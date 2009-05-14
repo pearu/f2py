@@ -1,7 +1,7 @@
-
-from numpy.testing import *
 from fparser.Fortran2003 import *
 from fparser.api import get_reader
+
+from nose.tools import assert_equal
 
 def assertRaises(exc, cls, s):
     try:
@@ -2009,6 +2009,5 @@ if 1:
     print '-----'
 
 if __name__ == "__main__":
-    from unittest import main
-    main ()
-    #NumpyTest().run()
+    import nose
+    nose.main()

@@ -11,10 +11,12 @@ Created: May 2006
 -----
 """
 
-from numpy.testing import *
+# from numpy.testing import *
 
 from fparser.block_statements import *
 from fparser.readfortran import Line, FortranStringReader
+
+from nose.tools import assert_equal
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
     if label:
