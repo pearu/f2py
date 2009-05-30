@@ -2007,7 +2007,3 @@ if 1:
     print 'Nof tests needs:',nof_needed_tests,'out of',total_needs
     print 'Total number of classes:',total_classes
     print '-----'
-
-if __name__ == "__main__":
-    import nose
-    nose.main()

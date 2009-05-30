@@ -189,6 +189,8 @@ class Variable:
         return
 
     def set_dimension(self, dims):
+        dims = [tuple(dim.split(':')) for dim in dims]
+        dims = [tuple(map(str.strip, dim)) for dim in dims]
         if self.dimension is not None:
             if not self.dimension==dims:
                 self.parent.warning(\
@@ -333,7 +335,7 @@ class Variable:
             s += typedecl.tostr() + ' '
         a = self.attributes[:]
         if self.dimension is not None:
-            a.append('DIMENSION(%s)' % (', '.join(self.dimension)))
+            a.append('DIMENSION(%s)' % (', '.join([':'.join(spec) for spec in self.dimension])))
         if self.intent is not None:
             a.append('INTENT(%s)' % (', '.join(self.intent)))
         if self.bind:
@@ -405,7 +407,8 @@ class Variable:
                     if len(spec)==1:
                         shape.append(spec[0])
                     else:
-                        shape.append(spec[1]-spec[0])
+                        n = int(spec[1]) - int(spec[0])
+                        shape.append(str(n))
                 self.shape = shape
         return
 
