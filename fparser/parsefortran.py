@@ -21,7 +21,7 @@ from readfortran import FortranFileReader, FortranStringReader
 from block_statements import BeginSource
 from utils import AnalyzeError
 
-class FortranParser:
+class FortranParser(object):
 
     cache = {}
 

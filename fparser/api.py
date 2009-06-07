@@ -50,7 +50,7 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs = None,
     return reader
 
 def parse(input, isfree=None, isstrict=None, include_dirs = None,
-          ignore_comments = True):
+          ignore_comments = True, analyze=True):
     """ Parse input and return Statement tree.
 
     input            --- string or filename.
@@ -65,5 +65,6 @@ def parse(input, isfree=None, isstrict=None, include_dirs = None,
     reader = get_reader(input, isfree, isstrict, include_dirs)
     parser = FortranParser(reader, ignore_comments = ignore_comments)
     parser.parse()
-    parser.analyze()
+    if analyze:
+        parser.analyze()
     return parser.block

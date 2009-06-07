@@ -19,7 +19,7 @@ from readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant
 
-class AttributeHolder:
+class AttributeHolder(object):
     # copied from symbolic.base module
     """
     Defines a object with predefined attributes. Only those attributes
@@ -97,7 +97,7 @@ def get_base_classes(cls):
         bases += get_base_classes(c)
     return bases + cls.__bases__ + (cls,)
 
-class Variable:
+class Variable(object):
     """
     Variable instance has attributes:
       name
@@ -412,10 +412,10 @@ class Variable:
                 self.shape = shape
         return
 
-class ProgramBlock:
+class ProgramBlock(object):
     pass
 
-class Statement:
+class Statement(object):
     """
     Statement instance has attributes:
       parent  - Parent BeginStatement or FortranParser instance

@@ -43,13 +43,13 @@ _is_fix_comment = lambda line: line and line[0] in '*cC!'
 _hollerith_start_search = re.compile(r'(?P<pre>\A|,\s*)(?P<num>\d+)h',re.I).search
 _is_call_stmt = re.compile(r'call\b', re.I).match
 
-class FortranReaderError: # TODO: may be derive it from Exception
+class FortranReaderError(object): # TODO: may be derive it from Exception
     def __init__(self, message):
         self.message = message
         print >> sys.stderr,message
         sys.stderr.flush()
 
-class Line:
+class Line(object):
     """ Holds a Fortran source line.
     """
 
@@ -137,7 +137,7 @@ class SyntaxErrorLine(Line, FortranReaderError):
         Line.__init__(self, line, linenospan, label, reader)
         FortranReaderError.__init__(self, message)
 
-class Comment:
+class Comment(object):
     """ Holds Fortran comment.
     """
     def __init__(self, comment, linenospan, reader):
@@ -150,7 +150,7 @@ class Comment:
     def isempty(self, ignore_comments=False):
         return ignore_comments or len(self.comment)<2
 
-class MultiLine:
+class MultiLine(object):
     """ Holds (prefix, line list, suffix) representing multiline
     syntax in .pyf files:
       prefix+'''+lines+'''+suffix.
@@ -174,7 +174,7 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
-class FortranReaderBase:
+class FortranReaderBase(object):
 
     def __init__(self, source, isfree, isstrict):
         """

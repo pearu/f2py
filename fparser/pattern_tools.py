@@ -13,7 +13,7 @@ Created: Oct 2006
 
 import re
 
-class Pattern:
+class Pattern(object):
     """
     p1 | p2    -> <p1> | <p2>
     p1 + p2    -> <p1> <p2>

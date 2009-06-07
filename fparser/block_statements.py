@@ -27,7 +27,7 @@ from base_classes import BeginStatement, EndStatement, Statement,\
 from readfortran import Line
 from utils import filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
 
-class HasImplicitStmt:
+class HasImplicitStmt(object):
 
     a = AttributeHolder(implicit_rules = {})
 
@@ -74,7 +74,7 @@ class HasImplicitStmt:
         s += ' ' + ', '.join(ls)
         return tab + s + '\n'
 
-class HasUseStmt:
+class HasUseStmt(object):
 
     a = AttributeHolder(use = {},
                         use_provides = {})
@@ -90,7 +90,7 @@ class HasUseStmt:
         sys.stderr.write('HasUseStmt.topyf not implemented\n')
         return ''
 
-class AccessSpecs:
+class AccessSpecs(object):
 
     a = AttributeHolder(private_id_list = [], public_id_list = [])
 
@@ -108,7 +108,7 @@ class AccessSpecs:
             l.append(tab + 'PUBLIC :: %s\n' % (a))
         return ''.join(l)
 
-class HasVariables:
+class HasVariables(object):
 
     a = AttributeHolder(variables = {},
                         variable_names = [] # defines the order of declarations
@@ -132,7 +132,7 @@ class HasVariables:
             s += tab + str(var) + '\n'
         return s
 
-class HasTypeDecls:
+class HasTypeDecls(object):
 
     a = AttributeHolder(type_decls = {})
 
@@ -149,7 +149,7 @@ class HasTypeDecls:
             return self.get_entity(kind)
         return type_decl
 
-class HasAttributes:
+class HasAttributes(object):
 
     known_attributes = []
     a = AttributeHolder(attributes = [])
@@ -176,7 +176,7 @@ class HasAttributes:
                 attributes.append(uattr)
         return
 
-class HasModuleProcedures:
+class HasModuleProcedures(object):
 
     a = AttributeHolder(module_procedures = [])
 
@@ -481,16 +481,17 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             var = self.parent.a.variables.pop(self.name)
             self.update_attributes(var.attributes)
 
-        parent_interface = self.parent.get_interface()
-        if self.name in parent_interface:
-            p = parent_interface[self.name]
-            last = p.content.pop()
-            assert isinstance(last,EndInterface),`last.__class__`
-            p.content += self.content
-            p.update_attributes(self.a.attributes)
-        else:
-            parent_interface[self.name] = self
-        return
+        if isinstance(self.parent, Module):#XXX
+            parent_interface = self.parent.get_interface()
+            if self.name in parent_interface:
+                p = parent_interface[self.name]
+                last = p.content.pop()
+                assert isinstance(last,EndInterface),`last.__class__`
+                p.content += self.content
+                p.update_attributes(self.a.attributes)
+            else:
+                parent_interface[self.name] = self
+            return
 
     def topyf(self, tab=''):
         s = tab + self.tostr() + '\n'

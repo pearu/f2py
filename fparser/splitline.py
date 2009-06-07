@@ -160,7 +160,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
             items.append(item)
     return items, stopchar
 
-class LineSplitterBase:
+class LineSplitterBase(object):
 
     def __iter__(self):
         return self
