@@ -313,12 +313,12 @@ class Module(BeginStatement, HasAttributes,
         if content:
             self.show_message('Not analyzed content: %s' % content)
 
-        #module_provides = self.a.module_provides
-        #for name, var in self.a.variables.items():
-        #    if var.is_public():
-        #        if name in module_provides:
-        #            self.warning('module data object name conflict with %s, overriding.' % (name))
-        #        module_provides[name] = var
+        module_provides = self.a.module_provides
+        for name, var in self.a.variables.items():
+            if var.is_public():
+                if name in module_provides:
+                    self.warning('module data object name conflict with %s, overriding.' % (name))
+                module_provides[name] = var
 
         return
 
@@ -606,12 +606,12 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if content:
             self.show_message('Not analyzed content: %s' % content)
 
-        #parent_provides = self.parent.get_provides()
-        #if parent_provides is not None:
-        #    if self.is_public():
-        #        if self.name in parent_provides:
-        #            self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
-        #        parent_provides[self.name] = self
+        parent_provides = self.parent.get_provides()
+        if parent_provides is not None:
+            if self.is_public():
+                if self.name in parent_provides:
+                    self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
+                parent_provides[self.name] = self
 
         return
 
@@ -1083,12 +1083,12 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
 
         self.parent.a.type_decls[self.name] = self
 
-        #parent_provides = self.parent.get_provides()
-        #if parent_provides is not None:
-        #    if self.is_public():
-        #        if self.name in parent_provides:
-        #            self.warning('type declaration name conflict with %s, overriding.' % (self.name))
-        #        parent_provides[self.name] = self
+        parent_provides = self.parent.get_provides()
+        if parent_provides is not None:
+            if self.is_public():
+                if self.name in parent_provides:
+                    self.warning('type declaration name conflict with %s, overriding.' % (self.name))
+                parent_provides[self.name] = self
 
         return
 

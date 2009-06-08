@@ -26,3 +26,68 @@ def test_dimension_attr():
 
     assert bvar.dimension == [('-20', '20'), ('100', '113'), ('-  512', '713')]
     assert bvar.shape == ['40', '13', '1225']
+
+def test_provides():
+    source_str = '''
+    module mod1
+    implicit none
+    integer, parameter :: GP = 6
+    integer :: a,b,c,d,e
+    ! module_provides = {GP,a,b,c,d,e}
+    ! use_provides = {}
+    end module mod1
+
+    module mod2
+    implicit none
+    integer, parameter :: SP = 5
+    real :: a,b,c
+    ! module_provides = {SP,a,b,c}
+    ! use_provides = {}
+    end module mod2
+
+    module mod3
+    use mod1
+    implicit none
+    integer, parameter :: DP = 0
+    ! module_provides = {DP}
+    ! use_provides = {GP,a,b,c,d,e}
+    end module mod3
+
+    module mod4
+    use mod2
+    implicit none
+    ! module_provides = {}
+    ! use_provides = {SP,a,b,c}
+    end module mod4
+
+    module mod5
+    use mod3, only: lGP => GP, a,b,e
+    use mod4, only: a2 => a, b2 => b
+    implicit none
+
+    integer, parameter :: FP = 1000
+    integer(kind=kind(0)) :: dummy
+    parameter (dummy = 20)
+    integer, private :: x,y,z
+
+    ! module_provides = {FP, dummy}
+    ! use_provides = {lGP, a, b, e, a2, b2}
+    end module mod5
+
+    module mod6
+    use mod5, qgp => lgp
+    implicit none
+    ! module_provides = {}
+    ! use_provides = {FP, dummy, a2, b2, qgp, a, b, e}
+    end module mod6
+
+      '''
+
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    mod5 = tree.a.module['mod5']
+    mod6 = tree.a.module['mod6']
+    assert mod5.a.module_provides.keys() == ['fp', 'dummy']
+    assert mod5.a.use_provides.keys() == ['a', 'b', 'e', 'a2', 'b2', 'lgp']
+    assert mod6.a.module_provides.keys() ==  []
+    assert mod6.a.use_provides.keys() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
+    assert mod6.a.use_provides['qgp'].name == 'gp'
