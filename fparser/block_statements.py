@@ -370,6 +370,7 @@ class EndProgram(EndStatement):
 
 class Program(BeginStatement, ProgramBlock,
               #HasAttributes, # XXX: why Program needs .attributes?
+              HasVariables,
               HasImplicitStmt, HasUseStmt, AccessSpecs):
     """ PROGRAM [name]
     """
