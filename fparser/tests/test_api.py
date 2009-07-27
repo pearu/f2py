@@ -4,7 +4,12 @@ Test parsing of whole fortran files; 'blackbox' tests here.
 
 from fparser import api
 import sys
+from os.path import abspath
 
+def test_use_module():
+    sources = [abspath('tests/modfile.f95'), abspath('tests/funcfile.f95')]
+    file_to_parse = sources[1]
+    tree = api.parse(file_to_parse, isfree=True, isstrict=False, source_only = sources)
 
 def test_dimension_attr():
     source_str = '''

@@ -137,17 +137,22 @@ def get_module_file(name, directory, _cache={}):
         if os.path.isfile(f1):
             _cache[name] = fn
             return f1
-    pattern = re.compile(r'\s*module\s+(?P<name>[a-z]\w*)', re.I).match
     for fn in glob.glob(os.path.join(directory,'*.f90')):
-        f = open(fn,'r')
-        for line in f:
-            m = pattern(line)
-            if m and m.group('name')==name:
-                _cache[name] = fn
-                f.close()
-                return fn
-        f.close()
+        if _module_in_file(name, fn):
+            _cache[name] = fn
+            return fn
     return
+
+def module_in_file(name, filename):
+    pattern = re.compile(r'\s*module\s+(?P<name>[a-z]\w*)', re.I).match
+    f = open(filename,'r')
+    for line in f:
+        m = pattern(line)
+        if m and m.group('name')==name:
+            f.close()
+            return filename
+    f.close()
+
 
 def str2stmt(string, isfree=True, isstrict=False):
     """ Convert Fortran code to Statement tree.

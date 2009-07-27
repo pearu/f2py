@@ -881,16 +881,12 @@ class Use(Statement):
 
         modules = self.top.a.module
         if self.name not in modules:
-            fn = None
-            for d in self.reader.include_dirs:
-                fn = get_module_file(self.name, d)
-                if fn is not None:
-                    break
+            fn = self.reader.find_module_source_file(self.name)
             if fn is not None:
                 from readfortran import FortranFileReader
                 from parsefortran import FortranParser
                 self.info('looking module information from %r' % (fn))
-                reader = FortranFileReader(fn)
+                reader = FortranFileReader(fn, include_dirs=self.reader.include_dirs, source_only=self.reader.source_only)
                 parser = FortranParser(reader)
                 parser.parse()
                 parser.block.a.module.update(modules)

@@ -200,8 +200,23 @@ class FortranReaderBase(object):
         self.reader = None
         self.include_dirs = ['.']
 
+        self.source_only = None
+
         self.set_mode(isfree, isstrict)
         return
+
+    def find_module_source_file(self, mod_name):
+        from utils import get_module_file, module_in_file
+        if self.source_only:
+            for sf in self.source_only:
+                if module_in_file(mod_name, sf):
+                    return sf
+        else:
+            fn = None
+            for d in self.include_dirs:
+                fn = get_module_file(mod_name, d)
+                if fn is not None:
+                    return fn
 
     def set_mode(self, isfree, isstrict):
         assert isfree is not None
@@ -726,7 +741,7 @@ class FortranReaderBase(object):
 
 class FortranFileReader(FortranReaderBase):
 
-    def __init__(self, filename, include_dirs = None):
+    def __init__(self, filename, include_dirs = None, source_only=None):
         isfree, isstrict = get_source_info(filename)
         self.id = filename
         self.file = open(filename,'r')
@@ -735,20 +750,25 @@ class FortranFileReader(FortranReaderBase):
             self.include_dirs.insert(0, os.path.dirname(filename))
         else:
             self.include_dirs = include_dirs[:]
+        if source_only is not None:
+            self.source_only = source_only[:]
         return
+
 
     def close_source(self):
         self.file.close()
 
 class FortranStringReader(FortranReaderBase):
 
-    def __init__(self, string, include_dirs = None):
+    def __init__(self, string, include_dirs = None, source_only = None):
         self.id = 'string-'+str(id(string))
         source = StringIO(string)
         isfree, isstrict = get_source_info_str(string)
         FortranReaderBase.__init__(self, source, isfree, isstrict)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
+        if source_only is not None:
+            self.source_only = source_only[:]
         return
 
 # Testing:

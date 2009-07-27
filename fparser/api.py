@@ -19,7 +19,7 @@ from block_statements import *
 # CHAR_BIT is used to convert object bit sizes to byte sizes
 from utils import CHAR_BIT
 
-def get_reader(input, isfree=None, isstrict=None, include_dirs = None,
+def get_reader(input, isfree=None, isstrict=None, include_dirs = None, source_only = None,
                ignore_comments = True):
     import os
     import re
@@ -39,9 +39,9 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs = None,
             if isfree is None: isfree = True
             if isstrict is None: isstrict = True
             return parse(c_input, isfree, isstrict, include_dirs)
-        reader = FortranFileReader(input, include_dirs = include_dirs)
+        reader = FortranFileReader(input, include_dirs = include_dirs, source_only = source_only)
     elif isinstance(input, str):
-        reader = FortranStringReader(input, include_dirs = include_dirs)
+        reader = FortranStringReader(input, include_dirs = include_dirs, source_only = source_only)
     else:
         raise TypeError,'Expected string or filename input but got %s' % (type(input))
     if isfree is None: isfree = reader.isfree
@@ -49,7 +49,7 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs = None,
     reader.set_mode(isfree, isstrict)
     return reader
 
-def parse(input, isfree=None, isstrict=None, include_dirs = None,
+def parse(input, isfree=None, isstrict=None, include_dirs = None, source_only = None,
           ignore_comments = True, analyze=True):
     """ Parse input and return Statement tree.
 
@@ -60,9 +60,12 @@ def parse(input, isfree=None, isstrict=None, include_dirs = None,
     include_dirs     --- list of include directories.
                          Default contains current working directory
                          and the directory of file name.
+    source_only      --- If set to a list of fortran source file names, only
+                         these files will be searched when a 'use' statement is
+                         encountered.
     """
     from parsefortran import FortranParser
-    reader = get_reader(input, isfree, isstrict, include_dirs)
+    reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
     parser = FortranParser(reader, ignore_comments = ignore_comments)
     parser.parse()
     if analyze:
