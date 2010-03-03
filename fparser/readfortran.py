@@ -612,10 +612,15 @@ class FortranReaderBase(object):
                     message =  'non-space/digit char %r found in column %i'\
                               ' of fixed Fortran code' % (line[i],i+1)
                     if self.isfix90:
-                        message = message + ', switching to free format mode'
+                        if i==0:
+                            message += ', interpreting line as comment line'
+                        else:
+                            message = message + ', switching to free format mode'
                         message = self.format_warning_message(\
                             message,startlineno, self.linecount)
                         self.show_message(message, sys.stderr)
+                        if i==0:
+                            return self.comment_item(line, startlineno, startlineno)                           
                         self.set_mode(True, False)
                     else:
                         return self.line_item(line[6:], startlineno, self.linecount,
