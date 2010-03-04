@@ -290,7 +290,7 @@ class Stop(Statement):
     STOP [ <stop-code> ]
     <stop-code> = <scalar-char-constant> | <1-5-digit>
     """
-    match = re.compile(r'stop\s*(\'\w*\'|"\w*"|\d+|)\Z',re.I).match
+    match = re.compile(r'stop\s*((\'\w*\'|"\w*")+|\d+|)\Z',re.I).match
 
     def process_item(self):
         self.code = self.item.apply_map(self.item.get_line()[4:].lstrip())
