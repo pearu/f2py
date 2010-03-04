@@ -18,6 +18,7 @@ __all__ = ['split_comma', 'specs_split_comma',
 
 import re
 import os, glob
+import sys
 
 class ParseError(Exception):
     pass
@@ -180,3 +181,21 @@ def get_char_bit():
     return i
 
 CHAR_BIT = get_char_bit()
+
+def show_parent_on_failure(func, _exception_depth=[0]):
+    """
+    Decorator for analyze methods.
+    """
+    def new_func(self):
+        try:
+            func(self)
+        except Exception, msg:
+            _exception_depth[0] += 1
+            if _exception_depth[0]==1:
+                print>>sys.stderr, 'While processing'
+                print>>sys.stderr, '  %s' % self.parent.item
+                print>>sys.stderr, 'with %r the following exception was raised:' % (func)
+            raise
+        _exception_depth[0] = 0
+    return new_func
+

@@ -18,6 +18,7 @@ import copy
 from readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant
+from utils import show_parent_on_failure
 
 class AttributeHolder(object):
     # copied from symbolic.base module
@@ -394,6 +395,7 @@ class Variable(object):
     def is_array_pointer(self):
         return self.is_array() and self.is_pointer()
 
+    @show_parent_on_failure
     def analyze(self):
         typedecl = self.get_typedecl()
         if self.is_array():
@@ -407,10 +409,15 @@ class Variable(object):
                     if len(spec)==1:
                         shape.append(spec[0])
                     else:
-                        n = int(spec[1]) - int(spec[0])
+                        try:
+                            n = int(spec[1]) - int(spec[0])
+                        except ValueError:
+                            n = '(%s)-(%s)' % (spec[1], spec[0]) 
                         shape.append(str(n))
                 self.shape = shape
         return
+
+
 
 class ProgramBlock(object):
     pass

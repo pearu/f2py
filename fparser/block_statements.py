@@ -26,6 +26,7 @@ from base_classes import BeginStatement, EndStatement, Statement,\
      AttributeHolder, ProgramBlock, Variable
 from readfortran import Line
 from utils import filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
+from utils import show_parent_on_failure
 
 class HasImplicitStmt(object):
 
@@ -208,6 +209,7 @@ class BeginSource(BeginStatement):
         self.fill(end_flag = True)
         return
 
+    @show_parent_on_failure
     def analyze(self):
         for stmt in self.content:
             if isinstance(stmt, Module):
@@ -296,6 +298,7 @@ class Module(BeginStatement, HasAttributes,
     def get_interface(self):
         return self.a.module_interface
 
+    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
@@ -466,6 +469,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
     #def get_provides(self):
     #    return self.a.interface_provides
 
+    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
@@ -570,11 +574,12 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         return f2py_stmt + specification_part + execution_part \
                + internal_subprogram_part
 
+    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
         if self.prefix:
-            self.update_attributes(prefix.upper().split())
+            self.update_attributes(self.prefix.upper().split())
 
         variables = self.a.variables
         for a in self.args:
@@ -1039,6 +1044,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         return [Integer] + private_or_sequence + component_part +\
                type_bound_procedure_part
 
+    @show_parent_on_failure
     def analyze(self):
         BeginStatement.analyze(self)
         for spec in self.specs:

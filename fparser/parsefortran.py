@@ -88,6 +88,7 @@ class FortranParser(object):
             pass
         except Exception, msg:
             if str(msg) != '123454321':
+                #print self.block
                 traceback.print_exc(file=sys.stderr)
                 self.reader.show_message(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ), sys.stderr)
                 sys.exit(123454321)
