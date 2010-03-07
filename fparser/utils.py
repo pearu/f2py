@@ -191,15 +191,16 @@ def show_item_on_failure(func, _exception_depth=[0]):
         try:
             func(self)
         except AnalyzeError, msg:
-            self.error('analyze error: %s' % (msg))
+            clsname = self.__class__.__name__
+            self.error('%s.analyze error: %s' % (clsname,msg))
+            traceback.print_exc()
         except ParseError, msg:
             self.error('parse error: %s' % (msg))
         except Exception, msg:
             _exception_depth[0] += 1
             if _exception_depth[0]==1:
                 self.error('exception triggered here: %s %s' % (Exception, msg))
-                traceback.print_exc(sys.stderr)
-            raise AA
+            raise
         _exception_depth[0] = 0
     return new_func
 

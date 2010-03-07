@@ -524,6 +524,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
     """
 
     a = AttributeHolder(internal_subprogram = {})
+    known_attributes = ['RECURSIVE', 'PURE', 'ELEMENTAL']
 
     def process_item(self):
         clsname = self.__class__.__name__.lower()
@@ -623,6 +624,8 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                 self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
             parent_provides[self.name] = self
 
+        if self.is_recursive() and self.is_elemental():
+            self.warning('C1241 violation: prefix cannot specify both ELEMENTAL and RECURSIVE')
         return
 
     def topyf(self, tab=''):
@@ -640,8 +643,10 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
 
     def is_public(self): return not self.is_private()
 
-    def is_private(self):
-        return self.parent.check_private(self.name)
+    def is_private(self): return self.parent.check_private(self.name)
+    def is_recursive(self): return 'RECURSIVE' in self.a.attributes
+    def is_pure(self): return 'PURE' in self.a.attributes
+    def is_elemental(self): return 'ELEMENTAL' in self.a.attributes
 
 class EndSubroutine(EndStatement):
     """
