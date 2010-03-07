@@ -19,6 +19,7 @@ from readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant
 from utils import show_parent_on_failure
+from utils import classes
 
 class AttributeHolder(object):
     # copied from symbolic.base module
@@ -108,6 +109,9 @@ class Variable(object):
       intent
       parent - Statement instances defining the variable
     """
+
+    __metaclass__ = classes
+    
     def __init__(self, parent, name):
         self.parent = parent
         self.parents = [parent]
@@ -420,7 +424,8 @@ class Variable(object):
 
 
 class ProgramBlock(object):
-    pass
+
+    __metaclass__ = classes
 
 class Statement(object):
     """
@@ -429,6 +434,8 @@ class Statement(object):
       item    - Line instance containing the statement line
       isvalid - boolean, when False, the Statement instance will be ignored
     """
+    __metaclass__ = classes
+
     modes = ['free90','fix90','fix77','pyf']
     _repr_attr_names = []
 
@@ -725,7 +732,7 @@ class BeginStatement(Statement):
                         'WARNING',
                         'no parse pattern found for "%s" in %r block'\
                         ' maybe due to inline comment.'\
-                        ' Trying to remove the comment.'\
+                        ' Trying to loose the comment.'\
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.

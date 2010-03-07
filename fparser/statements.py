@@ -34,6 +34,7 @@ from base_classes import Statement, Variable
 
 from utils import split_comma, specs_split_comma, AnalyzeError, ParseError,\
      get_module_file, parse_bind, parse_result, is_name
+from utils import classes
 
 class StatementWithNamelist(Statement):
     """
@@ -589,6 +590,20 @@ class Access(Statement):
         else:
             if '' not in l:
                 l.append('')
+            if not isinstance(self.parent, classes.Module):
+                parentclsname = self.parent.__class__.__name__
+                message = 'C548 violation: %s statement only allowed in the'\
+                          ' specification-part of a module, not in a %s.'\
+                          % (clsname.upper(), parentclsname.lower())
+                self.warning(message)
+        access_id_list = self.parent.a.private_id_list + self.parent.a.public_id_list
+        if access_id_list.count('')>1:
+            message = 'C548 violation: only one access-stmt with omitted'\
+                      ' access-id-list is permitted in'\
+                      ' the module-specification-part.'
+            self.warning(message)
+        # todo: check for conflicting access statement usages (e.g. private foo; public foo)
+        # todo: check for conflicting generic-spec id-s.
         return
 
 class Public(Access):

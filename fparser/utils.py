@@ -193,9 +193,37 @@ def show_parent_on_failure(func, _exception_depth=[0]):
             _exception_depth[0] += 1
             if _exception_depth[0]==1:
                 print>>sys.stderr, 'While processing'
-                print>>sys.stderr, '  %s' % self.parent.item
+                print>>sys.stderr, '  %s' % self.item
                 print>>sys.stderr, 'with %r the following exception was raised:' % (func)
             raise
         _exception_depth[0] = 0
     return new_func
+
+_classes_cache = {}
+class meta_classes(type):
+    """ Meta class for ``classes``.
+    """
+    def __getattr__(self, name):
+        # Expose created classes only as attributes to ``classes`` type.
+        cls = _classes_cache.get(name)
+        if cls is None:
+            return type.__getattr__(self, name) # raises AttributeError
+        return cls
+
+class classes(type):
+    """Make classes available as attributes of this class.
+
+    To add a class to the attributes list, one must use::
+
+      __metaclass__ = classes
+
+    in the definition of the class.
+    """
+
+    __metaclass__ = meta_classes
+
+    def __new__(metacls, name, bases, dict):
+        cls = type.__new__(metacls, name, bases, dict)
+        _classes_cache[name] = cls
+        return cls
 

@@ -614,10 +614,9 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
 
         parent_provides = self.parent.get_provides()
         if parent_provides is not None:
-            if self.is_public():
-                if self.name in parent_provides:
-                    self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
-                parent_provides[self.name] = self
+            if self.name in parent_provides:
+                self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
+            parent_provides[self.name] = self
 
         return
 
@@ -633,6 +632,15 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         s +=  HasVariables.topyf(self, tab=tab+'  ', only_variables = self.args)
         s += tab + 'END ' + self.__class__.__name__.upper() + ' ' + self.name + '\n'
         return s
+
+    def is_public(self): return not self.is_private()
+    def is_private(self):
+        if self.name in self.parent.a.public_id_list: return False
+        if self.name in self.parent.a.private_id_list: return True
+        if '' in self.parent.a.public_id_list: return False
+        if '' in self.parent.a.private_id_list: return True
+        #todo: handle generic-spec-s in id-lists.
+        return
 
 class EndSubroutine(EndStatement):
     """
