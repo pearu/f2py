@@ -1,7 +1,7 @@
 
 from fparser import api
 
-def test_reproduce_issue():
+def test_reproduce_issue_private():
     source_str = '''
     module m
     contains
@@ -76,3 +76,21 @@ def test_private_type():
     assert b.is_public()
     assert not c.is_private()
     assert c.is_public()
+
+def test_reproduce_issue_len():
+    source_str = '''
+    subroutine foo(a)
+    character(lenmax) a
+    character(lenmax, kind=4) b
+    character(len=lenmax, kind=4) c
+    character(kind=4, len=lenmax) d
+    character(lenmax, 4) e
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    a, b, c, d, e=tree.content[0].content[:5]
+    assert a.selector==('lenmax','')
+    assert b.selector==('lenmax','4')
+    assert c.selector==('lenmax','4')
+    assert d.selector==('lenmax','4')
+    assert e.selector==('lenmax','4')

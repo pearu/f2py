@@ -192,6 +192,17 @@ class TypeDeclarationStatement(Statement):
                 kind = l
         return length,kind
 
+    def _split_char_selector(self, line):
+        """line=``[key=]value`` -> key, value.
+        If line does not have name part then return None, value.
+        """
+        for name in ['len', 'kind']:
+            if line.startswith(name):
+                value_part = line[len(name):].lstrip()
+                if value_part.startswith('='):
+                    return name, value_part[1:].lstrip()
+        return None, line
+
     def _parse_char_selector(self, selector):
         if not selector:
             return '',''
@@ -209,33 +220,27 @@ class TypeDeclarationStatement(Statement):
             l = split_comma(selector[1:-1].strip(), self.item)
             if len(l)==1:
                 l = l[0]
-                if l.lower().startswith('len'):
-                    l=l[3:].lstrip()
-                    assert l.startswith('='),`l`
-                    l=l[1:].lstrip()
-                    kind = ''
-                elif l.lower().startswith('kind'):
-                    kind = l[4:].lstrip()[1:].lstrip()
-                    l = ''
+                key, value = self._split_char_selector(l)
+                if key=='len':
+                    kind, l = '', value
+                elif key=='kind':
+                    kind, l = value, l
                 else:
                     kind = ''
             else:
-                assert len(l)==2
-                if l[0].lower().startswith('len'):
-                    assert l[1].lower().startswith('kind'),`l`
-                    kind = l[1][4:].lstrip()[1:].lstrip()
-                    l = l[0][3:].lstrip()[1:].lstrip()
-                elif l[0].lower().startswith('kind'):
-                    assert l[1].lower().startswith('len'),`l`
-                    kind = l[0][4:].lstrip()[1:].lstrip()
-                    l = l[1][3:].lstrip()[1:].lstrip()
+                assert len(l)==2,`l`
+                key0, value0 = self._split_char_selector(l[0])
+                key1, value1 = self._split_char_selector(l[1])
+                if key0=='len':
+                    assert key1 in [None, 'kind'],`key1`
+                    l,kind = value0, value1
+                elif key0=='kind':
+                    assert key1=='len',`key1`
+                    l,kind = value1, value0
                 else:
-                    if l[1].lower().startswith('kind'):
-                        kind = l[1][4:].lstrip()[1:].lstrip()
-                        l = l[0]
-                    else:
-                        kind = l[1]
-                        l = l[0]
+                    assert key0 is None,`key0`
+                    assert key1 in [None,'kind'],`key1`
+                    l, kind = value0, value1
         return l,kind
 
     def tostr(self):
