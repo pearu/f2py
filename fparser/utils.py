@@ -20,7 +20,7 @@ __all__ = ['split_comma', 'specs_split_comma',
 import re
 import os, glob
 import sys
-
+import traceback
 class ParseError(Exception):
     pass
 
@@ -190,11 +190,16 @@ def show_item_on_failure(func, _exception_depth=[0]):
     def new_func(self):
         try:
             func(self)
+        except AnalyzeError, msg:
+            self.error('analyze error: %s' % (msg))
+        except ParseError, msg:
+            self.error('parse error: %s' % (msg))
         except Exception, msg:
             _exception_depth[0] += 1
             if _exception_depth[0]==1:
-                self.error('exception triggered here')
-            raise
+                self.error('exception triggered here: %s %s' % (Exception, msg))
+                traceback.print_exc(sys.stderr)
+            raise AA
         _exception_depth[0] = 0
     return new_func
 

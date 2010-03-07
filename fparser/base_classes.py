@@ -416,7 +416,12 @@ class Variable(object):
                 self.shape = shape
         return
 
-
+    def error(self, message):
+        return self.parent.error(message)
+    def warning(self, message):
+        return self.parent.warning(message)
+    def info(self, message):
+        return self.parent.info(message)
 
 class ProgramBlock(object):
 
