@@ -224,6 +224,13 @@ class FortranReaderBase(object):
                     return fn
 
     def set_mode(self, isfree, isstrict):
+        """ Set Fortran code mode.
+
+        Parameters
+        ----------
+        isfree : bool
+        isstrict : bool
+        """
         assert isfree is not None
         assert isstrict is not None
         self.isfree90 = isfree and not isstrict
@@ -242,6 +249,25 @@ class FortranReaderBase(object):
         self.name = '%s mode=%s' % (self.source, mode)
         return
 
+    def set_mode_from_str(self, mode):
+        """Set Fortran code mode from a string.
+
+        Parameters
+        ----------
+        mode : {'free90', 'fix90', 'fix77', 'pyf'}
+        """
+        if mode=='free90':
+            isfree, isstrict=True, False
+        elif mode=='fix90':
+            isfree, isstrict=False, False
+        elif mode=='fix77':
+            isfree, isstrict=False, True
+        elif mode=='pyf':
+            isfree, isstrict=True, True
+        else:
+            raise NotImplementedError(`mode`)
+        self.set_mode(isfree, isstrict)
+    
     def close_source(self):
         # called when self.source.next() raises StopIteration.
         pass
@@ -763,7 +789,6 @@ class FortranFileReader(FortranReaderBase):
         if source_only is not None:
             self.source_only = source_only[:]
         return
-
 
     def close_source(self):
         self.file.close()
