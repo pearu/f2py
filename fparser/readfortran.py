@@ -92,6 +92,11 @@ class Line(object):
         return self.__class__.__name__+'(%r,%s,%r)' \
                % (self.line, self.span, self.label)
 
+    def __str__(self):
+        if self.label:
+            return 'line #%s %r' % (self.span[0], self.label + self.line)
+        return 'line #%s %r' % (self.span[0], self.line)
+
     def isempty(self, ignore_comments=False):
         return not (self.line.strip() or self.label)
 

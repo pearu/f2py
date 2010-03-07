@@ -14,7 +14,8 @@ Created: May 2006
 __all__ = ['split_comma', 'specs_split_comma',
            'ParseError','AnalyzeError',
            'get_module_file','parse_bind','parse_result','is_name','parse_array_spec',
-           'CHAR_BIT','str2stmt']
+           'CHAR_BIT','str2stmt',
+           'classes']
 
 import re
 import os, glob
@@ -182,7 +183,7 @@ def get_char_bit():
 
 CHAR_BIT = get_char_bit()
 
-def show_parent_on_failure(func, _exception_depth=[0]):
+def show_item_on_failure(func, _exception_depth=[0]):
     """
     Decorator for analyze methods.
     """
@@ -192,9 +193,7 @@ def show_parent_on_failure(func, _exception_depth=[0]):
         except Exception, msg:
             _exception_depth[0] += 1
             if _exception_depth[0]==1:
-                print>>sys.stderr, 'While processing'
-                print>>sys.stderr, '  %s' % self.item
-                print>>sys.stderr, 'with %r the following exception was raised:' % (func)
+                self.error('exception triggered here')
             raise
         _exception_depth[0] = 0
     return new_func
@@ -218,11 +217,17 @@ class classes(type):
       __metaclass__ = classes
 
     in the definition of the class.
+
+    In addition, apply the following tasks:
+
+    * decorate analyze methods with show_item_on_failure
     """
 
     __metaclass__ = meta_classes
 
     def __new__(metacls, name, bases, dict):
+        if 'analyze' in dict:
+            dict['analyze'] =  show_item_on_failure(dict['analyze'])
         cls = type.__new__(metacls, name, bases, dict)
         _classes_cache[name] = cls
         return cls

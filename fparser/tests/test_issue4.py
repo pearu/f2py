@@ -33,3 +33,46 @@ def test_private_subroutine():
     assert b.is_public()
     assert not b.is_private()
 
+def test_related_issue_type():
+    source_str = '''
+    module m
+    type private :: a
+    end type a
+    type public :: b
+    end type b
+    type :: c
+    end type c
+    end module m
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    a,b,c = tree.content[0].content[:3]
+    assert a.is_private()
+    assert not a.is_public()
+
+    assert not b.is_private()
+    assert b.is_public()
+
+    assert not c.is_private()
+    assert c.is_public()
+
+def test_private_type():
+    source_str = '''
+    module m
+    private
+    public b
+    type :: a
+    end type a
+    type :: b
+    end type b
+    type public :: c
+    end type c
+    end module m
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    a,b,c = tree.content[0].content[2:5]
+    assert a.is_private()
+    assert not a.is_public()
+    assert not b.is_private()
+    assert b.is_public()
+    assert not c.is_private()
+    assert c.is_public()

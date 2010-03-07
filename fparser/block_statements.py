@@ -26,7 +26,6 @@ from base_classes import BeginStatement, EndStatement, Statement,\
      AttributeHolder, ProgramBlock, Variable
 from readfortran import Line
 from utils import filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
-from utils import show_parent_on_failure
 
 class HasImplicitStmt(object):
 
@@ -175,6 +174,8 @@ class HasAttributes(object):
                 elif not known_attributes(uattr):
                     self.warning('unknown attribute %r' % (attr))
                 attributes.append(uattr)
+            else:
+                self.warning('multiple specification of attribute %r' % (attr))                
         return
 
 class HasModuleProcedures(object):
@@ -209,7 +210,6 @@ class BeginSource(BeginStatement):
         self.fill(end_flag = True)
         return
 
-    @show_parent_on_failure
     def analyze(self):
         for stmt in self.content:
             if isinstance(stmt, Module):
@@ -298,7 +298,6 @@ class Module(BeginStatement, HasAttributes,
     def get_interface(self):
         return self.a.module_interface
 
-    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
@@ -339,6 +338,14 @@ class Module(BeginStatement, HasAttributes,
             s += stmt.topyf(tab=tab+'    ')
         s += tab + 'END MODULE ' + self.name + '\n'
         return s
+
+    def check_private(self, name):
+        if name in self.a.public_id_list: return False
+        if name in self.a.private_id_list: return True
+        if '' in self.a.public_id_list: return False
+        if '' in self.a.private_id_list: return True
+        #todo: handle generic-spec-s in id-lists.
+        return
 
 # Python Module
 
@@ -469,7 +476,6 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
     #def get_provides(self):
     #    return self.a.interface_provides
 
-    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
@@ -574,7 +580,6 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         return f2py_stmt + specification_part + execution_part \
                + internal_subprogram_part
 
-    @show_parent_on_failure
     def analyze(self):
         content = self.content[:]
 
@@ -634,13 +639,9 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         return s
 
     def is_public(self): return not self.is_private()
+
     def is_private(self):
-        if self.name in self.parent.a.public_id_list: return False
-        if self.name in self.parent.a.private_id_list: return True
-        if '' in self.parent.a.public_id_list: return False
-        if '' in self.parent.a.private_id_list: return True
-        #todo: handle generic-spec-s in id-lists.
-        return
+        return self.parent.check_private(self.name)
 
 class EndSubroutine(EndStatement):
     """
@@ -1052,7 +1053,6 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         return [Integer] + private_or_sequence + component_part +\
                type_bound_procedure_part
 
-    @show_parent_on_failure
     def analyze(self):
         BeginStatement.analyze(self)
         for spec in self.specs:
@@ -1132,6 +1132,13 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
                 s += var.get_bit_size()
             _cache[id(self)] = s
         return s
+
+    def is_public(self): return not self.is_private()
+
+    def is_private(self):
+        if 'PUBLIC' in self.a.attributes: return False
+        if 'PRIVATE' in self.a.attributes: return True
+        return self.parent.check_private(self.name)
 
 TypeDecl = Type
 

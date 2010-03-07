@@ -21,7 +21,6 @@ import string
 from base_classes import Statement, BeginStatement, EndStatement,\
      AttributeHolder, Variable
 from utils import split_comma, AnalyzeError, name_re, is_entity_decl, is_name, CHAR_BIT, parse_array_spec
-from utils import show_parent_on_failure
 
 # Intrinsic type specification statements
 
@@ -285,7 +284,6 @@ class TypeDeclarationStatement(Statement):
             return self.__class__(self.parent, self.item.copy(self.tostr()))
         return self
 
-    @show_parent_on_failure
     def analyze(self):
         if not self.entity_decls:
             return
@@ -540,7 +538,6 @@ class Implicit(Statement):
             l.append('%s ( %s )' % (stmt.tostr(), ', '.join(l1)))
         return tab + 'IMPLICIT ' + ', '.join(l)
 
-    @show_parent_on_failure
     def analyze(self):
         implicit_rules = self.parent.a.implicit_rules
         if not self.items:

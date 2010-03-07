@@ -18,7 +18,6 @@ import copy
 from readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant
-from utils import show_parent_on_failure
 from utils import classes
 
 class AttributeHolder(object):
@@ -280,10 +279,7 @@ class Variable(object):
     def is_private(self):
         if 'PUBLIC' in self.attributes: return False
         if 'PRIVATE' in self.attributes: return True
-        parent_attrs = self.parent.parent.a.attributes
-        if 'PUBLIC' in parent_attrs: return False
-        if 'PRIVATE' in parent_attrs: return True
-        return
+        return self.parent.parent.check_private(self.name)
     def is_public(self): return not self.is_private()
 
     def is_allocatable(self): return 'ALLOCATABLE' in self.attributes
@@ -399,7 +395,6 @@ class Variable(object):
     def is_array_pointer(self):
         return self.is_array() and self.is_pointer()
 
-    @show_parent_on_failure
     def analyze(self):
         typedecl = self.get_typedecl()
         if self.is_array():
@@ -730,9 +725,8 @@ class BeginStatement(Statement):
             if i != -1:
                 message = item.reader.format_message(\
                         'WARNING',
-                        'no parse pattern found for "%s" in %r block'\
-                        ' maybe due to inline comment.'\
-                        ' Trying to loose the comment.'\
+                        'no parse pattern found for "%s" in %r block,'\
+                        ' trying to remove inline comment (not in Fortran 77).'\
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.
