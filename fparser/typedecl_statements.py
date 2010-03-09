@@ -197,7 +197,7 @@ class TypeDeclarationStatement(Statement):
         If line does not have name part then return None, value.
         """
         for name in ['len', 'kind']:
-            if line.startswith(name):
+            if line[:len(name)].lower()==name:
                 value_part = line[len(name):].lstrip()
                 if value_part.startswith('='):
                     return name, value_part[1:].lstrip()
@@ -224,7 +224,7 @@ class TypeDeclarationStatement(Statement):
                 if key=='len':
                     kind, l = '', value
                 elif key=='kind':
-                    kind, l = value, l
+                    kind, l = value, ''
                 else:
                     kind = ''
             else:
