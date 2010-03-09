@@ -51,6 +51,19 @@ class FortranReaderError(object): # TODO: may be derive it from Exception
 
 class Line(object):
     """ Holds a Fortran source line.
+
+    Attributes
+    ----------
+    line : str
+      code line
+    span : 2-tuple
+      starting and ending line numbers
+    label : str
+      line label
+    reader : FortranReaderBase
+    strline : {None, str}
+    is_f2py_directive : bool
+      the line contains f2py directive
     """
 
     f2py_strmap_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
@@ -629,7 +642,6 @@ class FortranReaderBase(object):
             for mlstr in ['"""',"'''"]:
                 r = self.handle_multilines(line, startlineno, mlstr)
                 if r: return r
-
         if self.isfix:
             label = line[:5].strip().lower()
             if label.endswith(':'): label = label[:-1].strip()
@@ -668,6 +680,7 @@ class FortranReaderBase(object):
 
         handle_inline_comment = self.handle_inline_comment
 
+        endlineno = self.linecount
         if self.isfix90 and not is_f2py_directive:
             # handle inline comment
             newline,qc = handle_inline_comment(line[6:], startlineno)
@@ -686,6 +699,7 @@ class FortranReaderBase(object):
                     newline, qc = self.handle_inline_comment(line2[6:],
                                                              self.linecount, qc)
                     lines.append(newline)
+                    endlineno = self.linecount
                 next_line = self.get_next_line()
             # no character continuation should follows now
             if qc is not None:
@@ -703,8 +717,7 @@ class FortranReaderBase(object):
                         ' in fix format code',
                         startlineno + i, startlineno + i, l.rfind('&')+5)
                         self.show_message(message, sys.stderr)
-                return self.line_item(''.join(lines),startlineno,
-                                      self.linecount,label)
+                return self.line_item(''.join(lines),startlineno, endlineno,label)
         start_index = 0
         if self.isfix90:
             start_index = 6
@@ -747,6 +760,7 @@ class FortranReaderBase(object):
                 if i == -1 or line_i1_rstrip:
                     lines_append(line)
                     break
+                endlineno = self.linecount
                 lines_append(line[:i])
                 line = get_single_line()
                 continue
@@ -759,6 +773,7 @@ class FortranReaderBase(object):
                 k = line[:i].find('&')
                 if k != 1 and line[:k].lstrip():
                     k = -1
+            endlineno = self.linecount
             lines_append(line[k+1:i])
             if i==len(line):
                 break
@@ -767,9 +782,9 @@ class FortranReaderBase(object):
         if qc is not None:
             message = self.format_message('ASSERTION FAILURE(free)',
                 'following character continuation: %r, expected None.' % (qc),
-                startlineno, self.linecount)
+                startlineno, endlineno)
             self.show_message(message, sys.stderr)
-        return self.line_item(''.join(lines),startlineno,self.linecount,label)
+        return self.line_item(''.join(lines),startlineno,endlineno,label)
 
     ##  FortranReaderBase
 
