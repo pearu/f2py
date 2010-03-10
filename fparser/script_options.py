@@ -14,11 +14,6 @@ Description:
                       choices = ['show'],
                       help = 'Specify reading task. Default: %default.'
                       )
-    parser.add_option('--mode',
-                      default = 'auto',
-                      choices = ['auto', 'free90', 'fix90', 'fix77', 'pyf'],
-                      help = 'Specify Fortran code mode. Default: %default.'
-                      )
     parser.add_option_group(get_fortran_code_group(parser))
 
 def set_parse_options(parser):
