@@ -166,7 +166,7 @@ class Comment(object):
         return self.__class__.__name__+'(%r,%s)' \
                % (self.comment, self.span)
     def isempty(self, ignore_comments=False):
-        return ignore_comments or len(self.comment)<2
+        return ignore_comments # or len(self.comment)<2
 
 class MultiLine(object):
     """ Holds (prefix, line list, suffix) representing multiline
