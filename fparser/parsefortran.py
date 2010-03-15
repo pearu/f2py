@@ -1,15 +1,10 @@
 #!/usr/bin/env python
+"""Provides FortranParser.
 """
-Defines FortranParser.
+#Author: Pearu Peterson <pearu@cens.ioc.ee>
+#Created: May 2006
 
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
-"""
-
+__autodoc__ = ['FortranParser']
 __all__ = ['FortranParser']
 
 import re
@@ -22,14 +17,13 @@ from block_statements import BeginSource
 from utils import AnalyzeError
 
 class FortranParser(object):
-
+    """Parser of FortranReader structure.
+    
+    Use .parse() method for parsing, parsing result is saved in .block attribute.
+    """
     cache = {}
 
     def __init__(self, reader, ignore_comments=True):
-        """
-        Parser of FortranReader structure.
-        Use .parse() method for parsing, parsing result is saved in .block attribute.
-        """
         self.reader = reader
         if reader.id in self.cache:
             parser = self.cache[reader.id]

@@ -1,18 +1,12 @@
 #!/usr/bin/env python
-"""
-Defines FortranReader classes for reading Fortran codes from
-files and strings. FortranReader handles comments and line continuations
-of both fix and free format Fortran codes.
+"""Provides Fortran reader classes.
 
------
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
------
+Provides FortranReader classes for reading Fortran codes from files and
+strings. FortranReader handles comments and line continuations of both
+fix and free format Fortran codes.
 """
+#Author: Pearu Peterson <pearu@cens.ioc.ee>
+#Created: May 2006
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -157,6 +151,14 @@ class SyntaxErrorLine(Line, FortranReaderError):
 
 class Comment(object):
     """ Holds Fortran comment.
+
+    Attributes
+    ----------
+    comment : str
+      comment multiline string
+    span : 2-tuple
+      starting and ending line numbers
+    reader : FortranReaderBase
     """
     def __init__(self, comment, linenospan, reader):
         self.comment = comment
@@ -169,9 +171,20 @@ class Comment(object):
         return ignore_comments # or len(self.comment)<2
 
 class MultiLine(object):
-    """ Holds (prefix, line list, suffix) representing multiline
-    syntax in .pyf files:
+    """ Holds PYF file multiline.
+
+    PYF file multiline is represented as follows::
       prefix+'''+lines+'''+suffix.
+    
+    Attributes
+    ----------
+    prefix : str
+    block : list
+      list of lines
+    suffix : str
+    span : 2-tuple
+      starting and ending line numbers
+    reader : FortranReaderBase
     """
     def __init__(self, prefix, block, suffix, linenospan, reader):
         self.prefix = prefix
