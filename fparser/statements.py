@@ -1904,7 +1904,12 @@ class Pause(Statement):
 class CommentBlock(Statement):
     match = lambda s: True
     def process_item(self):
+        self.items = [line[1:] for line in self.item.comment.split('\n')]
         return
     def tofortran(self, isfix=None):
-        return self.item.comment
+        if isfix:
+            return 'C'+'\nC'.join(self.items)
+        tab = self.get_indent_tab(isfix=isfix) + '!'
+        return tab + ('\n'+tab).join(self.items)
+
     def analyze(self): return
