@@ -1908,8 +1908,9 @@ class CommentBlock(Statement):
         return
     def tofortran(self, isfix=None):
         if isfix:
-            return 'C'+'\nC'.join(self.items)
-        tab = self.get_indent_tab(isfix=isfix) + '!'
+            tab = 'C' + self.get_indent_tab(isfix=isfix)[1:]
+        else:
+            tab = self.get_indent_tab(isfix=isfix) + '!'
         return tab + ('\n'+tab).join(self.items)
 
     def analyze(self): return
