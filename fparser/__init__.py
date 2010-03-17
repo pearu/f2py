@@ -1,6 +1,18 @@
-"""Tools for parsing Fortran 60/77/90/2003 codes into Statement tree.
+"""Fortran parser package.
 
-Use api module for importing public symbols.
+:Author:
+  Pearu Peterson <pearu.peterson@gmail.com>
+:Created: September 2006
+
+Overview
+========
+
+The Fortran parser package is a Python implementation of Fortran
+66/77/90/95/2003 language parser.
+The Fortran language syntax rules are defined in `Fortran2003` package,
+the rules are taken from the following ISO/IEC 1539 working draft:
+
+  http://j3-fortran.org/doc/2003_Committee_Draft/04-007.pdf
 
 Modules
 -------

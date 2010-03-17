@@ -1,5 +1,8 @@
 """Public API for Fortran parser.
 
+This module exposes `Statement` subclasses, `CHAR_BIT` constant, and
+the `parse` amd `get_reader` functions.
+
 """
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
@@ -16,6 +19,37 @@ from utils import CHAR_BIT
 
 def get_reader(input, isfree=None, isstrict=None, include_dirs = None, source_only = None,
                ignore_comments = True):
+    """ Returns Fortran reader instance.
+
+    Parameters
+    ----------
+    input : str
+      Specify a string or filename containing Fortran code.    
+    isfree, isstrict : {None, bool}
+      Specify input Fortran format. The values are determined from the
+      input. If that fails then isfree=True and isstrict=False is assumed.
+    include_dirs : {None, list}
+      Specify a list of include directories. The default list (when
+      include_dirs=None) contains the current working directory and
+      the directory of ``filename``.
+    source_only : {None, list}
+      Specify a list of Fortran file names that are searched when the
+      ``USE`` statement is encountered.
+
+    Returns
+    -------
+    reader : `FortranReader`
+
+    Notes
+    -----
+    If ``input`` is a C filename then the functions searches for comment
+    lines starting with ``/*f2py`` and reads following lines as PYF file
+    content until a line ``*/`` is found.
+
+    See also
+    --------
+    parse
+    """
     import os
     import re
     from readfortran import FortranFileReader, FortranStringReader
@@ -48,16 +82,73 @@ def parse(input, isfree=None, isstrict=None, include_dirs = None, source_only = 
           ignore_comments = True, analyze=True):
     """ Parse input and return Statement tree.
 
-    input            --- string or filename.
-    isfree, isstrict --- specify input Fortran format.
-                         Defaults are True, False, respectively, or
-                         determined from input.
-    include_dirs     --- list of include directories.
-                         Default contains current working directory
-                         and the directory of file name.
-    source_only      --- If set to a list of fortran source file names, only
-                         these files will be searched when a 'use' statement is
-                         encountered.
+    Parameters
+    ----------
+    input : str
+      Specify a string or filename containing Fortran code.
+    isfree, isstrict : {None, bool}
+      Specify input Fortran format. The values are determined from the
+      input. If that fails then isfree=True and isstrict=False is assumed.
+    include_dirs : {None, list}
+      Specify a list of include directories. The default list (when
+      include_dirs=None) contains the current working directory and
+      the directory of ``filename``.
+    source_only : {None, list}
+      Specify a list of Fortran file names that are searched when the
+      ``USE`` statement is encountered.
+    ignore_comments : bool
+      When True then discard all comment lines in the Fortran code.
+    analyze : bool
+      When True then apply run analyze method on the Fortran code tree.
+
+    Returns
+    -------
+    block : `fparser.api.BeginSource`
+
+    Examples
+    --------
+
+        >>> code = '''
+        ... c comment
+        ...       subroutine foo(a)
+        ...         integer a
+        ...         print*, "a=",a
+        ...       end
+        ... '''
+        >>> tree = parse(code,isfree=False)
+        >>> print tree
+              !BEGINSOURCE <cStringIO.StringI object at 0x1798030> mode=fix90
+                SUBROUTINE foo(a)
+                  INTEGER a
+                  PRINT *, "a=", a
+                END SUBROUTINE foo
+        >>> print `tree`
+              BeginSource
+                blocktype='beginsource'
+                name='<cStringIO.StringI object at 0x1798030> mode=fix90'
+                a=AttributeHolder:
+              external_subprogram=<dict with keys ['foo']>
+                content:
+                  Subroutine
+                    args=['a']
+                    item=Line('subroutine foo(a)',(3, 3),'')
+                    a=AttributeHolder:
+                variables=<dict with keys ['a']>
+                    content:
+                      Integer
+                        selector=('', '')
+                        entity_decls=['a']
+                        item=Line('integer a',(4, 4),'')
+                      Print
+                        item=Line('print*, "a=",a',(5, 5),'')
+                  EndSubroutine
+                    blocktype='subroutine'
+                    name='foo'
+            item=Line('end',(6, 6),'')
+
+    See also
+    --------
+    get_reader
     """
     from parsefortran import FortranParser
     reader = get_reader(input, isfree, isstrict, include_dirs, source_only)

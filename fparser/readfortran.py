@@ -1,9 +1,66 @@
 #!/usr/bin/env python
 """Provides Fortran reader classes.
 
+Overview
+========
+
 Provides FortranReader classes for reading Fortran codes from files and
 strings. FortranReader handles comments and line continuations of both
 fix and free format Fortran codes.
+
+Examples
+========
+
+::
+
+    >> from fparser.readfortran import FortranFileReader
+    >>> import os
+    >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
+    >>> print reader.next()
+    line #1 'subroutine daxpy(n,da,dx,incx,dy,incy)'
+    >>> print `reader.next()`
+    Comment('c     constant times a vector plus a vector.\nc     uses unrolled loops for increments equal to one.\nc     jack dongarra, linpack, 3/11/78.\nc     modified 12/3/93, array(1) declarations changed to array(*)',(3, 6))
+    >>> print `reader.next()`
+    Line('double precision dx(*),dy(*),da',(8, 8),'')
+    >>> print `reader.next()`
+    Line('integer i,incx,incy,ix,iy,m,mp1,n',(9, 9),'')
+
+Note that the ``.next()`` method may return `Line`, `SyntaxErrorLine`,
+`Comment`, `MultiLine`, or `SyntaxErrorMultiLine` instance.
+Let us continue with the above example session to illustrate the `Line` methods and attributes::
+
+    >>> item = reader.next()
+    >>> item
+        Line('if (da .eq. 0.0d0) return',(12, 12),'')
+    >>> item.line
+        'if (da .eq. 0.0d0) return'
+    >>> item.strline
+        'if (F2PY_EXPR_TUPLE_5) return'
+    >>> item.strlinemap
+        {'F2PY_EXPR_TUPLE_5': 'da .eq. 0.0d0'}
+    >>> item.span
+        (12, 12)
+    >>> item.get_line()
+        'if (F2PY_EXPR_TUPLE_5) return'
+
+To read a Fortran code from a string, use `FortranStringReader` class::
+
+    >>> from fparser.readfortran import FortranStringReader
+    >>> code = '''
+    ...       subroutine foo(a)
+    ...         integer a
+    ...         print*,\"a=\",a
+    ...       end
+    ... '''
+    >>> reader = FortranStringReader(code)
+    >>> reader.set_mode(False, True)
+    >>> reader.next()
+        Line('subroutine foo(a)',(2, 2),'')
+    >>> reader.next()
+        Line('integer a',(3, 3),'')
+    >>> reader.next()
+        Line('print*,\"a=\",a',(4, 4),'')
+
 """
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: May 2006
