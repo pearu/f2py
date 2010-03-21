@@ -87,10 +87,16 @@ from splitline import String, string_replace_map, splitquote
 _spacedigits=' 0123456789'
 _cf2py_re = re.compile(r'(?P<indent>\s*)!f2py(?P<rest>.*)',re.I)
 _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==5*' '
-_is_f90_cont = lambda line: line and '&' in line and line.rstrip()[-1]=='&'
 _f90label_re = re.compile(r'\s*(?P<label>(\w+\s*:|\d+))\s*(\b|(?=&)|\Z)',re.I)
 _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).match
-_is_fix_comment = lambda line: line and line[0] in '*cC!'
+def _is_fix_comment(line, isstrict):
+    if line:
+        if line[0] in '*cC!':
+            return True
+        if not isstrict and line[:6]==' '*6:
+            if line[6:].lstrip().startswith('!'):
+                return True
+    return False
 _hollerith_start_search = re.compile(r'(?P<pre>\A|,\s*)(?P<num>\d+)h',re.I).search
 _is_call_stmt = re.compile(r'call\b', re.I).match
 
@@ -597,13 +603,30 @@ class FortranReaderBase(object):
         return line
 
     def handle_inline_comment(self, line, lineno, quotechar=None):
+        """
+        Parameters
+        ----------
+        line : str
+        lineno : int
+        quotechar : {None, str}
+
+        Returns
+        -------
+        line_with_no_comments : str
+        quotechar : {None, str}
+
+        Notes
+        -----
+        In-line comments are separated from line and put back to fifo
+        sequence where it will be processed as comment line.
+        """
         if quotechar is None and '!' not in line and \
            '"' not in line and "'" not in line:
             return line, quotechar
         i = line.find('!')
         put_item = self.fifo_item.append
         if quotechar is None and i!=-1:
-            # first try a quick method
+            # first try a quick method:
             newline = line[:i]
             if '"' not in newline and '\'' not in newline:
                 if self.isfix77 or not line[i:].startswith('!f2py'):
@@ -705,6 +728,7 @@ class FortranReaderBase(object):
         startlineno = self.linecount
         line = self.handle_cf2py_start(line)
         is_f2py_directive = startlineno in self.f2py_comment_lines
+        isstrict = self.isstrict
 
         label = None
         if self.ispyf:
@@ -718,7 +742,7 @@ class FortranReaderBase(object):
             if not line.strip():
                 # empty line
                 return self.line_item(line[6:],startlineno,self.linecount,label)
-            if _is_fix_comment(line):
+            if _is_fix_comment(line, isstrict):
                 return self.comment_item(line, startlineno, startlineno)
             for i in range(5):
                 if line[i] not in _spacedigits:
@@ -756,12 +780,12 @@ class FortranReaderBase(object):
             newline,qc = handle_inline_comment(line[6:], startlineno)
             lines = [newline]
             next_line = self.get_next_line()
-            while _is_fix_cont(next_line) or _is_fix_comment(next_line):
+            while _is_fix_cont(next_line) or _is_fix_comment(next_line, isstrict):
                 # handle fix format line continuations for F90 code.
                 # mixing fix format and f90 line continuations is not allowed
                 # nor detected, just eject warnings.
                 line2 = get_single_line()
-                if _is_fix_comment(line2):
+                if _is_fix_comment(line2, isstrict):
                     # handle fix format comments inside line continuations
                     citem = self.comment_item(line2,self.linecount,self.linecount)
                     self.fifo_item.append(citem)
