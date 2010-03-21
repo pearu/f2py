@@ -2,8 +2,9 @@
 from fparser.api import parse
 
 def test_comment_lines():
-    source_str = '''
+    source_str = '''\
   !comment line 1
+
 !comment line 2
 module foo
 !comment line 3
@@ -17,6 +18,7 @@ end module foo
     assert str(tree).strip().split('\n')[1:]=='''
 !BEGINSOURCE <cStringIO.StringI object at 0x1518de0> mode=free90
   !comment line 1
+
   !comment line 2
   MODULE foo
     !comment line 3
@@ -30,6 +32,7 @@ end module foo
     assert tree.asfix().strip().split('\n')[1:]=='''
 C      BEGINSOURCE <cStringIO.StringI object at 0x1630de0> mode=free90
 C       comment line 1
+
 C       comment line 2
         MODULE foo
 C         comment line 3

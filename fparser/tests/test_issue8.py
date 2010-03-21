@@ -16,9 +16,6 @@ def test_reproduce_issue():
                         ! Number of diffe
       end
 '''
-    #tree = api.get_reader(source_str, isfree=False, isstrict=False)
-    #for item in tree:
-    #    print item
     tree = api.parse(source_str, isfree=False, isstrict=False,
                      ignore_comments=False)
     assert str(tree).strip().split('\n')[1:]=='''

@@ -23,7 +23,7 @@ __all__ = ['GeneralAssignment',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
            'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
-           'CommentBlock']
+           'Comment']
 
 import re
 import sys
@@ -1901,16 +1901,28 @@ class Pause(Statement):
         return self.get_indent_tab(isfix=isfix) + 'PAUSE'
     def analyze(self): return
 
-class CommentBlock(Statement):
+class Comment(Statement):
+    """
+
+    Attributes
+    ----------
+    content : str
+      Content of the comment.
+    is_black : bool
+      When True then Comment represents blank line.
+    """
     match = lambda s: True
     def process_item(self):
-        self.items = [line.lstrip()[1:] for line in self.item.comment.split('\n')]
-        return
+        assert self.item.comment.count('\n')<=1,`self.item`
+        stripped = self.item.comment.lstrip()
+        self.is_blank = not stripped
+        self.content = stripped[1:] if stripped else ''
     def tofortran(self, isfix=None):
+        if self.is_blank:
+            return ''
         if isfix:
             tab = 'C' + self.get_indent_tab(isfix=isfix)[1:]
         else:
             tab = self.get_indent_tab(isfix=isfix) + '!'
-        return tab + ('\n'+tab).join(self.items)
-
+        return tab + self.content
     def analyze(self): return

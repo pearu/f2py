@@ -671,9 +671,9 @@ class BeginStatement(Statement):
         """
 
         mode = self.reader.mode
-        classes = self.get_classes()
-        self.classes = [cls for cls in classes if mode in cls.modes]
-        self.pyf_classes = [cls for cls in classes if 'pyf' in cls.modes]
+        class_list = self.get_classes()
+        self.classes = [cls for cls in class_list if mode in cls.modes]
+        self.pyf_classes = [cls for cls in class_list if 'pyf' in cls.modes]
 
         item = self.get_item()
         while item is not None:
@@ -682,7 +682,7 @@ class BeginStatement(Statement):
                     end_flag = True
                     break
             elif isinstance(item, Comment):
-                self.content.append(CommentBlock(self, item))
+                self.content.append(classes.Comment(self, item))
             else:
                 raise NotImplementedError(`item`)
             item = self.get_item()
@@ -837,5 +837,3 @@ class EndStatement(Statement):
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'END %s %s'\
                % (self.blocktype.upper(),self.name or '')
-
-from statements import CommentBlock
