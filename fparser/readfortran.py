@@ -94,8 +94,14 @@ def _is_fix_comment(line, isstrict):
         if line[0] in '*cC!':
             return True
         if not isstrict and line[:6]==' '*6:
-            if line[6:].lstrip().startswith('!'):
+            stripped = line[6:].lstrip()
+            if stripped.startswith('!'):
                 return True
+            if not stripped:
+                # blank line is a comment
+                return True
+    elif line=='':
+        return True
     return False
 _hollerith_start_search = re.compile(r'(?P<pre>\A|,\s*)(?P<num>\d+)h',re.I).search
 _is_call_stmt = re.compile(r'call\b', re.I).match
@@ -924,6 +930,7 @@ class FortranReaderBase(object):
             have_comment |= had_comment
             lines = [newline]
             next_line = self.get_next_line()
+
             while _is_fix_cont(next_line) or _is_fix_comment(next_line, isstrict):
                 # handle fix format line continuations for F90 code.
                 # Mixing fix format and f90 line continuations is not allowed
