@@ -90,16 +90,28 @@ _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==
 _f90label_re = re.compile(r'\s*(?P<label>(\w+\s*:|\d+))\s*(\b|(?=&)|\Z)',re.I)
 _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).match
 def _is_fix_comment(line, isstrict):
+    """ Check if line is a comment line in fixed format Fortran source.
+
+    References
+    ----------
+    :f2008:`3.3.3`
+    """
     if line:
         if line[0] in '*cC!':
             return True
-        if not isstrict and line[:6]==' '*6:
-            stripped = line[6:].lstrip()
-            if stripped.startswith('!'):
-                return True
-            if not stripped:
-                # blank line is a comment
-                return True
+        if not isstrict:
+            i = line.find('!')
+            if i!=-1:
+                start = line[:i].lstrip()
+                if not start:
+                    if i==5:
+                        # line continuation
+                        return False
+                    return True
+                else:
+                    # inline comment or ! is used in character context
+                    # inline comments are handled elsewhere
+                    pass
     elif line=='':
         return True
     return False

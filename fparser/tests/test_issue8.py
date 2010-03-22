@@ -106,3 +106,20 @@ def test_Issue_r25_1():
 
         END SUBROUTINE rsedit
     """.strip().split('\n')[1:]
+
+def test_comment_4():
+    source_str = """
+      subroutine m_struc_def()
+ !abc test
+      end
+    """
+    tree = api.parse(source_str, isfree=False, isstrict=False,
+                     ignore_comments=False)
+    assert str(tree).strip().split('\n')[1:]=="""
+      !      BEGINSOURCE <cStringIO.StringI object at 0x121aa80> mode=fix90
+
+        SUBROUTINE m_struc_def()
+          !abc test
+        END SUBROUTINE m_struc_def
+""".strip().split('\n')[1:]
+
