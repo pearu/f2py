@@ -491,15 +491,14 @@ class StmtBase(Base):
     """
     def tofortran(self, tab='', isfix=None):
         label = None
-        if self.item is not None: label = self.item.label
+        if self.item is not None:
+            label = self.item.label
         if isfix:
-            colon = ''
             c = ' '
         else:
-            colon = ':'
             c = ''
         if label:
-            t = c + label + colon
+            t = c + label
             if isfix:
                 while len(t)<6: t += ' '
             else:

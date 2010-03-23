@@ -83,11 +83,13 @@ from numpy.distutils.misc_util import yellow_text, red_text, blue_text
 
 from sourceinfo import get_source_info, get_source_info_str
 from splitline import String, string_replace_map, splitquote
+from utils import is_name
 
 _spacedigits=' 0123456789'
 _cf2py_re = re.compile(r'(?P<indent>\s*)!f2py(?P<rest>.*)',re.I)
 _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==5*' '
-_f90label_re = re.compile(r'\s*(?P<label>(\w+\s*:|\d+))\s*(\b|(?=&)|\Z)',re.I)
+_label_re = re.compile(r'\s*(?P<label>\d+)\s*(\b|(?=&)|\Z)',re.I)
+_construct_name_re = re.compile(r'\s*(?P<name>\w+)\s*:\s*(\b|(?=&)|\Z)',re.I)
 _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).match
 def _is_fix_comment(line, isstrict):
     """ Check if line is a comment line in fixed format Fortran source.
@@ -133,8 +135,10 @@ class Line(object):
       code line
     span : 2-tuple
       starting and ending line numbers
-    label : str
-      line label
+    label : {int, None}
+      Specify statement label
+    name : {str, None}
+      Specify construct name.
     reader : FortranReaderBase
     strline : {None, str}
     is_f2py_directive : bool
@@ -143,11 +147,14 @@ class Line(object):
 
     f2py_strmap_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
 
-    def __init__(self, line, linenospan, label, reader):
+    def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
-        #assert self.line, `line, linenospan, label`
+        assert self.line, `line, linenospan, label`
         self.span = linenospan
+        assert label is None or isinstance(label,int),`label`
+        assert name is None or isinstance(name,str) and name!='',`name`
         self.label = label
+        self.name = name
         self.reader = reader
         self.strline = None
         self.is_f2py_directive = linenospan[0] in reader.f2py_comment_lines
@@ -170,7 +177,7 @@ class Line(object):
             line = self.line
         if apply_map:
             line = self.apply_map(line)
-        return Line(line, self.span, self.label, self.reader)
+        return Line(line, self.span, self.label, self.name, self.reader)
 
     def clone(self, line):
         self.line = self.apply_map(line)
@@ -178,16 +185,19 @@ class Line(object):
         return
 
     def __repr__(self):
-        return self.__class__.__name__+'(%r,%s,%r)' \
-               % (self.line, self.span, self.label)
+        return self.__class__.__name__+'(%r,%s,%r,%r,<reader>)' \
+               % (self.line, self.span, self.label, self.name)
 
     def __str__(self):
-        if self.label:
-            return 'line #%s %r' % (self.span[0], self.label + self.line)
-        return 'line #%s %r' % (self.span[0], self.line)
+        s = 'line #%s' % (self.span[0])
+        if self.label is not None:
+            s += ' %s ' % (self.label)
+        if self.name is not None:
+            s += '%s: ' % (self.name)
+        return s + `self.line`
 
     def isempty(self, ignore_comments=False):
-        return not (self.line.strip() or self.label)
+        return not (self.line or self.label is not None or self.name is not None)
 
     def get_line(self):
         if self.strline is not None:
@@ -227,8 +237,8 @@ class Line(object):
         return line
 
 class SyntaxErrorLine(Line, FortranReaderError):
-    def __init__(self, line, linenospan, label, reader, message):
-        Line.__init__(self, line, linenospan, label, reader)
+    def __init__(self, line, linenospan, label, name, reader, message):
+        Line.__init__(self, line, linenospan, label, name, reader)
         FortranReaderError.__init__(self, message)
 
 class Comment(object):
@@ -634,13 +644,13 @@ class FortranReaderBase(object):
 
     # Interface to returned items:
 
-    def line_item(self, line, startlineno, endlineno, label, errmessage=None):
+    def line_item(self, line, startlineno, endlineno, label, name, errmessage=None):
         """ Construct Line item.
         """
         if errmessage is None:
-            return  Line(line, (startlineno, endlineno), label, self)
+            return  Line(line, (startlineno, endlineno), label, name, self)
         return SyntaxErrorLine(line, (startlineno, endlineno),
-                               label, self, errmessage)
+                               label, name, self, errmessage)
 
     def multiline_item(self, prefix, lines, suffix,
                        startlineno, endlineno, errmessage=None):
@@ -880,27 +890,20 @@ class FortranReaderBase(object):
         is_f2py_directive = startlineno in self.f2py_comment_lines
         isstrict = self.isstrict
         have_comment = False
-
         label = None
+        name = None
+        
         if self.ispyf:
             # handle multilines
             for mlstr in ['"""',"'''"]:
                 r = self.handle_multilines(line, startlineno, mlstr)
                 if r: return r
         if self.isfix:
-            label = line[:5].strip().lower()
-            if label.endswith(':'):
-                label = label[:-1].strip()
-            if not line.strip():
-                assert not label, `label` # labelled statements cannot be empty, see 3.2.4
-                line_content = line[6:].strip()
-                if line_content:
-                    return self.line_item(line_content,startlineno,self.linecount,label)
-                return self.comment_item('', startlineno, self.linecount)
             if _is_fix_comment(line, isstrict):
                 # comment line:
                 return self.comment_item(line, startlineno, startlineno)
-            for i in range(5):
+
+            for i in range(min(5,len(line))):
                 # check that fixed format line starts according to Fortran standard
                 if line[i] not in _spacedigits:
                     message =  'non-space/digit char %r found in column %i'\
@@ -920,8 +923,24 @@ class FortranReaderBase(object):
                     else:
                         # return line item with error message
                         return self.line_item(line[6:], startlineno, self.linecount,
-                                           label, self.format_error_message(\
+                                           label, name, self.format_error_message(\
                             message, startlineno, self.linecount))
+            # check for label
+            s = line[:5].strip().lower()
+            if s:
+                label = int(s)
+            if not self.isfix77:
+                m = _construct_name_re.match(line[6:])
+                if m:
+                    name = m.group('name')
+                    line = line[:6] + line[6:][m.end():].lstrip()
+            if not line[6:].strip():
+                # check for a blank line
+                if name is not None:
+                    self.error('No construct following construct-name.')
+                elif label is not None:
+                    self.warning('Label must follow nonblank character (F2008:3.2.5_2)')
+                return self.comment_item('', startlineno, self.linecount)
             # line is not a comment and the start of the line is valid
 
         if self.isfix77 and not is_f2py_directive:
@@ -931,7 +950,7 @@ class FortranReaderBase(object):
                 # handle fix format line continuations for F77 code
                 line = get_single_line()
                 lines.append(line[6:72])
-            return self.line_item(''.join(lines),startlineno,self.linecount,label)
+            return self.line_item(''.join(lines),startlineno,self.linecount,label,name)
 
         handle_inline_comment = self.handle_inline_comment
 
@@ -977,7 +996,7 @@ class FortranReaderBase(object):
                         ' in fix format code',
                         startlineno + i, startlineno + i, l.rfind('&')+5)
                         self.show_message(message, sys.stderr)
-            return self.line_item(''.join(lines),startlineno, endlineno,label)
+            return self.line_item(''.join(lines),startlineno, endlineno,label,name)
 
         # line is free format or fixed format with f2py directive (that
         # will be interpretted as free format line).
@@ -1008,14 +1027,17 @@ class FortranReaderBase(object):
                         line = get_single_line()
                         continue
                 else:
-                    # first line, check for a f90 label
-                    m = _f90label_re.match(line)
+                    # first line, check for a label
+                    m = _label_re.match(line)
                     if m:
-                        assert not label,`label,m.group('label')`
-                        label = m.group('label').strip()
-                        if label.endswith(':'): label = label[:-1].strip()
-                        if not self.ispyf: label = label.lower()
+                        assert not label,`label`
+                        label = int(m.group('label'))
                         line = line[m.end():]
+                    # check for a construct name
+                    m = _construct_name_re.match(line)
+                    if m:
+                        name = m.group('name')
+                        line = line[m.end():].lstrip()
                 line,qc,had_comment = handle_inline_comment(line, self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
@@ -1054,8 +1076,11 @@ class FortranReaderBase(object):
             self.show_message(message, sys.stderr)
         line_content = ''.join(lines).strip()
         if line_content:
-            return self.line_item(line_content,startlineno,endlineno,label)
-        assert not label, `label` # labelled statements cannot be empty, see 3.2.4
+            return self.line_item(line_content,startlineno,endlineno,label,name)
+        if label is not None:
+            self.warning('Label must follow nonblank character (F2008:3.2.5_2)')
+        if name is not None:
+            self.error('No construct following construct-name.')
         if have_comment:
             return self.next()
         return self.comment_item('', startlineno, endlineno)

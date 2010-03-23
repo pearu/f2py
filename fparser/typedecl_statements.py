@@ -325,25 +325,27 @@ class TypeDeclarationStatement(Statement):
         name = line[:m.end()]
         line = line[m.end():].lstrip()
         array_spec = None
-        item = self.item.copy(line)
-        line = item.get_line()
-        if line.startswith('('):
-            i = line.find(')')
-            assert i!=-1,`line`
-            array_spec = parse_array_spec(line[1:i].strip(), item)
-            line = line[i+1:].lstrip()
         char_length = None
-        if line.startswith('*'):
-            i = line.find('=')
-            if i==-1:
-                char_length = item.apply_map(line[1:].lstrip())
-                line = ''
-            else:
-                char_length = item.apply_map(line[1:i].strip())
-                line = line[i:]
         value = None
-        if line.startswith('='):
-            value = item.apply_map(line[1:].lstrip())
+        if line:
+            item = self.item.copy(line)
+            line = item.get_line()
+            if line.startswith('('):
+                i = line.find(')')
+                assert i!=-1,`line`
+                array_spec = parse_array_spec(line[1:i].strip(), item)
+                line = line[i+1:].lstrip()
+
+            if line.startswith('*'):
+                i = line.find('=')
+                if i==-1:
+                    char_length = item.apply_map(line[1:].lstrip())
+                    line = ''
+                else:
+                    char_length = item.apply_map(line[1:i].strip())
+                    line = line[i:]
+            if line.startswith('='):
+                value = item.apply_map(line[1:].lstrip())
         return name, array_spec, char_length, value
 
     def get_zero_value(self):

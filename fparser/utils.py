@@ -40,6 +40,8 @@ def split_comma(line, item = None, comma=',', keep_empty=False):
             if not s and not keep_empty: continue
             items.append(s)
         return items
+    if not line:
+        return []
     newitem = item.copy(line, True)
     apply_map = newitem.apply_map
     for s in newitem.get_line().split(comma):

@@ -772,7 +772,7 @@ class Select(BeginStatement):
         return 'SELECT CASE ( %s )' % (self.expr)
     def process_item(self):
         self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
-        self.name = self.item.label
+        self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 
     def get_classes(self):
@@ -799,7 +799,7 @@ class Where(BeginStatement):
         return 'WHERE ( %s )' % (self.expr)
     def process_item(self):
         self.expr = self.item.get_line()[5:].lstrip()[1:-1].strip()
-        self.name = self.item.label
+        self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 
     def get_classes(self):
@@ -874,7 +874,7 @@ class IfThen(BeginStatement):
         line = item.get_line()[2:-4].strip()
         assert line[0]=='(' and line[-1]==')',`line`
         self.expr = line[1:-1].strip()
-        self.name = item.label
+        self.construct_name = item.name
         return BeginStatement.process_item(self)
 
     def get_classes(self):
@@ -923,7 +923,7 @@ class If(BeginStatement):
         return 'IF (%s) %s' % (self.expr, str(self.content[0]).lstrip())
 
     def tofortran(self,isfix=None):
-        return self.get_indent_tab(colon=':',isfix=isfix) + self.tostr()
+        return self.get_indent_tab(isfix=isfix) + self.tostr()
 
     def get_classes(self):
         return action_stmt
@@ -957,7 +957,7 @@ class Do(BeginStatement):
         line = item.get_line()
         m = self.item_re(line)
         self.endlabel = m.group('label').strip()
-        self.name = item.label
+        self.construct_name = item.name
         self.loopcontrol = m.group('loopcontrol').strip()
         return BeginStatement.process_item(self)
 

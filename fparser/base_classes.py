@@ -501,7 +501,7 @@ class Statement(object):
             l.append(ttab + 'a=' + self.a.torepr(depth-1,incrtab+'  ').lstrip())
         return '\n'.join(l)
 
-    def get_indent_tab(self,colon=None,deindent=False,isfix=None):
+    def get_indent_tab(self,deindent=False,isfix=None):
         if isfix is None: isfix = self.reader.isfix
         if isfix:
             tab = ' '*6
@@ -513,21 +513,15 @@ class Statement(object):
             p = p.parent
         if deindent:
             tab = tab[:-2]
-        if self.item is None or not hasattr(self.item, 'label'):
+        label = getattr(self.item, 'label', None)
+        if label is None:
             return tab
-        s = self.item.label
-        if colon is None:
-            if isfix:
-                colon = ''
-            else:
-                colon = ':'
-        if s:
-            c = ''
-            if isfix:
-                c = ' '
-            tab = tab[len(c+s)+len(colon):]
-            if not tab: tab = ' '
-            tab = c + s + colon + tab
+        s = str(label)
+        if isfix:
+            s = ' '+s
+        tab = tab[len(s):]
+        if not tab: tab = ' '
+        tab = s + tab
         return tab
 
     def __str__(self):
@@ -601,7 +595,7 @@ class Statement(object):
         return
 
 class BeginStatement(Statement):
-    """ <blocktype> <name>
+    """[ construct_name : ] <blocktype> [ <name> ]
 
     BeginStatement instances have additional attributes:
       name
@@ -611,6 +605,7 @@ class BeginStatement(Statement):
       content - list of Line or Statement instances
       name    - name of the block, unnamed blocks are named
                 with the line label
+      construct_name - name of a construct
       parent  - Block or FortranParser instance
       item    - Line instance containing the block start statement
       get_item, put_item - methods to retrive/submit Line instances
@@ -620,7 +615,7 @@ class BeginStatement(Statement):
       stmt_cls, end_stmt_cls
 
     """
-    _repr_attr_names = ['blocktype','name'] + Statement._repr_attr_names
+    _repr_attr_names = ['blocktype','name','construct_name'] + Statement._repr_attr_names
     def __init__(self, parent, item=None):
 
         self.content = []
@@ -631,6 +626,7 @@ class BeginStatement(Statement):
         if not hasattr(self, 'name'):
             # process_item may change this
             self.name = '__'+self.blocktype.upper()+'__'
+        self.construct_name = getattr(item,'name',None)
         Statement.__init__(self, parent, item)
         return
 
@@ -638,7 +634,9 @@ class BeginStatement(Statement):
         return self.blocktype.upper() + ' '+ self.name
 
     def tofortran(self, isfix=None):
-        l=[self.get_indent_tab(colon=':', isfix=isfix) + self.tostr()]
+        construct_name = self.construct_name
+        construct_name = construct_name + ': ' if construct_name else ''
+        l=[self.get_indent_tab(isfix=isfix) + construct_name + self.tostr()]
         for c in self.content:
             l.append(c.tofortran(isfix=isfix))
         return '\n'.join(l)
@@ -820,19 +818,23 @@ class EndStatement(Statement):
                 # not the end of expected block
                 line = ''
                 self.isvalid = False
+        if self.parent.construct_name:
+            name = self.parent.construct_name
+        else:
+            name = self.parent.name
         if line:
-            if not line==self.parent.name:
+            if line!=name:
                 self.warning(\
                     'expected the end of %r block but got the end of %r, skipping.'\
-                    % (self.parent.name, line))
+                    % (name, line))
                 self.isvalid = False
-        self.name = self.parent.name
+        self.name = name
 
     def analyze(self):
         return
 
-    def get_indent_tab(self,colon=None,deindent=False,isfix=None):
-        return Statement.get_indent_tab(self, colon=colon, deindent=True,isfix=isfix)
+    def get_indent_tab(self,deindent=False,isfix=None):
+        return Statement.get_indent_tab(self, deindent=True,isfix=isfix)
 
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'END %s %s'\

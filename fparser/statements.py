@@ -725,9 +725,9 @@ class Format(Statement):
     match = re.compile(r'format\s*\(.*\)\Z', re.I).match
     def process_item(self):
         item = self.item
-        if not item.label:
+        if item.label is None:
             # R1001:
-            self.warning('R1001: FORMAT statement must be labeled but got %r.' \
+            self.warning('FORMAT statement must be labeled (F2008:C1001).' \
                          % (item.label))
         line = item.get_line()[6:].lstrip()
         assert line[0]+line[-1]=='()',`line`

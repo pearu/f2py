@@ -173,9 +173,9 @@ def test_open():
     assert_equal(parse(Open,'open (1, err =  123)'),'OPEN (1, ERR = 123)')
 
 def test_format():
-    assert_equal(parse(Format,'1: format ()'),'1: FORMAT ()')
-    assert_equal(parse(Format,'199 format (1)'),'199: FORMAT (1)')
-    assert_equal(parse(Format,'2 format (1 , SS)'),'2: FORMAT (1, ss)')
+    assert_equal(parse(Format,'1 format ()'),'1 FORMAT ()')
+    assert_equal(parse(Format,'199 format (1)'),'199 FORMAT (1)')
+    assert_equal(parse(Format,'2 format (1 , SS)'),'2 FORMAT (1, ss)')
 
 def test_save():
     assert_equal(parse(Save,'save'), 'SAVE')
