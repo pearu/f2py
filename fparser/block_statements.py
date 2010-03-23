@@ -314,7 +314,10 @@ class Module(BeginStatement, HasAttributes,
                     stmt.analyze()
                     self.a.module_subprogram[stmt.name] = stmt
                 stmt = content.pop(0)
-                assert isinstance(stmt, EndModule),`stmt`
+                while isinstance(stmt, Comment):
+                    stmt = content.pop(0)
+                if not isinstance(stmt, EndModule):
+                    stmt.error('Expected END MODULE statement (analyzer).')
                 continue
             stmt.analyze()
 
