@@ -199,7 +199,9 @@ class Line(object):
     def isempty(self, ignore_comments=False):
         return not (self.line or self.label is not None or self.name is not None)
 
-    def get_line(self):
+    def get_line(self, apply_map=False):
+        if apply_map:
+            return self.apply_map(self.get_line(apply_map=False))
         if self.strline is not None:
             return self.strline
         line = self.line
@@ -552,19 +554,15 @@ class FortranReaderBase(object):
                     path = os.path.join(incl_dir, filename)
                     if os.path.exists(path):
                         break
-                if not os.path.isfile(path):
+                if not os.path.isfile(path): # include file does not exist
                     dirs = os.pathsep.join(include_dirs)
-                    message = reader.format_message(\
-                        'WARNING',
-                        'include file %r not found in %r,'\
-                        ' ignoring.' % (filename, dirs),
-                        item.span[0], item.span[1])
-                    reader.show_message(message, sys.stdout)
-                    return self.next(ignore_comments = ignore_comments)
-                message = reader.format_message('INFORMATION',
-                                              'found file %r' % (path),
-                                              item.span[0], item.span[1])
-                reader.show_message(message, sys.stdout)
+                    # According to Fortran standard, INCLUDE line is
+                    # not a Fortran statement. To keep the information,
+                    # we are turning the INCLUDE line to a comment:
+                    reader.error('%r not found in %r. The INCLUDE line will be turned to a comment.' % (filename, dirs), item)
+                    item = self.comment_item('!'+item.get_line(apply_map=True), item.span[0], item.span[1])
+                    return item
+                reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(path, include_dirs = include_dirs)
                 return self.reader.next(ignore_comments = ignore_comments)
             return item
@@ -574,9 +572,9 @@ class FortranReaderBase(object):
             message = self.format_message('FATAL ERROR',
                                           'while processing line',
                                           self.linecount, self.linecount)
-            self.show_message(message, sys.stdout)
-            traceback.print_exc(file=sys.stdout)
-            self.show_message(red_text('STOPPED READING'), sys.stdout)
+            self.show_message(message, sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            self.show_message(red_text('STOPPED READING'), sys.stderr)
             raise StopIteration
 
     def _next(self, ignore_comments = False):
@@ -708,12 +706,24 @@ class FortranReaderBase(object):
         return self.format_message('WARNING',message, startlineno,
                                    endlineno, startcolno, endcolno)
 
+    def info(self, message, item=None):
+        if item is None:            
+            m = reader.format_message('INFORMATION',
+                                      message,
+                                      len(self.source_lines)-2, len(self.source_lines))
+        else:
+            m = reader.format_message('INFORMATION',
+                                      message,
+                                      item.span[0], item.span[1])
+        self.show_message(m, sys.stderr)
+        return
+
     def error(self, message, item=None):
         if item is None:
             m = self.format_error_message(message, len(self.source_lines)-2, len(self.source_lines))
         else:
             m = self.format_error_message(message, item.span[0], item.span[1])
-        self.show_message(m)
+        self.show_message(m, sys.stderr)
         return
 
     def warning(self, message, item=None):
@@ -721,7 +731,7 @@ class FortranReaderBase(object):
             m = self.format_warning_message(message, len(self.source_lines)-2, len(self.source_lines))
         else:
             m = self.format_warning_message(message, item.span[0], item.span[1])
-        self.show_message(m)
+        self.show_message(m, sys.stderr)
         return
 
     # Auxiliary methods for processing raw source lines:
