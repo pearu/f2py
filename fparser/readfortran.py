@@ -615,7 +615,8 @@ class FortranReaderBase(object):
                 items = []
                 for line in item.get_line().split(';'):
                     line = line.strip()
-                    items.append(item.copy(line, apply_map=True))
+                    if line:
+                        items.append(item.copy(line, apply_map=True))
                 items.reverse()
                 for newitem in items:
                     self.fifo_item.insert(0, newitem)

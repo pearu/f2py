@@ -950,13 +950,20 @@ class Do(BeginStatement):
     name = ''
 
     def tostr(self):
-        return 'DO %s %s' % (self.endlabel, self.loopcontrol)
+        l = ['DO']
+        for part in [self.endlabel, self.loopcontrol]:
+            if part:
+                l.append(str(part))
+        return ' '.join(l)
 
     def process_item(self):
         item = self.item
         line = item.get_line()
         m = self.item_re(line)
-        self.endlabel = m.group('label').strip()
+        label = m.group('label').strip() or None
+        if label:
+            label = int(label)
+        self.endlabel = label
         self.construct_name = item.name
         self.loopcontrol = m.group('loopcontrol').strip()
         return BeginStatement.process_item(self)

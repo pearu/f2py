@@ -59,18 +59,17 @@ end subroutine foo
 '''
     tree = parse(source_str, isfree=True, isstrict=False,
                  ignore_comments=False)
-    
     assert str(tree).strip().split('\n')[1:]=='''
 !BEGINSOURCE <cStringIO.StringI object at 0x2952e70> mode=free90
   SUBROUTINE foo()
     REAL a
     ! Valid code:
 100 a = 3
-    l: DO  
+    l: DO
     END DO l
 200 a = 4
     ! haa
-300 l1: DO  
+300 l1: DO
     END DO l1
   END SUBROUTINE foo
 '''.strip().split('\n')[1:]
@@ -96,11 +95,11 @@ end subroutine foo
           REAL a
           ! Valid code:
  100      a = 3
-          l: DO  
+          l: DO
           END DO l
  200      a = 4
           ! haa
- 300      l1: DO  
+ 300      l1: DO
           END DO l1
         END SUBROUTINE foo
 '''.strip().split('\n')[1:]
