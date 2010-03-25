@@ -97,3 +97,18 @@ def test_provides():
     assert mod6.a.module_provides.keys() ==  []
     assert mod6.a.use_provides.keys() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
     assert mod6.a.use_provides['qgp'].name == 'gp'
+
+def test_walk():
+    source_str = '''\
+    ! before foo 
+    subroutine foo
+    integer i, r
+    do i = 1,100
+      r = r + 1
+    end do
+    ! after end do
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False, ignore_comments=False)
+    for stmt, depth in api.walk(tree, 1):
+        print depth, stmt.item

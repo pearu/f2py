@@ -210,11 +210,12 @@ _classes_cache = {}
 class meta_classes(type):
     """ Meta class for ``classes``.
     """
+    __abstractmethods__ = False
     def __getattr__(self, name):
         # Expose created classes only as attributes to ``classes`` type.
         cls = _classes_cache.get(name)
         if cls is None:
-            return type.__getattr__(self, name) # raises AttributeError
+            raise AttributeError('instance does not have attribute %r' % (name))
         return cls
 
 class classes(type):

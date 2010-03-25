@@ -19,7 +19,7 @@ Examples
     >>> print reader.next()
     line #1 'subroutine daxpy(n,da,dx,incx,dy,incy)'
     >>> print `reader.next()`
-    Comment('c     constant times a vector plus a vector.\nc     uses unrolled loops for increments equal to one.\nc     jack dongarra, linpack, 3/11/78.\nc     modified 12/3/93, array(1) declarations changed to array(*)',(3, 6))
+    Comment('c     constant times a vector plus a vector.\\nc     uses unrolled loops for increments equal to one.\\nc     jack dongarra, linpack, 3/11/78.\\nc     modified 12/3/93, array(1) declarations changed to array(*)',(3, 6))
     >>> print `reader.next()`
     Line('double precision dx(*),dy(*),da',(8, 8),'')
     >>> print `reader.next()`

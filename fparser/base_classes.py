@@ -680,6 +680,7 @@ class BeginStatement(Statement):
                     end_flag = True
                     break
             elif isinstance(item, Comment):
+                # TODO: FIX ME, Comment content is a string
                 self.content.append(classes.Comment(self, item))
             else:
                 raise NotImplementedError(`item`)

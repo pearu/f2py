@@ -1,17 +1,16 @@
 """Public API for Fortran parser.
 
-This module exposes `Statement` subclasses, `CHAR_BIT` constant, and
-the `parse` amd `get_reader` functions.
-
+Module content
+--------------
 """
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
 
-__autodoc__ = ['get_reader', 'parse']
+__autodoc__ = ['get_reader', 'parse', 'walk']
 
 import Fortran2003
 # import all Statement classes:
-from base_classes import EndStatement
+from base_classes import EndStatement, classes
 from block_statements import *
 
 # CHAR_BIT is used to convert object bit sizes to byte sizes
@@ -157,3 +156,69 @@ def parse(input, isfree=None, isstrict=None, include_dirs = None, source_only = 
     if analyze:
         parser.analyze()
     return parser.block
+
+def walk(stmt, depth=-1, _initial_depth = None):
+    """ Generate Fortran statements by walking the stmt tree until given depth.
+
+    For each block statement in stmt, the walk functions yields a
+    tuple ``(statement, depth)`` where ``depth`` is the depth of tree
+    stucture for statement.
+
+    Parameters
+    ----------
+    stmt : Statement
+    depth : int
+      If depth is positive then walk in the tree until given depth.
+      If depth is negative then walk the whole tree.
+
+    Returns
+    -------
+    generator
+
+    Examples
+    --------
+
+      ::
+
+        from fparser import api
+        source_str = '''
+        subroutine foo
+          integer i, r
+          do i=1,100
+            r = r + i
+          end do
+        end
+        '''
+        tree = api.parse(source_str)
+        for stmt, depth in api.walk(tree):
+            print depth, stmt.item
+
+      that will print::
+
+        1 line #2'subroutine foo'
+        2 line #3'integer i, r'
+        2 line #4'do i=1,100'
+        3 line #5'r = r + i'
+        2 line #6'end do'
+        1 line #7'end'
+
+    """
+    if _initial_depth is None:
+        if depth==0:
+            return
+        _initial_depth = depth
+    if not isinstance(stmt, classes.BeginSource):
+        yield stmt, _initial_depth - depth
+    if isinstance(stmt, classes.BeginStatement):
+        last_stmt = stmt.content[-1]
+        last_index = len(stmt.content)
+        if isinstance(last_stmt, classes.EndStatement):
+            last_index -= 1
+        else:
+            last_stmt = None
+        if depth != 0:
+            for substmt in stmt.content[:last_index]:
+                for statement, statement_depth in walk(substmt, depth-1, _initial_depth):
+                    yield statement, statement_depth
+        if last_stmt is not None:
+            yield last_stmt, _initial_depth - depth

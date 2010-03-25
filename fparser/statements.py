@@ -1908,7 +1908,7 @@ class Comment(Statement):
     ----------
     content : str
       Content of the comment.
-    is_black : bool
+    is_blank : bool
       When True then Comment represents blank line.
     """
     match = lambda s: True
