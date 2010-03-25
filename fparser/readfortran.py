@@ -919,10 +919,10 @@ class FortranReaderBase(object):
                 if line[i] not in _spacedigits:
                     message =  'non-space/digit char %r found in column %i'\
                               ' of fixed Fortran code' % (line[i],i+1)
-                    if self.isfix90:
-                        if i==0:
-                            message += ', interpreting line as comment line'
-                        else:
+                    if i==0:
+                        message += ', interpreting line as comment line'
+                    if self.isfix90:     
+                        if i!=0:
                             message = message + ', switching to free format mode'
                         message = self.format_warning_message(\
                             message,startlineno, self.linecount)
@@ -932,7 +932,14 @@ class FortranReaderBase(object):
                             return self.comment_item(line, startlineno, startlineno)                           
                         self.set_mode(True, False)
                     else:
+                        if i==0:
+                            message = self.format_warning_message(\
+                            message,startlineno, self.linecount)
+                            self.show_message(message, sys.stderr)
+                            # non standard comment line:
+                            return self.comment_item(line, startlineno, startlineno)                           
                         # return line item with error message
+                        # TODO: handle cases with line[6:]==''
                         return self.line_item(line[6:], startlineno, self.linecount,
                                            label, name, self.format_error_message(\
                             message, startlineno, self.linecount))
