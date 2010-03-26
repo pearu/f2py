@@ -559,11 +559,13 @@ class FortranReaderBase(object):
                     # According to Fortran standard, INCLUDE line is
                     # not a Fortran statement. To keep the information,
                     # we are turning the INCLUDE line to a comment:
-                    reader.error('%r not found in %r. The INCLUDE line will be turned to a comment.' % (filename, dirs), item)
-                    item = self.comment_item('!'+item.get_line(apply_map=True), item.span[0], item.span[1])
-                    return item
+                    reader.warning('%r not found in %r. '\
+                                   'The INCLUDE line will be turned to a comment.'\
+                                   % (filename, dirs), item)
+                    return self.comment_item('!'+item.get_line(apply_map=True),
+                                             item.span[0], item.span[1])
                 reader.info('including file %r' % (path), item)
-                self.reader = FortranFileReader(path, include_dirs = include_dirs)
+                self.reader = FortranFileReader(path, include_dirs=include_dirs)
                 return self.reader.next(ignore_comments = ignore_comments)
             return item
         except StopIteration:
