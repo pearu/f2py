@@ -205,7 +205,7 @@ class Line(object):
         if self.strline is not None:
             return self.strline
         line = self.line
-        if self.reader.isfix77:
+        if self.reader.isf77:
             # Handle Hollerith constants by replacing them
             # with char-literal-constants.
             # H constants may appear only in DATA statements and
@@ -375,17 +375,17 @@ class FortranReaderBase(object):
         """
         assert isfree is not None
         assert isstrict is not None
-        self.isfree90 = isfree and not isstrict
-        self.isfix90 = not isfree and not isstrict
-        self.isfix77 = not isfree and isstrict
+        self.isfree = isfree and not isstrict
+        self.isfix = not isfree and not isstrict
+        self.isf77 = not isfree and isstrict
         self.ispyf   = isfree and isstrict
         self.isfree  = isfree
-        self.isfix   = not isfree
+        self.isfixed   = not isfree
         self.isstrict = isstrict
 
-        if self.isfree90: mode = 'free90'
-        elif self.isfix90: mode = 'fix90'
-        elif self.isfix77: mode = 'fix77'
+        if self.isfree: mode = 'free'
+        elif self.isfix: mode = 'fix'
+        elif self.isf77: mode = 'f77'
         else: mode = 'pyf'
         self.mode = mode
         self.name = '%s mode=%s' % (self.source, mode)
@@ -396,17 +396,17 @@ class FortranReaderBase(object):
 
         Parameters
         ----------
-        mode : {'free90', 'fix90', 'fix77', 'pyf'}
+        mode : {'free', 'fix', 'f77', 'pyf'}
 
         See also
         --------
         set_mode
         """
-        if mode=='free90':
+        if mode=='free':
             isfree, isstrict=True, False
-        elif mode=='fix90':
+        elif mode=='fix':
             isfree, isstrict=False, False
-        elif mode=='fix77':
+        elif mode=='f77':
             isfree, isstrict=False, True
         elif mode=='pyf':
             isfree, isstrict=True, True
@@ -755,12 +755,12 @@ class FortranReaderBase(object):
         line : str
         """
         if not line or self.ispyf: return line
-        if self.isfix:
+        if self.isfixed:
             if line[0] in '*cC!#':
                 if line[1:5].lower() == 'f2py':
                     line = 5*' ' + line[5:]
                     self.f2py_comment_lines.append(self.linecount)
-            if self.isfix77:
+            if self.isf77:
                 return line
         m = _cf2py_re.match(line)
         if m:
@@ -799,7 +799,7 @@ class FortranReaderBase(object):
             # first try a quick method:
             newline = line[:i]
             if '"' not in newline and '\'' not in newline:
-                if self.isfix77 or not line[i:].startswith('!f2py'):
+                if self.isf77 or not line[i:].startswith('!f2py'):
                     put_item(self.comment_item(line[i:], lineno, lineno))
                     return newline, quotechar, True
         # handle cases where comment char may be a part of a character content
@@ -884,7 +884,7 @@ class FortranReaderBase(object):
                                        startlineno, self.linecount)
 
     # The main method of interpreting raw source lines within
-    # the following contexts: f77, fixed f90, free f90, pyf.
+    # the following contexts: f77, fixed, free, pyf.
 
     def get_source_item(self):
         """ Return next source item.
@@ -911,7 +911,7 @@ class FortranReaderBase(object):
             for mlstr in ['"""',"'''"]:
                 r = self.handle_multilines(line, startlineno, mlstr)
                 if r: return r
-        if self.isfix:
+        if self.isfixed:
             if _is_fix_comment(line, isstrict):
                 # comment line:
                 return self.comment_item(line, startlineno, startlineno)
@@ -923,7 +923,7 @@ class FortranReaderBase(object):
                               ' of fixed Fortran code' % (line[i],i+1)
                     if i==0:
                         message += ', interpreting line as comment line'
-                    if self.isfix90:     
+                    if self.isfix:     
                         if i!=0:
                             message = message + ', switching to free format mode'
                         message = self.format_warning_message(\
@@ -949,7 +949,7 @@ class FortranReaderBase(object):
             s = line[:5].strip().lower()
             if s:
                 label = int(s)
-            if not self.isfix77:
+            if not self.isf77:
                 m = _construct_name_re.match(line[6:])
                 if m:
                     name = m.group('name')
@@ -963,7 +963,7 @@ class FortranReaderBase(object):
                 return self.comment_item('', startlineno, self.linecount)
             # line is not a comment and the start of the line is valid
 
-        if self.isfix77 and not is_f2py_directive:
+        if self.isf77 and not is_f2py_directive:
             # Fortran 77 is easy..
             lines = [line[6:72]]
             while _is_fix_cont(self.get_next_line()):
@@ -975,7 +975,7 @@ class FortranReaderBase(object):
         handle_inline_comment = self.handle_inline_comment
 
         endlineno = self.linecount
-        if self.isfix90 and not is_f2py_directive:
+        if self.isfix and not is_f2py_directive:
             # handle inline comment
             newline,qc, had_comment = handle_inline_comment(line[6:], startlineno)
             have_comment |= had_comment
@@ -983,9 +983,10 @@ class FortranReaderBase(object):
             next_line = self.get_next_line()
 
             while _is_fix_cont(next_line) or _is_fix_comment(next_line, isstrict):
-                # handle fix format line continuations for F90 code.
-                # Mixing fix format and f90 line continuations is not allowed
-                # nor detected, just eject warnings.
+                # handle fix format line continuations for F90 or
+                # newer code.  Mixing fix format and free format line
+                # continuations is not allowed nor detected, just
+                # eject warnings.
                 line2 = get_single_line() # consume next_line as line2
                 if _is_fix_comment(line2, isstrict):
                     # handle fix format comments inside line continuations after
@@ -1003,7 +1004,7 @@ class FortranReaderBase(object):
             # no character continuation should follows now
             if qc is not None:
                 message = self.format_message(\
-                            'ASSERTION FAILURE(fix90)',
+                            'ASSERTION FAILURE(fix)',
                             'following character continuation: %r, expected None.'\
                             % (qc), startlineno, self.linecount)
                 self.show_message(message, sys.stderr)
@@ -1012,7 +1013,7 @@ class FortranReaderBase(object):
                     l = lines[i]
                     if l.rstrip().endswith('&'):
                         message = self.format_warning_message(\
-                        'f90 line continuation character `&\' detected'\
+                        'free format line continuation character `&\' detected'\
                         ' in fix format code',
                         startlineno + i, startlineno + i, l.rfind('&')+5)
                         self.show_message(message, sys.stderr)
@@ -1022,7 +1023,7 @@ class FortranReaderBase(object):
         # will be interpretted as free format line).
         
         start_index = 0
-        if self.isfix90:
+        if self.isfix:
             start_index = 6
 
         lines = []

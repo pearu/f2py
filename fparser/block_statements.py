@@ -241,7 +241,7 @@ class BeginSource(BeginStatement):
         # so it should never end until all lines are read.
         # However, sometimes F77 programs lack the PROGRAM statement,
         # and here we fix that:
-        if self.reader.isfix77:
+        if self.reader.isf77:
             line = item.get_line()
             if line=='end':
                 message = item.reader.format_message(\
@@ -454,7 +454,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
                         | WRITE ( UNFORMATTED )
 
     """
-    modes = ['free90', 'fix90', 'pyf']
+    modes = ['free', 'fix', 'pyf']
     match = re.compile(r'(interface\s*(\w+\s*\(.*\)|\w*)|abstract\s*interface)\Z',re.I).match
     end_stmt_cls = EndInterface
     blocktype = 'interface'

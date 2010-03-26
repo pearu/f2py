@@ -31,6 +31,7 @@ is_name = re.compile(r'^[a-z_]\w*$',re.I).match
 name_re = re.compile(r'[a-z_]\w*',re.I).match
 is_entity_decl = re.compile(r'^[a-z_]\w*',re.I).match
 is_int_literal_constant = re.compile(r'^\d+(_\w+|)$').match
+module_file_extensions = ['.f90', '.f95', '.f03', '.f08']
 
 def split_comma(line, item = None, comma=',', keep_empty=False):
     items = []
@@ -121,7 +122,10 @@ def get_module_files(directory, _cache={}):
         return _cache[directory]
     module_line = re.compile(r'(\A|^)module\s+(?P<name>\w+)\s*(!.*|)$',re.I | re.M)
     d = {}
-    for fn in glob.glob(os.path.join(directory,'*.f90')):
+    files = []
+    for ext in module_file_extensions:
+        files += glob.glob(os.path.join(directory,'*'+ext))
+    for fn in files:
         f = open(fn,'r')
         for name in module_line.findall(f.read()):
             name = name[1]
@@ -137,11 +141,15 @@ def get_module_file(name, directory, _cache={}):
     if fn is not None:
         return fn
     if name.endswith('_module'):
-        f1 = os.path.join(directory,name[:-7]+'.f90')
-        if os.path.isfile(f1):
-            _cache[name] = fn
-            return f1
-    for fn in glob.glob(os.path.join(directory,'*.f90')):
+        for ext in module_file_extensions:
+            f1 = os.path.join(directory,name[:-7]+ext)
+            if os.path.isfile(f1):
+                _cache[name] = fn
+                return f1
+    files = []
+    for ext in module_file_extensions:
+        files += glob.glob(os.path.join(directory,'*'+ext))
+    for fn in files:
         if _module_in_file(name, fn):
             _cache[name] = fn
             return fn
