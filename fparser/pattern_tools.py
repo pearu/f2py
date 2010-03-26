@@ -339,6 +339,7 @@ abs_intent = abs(intent)
 intent_spec = Pattern('<intent-spec>', r'INOUT|IN|OUT', flags=re.I)
 abs_intent_spec = abs(intent_spec)
 
+function = Pattern('<function>', r'FUNCTION', flags=re.I)
 subroutine = Pattern('<subroutine>', r'SUBROUTINE', flags=re.I)
 
 select_case = Pattern('<select-case>', r'SELECT\s*CASE', flags=re.I, value='SELECT CASE')

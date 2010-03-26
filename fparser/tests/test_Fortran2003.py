@@ -10,6 +10,7 @@ def assertRaises(exc, cls, s):
     except exc:
         pass
 
+
 ###############################################################################
 ############################### SECTION  2 ####################################
 ###############################################################################
@@ -1847,6 +1848,62 @@ def test_Alt_Return_Spec(): # R1222
         assert_equal(str(a),'*123')
         assert_equal(repr(a),"Alt_Return_Spec(Label('123'))")
 
+def test_Function_Subprogram(): # R1223
+
+    reader = get_reader('''\
+    function foo()
+    end function foo''')
+    cls = Function_Subprogram
+    a = cls(reader)
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'FUNCTION foo()\nEND FUNCTION foo')
+    assert_equal(repr(a),"Function_Subprogram(Function_Stmt(None, Name('foo'), None, None), End_Function_Stmt('FUNCTION', Name('foo')))")
+
+    reader = get_reader('''\
+    pure real function foo(a) result(b) bind(c)
+    integer a
+    end function foo''')
+    cls = Function_Subprogram
+    a = cls(reader)
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PURE REAL FUNCTION foo(a) RESULT(b) BIND(C)\n  INTEGER :: a\nEND FUNCTION foo')
+
+def test_Function_Stmt(): # R1224
+        cls = Function_Stmt
+        a = cls('function foo()')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'FUNCTION foo()')
+        assert_equal(repr(a),"Function_Stmt(None, Name('foo'), None, None)")
+
+        a = cls('function foo(a,b)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'FUNCTION foo(a, b)')
+        assert_equal(repr(a),"Function_Stmt(None, Name('foo'), Dummy_Arg_List(',', (Name('a'), Name('b'))), None)")    
+
+        a = cls('function foo(a)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'FUNCTION foo(a)')
+
+        a = cls('real function foo(a)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'REAL FUNCTION foo(a)')
+
+        a = cls('real recursive function foo(a)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'REAL RECURSIVE FUNCTION foo(a)')
+
+        a = cls('real function foo(a) bind(c)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'REAL FUNCTION foo(a) BIND(C)')
+
+        a = cls('real function foo(a) result (b)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'REAL FUNCTION foo(a) RESULT(b)')
+
+        a = cls('real function foo(a) bind(c) result(b)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'REAL FUNCTION foo(a) RESULT(b) BIND(C)')
+
 def test_Prefix(): # R1227
 
         cls = Prefix
@@ -1878,6 +1935,27 @@ def test_Prefix_Spec(): # R1228
         a = cls('integer * 2')
         assert isinstance(a, Intrinsic_Type_Spec),`a`
         assert_equal(str(a),'INTEGER*2')
+
+def test_Suffix(): # R1229
+
+    cls = Suffix
+    
+    a = cls('bind(c)')
+    assert isinstance(a, Language_Binding_Spec),`a`
+    assert_equal(str(a),'BIND(C)')
+    assert_equal(repr(a),"Language_Binding_Spec(None)")
+
+    a = cls('result(a)')
+    assert isinstance(a, Suffix),`a`
+    assert_equal(str(a),'RESULT(a)')
+
+    a = cls('bind(c) result(a)')
+    assert isinstance(a, Suffix),`a`
+    assert_equal(str(a),'RESULT(a) BIND(C)')
+
+    a = cls('result(a) bind(c)')
+    assert isinstance(a, Suffix),`a`
+    assert_equal(str(a),'RESULT(a) BIND(C)')
 
 def test_Subroutine_Subprogram(): # R1231
 

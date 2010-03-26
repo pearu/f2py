@@ -498,7 +498,7 @@ class StmtBase(Base):
         else:
             c = ''
         if label:
-            t = c + label
+            t = c + str(label)
             if isfix:
                 while len(t)<6: t += ' '
             else:
@@ -918,8 +918,9 @@ class Label(StringBase): # R313
     <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
     """
     subclass_names = []
-    def match(string): return StringBase.match(pattern.abs_label, string)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return StringBase.match(pattern.abs_label, string)
 
 ###############################################################################
 ############################### SECTION  4 ####################################
@@ -2242,7 +2243,7 @@ class Bind_Stmt(StmtBase): # R522
         if i==-1:
             i = string.find(')')
             if i==-1: return
-            lhs. rhs = string[:i], string[i+1:]
+            lhs, rhs = string[:i], string[i+1:]
         else:
             lhs, rhs = string.split('::',1)
         lhs = lhs.rstrip()
@@ -2270,6 +2271,13 @@ class Data_Stmt(StmtBase): # R524
     """
     subclass_names = []
     use_names = ['Data_Stmt_Set']
+
+    @staticmethod
+    def match(string):
+        if string[:4].upper()!='DATA':
+            return
+        line = string[4:].lstrip()
+        print line
 
 class Data_Stmt_Set(Base): # R525
     """
@@ -3983,7 +3991,7 @@ class Block_Do_Construct(BlockBase): # R826
         if obj is None: return
         content.append(obj)
         if isinstance(obj, Label_Do_Stmt):
-            label = str(obj.dolabel)
+            label = str(obj.label)
             while 1:
                 try:
                     obj = Execution_Part_Construct(reader)
@@ -3998,7 +4006,7 @@ class Block_Do_Construct(BlockBase): # R826
         else:
             obj = End_Do(reader)
             content.append(obj)
-            raise NotImplementedError
+            raise NotImplementedError(`obj`)
         return content,
     match = staticmethod(match)
 
@@ -4029,6 +4037,7 @@ class Label_Do_Stmt(StmtBase): # R828
     """
     subclass_names = []
     use_names = ['Do_Construct_Name', 'Label', 'Loop_Control']
+    @staticmethod
     def match(string):
         if string[:2].upper()!='DO': return
         line = string[2:].lstrip()
@@ -4036,12 +4045,23 @@ class Label_Do_Stmt(StmtBase): # R828
         if m is None: return
         label = m.group()
         line = line[m.end():].lstrip()
-        if line: return Label(label), Loop_Control(line)
-        return Label(label), None
-    match = staticmethod(match)
+        if line:
+            return None, Label(label), Loop_Control(line)
+        return None, Label(label), None
     def tostr(self):
-        if self.itens[1] is None: return 'DO %s' % (self.items[0])
-        return 'DO %s %s' % self.items
+        name, label, loop_control = self.items
+        if name is None:
+            s = 'DO %s' % (label)
+        else:
+            s = '%s: DO %s' % (label)
+        if loop_control is not None:
+            s += ' %s' % (loop_control)
+        return s
+
+    do_construct_name = property(lambda self: self.items[0])
+    label = property(lambda self: self.items[1])
+    loop_control = property(lambda self: self.items[2])
+
 
 class Nonlabel_Do_Stmt(StmtBase, WORDClsBase): # R829
     """
@@ -5548,6 +5568,49 @@ class Function_Stmt(StmtBase): # R1224
     """
     subclass_names = []
     use_names = ['Prefix','Function_Name','Dummy_Arg_Name_List', 'Suffix']
+
+    @staticmethod
+    def match(string):
+        line, repmap = string_replace_map(string)
+        m = pattern.function.search(line)
+        if m is None:
+            return
+        prefix = line[:m.start()].rstrip() or None
+        if prefix is not None:
+            prefix = Prefix(repmap(prefix))
+        line = line[m.end():].lstrip()
+        m = pattern.name.match(line)
+        if m is None:
+            return
+        name = Function_Name(m.group())
+        line = line[m.end():].lstrip()
+        if not line.startswith('('):
+            return
+        i = line.find(')')
+        if i==-1:
+            return
+        dummy_args = line[1:i].strip() or None
+        if dummy_args is not None:
+            dummy_args = Dummy_Arg_List(repmap(dummy_args))
+        line = line[i+1:].lstrip()
+        suffix = None
+        if line:
+            suffix = Suffix(repmap(line))
+        return prefix, name, dummy_args, suffix
+
+    def tostr(self):
+        prefix, name, dummy_args, suffix = self.items
+        if prefix is not None:
+            s = '%s FUNCTION %s' % (prefix, name)
+        else:
+            s = 'FUNCTION %s' % (name)
+        if dummy_args is not None:
+            s += '(%s)' % (dummy_args)
+        else:
+            s += '()'
+        if suffix is not None:
+            s += ' %s' % (suffix)
+        return s
 
 class Proc_Language_Binding_Spec(Base): #1225
     """
