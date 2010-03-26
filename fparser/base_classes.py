@@ -436,7 +436,7 @@ class Statement(object):
     """
     __metaclass__ = classes
 
-    modes = ['free90','fix90','fix77','pyf']
+    modes = ['free','fix','f77','pyf']
     _repr_attr_names = []
 
     def __init__(self, parent, item):
@@ -502,7 +502,7 @@ class Statement(object):
         return '\n'.join(l)
 
     def get_indent_tab(self,deindent=False,isfix=None):
-        if isfix is None: isfix = self.reader.isfix
+        if isfix is None: isfix = self.reader.isfixed
         if isfix:
             tab = ' '*6
         else:
@@ -724,7 +724,7 @@ class BeginStatement(Statement):
 
         # Check if f77 code contains inline comments or other f90
         # constructs that got undetected by get_source_info.
-        if item.reader.isfix77:
+        if item.reader.isf77:
             i = line.find('!')
             if i != -1:
                 message = item.reader.format_message(\
@@ -738,11 +738,11 @@ class BeginStatement(Statement):
                 newitem = item.copy(line[:i].rstrip())
                 return self.process_subitem(newitem)
 
-            # try fix90 statement classes
+            # try fix statement classes
             f77_classes = self.classes
             classes = []
             for cls in self.get_classes():
-                if 'fix90' in cls.modes and cls not in f77_classes:
+                if 'f77' in cls.modes and cls not in f77_classes:
                     classes.append(cls)
             if classes:
                 message = item.reader.format_message(\
