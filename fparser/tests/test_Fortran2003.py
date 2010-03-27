@@ -63,6 +63,20 @@ def test_Name(): # R304
         a = Expr('a')
         assert isinstance(a,Name),`a`
 
+def test_Literal_Constant(): # R305
+
+    cls = Constant
+    a = cls('.false.')
+    assert isinstance(a, Logical_Literal_Constant), `a`
+    assert str(a)=='.FALSE.'
+
+def test_Literal_Constant(): # R306
+
+    cls = Literal_Constant
+    a = cls('.false.')
+    assert isinstance(a, Logical_Literal_Constant), `a`
+    assert str(a)=='.FALSE.'
+
 ###############################################################################
 ############################### SECTION  4 ####################################
 ###############################################################################
@@ -463,6 +477,10 @@ def test_Logical_Literal_Constant(): # R428
         assert_equal(str(a),'.TRUE.')
 
         a = cls('.FALSE.')
+        assert isinstance(a,cls),`a`
+        assert_equal(str(a),'.FALSE.')
+        
+        a = cls('.false.')
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'.FALSE.')
 
@@ -997,6 +1015,32 @@ def test_Access_Stmt(): # R518
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'PUBLIC :: a')
 
+def test_Data_Stmt(): #R524
+    cls = Data_Stmt
+    a = cls('DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
+
+    a = cls('DATA NAME / "JOHN DOE" / MILES / 10 * 0 /')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DATA NAME / "JOHN DOE" /, MILES / 10 * 0 /')
+
+    a = cls('DATA MYNAME / PERSON (21, \'JOHN SMITH\') /')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DATA MYNAME / PERSON(21, \'JOHN SMITH\') /')
+
+def test_Data_Stmt_Set(): #R525
+    cls = Data_Stmt_Set
+    a = cls('MILES / 10 * "2/3" /')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'MILES / 10 * "2/3" /')
+        
+def test_Data_Implied_Do(): # R527
+    cls = Data_Implied_Do
+    a = cls('((SKEW (K, J), J = 1, K), K = 1, 100)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'((SKEW(K, J), J = 1, K), K = 1, 100)')
+
 def test_Parameter_Stmt(): # R538
 
         cls = Parameter_Stmt
@@ -1366,7 +1410,10 @@ def test_Level_1_Expr(): # R702
         assert_equal(str(a),'.HEY. a')
         assert_equal(repr(a),"Level_1_Expr('.HEY.', Name('a'))")
 
-        assertRaises(NoMatchError,cls,'.not. a')
+        #assertRaises(NoMatchError,cls,'.not. a')
+
+        a = cls('.false.')
+        assert isinstance(a,Logical_Literal_Constant),`a`
 
 def test_Mult_Operand(): # R704
 
@@ -1583,7 +1630,21 @@ def test_Expr(): # R722
         assert isinstance(a,Real_Literal_Constant),`a`
         assert_equal(str(a),'0.0E-1')
 
+        a = cls('123')
+        assert isinstance(a,Int_Literal_Constant),`a`
+        assert_equal(str(a),'123')
+
+        a = cls('.false.')
+        assert isinstance(a,Logical_Literal_Constant),`a`
+
         assertRaises(NoMatchError,Scalar_Int_Expr,'a,b')
+
+def test_Logical_Expr(): # R733
+
+    cls = Logical_Expr
+    a = cls('.false.')
+    assert isinstance(a, Logical_Literal_Constant), `a`
+    assert str(a)=='.FALSE.'
 
 def test_Assignment_Stmt(): # R734
 
@@ -1600,6 +1661,9 @@ def test_Assignment_Stmt(): # R734
         a = cls('a%c = b+c')
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'a % c = b + c')
+
+        a = cls('a = .FALSE.')
+        assert isinstance(a, cls),`a`
 
 def test_Proc_Component_Ref(): # R741
 

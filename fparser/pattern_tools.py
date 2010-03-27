@@ -249,7 +249,7 @@ char_literal_constant = ~( kind_param + '_') + ("'" + ~~rep_char + "'" | '"' + ~
 a_n_char_literal_constant_named1 = ~( kind_param_named + '_') + (~~~("'" + ~~a_n_rep_char + "'" )).named('value')
 a_n_char_literal_constant_named2 = ~( kind_param_named + '_') + (~~~('"' + ~~a_n_rep_char + '"' )).named('value')
 
-logical_literal_constant = ('[.](TRUE|FALSE)[.]' + ~ ('_' + kind_param)).flags(re.I)
+logical_literal_constant = (r'[.](TRUE|FALSE)[.]' + ~ ('_' + kind_param)).flags(re.I)
 logical_literal_constant_named = Pattern('<value>',r'[.](TRUE|FALSE)[.]',flags=re.I).named() + ~ ('_' + kind_param_named)
 literal_constant = int_literal_constant | real_literal_constant | complex_literal_constant | logical_literal_constant | char_literal_constant | boz_literal_constant
 constant = literal_constant | named_constant

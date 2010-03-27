@@ -288,6 +288,8 @@ class BinaryOpBase(Base):
             lhs, op, rhs = t
             lhs = lhs.rstrip()
             rhs = rhs.lstrip()
+            #if not lhs or not rhs:
+            #    return
             op = op.upper()
         if not lhs: return
         if not rhs: return
@@ -2267,6 +2269,7 @@ class Bind_Entity(BracketBase): # R523
 
 class Data_Stmt(StmtBase): # R524
     """
+:F03R:524::
     <data-stmt> = DATA <data-stmt-set> [ [ , ] <data-stmt-set> ]...
     """
     subclass_names = []
@@ -2276,18 +2279,56 @@ class Data_Stmt(StmtBase): # R524
     def match(string):
         if string[:4].upper()!='DATA':
             return
-        line = string[4:].lstrip()
-        print line
+        line, repmap = string_replace_map(string[4:].lstrip())
+        i = line.find('/')
+        if i==-1: return
+        i = line.find('/',i+1)
+        if i==-1: return
+        items = [Data_Stmt_Set(repmap(line[:i+1]))]
+        line = line[i+1:].lstrip()
+        while line:
+            if line.startswith(','):
+                line = line[1:].lstrip()
+            i = line.find('/')
+            if i==-1: return
+            i = line.find('/',i+1)
+            if i==-1: return
+            items.append(Data_Stmt_Set(repmap(line[:i+1])))
+            line = line[i+1:].lstrip()
+        return tuple(items)
 
+    def tostr(self):
+        return 'DATA ' + ', '.join(map(str, self.items))
+    
 class Data_Stmt_Set(Base): # R525
     """
+:F03R:525::
     <data-stmt-set> = <data-stmt-object-list> / <data-stmt-value-list> /
     """
     subclass_names = []
     use_names = ['Data_Stmt_Object_List', 'Data_Stmt_Value_List']
 
+    @staticmethod
+    def match(string):
+        if not string.endswith('/'):
+            return
+        line, repmap = string_replace_map(string)
+        i = line.find('/')
+        if i==-1:
+            return
+        data_stmt_object_list = Data_Stmt_Object_List(repmap(line[:i].rstrip()))
+        data_stmt_value_list = Data_Stmt_Value_List(repmap(line[i+1:-1].strip()))
+        return data_stmt_object_list, data_stmt_value_list
+
+    data_stmt_object_list = property(lambda self: self.items[0])
+    data_stmt_value_list = property(lambda self: self.items[1])
+
+    def tostr(self):
+        return '%s / %s /' % tuple(self.items)
+
 class Data_Stmt_Object(Base): # R526
     """
+:F03R:526::
     <data-stmt-object> = <variable>
                          | <data-implied-do>
     """
@@ -2295,10 +2336,49 @@ class Data_Stmt_Object(Base): # R526
 
 class Data_Implied_Do(Base): # R527
     """
+:F03R:527::
     <data-implied-do> = ( <data-i-do-object-list> , <data-i-do-variable> = <scalar-int-expr > , <scalar-int-expr> [ , <scalar-int-expr> ] )
     """
     subclass_names = []
     use_names = ['Data_I_Do_Object_List', 'Data_I_Do_Variable', 'Scalar_Int_Expr']
+
+    @staticmethod
+    def match(string):
+        if not (string.startswith('(') and string.endswith(')')):
+            return
+        line, repmap = string_replace_map(string[1:-1].strip())
+        s = line.split('=',1)
+        if len(s) != 2:
+            return
+        lhs = s[0].rstrip()
+        rhs = s[1].lstrip()
+        s1 = lhs.rsplit(',',1)
+        if len(s1) != 2:
+            return
+        s2 = rhs.split(',')
+        if len(s2) not in [2,3]:
+            return
+        data_i_do_object_list = Data_I_Do_Object_List(repmap(s1[0].rstrip()))
+        data_i_do_variable = Data_I_Do_Variable(repmap(s1[1].lstrip()))
+        scalar_int_expr1 = Scalar_Int_Expr(repmap(s2[0].rstrip()))
+        scalar_int_expr2 = Scalar_Int_Expr(repmap(s2[1].strip()))
+        if len(s2)==3:
+            scalar_int_expr3 = Scalar_Int_Expr(repmap(s2[2].lstrip()))
+        else:
+            scalar_int_expr3 = None
+        return data_i_do_object_list, data_i_do_variable, scalar_int_expr1, scalar_int_expr2, scalar_int_expr3
+
+    data_i_do_object_list = property(lambda self: self.items[0])
+    data_i_do_variable = property(lambda self: self.items[1])
+    scalar_int_expr1 = property(lambda self: self.items[2])
+    scalar_int_expr2 = property(lambda self: self.items[3])
+    scalar_int_expr3 = property(lambda self: self.items[4])
+    
+    def tostr(self):
+        l = '%s, %s = %s, %s' % tuple(self.items[:4])
+        if self.items[4] is not None:
+            l += ', %s' % (self.items[4])
+        return '('+l+')'
 
 class Data_I_Do_Object(Base): # R528
     """
@@ -2322,7 +2402,7 @@ class Data_Stmt_Value(Base): # R530
     use_names = ['Data_Stmt_Repeat']
     def match(string):
         line, repmap = string_replace_map(string)
-        s = line.split('*')
+        s = line.split('*',1)
         if len(s)!=2: return
         lhs = repmap(s[0].rstrip())
         rhs = repmap(s[1].lstrip())
@@ -2486,7 +2566,7 @@ class Saved_Entity(BracketBase): # R544
     """
     subclass_names = ['Object_Name', 'Proc_Pointer_Name']
     use_names = ['Common_Block_Name']
-    def match(string): return BracketBase.match('//',CommonBlockName, string)
+    def match(string): return BracketBase.match('//',Common_Block_Name, string)
     match = staticmethod(match)
 
 class Proc_Pointer_Name(Base): # R545
@@ -3089,8 +3169,8 @@ class Level_1_Expr(UnaryOpBase): # R702
     subclass_names = ['Primary']
     use_names = []
     def match(string):
-        if pattern.non_defined_binary_op.match(string):
-            raise NoMatchError,'%s: %r' % (Level_1_Expr.__name__, string)
+        #if pattern.non_defined_binary_op.match(string):
+        #    raise NoMatchError,'%s: %r' % (Level_1_Expr.__name__, string)
         return UnaryOpBase.match(\
             pattern.defined_unary_op.named(),Primary,string)
     match = staticmethod(match)
@@ -3258,7 +3338,8 @@ class Expr(BinaryOpBase): # R722
     use_names = ['Expr']
     def match(string):
         return BinaryOpBase.match(Expr, pattern.defined_binary_op.named(), Level_5_Expr,
-                                   string)
+                                  string)
+        
     match = staticmethod(match)
 
 class Defined_Unary_Op(STRINGBase): # R723
@@ -4124,8 +4205,10 @@ class End_Do_Stmt(EndStmtBase): # R834
     """
     subclass_names = []
     use_names = ['Do_Construct_Name']
-    def match(string): return EndStmtBase.match('DO',Do_Construct_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('DO',Do_Construct_Name, string, require_stmt_type=True)
+
 
 class Nonblock_Do_Construct(Base): # R835
     """
