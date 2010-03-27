@@ -710,11 +710,11 @@ class FortranReaderBase(object):
 
     def info(self, message, item=None):
         if item is None:            
-            m = reader.format_message('INFORMATION',
+            m = self.format_message('INFORMATION',
                                       message,
                                       len(self.source_lines)-2, len(self.source_lines))
         else:
-            m = reader.format_message('INFORMATION',
+            m = self.format_message('INFORMATION',
                                       message,
                                       item.span[0], item.span[1])
         self.show_message(m, sys.stderr)
