@@ -186,8 +186,11 @@ class TypeDeclarationStatement(Statement):
             l = selector[1:-1].strip()
             if l.lower().startswith('kind'):
                 l = l[4:].lstrip()
-                assert l.startswith('='),`l`
-                kind = l[1:].lstrip()
+                if l[0]+l[-1]=='()':
+                    kind = 'kind'+l
+                else:
+                    assert l.startswith('='),`l`
+                    kind = l[1:].lstrip()
             else:
                 kind = l
         return length,kind
