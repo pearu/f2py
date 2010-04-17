@@ -1636,6 +1636,7 @@ def test_Expr(): # R722
 
         a = cls('.false.')
         assert isinstance(a,Logical_Literal_Constant),`a`
+        assert_equal(str(a),'.FALSE.')
 
         assertRaises(NoMatchError,Scalar_Int_Expr,'a,b')
 
@@ -1664,6 +1665,7 @@ def test_Assignment_Stmt(): # R734
 
         a = cls('a = .FALSE.')
         assert isinstance(a, cls),`a`
+        assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant('.FALSE.', None))")
 
 def test_Proc_Component_Ref(): # R741
 
@@ -1694,6 +1696,14 @@ def test_Where_Construct_Stmt(): # R745
 ############################### SECTION  8 ####################################
 ###############################################################################
 
+def test_Label_Do_Stmt(): # R828
+
+    cls = Label_Do_Stmt
+    a = cls('do 12')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'DO 12')
+    assert_equal(repr(a),"Label_Do_Stmt(None, Label('12'), None)")
+
 def test_Continue_Stmt(): # R848
 
         cls = Continue_Stmt
@@ -1717,6 +1727,20 @@ def test_Io_Unit(): # R901
         assert isinstance(a, Name),`a`
         assert_equal(str(a),'a')
 
+def test_Read_Stmt(): # R910
+    cls = Read_Stmt
+    a = cls('read(123)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'READ(UNIT = 123)')
+
+    a = cls('read(123) a')
+    assert_equal(str(a), 'READ(UNIT = 123) a')
+    a = cls('read(123) a(  2)')
+    assert_equal(str(a), 'READ(UNIT = 123) a(2)')
+
+    a = cls('read*, a(  2), b')
+    assert_equal(str(a), 'READ *, a(2), b')
+    
 def test_Write_Stmt(): # R911
 
         cls = Write_Stmt
@@ -1806,6 +1830,101 @@ def test_Wait_Spec(): # R922
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'ERR = 1')
 
+def test_Backspace_Stmt(): # R923
+
+    cls = Backspace_Stmt
+    a = cls('backspace 1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'BACKSPACE 1')
+
+    a = cls('backspace  (unit=1,err=2)')
+    assert_equal(str(a),'BACKSPACE(UNIT = 1, ERR = 2)')
+
+def test_Endfile_Stmt(): # R924
+
+    cls = Endfile_Stmt
+    a = cls('endfile 1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'ENDFILE 1')
+
+    a = cls('endfile  (unit=1,err=2)')
+    assert_equal(str(a),'ENDFILE(UNIT = 1, ERR = 2)')
+
+def test_Rewind_Stmt(): # R925
+
+    cls = Rewind_Stmt
+    a = cls('rewind 1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'REWIND 1')
+
+    a = cls('rewind  (unit=1,err=2)')
+    assert_equal(str(a),'REWIND(UNIT = 1, ERR = 2)')
+
+def test_Position_Spec(): # R926
+
+    cls = Position_Spec
+    a = cls('1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'UNIT = 1')
+    a = cls('unit=1')
+    assert_equal(str(a),'UNIT = 1')
+    a = cls('err=2')
+    assert_equal(str(a),'ERR = 2')
+    a = cls('iomsg=a')
+    assert_equal(str(a),'IOMSG = a')
+    a = cls('iostat=a')
+    assert_equal(str(a),'IOSTAT = a')
+
+def test_Flush_Stmt(): # R927
+
+    cls = Flush_Stmt
+    a = cls('flush 1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'FLUSH 1')
+
+    a = cls('flush  (unit=1,err=2)')
+    assert_equal(str(a),'FLUSH(UNIT = 1, ERR = 2)')
+
+def test_Flush_Spec(): # R928
+
+    cls = Flush_Spec
+    a = cls('1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'UNIT = 1')
+    a = cls('unit=1')
+    assert_equal(str(a),'UNIT = 1')
+    a = cls('err=2')
+    assert_equal(str(a),'ERR = 2')
+    a = cls('iomsg=a')
+    assert_equal(str(a),'IOMSG = a')
+    a = cls('iostat=a')
+    assert_equal(str(a),'IOSTAT = a')
+
+def test_Inquire_Stmt(): # R929
+
+    cls = Inquire_Stmt
+    a = cls('inquire(1,file=a)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INQUIRE(UNIT = 1, FILE = a)')
+    a = cls('inquire(iolength=n) a, b')
+    assert_equal(str(a),'INQUIRE(IOLENGTH=n) a, b')
+
+def test_Inquire_Spec(): # R930
+
+    cls = Inquire_Spec
+    a = cls('1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'UNIT = 1')
+    a = cls('file=fn')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'FILE = fn')
+
+    a = cls('access=a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'ACCESS = a')
+
+
+    
 ###############################################################################
 ############################### SECTION 10 ####################################
 ###############################################################################
@@ -1850,6 +1969,28 @@ def test_Module_Nature(): # R1110
 ###############################################################################
 ############################### SECTION 12 ####################################
 ###############################################################################
+
+def test_Proc_Attr_Spec(): # R1213
+    cls = Proc_Attr_Spec
+    a = cls('intent(in)')
+    assert isinstance(a, cls)
+    assert_equal(str(a),'INTENT(IN)')
+
+    a = cls('optional')
+    assert isinstance(a, cls)
+    assert_equal(str(a),'OPTIONAL')
+
+    a = cls('save')
+    assert isinstance(a, cls)
+    assert_equal(str(a),'SAVE')
+
+    a = cls('private')
+    assert isinstance(a, Access_Spec),`type(a)`
+    assert_equal(str(a),'PRIVATE')
+
+    a = cls('bind(c)')
+    assert isinstance(a, Language_Binding_Spec),`a`
+    assert_equal(str(a),'BIND(C)')
 
 def test_Function_Reference(): # R1217
 
@@ -1968,6 +2109,12 @@ def test_Function_Stmt(): # R1224
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'REAL FUNCTION foo(a) RESULT(b) BIND(C)')
 
+def test_Dummy_Arg_Name(): # R1226
+    cls = Dummy_Arg_Name
+    a = cls('a')
+    assert isinstance(a, Name),`a`
+    assert_equal(str(a),'a')
+
 def test_Prefix(): # R1227
 
         cls = Prefix
@@ -2020,6 +2167,18 @@ def test_Suffix(): # R1229
     a = cls('result(a) bind(c)')
     assert isinstance(a, Suffix),`a`
     assert_equal(str(a),'RESULT(a) BIND(C)')
+
+def test_End_Function_Stmt(): # R1230
+    cls = End_Function_Stmt
+    a = cls('end')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'END FUNCTION')
+
+    a = cls('endfunction')
+    assert_equal(str(a), 'END FUNCTION')
+
+    a = cls('endfunction foo')
+    assert_equal(str(a), 'END FUNCTION foo')
 
 def test_Subroutine_Subprogram(): # R1231
 
@@ -2077,6 +2236,15 @@ def test_Subroutine_Stmt(): # R1232
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'SUBROUTINE foo(*)')
 
+def test_Dummy_Arg(): # R1233
+    cls = Dummy_Arg
+    a = cls('a')
+    assert isinstance(a, Name),`a`
+    assert_equal(str(a),'a')
+    a = cls('*')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'*')
+    
 def test_End_Subroutine_Stmt(): # R1234
 
         cls = End_Subroutine_Stmt
@@ -2092,6 +2260,23 @@ def test_End_Subroutine_Stmt(): # R1234
         a = cls('endsubroutine')
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'END SUBROUTINE')
+
+def test_Entry_Stmt(): # R1235
+
+    cls = Entry_Stmt
+    a = cls('entry a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'ENTRY a()')
+
+    a = cls('entry a()')
+    assert_equal(str(a), 'ENTRY a()')
+
+    a = cls('entry a(b, c)')
+    assert_equal(str(a), 'ENTRY a(b, c)')
+
+    a = cls('entry a(b, c) bind(c)')
+    assert_equal(str(a), 'ENTRY a(b, c) BIND(C)')
+
 
 def test_Return_Stmt(): # R1236
 

@@ -213,7 +213,9 @@ intersphinx_mapping = {'http://docs.python.org/dev': None}
 extlinks = {'numpy': ('http://docs.scipy.org/doc/numpy/reference/generated/numpy.%s.html',
                       'numpy.'),
             'pythonlib': ('http://docs.python.org/library/%s.html',
-                          '')}
+                          ''),
+            #'F03R':('','Fortran 2003 Rule %s')
+            }
 
 
 
@@ -238,12 +240,12 @@ def scan_for_autodoc(obj, prefix, cache=set([])):
         n = obj.__name__
     else:
         n = prefix + '.' + obj.__name__
-        if not (getattr(obj,'__module__') or '').startswith(prefix):
+        if not (getattr(obj,'__module__', '') or '').startswith(prefix):
             # skip external classes
             return
     if n not in cache:
         for title in ['Examples', 'Example']:
-            if title+'\n' in (getattr(obj, '__doc__') or ''):
+            if title+'\n' in (getattr(obj, '__doc__','') or ''):
                 docs_with_examples.append('`%s <%s.html#%s>`_' % (n,n, title.lower()))
         yield n
         cache.add(n)
