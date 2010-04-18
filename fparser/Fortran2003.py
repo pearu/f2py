@@ -129,14 +129,15 @@ class BlockBase(Base):
                 obj = startcls(reader)
             except NoMatchError:
                 obj = None
-            if obj is None: return
+            if obj is None:
+                return
             content.append(obj)
         if endcls is not None:
             classes = subclasses + [endcls]
         else:
             classes = subclasses[:]
         i = 0
-        while 1:
+        while classes:
             cls = classes[i]
             try:
                 obj = cls(reader)
@@ -156,14 +157,16 @@ class BlockBase(Base):
                     i = j
             if obj is not None:
                 content.append(obj)
-                if endcls is not None and isinstance(obj, endcls): break
+                if endcls is not None and isinstance(obj, endcls):
+                    break
                 continue
             if endcls is not None:
                 item = reader.get_item()
                 if item is not None:
                     reader.error('failed to parse with %s, skipping.' % ('|'.join([c.__name__ for c in classes[i:]])), item)
                     continue
-                if hasattr(content[0],'name'):
+                print content
+                if content and hasattr(content[0],'name'):
                     reader.error('unexpected eof file while looking line for <%s> of %s.'\
                                  % (classes[-1].__name__.lower().replace('_','-'), content[0].name))
                 else:
@@ -178,8 +181,8 @@ class BlockBase(Base):
             if isinstance(end_stmt, endcls) and hasattr(end_stmt, 'get_name') and hasattr(start_stmt, 'get_name'):
                 if end_stmt.get_name() is not None:
                     if start_stmt.get_name() != end_stmt.get_name():
-                        end_stmt._item.reader.error('expected <%s-name> is %s but got %s. Ignoring.'\
-                                                    % (end_stmt.get_type().lower(), start_stmt.get_name(), end_stmt.get_name()))
+                        end_stmt.item.reader.error('expected <%s-name> is %s but got %s. Ignoring.'\
+                                                   % (end_stmt.get_type().lower(), start_stmt.get_name(), end_stmt.get_name()))
                 else:
                     end_stmt.set_name(start_stmt.get_name())
         return content,
@@ -203,7 +206,8 @@ class BlockBase(Base):
         extra_tab = ''
         if isinstance(end, EndStmtBase):
             extra_tab = '  '
-        l.append(start.tofortran(tab=tab,isfix=isfix))
+        if start is not None:
+            l.append(start.tofortran(tab=tab,isfix=isfix))
         for item in self.content[1:-1]:
             l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
         if len(self.content)>1:
@@ -633,9 +637,16 @@ class Program(BlockBase): # R201
     """
     subclass_names = []
     use_names = ['Program_Unit']
+    
+    @staticmethod
     def match(reader):
-        return BlockBase.match(Program_Unit, [Program_Unit], None, reader)
-    match = staticmethod(match)
+        try:
+            result = BlockBase.match(Program_Unit, [Program_Unit], None, reader)
+        except NoMatchError:
+            result = None
+        if result is not None:
+            return result
+        return BlockBase.match(Main_Program0, [], None, reader)
 
 class Program_Unit(Base): # R202
     """
@@ -732,7 +743,7 @@ class Execution_Part_Construct(Base): # R209
 class Execution_Part_Construct_C201(Base):
     subclass_names = ['Executable_Construct_C201', 'Format_Stmt', 'Entry_Stmt', 'Data_Stmt']
 
-class Internal_Subprogram_Part(Base): # R210
+class Internal_Subprogram_Part(BlockBase): # R210
     """
     <internal-subprogram-part> = <contains-stmt>
                                    <internal-subprogram>
@@ -740,6 +751,9 @@ class Internal_Subprogram_Part(Base): # R210
     """
     subclass_names = []
     use_names = ['Contains_Stmt', 'Internal_Subprogram']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Contains_Stmt, [Internal_Subprogram], None, reader)
 
 class Internal_Subprogram(Base): # R211
     """
@@ -1767,7 +1781,7 @@ class End_Enum_Stmt(EndStmtBase): # R464
     <end-enum-stmt> = END ENUM
     """
     subclass_names = []
-    def match(string): return EndStmtBase.match('ENUM',None, string, requite_stmt_type=True)
+    def match(string): return EndStmtBase.match('ENUM',None, string, require_stmt_type=True)
     match = staticmethod(match)
 
 class Array_Constructor(BracketBase): # R465
@@ -3728,8 +3742,8 @@ class Block(BlockBase): # R801
     """
     subclass_names = []
     use_names = ['Execution_Part_Construct']
+    @staticmethod
     def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
-    match = staticmethod(match)
 
 class If_Construct(BlockBase): # R802
     """
@@ -4094,34 +4108,9 @@ class Block_Do_Construct(BlockBase): # R826
     """
     subclass_names = []
     use_names = ['Do_Stmt', 'Do_Block', 'End_Do']
+    @staticmethod
     def match(reader):
-        assert isinstance(reader,FortranReaderBase),`reader`
-        content = []
-        try:
-            obj = Do_Stmt(reader)
-        except NoMatchError:
-            obj = None
-        if obj is None: return
-        content.append(obj)
-        if isinstance(obj, Label_Do_Stmt):
-            label = str(obj.label)
-            while 1:
-                try:
-                    obj = Execution_Part_Construct(reader)
-                except NoMatchError:
-                    obj = None
-                if obj is None: break
-                content.append(obj)
-                if isinstance(obj, Continue_Stmt) and obj.item.label==label:
-                    return content,
-            return
-            raise RuntimeError,'Expected continue stmt with specified label'
-        else:
-            obj = End_Do(reader)
-            content.append(obj)
-            raise NotImplementedError(`obj`)
-        return content,
-    match = staticmethod(match)
+        return BlockBase.match(Do_Stmt, [Do_Block], End_Do, reader)
 
     def tofortran(self, tab='', isfix=None):
         if not isinstance(self.content[0], Label_Do_Stmt):
@@ -4162,6 +4151,7 @@ class Label_Do_Stmt(StmtBase): # R828
         if line:
             return None, Label(label), Loop_Control(line)
         return None, Label(label), None
+
     def tostr(self):
         name, label, loop_control = self.items
         if name is None:
@@ -4221,9 +4211,13 @@ class Do_Variable(Base): # R831
 
 class Do_Block(Base): # R832
     """
-    <do-block> = <block>
+    <do-block> = [ <execution-part-construct> ]...
     """
     subclass_names = ['Block']
+    subclass_names = []
+    use_names = ['Execution_Part_Construct']
+    @staticmethod
+    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
 
 class End_Do(Base): # R833
     """
@@ -5379,9 +5373,9 @@ class Char_String_Edit_Desc(Base): # R1019
 ############################### SECTION 11 ####################################
 ###############################################################################
 
-class Main_Program(Base): # R1101
+class Main_Program(BlockBase): # R1101
     """
-    <main-program> = [ <program-stmt> ]
+    <main-program> = <program-stmt>
                          [ <specification-part> ]
                          [ <execution-part> ]
                          [ <internal-subprogram-part> ]
@@ -5390,6 +5384,24 @@ class Main_Program(Base): # R1101
     subclass_names = []
     use_names = ['Program_Stmt', 'Specification_Part', 'Execution_Part', 'Internal_Subprogram_Part',
                  'End_Program_Stmt']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Program_Stmt, [Specification_Part, Execution_Part, Internal_Subprogram_Part], End_Program_Stmt, reader)
+
+class Main_Program0(BlockBase):
+    """
+    <main-program> = 
+                         [ <specification-part> ]
+                         [ <execution-part> ]
+                         [ <internal-subprogram-part> ]
+                         <end-program-stmt>
+    """
+    subclass_names = []
+    use_names = ['Program_Stmt', 'Specification_Part', 'Execution_Part', 'Internal_Subprogram_Part',
+                 'End_Program_Stmt']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(None, [Specification_Part, Execution_Part, Internal_Subprogram_Part], End_Program_Stmt, reader)
 
 class Program_Stmt(StmtBase, WORDClsBase): # R1102
     """
@@ -5399,6 +5411,7 @@ class Program_Stmt(StmtBase, WORDClsBase): # R1102
     use_names = ['Program_Name']
     def match(string): return WORDClsBase.match('PROGRAM',Program_Name, string, require_cls = True)
     match = staticmethod(match)
+    def get_name(self): return self.items[1]
 
 class End_Program_Stmt(EndStmtBase): # R1103
     """
@@ -5408,8 +5421,10 @@ class End_Program_Stmt(EndStmtBase): # R1103
     use_names = ['Program_Name']
     def match(string): return EndStmtBase.match('PROGRAM',Program_Name, string)
     match = staticmethod(match)
+    def get_name(self): return self.items[1]
+    def set_name(self, name): self.items[1] = name
 
-class Module(Base): # R1104
+class Module(BlockBase): # R1104
     """
     <module> = <module-stmt>
                    [ <specification-part> ]
@@ -5419,14 +5434,20 @@ class Module(Base): # R1104
     subclass_names = []
     use_names = ['Module_Stmt', 'Specification_Part', 'Module_Subprogram_Part', 'End_Module_Stmt']
 
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Module_Stmt, [Specification_Part, Module_Subprogram_Part], End_Module_Stmt, reader)
+
 class Module_Stmt(StmtBase, WORDClsBase): # R1105
     """
     <module-stmt> = MODULE <module-name>
     """
     subclass_names = []
     use_names = ['Module_Name']
-    def match(string): return WORDClsBase.match('MODULE',Module_Name, string, require_cls = True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('MODULE',Module_Name, string, require_cls = True)
+    def get_name(self): return self.items[1]
 
 class End_Module_Stmt(EndStmtBase): # R1106
     """
@@ -5434,10 +5455,13 @@ class End_Module_Stmt(EndStmtBase): # R1106
     """
     subclass_names = []
     use_names = ['Module_Name']
-    def match(string): return EndStmtBase.match('MODULE',Module_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('MODULE',Module_Name, string)
+    def get_name(self): return self.items[1]
+    def set_name(self, name): self.items[1] = name
 
-class Module_Subprogram_Part(Base): # R1107
+class Module_Subprogram_Part(BlockBase): # R1107
     """
     <module-subprogram-part> = <contains-stmt>
                                    <module-subprogram>
@@ -5445,6 +5469,10 @@ class Module_Subprogram_Part(Base): # R1107
     """
     subclass_names = []
     use_names = ['Contains_Stmt', 'Module_Subprogram']
+
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Contains_Stmt, [Module_Subprogram], None, reader)
 
 class Module_Subprogram(Base): # R1108
     """
@@ -5564,8 +5592,9 @@ class Use_Defined_Operator(Base): # R1115
     """
     subclass_names = ['Defined_Unary_Op', 'Defined_Binary_Op']
 
-class Block_Data(Base): # R1116
+class Block_Data(BlockBase): # R1116
     """
+::
     <block-data> = <block-data-stmt>
                        [ <specification-part> ]
                        <end-block-data-stmt>
@@ -5573,12 +5602,18 @@ class Block_Data(Base): # R1116
     subclass_names = []
     use_names = ['Block_Data_Stmt', 'Specification_Part', 'End_Block_Data_Stmt']
 
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Block_Data_Stmt, [Specification_Part], End_Block_Data_Stmt, reader)
+
 class Block_Data_Stmt(StmtBase): # R1117
     """
+::
     <block-data-stmt> = BLOCK DATA [ <block-data-name> ]
     """
     subclass_names = []
     use_names = ['Block_Data_Name']
+    @staticmethod
     def match(string):
         if string[:5].upper()!='BLOCK': return
         line = string[5:].lstrip()
@@ -5586,33 +5621,45 @@ class Block_Data_Stmt(StmtBase): # R1117
         line = line[4:].lstrip()
         if not line: return None,
         return Block_Data_Name(line),
-    match = staticmethod(match)
     def tostr(self):
         if self.items[0] is None: return 'BLOCK DATA'
         return 'BLOCK DATA %s' % self.items
+    def get_name(self):
+        return self.items[0]
 
 class End_Block_Data_Stmt(EndStmtBase): # R1118
     """
+::
     <end-block-data-stmt> = END [ BLOCK DATA [ <block-data-name> ] ]
     """
     subclass_names = []
     use_names = ['Block_Data_Name']
-    def match(string): return EndStmtBase.match('BLOCK DATA',Block_Data_Name, string)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('BLOCK DATA',Block_Data_Name, string)
+    def get_name(self):
+        return self.items[1]
+    def set_name(self, name):
+        self.items[1] = name
 
 ###############################################################################
 ############################### SECTION 12 ####################################
 ###############################################################################
 
 
-class Interface_Block(Base): # R1201
+class Interface_Block(BlockBase): # R1201
     """
+::
     <interface-block> = <interface-stmt>
                             [ <interface-specification> ]...
                             <end-interface-stmt>
     """
     subclass_names = []
     use_names = ['Interface_Stmt', 'Interface_Specification', 'End_Interface_Stmt']
+
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Interface_Stmt, [Interface_Specification], End_Interface_Stmt, reader)
 
 class Interface_Specification(Base): # R1202
     """
@@ -5623,58 +5670,166 @@ class Interface_Specification(Base): # R1202
 
 class Interface_Stmt(StmtBase): # R1203
     """
+::
     <interface-stmt> = INTERFACE [ <generic-spec> ]
                        | ABSTRACT INTERFACE
+
+Attributes
+----------
+items : ({Generic_Spec, 'ABSTRACT'},)
     """
     subclass_names = []
     use_names = ['Generic_Spec']
 
+    @staticmethod
+    def match(string):
+        if string[:9].upper()=='INTERFACE':
+            line = string[9:].strip()
+            if not line:
+                return None,
+            return Generic_Spec(line),
+        if string[:8].upper()=='ABSTRACT':
+            line = string[8:].strip()
+            if line.upper()=='INTERFACE':
+                return 'ABSTRACT',
+
+    def tostr(self):
+        if self.items[0]=='ABSTRACT':
+            return 'ABSTRACT INTERFACE'
+        if self.items[0] is None:
+            return 'INTERFACE'
+        return 'INTERFACE %s' % (self.items[0])
+
 class End_Interface_Stmt(EndStmtBase): # R1204
     """
+::
     <end-interface-stmt> = END INTERFACE [ <generic-spec> ]
+
+Attributes
+----------
+items : (Generic_Spec, )
     """
     subclass_names = []
     use_names = ['Generic_Spec']
     def match(string): return EndStmtBase.match('INTERFACE',Generic_Spec, string, require_stmt_type=True)
     match = staticmethod(match)
 
-class Interface_Body(Base): # R1205
+class Function_Body(BlockBase):
     """
-    <interface-body> = <function-stmt>
-                           [ <specification-part> ]
-                           <end-function-stmt>
-                       | <subroutine-stmt>
-                           [ <specification-part> ]
-                           <end-subroutine-stmt>
+::
+    <function-body> = <function-stmt>
+                        [ <specification-part> ]
+                      <end-function-stmt>
     """
     subclass_names = []
-    use_names = ['Function_Stmt', 'Specification_Part', 'Subroutine_Stmt', 'End_Function_Stmt', 'End_Subroutine_Stmt']
+    use_names = ['Function_Stmt', 'Specification_Part', 'End_Function_Stmt']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Function_Stmt, [Specification_Part], End_Function_Stmt, reader)
+
+class Subroutine_Body(BlockBase):
+    """
+::
+    <subroutine-body> = <subroutine-stmt>
+                        [ <specification-part> ]
+                      <end-subroutine-stmt>
+    """
+    subclass_names = []
+    use_names = ['Subroutine_Stmt', 'Specification_Part', 'End_Subroutine_Stmt']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Subroutine_Stmt, [Specification_Part], End_Subroutine_Stmt, reader)
+
+class Interface_Body(Base): # R1205
+    """
+::
+    <interface-body> = <function-body> | <subroutine-body>
+
+See also
+--------
+Function_Body, Subroutine_Body
+    """
+    subclass_names = ['Function_Body', 'Subroutine_Body']
+    use_names = []
 
 class Procedure_Stmt(StmtBase): # R1206
     """
+::
     <procedure-stmt> = [ MODULE ] PROCEDURE <procedure-name-list>
+
+Attributes
+----------
+items : (Procedure_Name_List, )
     """
     subclass_names = []
     use_names = ['Procedure_Name_List']
 
+    @staticmethod
+    def match(string):
+        if string[:6].upper()=='MODULE':
+            line = string[6:].lstrip()
+        else:
+            line = string
+        if line[:9].upper()!='PROCEDURE':
+            return
+        line = line[9:].lstrip()
+        return Procedure_Name_List(line),
+
+    def tostr(self):
+        return 'MODULE PROCEDURE %s' % (self.items[0])
+
 class Generic_Spec(Base): # R1207
     """
+::
     <generic-spec> = <generic-name>
                      | OPERATOR ( <defined-operator> )
                      | ASSIGNMENT ( = )
                      | <dtio-generic-spec>
+Attributes
+----------
+items : ({'OPERATOR', 'ASSIGNMENT'}, {Defined_Operator, '='})
     """
     subclass_names = ['Generic_Name', 'Dtio_Generic_Spec']
     use_names = ['Defined_Operator']
-
+    @staticmethod
+    def match(string):
+        if string[:8].upper()=='OPERATOR':
+            line = string[8:].lstrip()
+            if not line or line[0]!='(' or line[-1]!=')': return
+            return 'OPERATOR', Defined_Operator(line[1:-1].strip())
+        if string[:10].upper()=='ASSIGNMENT':
+            line = string[10:].lstrip()
+            if not line or line[0]!='(' or line[-1]!=')': return
+            if line[1:-1].strip()=='=':
+                return 'ASSIGNMENT', '='
+    def tostr(self):
+        return '%s(%s)' % (self.items)
+            
 class Dtio_Generic_Spec(Base): # R1208
     """
+::
     <dtio-generic-spec> = READ ( FORMATTED )
                           | READ ( UNFORMATTED )
                           | WRITE ( FORMATTED )
                           | WRITE ( UNFORMATTED )
+Attributes
+----------
+items : (str, )
     """
     subclass_names = []
+    @staticmethod
+    def match(string):
+        for rw in ['READ', 'WRITE']:
+            if string[:len(rw)].upper()==rw:
+                line = string[len(rw):].lstrip()
+                if not line: return
+                if line[0]!='(' or line[-1]!=')': return
+                line = line[1:-1].strip().upper()
+                if line in ['FORMATTED', 'UNFORMATTED']:
+                    return '%s(%s)' % (rw, line),
+    def tostr(self):
+        return '%s' % (self.items[0])
+
 
 class Import_Stmt(StmtBase, WORDClsBase): # R1209
     """
@@ -5682,8 +5837,9 @@ class Import_Stmt(StmtBase, WORDClsBase): # R1209
     """
     subclass_names = []
     use_names = ['Import_Name_List']
-    def match(string): return WORDClsBase.match('IMPORT',Import_Name_List,string,check_colons=True, require_cls=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('IMPORT',Import_Name_List,string,check_colons=True, require_cls=True)
     tostr = WORDClsBase.tostr_a
 
 class External_Stmt(StmtBase, WORDClsBase): # R1210
@@ -5698,10 +5854,46 @@ class External_Stmt(StmtBase, WORDClsBase): # R1210
 
 class Procedure_Declaration_Stmt(StmtBase): # R1211
     """
+::
     <procedure-declaration-stmt> = PROCEDURE ( [ <proc-interface> ] ) [ [ , <proc-attr-spec> ]... :: ] <proc-decl-list>
+
+Attributes
+----------
+items : (Proc_Interface, Proc_Attr_Spec_List, Proc_Decl_List)
     """
     subclass_names = []
-    use_names = ['Proc_Interface', 'Proc_Attr_Spec', 'Proc_Decl_List']
+    use_names = ['Proc_Interface', 'Proc_Attr_Spec_List', 'Proc_Decl_List']
+
+    @staticmethod
+    def match(string):
+        if string[:9].upper()!='PROCEDURE':
+            return
+        line = string[9:].lstrip()
+        if not line.startswith('('): return
+        line, repmap = string_replace_map(line)
+        i = line.find(')')
+        if i==-1: return
+        l = line[1:i].strip()
+        proc_interface = Proc_Interface(repmap(l)) if l else None
+        line = line[i+1:].lstrip()
+        i = line.find('::')
+        proc_attr_spec_list = None
+        if i!=-1:
+            l = line[:i].rstrip()
+            if l and l[0]==',':
+                proc_attr_spec_list = Proc_Attr_Spec_List(repmap(l[1:].lstrip()))
+            line = line[i+2:].lstrip()
+        return proc_interface, proc_attr_spec_list, Proc_Decl_List(repmap(line))
+
+    def tostr(self):
+        r = 'PROCEDURE'
+        if self.items[0] is not None:
+            r += '(%s)' % (self.items[0])
+        else:
+            r += '()'
+        if self.items[1] is not None:
+            r += ', %s ::' % (self.items[1])
+        return '%s %s' % (r, self.items[2])
 
 class Proc_Interface(Base): # R1212
     """
@@ -5744,7 +5936,12 @@ items : ({'INTENT', 'OPTIONAL', 'SAVE'}, Intent_Spec)
 
 class Proc_Decl(BinaryOpBase): # R1214
     """
+::
     <proc-decl> = <procedure-entity-name> [ => <null-init> ]
+
+Attributes
+----------
+items : (Procedure_Entity_Name, Null_Init)
     """
     subclass_names = ['Procedure_Entity_Name']
     use_names = ['Null_Init']
@@ -5781,6 +5978,10 @@ class Function_Reference(CallBase): # R1217
 class Call_Stmt(StmtBase): # R1218
     """
     <call-stmt> = CALL <procedure-designator> [ ( [ <actual-arg-spec-list> ] ) ]
+
+Attributes
+----------
+items : (Procedure_Designator, Actual_Arg_Spec_List)
     """
     subclass_names = []
     use_names = ['Procedure_Designator', 'Actual_Arg_Spec_List']

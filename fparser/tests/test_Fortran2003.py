@@ -1934,41 +1934,271 @@ def test_Inquire_Spec(): # R930
 ############################### SECTION 11 ####################################
 ###############################################################################
 
+def test_Main_Program(): # R1101
+    cls = Main_Program
+    a = cls(get_reader('''
+program a
+end
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROGRAM a\nEND PROGRAM a')
+
+    a = cls(get_reader('''
+program a
+  real b
+  b = 1
+  contains
+  subroutine foo
+  end
+end
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a')
+    
+    a = Main_Program0(get_reader('''
+end
+    '''))
+    assert isinstance(a, Main_Program0),`a`
+    assert_equal(str(a),'END PROGRAM')
+
+    a = Main_Program0(get_reader('''
+contains
+  function foo()
+  end
+end
+    '''))
+    assert isinstance(a, Main_Program0),`a`
+    assert_equal(str(a),'CONTAINS\nFUNCTION foo()\nEND FUNCTION\nEND PROGRAM')
+
+def test_Module(): # R1104
+    cls = Module
+    a = cls(get_reader('''
+module m
+end
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'MODULE m\nEND MODULE m')
+    
+def test_Module_Subprogram_Part(): # R1107
+    cls = Module_Subprogram_Part
+    a = cls(get_reader('''
+contains
+  subroutine foo(a)
+  real a
+  a = 1.0
+  end
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a\n  a = 1.0\nEND SUBROUTINE foo')
+    
 def test_Use_Stmt(): # R1109
 
-        cls = Use_Stmt
-        a = cls('use a')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'USE :: a')
-        assert_equal(repr(a),"Use_Stmt(None, Name('a'), '', None)")
+    cls = Use_Stmt
+    a = cls('use a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'USE :: a')
+    assert_equal(repr(a),"Use_Stmt(None, Name('a'), '', None)")
+    
+    a = cls('use :: a, c=>d')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'USE :: a, c => d')
 
-        a = cls('use :: a, c=>d')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'USE :: a, c => d')
+    a = cls('use :: a, operator(.hey.)=>operator(.hoo.)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)')
 
-        a = cls('use :: a, operator(.hey.)=>operator(.hoo.)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)')
-
-        a = cls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'USE, INTRINSIC :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
+    a = cls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'USE, INTRINSIC :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
 
 def test_Module_Nature(): # R1110
 
-        cls = Module_Nature
-        a = cls('intrinsic')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'INTRINSIC')
-        assert_equal(repr(a),"Module_Nature('INTRINSIC')")
+    cls = Module_Nature
+    a = cls('intrinsic')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTRINSIC')
+    assert_equal(repr(a),"Module_Nature('INTRINSIC')")
+    
+    a = cls('non_intrinsic')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'NON_INTRINSIC')
 
-        a = cls('non_intrinsic')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'NON_INTRINSIC')
+def test_Rename(): # R1111
+    cls = Rename
+    a = cls('a=>b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a => b')
+
+    a = cls('operator(.foo.)=>operator(.bar.)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'OPERATOR(.FOO.) => OPERATOR(.BAR.)')
+
+def test_Block_Data(): # R1116
+    cls = Block_Data
+    a = cls(get_reader('''
+block data a
+real b
+end block data
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA a')
 
 ###############################################################################
 ############################### SECTION 12 ####################################
 ###############################################################################
+
+def test_Interface_Block(): # R1201
+    cls = Interface_Block
+    a = cls(get_reader('''\
+interface
+end interface'''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTERFACE\nEND INTERFACE')
+
+    a = cls(get_reader('''\
+abstract interface
+procedure a
+module procedure b,c
+end interface
+'''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'ABSTRACT INTERFACE\n  MODULE PROCEDURE a\n  MODULE PROCEDURE b, c\nEND INTERFACE')
+
+def test_Interface_Specification(): # R1202
+    cls = Interface_Specification
+    a = cls(get_reader('''
+    function foo()
+    end
+    '''))
+    assert isinstance(a, Function_Body),`a`
+    assert_equal(str(a),'FUNCTION foo()\nEND FUNCTION')
+
+def test_Interface_Stmt(): # R1203
+    cls = Interface_Stmt
+    a = cls('interface')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTERFACE')
+
+    a = cls('interface assignment(=)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTERFACE ASSIGNMENT(=)')
+
+    a = cls('abstract interface')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'ABSTRACT INTERFACE')
+
+def test_End_Interface_Stmt(): # R1204
+    cls = End_Interface_Stmt
+    a = cls('end interface')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'END INTERFACE')
+
+    a = cls('end interface read(formatted)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'END INTERFACE READ(FORMATTED)')
+
+def test_Interface_Body(): # R1205
+    cls = Interface_Body
+    a = cls(get_reader('''\
+subroutine foo
+end subroutine foo
+'''))
+    assert isinstance(a, Subroutine_Body),`a`
+    assert_equal(str(a),'SUBROUTINE foo\nEND SUBROUTINE foo')
+
+    a = cls(get_reader('''\
+function foo(a) result(c)
+  real a, c
+end
+'''))
+    assert isinstance(a, Function_Body),`a`
+    assert_equal(str(a),'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
+    
+def test_Procedure_Stmt(): # R1206
+    cls = Procedure_Stmt
+    a = cls('module procedure a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'MODULE PROCEDURE a')
+
+    a = cls('procedure a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'MODULE PROCEDURE a, b')
+
+def test_Generic_Spec(): # R1207
+    cls = Generic_Spec
+    a = cls('a')
+    assert isinstance(a, Name),`a`
+    assert_equal(str(a), 'a')
+    a = cls('read(formatted)')
+    assert isinstance(a, Dtio_Generic_Spec),`a`
+    assert_equal(str(a), 'READ(FORMATTED)')
+
+    a = cls('assignment ( = )')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'ASSIGNMENT(=)')
+
+    return # TODO
+    a = cls('operator(.foo.)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'OPERATOR(.foo.)')
+    
+
+    
+def test_Dtio_Generic_Spec(): # R1208
+    cls = Dtio_Generic_Spec
+    a = cls('read   ( formatted )')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'READ(FORMATTED)')
+
+    a = cls('write ( formatted )')
+    assert_equal(str(a), 'WRITE(FORMATTED)')
+    a = cls('read   ( unformatted )')
+    assert_equal(str(a), 'READ(UNFORMATTED)')
+    a = cls('write ( unformatted )')
+    assert_equal(str(a), 'WRITE(UNFORMATTED)')
+    
+
+def test_Import_Stmt(): # R1209
+    cls = Import_Stmt
+    a = cls('import :: a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'IMPORT :: a, b')
+
+    a = cls('import a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'IMPORT :: a')
+
+def test_External_Stmt(): # R1210
+    cls = External_Stmt
+    a = cls('external :: a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'EXTERNAL :: a, b')
+
+    a = cls('external a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'EXTERNAL :: a')
+
+def test_Procedure_Declaration_Stmt(): # R1211
+    cls = Procedure_Declaration_Stmt
+    a = cls('procedure () a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a), 'PROCEDURE() a')
+
+    a = cls('procedure (n) a')
+    assert_equal(str(a), 'PROCEDURE(n) a')
+
+    a = cls('procedure (real*8) a')
+    assert_equal(str(a), 'PROCEDURE(REAL*8) a')
+
+    a = cls('procedure (real(kind=8)) a')
+    assert_equal(str(a), 'PROCEDURE(REAL(KIND = 8)) a')
+
+    a = cls('procedure (real*8) :: a')
+    assert_equal(str(a), 'PROCEDURE(REAL*8) a')
+
+    a = cls('procedure (real*8), intent(in), bind(c) :: a, b')
+    assert_equal(str(a), 'PROCEDURE(REAL*8), INTENT(IN), BIND(C) :: a, b')
+
 
 def test_Proc_Attr_Spec(): # R1213
     cls = Proc_Attr_Spec
@@ -1992,6 +2222,29 @@ def test_Proc_Attr_Spec(): # R1213
     assert isinstance(a, Language_Binding_Spec),`a`
     assert_equal(str(a),'BIND(C)')
 
+def test_Proc_Decl(): # R1214
+
+    cls = Proc_Decl
+    a = cls('a => NULL')
+    assert isinstance(a, cls)
+    assert_equal(str(a),'a => NULL')
+
+    a = cls('a')
+    assert isinstance(a, Name),`type(a)`
+    assert_equal(str(a),'a')
+
+def test_Intrinsic_Stmt(): # R1216
+
+    cls = Intrinsic_Stmt
+    a = cls('intrinsic :: a, b')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'INTRINSIC :: a, b')
+    a = cls('intrinsic a, b')
+    assert_equal(str(a),'INTRINSIC :: a, b')
+
+    a = cls('intrinsic a')
+    assert_equal(str(a),'INTRINSIC :: a')
+
 def test_Function_Reference(): # R1217
 
         cls = Function_Reference
@@ -2004,6 +2257,18 @@ def test_Function_Reference(): # R1217
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'f(2, k = 1, a)')
 
+def test_Call_Stmt(): # R1218
+
+    cls = Call_Stmt
+    a = cls('call a')
+    assert isinstance(a, cls)
+    assert_equal(str(a), 'CALL a')
+
+    a = cls('call a()')
+    assert_equal(str(a), 'CALL a')
+
+    a = cls('call a(b,c)')
+    assert_equal(str(a), 'CALL a(b, c)')
 
 def test_Procedure_Designator(): # R1219
 
