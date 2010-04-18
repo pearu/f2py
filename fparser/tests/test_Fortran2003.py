@@ -1083,7 +1083,7 @@ def test_Implicit_Stmt(): # R549
         a = cls('implicitnone')
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'IMPLICIT NONE')
-        assert_equal(repr(a),"Implicit_Stmt('IMPLICIT NONE', None)")
+        assert_equal(repr(a),"Implicit_Stmt('NONE')")
 
         a = cls('implicit real(a-d), double precision(r-t,x), type(a) (y-z)')
         assert isinstance(a, cls),`a`
@@ -2012,6 +2012,76 @@ def test_Inquire_Spec(): # R930
 ############################### SECTION 10 ####################################
 ###############################################################################
 
+def test_Format_Stmt(): # R1001
+    cls = Format_Stmt
+    a = cls('format (3f9.4)')
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),'FORMAT(3F9.4)')
+    a = cls("format (' ',3f9.4)")
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),"FORMAT(' ', 3F9.4)")
+
+    a = cls('format(i6,f12.6,2x,f12.6)')
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),'FORMAT(I6, F12.6, 2X, F12.6)')
+
+    return
+    a = cls("format('text=','  '")
+    assert_equal(str(a),'')
+    
+def test_Format_Specification(): # R1002
+    cls = Format_Specification
+    a = cls('(3f9.4, 2f8.1)')
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),'(3F9.4, 2F8.1)')
+
+    a = cls("(' ', 2f8.1)")
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),"(' ', 2F8.1)")
+    
+def test_Format_Item(): # R1003
+    cls = Format_Item
+    a = cls('3f9.4')
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),'3F9.4')
+
+    a = cls("' '")
+    assert isinstance(a, Char_Literal_Constant),`type(a)`
+    assert_equal(str(a),"' '")
+
+    a = cls('i4/')
+    assert isinstance(a, Format_Item_C1002),`type(a)`
+    assert_equal(str(a),'I4, /')
+
+    a = cls('3f12.6/')
+    assert_equal(str(a),'3F12.6, /')
+
+    a = cls("/' '")
+    assert_equal(str(a),"/, ' '")
+
+    a = cls("' '/")
+    assert_equal(str(a),"' ', /")
+
+    a = cls("' '/' '")
+    assert_equal(str(a),"' ', /, ' '")
+
+def test_Format_Item_List():
+    cls = Format_Item_List
+    a = cls('3f9.4')
+    assert isinstance(a, Format_Item),`type(a)`
+    assert_equal(str(a),'3F9.4')
+
+    a = cls('3f9.4, 2f8.1')
+    assert isinstance(a, Format_Item_List),`type(a)`
+    assert_equal(str(a),'3F9.4, 2F8.1')
+
+    a = cls("' ', 2f8.1")
+    assert isinstance(a, Format_Item_List),`type(a)`
+    assert_equal(str(a),"' ', 2F8.1")
+
+    a = cls("' ', ' '")
+    assert_equal(str(a),"' ', ' '")
+    
 
 ###############################################################################
 ############################### SECTION 11 ####################################

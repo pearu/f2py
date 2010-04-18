@@ -204,6 +204,8 @@ octal_digit = Pattern('<octal-digit>',r'[0-7]')
 hex_digit = Pattern('<hex-digit>',r'[\dA-F]',flags=re.I)
 
 digit_string = Pattern('<digit-string>',r'\d+')
+abs_digit_string = abs(digit_string)
+abs_digit_string_named = abs(digit_string.named('value'))
 binary_digit_string = Pattern('<binary-digit-string>',r'[01]+')
 octal_digit_string = Pattern('<octal-digit-string>',r'[0-7]+')
 hex_digit_string = Pattern('<hex-digit-string>',r'[\dA-F]+',flags=re.I)

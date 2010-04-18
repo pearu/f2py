@@ -346,6 +346,8 @@ class FortranReaderBase(object):
         self.source_only = None
 
         self.set_mode(isfree, isstrict)
+
+        self.exit_on_error = True
         return
 
     def find_module_source_file(self, mod_name):
@@ -726,6 +728,8 @@ class FortranReaderBase(object):
         else:
             m = self.format_error_message(message, item.span[0], item.span[1])
         self.show_message(m, sys.stderr)
+        if self.exit_on_error:
+            sys.exit(1)
         return
 
     def warning(self, message, item=None):

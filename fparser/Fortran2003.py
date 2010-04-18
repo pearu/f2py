@@ -120,6 +120,10 @@ class BlockBase(Base):
                      ...
                      [ <subcls> ]...
                      [ <endcls> ]
+
+Attributes
+----------
+content : tuple
     """
     def match(startcls, subclasses, endcls, reader,
               match_labels = False,
@@ -174,6 +178,7 @@ class BlockBase(Base):
             if endcls is not None:
                 item = reader.get_item()
                 if item is not None:
+                    print item
                     reader.error('failed to parse with %s, skipping.' % ('|'.join([c.__name__ for c in classes[i:]])), item)
                     continue
                 if content and hasattr(content[0],'name'):
@@ -414,7 +419,8 @@ class NumberBase(Base):
     def match(number_pattern, string):
         m = number_pattern.match(string)
         if m is None: return
-        return m.group('value').upper(),m.group('kind_param')
+        d = m.groupdict()
+        return d['value'].upper(),d.get('kind_param')
     match = staticmethod(match)
     def tostr(self):
         if self.items[1] is None: return str(self.items[0])
@@ -589,6 +595,7 @@ class WORDClsBase(Base):
 ::
     <WORD-cls> = <WORD> [ [ :: ] <cls> ]
     """
+    @staticmethod
     def match(pattern, cls, string, check_colons=False, require_cls=False):
         if isinstance(pattern, (tuple,list)):
             for p in pattern:
@@ -628,7 +635,7 @@ class WORDClsBase(Base):
             return pattern_value, None
         if cls is None: return
         return pattern_value, cls(line)
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None: return str(self.items[0])
         s = str(self.items[1])
@@ -699,11 +706,11 @@ class Specification_Part(BlockBase): # R204
     """
     subclass_names = []
     use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part', 'Declaration_Construct']
+    @staticmethod
     def match(reader):
         return BlockBase.match(None, [Use_Stmt, Import_Stmt, Implicit_Part, Declaration_Construct], None, reader)
-    match = staticmethod(match)
 
-class Implicit_Part(Base): # R205
+class Implicit_Part(BlockBase): # R205
     """
 :F03R:`205`::
     <implicit-part> = [ <implicit-part-stmt> ]...
@@ -711,7 +718,10 @@ class Implicit_Part(Base): # R205
     """
     subclass_names = []
     use_names = ['Implicit_Part_Stmt', 'Implicit_Stmt']
-
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(None, [Implicit_Part_Stmt], None, reader)
+    
 class Implicit_Part_Stmt(Base): # R206
     """
 :F03R:`206`::
@@ -1085,6 +1095,15 @@ class Int_Literal_Constant(NumberBase): # R406
     subclass_names = []
     def match(string):
         return NumberBase.match(pattern.abs_int_literal_constant_named, string)
+    match = staticmethod(match)
+
+class Digit_String(NumberBase):
+    """
+    <digit-string> = <digit> [ <digit> ]...
+    """
+    subclass_names = []
+    def match(string):
+        return NumberBase.match(pattern.abs_digit_string_named, string)
     match = staticmethod(match)
 
 #R407: <kind-param> = <digit-string> | <scalar-int-constant-name>
@@ -2678,14 +2697,26 @@ class Volatile_Stmt(StmtBase, WORDClsBase): # R548
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
 
-class Implicit_Stmt(StmtBase, WORDClsBase): # R549
+class Implicit_Stmt(StmtBase): # R549
     """
+::
     <implicit-stmt> = IMPLICIT <implicit-spec-list>
                       | IMPLICIT NONE
+
+Attributes
+----------
+items : ({'NONE', Implicit_Spec_List},)
     """
     subclass_names = []
     use_names = ['Implicit_Spec_List']
+    @staticmethod
     def match(string):
+        if string[:8].upper()!='IMPLICIT':
+            return
+        line = string[8:].lstrip()
+        if len(line)==4 and line.upper()=='NONE':
+            return 'NONE',
+        return Implicit_Spec_List(line),
         for w,cls in [(pattern.abs_implicit_none, None),
                       ('IMPLICIT', Implicit_Spec_List)]:
             try:
@@ -2694,7 +2725,9 @@ class Implicit_Stmt(StmtBase, WORDClsBase): # R549
                 obj = None
             if obj is not None: return obj
         return
-    match = staticmethod(match)
+
+    def tostr(self):
+        return 'IMPLICIT %s' % (self.items[0])
 
 class Implicit_Spec(CallBase): # R550
     """
@@ -3118,7 +3151,7 @@ class Allocate_Stmt(StmtBase): # R623
             assert j!=-1,`i,j,line`
             opts = Alloc_Opt_List(repmap(line[j+1:].lstrip()))
             line = line[:j].rstrip()        
-        return spec, Allocation_List(line), opts
+        return spec, Allocation_List(repmap(line)), opts
 
     def tostr(self):
         spec, lst, opts = self.items
@@ -5260,8 +5293,9 @@ class Format_Stmt(StmtBase, WORDClsBase): # R1001
     """
     subclass_names = []
     use_names = ['Format_Specification']
-    def match(string): WORDClsBase.match('FORMAT', Format_Specification, string, require_cls=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('FORMAT', Format_Specification, string, require_cls=True)
 
 class Format_Specification(BracketBase): # R1002
     """
@@ -5269,55 +5303,122 @@ class Format_Specification(BracketBase): # R1002
     """
     subclass_names = []
     use_names = ['Format_Item_List']
-    def match(string): return BracketBase.match('()', Format_Item_List, string, require_cls=False)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return BracketBase.match('()', Format_Item_List, string, require_cls=False)
 
+class Format_Item_C1002(Base): # C1002
+    """
+::
+    <format-item-c1002> = <k>P [,] (F|D)<w>.<d> | (E|EN|ES|G)<w>.<d>[E<e>]
+                          | [<r>]/ [,] <format-item>
+                          | : [,] <format-item>
+                          | <format-item> [,] / [[,] <format-item>]
+                          | <format-item> [,] : [[,] <format-item>]
+                          
+Attributes
+----------
+items : (Format_Item, Format_Item)
+    """
+    subclass_names = []
+    use_names = ['K', 'W', 'D', 'E', 'Format_Item', 'R']
+
+    @staticmethod
+    def match(string):
+        if len(string)<=1: return
+        if string[0] in ':/':
+            return Control_Edit_Desc(string[0]), Format_Item(string[1:].lstrip())
+        if string[-1] in ':/':
+            return Format_Item(string[:-1].rstrip()), Control_Edit_Desc(string[-1])
+        i = 0
+        while i<len(string) and string[i].isdigit():
+            i += 1
+        if i:
+            p = string[i].upper()
+            if p in '/P':
+                return Control_Edit_Desc(string[:i+1]), Format_Item(string[i+1:].lstrip())
+        for p in '/:':
+            if p in string:
+                l,r = string.split(p,1)
+                return Format_Item(l), Format_Item(p+r)
+        
+    def tostr(self):
+        return '%s, %s' % (self.items)
+    
 class Format_Item(Base): # R1003
     """
     <format-item> = [ <r> ] <data-edit-desc>
                     | <control-edit-desc>
                     | <char-string-edit-desc>
                     | [ <r> ] ( <format-item-list> )
+                    | <format-item-c1002>
     """
-    subclass_names = ['Control_Edit_Desc', 'Char_String_Edit_Desc']
-    use_names = ['R', 'Format_Item_List']
+    subclass_names = ['Control_Edit_Desc', 'Char_String_Edit_Desc', 'Format_Item_C1002']
+    use_names = ['R', 'Format_Item_List','Data_Edit_Desc']
+    @staticmethod
+    def match(string):
+        i = 0
+        while i < len(string) and string[i].isdigit():
+            i += 1
+        rpart = None
+        if i:
+            rpart = R(string[:i])
+            string = string[i:].lstrip()
+        if not string:
+            return
+        if string[0]=='(' and string[-1]==')':
+            rest = Format_Item_List(string[1:-1].strip())
+        else:
+            rest = Data_Edit_Desc(string)
+        return rpart, rest
+
+    def tostr(self):
+        rpart, rest = self.items
+        if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
+            if rpart is not None:
+                return '%s%s' % (rpart, rest)
+            return '%s' % (rest)
+        if rpart is not None:
+            return '%s(%s)' % (rpart, rest)
+        return '(%s)' % (rest)
 
 class R(Base): # R1004
     """
+::
     <r> = <int-literal-constant>
-    <r> shall be positive and without kind parameter specified.
-    """
-    subclass_names = ['Int_Literal_Constant']
 
-class Data_Edit_Desc(Base): # R1005
+Notes
+-----
+C1003, C1004: <r> shall be positive and without kind parameter specified.
     """
-    <data-edit-desc> = I <w> [ . <m> ]
-                       | B <w> [ . <m> ]
-                       | O <w> [ . <m> ]
-                       | Z <w> [ . <m> ]
-                       | F <w> . <d>
+    subclass_names = ['Digit_String']
+
+class Data_Edit_Desc_C1002(Base):
+    """
+::
+    <data-edit-desc> =   F <w> . <d>
                        | E <w> . <d> [ E <e> ]
                        | EN <w> . <d> [ E <e> ]
                        | ES <w> . <d> [ E <e>]
                        | G <w> . <d> [ E <e> ]
-                       | L <w>
-                       | A [ <w> ]
                        | D <w> . <d>
-                       | DT [ <char-literal-constant> ] [ ( <v-list> ) ]
+
     """
     subclass_names = []
-    use_names = ['W', 'M', 'D', 'E', 'Char_Literal_Constant', 'V_List']
+    use_names = ['W', 'D', 'E']
+
+    @staticmethod
     def match(string):
         c = string[0].upper()
-        if c in ['I','B','O','Z','D']:
+        if c in ['D']:
             line = string[1:].lstrip()
             if '.' in line:
                 i1,i2 = line.split('.',1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
-                return c, W(i1), M(i2), None
+                return c, W(i1), M(i2), NoneInt_Literal_Constant
             return c,W(line), None, None
-        if c in ['E','G']:
+        if c in ['E','F','G']:
             line = string[1:].lstrip()
             if line.count('.')==1:
                 i1,i2 = line.split('.',1)
@@ -5332,15 +5433,6 @@ class Data_Edit_Desc(Base): # R1005
                 return c, W(i1), D(i2), E(i3)
             else:
                 return
-        if c=='L':
-            line = string[1:].lstrip()
-            if not line: return
-            return c, W(line), None, None
-        if c=='A':
-            line = string[1:].lstrip()
-            if not line:
-                return c, None, None, None
-            return c, W(line), None, None
         c = string[:2].upper()
         if len(c)!=2: return
         if c in ['EN','ES']:
@@ -5358,6 +5450,56 @@ class Data_Edit_Desc(Base): # R1005
                 return c, W(i1), D(i2), E(i3)
             else:
                 return
+        return
+
+    def tostr(self):
+        c = self.items[0]
+        if c in ['F', 'D']:
+            if self.items[2] is None:
+                return '%s%s' % (c, self.items[1])
+            return '%s%s.%s' % (c, self.items[1], self.items[2])
+        if c in ['E', 'EN', 'ES', 'G']:
+            if self.items[3] is None:
+                return '%s%s.%s' % (c, self.items[1], self.items[2])
+            return '%s%s.%sE%s' % (c, self.items[1], self.items[2], self.items[3])
+        raise NotImpletenetedError,`c`
+
+class Data_Edit_Desc(Base): # R1005
+    """
+::
+    <data-edit-desc> =   I <w> [ . <m> ]
+                       | B <w> [ . <m> ]
+                       | O <w> [ . <m> ]
+                       | Z <w> [ . <m> ]
+                       | L <w>
+                       | A [ <w> ]
+                       | DT [ <char-literal-constant> ] [ ( <v-list> ) ]
+                       | <data-edit-desc-c1002>
+    """
+    subclass_names = ['Data_Edit_Desc_C1002']
+    use_names = ['W', 'M', 'Char_Literal_Constant', 'V_List']
+    @staticmethod
+    def match(string):
+        c = string[0].upper()
+        if c in ['I','B','O','Z']:
+            line = string[1:].lstrip()
+            if '.' in line:
+                i1,i2 = line.split('.',1)
+                i1 = i1.rstrip()
+                i2 = i2.lstrip()
+                return c, W(i1), M(i2), NoneInt_Literal_Constant
+            return c,W(line), None, None
+        if c=='L':
+            line = string[1:].lstrip()
+            if not line: return
+            return c, W(line), None, None
+        if c=='A':
+            line = string[1:].lstrip()
+            if not line:
+                return c, None, None, None
+            return c, W(line), None, None
+        c = string[:2].upper()
+        if len(c)!=2: return
         if c=='DT':
             line = string[2:].lstrip()
             if not line:
@@ -5374,17 +5516,13 @@ class Data_Edit_Desc(Base): # R1005
                 return c, None, lst, None
             return c, Char_Literal_Constant(line), lst, None
         return
-    match = staticmethod(match)
+
     def tostr(self):
-        c = selt.items[0]
-        if c in ['I', 'B', 'O', 'Z', 'F', 'D', 'A', 'L']:
+        c = self.items[0]
+        if c in ['I', 'B', 'O', 'Z','A', 'L']:
             if self.items[2] is None:
                 return '%s%s' % (c, self.items[1])
             return '%s%s.%s' % (c, self.items[1], self.items[2])
-        if c in ['E', 'EN', 'ES', 'G']:
-            if self.items[3] is None:
-                return '%s%s.%s' % (c, self.items[1], self.items[2])
-            return '%s%s.%sE%s' % (c, self.items[1], self.items[2], self.items[3])
         if c=='DT':
             if self.items[1] is None:
                 if self.items[2] is None:
@@ -5400,31 +5538,56 @@ class Data_Edit_Desc(Base): # R1005
 
 class W(Base): # R1006
     """
-    <w> = <int-literal-constant>
+::
+    <w> = <int-literal-constant> == <digit-string>
+
+Notes
+-----
+C1006, C1007: <w> is zero or postive and without kind parameters.
     """
-    subclass_names = ['Int_Literal_Constant']
+    subclass_names = ['Digit_String']
 
 class M(Base): # R1007
     """
+::
     <m> = <int-literal-constant>
+
+Notes
+-----
+C1007: <w> is without kind parameters.
     """
     subclass_names = ['Int_Literal_Constant']
 
 class D(Base): # R1008
     """
+::
     <d> = <int-literal-constant>
+
+Notes
+-----
+C1007: <d> is without kind parameters.
     """
     subclass_names = ['Int_Literal_Constant']
 
 class E(Base): # R1009
     """
+::
     <e> = <int-literal-constant>
+
+Notes
+-----
+C1005, C1007: <e> is postive and without kind parameters.
     """
-    subclass_names = ['Int_Literal_Constant']
+    subclass_names = ['Digit_String']
 
 class V(Base): # R1010
     """
+::
     <v> = <signed-int-literal-constant>
+    
+Notes
+-----
+C1007: <w> is without kind parameters.
     """
     subclass_names = ['Signed_Int_Literal_Constant']
 
@@ -5438,14 +5601,36 @@ class Control_Edit_Desc(Base): # R1011
                           | <blank-interp-edit-desc>
                           | <round-edit-desc>
                           | <decimal-edit-desc>
+
+Attributes
+----------
+items : ({R, K, None}, {'/', 'P', ':'})
     """
     subclass_names = ['Position_Edit_Desc', 'Sign_Edit_Desc', 'Blank_Interp_Edit_Desc', 'Round_Edit_Desc',
                       'Decimal_Edit_Desc']
     use_names = ['R', 'K']
+    @staticmethod
+    def match(string):
+        if len(string)==1 and string in '/:':
+            return None, string
+        if string[-1]=='/':
+            return R(string[:-1].rstrip()), '/'
+        if string[-1].upper()=='P':
+            return K(string[:-1].rstrip()), 'P'
+
+    def tostr(self):
+        if self.items[0] is not None:
+            return '%s%s' % (self.items)
+        return '%s' % (self.items[1])
 
 class K(Base): # R1012
     """
+::
     <k> = <signed-int-literal-constant>
+
+Notes
+-----
+C1009: <k> is without kind parameters.
     """
     subclass_names = ['Signed_Int_Literal_Constant']
 
@@ -5455,15 +5640,39 @@ class Position_Edit_Desc(Base): # R1013
                            | TL <n>
                            | TR <n>
                            | <n> X
+
+Attributes
+----------
+items : ({'T', 'TL', 'TR', N}, {N, 'X'})
     """
     subclass_names = []
     use_names = ['N']
+    @staticmethod
+    def match(string):
+        if len(string)<=1:
+            return
+        if string[0].upper()=='T':
+            if string[1].upper() in 'LR':
+                start = string[:2]
+                rest = string[2:].lstrip()
+            else:
+                start = string[1]
+                rest = string[1:].lstrip()
+            return start.upper(), N(rest)
+        if string[-1].upper()=='X':
+            return N(string[:-1].rstrip()), 'X'
+
+    def tostr(self):
+        return '%s%s' % (self.items)
 
 class N(Base): # R1014
     """
-    <n> = <int-literal-constant>
+::
+    <n> = <int-literal-constant> == <digit-string>
+
+C1010, C1011: <n> is positive and without kind parameter.
     """
-    subclass_names = ['Int_Literal_Constant']
+    subclass_names = ['Digit_String']
 
 class Sign_Edit_Desc(STRINGBase): # R1015
     """
