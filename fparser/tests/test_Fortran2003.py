@@ -1113,6 +1113,15 @@ def test_Letter_Spec(): # R551
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'D')
 
+def test_Namelist_Stmt(): # R552
+    cls = Namelist_Stmt
+    a = cls('namelist / nlist / a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'NAMELIST /nlist/ a')
+
+    a = cls('namelist / nlist / a, /mlist/ b,c /klist/ d,e')
+    assert_equal(str(a),'NAMELIST /nlist/ a, /mlist/ b, c, /klist/ d, e')
+        
 def test_Equivalence_Stmt(): # R554
 
         cls = Equivalence_Stmt
@@ -1303,6 +1312,19 @@ def test_Subscript_Triplet(): # R620
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'a + 1 :')
 
+def test_Allocate_Stmt(): # R623
+    cls = Allocate_Stmt
+    a = cls('allocate(a,b)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'ALLOCATE(a, b)')
+
+    a = cls('allocate(real::a)')
+    assert_equal(str(a),'ALLOCATE(REAL::a)')
+
+    a = cls('allocate(real(kind=8)::a, stat=b, source=c//d)')
+    assert_equal(str(a),'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
+
+
 def test_Alloc_Opt(): # R624
 
         cls = Alloc_Opt
@@ -1323,6 +1345,18 @@ def test_Nullify_Stmt(): # R633
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'NULLIFY(a, c)')
 
+def test_Deallocate_Stmt(): # R635
+    cls = Deallocate_Stmt
+    a = cls('deallocate (a)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DEALLOCATE(a)')
+
+    a = cls('deallocate (a,stat=b)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DEALLOCATE(a, STAT = b)')
+    a = cls('deallocate (a,c,stat=b,errmsg=d)')
+    assert_equal(str(a),'DEALLOCATE(a, c, STAT = b, ERRMSG = d)')
+        
 ###############################################################################
 ############################### SECTION  7 ####################################
 ###############################################################################
@@ -1696,6 +1730,55 @@ def test_Where_Construct_Stmt(): # R745
 ############################### SECTION  8 ####################################
 ###############################################################################
 
+def test_Block_Label_Do_Construct(): # # R826_1
+    cls = Block_Label_Do_Construct
+    a = cls(get_reader('''
+      do 12
+        a = 1
+ 12   continue
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'DO 12\n  a = 1\n12 CONTINUE')
+
+    a = cls(get_reader('''
+      do 12
+        do 13
+          a = 1
+ 13   continue
+ 12   continue
+    '''))
+    assert_equal(str(a),'DO 12\n  DO 13\n    a = 1\n13 CONTINUE\n12 CONTINUE')
+    assert len(a.content)==3,`len(a.content)`
+    assert_equal(str(a.content[1]), 'DO 13\n  a = 1\n13 CONTINUE')
+
+def test_Block_Nonlabel_Do_Construct(): # # R826_2
+    cls = Block_Nonlabel_Do_Construct
+    a = cls(get_reader('''
+      do i=1,10
+        a = 1
+      end do
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'DO , i = 1, 10\n  a = 1\nEND DO')
+
+    a = cls(get_reader('''
+      foo:do i=1,10
+        a = 1
+      end do foo
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'foo:DO , i = 1, 10\n  a = 1\nEND DO foo')
+
+    a = cls(get_reader('''
+      do j=1,2
+      foo:do i=1,10
+        a = 1
+      end do foo
+      end do
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'DO , j = 1, 2\n  foo:DO , i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
+
 def test_Label_Do_Stmt(): # R828
 
     cls = Label_Do_Stmt
@@ -1706,11 +1789,11 @@ def test_Label_Do_Stmt(): # R828
 
 def test_Continue_Stmt(): # R848
 
-        cls = Continue_Stmt
-        a = cls('continue')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'CONTINUE')
-        assert_equal(repr(a),"Continue_Stmt('CONTINUE')")
+    cls = Continue_Stmt
+    a = cls('continue')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'CONTINUE')
+    assert_equal(repr(a),"Continue_Stmt('CONTINUE')")
 
 ###############################################################################
 ############################### SECTION  9 ####################################

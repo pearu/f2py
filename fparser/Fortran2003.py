@@ -121,7 +121,10 @@ class BlockBase(Base):
                      [ <subcls> ]...
                      [ <endcls> ]
     """
-    def match(startcls, subclasses, endcls, reader):
+    def match(startcls, subclasses, endcls, reader,
+              match_labels = False,
+              match_names = False,
+              ):
         assert isinstance(reader,FortranReaderBase),`reader`
         content = []
         if startcls is not None:
@@ -158,6 +161,14 @@ class BlockBase(Base):
             if obj is not None:
                 content.append(obj)
                 if endcls is not None and isinstance(obj, endcls):
+                    if match_labels:
+                        start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
+                        if start_label != end_label:
+                            continue
+                    if match_names:
+                        start_name, end_name = content[0].get_start_name(), content[-1].get_end_name()
+                        if start_name != end_name:
+                            continue
                     break
                 continue
             if endcls is not None:
@@ -165,7 +176,6 @@ class BlockBase(Base):
                 if item is not None:
                     reader.error('failed to parse with %s, skipping.' % ('|'.join([c.__name__ for c in classes[i:]])), item)
                     continue
-                print content
                 if content and hasattr(content[0],'name'):
                     reader.error('unexpected eof file while looking line for <%s> of %s.'\
                                  % (classes[-1].__name__.lower().replace('_','-'), content[0].name))
@@ -460,6 +470,10 @@ class StringBase(Base):
     """
 ::
     <string-base> = <xyz>
+
+Attributes
+----------
+string
     """
     def match(pattern, string):
         if isinstance(pattern, (list,tuple)):
@@ -504,12 +518,18 @@ class STRINGBase(StringBase):
 class StmtBase(Base):
     """
 ::
-    [ <label> ] <stmt>
+    [ [ <label> ] [ <construct-name> : ] ] <stmt>
+
+Attributes
+----------
+item : readfortran.Line
     """
     def tofortran(self, tab='', isfix=None):
         label = None
+        name = None
         if self.item is not None:
             label = self.item.label
+            name = self.item.name
         if isfix:
             c = ' '
         else:
@@ -522,6 +542,8 @@ class StmtBase(Base):
                 tab = tab[len(t):] or ' '
         else:
             t = ''
+        if name:
+            return t + tab + name+':' + str(self)
         return t + tab + str(self)
 
 class EndStmtBase(StmtBase):
@@ -952,12 +974,20 @@ class Char_Constant(Base): # R309
 
 class Label(StringBase): # R313
     """
+::
     <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
+
+Attributes
+----------
+string : str
     """
     subclass_names = []
     @staticmethod
     def match(string):
         return StringBase.match(pattern.abs_label, string)
+
+    def __int__(self):
+        return int(self.string)
 
 ###############################################################################
 ############################### SECTION  4 ####################################
@@ -2706,10 +2736,37 @@ class Letter_Spec(Base): # R551
 
 class Namelist_Stmt(StmtBase): # R552
     """
-    <namelist-stmt> = NAMELIST / <namelist-group-name> / <namelist-group-object-list> [ [ , ] / <namelist-group-name> / <namelist-group-object-list> ]
+::
+    <namelist-stmt> = NAMELIST / <namelist-group-name> / <namelist-group-object-list> [ [ , ] / <namelist-group-name> / <namelist-group-object-list> ]...
+
+Attributes
+----------
+items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
     """
     subclass_names = []
     use_names = ['Namelist_Group_Name', 'Namelist_Group_Object_List']
+    @staticmethod
+    def match(string):
+        if string[:8].upper()!='NAMELIST':
+            return
+        line = string[8:].lstrip()
+        parts = line.split('/')
+        items = []
+        fst = parts.pop(0)
+        assert not fst,`fst, parts`
+        while len(parts)>=2:
+            name,lst = parts[:2]
+            del parts[:2]
+            name = name.strip()
+            lst = lst.strip()
+            if lst.endswith(','):
+                lst = lst[:-1].rstrip()
+            items.append((Namelist_Group_Name(name),Namelist_Group_Object_List(lst)))
+        assert not parts,`parts`
+        return tuple(items)
+
+    def tostr(self):
+        return 'NAMELIST ' + ', '.join('/%s/ %s' % (name_lst) for name_lst in self.items)
 
 class Namelist_Group_Object(Base): # R553
     """
@@ -3041,6 +3098,40 @@ class Allocate_Stmt(StmtBase): # R623
     subclass_names = []
     use_names = ['Type_Spec', 'Allocation_List', 'Alloc_Opt_List']
 
+    @staticmethod
+    def match(string):
+        if string[:8].upper() != 'ALLOCATE':
+            return
+        line = string[8:].lstrip()
+        if not line or line[0]!='(' or line[-1]!=')':
+            return
+        line, repmap = string_replace_map(line[1:-1].strip())
+        i = line.find('::')
+        spec = None
+        if i!=-1:
+            spec = Type_Spec(repmap(line[:i].rstrip()))
+            line = line[i+2:].lstrip()
+        i = line.find('=')
+        opts = None
+        if i!=-1:
+            j = line[:i].rfind(',')
+            assert j!=-1,`i,j,line`
+            opts = Alloc_Opt_List(repmap(line[j+1:].lstrip()))
+            line = line[:j].rstrip()        
+        return spec, Allocation_List(line), opts
+
+    def tostr(self):
+        spec, lst, opts = self.items
+        if spec is not None:
+            if opts is not None:
+                return 'ALLOCATE(%s::%s, %s)' % (spec, lst, opts)
+            else:
+                return 'ALLOCATE(%s::%s)' % (spec, lst)
+        elif opts is not None:
+            return 'ALLOCATE(%s, %s)' % (lst, opts)
+        else:
+            return 'ALLOCATE(%s)' % (lst)
+    
 class Alloc_Opt(KeywordValueBase):# R624
     """
     <alloc-opt> = STAT = <stat-variable>
@@ -3155,6 +3246,27 @@ class Deallocate_Stmt(StmtBase): # R635
     """
     subclass_names = []
     use_names = ['Allocate_Object_List', 'Dealloc_Opt_List']
+    @staticmethod
+    def match(string):
+        if string[:10].upper()!='DEALLOCATE':
+            return
+        line = string[10:].lstrip()
+        if not line or line[0]!='(' or line[-1]!=')':
+            return
+        line, repmap = string_replace_map(line[1:-1].strip())
+        i = line.find('=')
+        opts = None
+        if i!=-1:
+            j = line[:i].rfind(',')
+            assert j!=-1,`i,j,line`
+            opts = Dealloc_Opt_List(repmap(line[j+1:].lstrip()))
+            line = line[:j].rstrip()
+        return Allocate_Object_List(repmap(line)), opts
+
+    def tostr(self):
+        if self.items[1] is not None:
+            return 'DEALLOCATE(%s, %s)' % (self.items)
+        return 'DEALLOCATE(%s)' % (self.items[0])
 
 class Dealloc_Opt(KeywordValueBase): # R636
     """
@@ -4100,21 +4212,27 @@ class Do_Construct(Base): # R825
     """
     subclass_names = ['Block_Do_Construct', 'Nonblock_Do_Construct']
 
-class Block_Do_Construct(BlockBase): # R826
+class Block_Do_Construct(Base): # R826
     """
-    <block-do-construct> = <do-stmt>
-                               <do-block>
-                               <end-do>
+    <block-do-construct> = <block-label-do-construct> | <block-nonlabel-do-construct>
+    """
+    subclass_names = ['Block_Label_Do_Construct', 'Block_Nonlabel_Do_Construct']
+
+class Block_Label_Do_Construct(BlockBase): # R826_1
+    """
+    <block-label-do-construct> = <label-do-stmt>
+                                   [ <execution-part-construct> ]...
+                                   <continue-stmt>
     """
     subclass_names = []
-    use_names = ['Do_Stmt', 'Do_Block', 'End_Do']
+    use_names = ['Label_Do_Stmt', 'Execution_Part_Construct', 'Continue_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(Do_Stmt, [Do_Block], End_Do, reader)
+        return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
+                               Continue_Stmt, reader,
+                               match_labels=True)
 
     def tofortran(self, tab='', isfix=None):
-        if not isinstance(self.content[0], Label_Do_Stmt):
-            return BlockBase.tofortran(tab, isfix)
         l = []
         start = self.content[0]
         end = self.content[-1]
@@ -4125,6 +4243,21 @@ class Block_Do_Construct(BlockBase): # R826
         if len(self.content)>1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
+
+    
+class Block_Nonlabel_Do_Construct(BlockBase): # R826_2
+    """
+    <block-nonlabel-do-construct> = <nonlabel-do-stmt>
+                                     [ <execution-part-construct> ]...
+                                     <end-do-stmt>
+    """
+    subclass_names = []
+    use_names = ['Nonlabel_Do_Stmt', 'Execution_Part_Construct', 'End_Do_Stmt']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
+                               End_Do_Stmt, reader
+                               )
 
 class Do_Stmt(Base): # R827
     """
@@ -4141,7 +4274,7 @@ class Label_Do_Stmt(StmtBase): # R828
     use_names = ['Do_Construct_Name', 'Label', 'Loop_Control']
     @staticmethod
     def match(string):
-        # TODO: parse do-construct-name
+        # do-construct-name is determined by reader
         if string[:2].upper()!='DO': return
         line = string[2:].lstrip()
         m = pattern.label.match(line)
@@ -4161,6 +4294,12 @@ class Label_Do_Stmt(StmtBase): # R828
         if loop_control is not None:
             s += ' %s' % (loop_control)
         return s
+
+    def get_start_name(self):
+        return self.item.name
+
+    def get_start_label(self):
+        return int(self.items[1])
 
     do_construct_name = property(lambda self: self.items[0])
     label = property(lambda self: self.items[1])
@@ -4209,7 +4348,7 @@ class Do_Variable(Base): # R831
     """
     subclass_names = ['Scalar_Int_Variable']
 
-class Do_Block(Base): # R832
+class Do_Block(BlockBase): # R832
     """
     <do-block> = [ <execution-part-construct> ]...
     """
@@ -4236,6 +4375,8 @@ class End_Do_Stmt(EndStmtBase): # R834
     def match(string):
         return EndStmtBase.match('DO',Do_Construct_Name, string, require_stmt_type=True)
 
+    def get_end_name(self):
+        return self.items[2]
 
 class Nonblock_Do_Construct(Base): # R835
     """
@@ -4414,6 +4555,8 @@ class Continue_Stmt(StmtBase, STRINGBase): # R848
     def match(string): return STRINGBase.match('CONTINUE', string)
     match = staticmethod(match)
 
+    def get_end_label(self):
+        return self.item.label
 
 class Stop_Stmt(StmtBase, WORDClsBase): # R849
     """
@@ -4586,8 +4729,8 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
             l = line[1:i].strip()
             if not l: return
             if i==len(line)-1:
-                return Io_Control_Spec_List(l),None,None
-            return Io_Control_Spec_List(l), None, Input_Item_List(repmap(line[i+1:].lstrip()))
+                return Io_Control_Spec_List(repmap(l)),None,None
+            return Io_Control_Spec_List(repmap(l)), None, Input_Item_List(repmap(line[i+1:].lstrip()))
         if not line: return
         c = line[0].upper()
         if 'A'<=c<='Z' or c=='_' or '0'<=c<='9': return
@@ -5419,10 +5562,8 @@ class End_Program_Stmt(EndStmtBase): # R1103
     """
     subclass_names = []
     use_names = ['Program_Name']
+    @staticmethod
     def match(string): return EndStmtBase.match('PROGRAM',Program_Name, string)
-    match = staticmethod(match)
-    def get_name(self): return self.items[1]
-    def set_name(self, name): self.items[1] = name
 
 class Module(BlockBase): # R1104
     """
@@ -5458,8 +5599,6 @@ class End_Module_Stmt(EndStmtBase): # R1106
     @staticmethod
     def match(string):
         return EndStmtBase.match('MODULE',Module_Name, string)
-    def get_name(self): return self.items[1]
-    def set_name(self, name): self.items[1] = name
 
 class Module_Subprogram_Part(BlockBase): # R1107
     """
@@ -5637,10 +5776,7 @@ class End_Block_Data_Stmt(EndStmtBase): # R1118
     @staticmethod
     def match(string):
         return EndStmtBase.match('BLOCK DATA',Block_Data_Name, string)
-    def get_name(self):
-        return self.items[1]
-    def set_name(self, name):
-        self.items[1] = name
+
 
 ###############################################################################
 ############################### SECTION 12 ####################################
@@ -6253,8 +6389,8 @@ class Dummy_Arg(StringBase): # R1233
                   | *
     """
     subclass_names = ['Dummy_Arg_Name']
+    @staticmethod
     def match(string): return StringBase.match('*', string)
-    match = staticmethod(match)
 
 class End_Subroutine_Stmt(EndStmtBase): # R1234
     """
@@ -6262,8 +6398,8 @@ class End_Subroutine_Stmt(EndStmtBase): # R1234
     """
     subclass_names = []
     use_names = ['Subroutine_Name']
+    @staticmethod
     def match(string): return EndStmtBase.match('SUBROUTINE', Subroutine_Name, string)
-    match = staticmethod(match)
 
 class Entry_Stmt(StmtBase): # R1235
     """
@@ -6310,6 +6446,7 @@ class Return_Stmt(StmtBase): # R1236
     """
     subclass_names = []
     use_names = ['Scalar_Int_Expr']
+
     def match(string):
         start = string[:6].upper()
         if start!='RETURN': return
