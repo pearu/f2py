@@ -19,6 +19,15 @@ class NoMatchError(Exception):
 class ParseError(Exception):
     pass
 
+def show_result(func):
+    return func
+    def new_func(cls, string, **kws):
+        r = func(cls, string, **kws)
+        if r is not None and isinstance(r, StmtBase):
+            print '%s(%r) -> %r' % (cls.__name__, string, str(r))
+        return r
+    return new_func
+
 class Base(object):
     """ Base class for Fortran 2003 syntax rules.
 
@@ -29,6 +38,7 @@ class Base(object):
     """
     subclasses = {}
 
+    @show_result
     def __new__(cls, string, parent_cls = None):
         """
         """
@@ -128,6 +138,7 @@ content : tuple
     def match(startcls, subclasses, endcls, reader,
               match_labels = False,
               match_names = False,
+              enable_nonblock_do_construct_hook = False,
               ):
         assert isinstance(reader,FortranReaderBase),`reader`
         content = []
@@ -139,12 +150,27 @@ content : tuple
             if obj is None:
                 return
             content.append(obj)
+            if enable_nonblock_do_construct_hook:
+                start_label = obj.get_start_label()
         if endcls is not None:
             classes = subclasses + [endcls]
         else:
             classes = subclasses[:]
+        if endcls is not None:
+            endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
         i = 0
         while classes:
+            if enable_nonblock_do_construct_hook:
+                try:
+                    obj = startcls(reader)
+                except NoMatchError:
+                    obj = None
+                if obj is not None:
+                    if start_label == obj.get_start_label():
+                        content.append(obj)
+                        continue
+                    else:
+                        raise NotImplementedError('restore reader')
             cls = classes[i]
             try:
                 obj = cls(reader)
@@ -164,7 +190,7 @@ content : tuple
                     i = j
             if obj is not None:
                 content.append(obj)
-                if endcls is not None and isinstance(obj, endcls):
+                if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
                         start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
                         if start_label != end_label:
@@ -193,7 +219,7 @@ content : tuple
             # check names of start and end statements:
             start_stmt = content[0]
             end_stmt = content[-1]
-            if isinstance(end_stmt, endcls) and hasattr(end_stmt, 'get_name') and hasattr(start_stmt, 'get_name'):
+            if isinstance(end_stmt, endcls_all) and hasattr(end_stmt, 'get_name') and hasattr(start_stmt, 'get_name'):
                 if end_stmt.get_name() is not None:
                     if start_stmt.get_name() != end_stmt.get_name():
                         end_stmt.item.reader.error('expected <%s-name> is %s but got %s. Ignoring.'\
@@ -551,6 +577,9 @@ item : readfortran.Line
         if name:
             return t + tab + name+':' + str(self)
         return t + tab + str(self)
+
+    def get_end_label(self):
+        return self.item.label
 
 class EndStmtBase(StmtBase):
     """
@@ -4420,21 +4449,36 @@ class Nonblock_Do_Construct(Base): # R835
 
 class Action_Term_Do_Construct(BlockBase): # R836
     """
+::
     <action-term-do-construct> = <label-do-stmt>
                                      <do-body>
                                      <do-term-action-stmt>
+
+::
+    <action-term-do-construct> = <label-do-stmt>
+                                 [ <execution-part-construct> ]...
+                                 <do-term-action-stmt>
     """
     subclass_names = []
-    use_names = ['Label_Do_Stmt', 'Do_Body', 'Do_Term_Action_Stmt']
+    use_names = ['Label_Do_Stmt', 'Execution_Part_Construct', 'Do_Term_Action_Stmt']
+
+    @staticmethod
     def match(reader):
-        content = []
-        for cls in [Label_Do_Stmt, Do_Body, Do_Term_Action_Stmt]:
-            obj = cls(reader)
-            if obj is None: # todo: restore reader
-                return
-            content.append(obj)
-        return content,
-    match = staticmethod(match)
+        return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
+                               Do_Term_Action_Stmt, reader,
+                               match_labels=True, enable_nonblock_do_construct_hook=True)
+
+    def tofortran(self, tab='', isfix=None):
+        l = []
+        start = self.content[0]
+        end = self.content[-1]
+        extra_tab = '  '
+        l.append(start.tofortran(tab=tab,isfix=isfix))
+        for item in self.content[1:-1]:
+            l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
+        if len(self.content)>1:
+            l.append(end.tofortran(tab=tab,isfix=isfix))
+        return '\n'.join(l)
 
 class Do_Body(BlockBase): # R837
     """
@@ -4447,10 +4491,15 @@ class Do_Body(BlockBase): # R837
 
 class Do_Term_Action_Stmt(StmtBase): # R838
     """
+::
     <do-term-action-stmt> = <action-stmt>
-    C824: <do-term-action-stmt> shall not be <continue-stmt>, <goto-stmt>, <return-stmt>, <stop-stmt>,
-                          <exit-stmt>, <cycle-stmt>, <end-function-stmt>, <end-subroutine-stmt>,
-                          <end-program-stmt>, <arithmetic-if-stmt>
+
+Notes
+-----
+C824: <do-term-action-stmt> shall not be <continue-stmt>, <goto-stmt>,
+      <return-stmt>, <stop-stmt>, <exit-stmt>, <cycle-stmt>,
+      <end-function-stmt>, <end-subroutine-stmt>, <end-program-stmt>,
+      <arithmetic-if-stmt>
     """
     subclass_names = ['Action_Stmt_C824']
 
@@ -4953,6 +5002,22 @@ class Io_Implied_Do(Base): # R917
     subclass_names = []
     use_names = ['Io_Implied_Do_Object_List', 'Io_Implied_Do_Control']
 
+    @staticmethod
+    def match(string):
+        if len(string)<=9 or string[0]!='(' or string[-1]!=')':
+            return
+        line, repmap = string_replace_map(string[1:-1].strip())
+        i = line.rfind('=')
+        if i==-1:
+            return
+        j = line[:i].rfind(',')
+        if j==-1:
+            return
+        return Io_Implied_Do_Object_List(repmap(line[:j].rstrip())), Io_Implied_Do_Control(repmap(line[j+1:].lstrip()))
+
+    def tostr(self):
+        return '(%s, %s)' % (self.items)
+
 class Io_Implied_Do_Object(Base): # R918
     """
     <io-implied-do-object> = <input-item>
@@ -4966,6 +5031,25 @@ class Io_Implied_Do_Control(Base): # R919
     """
     subclass_names = []
     use_names = ['Do_Variable', 'Scalar_Int_Expr']
+
+    @staticmethod
+    def match(string):
+        line, repmap = string_replace_map(string)
+        if '=' not in line:
+            return
+        v, exprs = line.split('=',1)
+        v = Do_Variable(repmap(v.rstrip()))
+        exprs = exprs.lstrip().split(',')
+        if len(exprs) not in [2,3]: return
+        exprs = tuple([Scalar_Int_Expr(repmap(e.strip())) for e in exprs])
+        if len(exprs)==2:
+            return (v,)+exprs+(None,)
+        return (v,)+exprs
+
+    def tostr(self):
+        if self.items[3] is not None:
+            return '%s = %s, %s, %s' % (self.items)
+        return '%s = %s, %s' % (self.items[:-1])
 
 class Dtv_Type_Spec(CALLBase): # R920
     """

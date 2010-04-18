@@ -1787,6 +1787,25 @@ def test_Label_Do_Stmt(): # R828
     assert_equal(str(a),'DO 12')
     assert_equal(repr(a),"Label_Do_Stmt(None, Label('12'), None)")
 
+def test_Nonblock_Do_Construct(): # R835
+    cls = Nonblock_Do_Construct
+    a = cls(get_reader('''
+      do  20  i = 1, 3
+ 20     rotm(i,j) = r2(j,i)
+    '''))
+    assert isinstance(a,Action_Term_Do_Construct),`a`
+    assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
+
+    a = cls(get_reader('''
+      do  20  i = 1, 3
+      k = 3
+      do  20  j = 1, 3
+      l = 3
+ 20     rotm(i,j) = r2(j,i)
+    '''))
+    assert isinstance(a,Action_Term_Do_Construct),`a`
+    assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n  l = 3\n20 rotm(i, j) = r2(j, i)')
+    
 def test_Continue_Stmt(): # R848
 
     cls = Continue_Stmt
@@ -1893,6 +1912,27 @@ def test_Format(): # R914
         a = cls('123')
         assert isinstance(a, Label),`a`
         assert_equal(str(a),'123')
+
+def test_Io_Implied_Do(): # R917
+    cls = Io_Implied_Do
+    a = cls('(a, i=1,2)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'(a, i = 1, 2)')
+
+    a = cls('((i+j,j=3,4,1), i=1,2)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'((i + j, j = 3, 4, 1), i = 1, 2)')
+
+def test_Io_Implied_Do_Control(): # R919
+
+    cls = Io_Implied_Do_Control
+    a = cls('i=1,2')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'i = 1, 2')
+
+    a = cls('i=f(2),2-1,a+2')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'i = f(2), 2 - 1, a + 2')
 
 def test_Wait_Stmt(): # R921
 
