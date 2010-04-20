@@ -137,7 +137,7 @@ content : tuple
     """
     def match(startcls, subclasses, endcls, reader,
               match_labels = False,
-              match_names = False,
+              match_names = False, match_name_classes = (),
               enable_nonblock_do_construct_hook = False,
               ):
         assert isinstance(reader,FortranReaderBase),`reader`
@@ -152,6 +152,8 @@ content : tuple
             content.append(obj)
             if enable_nonblock_do_construct_hook:
                 start_label = obj.get_start_label()
+            if match_names:
+                start_name = obj.get_start_name()
         if endcls is not None:
             classes = subclasses + [endcls]
         else:
@@ -190,6 +192,12 @@ content : tuple
                     i = j
             if obj is not None:
                 content.append(obj)
+
+                if match_names and isinstance(obj,match_name_classes):
+                    end_name = obj.get_end_name()
+                    if end_name != start_name:
+                        reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
+                
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
                         start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
@@ -207,9 +215,9 @@ content : tuple
                     print item
                     reader.error('failed to parse with %s, skipping.' % ('|'.join([c.__name__ for c in classes[i:]])), item)
                     continue
-                if content and hasattr(content[0],'name'):
-                    reader.error('unexpected eof file while looking line for <%s> of %s.'\
-                                 % (classes[-1].__name__.lower().replace('_','-'), content[0].name))
+                if content:# and hasattr(content[0],'name'):
+                    reader.error('unexpected eof file while looking line for <%s> with name "%s".'\
+                                 % (classes[-1].__name__.lower().replace('_','-'), content[0].get_start_name()))
                 else:
                     reader.error('unexpected eof file while looking line for <%s>.'\
                                  % (classes[-1].__name__.lower().replace('_','-')))
@@ -3934,46 +3942,16 @@ class If_Construct(BlockBase): # R802
     subclass_names = []
     use_names = ['If_Then_Stmt', 'Block', 'Else_If_Stmt', 'Else_Stmt', 'End_If_Stmt']
 
-    def match(reader):
-        content = []
-        try:
-            obj = If_Then_Stmt(reader)
-        except NoMatchError:
-            obj = None
-        if obj is None: return
-        content.append(obj)
-        obj = Block(reader)
-        if obj is None: return # todo: restore reader
-        content.append(obj)
-        while 1:
-            try:
-                obj = Else_If_Stmt(reader)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
-                content.append(obj)
-                obj = Block(reader)
-                if obj is None: return # todo: restore reader
-                content.append(obj)
-                continue
-            try:
-                obj = Else_Stmt(reader)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
-                content.append(obj)
-                obj = Block(reader)
-                if obj is None: return # todo: restore reader
-                content.append(obj)
-            break
-        try:
-            obj = End_If_Stmt(reader)
-        except NoMatchError:
-            obj = None
-        if obj is None: return # todo: restore reader
-        content.append(obj)
-        return content,
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return BlockBase.match(If_Then_Stmt, [Execution_Part_Construct,
+                                              Else_If_Stmt,
+                                              Execution_Part_Construct,
+                                              Else_Stmt,
+                                              Execution_Part_Construct],
+                               End_If_Stmt, string,
+                               match_names = True,
+                               match_name_classes = (Else_If_Stmt, Else_Stmt, End_If_Stmt))
 
     def tofortran(self, tab='', isfix=None):
         l = []
@@ -3995,6 +3973,8 @@ class If_Then_Stmt(StmtBase): # R803
     """
     subclass_names = []
     use_names = ['If_Construct_Name', 'Scalar_Logical_Expr']
+
+    @staticmethod
     def match(string):
         if string[:2].upper()!='IF': return
         if string[-4:].upper()!='THEN': return
@@ -4002,8 +3982,12 @@ class If_Then_Stmt(StmtBase): # R803
         if not line: return
         if line[0]+line[-1]!='()': return
         return Scalar_Logical_Expr(line[1:-1].strip()),
-    match = staticmethod(match)
-    def tostr(self): return 'IF (%s) THEN' % self.items
+
+    def tostr(self):
+        return 'IF (%s) THEN' % self.items
+
+    def get_start_name(self):
+        return self.item.name
 
 class Else_If_Stmt(StmtBase): # R804
     """
@@ -4012,6 +3996,7 @@ class Else_If_Stmt(StmtBase): # R804
     subclass_names = []
     use_names = ['Scalar_Logical_Expr', 'If_Construct_Name']
 
+    @staticmethod
     def match(string):
         if string[:4].upper()!='ELSE': return
         line = string[4:].lstrip()
@@ -4026,11 +4011,16 @@ class Else_If_Stmt(StmtBase): # R804
         line = line[4:].lstrip()
         if line: return Scalar_Logical_Expr(expr), If_Construct_Name(line)
         return Scalar_Logical_Expr(expr), None
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None:
             return 'ELSE IF (%s) THEN' % (self.items[0])
         return 'ELSE IF (%s) THEN %s' % self.items
+
+    def get_end_name(self):
+        name = self.items[1]
+        if name is not None:
+            return name.string
 
 class Else_Stmt(StmtBase): # R805
     """
@@ -4038,16 +4028,23 @@ class Else_Stmt(StmtBase): # R805
     """
     subclass_names = []
     use_names = ['If_Construct_Name']
+
+    @staticmethod
     def match(string):
         if string[:4].upper()!='ELSE': return
         line = string[4:].lstrip()
         if line: return If_Construct_Name(line),
         return None,
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[0] is None:
             return 'ELSE'
         return 'ELSE %s' % self.items
+
+    def get_end_name(self):
+        name = self.items[0]
+        if name is not None:
+            return name.string
 
 class End_If_Stmt(EndStmtBase): # R806
     """
@@ -4055,8 +4052,15 @@ class End_If_Stmt(EndStmtBase): # R806
     """
     subclass_names = []
     use_names = ['If_Construct_Name']
-    def match(string): return EndStmtBase.match('IF',If_Construct_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('IF',If_Construct_Name, string, require_stmt_type=True)
+
+    def get_end_name(self):
+        name = self.items[1]
+        if name is not None:
+            return name.string
 
 class If_Stmt(StmtBase): # R807
     """
@@ -4064,6 +4068,7 @@ class If_Stmt(StmtBase): # R807
     """
     subclass_names = []
     use_names = ['Scalar_Logical_Expr', 'Action_Stmt_C802']
+    @staticmethod
     def match(string):
         if string[:2].upper() != 'IF': return
         line, repmap = string_replace_map(string)
@@ -4074,7 +4079,6 @@ class If_Stmt(StmtBase): # R807
         expr = repmap(line[1:i].strip())
         stmt = repmap(line[i+1:].lstrip())
         return Scalar_Logical_Expr(expr), Action_Stmt_C802(stmt)
-    match = staticmethod(match)
     def tostr(self): return 'IF (%s) %s' % self.items
 
 class Case_Construct(Base): # R808

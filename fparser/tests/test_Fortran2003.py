@@ -1730,6 +1730,85 @@ def test_Where_Construct_Stmt(): # R745
 ############################### SECTION  8 ####################################
 ###############################################################################
 
+def test_If_Construct(): # R802
+    cls = If_Construct
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+end if
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\nEND IF')
+
+    a = cls(get_reader('''
+name: if (expr) then
+  a = 1
+end if name
+    '''))
+
+    assert_equal(str(a),'name:IF (expr) THEN\n  a = 1\nEND IF name')
+
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+  if (expr2) then
+    a = 2
+  endif
+  a = 3
+end if
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\n  IF (expr2) THEN\n    a = 2\n  END IF\n  a = 3\nEND IF')
+
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+else if (expr2) then
+  a = 2
+end if
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nEND IF')
+
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+else
+  a = 2
+end if
+    '''))
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE\n  a = 2\nEND IF')
+
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+else if (expr2) then
+  a = 2
+else
+  a = 3
+end if
+    '''))
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nELSE\n  a = 3\nEND IF')
+
+    a = cls(get_reader('''
+named: if (expr) then
+  a = 1
+else named
+  a = 2
+end if named
+    '''))
+    assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\nELSE named\n  a = 2\nEND IF named')
+
+    a = cls(get_reader('''
+named: if (expr) then
+  a = 1
+  named2: if (expr2) then
+    a = 2
+  end if named2
+end if named
+'''))
+    assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n    a = 2\n  END IF named2\nEND IF named')
+    
 def test_Block_Label_Do_Construct(): # # R826_1
     cls = Block_Label_Do_Construct
     a = cls(get_reader('''
