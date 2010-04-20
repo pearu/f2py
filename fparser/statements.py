@@ -947,7 +947,8 @@ class Use(Statement):
         else:
             name_idx = name
         if name_idx in use_provides:
-            self.warning("entity name '%s' is already declared in module '%s', overriding." % (name, self.name))
+            if ovar != use_provides[name_idx]:
+                self.warning("entity name '%s' is already declared in module '%s' while adding it to '%s', overriding." % (name, self.name, self.parent.name))
         use_provides[name_idx] = ovar
 
 
