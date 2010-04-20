@@ -348,6 +348,7 @@ class FortranReaderBase(object):
         self.set_mode(isfree, isstrict)
 
         self.exit_on_error = True
+        self.restore_cache = []
         return
 
     def find_module_source_file(self, mod_name):
@@ -504,10 +505,10 @@ class FortranReaderBase(object):
         """ Return next item.
         """
         try:
-            return self.next(ignore_comments = True)
+            item = self.next(ignore_comments = True)
         except StopIteration:
-            pass
-        return
+            return
+        return item
 
     def put_item(self, item):
         """ Insert item to FIFO item buffer.

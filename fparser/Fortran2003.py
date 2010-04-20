@@ -48,8 +48,8 @@ class Base(object):
             parent_cls.append(cls)
         #print '__new__:',cls.__name__,`string`
         match = cls.__dict__.get('match', None)
-        if isinstance(string, FortranReaderBase) and not issubclass(cls, BlockBase) \
-               and match is not None:
+        result = None
+        if isinstance(string, FortranReaderBase) and match is not None and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
             if item is None: return
@@ -62,16 +62,15 @@ class Base(object):
                 return
             obj.item = item
             return obj
-        errmsg = '%s: %r' % (cls.__name__, string)
+
         if match is not None:
+            # IMPORTANT: if string is FortranReaderBase then cls must
+            # restore readers content when no match is found.
             try:
                 result = cls.match(string)
             except NoMatchError, msg:
-                if str(msg)==errmsg: # avoid recursion 1.
+                if str(msg)=='%s: %r' % (cls.__name__, string): # avoid recursion 1.
                     raise
-                result = None
-        else:
-            result = None
 
         #print '__new__:result:',cls.__name__,`string,result`
         if isinstance(result, tuple):
@@ -95,6 +94,7 @@ class Base(object):
                     return obj
         else:
             raise AssertionError,`result`
+        errmsg = '%s: %r' % (cls.__name__, string)
         raise NoMatchError,errmsg
 
 ##     def restore_reader(self):
@@ -121,6 +121,8 @@ class Base(object):
     def tofortran(self, tab='', isfix=None):
         return tab + str(self)
 
+    def restore_reader(self, reader):
+        reader.put_item(self.item)
 
 class BlockBase(Base):
     """
@@ -172,7 +174,7 @@ content : tuple
                         content.append(obj)
                         continue
                     else:
-                        raise NotImplementedError('restore reader')
+                        obj.restore_reader(reader)
             cls = classes[i]
             try:
                 obj = cls(reader)
@@ -192,7 +194,6 @@ content : tuple
                     i = j
             if obj is not None:
                 content.append(obj)
-
                 if match_names and isinstance(obj,match_name_classes):
                     end_name = obj.get_end_name()
                     if end_name != start_name:
@@ -212,9 +213,11 @@ content : tuple
             if endcls is not None:
                 item = reader.get_item()
                 if item is not None:
-                    print item
-                    reader.error('failed to parse with %s, skipping.' % ('|'.join([c.__name__ for c in classes[i:]])), item)
-                    continue
+                    # no match found, restoring consumed reader items
+                    reader.put_item(item)
+                    for obj in reversed(content):
+                        obj.restore_reader(reader)
+                    return
                 if content:# and hasattr(content[0],'name'):
                     reader.error('unexpected eof file while looking line for <%s> with name "%s".'\
                                  % (classes[-1].__name__.lower().replace('_','-'), content[0].get_start_name()))
@@ -269,6 +272,10 @@ content : tuple
 ##         for obj in content:
 ##             obj.restore_reader()
 ##         return
+
+    def restore_reader(self, reader):
+        for obj in reversed(self.content):
+            obj.restore_reader(reader)
 
 class SequenceBase(Base):
     """
@@ -4480,6 +4487,8 @@ class Action_Term_Do_Construct(BlockBase): # R836
         l.append(start.tofortran(tab=tab,isfix=isfix))
         for item in self.content[1:-1]:
             l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
+            if isinstance(item, Label_Do_Stmt):
+                extra_tab += '  '
         if len(self.content)>1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
@@ -5504,7 +5513,7 @@ class Data_Edit_Desc_C1002(Base):
                 i1,i2 = line.split('.',1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
-                return c, W(i1), M(i2), NoneInt_Literal_Constant
+                return c, W(i1), M(i2), None
             return c,W(line), None, None
         if c in ['E','F','G']:
             line = string[1:].lstrip()

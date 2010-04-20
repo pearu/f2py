@@ -1808,7 +1808,28 @@ named: if (expr) then
 end if named
 '''))
     assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n    a = 2\n  END IF named2\nEND IF named')
-    
+
+
+
+def test_if_nonblock_do():
+    cls = If_Construct
+    a = cls(get_reader('''
+if (expr) then
+   do  20  i = 1, 3
+     a = 1
+     do  20  j = 1, 3
+       a = 2
+       do  20  k = 1, 3
+         a = 3
+20 rotm(i,j) = r2(j,i)
+endif
+'''))    
+    assert isinstance(a,cls),`a`
+    assert len(a.content)==3,`a`
+    a = a.content[1]
+    assert isinstance(a, Action_Term_Do_Construct),`a`
+    assert_equal(str(a),'DO 20 , i = 1, 3\n  a = 1\n  DO 20 , j = 1, 3\n    a = 2\n    DO 20 , k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
+
 def test_Block_Label_Do_Construct(): # # R826_1
     cls = Block_Label_Do_Construct
     a = cls(get_reader('''
@@ -1883,7 +1904,7 @@ def test_Nonblock_Do_Construct(): # R835
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a,Action_Term_Do_Construct),`a`
-    assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n  l = 3\n20 rotm(i, j) = r2(j, i)')
+    assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n20 rotm(i, j) = r2(j, i)')
     
 def test_Continue_Stmt(): # R848
 
