@@ -1075,7 +1075,6 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
                type_bound_procedure_part
 
     def analyze(self):
-        BeginStatement.analyze(self)
         for spec in self.specs:
             i = spec.find('(')
             if i!=-1:

@@ -150,17 +150,18 @@ def get_module_file(name, directory, _cache={}):
     for ext in module_file_extensions:
         files += glob.glob(os.path.join(directory,'*'+ext))
     for fn in files:
-        if _module_in_file(name, fn):
+        if module_in_file(name, fn):
             _cache[name] = fn
             return fn
     return
 
 def module_in_file(name, filename):
+    name = name.lower()
     pattern = re.compile(r'\s*module\s+(?P<name>[a-z]\w*)', re.I).match
     f = open(filename,'r')
     for line in f:
         m = pattern(line)
-        if m and m.group('name')==name:
+        if m and m.group('name').lower()==name:
             f.close()
             return filename
     f.close()
