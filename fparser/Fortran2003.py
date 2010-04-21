@@ -85,13 +85,14 @@ class Base(object):
             for subcls in Base.subclasses.get(cls.__name__,[]):
                 if subcls in parent_cls: # avoid recursion 2.
                     continue
-                #print '%s:%s: %r' % (cls.__name__,subcls.__name__,string)
+                #print '%s:%s: %r' % (cls.__name__,subcls.__name__,string)                
                 try:
                     obj = subcls(string, parent_cls = parent_cls)
                 except NoMatchError, msg:
                     obj = None
                 if obj is not None:
                     return obj
+
         else:
             raise AssertionError,`result`
         errmsg = '%s: %r' % (cls.__name__, string)
@@ -141,6 +142,7 @@ content : tuple
               match_labels = False,
               match_names = False, match_name_classes = (),
               enable_nonblock_do_construct_hook = False,
+              enable_if_construct_hook = False,
               ):
         assert isinstance(reader,FortranReaderBase),`reader`
         content = []
@@ -209,18 +211,34 @@ content : tuple
                         if start_name != end_name:
                             continue
                     break
+                if enable_if_construct_hook:
+                    if isinstance(obj, Else_If_Stmt):
+                        i = 0
+                    if isinstance(obj, (Else_Stmt, End_If_Stmt)):
+                        enable_if_construct_hook = False
                 continue
             if endcls is not None:
+                #for obj in reversed(content):
+                #    obj.restore_reader(reader)
+                #return
                 item = reader.get_item()
                 if item is not None:
+                    if 1:
+                        pass
+                    elif content:
+                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item), item=content[0].item)
+                    else:
+                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item))
                     # no match found, restoring consumed reader items
                     reader.put_item(item)
                     for obj in reversed(content):
                         obj.restore_reader(reader)
                     return
                 if content:# and hasattr(content[0],'name'):
-                    reader.error('unexpected eof file while looking line for <%s> with name "%s".'\
-                                 % (classes[-1].__name__.lower().replace('_','-'), content[0].get_start_name()))
+                    reader.info('closing <%s> not found while reaching eof' % (endcls.__name__.lower()), item=content[0].item)
+                    for obj in reversed(content):
+                        obj.restore_reader(reader)
+                    return
                 else:
                     reader.error('unexpected eof file while looking line for <%s>.'\
                                  % (classes[-1].__name__.lower().replace('_','-')))
@@ -481,7 +499,10 @@ class CallBase(Base):
         if i==-1: return
         lhs = line[:i].rstrip()
         if not lhs: return
-        rhs = line[i+1:-1].strip()
+        j = line.find(')')
+        rhs = line[i+1:j].strip()
+        if line[j+1:].lstrip():
+            return
         lhs = repmap(lhs)
         if upper_lhs:
             lhs = lhs.upper()
@@ -713,6 +734,7 @@ class Program(BlockBase): # R201
     
     @staticmethod
     def match(reader):
+        #return Program_Unit(reader)
         try:
             result = BlockBase.match(Program_Unit, [Program_Unit], None, reader)
         except NoMatchError:
@@ -2130,8 +2152,10 @@ class Entity_Decl(Base): # R504
             char_length = Char_Length(char_length)
         if newline.startswith('='):
             init = Initialization(newline)
+        elif newline:
+            return
         else:
-            assert newline=='',`newline`
+            assert newline=='',`newline, string`
         return name, array_spec, char_length, init
     match = staticmethod(match)
     def tostr(self):
@@ -3958,7 +3982,8 @@ class If_Construct(BlockBase): # R802
                                               Execution_Part_Construct],
                                End_If_Stmt, string,
                                match_names = True,
-                               match_name_classes = (Else_If_Stmt, Else_Stmt, End_If_Stmt))
+                               match_name_classes = (Else_If_Stmt, Else_Stmt, End_If_Stmt),
+                               enable_if_construct_hook = True)
 
     def tofortran(self, tab='', isfix=None):
         l = []

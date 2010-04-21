@@ -1809,7 +1809,36 @@ end if named
 '''))
     assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n    a = 2\n  END IF named2\nEND IF named')
 
+    a = cls(get_reader('''
+if (expr) then
+  a = 1
+else if (expr2) then
+  a = 2
+else if (expr3) then
+  a = 3
+end if
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nELSE IF (expr3) THEN\n  a = 3\nEND IF')
 
+    a = cls(get_reader('''
+        if (dxmx .gt. 0d0) then
+          diff = 0
+          do  80  k = 1, n
+   80     diff = max(diff,abs(xnew(k)-xin(k)))
+          if (diff .gt. dxmx) then
+            betx = dxmx/diff
+
+            call awrit3(' broyj:  max shift = %1;3g'//
+     .        ' is larger than dxmx = %1;3g.  Scale by %1;3g',
+     .        ' ',80,i1mach(2),diff,dxmx,dxmx/diff)
+
+            do  82  k = 1, n
+   82       xnew(k) = xin(k) + betx*(xnew(k)-xin(k))
+          endif
+        endif
+
+    '''))
 
 def test_if_nonblock_do():
     cls = If_Construct
@@ -1830,6 +1859,16 @@ endif
     assert isinstance(a, Action_Term_Do_Construct),`a`
     assert_equal(str(a),'DO 20 , i = 1, 3\n  a = 1\n  DO 20 , j = 1, 3\n    a = 2\n    DO 20 , k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
 
+    a = cls(get_reader('''
+if (expr) then
+    do  50  i = n, m, -1
+  50 call foo(a)
+endif'''))
+    assert isinstance(a,cls),`a`
+    assert len(a.content)==3,`a`
+    a = a.content[1]
+    assert isinstance(a, Action_Term_Do_Construct),`a`
+    
 def test_Block_Label_Do_Construct(): # # R826_1
     cls = Block_Label_Do_Construct
     a = cls(get_reader('''
@@ -1905,6 +1944,20 @@ def test_Nonblock_Do_Construct(): # R835
     '''))
     assert isinstance(a,Action_Term_Do_Construct),`a`
     assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n20 rotm(i, j) = r2(j, i)')
+
+    a = cls(get_reader('''
+      do  20  i = 1, 3
+ 20     rotm(i,j) = r2(j,i)
+    '''))
+    assert isinstance(a,Action_Term_Do_Construct),`a`
+    assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
+
+    a = cls(get_reader('''
+    do  50  i = n, m, -1
+  50 call foo(a)
+    '''))
+    assert isinstance(a,Action_Term_Do_Construct),`a`
+    assert_equal(str(a),'DO 50 , i = n, m, - 1\n50 CALL foo(a)')
     
 def test_Continue_Stmt(): # R848
 
