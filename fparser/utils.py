@@ -31,7 +31,7 @@ is_name = re.compile(r'^[a-z_]\w*$',re.I).match
 name_re = re.compile(r'[a-z_]\w*',re.I).match
 is_entity_decl = re.compile(r'^[a-z_]\w*',re.I).match
 is_int_literal_constant = re.compile(r'^\d+(_\w+|)$').match
-module_file_extensions = ['.f90', '.f95', '.f03', '.f08']
+module_file_extensions = ['.f', '.f90', '.f95', '.f03', '.f08']
 
 def split_comma(line, item = None, comma=',', keep_empty=False):
     items = []
