@@ -251,8 +251,8 @@ char_literal_constant = ~( kind_param + '_') + ("'" + ~~rep_char + "'" | '"' + ~
 a_n_char_literal_constant_named1 = ~( kind_param_named + '_') + (~~~("'" + ~~a_n_rep_char + "'" )).named('value')
 a_n_char_literal_constant_named2 = ~( kind_param_named + '_') + (~~~('"' + ~~a_n_rep_char + '"' )).named('value')
 
-logical_literal_constant = (r'[.](TRUE|FALSE)[.]' + ~ ('_' + kind_param)).flags(re.I)
-logical_literal_constant_named = Pattern('<value>',r'[.](TRUE|FALSE)[.]',flags=re.I).named() + ~ ('_' + kind_param_named)
+logical_literal_constant = (r'[.]\s*(TRUE|FALSE)\s*[.]' + ~ ('_' + kind_param)).flags(re.I)
+logical_literal_constant_named = Pattern('<value>',r'[.]\s*(TRUE|FALSE)\s*[.]',flags=re.I).named() + ~ ('_' + kind_param_named)
 literal_constant = int_literal_constant | real_literal_constant | complex_literal_constant | logical_literal_constant | char_literal_constant | boz_literal_constant
 constant = literal_constant | named_constant
 int_constant = int_literal_constant | boz_literal_constant | named_constant
@@ -266,21 +266,21 @@ primary = constant | name | data_ref | (r'[(]' + name + r'[)]')
 power_op = Pattern('<power-op>',r'(?<![*])[*]{2}(?![*])')
 mult_op = Pattern('<mult-op>',r'(?<![*])[*](?![*])|(?<![/])[/](?![/])')
 add_op = Pattern('<add-op>',r'[+-]')
-concat_op = Pattern('<concat-op>',r'(?<![/])[/]{2}(?![/])')
-rel_op = Pattern('<rel-op>','[.]EQ[.]|[.]NE[.]|[.]LT[.]|[.]LE[.]|[.]GT[.]|[.]GE[.]|[=]{2}|/[=]|[<][=]|[<]|[>][=]|[>]',flags=re.I)
-not_op = Pattern('<not-op>','[.]NOT[.]',flags=re.I)
-and_op = Pattern('<and-op>','[.]AND[.]',flags=re.I)
-or_op = Pattern('<or-op>','[.]OR[.]',flags=re.I)
-equiv_op = Pattern('<equiv-op>','[.]EQV[.]|[.]NEQV[.]',flags=re.I)
+concat_op = Pattern('<concat-op>',r'(?<![/])[/]\s*[/](?![/])')
+rel_op = Pattern('<rel-op>','[.]\s*EQ\s*[.]|[.]\s*NE\s*[.]|[.]\s*LT\s*[.]|[.]\s*LE\s*[.]|[.]\s*GT\s*[.]|[.]\s*GE\s*[.]|[=]{2}|/[=]|[<][=]|[<]|[>][=]|[>]',flags=re.I)
+not_op = Pattern('<not-op>','[.]\s*NOT\s*[.]',flags=re.I)
+and_op = Pattern('<and-op>','[.]\s*AND\s*[.]',flags=re.I)
+or_op = Pattern('<or-op>','[.]\s*OR\s*[.]',flags=re.I)
+equiv_op = Pattern('<equiv-op>','[.]\s*EQV\s*[.]|[.]\s*NEQV\s*[.]',flags=re.I)
 percent_op = Pattern('<percent-op>',r'%',flags=re.I)
 intrinsic_operator = power_op | mult_op | add_op | concat_op | rel_op | not_op | and_op | or_op | equiv_op
 extended_intrinsic_operator = intrinsic_operator
 
-defined_unary_op = Pattern('<defined-unary-op>','[.][A-Z]+[.]',flags=re.I)
-defined_binary_op = Pattern('<defined-binary-op>','[.][A-Z]+[.]',flags=re.I)
+defined_unary_op = Pattern('<defined-unary-op>','[.]\s*[A-Z]+\s*[.]',flags=re.I)
+defined_binary_op = Pattern('<defined-binary-op>','[.]\s*[A-Z]+\s*[.]',flags=re.I)
 defined_operator = defined_unary_op | defined_binary_op | extended_intrinsic_operator
 abs_defined_operator = abs(defined_operator)
-defined_op = Pattern('<defined-op>','[.][A-Z]+[.]',flags=re.I)
+defined_op = Pattern('<defined-op>','[.]\s*[A-Z]+\s*[.]',flags=re.I)
 abs_defined_op = abs(defined_op)
 
 non_defined_binary_op = intrinsic_operator | logical_literal_constant

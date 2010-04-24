@@ -16,9 +16,13 @@ def runner (parser, options, args):
         reader = FortranFileReader(filename)
         if options.mode != 'auto':
             reader.set_mode_from_str(options.mode)
-        print reader.mode
-        program = Fortran2003.Program(reader)
-        print program
+        try:
+            program = Fortran2003.Program(reader)
+            print program
+        except Fortran2003.NoMatchError, msg:
+            print 'parsing %r failed at %s' % (filename, reader.fifo_item[-1])
+            print 'quiting'
+            return
 
 def main ():
     parser = OptionParser()

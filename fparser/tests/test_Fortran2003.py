@@ -159,8 +159,8 @@ def test_Signed_Int_Literal_Constant(): # R405
 
         a = cls('+ 21_2')
         assert isinstance(a,cls),`a`
-        assert_equal(str(a),'+ 21_2')
-        assert_equal(repr(a),"%s('+ 21', '2')" % (cls.__name__))
+        assert_equal(str(a),'+21_2')
+        assert_equal(repr(a),"%s('+21', '2')" % (cls.__name__))
 
         a = cls('-21_SHORT')
         assert isinstance(a,cls),`a`
@@ -241,7 +241,7 @@ def test_Signed_Real_Literal_Constant(): # R416
 
         a = cls('- 12.')
         assert isinstance(a,cls),`a`
-        assert_equal(str(a),'- 12.')
+        assert_equal(str(a),'-12.')
 
         a = cls('1.6E3')
         assert isinstance(a,cls),`a`
@@ -1674,9 +1674,15 @@ def test_Expr(): # R722
 
         assertRaises(NoMatchError,Scalar_Int_Expr,'a,b')
 
-def test_Logical_Expr(): # R733
-
+def test_Logical_Expr(): # R724
     cls = Logical_Expr
+    a = cls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
+    assert isinstance(a,Equiv_Operand),`a`
+    assert_equal(str(a),'(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
+    
+def test_Logical_Initialization_Expr(): # R733
+
+    cls = Logical_Initialization_Expr
     a = cls('.false.')
     assert isinstance(a, Logical_Literal_Constant), `a`
     assert str(a)=='.FALSE.'
@@ -1700,6 +1706,10 @@ def test_Assignment_Stmt(): # R734
         a = cls('a = .FALSE.')
         assert isinstance(a, cls),`a`
         assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant('.FALSE.', None))")
+
+        a = cls('a(n)(k:m) = 5')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'a(n)(k : m) = 5')
 
 def test_Proc_Component_Ref(): # R741
 
@@ -1840,6 +1850,7 @@ end if
 
     '''))
 
+    
 def test_if_nonblock_do():
     cls = If_Construct
     a = cls(get_reader('''

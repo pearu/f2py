@@ -158,6 +158,7 @@ class Line(object):
         self.reader = reader
         self.strline = None
         self.is_f2py_directive = linenospan[0] in reader.f2py_comment_lines
+        self.parse_cache = {}
 
     def has_map(self):
         return not not (hasattr(self,'strlinemap') and self.strlinemap)
@@ -237,6 +238,27 @@ class Line(object):
         self.strline = line
         self.strlinemap = str_map
         return line
+
+    def parse_line(self, cls, parent_cls):
+        if cls not in self.parse_cache:
+            self.parse_cache[cls] = None
+            obj = cls(self.line, parent_cls = parent_cls)
+            self.parse_cache[cls] = obj
+        else:
+            obj = self.parse_cache[cls]
+            #print self.line, cls.__name__,obj
+        return obj
+
+    def parse_block(self, reader, cls, parent_cls):
+        key = cls, tuple(parent_cls)
+        if not self.parse_cache.has_key(key):
+            #self.parse_cache[key] = None
+            obj = cls(reader, parent_cls = parent_cls)
+            self.parse_cache[key] = obj
+        else:
+            obj = self.parse_cache[key]
+            #print self.line, cls.__name__,obj
+        return obj
 
 class SyntaxErrorLine(Line, FortranReaderError):
     def __init__(self, line, linenospan, label, name, reader, message):
@@ -350,6 +372,9 @@ class FortranReaderBase(object):
         self.exit_on_error = True
         self.restore_cache = []
         return
+
+    def __repr__(self):
+        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.source, self.isfree, self.isstrict)
 
     def find_module_source_file(self, mod_name):
         from utils import get_module_file, module_in_file
