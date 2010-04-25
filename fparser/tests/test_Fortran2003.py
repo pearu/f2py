@@ -638,6 +638,47 @@ def test_Component_Decl(): # R442
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'a(1) => NULL')
 
+def test_Proc_Component_Def_Stmt(): # R445
+    cls = Proc_Component_Def_Stmt
+    a = cls('procedure(), pointer :: a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROCEDURE(), POINTER :: a')
+
+    a = cls('procedure(real*8), pointer, pass(n) :: a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b')
+
+def test_Type_Bound_Procedure_Part(): # R448
+    cls = Type_Bound_Procedure_Part
+    a = cls(get_reader('''
+contains
+procedure, pass :: length => point_length
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'CONTAINS\nPROCEDURE, PASS :: length => point_length')
+
+def test_Proc_Binding_Stmt(): # R450
+    cls = Proc_Binding_Stmt
+    a = cls('procedure, pass :: length => point_length')
+    assert isinstance(a, Specific_Binding),`a`
+    assert_equal(str(a),'PROCEDURE, PASS :: length => point_length')
+
+def test_Specific_Binding(): # R451
+    cls = Specific_Binding
+    a = cls('procedure, pass :: length => point_length')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROCEDURE, PASS :: length => point_length')
+
+def test_Generic_Binding(): # R452
+    cls = Generic_Binding
+    a = cls('generic :: a => b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'GENERIC :: a => b')
+
+    a = cls('generic, private :: read(formatted) => b,c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'GENERIC, PRIVATE :: READ(FORMATTED) => b, c')
+
 def test_Final_Binding(): # R454
 
         cls = Final_Binding
@@ -766,6 +807,23 @@ def test_Component_Spec_List(): # R458-list
         a = cls('k=a, c')
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'k = a, c')
+
+def test_Enum_Def(): # R460
+    cls = Enum_Def
+    a = cls(get_reader('''
+enum, bind(c)
+enumerator :: red = 4, blue = 9
+enumerator yellow
+end enum
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'ENUM, BIND(C)\n  ENUMERATOR :: red = 4, blue = 9\n  ENUMERATOR :: yellow\nEND ENUM')
+
+def test_Enum_Def_Stmt(): # R461
+    cls = Enum_Def_Stmt
+    a = cls('enum, bind(c)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'ENUM, BIND(C)')
 
 def test_Array_Constructor(): # R465
 
@@ -1098,24 +1156,34 @@ def test_Parameter_Stmt(): # R538
 
 def test_Named_Constant_Def(): # R539
 
-        cls = Named_Constant_Def
-        a = cls('a=1')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = 1')
-        assert_equal(repr(a),"Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
+    cls = Named_Constant_Def
+    a = cls('a=1')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = 1')
+    assert_equal(repr(a),"Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
 
 def test_Pointer_Decl(): # R541
 
-        cls = Pointer_Decl
-        a = cls('a(:)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(:)')
-        assert_equal(repr(a),"Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
+    cls = Pointer_Decl
+    a = cls('a(:)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(:)')
+    assert_equal(repr(a),"Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
+    
+    a = cls('a(:,:)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(:, :)')
 
-        a = cls('a(:,:)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(:, :)')
+def test_Target_Stmt(): # R546
+    cls = Target_Stmt
+    a = cls('target a, b(1000, 1000)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'TARGET :: a, b(1000, 1000)')
 
+    a = cls('target :: a, c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'TARGET :: a, c')
+    
 def test_Implicit_Stmt(): # R549
 
         cls = Implicit_Stmt
@@ -1758,6 +1826,29 @@ def test_Assignment_Stmt(): # R734
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'b = a + 1D-8 + 1.1E+3')
 
+def test_Pointer_Assignment_Stmt(): # R735
+    cls = Pointer_Assignment_Stmt
+    a = cls('new_node % left => current_node')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'new_node % left => current_node')
+    
+    a = cls('simple_name => target_structure % substruct % component')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'simple_name => target_structure % substruct % component')
+
+    for stmt in '''\
+PTR => NULL()
+ROW => MAT2D(N, :)
+WINDOW => MAT2D(I - 1 : I + 1, J - 1 : J + 1)
+POINTER_OBJECT => POINTER_FUNCTION(ARG_1, ARG_2)
+EVERY_OTHER => VECTOR(1 : N : 2)
+WINDOW2(0 :, 0 :) => MAT2D(ML : MU, NL : NU)
+P => BESSEL
+STRUCT % COMPONENT => BESSEL'''.split('\n'):
+        a = cls(stmt)
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a), stmt)
+            
 def test_Proc_Component_Ref(): # R741
 
         cls = Proc_Component_Ref
@@ -1896,7 +1987,6 @@ end if
         endif
 
     '''))
-
     
 def test_if_nonblock_do():
     cls = If_Construct
@@ -1926,8 +2016,70 @@ endif'''))
     assert len(a.content)==3,`a`
     a = a.content[1]
     assert isinstance(a, Action_Term_Do_Construct),`a`
-    
-def test_Block_Label_Do_Construct(): # # R826_1
+
+def test_Associate_Construct(): # R816
+    cls = Associate_Construct
+    a = cls(get_reader('''
+ASSOCIATE ( Z => EXP(-(X**2+Y**2)) * COS(THETA) )
+PRINT *, A+Z, A-Z
+END ASSOCIATE
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
+
+    a = cls(get_reader('''
+name:ASSOCIATE ( XC => AX%B(I,J)%C )
+XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
+END ASSOCIATE name
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
+
+    a = cls(get_reader('''
+ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
+W = ZX*X + ZY*Y
+END ASSOCIATE
+    '''))
+    assert_equal(str(a),'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
+
+def test_Select_Type_Construct(): # R821
+    cls = Select_Type_Construct
+    a = cls(get_reader('''
+n:SELECT TYPE ( A => P_OR_C )
+CLASS IS ( POINT )
+PRINT *, A%X, A%Y ! This block gets executed
+TYPE IS ( POINT_3D )
+PRINT *, A%X, A%Y, A%Z
+END SELECT n
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'n:SELECT TYPE(A=>P_OR_C)\n  CLASS IS (POINT)\n  PRINT *, A % X, A % Y\n  TYPE IS (POINT_3D)\n  PRINT *, A % X, A % Y, A % Z\nEND SELECT n')
+
+def test_Select_Type_Stmt(): # R822
+    cls = Select_Type_Stmt
+    a = cls('select type(a=>b)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'SELECT TYPE(a=>b)')
+
+    a = cls('select type(a)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'SELECT TYPE(a)')
+
+def test_Type_Guard_Stmt(): # R823
+    cls = Type_Guard_Stmt
+    a = cls('type is (real*8)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'TYPE IS (REAL*8)')
+
+    a = cls('class is (mytype) name')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'CLASS IS (mytype) name')
+
+    a = cls('classdefault')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'CLASS DEFAULT')
+
+def test_Block_Label_Do_Construct(): # R826_1
     cls = Block_Label_Do_Construct
     a = cls(get_reader('''
       do 12
@@ -3009,7 +3161,7 @@ if 1:
         total_needs += 1
         if match is None:
             if test_cls is None:
-                #print 'Needs tests:', clsname
+                print 'Needs tests:', clsname
                 print 'Needs match implementation:', clsname
                 nof_needed_tests += 1
                 nof_needed_match += 1
@@ -3018,7 +3170,7 @@ if 1:
                 nof_needed_match += 1
         else:
             if test_cls is None:
-                #print 'Needs tests:', clsname
+                print 'Needs tests:', clsname
                 nof_needed_tests += 1
         continue
     print '-----'
