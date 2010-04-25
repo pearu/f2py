@@ -21,6 +21,7 @@ def runner (parser, options, args):
             print program
         except Fortran2003.NoMatchError, msg:
             print 'parsing %r failed at %s' % (filename, reader.fifo_item[-1])
+            print 'started at %s' % (reader.fifo_item[0])
             print 'quiting'
             return
 

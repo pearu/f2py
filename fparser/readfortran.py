@@ -585,8 +585,14 @@ class FortranReaderBase(object):
                 if not os.path.isfile(path): # include file does not exist
                     dirs = os.pathsep.join(include_dirs)
                     # According to Fortran standard, INCLUDE line is
-                    # not a Fortran statement. To keep the information,
-                    # we are turning the INCLUDE line to a comment:
+                    # not a Fortran statement.
+                    reader.warning('%r not found in %r. INLCUDE line treated as comment line.'\
+                                   % (filename, dirs), item)
+                    if ignore_comments:
+                        item = self._next(ignore_comments)
+                    return item
+                    # To keep the information, we are turning the
+                    # INCLUDE line to a comment:
                     reader.warning('%r not found in %r. '\
                                    'The INCLUDE line will be turned to a comment.'\
                                    % (filename, dirs), item)

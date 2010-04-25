@@ -11,6 +11,8 @@ Created: Oct 2006
 -----
 """
 
+dollar_ok = True
+
 import re
 
 class Pattern(object):
@@ -74,7 +76,7 @@ class Pattern(object):
     def search(self, string):
         return self.get_compiled().search(string)
 
-    def rsplit(self, string):
+    def rsplit(self, string, is_add=False):
         """
         Return (<lhs>, <pattern_match>, <rhs>) where
           string = lhs + pattern_match + rhs
@@ -83,6 +85,10 @@ class Pattern(object):
         """
         compiled = self.get_compiled()
         t = compiled.split(string)
+        if is_add:
+            n = ''.join(t[-3:]).replace(' ','')
+            if abs_real_literal_constant.match(n):
+                t = t[:-3] + [n]
         if len(t) < 3: return
         if '' in t[1:-1]: return
         rhs = t[-1].strip()
@@ -196,7 +202,10 @@ class Pattern(object):
 # Predefined patterns
 
 letter = Pattern('<letter>','[A-Z]',flags=re.I)
-name = Pattern('<name>', r'[A-Z]\w*',flags=re.I)
+if dollar_ok:
+    name = Pattern('<name>', r'[A-Z][\w$]*',flags=re.I)
+else:
+    name = Pattern('<name>', r'[A-Z]\w*',flags=re.I)
 digit = Pattern('<digit>',r'\d')
 underscore = Pattern('<underscore>', '_')
 binary_digit = Pattern('<binary-digit>',r'[01]')
@@ -290,9 +299,6 @@ abs_label = abs(label)
 
 keyword = name
 keyword_equal = keyword + '='
-
-
-
 
 abs_constant = abs(constant)
 abs_literal_constant = abs(literal_constant)

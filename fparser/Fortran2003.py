@@ -143,7 +143,8 @@ content : tuple
     """
     def match(startcls, subclasses, endcls, reader,
               match_labels = False,
-              match_names = False, match_name_classes = (),
+              match_names = False, set_unspecified_end_name = False,
+              match_name_classes = (),
               enable_do_label_construct_hook = False,
               enable_if_construct_hook = False,
               ):
@@ -211,7 +212,10 @@ content : tuple
                             continue
                     if match_names:
                         start_name, end_name = content[0].get_start_name(), content[-1].get_end_name()
-                        if start_name != end_name:
+                        if set_unspecified_end_name and end_name is None:
+                            content[-1].set_name(start_name)
+                        elif start_name != end_name:
+                            reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
                             continue
                     break
                 if enable_if_construct_hook:
@@ -357,7 +361,8 @@ class BinaryOpBase(Base):
     <binary-op-base> = <lhs> <op> <rhs>
     <op> is searched from right by default.
     """
-    def match(lhs_cls, op_pattern, rhs_cls, string, right=True, exclude_op_pattern = None):
+    def match(lhs_cls, op_pattern, rhs_cls, string, right=True, exclude_op_pattern = None,
+              is_add = False):
         line, repmap = string_replace_map(string)
         if isinstance(op_pattern, str):
             if right:
@@ -369,7 +374,7 @@ class BinaryOpBase(Base):
             op = op_pattern
         else:
             if right:
-                t = op_pattern.rsplit(line)
+                t = op_pattern.rsplit(line, is_add = is_add)
             else:
                 t = op_pattern.lsplit(line)
             if t is None or len(t)!=3: return
@@ -631,6 +636,7 @@ class EndStmtBase(StmtBase):
 ::
     <end-stmt-base> = END [ <stmt> [ <stmt-name>] ]
     """
+    @staticmethod
     def match(stmt_type, stmt_name, string, require_stmt_type=False):
         start = string[:3].upper()
         if start != 'END': return
@@ -646,7 +652,6 @@ class EndStmtBase(StmtBase):
             if stmt_name is None: return
             return stmt_type, stmt_name(line)
         return stmt_type, None
-    match = staticmethod(match)
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
         self.type, self.name = stmt_type, stmt_name
@@ -654,7 +659,12 @@ class EndStmtBase(StmtBase):
     def get_name(self): return self.items[1]
     def get_type(self): return self.items[0]
     def set_name(self, name):
-        self.items[1] = name
+        if self.items[1] is not None:
+            self.warning('item already has name %r, changing it to %r' % (self.items[1], name))
+        if isinstance(name, Name):
+            self.items[1] = name
+        else:
+            self.items[1] = Name(name)
     def tostr(self):
         if self.items[1] is not None:
             return 'END %s %s' % tuple(self.items)
@@ -1337,9 +1347,8 @@ class Char_Selector(Base): # R424
     def match(string):
         if string[0]+string[-1] != '()': return
         line, repmap = string_replace_map(string[1:-1].strip())
-        if line[:3].upper()=='LEN':
+        if line[:3].upper()=='LEN' and line[3:].lstrip().startswith('='):
             line = line[3:].lstrip()
-            if not line.startswith('='): return
             line = line[1:].lstrip()
             i = line.find(',')
             if i==-1: return
@@ -1352,9 +1361,8 @@ class Char_Selector(Base): # R424
             v = repmap(v)
             line = repmap(line)
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
-        elif line[:4].upper()=='KIND':
+        elif line[:4].upper()=='KIND' and line[4:].lstrip().startswith('='):
             line = line[4:].lstrip()
-            if not line.startswith('='): return
             line = line[1:].lstrip()
             i = line.find(',')
             if i==-1: return None,Scalar_Int_Initialization_Expr(line)
@@ -1370,9 +1378,8 @@ class Char_Selector(Base): # R424
             if i==-1: return
             v = line[:i].rstrip()
             line = line[i+1:].lstrip()
-            if line[:4].upper()=='KIND':
+            if line[:4].upper()=='KIND' and line[4:].lstrip().startswith('='):
                 line = line[4:].lstrip()
-                if not line.startswith('='): return
                 line = line[1:].lstrip()
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
         return
@@ -1392,9 +1399,8 @@ class Length_Selector(Base): # R425
     def match(string):
         if string[0]+string[-1] == '()':
             line = string[1:-1].strip()
-            if line[:3].upper()=='LEN':
+            if line[:3].upper()=='LEN' and line[3:].lstrip().startswith('='):
                 line = line[3:].lstrip()
-                if not line.startswith('='): return
                 line = line[1:].lstrip()
             return '(',Type_Param_Value(line),')'
         if not string.startswith('*'): return
@@ -1468,7 +1474,8 @@ class Derived_Type_Def(BlockBase): # R429
     def match(reader):
         return BlockBase.match(Derived_Type_Stmt, [Type_Param_Def_Stmt, Private_Or_Sequence,
                                                    Component_Part, Type_Bound_Procedure_Part], End_Type_Stmt, reader,
-                               match_names = True)
+                               match_names = True, set_unspecified_end_name = True # C431
+                               )
 
 
 class Derived_Type_Stmt(StmtBase): # R430
@@ -1756,7 +1763,7 @@ class Component_Initialization(Base): # R444
         if string.startswith('=>'):
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
-            return '=', Initialization_Expr(string[2:].lstrip())
+            return '=', Initialization_Expr(string[1:].lstrip())
         return
     match = staticmethod(match)
     def tostr(self): return '%s %s' % tuple(self.items)
@@ -2270,7 +2277,7 @@ class Initialization(Base): # R506
         if string.startswith('=>'):
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
-            return '=', Initialization_Expr(string[2:].lstrip())
+            return '=', Initialization_Expr(string[1:].lstrip())
         return
     match = staticmethod(match)
     def tostr(self): return '%s %s' % self.items
@@ -3573,7 +3580,7 @@ class Level_2_Expr(BinaryOpBase): # R706
     use_names = ['Level_2_Expr']
     def match(string):
         return BinaryOpBase.match(\
-            Level_2_Expr,pattern.add_op.named(),Add_Operand,string)
+            Level_2_Expr,pattern.add_op.named(),Add_Operand,string, is_add=True)
     match = staticmethod(match)
 
 class Level_2_Unary_Expr(UnaryOpBase): # R706.c
@@ -4065,7 +4072,7 @@ class If_Construct(BlockBase): # R802
                                               Else_Stmt,
                                               Execution_Part_Construct],
                                End_If_Stmt, string,
-                               match_names = True,
+                               match_names = True, # C801
                                match_name_classes = (Else_If_Stmt, Else_Stmt, End_If_Stmt),
                                enable_if_construct_hook = True)
 
@@ -5533,17 +5540,18 @@ items : (Format_Item, Format_Item)
             return Control_Edit_Desc(string[0]), Format_Item(string[1:].lstrip())
         if string[-1] in ':/':
             return Format_Item(string[:-1].rstrip()), Control_Edit_Desc(string[-1])
+        line, repmap = string_replace_map(string)
         i = 0
-        while i<len(string) and string[i].isdigit():
+        while i<len(line) and line[i].isdigit():
             i += 1
         if i:
-            p = string[i].upper()
+            p = line[i].upper()
             if p in '/P':
-                return Control_Edit_Desc(string[:i+1]), Format_Item(string[i+1:].lstrip())
+                return Control_Edit_Desc(repmap(line[:i+1])), Format_Item(repmap(line[i+1:].lstrip()))
         for p in '/:':
-            if p in string:
-                l,r = string.split(p,1)
-                return Format_Item(l), Format_Item(p+r)
+            if p in line:
+                l,r = line.split(p,1)
+                return Format_Item(repmap(l.rstrip())), Format_Item(p+repmap(r.lstrip()))
         
     def tostr(self):
         return '%s, %s' % (self.items)
@@ -5724,6 +5732,8 @@ class Data_Edit_Desc(Base): # R1005
         c = self.items[0]
         if c in ['I', 'B', 'O', 'Z','A', 'L']:
             if self.items[2] is None:
+                if self.items[1] is None:
+                    return c
                 return '%s%s' % (c, self.items[1])
             return '%s%s.%s' % (c, self.items[1], self.items[2])
         if c=='DT':
@@ -5796,6 +5806,7 @@ C1007: <w> is without kind parameters.
 
 class Control_Edit_Desc(Base): # R1011
     """
+::
     <control-edit-desc> = <position-edit-desc>
                           | [ <r> ] /
                           | :
@@ -5804,7 +5815,10 @@ class Control_Edit_Desc(Base): # R1011
                           | <blank-interp-edit-desc>
                           | <round-edit-desc>
                           | <decimal-edit-desc>
+                          | $
 
+Note that `$` is not in Fortran 90 or newer standards.
+    
 Attributes
 ----------
 items : ({R, K, None}, {'/', 'P', ':'})
@@ -5814,7 +5828,9 @@ items : ({R, K, None}, {'/', 'P', ':'})
     use_names = ['R', 'K']
     @staticmethod
     def match(string):
-        if len(string)==1 and string in '/:':
+        if len(string)==1 and string in '/:$':
+            if string=='$':
+                print ('non-standard <control-edit-desc>: %r' % (string))
             return None, string
         if string[-1]=='/':
             return R(string[:-1].rstrip()), '/'

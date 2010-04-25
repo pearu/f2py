@@ -38,13 +38,22 @@ def test_Program(): # R201
 
 def test_Specification_Part(): # R204
 
-        reader = get_reader('''\
-      integer a''')
-        cls = Specification_Part
-        a = cls(reader)
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'INTEGER :: a')
-        assert_equal(repr(a), "Specification_Part(Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), None, Entity_Decl(Name('a'), None, None, None)))")
+    reader = get_reader('''\
+    integer a''')
+    cls = Specification_Part
+    a = cls(reader)
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTEGER :: a')
+    assert_equal(repr(a), "Specification_Part(Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), None, Entity_Decl(Name('a'), None, None, None)))")
+
+    a = cls(get_reader('''
+type a
+end type a
+type b
+end type b
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b')
 
 ###############################################################################
 ############################### SECTION  3 ####################################
@@ -854,10 +863,24 @@ def test_Type_Declaration_Stmt(): # R501
 
         a = cls('REAL A( LDA, * ), B( LDB, * )')
         assert isinstance(a, cls),`a`
+        assert_equal(str(a), 'REAL :: A(LDA, *), B(LDB, *)')
 
         a = cls('DOUBLE PRECISION   ALPHA, BETA')
         assert isinstance(a, cls),`a`
+        assert_equal(str(a), 'DOUBLE PRECISION :: ALPHA, BETA')
 
+        a = cls('logical,parameter:: T=.true.')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a), 'LOGICAL, PARAMETER :: T = .TRUE.')
+        
+        a = cls('character(n),private:: x(n)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a), 'CHARACTER(LEN = n), PRIVATE :: x(n)')
+
+        a = cls('character(lenmax),private:: x(n)')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a), 'CHARACTER(LEN = lenmax), PRIVATE :: x(n)')
+        
 def test_Declaration_Type_Spec(): # R502
 
         cls = Declaration_Type_Spec
@@ -912,6 +935,22 @@ def test_Entity_Decl(): # 504
         a = cls('a(1)*(3) = 2')
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'a(1)*(3) = 2')
+
+        a = cls('a = 2')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'a = 2')
+
+        a = cls('a=2')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'a = 2')
+
+        a = cls('a = "abc "')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'a = "abc "')
+
+        a = cls('a = .true.')
+        assert isinstance(a, cls),`a`
+        assert_equal(str(a),'a = .TRUE.')
 
 def test_Access_Spec(): # R508
 
@@ -1043,19 +1082,19 @@ def test_Data_Implied_Do(): # R527
 
 def test_Parameter_Stmt(): # R538
 
-        cls = Parameter_Stmt
-        a = cls('parameter(a=1)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'PARAMETER(a = 1)')
-        assert_equal(repr(a),"Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None)))")
+    cls = Parameter_Stmt
+    a = cls('parameter(a=1)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PARAMETER(a = 1)')
+    assert_equal(repr(a),"Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None)))")
+    
+    a = cls('parameter(a=1, b=a+2)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PARAMETER(a = 1, b = a + 2)')
 
-        a = cls('parameter(a=1, b=a+2)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'PARAMETER(a = 1, b = a + 2)')
-
-        a = cls('PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'PARAMETER(ONE = 1.0D+0, ZERO = 0.0D+0)')
+    a = cls('PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PARAMETER(ONE = 1.0D+0, ZERO = 0.0D+0)')
 
 def test_Named_Constant_Def(): # R539
 
@@ -1689,27 +1728,35 @@ def test_Logical_Initialization_Expr(): # R733
 
 def test_Assignment_Stmt(): # R734
 
-        cls = Assignment_Stmt
-        a = cls('a = b')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = b')
-        assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Name('b'))")
+    cls = Assignment_Stmt
+    a = cls('a = b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = b')
+    assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Name('b'))")
 
-        a = cls('a(3:4) = b+c')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(3 : 4) = b + c')
+    a = cls('a(3:4) = b+c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(3 : 4) = b + c')
 
-        a = cls('a%c = b+c')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a % c = b + c')
+    a = cls('a%c = b+c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a % c = b + c')
 
-        a = cls('a = .FALSE.')
-        assert isinstance(a, cls),`a`
-        assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant('.FALSE.', None))")
+    a = cls('a = .FALSE.')
+    assert isinstance(a, cls),`a`
+    assert_equal(repr(a),"Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant('.FALSE.', None))")
 
-        a = cls('a(n)(k:m) = 5')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(n)(k : m) = 5')
+    a = cls('a(n)(k:m) = 5')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(n)(k : m) = 5')
+
+    a = cls('b = a + 1  d - 8')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'b = a + 1D-8')
+
+    a = cls('b = a + 1  d - 8 + 1.1e+3')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'b = a + 1D-8 + 1.1E+3')
 
 def test_Proc_Component_Ref(): # R741
 
@@ -2063,19 +2110,19 @@ def test_Io_Control_Spec_List(): # R913-list
 
 def test_Format(): # R914
 
-        cls = Format
-        a = cls('*')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'*')
-        assert_equal(repr(a),"Format('*')")
-
-        a = cls('a')
-        assert isinstance(a, Name),`a`
-        assert_equal(str(a),'a')
-
-        a = cls('123')
-        assert isinstance(a, Label),`a`
-        assert_equal(str(a),'123')
+    cls = Format
+    a = cls('*')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'*')
+    assert_equal(repr(a),"Format('*')")
+    
+    a = cls('a')
+    assert isinstance(a, Name),`a`
+    assert_equal(str(a),'a')
+    
+    a = cls('123')
+    assert isinstance(a, Label),`a`
+    assert_equal(str(a),'123')
 
 def test_Io_Implied_Do(): # R917
     cls = Io_Implied_Do
@@ -2100,10 +2147,10 @@ def test_Io_Implied_Do_Control(): # R919
 
 def test_Wait_Stmt(): # R921
 
-        cls = Wait_Stmt
-        a = cls('wait (123)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'WAIT(UNIT = 123)')
+    cls = Wait_Stmt
+    a = cls('wait (123)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'WAIT(UNIT = 123)')
 
 def test_Wait_Spec(): # R922
 
@@ -2229,6 +2276,18 @@ def test_Format_Stmt(): # R1001
     assert isinstance(a, cls),`type(a)`
     assert_equal(str(a),'FORMAT(I6, F12.6, 2X, F12.6)')
 
+    a = cls("format(' Enter smth',$)")
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),"FORMAT(' Enter smth', $)")
+
+    a = cls("format(/'a' /'b')")
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),"FORMAT(/, 'a', /, 'b')")
+
+    a = cls("format('a:':' b')")
+    assert isinstance(a, cls),`type(a)`
+    assert_equal(str(a),"FORMAT('a:', :, ' b')")
+
     return
     a = cls("format('text=','  '")
     assert_equal(str(a),'')
@@ -2335,7 +2394,18 @@ end
     '''))
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'MODULE m\nEND MODULE m')
-    
+
+    a = cls(get_reader('''
+module m
+type a
+end type
+type b
+end type b
+end
+    '''))
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b\nEND MODULE m')
+
 def test_Module_Subprogram_Part(): # R1107
     cls = Module_Subprogram_Part
     a = cls(get_reader('''
