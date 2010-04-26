@@ -1865,14 +1865,84 @@ def test_Where_Stmt(): # R743
         assert_equal(str(a),'WHERE (a) c = 2')
         assert_equal(repr(a),"Where_Stmt(Name('a'), Assignment_Stmt(Name('c'), '=', Int_Literal_Constant('2', None)))")
 
+def test_Where_Construct(): # R745
+    cls = Where_Construct
+    a = cls(get_reader('''
+    where (pressure <= 1.0)
+    pressure = pressure + inc_pressure
+    temp = temp - 5.0
+    elsewhere
+    raining = .true.
+    end where
+'''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'WHERE (pressure <= 1.0)\n  pressure = pressure + inc_pressure\n  temp = temp - 5.0\nELSEWHERE\n  raining = .TRUE.\nEND WHERE')
+
+    a = cls(get_reader('''
+    where (cond1)
+    elsewhere (cond2)
+    end where
+'''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE')
+
+    a = cls(get_reader('''
+    n:where (cond1)
+    elsewhere (cond2) n
+    elsewhere n
+    end where n
+'''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\nEND WHERE n')
+
+
 def test_Where_Construct_Stmt(): # R745
 
-        cls = Where_Construct_Stmt
-        a = cls('where (a)')
-        assert isinstance(a,cls),`a`
-        assert_equal(str(a),'WHERE (a)')
-        assert_equal(repr(a),"Where_Construct_Stmt(Name('a'))")
+    cls = Where_Construct_Stmt
+    a = cls('where (a)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'WHERE (a)')
+    assert_equal(repr(a),"Where_Construct_Stmt(Name('a'))")
 
+def test_Forall_Construct(): # R752
+    cls = Forall_Construct
+    a = cls(get_reader('''
+    forall (i = 1:10, j = 1:10, b(i, j) /= 0.0)
+      a(i, j) = real (i + j - 2)
+      b(i, j) = a(i, j) + b(i, j) * real (i * j)
+    end forall
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + b(i, j) * real(i * j)\nEND FORALL')
+
+    a = cls(get_reader('''
+    n: forall (x = 1:5:2, j = 1:4)
+      a(x, j) = j
+    end forall n
+    '''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
+    
+def test_Forall_Header(): # R754
+    cls = Forall_Header
+    a = cls('(n=1:2, a+1)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'(n = 1 : 2, a + 1)')
+
+    a = cls('(n=1:2, m=1:x-1:z(a))')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'(n = 1 : 2, m = 1 : x - 1 : z(a))')
+
+def test_Forall_Triplet_Spec(): # R755
+
+    cls = Forall_Triplet_Spec
+    a = cls('n = 1: 2')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'n = 1 : 2')
+
+    a = cls('n = f(x): 2-b:a+1')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'n = f(x) : 2 - b : a + 1')
 
 ###############################################################################
 ############################### SECTION  8 ####################################
@@ -2016,6 +2086,35 @@ endif'''))
     assert len(a.content)==3,`a`
     a = a.content[1]
     assert isinstance(a, Action_Term_Do_Construct),`a`
+
+def test_Case_Construct(): # R808
+    cls = Case_Construct
+    a = cls(get_reader('''
+select case (n)
+case (:-1)
+  signum = -1
+case (0)
+  signum = 0
+case (1:)
+  signum = 1
+end select
+'''))
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n  signum = 0\nCASE (1 :)\n  signum = 1\nEND SELECT')
+    
+def test_Case_Selector(): # R813
+    cls = Case_Selector
+    a = cls('default')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'DEFAULT')
+
+    a = cls('(2)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'(2)')
+
+    a = cls('(2:3, c+2:, :-a)')
+    assert isinstance(a,cls),`a`
+    assert_equal(str(a),'(2 : 3, c + 2 :, : - a)')
 
 def test_Associate_Construct(): # R816
     cls = Associate_Construct

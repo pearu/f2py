@@ -147,7 +147,9 @@ content : tuple
               match_name_classes = (),
               enable_do_label_construct_hook = False,
               enable_if_construct_hook = False,
-              enable_select_type_construct_hook = False
+              enable_where_construct_hook = False,
+              enable_select_type_construct_hook = False,
+              enable_case_construct_hook = False
               ):
         assert isinstance(reader,FortranReaderBase),`reader`
         content = []
@@ -205,7 +207,7 @@ content : tuple
                     end_name = obj.get_end_name()
                     if end_name != start_name:
                         reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
-                
+                    
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
                         start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
@@ -224,11 +226,21 @@ content : tuple
                         i = 0
                     if isinstance(obj, (Else_Stmt, End_If_Stmt)):
                         enable_if_construct_hook = False
+                if enable_where_construct_hook:
+                    if isinstance(obj, Masked_Elsewhere_Stmt):
+                        i = 0
+                    if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
+                        enable_where_construct_hook = False
                 if enable_select_type_construct_hook:
                     if isinstance(obj, Type_Guard_Stmt):
                         i = 1
                     if isinstance(obj, End_Select_Type_Stmt):
                         enable_select_type_construct_hook = False
+                if enable_case_construct_hook:
+                    if isinstance(obj, Case_Stmt):
+                        i = 1
+                    if isinstance(obj, End_Select_Stmt):
+                        enable_case_construct_hook = False
                 continue
             if endcls is not None:
                 if 1:
@@ -4011,7 +4023,7 @@ class Where_Stmt(StmtBase): # R743
     def tostr(self): return 'WHERE (%s) %s' % tuple(self.items)
 
 
-class Where_Construct(Base): # R744
+class Where_Construct(BlockBase): # R744
     """
     <where-construct> = <where-construct-stmt>
                               [ <where-body-construct> ]...
@@ -4023,9 +4035,35 @@ class Where_Construct(Base): # R744
                             <end-where-stmt>
     """
     subclass_names = []
-    use_names = ['Where_Construct_Stmt', 'Where_Body_Construct',
+    use_names = ['Where_Construct_Stmt', 'Where_Body_Construct', 'Masked_Elsewhere_Stmt',
                  'Elsewhere_Stmt', 'End_Where_Stmt'
                  ]
+
+    @staticmethod
+    def match(string):
+        return BlockBase.match(Where_Construct_Stmt, [Where_Body_Construct,
+                                                      Masked_Elsewhere_Stmt,
+                                                      Where_Body_Construct,
+                                                      Elsewhere_Stmt,
+                                                      Where_Body_Construct,
+                                                      ],
+                               End_Where_Stmt, string,
+                               match_names = True, # C730
+                               match_name_classes = (Masked_Elsewhere_Stmt, Elsewhere_Stmt, End_Where_Stmt), # C730
+                               enable_where_construct_hook = True)
+
+    def tofortran(self, tab='', isfix=None):
+        l = []
+        start = self.content[0]
+        end = self.content[-1]
+        l.append(start.tofortran(tab=tab,isfix=isfix))
+        for item in self.content[1:-1]:
+            if isinstance(item, (Masked_Elsewhere_Stmt, Elsewhere_Stmt)):
+                l.append(item.tofortran(tab=tab,isfix=isfix))
+            else:
+                l.append(item.tofortran(tab=tab+'  ',isfix=isfix))
+        l.append(end.tofortran(tab=tab,isfix=isfix))
+        return '\n'.join(l)
 
 class Where_Construct_Stmt(StmtBase): # R745
     """
@@ -4034,6 +4072,7 @@ class Where_Construct_Stmt(StmtBase): # R745
     subclass_names = []
     use_names = ['Where_Construct_Name', 'Mask_Expr']
 
+    @staticmethod
     def match(string):
         if string[:5].upper()!='WHERE': return
         line = string[5:].lstrip()
@@ -4042,11 +4081,15 @@ class Where_Construct_Stmt(StmtBase): # R745
         line = line[1:-1].strip()
         if not line: return
         return Mask_Expr(line),
-    match = staticmethod(match)
+
     def tostr(self): return 'WHERE (%s)' % tuple(self.items)
+
+    def get_start_name(self):
+        return self.item.name
 
 class Where_Body_Construct(Base): # R746
     """
+::
     <where-body-construct> = <where-assignment-stmt>
                              | <where-stmt>
                              | <where-construct>
@@ -4055,6 +4098,7 @@ class Where_Body_Construct(Base): # R746
 
 class Where_Assignment_Stmt(Base): # R747
     """
+::
     <where-assignment-stmt> = <assignment-stmt>
     """
     subclass_names = ['Assignment_Stmt']
@@ -4071,6 +4115,7 @@ class Masked_Elsewhere_Stmt(StmtBase): # R749
     """
     subclass_names = []
     use_names = ['Mask_Expr', 'Where_Construct_Name']
+    @staticmethod
     def match(string):
         if string[:9].upper()!='ELSEWHERE': return
         line = string[9:].lstrip()
@@ -4083,10 +4128,15 @@ class Masked_Elsewhere_Stmt(StmtBase): # R749
         if line:
             return Mask_Expr(expr), Where_Construct_Name(line)
         return Mask_Expr(expr), None
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None: return 'ELSEWHERE(%s)' % (self.items[0])
         return 'ELSEWHERE(%s) %s' % self.items
+
+    def get_end_name(self):
+        name = self.items[1]
+        if name is not None:
+            return name.string
 
 class Elsewhere_Stmt(StmtBase, WORDClsBase): # R750
     """
@@ -4094,8 +4144,14 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase): # R750
     """
     subclass_names = []
     use_names = ['Where_Construct_Name']
-    def match(string): return WORDClsBase.match('ELSEWHERE', Where_Construct_Name, string)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('ELSEWHERE', Where_Construct_Name, string)
+
+    def get_end_name(self):
+        name = self.items[1]
+        if name is not None:
+            return name.string
 
 class End_Where_Stmt(EndStmtBase): # R751
     """
@@ -4103,11 +4159,12 @@ class End_Where_Stmt(EndStmtBase): # R751
     """
     subclass_names = []
     use_names = ['Where_Construct_Name']
-    def match(string): return EndStmtBase.match('WHERE',Where_Construct_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('WHERE',Where_Construct_Name, string, require_stmt_type=True)
 
 
-class Forall_Construct(Base): # R752
+class Forall_Construct(BlockBase): # R752
     """
     <forall-construct> = <forall-construct-stmt>
                              [ <forall-body-construct> ]...
@@ -4116,14 +4173,24 @@ class Forall_Construct(Base): # R752
     subclass_names = []
     use_names = ['Forall_Construct_Stmt', 'Forall_Body_Construct', 'End_Forall_Stmt']
 
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Forall_Construct_Stmt, [Forall_Body_Construct], End_Forall_Stmt, reader,
+                               match_names = True, # C732
+                               )
+
 class Forall_Construct_Stmt(StmtBase, WORDClsBase): # R753
     """
     <forall-construct-stmt> = [ <forall-construct-name> : ] FORALL <forall-header>
     """
     subclass_names = []
     use_names = ['Forall_Construct_Name', 'Forall_Header']
-    def match(string): return WORDClsBase.match('FORALL', Forall_Header, string, require_cls = True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('FORALL', Forall_Header, string, require_cls = True)
+
+    def get_start_name(self):
+        return self.item.name
 
 class Forall_Header(Base): # R754
     """
@@ -4132,12 +4199,46 @@ class Forall_Header(Base): # R754
     subclass_names = []
     use_names = ['Forall_Triplet_Spec_List', 'Scalar_Mask_Expr']
 
+    @staticmethod
+    def match(string):
+        if not string or string[0]+string[-1]!='()': return
+        line, repmap = string_replace_map(string[1:-1].strip())
+        lst = line.rsplit(',', 1)
+        if len(lst)!=2: return
+        if ':' not in lst[1]:
+            return Forall_Triplet_Spec_List(repmap(lst[0].rstrip())), Scalar_Mask_Expr(repmap(lst[1].lstrip()))
+        return Forall_Triplet_Spec_List(repmap(line)), None
+
+    def tostr(self):
+        if self.items[1] is None:
+            return '(%s)' % (self.items[0])
+        return '(%s, %s)' % (self.items)
+
+
 class Forall_Triplet_Spec(Base): # R755
     """
     <forall-triplet-spec> = <index-name> = <subscript> : <subscript> [ : <stride> ]
     """
     subclass_names = []
     use_names = ['Index_Name', 'Subscript', 'Stride']
+
+    @staticmethod
+    def match(string):
+        line, repmap = string_replace_map(string)
+        i = line.find('=')
+        if i==-1: return
+        n = Index_Name(repmap(line[:i].rstrip()))
+        line = line[i+1:].lstrip()
+        s = map(lambda s: repmap(s.strip()), line.split(':'))
+        if len(s)==2:
+            return n, Subscript(s[0]), Subscript(s[1]), None
+        if len(s)==3:
+            return n, Subscript(s[0]), Subscript(s[1]), Stride(s[2])
+
+    def tostr(self):
+        if self.items[3] is None:
+            return '%s = %s : %s' % (self.items[:3])
+        return '%s = %s : %s : %s' % (self.items)
 
 class Forall_Body_Construct(Base): # R756
     """
@@ -4163,8 +4264,9 @@ class End_Forall_Stmt(EndStmtBase): # R758
     """
     subclass_names = []
     use_names = ['Forall_Construct_Name']
-    def match(string): return EndStmtBase.match('FORALL',Forall_Construct_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('FORALL',Forall_Construct_Name, string, require_stmt_type=True)
 
 class Forall_Stmt(StmtBase): # R759
     """
@@ -4172,6 +4274,7 @@ class Forall_Stmt(StmtBase): # R759
     """
     subclass_names = []
     use_names = ['Forall_Header', 'Forall_Assignment_Stmt']
+    @staticmethod
     def match(string):
         if string[:6].upper()!='FORALL': return
         line, repmap = string_replace_map(string[6:].lstrip())
@@ -4183,7 +4286,7 @@ class Forall_Stmt(StmtBase): # R759
         line = repmap(line[i+1:].lstrip())
         if not line: return
         return Forall_Header(header), Forall_Assignment_Stmt(line)
-    match = staticmethod(match)
+
     def tostr(self): return 'FORALL %s %s' % self.items
 
 ###############################################################################
@@ -4349,16 +4452,39 @@ class If_Stmt(StmtBase): # R807
         return Scalar_Logical_Expr(expr), Action_Stmt_C802(stmt)
     def tostr(self): return 'IF (%s) %s' % self.items
 
-class Case_Construct(Base): # R808
+class Case_Construct(BlockBase): # R808
     """
     <case-construct> = <select-case-stmt>
                            [ <case-stmt>
-                             <block>
+                             <block> == [<execution-part-construct>]..
                            ]..
                            <end-select-stmt>
     """
     subclass_names = []
-    use_names = ['Select_Case_Stmt', 'Case_Stmt', 'End_Select_Stmt']
+    use_names = ['Select_Case_Stmt', 'Case_Stmt', 'End_Select_Stmt', 'Execution_Part_Construct']
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(Select_Case_Stmt, [Case_Stmt,
+                                                  Execution_Part_Construct,
+                                                  Case_Stmt],
+                               End_Select_Stmt, reader,
+                               match_names = True, # C803
+                               enable_case_construct_hook = True # C803
+                               )
+
+    def tofortran(self, tab='', isfix=None):
+        l = []
+        start = self.content[0]
+        end = self.content[-1]
+        l.append(start.tofortran(tab=tab,isfix=isfix))
+        for item in self.content[1:-1]:
+            if isinstance(item, Case_Stmt):
+                l.append(item.tofortran(tab=tab,isfix=isfix))
+            else:
+                l.append(item.tofortran(tab=tab+'  ',isfix=isfix))
+        l.append(end.tofortran(tab=tab,isfix=isfix))
+        return '\n'.join(l)
+
 
 class Select_Case_Stmt(StmtBase, CALLBase): # R809
     """
@@ -4366,8 +4492,22 @@ class Select_Case_Stmt(StmtBase, CALLBase): # R809
     """
     subclass_names = []
     use_names = ['Case_Construct_Name', 'Case_Expr']
-    def match(string): return CALLBase.match(pattter.abs_select_case, Case_Expr, string)
-    match = staticmethod(match)
+
+    @staticmethod
+    def match(string):
+        if string[:6].upper()!='SELECT': return
+        line = string[6:].lstrip()
+        if line[:4].upper()!='CASE': return
+        line = line[4:].lstrip()
+        if not line or line[0]+line[-1] != '()': return
+        line = line[1:-1].strip()
+        return Case_Expr(line),
+
+    def tostr(self):
+        return 'SELECT CASE (%s)' % (self.items[0])
+
+    def get_start_name(self):
+        return self.item.name
 
 class Case_Stmt(StmtBase): # R810
     """
@@ -4376,14 +4516,37 @@ class Case_Stmt(StmtBase): # R810
     subclass_names = []
     use_names = ['Case_Selector', 'Case_Construct_Name']
 
+    @staticmethod
+    def match(string):
+        if string[:4].upper()!='CASE': return
+        line, repmap = string_replace_map(string[4:].lstrip())
+        if line.startswith('('):
+            i = line.find(')')
+            if i==-1: return
+            n = line[i+1:].lstrip() or None
+            if n:
+                n = Case_Construct_Name(repmap(n))
+            return Case_Selector(repmap(line[:i+1].rstrip())), n
+        if line[:7].upper()=='DEFAULT':
+            n = repmap(line[7:].lstrip()) or None
+            if n:
+                n = Case_Construct_Name(repmap(n))
+            return Case_Selector(line[:7]), n
+
+    def tostr(self):
+        if self.items[1] is None:
+            return 'CASE %s' % (self.items[0])
+        return 'CASE %s %s' % (self.items)
+
 class End_Select_Stmt(EndStmtBase): # R811
     """
     <end-select-stmt> = END SELECT [ <case-construct-name> ]
     """
     subclass_names = []
     use_names = ['Case_Construct_Name']
-    def match(string): return EndStmtBase.match('SELECT',Case_Construct_Name, string, require_stmt_type=True)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return EndStmtBase.match('SELECT',Case_Construct_Name, string, require_stmt_type=True)
 
 class Case_Expr(Base): # R812
     """
@@ -4401,6 +4564,19 @@ class Case_Selector(Base): # R813
     """
     subclass_names = []
     use_names = ['Case_Value_Range_List']
+
+    @staticmethod
+    def match(string):
+        if len(string)==7 and string.upper()=='DEFAULT':
+            return None,
+        if not (string.startswith('(') and string.endswith(')')):
+            return 
+        return Case_Value_Range_List(string[1:-1].strip()),
+
+    def tostr(self):
+        if self.items[0] is None:
+            return 'DEFAULT'
+        return '(%s)' % (self.items[0])
 
 class Case_Value_Range(SeparatorBase): # R814
     """
