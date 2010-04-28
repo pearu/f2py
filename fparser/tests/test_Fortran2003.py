@@ -527,14 +527,14 @@ def test_Type_Attr_Spec(): # R431
         a = cls('abstract')
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'ABSTRACT')
-        assert_equal(repr(a),"Type_Attr_Spec('ABSTRACT')")
+        assert_equal(repr(a),"Type_Attr_Spec('ABSTRACT', None)")
 
         a = cls('bind (c )')
-        assert isinstance(a, Language_Binding_Spec),`a`
+        assert isinstance(a, cls),`a`
         assert_equal(str(a),'BIND(C)')
 
         a = cls('extends(a)')
-        assert isinstance(a, Type_EXTENDS_Parent_Type_Name),`a`
+        assert isinstance(a, cls),`a`
         assert_equal(str(a),'EXTENDS(a)')
 
         a = cls('private')
@@ -980,35 +980,42 @@ def test_Intent_Attr_Spec(): # R503.f
 
 def test_Entity_Decl(): # 504
 
-        cls = Entity_Decl
-        a = cls('a(1)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(1)')
-        assert_equal(repr(a),"Entity_Decl(Name('a'), Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)), None, None)")
+    cls = Entity_Decl
+    a = cls('a(1)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(1)')
+    assert_equal(repr(a),"Entity_Decl(Name('a'), Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)), None, None)")
+    
+    a = cls('a(1)*(3)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(1)*(3)')
+    
+    a = cls('a(1)*(3) = 2')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(1)*(3) = 2')
 
-        a = cls('a(1)*(3)')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(1)*(3)')
+    a = cls('a = 2')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = 2')
 
-        a = cls('a(1)*(3) = 2')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a(1)*(3) = 2')
+    a = cls('a=2')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = 2')
+    
+    a = cls('a = "abc "')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = "abc "')
+    
+    a = cls('a = .true.')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a = .TRUE.')
 
-        a = cls('a = 2')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = 2')
-
-        a = cls('a=2')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = 2')
-
-        a = cls('a = "abc "')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = "abc "')
-
-        a = cls('a = .true.')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'a = .TRUE.')
+def test_Target_Entity_Decl():
+    cls = Target_Entity_Decl
+    a = cls('a(1)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'a(1)')
+    assert_equal(repr(a),"Target_Entity_Decl(Name('a'), Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)), None, None)")
 
 def test_Access_Spec(): # R508
 
@@ -1183,7 +1190,27 @@ def test_Target_Stmt(): # R546
     a = cls('target :: a, c')
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'TARGET :: a, c')
-    
+
+def test_Value_Stmt(): # R547
+    cls = Value_Stmt
+    a = cls('value a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'VALUE :: a')
+
+    a = cls('value:: a, c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'VALUE :: a, c')
+
+def test_Volatile_Stmt(): # R548
+    cls = Volatile_Stmt
+    a = cls('volatile a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'VOLATILE :: a')
+
+    a = cls('volatile :: a, c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'VOLATILE :: a, c')
+
 def test_Implicit_Stmt(): # R549
 
         cls = Implicit_Stmt
@@ -2276,6 +2303,20 @@ def test_Continue_Stmt(): # R848
     assert_equal(str(a),'CONTINUE')
     assert_equal(repr(a),"Continue_Stmt('CONTINUE')")
 
+def test_Stop_Stmt(): # R849
+    cls = Stop_Stmt
+    a = cls('stop')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'STOP')
+
+    a = cls('stop 123')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'STOP 123')
+
+    a = cls('stop   \'hey you\'')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),"STOP 'hey you'")
+
 ###############################################################################
 ############################### SECTION  9 ####################################
 ###############################################################################
@@ -2791,6 +2832,11 @@ end
 '''))
     assert isinstance(a, Function_Body),`a`
     assert_equal(str(a),'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
+
+def test_Subroutine_Body():
+    pass
+def test_Function_Body():
+    pass
     
 def test_Procedure_Stmt(): # R1206
     cls = Procedure_Stmt

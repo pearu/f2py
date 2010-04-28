@@ -1547,26 +1547,34 @@ class Type_Name(Name): # C424
         return Name.match(string)
     match = staticmethod(match)
 
-class Type_EXTENDS_Parent_Type_Name(CALLBase):
-    """
-    <..> = EXTENDS ( <parent-type-name> )
-    """
-    subclass_names = []
-    use_names = ['Parent_Type_Name']
-    def match(string): return CALLBase.match('EXTENDS', Parent_Type_Name, string)
-    match = staticmethod(match)
-
-class Type_Attr_Spec(STRINGBase): # R431
+class Type_Attr_Spec(Base): # R431
     """
     <type-attr-spec> = <access-spec>
                        | EXTENDS ( <parent-type-name> )
                        | ABSTRACT
                        | BIND (C)
     """
-    subclass_names = ['Access_Spec', 'Type_EXTENDS_Parent_Type_Name', 'Language_Binding_Spec']
+    subclass_names = ['Access_Spec', 'Language_Binding_Spec'][:-1]
+    use_names = ['Parent_Type_Name']
     @staticmethod
     def match(string):
-        return STRINGBase.match('ABSTRACT', string)
+        if len(string)==8 and string.upper()=='ABSTRACT':
+            return 'ABSTRACT', None
+        if string[:4].upper()=='BIND':
+            line = string[4:].lstrip()
+            if not line or line[0]+line[-1]!='()': return
+            line = line[1:-1].strip()
+            if line.upper()=='C':
+                return 'BIND', 'C'
+        elif string[:7].upper()=='EXTENDS':
+            line = string[7:].lstrip()
+            if not line or line[0]+line[-1]!='()': return
+            return 'EXTENDS', Parent_Type_Name(line[1:-1].strip())
+
+    def tostr(self):
+        if self.items[1] is None:
+            return '%s' % (self.items[0])
+        return '%s(%s)' % (self.items)
 
 class Private_Or_Sequence(Base): # R432
     """
@@ -2309,7 +2317,7 @@ class Entity_Decl(Base): # R504
     """
     subclass_names = []
     use_names = ['Object_Name', 'Array_Spec', 'Char_Length', 'Initialization', 'Function_Name']
-    def match(string):
+    def match(string, target=False):
         m = pattern.name.match(string)
         if m is None: return
         name = Name(m.group())
@@ -2324,6 +2332,9 @@ class Entity_Decl(Base): # R504
             if i==-1: return
             array_spec = Array_Spec(repmap(line[1:i].strip()))
             newline = repmap(line[i+1:].lstrip())
+        if target:
+            if newline: return
+            return name, array_spec, None, None
         if newline.startswith('*'):
             line, repmap = string_replace_map(newline)
             i = line.find('=')
@@ -2922,7 +2933,7 @@ class Proc_Pointer_Name(Base): # R545
     """
     subclass_names = ['Name']
 
-class Target_Entity_Decl(Base):
+class Target_Entity_Decl(Entity_Decl):
     """
     <target-entity-decl> = <object-name> [ ( <array-spec> ) ]
     """
@@ -2931,25 +2942,7 @@ class Target_Entity_Decl(Base):
     
     @staticmethod
     def match(string):
-        m = pattern.name.match(string)
-        if m is None: return
-        name = Object_Name(m.group())
-        newline = string[m.end():].lstrip()
-        if not newline: return name, None
-        array_spec = None
-        if newline.startswith('(') and newline.endswith(')'):
-            line, repmap = string_replace_map(newline)
-            i = line.find(')')
-            array_spec = Array_Spec(repmap(line[1:i].strip()))
-            newline = repmap(line[i+1:].lstrip())
-            if newline:
-                return
-            return name, array_spec
-
-    def tostr(self):
-        if self.items[1] is None:
-            return '%s' % (self.items[0])
-        return '%s(%s)' % (self.items)
+        return Entity_Decl.match(string, target=True)
 
 class Target_Stmt(StmtBase): # R546
     """
