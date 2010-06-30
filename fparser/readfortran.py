@@ -464,7 +464,7 @@ class FortranReaderBase(object):
         self.linecount -= 1
         return
 
-    def get_single_line(self, ignore_empty=False):
+    def get_single_line(self, ignore_empty=False, ignore_comments=False):
         """ Return line from FILO line buffer or from source.
 
         First try getting the line from FILO line buffer.
@@ -505,12 +505,16 @@ class FortranReaderBase(object):
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace('\xa0',' ').rstrip()
         self.source_lines.append(line)
+
+        if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict):
+            return self.get_single_line(ignore_empty, ignore_comments)
         
         if ignore_empty and not line:
-            return self.get_single_line()
+            return self.get_single_line(ignore_empty, ignore_comments)
+
         return line
 
-    def get_next_line(self):
+    def get_next_line(self, ignore_empty=False, ignore_comments=False):
         """ Return next non-empty line from FILO line buffer or from source.
 
         The line will be put to FILO line buffer. So, this method can
@@ -520,7 +524,7 @@ class FortranReaderBase(object):
         --------
         get_single_line, put_single_line
         """
-        line = self.get_single_line()
+        line = self.get_single_line(ignore_empty, ignore_comments)
         if line is None: return
         self.put_single_line(line)
         return line
@@ -919,6 +923,7 @@ class FortranReaderBase(object):
             return self.multiline_item(prefix,multilines,suffix,
                                        startlineno, self.linecount)
 
+
     # The main method of interpreting raw source lines within
     # the following contexts: f77, fixed, free, pyf.
 
@@ -1002,7 +1007,7 @@ class FortranReaderBase(object):
         if self.isf77 and not is_f2py_directive:
             # Fortran 77 is easy..
             lines = [line[6:72]]
-            while _is_fix_cont(self.get_next_line()):
+            while _is_fix_cont(self.get_next_line(ignore_empty=True, ignore_comments=True)):
                 # handle fix format line continuations for F77 code
                 line = get_single_line()
                 lines.append(line[6:72])
