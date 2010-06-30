@@ -735,8 +735,11 @@ class BeginStatement(Statement):
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.
                 self.show_message(message)
-                newitem = item.copy(line[:i].rstrip())
-                return self.process_subitem(newitem)
+                if line[:i]:
+                    newitem = item.copy(line[:i].rstrip())
+                    return self.process_subitem(newitem)
+                else:
+                    return True
 
             # try fix statement classes
             f77_classes = self.classes
