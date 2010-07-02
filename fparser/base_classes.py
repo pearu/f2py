@@ -549,24 +549,27 @@ class Statement(object):
             return message
         return message
 
-    def show_message(self, message, stream=sys.stderr):
-        print >> stream, message
-        stream.flush()
-        return
+    # def show_message(self, message, stream=sys.stderr):
+    #     print >> stream, message
+    #     stream.flush()
+    #     return
 
     def error(self, message):
         message = self.format_message('ERROR', red_text(message))
-        self.show_message(message)
+        logger.error(message)
+        # self.show_message(message)
         return
 
     def warning(self, message):
         message = self.format_message('WARNING', yellow_text(message))
-        self.show_message(message)
+        logger.warning(message)
+        # self.show_message(message)
         return
 
     def info(self, message):
         message = self.format_message('INFO', message)
-        self.show_message(message)
+        logger.info(message)
+        # self.show_message(message)
         return
 
     def analyze(self):
@@ -735,7 +738,8 @@ class BeginStatement(Statement):
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.
-                self.show_message(message)
+                logger.warning(message)
+                # self.show_message(message)
                 if line[:i]:
                     newitem = item.copy(line[:i].rstrip())
                     return self.process_subitem(newitem)
@@ -756,7 +760,8 @@ class BeginStatement(Statement):
                         ' Trying f90 fix mode patterns..'\
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
-                self.show_message(message)
+                logger.warning(message)
+                # self.show_message(message)
 
                 item.reader.set_mode(False, False)
                 self.classes = classes
@@ -772,7 +777,8 @@ class BeginStatement(Statement):
                         'The f90 fix mode resolved the parse pattern issue.'\
                         ' Setting reader to f90 fix mode.',
                         item.span[0], item.span[1])
-                    self.show_message(message)
+                    logger.info(message)
+                    # self.show_message(message)
                     # set f90 fix mode
                     self.classes = f77_classes + classes
                     self.reader.set_mode(False, False)
@@ -787,7 +793,8 @@ class BeginStatement(Statement):
                         'no parse pattern found for "%s" in %r block.'\
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
-        self.show_message(message)
+        logger.warning(message)
+        # self.show_message(message)
         self.content.append(item)
         #sys.exit()
         return

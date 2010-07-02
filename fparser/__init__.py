@@ -31,4 +31,10 @@ Modules
 import os
 import logging, logging.config
 
+# Default logging configuration file
+_DEFAULT_LOG_CONFIG_PATH = os.path.join(os.path.dirname(__file__),'log.config')
+
+# Setup loggers
+logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
+
 __autodoc__ = ['api', 'Fortran2003', 'readfortran', 'parsefortran']

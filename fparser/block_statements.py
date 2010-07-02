@@ -248,7 +248,8 @@ class BeginSource(BeginStatement):
                         'WARNING',
                         'assuming the end of undefined PROGRAM statement',
                         item.span[0],item.span[1])
-                print >> sys.stderr, message
+                logger.warning(message)
+                # print >> sys.stderr, message
                 p = Program(self)
                 p.content.extend(self.content)
                 p.content.append(EndProgram(p,item))
@@ -322,7 +323,8 @@ class Module(BeginStatement, HasAttributes,
             stmt.analyze()
 
         if content:
-            self.show_message('Not analyzed content: %s' % content)
+            logger.info('Not analyzed content: %s' % content)
+            # self.show_message('Not analyzed content: %s' % content)
 
         module_provides = self.a.module_provides
         for name, var in self.a.variables.items():
@@ -495,7 +497,8 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             stmt.analyze()
             #assert isinstance(stmt, SubProgramStatement),`stmt.__class__.__name__`
         if content:
-            self.show_message('Not analyzed content: %s' % content)
+            logger.info('Not analyzed content: %s' % content)
+            # self.show_message('Not analyzed content: %s' % content)
 
         if self.name in self.parent.a.variables:
             var = self.parent.a.variables.pop(self.name)
@@ -625,7 +628,8 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                 stmt.analyze()
 
         if content:
-            self.show_message('Not analyzed content: %s' % content)
+            logger.info('Not analyzed content: %s' % content)
+            # self.show_message('Not analyzed content: %s' % content)
 
         parent_provides = self.parent.get_provides()
         if parent_provides is not None:
@@ -1103,7 +1107,8 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
             stmt.analyze()
 
         if content:
-            self.show_message('Not analyzed content: %s' % content)
+            logging.info('Not analyzed content: %s' % content)
+            # self.show_message('Not analyzed content: %s' % content)
 
         parameters = self.a.parameters
         components = self.a.components
