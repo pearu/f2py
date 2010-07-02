@@ -15,6 +15,7 @@ __all__ = ['Statement','BeginStatement','EndStatement', 'Variable',
 import re
 import sys
 import copy
+import logging
 from readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant

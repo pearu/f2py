@@ -28,4 +28,7 @@ Modules
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
 
+import os
+import logging, logging.config
+
 __autodoc__ = ['api', 'Fortran2003', 'readfortran', 'parsefortran']
