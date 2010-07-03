@@ -7351,7 +7351,7 @@ if 1: # Optimize subclass tree:
 
     def _rpl_list(clsname):
         if clsname not in Base_classes:
-            logger.warning('Not implemented: %s' % clsname)
+            logger.debug('Not implemented: %s' % clsname)
             # print 'Not implemented:',clsname
             return [] # remove this code when all classes are implemented
         cls = Base_classes[clsname]
@@ -7382,7 +7382,7 @@ if 1: # Optimize subclass tree:
 for clsname, cls in Base_classes.items():
     subclass_names = getattr(cls, 'subclass_names', None)
     if subclass_names is None:
-        logger.warning('%s class is missing subclass_names list' % (clsname))
+        logger.debug('%s class is missing subclass_names list' % (clsname))
         # print '%s class is missing subclass_names list' % (clsname)
         continue
     try:
@@ -7393,7 +7393,7 @@ for clsname, cls in Base_classes.items():
         if n in Base_classes:
             l.append(Base_classes[n])
         else:
-            logger.warning('%s not implemented needed by %s' % (n,clsname))
+            logger.debug('%s not implemented needed by %s' % (n,clsname))
             # print '%s not implemented needed by %s' % (n,clsname)
 
 if 1:
@@ -7405,16 +7405,16 @@ if 1:
         for n in subclasses_names:
             break
             if n not in subclass_names:
-                logger.warning('%s needs to be added to %s subclasses_name list' % (n,cls.__name__))
+                logger.debug('%s needs to be added to %s subclasses_name list' % (n,cls.__name__))
                 # print '%s needs to be added to %s subclasses_name list' % (n,cls.__name__)
         for n in subclass_names:
             break
             if n not in subclasses_names:
-                logger.warning('%s needs to be added to %s subclass_name list' % (n,cls.__name__))
+                logger.debug('%s needs to be added to %s subclass_name list' % (n,cls.__name__))
                 # print '%s needs to be added to %s subclass_name list' % (n,cls.__name__)
         for n in use_names + subclass_names:
             if n not in Base_classes:
-                logger.warning('%s not defined used by %s' % (n, cls.__name__))
+                logger.debug('%s not defined used by %s' % (n, cls.__name__))
                 # print '%s not defined used by %s' % (n, cls.__name__)
 
 
