@@ -5,9 +5,12 @@
 #Created: Oct 2006
 
 import re
+import logging
 from splitline import string_replace_map
 import pattern_tools as pattern
 from readfortran import FortranReaderBase
+
+logger = logging.getLogger("fparser")
 
 ###############################################################################
 ############################## BASE CLASSES ###################################
@@ -6197,7 +6200,8 @@ items : ({R, K, None}, {'/', 'P', ':'})
     def match(string):
         if len(string)==1 and string in '/:$':
             if string=='$':
-                print ('non-standard <control-edit-desc>: %r' % (string))
+                logger.debug('non-standard <control-edit-desc>: %r' % (string))
+                # print ('non-standard <control-edit-desc>: %r' % (string))
             return None, string
         if string[-1]=='/':
             return R(string[:-1].rstrip()), '/'
@@ -7347,7 +7351,8 @@ if 1: # Optimize subclass tree:
 
     def _rpl_list(clsname):
         if clsname not in Base_classes:
-            print 'Not implemented:',clsname
+            logger.warning('Not implemented: %s' % clsname)
+            # print 'Not implemented:',clsname
             return [] # remove this code when all classes are implemented
         cls = Base_classes[clsname]
         if 'match' in cls.__dict__:
@@ -7377,7 +7382,8 @@ if 1: # Optimize subclass tree:
 for clsname, cls in Base_classes.items():
     subclass_names = getattr(cls, 'subclass_names', None)
     if subclass_names is None:
-        print '%s class is missing subclass_names list' % (clsname)
+        logger.warning('%s class is missing subclass_names list' % (clsname))
+        # print '%s class is missing subclass_names list' % (clsname)
         continue
     try:
         l = Base.subclasses[clsname]
@@ -7387,7 +7393,8 @@ for clsname, cls in Base_classes.items():
         if n in Base_classes:
             l.append(Base_classes[n])
         else:
-            print '%s not implemented needed by %s' % (n,clsname)
+            logger.warning('%s not implemented needed by %s' % (n,clsname))
+            # print '%s not implemented needed by %s' % (n,clsname)
 
 if 1:
     for cls in Base_classes.values():
@@ -7398,14 +7405,17 @@ if 1:
         for n in subclasses_names:
             break
             if n not in subclass_names:
-                print '%s needs to be added to %s subclasses_name list' % (n,cls.__name__)
+                logger.warning('%s needs to be added to %s subclasses_name list' % (n,cls.__name__))
+                # print '%s needs to be added to %s subclasses_name list' % (n,cls.__name__)
         for n in subclass_names:
             break
             if n not in subclasses_names:
-                print '%s needs to be added to %s subclass_name list' % (n,cls.__name__)
+                logger.warning('%s needs to be added to %s subclass_name list' % (n,cls.__name__))
+                # print '%s needs to be added to %s subclass_name list' % (n,cls.__name__)
         for n in use_names + subclass_names:
             if n not in Base_classes:
-                print '%s not defined used by %s' % (n, cls.__name__)
+                logger.warning('%s not defined used by %s' % (n, cls.__name__))
+                # print '%s not defined used by %s' % (n, cls.__name__)
 
 
 #EOF
