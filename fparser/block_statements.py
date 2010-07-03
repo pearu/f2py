@@ -25,7 +25,7 @@ import sys
 from base_classes import BeginStatement, EndStatement, Statement,\
      AttributeHolder, ProgramBlock, Variable
 from readfortran import Line
-from utils import filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
+from utils import split_comma, filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
 
 class HasImplicitStmt(object):
 
