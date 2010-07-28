@@ -905,7 +905,7 @@ class If(BeginStatement):
         if not line:
             newitem = self.get_item()
         else:
-            newitem = item.copy(line)
+            newitem = item.copy(line, apply_map=True)
         newline = newitem.get_line()
         for cls in classes:
             if cls.match(newline):

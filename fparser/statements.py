@@ -99,7 +99,18 @@ class GeneralAssignment(Statement):
             else:
                 self.__class__ = Assignment
         apply_map = self.item.apply_map
-        self.variable = apply_map(m.group('variable').replace(' ',''))
+        v = m.group('variable').replace(' ','')
+        while True:
+            i = v.find(')')
+            if i==-1:
+                break
+            v = v[i+1:]
+            if v.startswith('('):
+                continue
+            if v:
+                self.isvalid = False
+                return
+        self.variable = apply_map(v)
         self.expr = apply_map(m.group('expr'))
         return
 
