@@ -88,14 +88,15 @@ class FortranParser(object):
             self.block.analyze()
         except AnalyzeError:
             pass
-        except Exception, msg:
-            if str(msg) != '123454321':
-                #print self.block
-                logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack() ))))
-                logger.critical(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ))
-                # self.reader.show_message(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ), sys.stderr)
-                sys.exit(123454321)
-            return
+        # except Exception, msg:
+            # import pdb; pdb.set_trace()
+            # if str(msg) != '123454321':
+                # #print self.block
+                # logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack() ))))
+                # logger.critical(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ))
+                # # self.reader.show_message(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ), sys.stderr)
+                # sys.exit(123454321)
+            # return
         self.is_analyzed = True
         return
 
