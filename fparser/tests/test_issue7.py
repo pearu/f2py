@@ -33,8 +33,8 @@ c
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
-    assert a.span==(2,2),`a.span`
-    assert comment.span==(3,3)
+    assert a.span==(2,4),`a.span`
+    assert comment.span==(5,5),`comment.span`
     assert end.span==(5,5),`end.span`
 
 def test_reproduce_issue_fix90():
