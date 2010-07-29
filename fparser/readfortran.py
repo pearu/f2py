@@ -596,8 +596,7 @@ class FortranReaderBase(object):
                     # not a Fortran statement.
                     reader.warning('%r not found in %r. INLCUDE line treated as comment line.'\
                                    % (filename, dirs), item)
-                    if ignore_comments:
-                        item = self._next(ignore_comments)
+                    item = self.next(ignore_comments)
                     return item
                     # To keep the information, we are turning the
                     # INCLUDE line to a comment:
