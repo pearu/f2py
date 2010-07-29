@@ -99,7 +99,7 @@ class GeneralAssignment(Statement):
             else:
                 self.__class__ = Assignment
         apply_map = self.item.apply_map
-        v = m.group('variable').replace(' ','')
+        v1 = v = m.group('variable').replace(' ','')
         while True:
             i = v.find(')')
             if i==-1:
@@ -110,7 +110,7 @@ class GeneralAssignment(Statement):
             if v:
                 self.isvalid = False
                 return
-        self.variable = apply_map(v)
+        self.variable = apply_map(v1)
         self.expr = apply_map(m.group('expr'))
         return
 
