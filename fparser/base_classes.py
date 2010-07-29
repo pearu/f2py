@@ -21,6 +21,8 @@ from numpy.distutils.misc_util import yellow_text, red_text
 from utils import split_comma, specs_split_comma, is_int_literal_constant
 from utils import classes
 
+logger = logging.getLogger('fparser')
+
 class AttributeHolder(object):
     # copied from symbolic.base module
     """
