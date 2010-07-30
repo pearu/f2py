@@ -1,9 +1,9 @@
 
 import numpy
 from numpy.testing import *
-set_package_path()
 from extgen import *
-restore_path()
+import unittest
+NumpyTestCase = unittest.TestCase
 
 class _test_PyCArrayTypeSpec(NumpyTestCase):
 
