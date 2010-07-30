@@ -1145,6 +1145,46 @@ def test_Data_Implied_Do(): # R527
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'((SKEW(K, J), J = 1, K), K = 1, 100)')
 
+# R531-R534 are trivial
+
+def test_Dimension_Stmt(): # R535
+
+    cls = Dimension_Stmt
+    a = cls('dimension :: a(5)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DIMENSION :: a(5)')
+    assert_equal(repr(a),"Dimension_Stmt([(Name('a'), Explicit_Shape_Spec(None, Int_Literal_Constant('5', None)))])")
+
+    a = cls('dimension a(n,m), b(:), c(2:n), d(*), e(n, 2:*)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'DIMENSION :: a(n, m), b(:), c(2 : n), d(*), e(n, 2 : *)')
+
+def test_Intent_Stmt(): # R536
+
+    cls = Intent_Stmt
+    a = cls('intent(in) :: a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTENT(IN) :: a')
+    assert_equal(repr(a),"Intent_Stmt(Intent_Spec('IN'), Name('a'))")
+
+    a = cls('intent(out) a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'INTENT(OUT) :: a, b')
+    assert_equal(repr(a),"Intent_Stmt(Intent_Spec('OUT'), Dummy_Arg_Name_List(',', (Name('a'), Name('b'))))")
+
+def test_Optional_Stmt(): # R537
+
+    cls = Optional_Stmt
+    a = cls('optional :: a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'OPTIONAL :: a')
+    assert_equal(repr(a),"Optional_Stmt('OPTIONAL', Name('a'))")
+
+    a = cls('optional :: a, b, c')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'OPTIONAL :: a, b, c')
+    assert_equal(repr(a),"Optional_Stmt('OPTIONAL', Dummy_Arg_Name_List(',', (Name('a'), Name('b'), Name('c'))))")
+
 def test_Parameter_Stmt(): # R538
 
     cls = Parameter_Stmt
@@ -1169,6 +1209,14 @@ def test_Named_Constant_Def(): # R539
     assert_equal(str(a),'a = 1')
     assert_equal(repr(a),"Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
 
+def test_Pointer_Stmt(): # R540
+
+    cls = Pointer_Stmt
+    a = cls('pointer a(:), b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'POINTER :: a(:), b')
+    assert_equal(repr(a),"Pointer_Stmt('POINTER', Pointer_Decl_List(',', (Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None)), Name('b'))))")
+
 def test_Pointer_Decl(): # R541
 
     cls = Pointer_Decl
@@ -1180,6 +1228,49 @@ def test_Pointer_Decl(): # R541
     a = cls('a(:,:)')
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'a(:, :)')
+
+def test_Protected_Stmt(): # R542
+    cls = Protected_Stmt
+    a = cls('protected a,b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROTECTED :: a, b')
+    assert_equal(repr(a),"Protected_Stmt('PROTECTED', Entity_Name_List(',', (Name('a'), Name('b'))))")
+
+    a = cls('protected ::a')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'PROTECTED :: a')
+    assert_equal(repr(a),"Protected_Stmt('PROTECTED', Name('a'))")
+
+def test_Save_Stmt(): # R543
+    cls = Save_Stmt
+    a = cls('save')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'SAVE')
+    assert_equal(repr(a),"Save_Stmt('SAVE', None)")
+
+    a = cls('save a, b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'SAVE :: a, b')
+    assert_equal(repr(a),"Save_Stmt('SAVE', Saved_Entity_List(',', (Name('a'), Name('b'))))")
+
+    a = cls('save :: /a/ , b')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'SAVE :: /a/, b')
+    assert_equal(repr(a),"Save_Stmt('SAVE', Saved_Entity_List(',', (Saved_Entity('/', Name('a'), '/'), Name('b'))))")
+
+def test_Saved_Entity(): # R544
+    cls = Saved_Entity
+    a = cls('a')
+    assert isinstance(a, Name),`a`
+    assert_equal(str(a),'a')
+    assert_equal(repr(a),"Name('a')")
+
+    a = cls('/a/')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'/a/')
+    assert_equal(repr(a),"Saved_Entity('/', Name('a'), '/')")
+
+# R545 is trivial
 
 def test_Target_Stmt(): # R546
     cls = Target_Stmt
