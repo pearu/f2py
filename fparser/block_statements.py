@@ -635,7 +635,8 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if parent_provides is not None:
             if self.name in parent_provides:
                 self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
-            parent_provides[self.name] = self
+            if self.is_public():
+                parent_provides[self.name] = self
 
         if self.is_recursive() and self.is_elemental():
             self.warning('C1241 violation: prefix cannot specify both ELEMENTAL and RECURSIVE')
