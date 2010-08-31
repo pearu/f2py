@@ -621,6 +621,8 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                     stmt.analyze()
                     self.a.internal_subprogram[stmt.name] = stmt
                 stmt = content.pop(0)
+                while isinstance (stmt, Comment):
+                    stmt = content.pop(0)
                 assert isinstance(stmt, self.end_stmt_cls),`stmt`
             elif isinstance(stmt, self.end_stmt_cls):
                 continue
