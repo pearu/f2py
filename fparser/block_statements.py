@@ -363,7 +363,8 @@ class Module(BeginStatement, HasAttributes,
 class EndPythonModule(EndStatement):
     match = re.compile(r'end(\s*python\s*module\s*\w*|)\Z', re.I).match
 
-class PythonModule(BeginStatement, HasImplicitStmt, HasUseStmt):
+class PythonModule(BeginStatement, HasImplicitStmt, HasUseStmt,
+                   HasVariables):
     """
     PYTHON MODULE <name>
      ..

@@ -414,11 +414,16 @@ class FortranReaderBase(object):
         self.isfree  = isfree
         self.isfixed   = not isfree
         self.isstrict = isstrict
-
-        if self.isfree: mode = 'free'
-        elif self.isfix: mode = 'fix'
-        elif self.isf77: mode = 'f77'
-        else: mode = 'pyf'
+        if isfree and isstrict:
+            mode = 'pyf'
+        elif self.isfree:
+            mode = 'free'
+        elif self.isfix:
+            mode = 'fix'
+        elif self.isf77:
+            mode = 'f77'
+        else:
+            assert False
         self.mode = mode
         self.name = '%s mode=%s' % (self.source, mode)
         return
