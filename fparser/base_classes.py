@@ -324,7 +324,7 @@ class Variable(object):
             if lattr.startswith('check'):
                 l = attr[5:].lstrip()
                 assert l[0]+l[-1]=='()',`l`
-                self.check.extend(split_comma(l[1:-1].strip()), self.parent.item)
+                self.check.extend(split_comma(l[1:-1].strip(), self.parent.item))
                 continue
             if uattr not in attributes:
                 if uattr not in self.known_attributes:
