@@ -215,7 +215,7 @@ class Line(object):
             # with char-literal-constants.
             # H constants may appear only in DATA statements and
             # in the argument list of CALL statement.
-            # Holleriht constants were removed from the Fortran 77 standard.
+            # Hollerith constants were removed from the Fortran 77 standard.
             # The following handling is not perfect but works for simple
             # usage cases.
             # todo: Handle hollerith constants in DATA statement

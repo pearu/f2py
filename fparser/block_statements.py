@@ -880,7 +880,7 @@ class IfThen(BeginStatement):
         item = self.item
         line = item.get_line()[2:-4].strip()
         assert line[0]=='(' and line[-1]==')',`line`
-        self.expr = line[1:-1].strip()
+        self.expr = item.apply_map(line[1:-1].strip())
         self.construct_name = item.name
         return BeginStatement.process_item(self)
 
