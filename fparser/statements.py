@@ -105,7 +105,7 @@ class GeneralAssignment(Statement):
             if i==-1:
                 break
             v = v[i+1:]
-            if v.startswith('('):
+            if v.startswith('(') or v.startswith(r'%'):
                 continue
             if v:
                 self.isvalid = False
