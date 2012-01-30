@@ -824,6 +824,7 @@ class EndStatement(Statement):
     def process_item(self):
         item = self.item
         line = item.get_line().replace(' ','')[3:]
+        line = item.apply_map(line)
         blocktype = self.blocktype
         if line.lower().startswith(blocktype):
             line = line[len(blocktype):].strip()

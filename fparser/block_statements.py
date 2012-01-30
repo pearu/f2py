@@ -437,7 +437,7 @@ class BlockData(BeginStatement, HasImplicitStmt, HasUseStmt,
 # Interface
 
 class EndInterface(EndStatement):
-    match = re.compile(r'end\s*interface\s*\w*\Z', re.I).match
+    match = re.compile(r'end\s*interface\s*(\w+\s*\(.*\)|\w*)\Z',re.I).match
     blocktype = 'interface'
 
 class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
@@ -472,6 +472,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
 
     def process_item(self):
         line = self.item.get_line()
+        line = self.item.apply_map(line)
         self.isabstract = line.startswith('abstract')
         if self.isabstract:
             self.generic_spec = ''
