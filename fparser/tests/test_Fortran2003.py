@@ -2907,6 +2907,10 @@ def test_End_Interface_Stmt(): # R1204
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'END INTERFACE READ(FORMATTED)')
 
+    a = cls('end interface assignment(=)')
+    assert isinstance(a, cls),`a`
+    assert_equal(str(a),'END INTERFACE ASSIGNMENT(=)')
+
 def test_Interface_Body(): # R1205
     cls = Interface_Body
     a = cls(get_reader('''\
