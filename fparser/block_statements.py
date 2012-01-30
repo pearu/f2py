@@ -840,7 +840,7 @@ class Forall(BeginStatement):
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
     end_stmt_cls = EndForall
-    match = re.compile(r'forarr\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'forall\s*\(.*\)\Z',re.I).match
     name = ''
     def process_item(self):
         self.specs = self.item.get_line()[6:].lstrip()[1:-1].strip()
