@@ -1,17 +1,14 @@
 # News #
 
-  * July 30, 2010: Created [F2PYDevelopment](F2PYDevelopment.md) wiki page.
-  * July 27, 2010: Source code development has been switched from Subversion to Mercurial
-  * March 19, 2010: Created [F2PY References](http://www.f2py.com/home/references).
+  * 16/01/2017 Parser code extracted from F2PY project to form the
+    base of the fparser project.
 
 # Introduction #
 
-This project is created to support the development
-of G3 F2PY and related tools (Fortran 77/../2003 parser,
-code generators, etc).
+This project is based upon the Fortran (77..2003) parser originally
+developed by Pearu Peterson for the F2PY project,
+[www.f2py.com](http://www.f2py.com).
 
 # See also #
 
 [www.f2py.com](http://www.f2py.com).
-
-[F2PY G3 Documentation](http://f2py.sourceforge.net/docs/)
