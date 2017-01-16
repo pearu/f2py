@@ -3378,7 +3378,7 @@ def test_Contains(): # R1237
         assert_equal(str(a),'CONTAINS')
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
 
-if 1:
+if 0:
     nof_needed_tests = 0
     nof_needed_match = 0
     total_needs = 0
