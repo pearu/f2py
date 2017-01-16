@@ -30,14 +30,12 @@
 """Setup script. Used by easy_install and pip."""
 
 from setuptools import setup, find_packages
-import os
 
 PACKAGES = find_packages(where="src")
 
-NAME = 'f2py'
+NAME = 'fparser'
 AUTHOR = 'Andrew Porter'
 AUTHOR_EMAIL = 'trackstand.andy@gmail.com'
-LICENSE = 'BSD'
 URL = 'https://github.com/stfc/fparser'
 DOWNLOAD_URL = 'https://github.com/stfc/fparser'
 DESCRIPTION = 'The fparser Project'
@@ -48,47 +46,43 @@ the F2PY project (http://www.f2py.com).
 
 See https://github.com/stfc/fparser for more information.
 '''
-CLASSIFIERS = """\
-Development Status :: 3 - Alpha
-Environment :: Console
-Intended Audience :: Developers
-Intended Audience :: Science/Research
-License :: OSI Approved
-Natural Language :: English
-Programming Language :: Fortran
-Programming Language :: Python
-Topic :: Scientific/Engineering
-Topic :: Software Development
-Topic :: Utilities,
-Operating System :: POSIX
-Operating System :: Unix
-Operating System :: MacOS
-"""
+LICENSE='OSI Approved :: BSD 3-Clause License'
 
-PLATFORMS = ['Linux', 'MacOS']
-MAJOR               = 0
-MINOR               = 0
-MICRO               = 1
-ISRELEASED          = not True
-VERSION             = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+CLASSIFIERS = [
+    'Development Status :: 3 - Alpha',
+    'Environment :: Console',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'Natural Language :: English',
+    'Programming Language :: Fortran',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Software Development',
+    'Topic :: Utilities',
+    'Operating System :: POSIX',
+    'Operating System :: Unix',
+    'Operating System :: MacOS']
+
+MAJOR = 0
+MINOR = 0
+MICRO = 1
+ISRELEASED = not True
+VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
 
     setup(
-        name = NAME,
-        version = VERSION,
-        author = AUTHOR,
-        author_email = AUTHOR_EMAIL,
-        license = LICENSE,
-        url = URL,
-        download_url = DOWNLOAD_URL,
-        description = DESCRIPTION,
-        long_description = LONG_DESCRIPTION,
-        classifiers = filter(None, CLASSIFIERS.split('\n')),
+        name=NAME,
+        version=VERSION,
+        author=AUTHOR,
+        author_email=(AUTHOR_EMAIL),
+        license=LICENSE,
+        url=URL,
+        description=DESCRIPTION,
+        long_description=LONG_DESCRIPTION,
+        classifiers=CLASSIFIERS,
         packages=PACKAGES,
-        package_dir={"", "src"},
+        package_dir={"": "src"},
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
-        include_package_data=True,
-        platforms = PLATFORMS,
-        configuration=configuration)
+        include_package_data=True)
