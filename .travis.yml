@@ -1,0 +1,13 @@
+language: python
+python:
+  - 2.7
+# command to install dependencies
+before_install:
+  - pip install coveralls
+install:
+  - "pip install ."
+script:
+  - coverage run --source=fparser -m py.test
+  - coverage report -m
+after_success:
+  - coveralls
