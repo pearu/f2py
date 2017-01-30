@@ -6,7 +6,7 @@
 # All rights reserved.
 
 # Modifications made as part of the fparser project are distributed
-# under the follosing license:
+# under the following license:
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
