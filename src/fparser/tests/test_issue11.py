@@ -61,8 +61,18 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
-include LICENSE
-include README.md
-include *.py
-global-include src/fparser/tests/*.py
-recursive-include doc *.py *.rst Makefile
+
+from fparser import api
+
+def test_reproduce_issue():
+    source_str = '''\
+      subroutine bndfp()
+      include "events.ins"
+      end
+'''
+    tree = api.parse(source_str, isfree=False, isstrict=False,
+                     ignore_comments=False)
+    print tree
+    return
+    assert str(tree).strip().split('\n')[1:]=='''
+    '''.strip().split('\n')[1:]

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -61,8 +62,43 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
-include LICENSE
-include README.md
-include *.py
-global-include src/fparser/tests/*.py
-recursive-include doc *.py *.rst Makefile
+
+import os
+import sys
+### START UPDATE SYS.PATH ###
+### END UPDATE SYS.PATH ###
+try:
+    from iocbio.optparse_gui import OptionParser
+except ImportError:
+    from optparse import OptionParser
+from fparser.script_options import set_parse_options
+
+def runner (parser, options, args):
+    from fparser.readfortran import  FortranFileReader
+    from fparser.parsefortran import  FortranParser
+    for filename in args:
+        reader = FortranFileReader(filename)
+        if options.mode != 'auto':
+            reader.set_mode_from_str(options.mode)
+        parser = FortranParser(reader)
+        parser.parse()
+        parser.analyze()
+        if options.task=='show':
+            print parser.block.torepr(4)
+        elif options.task == 'none':
+            pass
+        else:
+            raise NotImplementedError(`options.task`)
+        
+
+def main ():
+    parser = OptionParser()
+    set_parse_options(parser)
+    if hasattr(parser, 'runner'):
+        parser.runner = runner
+    options, args = parser.parse_args()
+    runner(parser, options, args)
+    return
+
+if __name__=="__main__":
+    main()
