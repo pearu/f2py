@@ -1428,7 +1428,7 @@ class Entry(Statement):
     <language-binding-spec> = BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
     <dummy-arg> = <dummy-arg-name> | *
     """
-    match = re.compile(r'entry\s+[a-zA-Z]\w', re.I).match
+    match = re.compile(r'entry\s+[a-zA-Z]', re.I).match
     def process_item(self):
         line = self.item.get_line()[5:].lstrip()
         m = re.match(r'\w+', line)
