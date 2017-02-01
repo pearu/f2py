@@ -456,7 +456,7 @@ class BinaryOpBase(Base):
     <op> is searched from right by default.
     """
     def match(lhs_cls, op_pattern, rhs_cls, string, right=True,
-              exclude_op_pattern = None, is_add = False):
+              exclude_op_pattern=None, is_add=False):
         line, repmap = string_replace_map(string)
         if isinstance(op_pattern, str):
             if right:
@@ -1933,7 +1933,7 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
                                  | <access-spec>
     """
     subclass_names = ['Access_Spec', 'Proc_Component_PASS_Arg_Name']
-    def match(string): return STRINGBase.match(['POINTER','PASS','NOPASS'],
+    def match(string): return STRINGBase.match(['POINTER', 'PASS', 'NOPASS'],
                                                string.upper())
     match = staticmethod(match)
 
@@ -4206,7 +4206,7 @@ class Masked_Elsewhere_Stmt(StmtBase): # R749
     use_names = ['Mask_Expr', 'Where_Construct_Name']
     @staticmethod
     def match(string):
-        if string[:9].upper()!='ELSEWHERE' and \
+        if string[:9].upper() != 'ELSEWHERE' and \
            string[:10].upper() != "ELSE WHERE":
             return
         idx = string[:10].upper().index("WHERE")
@@ -6104,26 +6104,27 @@ class Data_Edit_Desc_C1002(Base):
                 return c, W(i1), M(i2), None
             return c,W(line), None, None
         if c in ['E']:
+            # Format descriptor can be 'E', 'ES' or 'EN'
             line = string[1:].lstrip()
             c2 = line[0].upper()
             if c2 in ['S', 'N']:
                 line = line[1:].lstrip()
             else:
                 c2 = ""
-            if line.count('.')==1:
-                i1,i2 = line.split('.',1)
+            if line.count('.') == 1:
+                i1, i2 = line.split('.', 1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
                 return c+c2, W(i1), D(i2), None
-            elif line.count('.')==2:
-                i1,i2,i3 = line.split('.',2)
+            elif line.count('.') == 2:
+                i1, i2, i3 = line.split('.', 2)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
                 i3 = i3.lstrip()
                 return c+c2, W(i1), D(i2), E(i3)
             else:
                 return
-        if c in ['F','G']:
+        if c in ['F', 'G']:
             line = string[1:].lstrip()
             if line.count('.')==1:
                 i1,i2 = line.split('.',1)
@@ -6573,7 +6574,7 @@ class Use_Stmt(StmtBase): # R1109
         name = Module_Name(name)
         line = line[i+1:].lstrip()
         if not line: return
-        if line[:4].upper()=='ONLY':
+        if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
             if line[0] != ':':
                 return
