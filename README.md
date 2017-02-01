@@ -12,6 +12,8 @@ developed by Pearu Peterson for the F2PY project,
 # Code Metrics #
 
 [![Build Status](https://travis-ci.org/stfc/fparser.svg?branch=master)](https://travis-ci.org/stfc/fparser)
+[![Coverage Status](https://coveralls.io/repos/github/stfc/fparser/badge.svg?branch=master)](https://coveralls.io/github/stfc/fparser?branch=master)
+[![Code Health](https://landscape.io/github/stfc/fparser/master/landscape.svg?style=flat)](https://landscape.io/github/stfc/fparser/master)
 
 # See also #
 
