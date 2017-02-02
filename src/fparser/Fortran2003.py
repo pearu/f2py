@@ -4211,7 +4211,7 @@ class Masked_Elsewhere_Stmt(StmtBase): # R749
     def match(string):
         if not Elsewhere_Stmt._regex.match(string):
             return
-        idx = string[:10].upper().index("WHERE")
+        idx = string.upper().index("WHERE")
         line = string[idx+5:].lstrip()
 
         if not line.startswith('('): return
@@ -4245,7 +4245,7 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase): # R750
     def match(string):
         if not Elsewhere_Stmt._regex.match(string):
             return
-        idx = string[:10].upper().index("WHERE")
+        idx = string.upper().index("WHERE")
         line = string[idx+5:].lstrip()
         if line:
             return "ELSEWHERE", Where_Construct_Name(line)

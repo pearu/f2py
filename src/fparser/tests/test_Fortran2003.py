@@ -2059,24 +2059,28 @@ def test_Where_Construct(): # R745
     end where
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'WHERE (pressure <= 1.0)\n  pressure = pressure + inc_pressure\n  temp = temp - 5.0\nELSEWHERE\n  raining = .TRUE.\nEND WHERE')
+    assert (str(a) == "WHERE (pressure <= 1.0)\n  "
+            "pressure = pressure + inc_pressure\n  "
+            "temp = temp - 5.0\n"
+            "ELSEWHERE\n  raining = .TRUE.\nEND WHERE")
 
     a = cls(get_reader('''
     where (cond1)
-    elsewhere (cond2)
+    else    where (cond2)
     end where
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE')
+    assert str(a) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
 
     a = cls(get_reader('''
     n:where (cond1)
     elsewhere (cond2) n
-    elsewhere n
+    else   where n
     end where n
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\nEND WHERE n')
+    assert (str(a) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
+            "ELSEWHERE n\nEND WHERE n")
 
     a = cls(get_reader('''
     n:where (cond1)
@@ -2089,6 +2093,18 @@ def test_Where_Construct(): # R745
     assert (str(a) ==
                  'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\n'
                  'END WHERE n')
+
+    a = cls(get_reader('''
+    n:where (me(:)=="hello")
+    else where (me(:)=="goodbye") n
+    else where n
+    end where n
+'''))
+    print str(a)
+    assert (str(a) ==
+            'n:WHERE (me(:) == "hello")\nELSEWHERE(me(:) == "goodbye") n\n'
+            'ELSEWHERE n\n'
+            'END WHERE n')
 
 
 def test_Where_Construct_Stmt(): # R745
