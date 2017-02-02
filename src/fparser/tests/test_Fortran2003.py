@@ -1726,6 +1726,19 @@ def test_Parenthesis(): # R701.h
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'(a + (a + c))')
 
+        obj  = cls('("a"+"c")')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '("a" + "c")'
+
+        obj  = cls('("a"+")")')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '("a" + ")")'
+
+        obj  = cls('''(')'+")")''')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '''(')' + ")")'''
+
+
 def test_Level_1_Expr(): # R702
 
         cls = Level_1_Expr

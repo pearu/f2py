@@ -115,10 +115,12 @@ class Base(object):
         elif cls not in parent_cls:
             parent_cls.append(cls)
         #print '__new__:',cls.__name__,`string`
-        match = cls.__dict__.get('match', None)
+        # Get the class' match method if it has one
+        match = cls.__dict__.get('match')
+        #print '__new__:',type(match), dir(cls)
         result = None
         if isinstance(string, FortranReaderBase) and \
-           match is not None and not issubclass(cls, BlockBase):
+           match and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
             if item is None: return
@@ -133,7 +135,7 @@ class Base(object):
             obj.item = item
             return obj
 
-        if match is not None:
+        if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
             try:
@@ -559,6 +561,7 @@ class BracketBase(Base):
 ::
     <bracket-base> = <left-bracket-base> <something> <right-bracket>
     """
+    @staticmethod
     def match(brackets, cls, string, require_cls=True):
         bracket_len = len(brackets)/2
         left = brackets[:bracket_len]
@@ -569,11 +572,19 @@ class BracketBase(Base):
             # zero open brackets before we get to the end then the
             # opening bracket at the start of the string does not
             # correspond to the closing bracket at the end of it.
+            # Unless of course any interim brackets we encouter are
+            # within strings...
             num_open = 1
+            in_string = False
             for idx in range(bracket_len, len(string)-bracket_len):
-                if string[idx:idx+bracket_len] == left:
+                if string[idx] == '"' or string[idx] == "'":
+                    in_string = not in_string
+                if in_string:
+                    # Ignore anything within quotes
+                    continue
+                if string[idx:idx+bracket_len-1] == left:
                     num_open += 1
-                elif string[idx:idx+bracket_len] == right:
+                elif string[idx:idx+bracket_len-1] == right:
                     num_open -= 1
                 if num_open == 0:
                     return
@@ -584,7 +595,7 @@ class BracketBase(Base):
                 return left, None, right
             return left, cls(line), right
         return
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None:
             return '%s%s' % (self.items[0], self.items[2])
