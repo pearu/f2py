@@ -66,6 +66,7 @@ from fparser.Fortran2003 import *
 from fparser.api import get_reader
 
 from nose.tools import assert_equal
+import pytest
 
 def assertRaises(exc, cls, s):
     try:
@@ -1706,6 +1707,7 @@ def test_Primary(): # R701
         assert isinstance(a,Real_Literal_Constant),`a`
         assert_equal(str(a),'0.0E-1')
 
+
 def test_Parenthesis(): # R701.h
 
         cls = Parenthesis
@@ -1737,6 +1739,10 @@ def test_Parenthesis(): # R701.h
         obj  = cls('''(')'+")")''')
         assert isinstance(obj, cls), `obj`
         assert str(obj) == '''(')' + ")")'''
+
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = cls('(a+b)*(c+d)')
+        assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo)
 
 
 def test_Level_1_Expr(): # R702
