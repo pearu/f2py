@@ -582,9 +582,11 @@ class BracketBase(Base):
                 if in_string:
                     # Ignore anything within quotes
                     continue
-                if string[idx:idx+bracket_len-1] == left:
+                # A slice in python goes up to but *does not
+                # include* the last position so no need for a '-1'
+                if string[idx:idx+bracket_len] == left:
                     num_open += 1
-                elif string[idx:idx+bracket_len-1] == right:
+                elif string[idx:idx+bracket_len] == right:
                     num_open -= 1
                 if num_open == 0:
                     return
