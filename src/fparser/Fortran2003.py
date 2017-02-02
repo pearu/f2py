@@ -4200,14 +4200,16 @@ class Mask_Expr(Base): # R748
 
 class Masked_Elsewhere_Stmt(StmtBase): # R749
     """
-    <masked-elsewhere-stmt> = ELSEWHERE ( <mask-expr> ) [ <where-construct-name> ]
+    <masked-elsewhere-stmt> = ELSEWHERE
+                              ( <mask-expr> ) [ <where-construct-name> ]
     """
+    import re
     subclass_names = []
     use_names = ['Mask_Expr', 'Where_Construct_Name']
+
     @staticmethod
     def match(string):
-        if string[:9].upper() != 'ELSEWHERE' and \
-           string[:10].upper() != "ELSE WHERE":
+        if not Elsewhere_Stmt._regex.match(string):
             return
         idx = string[:10].upper().index("WHERE")
         line = string[idx+5:].lstrip()
@@ -4237,10 +4239,11 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase): # R750
     """
     subclass_names = []
     use_names = ['Where_Construct_Name']
+    _regex = re.compile(r'ELSE\s*WHERE', re.I)
+
     @staticmethod
     def match(string):
-        if string[:9].upper() != 'ELSEWHERE' and \
-           string[:10].upper() != "ELSE WHERE":
+        if not Elsewhere_Stmt._regex.match(string):
             return
         idx = string[:10].upper().index("WHERE")
         line = string[idx+5:].lstrip()
