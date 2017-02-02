@@ -1744,6 +1744,10 @@ def test_Parenthesis(): # R701.h
             _ = cls('(a+b)*(c+d)')
         assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo)
 
+        with pytest.raises(NoMatchError) as excinfo:
+            _  = cls('''()''')
+        assert "Parenthesis: '()'" in str(excinfo)
+
 
 def test_Level_1_Expr(): # R702
 
