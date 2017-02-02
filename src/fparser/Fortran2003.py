@@ -180,8 +180,6 @@ class Base(object):
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
                                                                   self.items)))
-    def tostr(self):
-        return self.torepr()
 
     def compare(self, other):
         return cmp(self.items,other.items)
