@@ -2856,6 +2856,47 @@ def test_Format_Item(): # R1003
     a = cls("' '/' '")
     assert_equal(str(a),"' ', /, ' '")
 
+
+def test_Edit_Desc():
+    ''' Tests for matching Edit Descriptors '''
+    cls = Data_Edit_Desc
+    obj = cls('I3')
+    assert str(obj) == 'I3'
+
+    obj = cls('I3.2')
+    assert str(obj) == 'I3.2'
+
+    obj = cls('O3.2')
+    assert str(obj) == 'O3.2'
+
+    obj = cls('Z3.2')
+    assert str(obj) == 'Z3.2'
+
+    obj = cls('L3')
+    assert str(obj) == 'L3'
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('L3.2')
+    assert "NoMatchError: Data_Edit_Desc: 'L3.2'" in str(excinfo)
+
+    obj = cls('A3')
+    assert str(obj) == 'A3'
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('A3.2')
+    assert "NoMatchError: Data_Edit_Desc: 'A3.2'" in str(excinfo)
+
+    obj = cls("DT'a_name'")
+    assert str(obj) == "DT'a_name'"
+
+    obj = cls("DT'a_name'(3,-2)")
+    assert str(obj) == "DT'a_name'(3, -2)"
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls("DT'a_name'()")
+    assert '''Data_Edit_Desc: "DT'a_name'()"''' in str(excinfo)
+
+
 def test_Format_Item_List():
     cls = Format_Item_List
     a = cls('3f9.4')
