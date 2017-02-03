@@ -6118,32 +6118,33 @@ class Data_Edit_Desc_C1002(Base):
     def match(string):
         c = string[0].upper()
         if c in ['D']:
-            line = string[1:].lstrip()
+            line = string[1:].lstrip().upper()
             if '.' in line:
                 i1,i2 = line.split('.',1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
                 return c, W(i1), M(i2), None
-            return c,W(line), None, None
+            return
         if c in ['E']:
             # Format descriptor can be 'E', 'ES' or 'EN'
-            line = string[1:].lstrip()
-            c2 = line[0].upper()
+            line = string[1:].lstrip().upper()
+            c2 = line[0]
             if c2 in ['S', 'N']:
                 line = line[1:].lstrip()
             else:
                 c2 = ""
-            if line.count('.') == 1:
-                i1, i2 = line.split('.', 1)
+            if "." in line:
+                i1, i2 = line.split('.')
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
-                return c+c2, W(i1), D(i2), None
-            elif line.count('.') == 2:
-                i1, i2, i3 = line.split('.', 2)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                i3 = i3.lstrip()
-                return c+c2, W(i1), D(i2), E(i3)
+                # Can optionally specify the no. of digits for the exponent
+                if i2.count('E') == 1:
+                    i2, i3 = i2.split('E')
+                    i2 = i2.lstrip()
+                    i3 = i3.lstrip()
+                    return c+c2, W(i1), D(i2), E(i3)
+                else:
+                    return c+c2, W(i1), D(i2), None
             else:
                 return
         if c in ['F', 'G']:

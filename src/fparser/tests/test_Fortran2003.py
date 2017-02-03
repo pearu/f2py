@@ -2818,8 +2818,18 @@ def test_Format_Item(): # R1003
     a = cls('3f12.6/')
     assert str(a) == '3F12.6, /'
 
+    a = cls('3d12.6/')
+    assert str(a) == '3D12.6, /'
+
+    # D specifier must be Dw.d so must have a decimal point
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('3d12/')
+
     a = cls('3e12.6/')
     assert str(a) == '3E12.6, /'
+
+    a = cls('3e12.6e2/')
+    assert str(a) == '3E12.6E2, /'
 
     # Scientific format
     a = cls('3es12.6/')
@@ -2828,6 +2838,14 @@ def test_Format_Item(): # R1003
     # Engineering format
     a = cls('3en12.6/')
     assert str(a) == '3EN12.6, /'
+
+    # Must have a decimal point
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('3en12/')
+
+    # Engineering format specifying number of digits in exponent
+    a = cls('3en12.6e3/')
+    assert str(a) == '3EN12.6E3, /'
 
     a = cls("/' '")
     assert_equal(str(a),"/, ' '")
