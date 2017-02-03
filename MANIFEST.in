@@ -66,3 +66,4 @@ include README.md
 include *.py
 global-include src/fparser/tests/*.py
 recursive-include doc *.py *.rst Makefile
+recursive-include src *.config
