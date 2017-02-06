@@ -311,21 +311,24 @@ For example,
             PRINT *, "a=", a
           END SUBROUTINE foo
 
-Files `block_statements.py`__, `base_classes.py`__, `typedecl_statements.py`__, `statements.py`__
--------------------------------------------------------------------------------------------------
+Model for Fortran code Statements
+---------------------------------
+
+The model for representing Fortran code statements is defined in files
+`block_statements.py`__, `base_classes.py`__,
+`typedecl_statements.py`__ and `statements.py`__.
+It consists of a tree of `Statement` classes defined in
+`base_classes.py`. There are two types of statements: one-line
+statements and block statements. Block statements consists of start
+and end statements, and content statements in between that can be of
+both types again.
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/block_statements.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/base_classes.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/typedecl_statements.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/statements.py
 
-The model for representing Fortran code statements consists of a tree
-of `Statement` classes defined in `base_classes.py`. There are two
-types of statements: one-line statements and block statements. Block
-statements consists of start and end statements, and content
-statements in between that can be of both types again.
-
-`Statement` instance has the following attributes:
+A `Statement` instance has the following attributes:
 
   * `.parent`  - it is either parent block-type statement or `FortranParser`
     instance.
@@ -394,24 +397,14 @@ and the following methods:
   * `.is_optional()`
   * `.is_required()`
 
-The following type declaration statements are defined in
-`typedecl_statements.py`:
+Base Classes
+^^^^^^^^^^^^
 
-  `Integer`, `Real`, `DoublePrecision`, `Complex`, `DoubleComplex`, `Logical`,
-  `Character`, `Byte`, `Type`, `Class`
+.. automodule:: fparser.base_classes
+    :members:
 
-and they have the following attributes:
-
-  * `.selector`           - contains lenght and kind specs
-  * `.entity_decls`, `.attrspec`
-
-and methods:
-
-  * `.tostr()` - return string representation of Fortran type declaration
-  * `.astypedecl()` - pure type declaration instance, it has no `.entity_decls`
-    and `.attrspec`.
-  * `.analyze()` - processes `.entity_decls` and `.attrspec` attributes and adds
-    `Variable` instance to `.parent.a.variables` dictionary.
+Block Statements
+^^^^^^^^^^^^^^^^
 
 The following block statements are defined in `block_statements.py`:
 
@@ -443,6 +436,42 @@ Block statements have the following methods:
   * `.get_classes()` - returns a list of `Statement` classes that are valid
     as a content of given block statement.
 
+..  For some reason the block_statements module adds *all* of the
+    classes defined in both the statements and typedecl_statements
+    modules to its __all__ list so we have to manually specify just those
+    classes that we want documented.
+.. automodule:: fparser.block_statements
+    :members: HasImplicitStmt, HasUseStmt, AccessSpecs, HasVariables, HasTypeDecls, HasAttributes, HasModuleProcedures, EndSource, BeginSource, EndModule, Module, EndPythonModule, PythonModule, EndProgram, Program, EndBlockData, BlockData, Interface, EndInterface, SubProgramStatement, Subroutine, EndSubroutine, Function, EndFunction, SubprogramPrefix, Select, EndSelect, Where, EndWhere, Forall, EndForall, If, IfThen, EndIfThen, Do, EndDo, Associate, EndAssociate, Type, EndType, Enum, EndEnum
+
+Type-declaration Statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following type declaration statements are defined in
+`typedecl_statements.py`:
+
+  `Integer`, `Real`, `DoublePrecision`, `Complex`, `DoubleComplex`, `Logical`,
+  `Character`, `Byte`, `Type`, `Class`
+
+and they have the following attributes:
+
+  * `.selector`           - contains lenght and kind specs
+  * `.entity_decls`, `.attrspec`
+
+and methods:
+
+  * `.tostr()` - return string representation of Fortran type declaration
+  * `.astypedecl()` - pure type declaration instance, it has no `.entity_decls`
+    and `.attrspec`.
+  * `.analyze()` - processes `.entity_decls` and `.attrspec` attributes and adds
+    `Variable` instance to `.parent.a.variables` dictionary.
+
+
+.. automodule:: fparser.typedecl_statements
+    :members:
+
+Statements
+^^^^^^^^^^
+
 The following one-line statements are defined:
 
   `Implicit`, `TypeDeclarationStatement` derivatives (see above),
@@ -459,3 +488,5 @@ The following one-line statements are defined:
   `Enumerator`, `FortranName`, `Threadsafe`, `Depend`, `Check`,
   `CallStatement`, `CallProtoArgument`, `Pause`
 
+.. automodule:: fparser.statements
+    :members:
