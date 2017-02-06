@@ -75,9 +75,6 @@ The fparser package contains the following files:
 api.py - public API for Fortran parser
 --------------------------------------
 
-.. automodule:: fparser.api
-    :members:
-
 `This file`_ exposes `Statement` subclasses, `CHAR_BIT` constant,
 and a function `parse`.
 
@@ -127,6 +124,9 @@ tree of Fortran input. For example,
               blocktype='subroutine'
               name='foo'
               item=Line('end',(6, 6),'')
+
+.. automodule:: fparser.api
+    :members:
 
 readfortran.py
 --------------

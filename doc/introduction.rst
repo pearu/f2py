@@ -5,7 +5,7 @@ Introduction
 
 The fparser package is a Python implementation of a Fortran
 66/77/90/95/2003 language parser. The code is available on the Python
-Package Index (https://pypi.python.org/pypi/fparser/0.0.1) or from
+Package Index (https://pypi.python.org/pypi/fparser) or from
 github (https://github.com/stfc/fparser).  Currently fparser actually
 includes two different implementations, the first supports Fortran
 66/77/90 while the second also has support for Fortran 2003.
