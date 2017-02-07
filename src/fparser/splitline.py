@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -66,13 +67,8 @@
 """
 Defines LineSplitter and helper functions.
 
------
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
+Original Author: Pearu Peterson <pearu@cens.ioc.ee>
+First version created: May 2006
 -----
 """
 
@@ -334,8 +330,7 @@ def splitparen(line,paren='()'):
         except IndexError:
             break
         nofslashes = 0
-        l = []
-        l_append = l.append
+        charlist = []
         if stopchar is None:
             # search for parenthesis start
             while 1:
@@ -347,33 +342,36 @@ def splitparen(line,paren='()'):
                     nofslashes += 1
                 else:
                     nofslashes = 0
-                l_append(char)
+                charlist.append(char)
                 try:
                     char = line[i]; i += 1
                 except IndexError:
                     break
-            item = ''.join(l)
+            item = ''.join(charlist)
         else:
             nofstarts = 0
             while 1:
                 if char==stopchar and not nofslashes % 2 and nofstarts==1:
-                    l_append(char)
+                    charlist.append(char)
                     stopchar = None
                     break
+
                 if char=='\\':
                     nofslashes += 1
                 else:
                     nofslashes = 0
+
                 if char==startchar:
                     nofstarts += 1
                 elif char==endchar:
                     nofstarts -= 1
-                l_append(char)
+
+                charlist.append(char)
                 try:
                     char = line[i]; i += 1
                 except IndexError:
                     break
-            item = ParenString(''.join(l))
+            item = ParenString(''.join(charlist))
         items.append(item)
     return items
 

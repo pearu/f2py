@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -65,8 +66,8 @@
 
 """Fortran 2003 Syntax Rules.
 """
-#Author: Pearu Peterson <pearu@cens.ioc.ee>
-#Created: Oct 2006
+# Original author: Pearu Peterson <pearu@cens.ioc.ee>
+# First version created: Oct 2006
 
 import re
 import logging
@@ -113,10 +114,13 @@ class Base(object):
             parent_cls = [cls]
         elif cls not in parent_cls:
             parent_cls.append(cls)
-        #print '__new__:',cls.__name__,`string`
-        match = cls.__dict__.get('match', None)
+
+        # Get the class' match method if it has one
+        match = cls.__dict__.get('match')
+
         result = None
-        if isinstance(string, FortranReaderBase) and match is not None and not issubclass(cls, BlockBase):
+        if isinstance(string, FortranReaderBase) and \
+           match and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
             if item is None: return
@@ -131,7 +135,7 @@ class Base(object):
             obj.item = item
             return obj
 
-        if match is not None:
+        if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
             try:
@@ -166,7 +170,7 @@ class Base(object):
         errmsg = '%s: %r' % (cls.__name__, string)
         #if isinstance(string, FortranReaderBase) and string.fifo_item:
         #    errmsg += ' while reaching %s' % (string.fifo_item[-1])
-        raise NoMatchError,errmsg
+        raise NoMatchError, errmsg
 
 ##     def restore_reader(self):
 ##         self._item.reader.put_item(self._item)
@@ -176,7 +180,9 @@ class Base(object):
         self.items = items
         return
     def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,self.items)))
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
+                                                                  self.items)))
+
     def compare(self, other):
         return cmp(self.items,other.items)
 
@@ -341,9 +347,12 @@ content : tuple
             # check names of start and end statements:
             start_stmt = content[0]
             end_stmt = content[-1]
-            if isinstance(end_stmt, endcls_all) and hasattr(end_stmt, 'get_name') and hasattr(start_stmt, 'get_name'):
+            if isinstance(end_stmt, endcls_all) and \
+               hasattr(end_stmt, 'get_name') and \
+               hasattr(start_stmt, 'get_name'):
                 if end_stmt.get_name() is not None:
-                    if start_stmt.get_name() != end_stmt.get_name():
+                    if start_stmt.get_name().string.lower() != \
+                       end_stmt.get_name().string.lower():
                         end_stmt.item.reader.error('expected <%s-name> is %s but got %s. Ignoring.'\
                                                    % (end_stmt.get_type().lower(), start_stmt.get_name(), end_stmt.get_name()))
                 else:
@@ -446,8 +455,8 @@ class BinaryOpBase(Base):
     <binary-op-base> = <lhs> <op> <rhs>
     <op> is searched from right by default.
     """
-    def match(lhs_cls, op_pattern, rhs_cls, string, right=True, exclude_op_pattern = None,
-              is_add = False):
+    def match(lhs_cls, op_pattern, rhs_cls, string, right=True,
+              exclude_op_pattern=None, is_add=False):
         line, repmap = string_replace_map(string)
         if isinstance(op_pattern, str):
             if right:
@@ -472,6 +481,7 @@ class BinaryOpBase(Base):
         if exclude_op_pattern is not None:
             if exclude_op_pattern.match(op):
                 return
+
         lhs_obj = lhs_cls(repmap(lhs))
         rhs_obj = rhs_cls(repmap(rhs))
         return lhs_obj, op.replace(' ',''), rhs_obj
@@ -551,19 +561,51 @@ class BracketBase(Base):
 ::
     <bracket-base> = <left-bracket-base> <something> <right-bracket>
     """
+    @staticmethod
     def match(brackets, cls, string, require_cls=True):
-        i = len(brackets)/2
-        left = brackets[:i]
-        right = brackets[-i:]
-        if string.startswith(left) and string.endswith(right):
-            line = string[i:-i].strip()
-            if not line:
-                if require_cls:
-                    return
-                return left,None,right
-            return left,cls(line),right
-        return
-    match = staticmethod(match)
+        ''' The generic match method for all types of bracketed
+        expressions '''
+        bracket_len = len(brackets)/2
+        left = brackets[:bracket_len]
+        right = brackets[-bracket_len:]
+
+        if not (string.startswith(left) and string.endswith(right)):
+            return
+
+        # Check whether or not there's anything between the open
+        # and close brackets
+        line = string[bracket_len:-bracket_len].strip()
+        if not line:
+            if require_cls:
+                return
+            return left, None, right
+
+        # There's some content between the open and close brackets.
+        # We may have something like "(a + b)*(a - b)" so have
+        # to check - we start with one open bracket. If we reach
+        # zero open brackets before we get to the end then the
+        # opening bracket at the start of the string does not
+        # correspond to the closing bracket at the end of it.
+        # Unless of course any interim brackets we encounter are
+        # within strings...
+        num_open = 1
+        in_string = False
+        for idx in range(bracket_len, len(string)-bracket_len):
+            if string[idx] == '"' or string[idx] == "'":
+                in_string = not in_string
+            if in_string:
+                # Ignore anything within quotes
+                continue
+            # A slice in python goes up to but *does not
+            # include* the last position so no need for a '-1'
+            if string[idx:idx+bracket_len] == left:
+                num_open += 1
+            elif string[idx:idx+bracket_len] == right:
+                num_open -= 1
+            if num_open == 0:
+                return
+        return left, cls(line), right
+
     def tostr(self):
         if self.items[1] is None:
             return '%s%s' % (self.items[0], self.items[2])
@@ -1557,9 +1599,12 @@ class Derived_Type_Def(BlockBase): # R429
                  'Type_Bound_Procedure_Part', 'End_Type_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(Derived_Type_Stmt, [Type_Param_Def_Stmt, Private_Or_Sequence,
-                                                   Component_Part, Type_Bound_Procedure_Part], End_Type_Stmt, reader,
-                               match_names = True, set_unspecified_end_name = True # C431
+        return BlockBase.match(Derived_Type_Stmt,
+                               [Type_Param_Def_Stmt, Private_Or_Sequence,
+                                Component_Part, Type_Bound_Procedure_Part],
+                               End_Type_Stmt, reader,
+                               match_names = True,
+                               set_unspecified_end_name = True # C431
                                )
 
 
@@ -1907,7 +1952,8 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
                                  | <access-spec>
     """
     subclass_names = ['Access_Spec', 'Proc_Component_PASS_Arg_Name']
-    def match(string): return STRINGBase.match(['POINTER','PASS','NOPASS'], string)
+    def match(string): return STRINGBase.match(['POINTER', 'PASS', 'NOPASS'],
+                                               string.upper())
     match = staticmethod(match)
 
 class Private_Components_Stmt(StmtBase): # R447
@@ -1915,7 +1961,7 @@ class Private_Components_Stmt(StmtBase): # R447
     <private-components-stmt> = PRIVATE
     """
     subclass_names = []
-    def match(string): return StringBase.match('PRIVATE', string)
+    def match(string): return StringBase.match('PRIVATE', string.upper())
     match = staticmethod(match)
 
 class Type_Bound_Procedure_Part(BlockBase): # R448
@@ -1929,14 +1975,16 @@ class Type_Bound_Procedure_Part(BlockBase): # R448
     use_names = ['Contains_Stmt', 'Binding_Private_Stmt', 'Proc_Binding_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(Contains_Stmt, [Binding_Private_Stmt, Proc_Binding_Stmt], None, reader)
+        return BlockBase.match(Contains_Stmt,
+                               [Binding_Private_Stmt, Proc_Binding_Stmt],
+                               None, reader)
 
 class Binding_Private_Stmt(StmtBase, STRINGBase): # R449
     """
     <binding-private-stmt> = PRIVATE
     """
     subclass_names = []
-    def match(string): return StringBase.match('PRIVATE', string)
+    def match(string): return StringBase.match('PRIVATE', string.upper())
     match = staticmethod(match)
 
 class Proc_Binding_Stmt(Base): # R450
@@ -4171,14 +4219,20 @@ class Mask_Expr(Base): # R748
 
 class Masked_Elsewhere_Stmt(StmtBase): # R749
     """
-    <masked-elsewhere-stmt> = ELSEWHERE ( <mask-expr> ) [ <where-construct-name> ]
+    <masked-elsewhere-stmt> = ELSEWHERE
+                              ( <mask-expr> ) [ <where-construct-name> ]
     """
+    import re
     subclass_names = []
     use_names = ['Mask_Expr', 'Where_Construct_Name']
+
     @staticmethod
     def match(string):
-        if string[:9].upper()!='ELSEWHERE': return
-        line = string[9:].lstrip()
+        if not Elsewhere_Stmt._regex.match(string):
+            return
+        idx = string.upper().index("WHERE")
+        line = string[idx+5:].lstrip()
+
         if not line.startswith('('): return
         i = line.rfind(')')
         if i==-1: return
@@ -4204,9 +4258,17 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase): # R750
     """
     subclass_names = []
     use_names = ['Where_Construct_Name']
+    _regex = re.compile(r'ELSE\s*WHERE', re.I)
+
     @staticmethod
     def match(string):
-        return WORDClsBase.match('ELSEWHERE', Where_Construct_Name, string)
+        if not Elsewhere_Stmt._regex.match(string):
+            return
+        idx = string.upper().index("WHERE")
+        line = string[idx+5:].lstrip()
+        if line:
+            return "ELSEWHERE", Where_Construct_Name(line)
+        return "ELSEWHERE", None
 
     def get_end_name(self):
         name = self.items[1]
@@ -6056,14 +6118,36 @@ class Data_Edit_Desc_C1002(Base):
     def match(string):
         c = string[0].upper()
         if c in ['D']:
-            line = string[1:].lstrip()
+            line = string[1:].lstrip().upper()
             if '.' in line:
                 i1,i2 = line.split('.',1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
                 return c, W(i1), M(i2), None
-            return c,W(line), None, None
-        if c in ['E','F','G']:
+            return
+        if c in ['E']:
+            # Format descriptor can be 'E', 'ES' or 'EN'
+            line = string[1:].lstrip().upper()
+            c2 = line[0]
+            if c2 in ['S', 'N']:
+                line = line[1:].lstrip()
+            else:
+                c2 = ""
+            if "." in line:
+                i1, i2 = line.split('.')
+                i1 = i1.rstrip()
+                i2 = i2.lstrip()
+                # Can optionally specify the no. of digits for the exponent
+                if i2.count('E') == 1:
+                    i2, i3 = i2.split('E')
+                    i2 = i2.lstrip()
+                    i3 = i3.lstrip()
+                    return c+c2, W(i1), D(i2), E(i3)
+                else:
+                    return c+c2, W(i1), D(i2), None
+            else:
+                return
+        if c in ['F', 'G']:
             line = string[1:].lstrip()
             if line.count('.')==1:
                 i1,i2 = line.split('.',1)
@@ -6132,7 +6216,7 @@ class Data_Edit_Desc(Base): # R1005
                 i1,i2 = line.split('.',1)
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
-                return c, W(i1), M(i2), NoneInt_Literal_Constant
+                return c, W(i1), M(i2), None, Int_Literal_Constant
             return c,W(line), None, None
         if c=='L':
             line = string[1:].lstrip()
@@ -6513,8 +6597,11 @@ class Use_Stmt(StmtBase): # R1109
         name = Module_Name(name)
         line = line[i+1:].lstrip()
         if not line: return
-        if line[:5].upper()=='ONLY:':
-            line = line[5:].lstrip()
+        if line[:4].upper() == 'ONLY':
+            line = line[4:].lstrip()
+            if line[0] != ':':
+                return
+            line = line[1:].lstrip()
             if not line:
                 return nature, name, ', ONLY:', None
             return nature, name, ', ONLY:', Only_List(line)

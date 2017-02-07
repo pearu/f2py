@@ -66,6 +66,7 @@ from fparser.Fortran2003 import *
 from fparser.api import get_reader
 
 from nose.tools import assert_equal
+import pytest
 
 def assertRaises(exc, cls, s):
     try:
@@ -84,13 +85,14 @@ def test_Program(): # R201
         cls = Program
         reader = get_reader('''\
       subroutine foo
-      end subroutine foo
+      end subroutine Foo
       subroutine bar
       end
       ''')
         a = cls(reader)
         assert isinstance(a, cls),`a`
-        assert_equal(str(a), 'SUBROUTINE foo\nEND SUBROUTINE foo\nSUBROUTINE bar\nEND SUBROUTINE bar')
+        assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
+            "END SUBROUTINE bar" == str(a)
 
         reader = get_reader('''\
       subroutine foo (*)
@@ -1705,6 +1707,7 @@ def test_Primary(): # R701
         assert isinstance(a,Real_Literal_Constant),`a`
         assert_equal(str(a),'0.0E-1')
 
+
 def test_Parenthesis(): # R701.h
 
         cls = Parenthesis
@@ -1724,6 +1727,27 @@ def test_Parenthesis(): # R701.h
         a  = cls('(a+(a+c))')
         assert isinstance(a,cls),`a`
         assert_equal(str(a),'(a + (a + c))')
+
+        obj  = cls('("a"+"c")')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '("a" + "c")'
+
+        obj  = cls('("a"+")")')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '("a" + ")")'
+
+        obj  = cls('''(')'+")")''')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '''(')' + ")")'''
+
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = cls('(a+b)*(c+d)')
+        assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo)
+
+        with pytest.raises(NoMatchError) as excinfo:
+            _  = cls('''()''')
+        assert "Parenthesis: '()'" in str(excinfo)
+
 
 def test_Level_1_Expr(): # R702
 
@@ -2058,24 +2082,52 @@ def test_Where_Construct(): # R745
     end where
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'WHERE (pressure <= 1.0)\n  pressure = pressure + inc_pressure\n  temp = temp - 5.0\nELSEWHERE\n  raining = .TRUE.\nEND WHERE')
+    assert (str(a) == "WHERE (pressure <= 1.0)\n  "
+            "pressure = pressure + inc_pressure\n  "
+            "temp = temp - 5.0\n"
+            "ELSEWHERE\n  raining = .TRUE.\nEND WHERE")
 
     a = cls(get_reader('''
     where (cond1)
-    elsewhere (cond2)
+    else    where (cond2)
     end where
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE')
+    assert str(a) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
 
     a = cls(get_reader('''
     n:where (cond1)
     elsewhere (cond2) n
-    elsewhere n
+    else   where n
     end where n
 '''))
     assert isinstance(a,cls),`a`
-    assert_equal(str(a),'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\nEND WHERE n')
+    assert (str(a) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
+            "ELSEWHERE n\nEND WHERE n")
+
+    a = cls(get_reader('''
+    n:where (cond1)
+    else where (cond2) n
+    else where n
+    end where n
+'''))
+    assert isinstance(a,cls),`a`
+    print str(a)
+    assert (str(a) ==
+                 'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\n'
+                 'END WHERE n')
+
+    a = cls(get_reader('''
+    n:where (me(:)=="hello")
+    else where (me(:)=="goodbye") n
+    else where n
+    end where n
+'''))
+    print str(a)
+    assert (str(a) ==
+            'n:WHERE (me(:) == "hello")\nELSEWHERE(me(:) == "goodbye") n\n'
+            'ELSEWHERE n\n'
+            'END WHERE n')
 
 
 def test_Where_Construct_Stmt(): # R745
@@ -2764,7 +2816,36 @@ def test_Format_Item(): # R1003
     assert_equal(str(a),'I4, /')
 
     a = cls('3f12.6/')
-    assert_equal(str(a),'3F12.6, /')
+    assert str(a) == '3F12.6, /'
+
+    a = cls('3d12.6/')
+    assert str(a) == '3D12.6, /'
+
+    # D specifier must be Dw.d so must have a decimal point
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('3d12/')
+
+    a = cls('3e12.6/')
+    assert str(a) == '3E12.6, /'
+
+    a = cls('3e12.6e2/')
+    assert str(a) == '3E12.6E2, /'
+
+    # Scientific format
+    a = cls('3es12.6/')
+    assert str(a) == '3ES12.6, /'
+
+    # Engineering format
+    a = cls('3en12.6/')
+    assert str(a) == '3EN12.6, /'
+
+    # Must have a decimal point
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('3en12/')
+
+    # Engineering format specifying number of digits in exponent
+    a = cls('3en12.6e3/')
+    assert str(a) == '3EN12.6E3, /'
 
     a = cls("/' '")
     assert_equal(str(a),"/, ' '")
@@ -2774,6 +2855,47 @@ def test_Format_Item(): # R1003
 
     a = cls("' '/' '")
     assert_equal(str(a),"' ', /, ' '")
+
+
+def test_Edit_Desc():
+    ''' Tests for matching Edit Descriptors '''
+    cls = Data_Edit_Desc
+    obj = cls('I3')
+    assert str(obj) == 'I3'
+
+    obj = cls('I3.2')
+    assert str(obj) == 'I3.2'
+
+    obj = cls('O3.2')
+    assert str(obj) == 'O3.2'
+
+    obj = cls('Z3.2')
+    assert str(obj) == 'Z3.2'
+
+    obj = cls('L3')
+    assert str(obj) == 'L3'
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('L3.2')
+    assert "NoMatchError: Data_Edit_Desc: 'L3.2'" in str(excinfo)
+
+    obj = cls('A3')
+    assert str(obj) == 'A3'
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('A3.2')
+    assert "NoMatchError: Data_Edit_Desc: 'A3.2'" in str(excinfo)
+
+    obj = cls("DT'a_name'")
+    assert str(obj) == "DT'a_name'"
+
+    obj = cls("DT'a_name'(3,-2)")
+    assert str(obj) == "DT'a_name'(3, -2)"
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls("DT'a_name'()")
+    assert '''Data_Edit_Desc: "DT'a_name'()"''' in str(excinfo)
+
 
 def test_Format_Item_List():
     cls = Format_Item_List
@@ -2792,6 +2914,9 @@ def test_Format_Item_List():
     a = cls("' ', ' '")
     assert_equal(str(a),"' ', ' '")
     
+    a = cls("3(3f8.2, :), (A)")
+    assert str(a) == "3(3F8.2, :), (A)"
+
 
 ###############################################################################
 ############################### SECTION 11 ####################################
@@ -2872,7 +2997,22 @@ def test_Use_Stmt(): # R1109
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'USE :: a')
     assert_equal(repr(a),"Use_Stmt(None, Name('a'), '', None)")
-    
+
+    a = cls('use a, only: b')
+    assert isinstance(a, cls), `a`
+    assert str(a) == 'USE :: a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+
+    a = cls('use a, only : b')
+    assert isinstance(a, cls), `a`
+    assert str(a) == 'USE :: a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+
+    a = cls('use a, ONLY : b')
+    assert isinstance(a, cls), `a`
+    assert str(a) == 'USE :: a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+
     a = cls('use :: a, c=>d')
     assert isinstance(a, cls),`a`
     assert_equal(str(a),'USE :: a, c => d')
@@ -3441,6 +3581,7 @@ def test_Contains(): # R1237
         assert isinstance(a, cls),`a`
         assert_equal(str(a),'CONTAINS')
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
+
 
 if 0:
     nof_needed_tests = 0
