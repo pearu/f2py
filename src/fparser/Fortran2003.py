@@ -114,10 +114,10 @@ class Base(object):
             parent_cls = [cls]
         elif cls not in parent_cls:
             parent_cls.append(cls)
-        #print '__new__:',cls.__name__,`string`
+
         # Get the class' match method if it has one
         match = cls.__dict__.get('match')
-        #print '__new__:',type(match), dir(cls)
+
         result = None
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
