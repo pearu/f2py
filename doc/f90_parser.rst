@@ -65,10 +65,10 @@
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGE.
 
-.. _Package Structure:
+.. _f90_parser:
 
-Fortran parser package structure
-================================
+Parser for Fortran 66-90
+========================
 
 Package Modules
 ^^^^^^^^^^^^^^^
@@ -78,7 +78,6 @@ The fparser package contains the following modules:
  * :ref:`api`
  * :ref:`readfortran`
  * :ref:`parsefortran`
- * :ref:`Fortran2003`
 
 The functionality of each of these is described in the sections below.
 
@@ -320,12 +319,6 @@ For example,
             PRINT *, "a=", a
           END SUBROUTINE foo
 
-.. _Fortran2003 :
-
-Fortran2003.py
---------------
-
-Some text here.
 
 Model for Fortran Code Statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

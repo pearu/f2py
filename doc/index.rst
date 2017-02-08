@@ -75,8 +75,6 @@ Welcome to fparser's documentation!
 
    license
    introduction
-   package_structure
+   f90_parser
+   f2k_parser
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
