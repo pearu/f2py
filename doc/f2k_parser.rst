@@ -10,7 +10,7 @@ the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. As with the other parser
 (:ref:`f90_parser`), the source code to parse must be provided via an
 iterator which is an instance of either `FortranFileReader` or
-`FortranStringReader`. For example:
+`FortranStringReader` (see :ref:`readfortran`). For example:
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/Fortran2003.py
 
@@ -43,4 +43,8 @@ The module provides the classes; `Main_Program`,
 `Subroutine_Subprogram`, `Function_Subprogram`, `Program_Stmt`,
 `Function_Stmt`, `Subroutine_Stmt`, `Block_Do_Construct`,
 `Block_Label_Do_Construct`, `Block_Nonlabel_Do_Construct`,
-`Execution_Part`, `Name` and `Constant`, amongst others.
+`Execution_Part`, `Name` and `Constant`, amongst others.  Nodes in the
+tree representing the parsed code are instances of either `BlockBase`
+or `SequenceBase`. Child nodes are then stored in the `.content`
+attribute of `BlockBase` objects or the `.items` attribute of
+`SequenceBase` objects. Both of these attributes are Tuple instances.
