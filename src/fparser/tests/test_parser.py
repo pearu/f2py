@@ -74,7 +74,7 @@ Test parsing single Fortran lines.
 
 from fparser.block_statements import *
 from fparser.readfortran import Line, FortranStringReader
-
+import pytest
 from nose.tools import assert_equal
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -639,3 +639,88 @@ def test_select_type():
     assert "CLASS IS ( some_class )" in gen
     assert "CLASS DEFAULT" in gen
 
+
+def test_type_is_process_item(monkeypatch, capsys):
+    ''' Test error condition raised in TypeIs.process_item() method '''
+    from fparser import api
+    import fparser
+    source_str = '''
+    subroutine foo(an_object)
+    class(*) :: an_object
+    real    :: aval = 0.0
+    select type(an_object)
+    type is (some_type)
+      aval = 1.0
+    class is (some_class)
+      aval = 0.0
+    class default
+      aval = -1.0
+    end select
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert tree
+    for statement in tree.content[0].content:
+        if isinstance(statement, fparser.block_statements.SelectType):
+            break
+    assert isinstance(statement, fparser.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.statements.TypeIs)
+    typeis = statement.content[0]
+    typeis.parent.name = "not_a_name"
+    monkeypatch.setattr(typeis.item, "get_line",
+                        lambda: "type is (blah): wrong_name")
+    # We need to monkeypatch the logger used by fparser because it
+    # grabs stdout before the pytest framework can intercept it. In
+    # python < 3 you can't make a lambda out of 'print' because print
+    # is not a function (you cannot do "x = print y" for
+    # instance). Therefore we have to create our own, temporary
+    # function that simply wraps print and returns a value.
+    def write_out(arg):
+        print arg
+        return None
+    # Monkeypatch the typeis object so that a call to self.warning
+    # (which normally results in a call to the logger) gets replaced
+    # with a call to our new write_out() function
+    monkeypatch.setattr(typeis, "warning", write_out)
+    typeis.process_item()
+    output, _ =  capsys.readouterr()
+    print output
+    assert "expected type-is-construct-name 'not_a_name' but got " in output
+
+
+def test_type_is_to_fortran(monkeypatch, capsys):
+    ''' Test error condition raised in TypeIs.to_fortran() method '''
+    from fparser import api
+    import fparser
+    from fparser.utils import ParseError
+    source_str = '''
+    subroutine foo(an_object)
+    class(*) :: an_object
+    real    :: aval = 0.0
+    select type(an_object)
+    type is (some_type)
+      aval = 1.0
+    class is (some_class)
+      aval = 0.0
+    class default
+      aval = -1.0
+    end select
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert tree
+    for statement in tree.content[0].content:
+        if isinstance(statement, fparser.block_statements.SelectType):
+            break
+    assert isinstance(statement, fparser.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.statements.TypeIs)
+    typeis = statement.content[0]
+    typeis.name = "some_name"
+    fort = typeis.tofortran()
+    assert "TYPE IS ( some_type ) some_name" in fort
+    # Now break the internal state and check for expected exception
+    typeis.items = None
+    with pytest.raises(ParseError) as excinfo:
+        _ = typeis.tofortran()
+    assert "TYPE IS construct must have arguments" in str(excinfo)
+    

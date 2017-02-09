@@ -1817,7 +1817,7 @@ class TypeIs(Statement):
         self.items = items
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
-        if self.name and self.name!=parent_name:
+        if self.name and self.name != parent_name:
             self.warning(
                 'expected type-is-construct-name %r but got %r, skipping.'
                 % (parent_name, self.name))
@@ -1833,7 +1833,7 @@ class TypeIs(Statement):
                 l.append((' : '.join(item)).strip())
             s += ' ( %s )' % (', '.join(l))
         else:
-            raise ParseException("TYPE IS construct must have arguments")
+            raise ParseError("TYPE IS construct must have arguments")
         if self.name:
             s += ' ' + self.name
         return s
