@@ -68,7 +68,7 @@ Fortran block statements.
 """
 
 __all__ = ['BeginSource','Module','PythonModule','Program','BlockData','Interface',
-           'Subroutine','Function','Select','WhereConstruct','ForallConstruct',
+           'Subroutine','Function','SelectCase','SelectType','WhereConstruct','ForallConstruct',
            'IfThen','If','Do','Associate','TypeDecl','Enum',
            'EndSource','EndModule','EndPythonModule','EndProgram','EndBlockData','EndInterface',
            'EndSubroutine','EndFunction','EndSelect','EndWhere','EndForall',
@@ -827,7 +827,7 @@ class EndSelect(EndStatement):
 
 class Select(BeginStatement):
     """
-    [ <case-construct-name> : ] SELECT CASE ( <case-expr> )
+    Base class for the Select (case/type) statement
 
     """
     match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
@@ -842,6 +842,29 @@ class Select(BeginStatement):
 
     def get_classes(self):
         return [Case] + execution_part_construct
+
+
+class SelectCase(Select):
+    """
+    [ <case-construct-name> : ] SELECT CASE ( <case-expr> )
+
+    """
+    match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
+    def tostr(self):
+        return 'SELECT CASE ( %s )' % (self.expr)
+
+
+class SelectType(Select):
+    """
+    [ <case-construct-name> : ] SELECT TYPE ( <case-expr> )
+
+    """
+    match = re.compile(r'select\s*type\s*\(.*\)\Z',re.I).match
+    def tostr(self):
+        return 'SELECT TYPE ( %s )' % (self.expr)
+
+    def get_classes(self):
+        return [TypeIs, ClassIs] + execution_part_construct
 
 # Where
 
@@ -1305,8 +1328,7 @@ action_stmt = [ Allocate, GeneralAssignment, Assign, Backspace, Call, Close,
 # EndFunction, EndProgram, EndSubroutine - part of the corresponding blocks
 
 executable_construct = [ Associate, Do, ForallConstruct, IfThen,
-    Select, WhereConstruct ] + action_stmt
-#Case, see Select
+    SelectCase, SelectType, WhereConstruct ] + action_stmt
 
 execution_part_construct = executable_construct + [ Format, Entry,
     Data ]

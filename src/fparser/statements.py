@@ -77,7 +77,8 @@ __all__ = ['GeneralAssignment',
            'Inquire','Sequence','External','Namelist','Common','Optional','Intent',
            'Entry','Import','ForallStmt','SpecificBinding','GenericBinding',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
-           'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
+           'Case','TypeIs', 'ClassIs', 'WhereStmt', 'ElseWhere', 'Enumerator',
+           'FortranName', 'Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
            'Comment']
 
@@ -1777,8 +1778,112 @@ class Case(Statement):
 
     def tofortran(self, isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
-        s = 'CASE'
+        s = tab + 'CASE'
         if self.items:
+            l = []
+            for item in self.items:
+                l.append((' : '.join(item)).strip())
+            s += ' ( %s )' % (', '.join(l))
+        else:
+            s += ' DEFAULT'
+        if self.name:
+            s += ' ' + self.name
+        return s
+    def analyze(self): return
+
+
+class TypeIs(Statement):
+    """
+    TYPE IS <type-selector> [ <case-constract-name> ]
+    <type-selector> = ( <type-value-range-list> ) 
+    <type-value-range> = <case-value>
+    <case-value> = <char>
+    """
+    match = re.compile(r'type\b\s*is\b\s*\(.*\)\s*\w*\Z', re.I).match
+    def process_item(self):
+        line = self.item.get_line()[4:].lstrip()
+        i = line.find('(')
+        if i > 0:
+            line = line[i:]
+            i = line.find(')')
+            items = split_comma(line[1:i].strip(), self.item)
+            line = line[i+1:].lstrip()
+        for i in range(len(items)):
+            it = self.item.copy(items[i])
+            rl = []
+            for r in it.get_line().split(':'):
+                rl.append(it.apply_map(r.strip()))
+            items[i] = rl
+        self.items = items
+        self.name = line
+        parent_name = getattr(self.parent, 'name', '')
+        if self.name and self.name!=parent_name:
+            self.warning(
+                'expected type-is-construct-name %r but got %r, skipping.'
+                % (parent_name, self.name))
+            self.isvalid = False
+        return
+
+    def tofortran(self, isfix=None):
+        tab = self.get_indent_tab(isfix=isfix)
+        s = tab + 'TYPE IS'
+        if self.items:
+            l = []
+            for item in self.items:
+                l.append((' : '.join(item)).strip())
+            s += ' ( %s )' % (', '.join(l))
+        else:
+            raise ParseException("TYPE IS construct must have arguments")
+        if self.name:
+            s += ' ' + self.name
+        return s
+    def analyze(self): return
+
+
+class ClassIs(Statement):
+    """
+    CLASS <class-selector>
+    <class-selector> = ( IS <type-value-range-list> | DEFAULT ) 
+    <type-value-range> = <case-value>
+    <case-value> = <char>
+    """
+    match = re.compile(r'class\b\s*(is\b\s*\(.*\)|default)\s*\w*\Z',
+                       re.I).match
+    def process_item(self):
+        line = self.item.get_line()[5:].lstrip()
+        if line.lower().startswith('is'):
+            # We have a 'class is ...' statement
+            i = line.find('(')
+            line = line[i:]
+            i = line.find(')')
+            items = split_comma(line[1:i].strip(), self.item)
+            line = line[i+1:].lstrip()
+        else:
+            # We have a 'class default' statement
+            assert line.lower().startswith('default'),`line`
+            items = []
+            line = line[7:].lstrip()
+        for i in range(len(items)):
+            it = self.item.copy(items[i])
+            rl = []
+            for r in it.get_line().split(':'):
+                rl.append(it.apply_map(r.strip()))
+            items[i] = rl
+        self.items = items
+        self.name = line
+        parent_name = getattr(self.parent, 'name', '')
+        if self.name and self.name!=parent_name:
+            self.warning(
+                'expected class-construct-name %r but got %r, skipping.'
+                % (parent_name, self.name))
+            self.isvalid = False
+        return
+
+    def tofortran(self, isfix=None):
+        tab = self.get_indent_tab(isfix=isfix)
+        s = tab + 'CLASS'
+        if self.items:
+            s += ' IS'
             l = []
             for item in self.items:
                 l.append((' : '.join(item)).strip())

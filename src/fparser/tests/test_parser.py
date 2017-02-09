@@ -62,17 +62,12 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
+# Original author: Pearu Peterson <pearu@cens.ioc.ee>
+# First version created: May 2006
+
 """
 Test parsing single Fortran lines.
 
------
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
------
 """
 
 # from numpy.testing import *
@@ -555,4 +550,89 @@ def test_implicit():
                  'IMPLICIT INTEGER ( i-m, p, q-r )')
     assert_equal(parse(Implicit,'implicit integer (i-m), real (z)'),
                  'IMPLICIT INTEGER ( i-m ), REAL ( z )')
+
+
+def test_select_case():
+    '''Test that fparser correctly recognises select case'''
+    from fparser import api
+    import fparser
+    source_str = '''
+    subroutine foo
+    integer :: iflag = 1
+    real    :: aval = 0.0
+    select case(iflag)
+    case(1)
+      aval = 1.0
+    case default
+      aval = 0.0
+    end select
+    ! Same again but with more white space
+    select   case(iflag)
+    case ( 1 )
+      aval = 1.0
+    case  default
+      aval = 0.0
+    end select
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert tree
+    select_list = []
+    for statement in tree.content[0].content:
+        if isinstance(statement, fparser.block_statements.SelectCase):
+            select_list.append(statement)
+    assert len(select_list) == 2
+    for statement in select_list:
+        assert isinstance(statement, fparser.block_statements.SelectCase)
+        assert isinstance(statement.content[0], fparser.statements.Case)
+        assert isinstance(statement.content[2], fparser.statements.Case)
+        assert isinstance(statement.content[3], fparser.statements.Assignment)
+
+
+def test_select_type():
+    '''Test that fparser correctly recognises select type'''
+    from fparser import api
+    import fparser
+    source_str = '''
+    subroutine foo(an_object)
+    class(*) :: an_object
+    real    :: aval = 0.0
+    select type(an_object)
+    type is (some_type)
+      aval = 1.0
+    class is (some_class)
+      aval = 0.0
+    class default
+      aval = -1.0
+    end select
+    ! Same again but with more white space
+    select   type ( an_object )
+    type  is  ( some_type )
+      aval = 1.0
+    class  is  ( some_class)
+      aval = 0.0
+    class   default
+      aval = -1.0
+    end select
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert tree
+    select_list = []
+    for statement in tree.content[0].content:
+        if isinstance(statement, fparser.block_statements.SelectType):
+            select_list.append(statement)
+    assert len(select_list) == 2
+    for statement in select_list:
+        assert isinstance(statement, fparser.block_statements.SelectType)
+        assert isinstance(statement.content[0], fparser.statements.TypeIs)
+        assert isinstance(statement.content[2], fparser.statements.ClassIs)
+        assert isinstance(statement.content[3], fparser.statements.Assignment)
+        assert isinstance(statement.content[4], fparser.statements.ClassIs)
+    gen = str(tree)
+    print gen
+    assert "SELECT TYPE ( an_object )" in gen
+    assert "TYPE IS ( some_type )" in gen
+    assert "CLASS IS ( some_class )" in gen
+    assert "CLASS DEFAULT" in gen
 
