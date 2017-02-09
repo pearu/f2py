@@ -1,47 +1,102 @@
 .. -*- rest -*-
 
-======================
-Fortran parser package
-======================
+..
+    Modified work Copyright (c) 2017 Science and Technology Facilities Council
+    Original work Copyright (c) 1999-2008 Pearu Peterson
 
-:Author:
-  Pearu Peterson <pearu.peterson@gmail.com>
-:Created: September 2006
+    All rights reserved.
 
+    Modifications made as part of the fparser project are distributed
+    under the following license:
 
-.. contents:: Table of Contents
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
 
-Overview
-========
+    1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
 
-The Fortran parser package is a Python implementation
-of Fortran 66/77/90/95/2003 language parser. The code
-is under NumPy SVN tree: `numpy/f2py/lib/parser/`__.
-The Fortran language syntax rules are defined in `Fortran2003.py`__,
-the rules are taken from the following ISO/IEC 1539 working draft:
-http://j3-fortran.org/doc/2003_Committee_Draft/04-007.pdf.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
 
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/Fortran2003.py
+    3. Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
 
-Fortran parser package structure
-================================
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-`numpy.f2py.lib.parser` package contains the following files:
+    --------------------------------------------------------------------
+
+    The original software (in the f2py project) was distributed under
+    the following license:
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+      a. Redistributions of source code must retain the above copyright notice,
+         this list of conditions and the following disclaimer.
+      b. Redistributions in binary form must reproduce the above copyright
+         notice, this list of conditions and the following disclaimer in the
+         documentation and/or other materials provided with the distribution.
+      c. Neither the name of the F2PY project nor the names of its
+         contributors may be used to endorse or promote products derived from
+         this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+    DAMAGE.
+
+.. _f90_parser:
+
+Parser for Fortran 66-90
+========================
+
+Package Modules
+^^^^^^^^^^^^^^^
+
+The fparser package contains the following modules:
+
+ * :ref:`api`
+ * :ref:`readfortran`
+ * :ref:`parsefortran`
+
+The functionality of each of these is described in the sections below.
+
+.. _api :
 
 api.py - public API for Fortran parser
 --------------------------------------
 
-`This file`__ exposes `Statement` subclasses, `CHAR_BIT` constant, and a function `parse`.
+`This file`_ exposes `Statement` subclasses, the `CHAR_BIT` constant,
+and a function, `parse`.
 
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/api.py
+.. _This file: https://github.com/stfc/fparser/blob/master/src/fparser/api.py
 
 Function `parse(<input>, ..)` parses, analyzes and returns a `Statement`
 tree of Fortran input. For example,
 
 ::
 
-  >>> from api import parse
+  >>> from fparser.api import parse
   >>> code = """
   ... c comment
   ...       subroutine foo(a)
@@ -49,7 +104,7 @@ tree of Fortran input. For example,
   ...       print*,"a=",a
   ...       end
   ... """
-  >>> tree = parse(code,isfree=False)
+  >>> tree = parse(code, isfree=False)
   >>> print tree
         !BEGINSOURCE <cStringIO.StringI object at 0xb75ac410> mode=fix90
           SUBROUTINE foo(a)
@@ -81,24 +136,28 @@ tree of Fortran input. For example,
               name='foo'
               item=Line('end',(6, 6),'')
 
+
+.. _readfortran :
+
 readfortran.py
 --------------
 
-`This file`__ contains tools for reading Fortran codes from file and string objects.
+`This file`__ contains tools for reading Fortran codes from file and
+from string objects.
 
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/readfortran.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/readfortran.py
 
-To read Fortran code from a file, use `FortranFileReader` class.
-`FortranFileReader` class is iterator over Fortran code lines
-and is derived from `FortranReaderBase` class.
-It automatically handles the line continuations and comments, as
-well as it detects if Fortran file is in the free or fixed format.
+To read Fortran code from a file, use the `FortranFileReader` class.
+The `FortranFileReader` class is an iterator over Fortran code lines
+and is derived from the `FortranReaderBase` class.
+It automatically handles line continuations and comments, as
+well as detecting whether a Fortran file is in free or fixed format.
 
 For example,
 
 ::
 
-  >>> from readfortran import *
+  >>> from fparser.readfortran import *
   >>> import os
   >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
   >>> reader.next()
@@ -110,19 +169,22 @@ For example,
   >>> reader.next()
   Line('integer i,incx,incy,ix,iy,m,mp1,n',(9, 9),'')
 
-Note that `FortranReaderBase.next()` method may return `Line`, `SyntaxErrorLine`, `Comment`, `MultiLine`,
-`SyntaxErrorMultiLine` instances.
+Note that the `FortranReaderBase.next()` method may return `Line`,
+`SyntaxErrorLine`, `Comment`, `MultiLine`, or `SyntaxErrorMultiLine`
+instances.
 
-`Line` instance has the following attributes:
+A `Line` instance has the following attributes:
 
   * `.line` - contains Fortran code line
   * `.span` - a 2-tuple containing the span of line numbers containing
     Fortran code in the original Fortran file
   * `.label` - the label of Fortran code line
   * `.reader` - the `FortranReaderBase` class instance
-  * `.strline` - if it is not `None` then it contains Fortran code line with parenthesis
+  * `.strline` - if it is not `None` then it contains Fortran code line
+    with parenthesis
     content and string literal constants saved in the `.strlinemap` dictionary.
-  * `.is_f2py_directive` - `True` if line starts with the f2py directive comment.
+  * `.is_f2py_directive` - `True` if line starts with the f2py directive
+    comment.
 
 and the following methods:
 
@@ -158,7 +220,7 @@ For example,
   >>> item.copy('if(F2PY_EXPR_TUPLE_4)pause',True)
   Line('if(n.le.0)pause',(11, 11),'')
 
-`Comment` instance has the following attributes:
+A `Comment` instance has the following attributes:
 
   * `.comment` - a comment string
   * `.span` - a 2-tuple containing the span of line numbers containing
@@ -167,11 +229,11 @@ For example,
 
 and `.isempty()` method.
 
-`MultiLine` class represents multiline syntax in the .pyf files::
+A `MultiLine` class represents multiline syntax in the .pyf files::
 
   <prefix>'''<lines>'''<suffix>
 
-`MultiLine` instance has the following attributes:
+A `MultiLine` instance has the following attributes:
 
   * `.prefix` - the content of `<prefix>`
   * `.block` - a list of lines
@@ -180,7 +242,7 @@ and `.isempty()` method.
     multiline syntax in the original Fortran file
   * `.reader` - the `FortranReaderBase` class instance
 
-and `.isempty()` method.
+and a `.isempty()` method.
 
 `SyntaxErrorLine` and `SyntaxErrorMultiLine` are like `Line` and `MultiLine`
 classes, respectively, with a functionality of issuing an error
@@ -213,9 +275,9 @@ of the given `<string>` content. When `<isfree>` and `<isstrict>` are both
   >>> reader.next()
   Line('end',(5, 5),'')
 
-`FortranReaderBase` has the following attributes:
+An instance of `FortranReaderBase` has the following attributes:
 
-  * `.source` - a file-like object with `.next()` method to retrive 
+  * `.source` - a file-like object with a `.next()` method to retrive 
     a source code line
   * `.source_lines` - a list of read source lines
   * `.reader` - a `FortranReaderBase` instance for reading files
@@ -228,18 +290,21 @@ and the following methods:
   * `.set_mode(isfree, isstrict)` - set Fortran code format information
   * `.close_source()` - called when `.next()` raises `StopIteration` exception.
 
+.. _parsefortran :
+
 parsefortran.py
 ---------------
 
-`This file`__ contains code for parsing Fortran code from `FortranReaderBase` iterator.
+`This file`__ contains code for parsing Fortran code from a
+`FortranReaderBase` iterator.
 
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/parsefortran.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/parsefortran.py
 
-`FortranParser` class holds the parser information while
-iterating over items returned by `FortranReaderBase` iterator.
+The `FortranParser` class holds the parser information while
+iterating over items returned by a `FortranReaderBase` iterator.
 The parsing information, collected when calling `.parse()` method,
-is saved in `.block` attribute as an instance
-of `BeginSource` class defined in `block_statements.py` file.
+is saved in the `.block` attribute as an instance
+of the `BeginSource` class defined in the `block_statements.py` file.
 
 For example,
 
@@ -254,43 +319,53 @@ For example,
             PRINT *, "a=", a
           END SUBROUTINE foo
 
-Files `block_statements.py`__, `base_classes.py`__, `typedecl_statements.py`__, `statements.py`__
--------------------------------------------------------------------------------------------------
 
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/block_statements.py
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/base_classes.py
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/typedecl_statements.py
-__ http://projects.scipy.org/scipy/numpy/browser/trunk/numpy/f2py/lib/parser/statements.py
+Model for Fortran Code Statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The model for representing Fortran code statements consists of a tree of `Statement`
-classes defined in `base_classes.py`. There are two types of statements: one-line
-statements and block statements. Block statements consists of start and end
-statements, and content statements in between that can be of both types again.
+The model for representing Fortran code statements is defined in files
+`block_statements.py`__, `base_classes.py`__,
+`typedecl_statements.py`__ and `statements.py`__.
+It consists of a tree of `Statement` classes defined in
+`base_classes.py`. There are two types of statements: one-line
+statements and block statements. Block statements consists of start
+and end statements, and content statements in between that can be of
+both types again.
 
-`Statement` instance has the following attributes:
+__ https://github.com/stfc/fparser/blob/master/src/fparser/block_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/base_classes.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/typedecl_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/statements.py
 
-  * `.parent`  - it is either parent block-type statement or `FortranParser` instance.
-  * `.item`    - a `Line` instance containing Fortran statement line information, see above.
-  * `.isvalid` - when `False` then processing this `Statement` instance will be skipped,
-    for example, when the content of `.item` does not match with
+A `Statement` instance has the following attributes:
+
+  * `.parent`  - either the parent block-type statement or the `FortranParser`
+    instance.
+  * `.item`    - a `Line` instance containing Fortran statement line
+    information, see above.
+  * `.isvalid` - when `False` then processing of this `Statement` instance will
+    be skipped. e.g. when the content of `.item` does not match with
     the `Statement` class.
   * `.ignore`  - when `True` then the `Statement` instance will be ignored.
-  * `.modes`   - a list of Fortran format modes where the `Statement` instance is valid.
+  * `.modes`   - a list of Fortran format modes where the `Statement`
+    instance is valid.
 
 and the following methods:
 
-  * `.info(message)`, `.warning(message)`, `.error(message)` - to spit out messages to
-    `sys.stderr` stream.
+  * `.info(message)`, `.warning(message)`, `.error(message)` - to spit out
+    messages to the `sys.stderr` stream.
   * `.get_variable(name)` - get `Variable` instance by name that is defined in
     current namespace. If name is not defined, then the corresponding
     `Variable` instance is created.
-  * `.analyze()` - calculate various information about the `Statement`, this information
-    is saved in `.a` attribute that is `AttributeHolder` instance.
+  * `.analyze()` - calculate various information about the `Statement`,
+    this information is saved in `.a` attribute that is an instance of
+    `AttributeHolder`.
 
-All statement classes are derived from the `Statement` class. Block statements are
-derived from the `BeginStatement` class and is assumed to end with an `EndStatement`
-instance in `.content` attribute list. `BeginStatement` and `EndStatement` instances
-have the following attributes:
+All statement classes are derived from the `Statement` class. Block
+statements are derived from the `BeginStatement` class and are assumed
+to end with an `EndStatement` instance in the `.content` attribute
+list. `BeginStatement` and `EndStatement` instances have the following
+attributes:
 
   * `.name`      - name of the block, blocks without names use line label
     as the name.
@@ -299,10 +374,10 @@ have the following attributes:
 
 and the following methods:
 
-  * `.__str__()` - returns string representation of Fortran code.
+  * `.__str__()` - returns a string representation of the Fortran code.
 
 A number of statements may declare a variable that is used in other
-statement expressions. Variables are represented via `Variable` class
+statement expressions. Variables are represented via the `Variable` class
 and its instances have the following attributes:
 
   * `.name`      - name of the variable
@@ -329,23 +404,8 @@ and the following methods:
   * `.is_optional()`
   * `.is_required()`
 
-The following type declaration statements are defined in `typedecl_statements.py`:
-
-  `Integer`, `Real`, `DoublePrecision`, `Complex`, `DoubleComplex`, `Logical`,
-  `Character`, `Byte`, `Type`, `Class`
-
-and they have the following attributes:
-
-  * `.selector`           - contains lenght and kind specs
-  * `.entity_decls`, `.attrspec`
-
-and methods:
-
-  * `.tostr()` - return string representation of Fortran type declaration
-  * `.astypedecl()` - pure type declaration instance, it has no `.entity_decls`
-    and `.attrspec`.
-  * `.analyze()` - processes `.entity_decls` and `.attrspec` attributes and adds
-    `Variable` instance to `.parent.a.variables` dictionary.
+Block Statements
+----------------
 
 The following block statements are defined in `block_statements.py`:
 
@@ -362,22 +422,48 @@ deriving them from the following classes:
 In summary, the `.a` attribute may hold different information sets as follows:
 
   * `BeginSource` - `.module`, `.external_subprogram`, `.blockdata`
-  * `Module` - `.attributes`, `.implicit_rules`, `.use`, `.use_provides`, `.variables`,
-    `.type_decls`, `.module_subprogram`, `.module_data`
+  * `Module` - `.attributes`, `.implicit_rules`, `.use`, `.use_provides`,
+    `.variables`, `.type_decls`, `.module_subprogram`, `.module_data`
   * `PythonModule` - `.implicit_rules`, `.use`, `.use_provides`
   * `Program` - `.attributes`, `.implicit_rules`, `.use`, `.use_provides`
   * `BlockData` - `.implicit_rules`, `.use`, `.use_provides`, `.variables`
-  * `Interface` - `.implicit_rules`, `.use`, `.use_provides`, `.module_procedures`
-  * `Function`, `Subroutine` - `.implicit_rules`, `.attributes`, `.use`, `.use_statements`,
-    `.variables`, `.type_decls`, `.internal_subprogram`
+  * `Interface` - `.implicit_rules`, `.use`, `.use_provides`,
+    `.module_procedures`
+  * `Function`, `Subroutine` - `.implicit_rules`, `.attributes`, `.use`,
+    `.use_statements`, `.variables`, `.type_decls`, `.internal_subprogram`
   * `TypeDecl` - `.variables`, `.attributes`
 
 Block statements have the following methods:
 
   * `.get_classes()` - returns a list of `Statement` classes that are valid
-    as a content of given block statement.
+    as a content of the given block statement.
 
-The following one line statements are defined:
+Type-declaration Statements
+---------------------------
+
+The following type-declaration statements are defined in
+`typedecl_statements.py`:
+
+  `Integer`, `Real`, `DoublePrecision`, `Complex`, `DoubleComplex`, `Logical`,
+  `Character`, `Byte`, `Type`, `Class`
+
+and they have the following attributes:
+
+  * `.selector`   - contains length and kind specs
+  * `.entity_decls`, `.attrspec`
+
+and methods:
+
+  * `.tostr()` - return string representation of Fortran type declaration
+  * `.astypedecl()` - pure type declaration instance, it has no `.entity_decls`
+    and `.attrspec`.
+  * `.analyze()` - processes `.entity_decls` and `.attrspec` attributes and adds
+    `Variable` instance to `.parent.a.variables` dictionary.
+
+Statements
+----------
+
+The following one-line statements are defined:
 
   `Implicit`, `TypeDeclarationStatement` derivatives (see above),
   `Assignment`, `PointerAssignment`, `Assign`, `Call`, `Goto`, `ComputedGoto`,
@@ -392,4 +478,3 @@ The following one line statements are defined:
   `Asynchronous`, `Bind`, `Else`, `ElseIf`, `Case`, `Where`, `ElseWhere`,
   `Enumerator`, `FortranName`, `Threadsafe`, `Depend`, `Check`,
   `CallStatement`, `CallProtoArgument`, `Pause`
-

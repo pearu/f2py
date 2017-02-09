@@ -1,4 +1,8 @@
-..
+..  fparser documentation master file, created by
+    sphinx-quickstart on Mon Feb  6 10:31:52 2017.
+    You can adapt this file completely to your liking, but it should at least
+    contain the root `toctree` directive.
+
     Modified work Copyright (c) 2017 Science and Technology Facilities Council
     Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -63,30 +67,14 @@
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGE.
 
-F2py
-====
+Welcome to fparser's documentation!
+===================================
 
-:Release: |version|
-:Date: |today|
+.. toctree::
+   :maxdepth: 2
 
-The `F2py`__ project...
+   license
+   introduction
+   f90_parser
+   f2k_parser
 
-__ http://code.google.com/p/f2py/
-
-Please report any issues to `F2py Issue Tracker`__.
-
-__ http://code.google.com/p/f2py/issues/list
-
-.. include:: generated/scripts.rst
-
-:mod:`fparser` content
-======================
-
-.. currentmodule:: fparser
-
-.. automodule:: fparser.__init__
-  :members:
-
-See also
---------
-`List of documentations with examples <generated/examples.html>`_
