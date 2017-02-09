@@ -587,6 +587,9 @@ def test_select_case():
         assert isinstance(statement.content[0], fparser.statements.Case)
         assert isinstance(statement.content[2], fparser.statements.Case)
         assert isinstance(statement.content[3], fparser.statements.Assignment)
+    gen = str(tree)
+    print gen
+    assert "SELECT CASE ( iflag )" in gen
 
 
 def test_select_type():

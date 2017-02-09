@@ -833,10 +833,9 @@ class Select(BeginStatement):
     match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndSelect
     name = ''
-    def tostr(self):
-        return 'SELECT CASE ( %s )' % (self.expr)
     def process_item(self):
-        self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        self.expr = self.item.get_line()[6:].lstrip()[4:].\
+                    lstrip()[1:-1].strip()
         self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 
