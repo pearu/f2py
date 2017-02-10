@@ -793,3 +793,10 @@ def test_class_is_to_fortran():
     clsis.name = "some_name"
     fort = clsis.tofortran()
     assert "CLASS IS ( some_class ) some_name" in fort
+
+
+def test_type_bound_array_access():
+    ''' Check that we can parse code that calls a type-bound procedure
+    on the element of an array (of derived types) '''
+    parsed_code =  parse(Call, 'call an_array(idx)%a_func()')
+    assert parsed_code == "CALL an_array(idx)%a_func()"
