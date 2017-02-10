@@ -161,7 +161,8 @@ fparser-l has full support for Fortran conforming to the 66, 70 or 90
 standards. Support for Fortran following more recent standards has
 been added on an as-required basis and consists of:
 
-* The SELECT TYPE block
+* The SELECT TYPE block (including the TYPE IS, CLASS IS and CLASS
+  DEFAULT clauses)
 
 Reference
 ^^^^^^^^^
