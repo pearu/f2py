@@ -92,7 +92,7 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
             if r != r1:
                 raise ValueError, 'Failed to parse %r with %s pattern in pyf mode, got %r' % (r, cls.__name__, r1)
         return r
-    raise ValueError, 'parsing %r with %s pattern failed' % (line, cls.__name__)
+    raise ValueError('parsing %r with %s pattern failed'%(line, cls.__name__))
 
 
 # We need to monkeypatch the logger used by fparser because it grabs
@@ -109,7 +109,7 @@ def print_wrapper(arg):
 
 
 def test_assignment():
-    assert_equal(parse(Assignment,'a=b'), 'a = b')
+    assert_equal(parse(Assignment, 'a=b'), 'a = b')
     assert_equal(parse(PointerAssignment,'a=>b'), 'a => b')
     assert_equal(parse(Assignment,'a (2)=b(n,m)'), 'a(2) = b(n,m)')
     assert_equal(parse(Assignment,'a % 2(2,4)=b(a(i))'), 'a%2(2,4) = b(a(i))')
@@ -673,6 +673,7 @@ def test_type_is_process_item(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
+    statement = None # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -687,12 +688,12 @@ def test_type_is_process_item(monkeypatch, capsys):
     # with a call to our print_wrapper() function
     monkeypatch.setattr(typeis, "warning", print_wrapper)
     typeis.process_item()
-    output, _ =  capsys.readouterr()
+    output, _ = capsys.readouterr()
     print output
     assert "expected type-is-construct-name 'not_a_name' but got " in output
 
 
-def test_type_is_to_fortran(monkeypatch, capsys):
+def test_type_is_to_fortran():
     ''' Test error condition raised in TypeIs.to_fortran() method '''
     from fparser import api
     import fparser
@@ -711,6 +712,7 @@ def test_type_is_to_fortran(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
+    statement = None # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -725,7 +727,7 @@ def test_type_is_to_fortran(monkeypatch, capsys):
     with pytest.raises(ParseError) as excinfo:
         _ = typeis.tofortran()
     assert "TYPE IS construct must have arguments" in str(excinfo)
-    
+
 
 def test_class_is_process_item(monkeypatch, capsys):
     ''' Test error condition raised in ClassIs.process_item() method '''
@@ -745,6 +747,7 @@ def test_class_is_process_item(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
+    statement = None # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -759,16 +762,15 @@ def test_class_is_process_item(monkeypatch, capsys):
     # with a call to our print_wrapper() function
     monkeypatch.setattr(clsis, "warning", print_wrapper)
     clsis.process_item()
-    output, _ =  capsys.readouterr()
+    output, _ = capsys.readouterr()
     print output
     assert "expected class-construct-name 'not_a_name' but got " in output
 
 
-def test_class_is_to_fortran(monkeypatch, capsys):
+def test_class_is_to_fortran():
     ''' Test ClassIs.to_fortran() method '''
     from fparser import api
     import fparser
-    from fparser.utils import ParseError
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -781,6 +783,7 @@ def test_class_is_to_fortran(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
+    statement = None # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
