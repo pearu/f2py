@@ -1737,6 +1737,7 @@ class ElseIf(Statement):
 
     def analyze(self): return
 
+
 # SelectCase construct statements
 
 class Case(Statement):
@@ -1749,71 +1750,79 @@ class Case(Statement):
                          | <case-value> : <case-value>
     <case-value> = <scalar-(int|char|logical)-initialization-expr>
     """
-    match = re.compile(r'case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z',re.I).match
+    match = re.compile(r'case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z', re.I).match
+
     def process_item(self):
-        #assert self.parent.__class__.__name__=='Select',`self.parent.__class__`
+        ''' Populate the state of this item by parsing the associated line
+        of code '''
         line = self.item.get_line()[4:].lstrip()
         if line.startswith('('):
-            i = line.find(')')
-            items = split_comma(line[1:i].strip(), self.item)
-            line = line[i+1:].lstrip()
+            idx = line.find(')')
+            items = split_comma(line[1:idx].strip(), self.item)
+            line = line[idx+1:].lstrip()
         else:
-            assert line.lower().startswith('default'),`line`
+            assert line.lower().startswith('default'), repr(line)
             items = []
             line = line[7:].lstrip()
-        for i in range(len(items)):
-            it = self.item.copy(items[i])
-            rl = []
-            for r in it.get_line().split(':'):
-                rl.append(it.apply_map(r.strip()))
-            items[i] = rl
+        for idx in range(len(items)):
+            itm = self.item.copy(items[idx])
+            rlst = []
+            for part in itm.get_line().split(':'):
+                rlst.append(itm.apply_map(part.strip()))
+            items[idx] = rlst
         self.items = items
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
-        if self.name and self.name!=parent_name:
-            self.warning('expected case-construct-name %r but got %r, skipping.'\
-                         % (parent_name, self.name))
+        if self.name and self.name != parent_name:
+            self.warning("Expected case-construct-name {0} but got {1}, "
+                         "skipping.".format(parent_name, self.name))
             self.isvalid = False
         return
 
     def tofortran(self, isfix=None):
+        ''' Return the Fortran for this object as a string '''
         tab = self.get_indent_tab(isfix=isfix)
-        s = tab + 'CASE'
+        txt = tab + 'CASE'
         if self.items:
-            l = []
+            lst = []
             for item in self.items:
-                l.append((' : '.join(item)).strip())
-            s += ' ( %s )' % (', '.join(l))
+                lst.append((' : '.join(item)).strip())
+            txt += ' ( %s )' % (', '.join(lst))
         else:
-            s += ' DEFAULT'
+            txt += ' DEFAULT'
         if self.name:
-            s += ' ' + self.name
-        return s
-    def analyze(self): return
+            txt += ' ' + self.name
+        return txt
+
+    def analyze(self):
+        return
 
 
 class TypeIs(Statement):
     """
     TYPE IS <type-selector> [ <case-constract-name> ]
-    <type-selector> = ( <type-value-range-list> ) 
+    <type-selector> = ( <type-value-range-list> )
     <type-value-range> = <case-value>
     <case-value> = <char>
     """
     match = re.compile(r'type\b\s*is\b\s*\(.*\)\s*\w*\Z', re.I).match
+
     def process_item(self):
+        ''' Populate the state of this object by parsing the associated
+        line of code '''
         line = self.item.get_line()[4:].lstrip()
-        i = line.find('(')
-        if i > 0:
-            line = line[i:]
-            i = line.find(')')
-            items = split_comma(line[1:i].strip(), self.item)
-            line = line[i+1:].lstrip()
-        for i in range(len(items)):
-            it = self.item.copy(items[i])
-            rl = []
-            for r in it.get_line().split(':'):
-                rl.append(it.apply_map(r.strip()))
-            items[i] = rl
+        idx = line.find('(')
+        if idx > 0:
+            line = line[idx:]
+            idx = line.find(')')
+            items = split_comma(line[1:idx].strip(), self.item)
+            line = line[idx+1:].lstrip()
+        for idx in range(len(items)):
+            itm = self.item.copy(items[idx])
+            rlst = []
+            for rpart in itm.get_line().split(':'):
+                rlst.append(itm.apply_map(rpart.strip()))
+            items[idx] = rlst
         self.items = items
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
@@ -1825,54 +1834,60 @@ class TypeIs(Statement):
         return
 
     def tofortran(self, isfix=None):
+        ''' Create the Fortran representation of this object and return
+        it as a string '''
         tab = self.get_indent_tab(isfix=isfix)
-        s = tab + 'TYPE IS'
+        text = tab + 'TYPE IS'
         if self.items:
-            l = []
+            lst = []
             for item in self.items:
-                l.append((' : '.join(item)).strip())
-            s += ' ( %s )' % (', '.join(l))
+                lst.append((' : '.join(item)).strip())
+            text += ' ( %s )' % (', '.join(lst))
         else:
             raise ParseError("TYPE IS construct must have arguments")
         if self.name:
-            s += ' ' + self.name
-        return s
-    def analyze(self): return
+            text += ' ' + self.name
+        return text
+
+    def analyze(self):
+        return
 
 
 class ClassIs(Statement):
     """
     CLASS <class-selector>
-    <class-selector> = ( IS <type-value-range-list> | DEFAULT ) 
+    <class-selector> = ( IS <type-value-range-list> | DEFAULT )
     <type-value-range> = <case-value>
     <case-value> = <char>
     """
     match = re.compile(r'class\b\s*(is\b\s*\(.*\)|default)\s*\w*\Z',
                        re.I).match
+
     def process_item(self):
+        ''' Populate the state of this object by parsing the string '''
         line = self.item.get_line()[5:].lstrip()
         if line.lower().startswith('is'):
             # We have a 'class is ...' statement
-            i = line.find('(')
-            line = line[i:]
-            i = line.find(')')
-            items = split_comma(line[1:i].strip(), self.item)
-            line = line[i+1:].lstrip()
+            idx = line.find('(')
+            line = line[idx:]
+            idx = line.find(')')
+            items = split_comma(line[1:idx].strip(), self.item)
+            line = line[idx+1:].lstrip()
         else:
             # We have a 'class default' statement
-            assert line.lower().startswith('default'),`line`
+            assert line.lower().startswith('default'), repr(line)
             items = []
             line = line[7:].lstrip()
-        for i in range(len(items)):
-            it = self.item.copy(items[i])
-            rl = []
-            for r in it.get_line().split(':'):
-                rl.append(it.apply_map(r.strip()))
-            items[i] = rl
+        for idx in range(len(items)):
+            item = self.item.copy(items[idx])
+            rlst = []
+            for rchar in item.get_line().split(':'):
+                rlst.append(item.apply_map(rchar.strip()))
+            items[idx] = rlst
         self.items = items
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
-        if self.name and self.name!=parent_name:
+        if self.name and self.name != parent_name:
             self.warning(
                 'expected class-construct-name %r but got %r, skipping.'
                 % (parent_name, self.name))
@@ -1880,20 +1895,24 @@ class ClassIs(Statement):
         return
 
     def tofortran(self, isfix=None):
+        ''' Returns the Fortran for this object as a string '''
         tab = self.get_indent_tab(isfix=isfix)
-        s = tab + 'CLASS'
+        text = tab + 'CLASS'
         if self.items:
-            s += ' IS'
-            l = []
+            text += ' IS'
+            lchar = []
             for item in self.items:
-                l.append((' : '.join(item)).strip())
-            s += ' ( %s )' % (', '.join(l))
+                lchar.append((' : '.join(item)).strip())
+            text += ' ( %s )' % (', '.join(lchar))
         else:
-            s += ' DEFAULT'
+            text += ' DEFAULT'
         if self.name:
-            s += ' ' + self.name
-        return s
-    def analyze(self): return
+            text += ' ' + self.name
+        return text
+
+    def analyze(self):
+        return
+
 
 # Where construct statements
 
