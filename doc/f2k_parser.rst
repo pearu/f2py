@@ -1,10 +1,10 @@
 
-.. _Fortran2003 :
+.. _fparser-e :
 
-Fortran2003 Parser
-==================
+fparser-e
+=========
 
-fparser provides support for parsing Fortran up to and including
+fparser-e provides support for parsing Fortran up to and including
 Fortran 2003 through the `Fortran2003` module. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. As with the other parser

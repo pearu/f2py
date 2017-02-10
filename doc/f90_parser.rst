@@ -65,34 +65,26 @@
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGE.
 
-.. _f90_parser:
+.. _fparser-l:
 
-Parser for Fortran 66-90
-========================
+fparser-l
+=========
 
-Package Modules
-^^^^^^^^^^^^^^^
+Getting Going
+^^^^^^^^^^^^^
 
-The fparser package contains the following modules:
+fparser-l was the original parser provided by fparser and was
+implemented to parse Fortran code written in Fortran 66, 70 or 90
+syntax. It has subsequently been extended to support some of the
+aspects of more recent versions of Fortran up to 2008 (see
+:ref:`beyond_f90`). In order to use it you will need to have installed
+the fparser package which is available from the Python Packagage Index
+(pypi) or github (https://github.com/stfc/fparser). In turn fparser
+requires the numpy and nose packages. When installing using pip these
+dependencies should be installed automatically for you.
 
- * :ref:`api`
- * :ref:`readfortran`
- * :ref:`parsefortran`
-
-The functionality of each of these is described in the sections below.
-
-.. _api :
-
-api.py - public API for Fortran parser
---------------------------------------
-
-`This file`_ exposes `Statement` subclasses, the `CHAR_BIT` constant,
-and a function, `parse`.
-
-.. _This file: https://github.com/stfc/fparser/blob/master/src/fparser/api.py
-
-Function `parse(<input>, ..)` parses, analyzes and returns a `Statement`
-tree of Fortran input. For example,
+Once installed, you should be able to open the python interpreter and
+try it out, e.g.:
 
 ::
 
@@ -136,6 +128,64 @@ tree of Fortran input. For example,
               name='foo'
               item=Line('end',(6, 6),'')
 
+As indicated by the above output, the `fparser.api.parse()` function
+returns a `Statement` tree representation of the parsed source code.
+This `parse()` function is actually a convenience method that wraps
+the creation of a reader for Fortran source code (either
+FortranStringReader or FortranFileReader) followed by a call to use
+that reader to create the tree, e.g.:
+
+::
+
+  >>> reader = FortranStringReader(code, False, True)
+  >>> parser = FortranParser(reader)
+  >>> parser.parse()
+  >>> print parser.block
+        !BEGINSOURCE <cStringIO.StringI object at 0xb751d500> mode=fix77
+          SUBROUTINE foo(a)
+            PRINT *, "a=", a
+          END SUBROUTINE foo
+
+The `FortranParser` class holds the parser information while
+iterating over items returned by a `FortranReaderBase` iterator.
+The parsing information, collected when calling `.parse()` method,
+is saved in the `.block` attribute as an instance
+of the `BeginSource` class defined in the `block_statements.py` file.
+
+.. _beyond_f90:
+
+Support for Fortran Standards beyond Fortran90
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+fparser-l has full support for Fortran conforming to the 66, 70 or 90
+standards. Support for Fortran following more recent standards has
+been added on an as-required basis and consists of:
+
+* The SELECT TYPE block
+
+Reference
+^^^^^^^^^
+
+The fparser package contains the following modules:
+
+ * :ref:`api`
+ * :ref:`readfortran`
+ * :ref:`parsefortran`
+
+The functionality of each of these is described in the sections below.
+
+.. _api :
+
+api.py
+------
+
+`This file`_ provides the public API to fparser-l. It exposes
+`Statement` subclasses and a function, `parse`.
+
+.. _This file: https://github.com/stfc/fparser/blob/master/src/fparser/api.py
+
+Function `parse(<input>, ..)` parses, analyzes and returns a `Statement`
+tree of Fortran input. 
 
 .. _readfortran :
 
@@ -292,36 +342,9 @@ and the following methods:
 
 .. _parsefortran :
 
-parsefortran.py
----------------
-
-`This file`__ contains code for parsing Fortran code from a
-`FortranReaderBase` iterator.
-
-__ https://github.com/stfc/fparser/blob/master/src/fparser/parsefortran.py
-
-The `FortranParser` class holds the parser information while
-iterating over items returned by a `FortranReaderBase` iterator.
-The parsing information, collected when calling `.parse()` method,
-is saved in the `.block` attribute as an instance
-of the `BeginSource` class defined in the `block_statements.py` file.
-
-For example,
-
-::
-
-  >>> reader = FortranStringReader(code, False, True)
-  >>> parser = FortranParser(reader)
-  >>> parser.parse()
-  >>> print parser.block
-        !BEGINSOURCE <cStringIO.StringI object at 0xb751d500> mode=fix77
-          SUBROUTINE foo(a)
-            PRINT *, "a=", a
-          END SUBROUTINE foo
-
 
 Model for Fortran Code Statements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
 The model for representing Fortran code statements is defined in files
 `block_statements.py`__, `base_classes.py`__,
@@ -405,7 +428,7 @@ and the following methods:
   * `.is_required()`
 
 Block Statements
-----------------
+~~~~~~~~~~~~~~~~
 
 The following block statements are defined in `block_statements.py`:
 
@@ -439,7 +462,7 @@ Block statements have the following methods:
     as a content of the given block statement.
 
 Type-declaration Statements
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following type-declaration statements are defined in
 `typedecl_statements.py`:
@@ -461,7 +484,7 @@ and methods:
     `Variable` instance to `.parent.a.variables` dictionary.
 
 Statements
-----------
+~~~~~~~~~~
 
 The following one-line statements are defined:
 
