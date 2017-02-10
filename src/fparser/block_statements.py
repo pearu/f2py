@@ -833,7 +833,10 @@ class Select(BeginStatement):
     match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndSelect
     name = ''
+
     def process_item(self):
+        ''' Populate the state of this Select object by parsing the
+        associated line of code '''
         self.expr = self.item.get_line()[6:].lstrip()[4:].\
                     lstrip()[1:-1].strip()
         self.construct_name = self.item.name
@@ -848,7 +851,8 @@ class SelectCase(Select):
     [ <case-construct-name> : ] SELECT CASE ( <case-expr> )
 
     """
-    match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'select\s*case\s*\(.*\)\Z', re.I).match
+
     def tostr(self):
         return 'SELECT CASE ( %s )' % (self.expr)
 
@@ -858,12 +862,14 @@ class SelectType(Select):
     [ <case-construct-name> : ] SELECT TYPE ( <case-expr> )
 
     """
-    match = re.compile(r'select\s*type\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'select\s*type\s*\(.*\)\Z', re.I).match
+
     def tostr(self):
         return 'SELECT TYPE ( %s )' % (self.expr)
 
     def get_classes(self):
         return [TypeIs, ClassIs] + execution_part_construct
+
 
 # Where
 
@@ -1317,34 +1323,34 @@ proc_binding_stmt = [SpecificBinding, GenericBinding, FinalBinding]
 
 type_bound_procedure_part = [Contains, Private] + proc_binding_stmt
 
-#R214
-action_stmt = [ Allocate, GeneralAssignment, Assign, Backspace, Call, Close,
-    Continue, Cycle, Deallocate, Endfile, Exit, Flush, ForallStmt,
-    Goto, If, Inquire, Nullify, Open, Print, Read, Return, Rewind,
-    Stop, Wait, WhereStmt, Write, ArithmeticIf, ComputedGoto,
-    AssignedGoto, Pause ]
+# R214
+action_stmt = [Allocate, GeneralAssignment, Assign, Backspace, Call, Close,
+               Continue, Cycle, Deallocate, Endfile, Exit, Flush, ForallStmt,
+               Goto, If, Inquire, Nullify, Open, Print, Read, Return, Rewind,
+               Stop, Wait, WhereStmt, Write, ArithmeticIf, ComputedGoto,
+               AssignedGoto, Pause]
 # GeneralAssignment = Assignment + PointerAssignment
 # EndFunction, EndProgram, EndSubroutine - part of the corresponding blocks
 
-executable_construct = [ Associate, Do, ForallConstruct, IfThen,
-    SelectCase, SelectType, WhereConstruct ] + action_stmt
+executable_construct = [Associate, Do, ForallConstruct, IfThen,
+                        SelectCase, SelectType, WhereConstruct] + action_stmt
 
-execution_part_construct = executable_construct + [ Format, Entry,
-    Data ]
+execution_part_construct = executable_construct + [Format, Entry,
+                                                   Data]
 
 execution_part = execution_part_construct[:]
 
-#C201, R208
+# C201, R208
 for cls in [EndFunction, EndProgram, EndSubroutine]:
     try: execution_part.remove(cls)
     except ValueError: pass
 
 internal_subprogram = [Function, Subroutine]
 
-internal_subprogram_part = [ Contains, ] + internal_subprogram
+internal_subprogram_part = [Contains, ] + internal_subprogram
 
-declaration_construct = [ TypeDecl, Entry, Enum, Format, Interface,
-    Parameter, ModuleProcedure, ] + specification_stmt + \
+declaration_construct = [TypeDecl, Entry, Enum, Format, Interface,
+    Parameter, ModuleProcedure,] + specification_stmt + \
     type_declaration_stmt
 # stmt-function-stmt
 
