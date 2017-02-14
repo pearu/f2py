@@ -157,6 +157,37 @@ def test_named_select_case():
     assert "incase: SELECT CASE ( iflag )" in gen
 
 
+def test_select_case_brackets():
+    '''Test that fparser correctly parses a select case involving
+    parentheses '''
+    from fparser import api
+    import fparser
+    source_str = '''
+    subroutine foo
+    integer :: iflag(2) = 1
+    real    :: aval = 0.0
+    select case(iflag(1))
+    case(1)
+      aval = 1.0
+    case default
+      aval = 0.0
+    end select
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert tree
+    for statement in tree.content[0].content:
+        if isinstance(statement, fparser.block_statements.SelectCase):
+            break
+    assert isinstance(statement, fparser.block_statements.SelectCase)
+    assert isinstance(statement.content[0], fparser.statements.Case)
+    assert isinstance(statement.content[2], fparser.statements.Case)
+    assert isinstance(statement.content[3], fparser.statements.Assignment)
+    gen = str(tree)
+    print gen
+    assert "SELECT CASE ( iflag(1) )" in gen
+
+
 def test_select_type():
     '''Test that fparser correctly recognises select type'''
     from fparser import api
