@@ -830,7 +830,6 @@ class Select(BeginStatement):
     Base class for the Select (case/type) statement
 
     """
-    match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndSelect
     name = ''
 
