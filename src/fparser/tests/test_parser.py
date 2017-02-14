@@ -83,14 +83,17 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
     reader.set_mode(isfree, isstrict)
     item = reader.next()
     if not cls.match(item.get_line()):
-        raise ValueError, '%r does not match %s pattern' % (line, cls.__name__)
+        raise ValueError('%r does not match %s pattern'%(line, cls.__name__))
     stmt = cls(item, item)
     if stmt.isvalid:
+        # Check that we can successfully parse the string representation
+        # of the parsed object
         r = str(stmt)
         if not isstrict:
             r1 = parse(cls, r, isstrict=True)
             if r != r1:
-                raise ValueError, 'Failed to parse %r with %s pattern in pyf mode, got %r' % (r, cls.__name__, r1)
+                raise ValueError('Failed to parse %r with %s pattern in Pyf '
+                                 'mode, got %r'%(r, cls.__name__, r1))
         return r
     raise ValueError('parsing %r with %s pattern failed'%(line, cls.__name__))
 
@@ -798,5 +801,12 @@ def test_class_is_to_fortran():
 def test_type_bound_array_access():
     ''' Check that we can parse code that calls a type-bound procedure
     on the element of an array (of derived types) '''
+    parsed_code =  parse(Call, 'call an_array(idx)%a_func(arg)')
+    assert parsed_code == "CALL an_array(idx)%a_func(arg)"
+    # Routine being called has no arguments - it is valid Fortran to
+    # omit the parentheses entirely in this case
     parsed_code =  parse(Call, 'call an_array(idx)%a_func()')
-    assert parsed_code == "CALL an_array(idx)%a_func()"
+    assert parsed_code == "CALL an_array(idx)%a_func"
+    # Perversely put in a character string arg containing '('
+    parsed_code =  parse(Call, 'call an_array(idx)%a_func("(")')
+    assert parsed_code == 'CALL an_array(idx)%a_func("(")'
