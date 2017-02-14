@@ -836,8 +836,13 @@ class Select(BeginStatement):
     def process_item(self):
         ''' Populate the state of this Select object by parsing the
         associated line of code '''
-        self.expr = self.item.get_line()[6:].lstrip()[4:].\
-                    lstrip()[1:-1].strip()
+        item = self.item
+        # TODO make the following more robust, particularly to the
+        # presence of a name at the beginning
+        # (e.g. "a_name: select case(...)")
+        line = item.get_line()[6:].lstrip()[4:].\
+               lstrip()[1:-1].strip()
+        self.expr = item.apply_map(line)
         self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 

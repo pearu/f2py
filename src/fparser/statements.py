@@ -1757,7 +1757,7 @@ class Case(Statement):
         of code '''
         line = self.item.get_line()[4:].lstrip()
         if line.startswith('('):
-            idx = line.find(')')
+            idx = line.rfind(')')
             items = split_comma(line[1:idx].strip(), self.item)
             line = line[idx+1:].lstrip()
         else:
