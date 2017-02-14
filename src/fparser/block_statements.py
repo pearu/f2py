@@ -841,9 +841,6 @@ class Select(BeginStatement):
         self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 
-    def get_classes(self):
-        return [Case] + execution_part_construct
-
 
 class SelectCase(Select):
     """
@@ -854,6 +851,11 @@ class SelectCase(Select):
 
     def tostr(self):
         return 'SELECT CASE ( %s )' % (self.expr)
+
+    def get_classes(self):
+        ''' Return the list of classes that this instance may
+        have as children '''
+        return [Case] + execution_part_construct
 
 
 class SelectType(Select):
@@ -867,6 +869,8 @@ class SelectType(Select):
         return 'SELECT TYPE ( %s )' % (self.expr)
 
     def get_classes(self):
+        ''' Return the list of classes that this instance may
+        have as children '''
         return [TypeIs, ClassIs] + execution_part_construct
 
 
