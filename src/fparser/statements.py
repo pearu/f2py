@@ -1742,7 +1742,7 @@ class ElseIf(Statement):
 
 class Case(Statement):
     """
-    CASE <case-selector> [ <case-constract-name> ]
+    CASE <case-selector> [ <case-construct-name> ]
     <case-selector> = ( <case-value-range-list> ) | DEFAULT
     <case-value-range> = <case-value>
                          | <case-value> :
@@ -1800,7 +1800,7 @@ class Case(Statement):
 
 class TypeIs(Statement):
     """
-    TYPE IS <type-selector> [ <case-constract-name> ]
+    TYPE IS <type-selector> [ <case-construct-name> ]
     <type-selector> = ( <type-value-range-list> )
     <type-value-range> = <case-value>
     <case-value> = <char>
