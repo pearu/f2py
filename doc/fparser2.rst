@@ -1,23 +1,23 @@
 
-.. _fparser-e :
+.. _fparser2 :
 
-fparser-e
-=========
+fparser2
+========
 
-fparser-e provides support for parsing Fortran up to and including
+fparser2 provides support for parsing Fortran up to and including
 Fortran 2003 through the `Fortran2003` module. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. 
 
+__ https://github.com/stfc/fparser/blob/master/src/fparser/Fortran2003.py
+
 Getting Going
 -------------
 
-As with the other parser (:ref:`fparser-l`), the source code to parse
+As with the other parser (:ref:`fparser`), the source code to parse
 must be provided via an iterator which is an instance of either
 `FortranFileReader` or `FortranStringReader` (see
 :ref:`readfortran`). For example:
-
-__ https://github.com/stfc/fparser/blob/master/src/fparser/Fortran2003.py
 
 ::
    

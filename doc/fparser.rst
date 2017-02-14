@@ -65,23 +65,24 @@
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGE.
 
-.. _fparser-l:
+.. _fparser:
 
-fparser-l
-=========
+fparser
+=======
 
 Getting Going
 ^^^^^^^^^^^^^
 
-fparser-l was the original parser provided by fparser and was
-implemented to parse Fortran code written in Fortran 66, 70 or 90
-syntax. It has subsequently been extended to support some of the
-aspects of more recent versions of Fortran up to 2008 (see
-:ref:`beyond_f90`). In order to use it you will need to have installed
-the fparser package which is available from the Python Packagage Index
-(pypi) or github (https://github.com/stfc/fparser). In turn fparser
-requires the numpy and nose packages. When installing using pip these
-dependencies should be installed automatically for you.
+fparser was the original parser provided by the fparser package and
+was implemented to parse Fortran code written in Fortran 66, 70 or 90
+syntax. It is gradually being extended on an as-required basis in
+order to support some of the aspects of more recent versions of
+Fortran (see :ref:`beyond_f90`). In order to use it you will need to
+have installed the fparser package which is available from the Python
+Packagage Index (pypi) or github (https://github.com/stfc/fparser). In
+turn fparser requires the numpy and nose packages. When installing
+using pip these dependencies should be installed automatically for
+you.
 
 Once installed, you should be able to open the python interpreter and
 try it out, e.g.:
@@ -157,12 +158,12 @@ of the `BeginSource` class defined in the `block_statements.py` file.
 Support for Fortran Standards beyond Fortran90
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-fparser-l has full support for Fortran conforming to the 66, 70 or 90
-standards. Support for Fortran following more recent standards has
-been added on an as-required basis and consists of:
+fparser has full support for Fortran conforming to the 66, 70 or 90
+standards. Support for Fortran following more recent standards is
+being added on an as-required basis and currently consists of:
 
 * The SELECT TYPE block (including the TYPE IS, CLASS IS and CLASS
-  DEFAULT clauses)
+  DEFAULT clauses) - Fortran 2003
 
 Reference
 ^^^^^^^^^
@@ -180,7 +181,7 @@ The functionality of each of these is described in the sections below.
 api.py
 ------
 
-`This file`_ provides the public API to fparser-l. It exposes
+`This file`_ provides the public API to fparser. It exposes
 `Statement` subclasses and a function, `parse`.
 
 .. _This file: https://github.com/stfc/fparser/blob/master/src/fparser/api.py
