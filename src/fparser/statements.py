@@ -1811,6 +1811,10 @@ class TypeIs(Statement):
         ''' Populate the state of this object by parsing the associated
         line of code '''
         line = self.item.get_line()[4:].lstrip()
+        # We have a 'type is (...)' statement. At this point
+        # any expression used for the type specifier will have
+        # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
+        # will not contain any parentheses.
         idx = line.find('(')
         if idx > 0:
             line = line[idx:]
@@ -1867,7 +1871,10 @@ class ClassIs(Statement):
         ''' Populate the state of this object by parsing the string '''
         line = self.item.get_line()[5:].lstrip()
         if line.lower().startswith('is'):
-            # We have a 'class is ...' statement
+            # We have a 'class is ...' statement. At this point
+            # any expression used for the class specifier will have
+            # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
+            # will not contain any parentheses.
             idx = line.find('(')
             line = line[idx:]
             idx = line.find(')')

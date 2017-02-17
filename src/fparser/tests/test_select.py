@@ -208,7 +208,7 @@ def test_select_type():
     select   type ( an_object )
     type  is  ( some_type )
       aval = 1.0
-    class  is  ( some_class)
+    class  is  ( some_class(1) )
       aval = 0.0
     class   default
       aval = -1.0
@@ -234,6 +234,7 @@ def test_select_type():
     assert "TYPE IS ( some_type )" in gen
     assert "CLASS IS ( some_class )" in gen
     assert "CLASS DEFAULT" in gen
+    assert "CLASS IS ( some_class(1) )" in gen
 
 
 def test_type_is_process_item(monkeypatch, capsys):
