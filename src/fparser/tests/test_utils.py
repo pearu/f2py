@@ -38,7 +38,6 @@ Test the various utility functions
 """
 
 import pytest
-import fparser
 from fparser.utils import split_comma, ParseError
 
 
@@ -67,7 +66,7 @@ def test_split_comma_exceptions():
         _ = split_comma("one, two", brackets=("()", ))
     assert "brackets tuple must contain just two items" in str(excinfo)
     with pytest.raises(ParseError) as excinfo:
-        _ = split_comma("one, two", brackets=("(","(","("))
+        _ = split_comma("one, two", brackets=("(", "(", "("))
     assert "brackets tuple must contain just two items" in str(excinfo)
 
 
@@ -95,7 +94,7 @@ def test_split_bracketed_list():
     assert not items
 
 
-def test_extract_bracketed_list_items():
+def test_extract_bracketed_list():
     ''' Test the extraction and parsing of a list within parentheses within
     a larger string '''
     from fparser.utils import extract_bracketed_list_items
@@ -105,7 +104,7 @@ def test_extract_bracketed_list_items():
     assert items[2] == "a"
 
 
-def test_extract_bracketed_list_items_errors():
+def test_extract_bracketed_list_err():
     ''' Test that we get the expected errors if the string passed into
     extract_bracketed_list_items() does not have the correct format '''
     from fparser.utils import extract_bracketed_list_items
