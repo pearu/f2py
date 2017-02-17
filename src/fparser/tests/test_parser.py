@@ -440,18 +440,6 @@ def test_else():
     assert_equal(parse(ElseIf,'else if (a.eq.b(1,2)) then'),
                  'ELSE IF (a.eq.b(1,2)) THEN')
 
-def test_case():
-    assert_equal(parse(Case,'case (1)'),'CASE ( 1 )')
-    assert_equal(parse(Case,'case (1:)'),'CASE ( 1 : )')
-    assert_equal(parse(Case,'case (:1)'),'CASE ( : 1 )')
-    assert_equal(parse(Case,'case (1:2)'),'CASE ( 1 : 2 )')
-    assert_equal(parse(Case,'case (a(1,2))'),'CASE ( a(1,2) )')
-    assert_equal(parse(Case,'case ("ab")'),'CASE ( "ab" )')
-    assert_equal(parse(Case,'case default'),'CASE DEFAULT')
-    assert_equal(parse(Case,'case (1:2 ,3:4)'),'CASE ( 1 : 2, 3 : 4 )')
-    assert_equal(parse(Case,'case (a(1,:):)'),'CASE ( a(1,:) : )')
-    assert_equal(parse(Case,'case default'),'CASE DEFAULT')
-
 def test_where():
     assert_equal(parse(WhereStmt,'where (1) a=1'),'WHERE ( 1 ) a = 1')
     assert_equal(parse(WhereStmt,'where (a(1,2)) a=1'),'WHERE ( a(1,2) ) a = 1')

@@ -1763,7 +1763,14 @@ class Case(Statement):
             self.name = line[idx+1:].lstrip()
         except ParseError:
             # No list in parentheses found so we must have a 'case default'
-            assert line.lower().startswith('default'), repr(line)
+            if not line.lower().startswith('default'):
+                # We should never get to here because such a string should
+                # not have generated a match
+                self.warning(
+                    "Internal error when parsing CASE statement: {0}".
+                    format(line))
+                self.isvalid = False
+                return
             self.items = []
             self.name = line[7:].lstrip()
         parent_name = getattr(self.parent, 'name', '')
@@ -1864,7 +1871,14 @@ class ClassIs(Statement):
             self.name = line[idx+1:].lstrip()
         except ParseError:
             # We have a 'class default' statement
-            assert line.lower().startswith('default'), repr(line)
+            if not line.lower().startswith('default'):
+                # We should never get here because such a string should
+                # not have generated a match
+                self.warning(
+                    "Internal error when parsing CLASS statement: {0}".
+                    format(line))
+                self.isvalid = False
+                return
             self.items = []
             self.name = line[7:].lstrip()
         parent_name = getattr(self.parent, 'name', '')

@@ -83,6 +83,71 @@ def print_wrapper(arg):
     return None
 
 
+def test_case():
+    ''' Basic tests for parsing of individual case statements '''
+    from test_parser import parse
+    from fparser.block_statements import Case
+    assert parse(Case, 'case (1)') == 'CASE ( 1 )'
+    assert parse(Case, 'case (1:)') == 'CASE ( 1 : )'
+    assert parse(Case, 'case (:1)') == 'CASE ( : 1 )'
+    assert parse(Case, 'case (1:2)') == 'CASE ( 1 : 2 )'
+    assert parse(Case, 'case (a(1,2))') == 'CASE ( a(1,2) )'
+    assert parse(Case, 'case ("ab")') == 'CASE ( "ab" )'
+    assert parse(Case, 'case default') == 'CASE DEFAULT'
+    assert parse(Case, 'case (1:2 ,3:4)') == 'CASE ( 1 : 2, 3 : 4 )'
+    assert parse(Case, 'case (a(1,:):)') == 'CASE ( a(1,:) : )'
+    assert parse(Case, 'case default') == 'CASE DEFAULT'
+
+
+def test_case_internal_error(monkeypatch, capsys):
+    ''' Check that expected errors are raised when invalid case
+    statements are encountered '''
+    from fparser.block_statements import Case
+    from fparser.readfortran import FortranStringReader
+    reader = FortranStringReader('CASE (yes)')
+    reader.set_mode(True, False)
+    item = reader.next()
+    stmt = Case(item, item)
+    # Monkeypatch our valid Case object so that get_line() now
+    # returns something invalid. We have to do it this way
+    # because if we started with this text then we wouldn't get
+    # past the match() method
+    monkeypatch.setattr(stmt.item, "get_line",
+                        lambda: "case invalid")
+    # Monkeypatch the Case object so that a call to self.warning
+    # (which normally results in a call to the logger) gets replaced
+    # with a call to our print_wrapper() function
+    monkeypatch.setattr(stmt, "warning", print_wrapper)
+    stmt.process_item()
+    output, _ = capsys.readouterr()
+    print output
+    assert "Internal error when parsing CASE statement" in output
+
+
+def test_class_internal_error(monkeypatch, capsys):
+    ''' Check that expected errors are raised when invalid CLASS
+    statements are encountered '''
+    from fparser.block_statements import ClassIs
+    from fparser.readfortran import FortranStringReader
+    reader = FortranStringReader('CLASS IS (yes)')
+    reader.set_mode(True, False)
+    item = reader.next()
+    stmt = ClassIs(item, item)
+    # Monkeypatch our valid Case object so that get_line() now
+    # returns something invalid. We have to do it this way
+    # because if we started with this text then we wouldn't get
+    # past the match() method
+    monkeypatch.setattr(stmt.item, "get_line",
+                        lambda: "class invalid")
+    # Monkeypatch the Case object so that a call to self.warning
+    # (which normally results in a call to the logger) gets replaced
+    # with a call to our print_wrapper() function
+    monkeypatch.setattr(stmt, "warning", print_wrapper)
+    stmt.process_item()
+    output, _ = capsys.readouterr()
+    assert "Internal error when parsing CLASS statement" in output
+
+
 def test_select_case():
     '''Test that fparser correctly recognises select case'''
     from fparser import api
@@ -176,6 +241,7 @@ def test_select_case_brackets():
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
+    statement = None  # Keep pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectCase):
             break
@@ -256,7 +322,7 @@ def test_type_is_process_item(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
-    statement = None # Keeps pylint happy
+    statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -295,7 +361,7 @@ def test_type_is_to_fortran():
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
-    statement = None # Keeps pylint happy
+    statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -330,7 +396,7 @@ def test_class_is_process_item(monkeypatch, capsys):
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
-    statement = None # Keeps pylint happy
+    statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
@@ -366,7 +432,7 @@ def test_class_is_to_fortran():
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False)
     assert tree
-    statement = None # Keeps pylint happy
+    statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
         if isinstance(statement, fparser.block_statements.SelectType):
             break
