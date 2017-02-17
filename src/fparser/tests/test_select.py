@@ -206,9 +206,9 @@ def test_select_type():
     end select
     ! Same again but with more white space
     select   type ( an_object )
-    type  is  ( some_type )
+    type  is  ( some_type(i), some_other_type )
       aval = 1.0
-    class  is  ( some_class(1) )
+    class  is  ( some_class(1), some_other_class )
       aval = 0.0
     class   default
       aval = -1.0
@@ -232,9 +232,10 @@ def test_select_type():
     print gen
     assert "SELECT TYPE ( an_object )" in gen
     assert "TYPE IS ( some_type )" in gen
+    assert "TYPE IS ( some_type(i), some_other_type )" in gen
     assert "CLASS IS ( some_class )" in gen
     assert "CLASS DEFAULT" in gen
-    assert "CLASS IS ( some_class(1) )" in gen
+    assert "CLASS IS ( some_class(1), some_other_class )" in gen
 
 
 def test_type_is_process_item(monkeypatch, capsys):

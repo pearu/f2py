@@ -89,8 +89,9 @@ from base_classes import Statement, Variable
 
 # Auxiliary tools
 
-from utils import split_comma, specs_split_comma, AnalyzeError, ParseError,\
-     get_module_file, parse_bind, parse_result, is_name
+from utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
+     get_module_file, parse_bind, parse_result, is_name, \
+     extract_bracketed_list_items
 from utils import classes
 
 class StatementWithNamelist(Statement):
@@ -1756,22 +1757,15 @@ class Case(Statement):
         ''' Populate the state of this item by parsing the associated line
         of code '''
         line = self.item.get_line()[4:].lstrip()
-        if line.startswith('('):
+        try:
+            self.items = extract_bracketed_list_items(line, self.item)
             idx = line.rfind(')')
-            items = split_comma(line[1:idx].strip(), self.item)
-            line = line[idx+1:].lstrip()
-        else:
+            self.name = line[idx+1:].lstrip()
+        except ParseError:
+            # No list in parentheses found so we must have a 'case default'
             assert line.lower().startswith('default'), repr(line)
-            items = []
-            line = line[7:].lstrip()
-        for idx in range(len(items)):
-            itm = self.item.copy(items[idx])
-            rlst = []
-            for part in itm.get_line().split(':'):
-                rlst.append(itm.apply_map(part.strip()))
-            items[idx] = rlst
-        self.items = items
-        self.name = line
+            self.items = []
+            self.name = line[7:].lstrip()
         parent_name = getattr(self.parent, 'name', '')
         if self.name and self.name != parent_name:
             self.warning("Expected case-construct-name {0} but got {1}, "
@@ -1810,25 +1804,15 @@ class TypeIs(Statement):
     def process_item(self):
         ''' Populate the state of this object by parsing the associated
         line of code '''
-        line = self.item.get_line()[4:].lstrip()
+        line = self.item.get_line()
         # We have a 'type is (...)' statement. At this point
         # any expression used for the type specifier will have
         # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
-        # will not contain any parentheses.
-        idx = line.find('(')
-        if idx > 0:
-            line = line[idx:]
-            idx = line.find(')')
-            items = split_comma(line[1:idx].strip(), self.item)
-            line = line[idx+1:].lstrip()
-        for idx in range(len(items)):
-            itm = self.item.copy(items[idx])
-            rlst = []
-            for rpart in itm.get_line().split(':'):
-                rlst.append(itm.apply_map(rpart.strip()))
-            items[idx] = rlst
-        self.items = items
-        self.name = line
+        # will not itself contain any parentheses.
+        self.items = extract_bracketed_list_items(line, self.item)
+        # Get and store the case-construct-name (if any)
+        idx2 = line.rfind(')')
+        self.name = line[idx2+1:].lstrip()
         parent_name = getattr(self.parent, 'name', '')
         if self.name and self.name != parent_name:
             self.warning(
@@ -1870,29 +1854,19 @@ class ClassIs(Statement):
     def process_item(self):
         ''' Populate the state of this object by parsing the string '''
         line = self.item.get_line()[5:].lstrip()
-        if line.lower().startswith('is'):
+        try:
+            self.items = extract_bracketed_list_items(line, self.item)
             # We have a 'class is ...' statement. At this point
             # any expression used for the class specifier will have
             # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
             # will not contain any parentheses.
-            idx = line.find('(')
-            line = line[idx:]
-            idx = line.find(')')
-            items = split_comma(line[1:idx].strip(), self.item)
-            line = line[idx+1:].lstrip()
-        else:
+            idx = line.rfind(')')
+            self.name = line[idx+1:].lstrip()
+        except ParseError:
             # We have a 'class default' statement
             assert line.lower().startswith('default'), repr(line)
-            items = []
-            line = line[7:].lstrip()
-        for idx in range(len(items)):
-            item = self.item.copy(items[idx])
-            rlst = []
-            for rchar in item.get_line().split(':'):
-                rlst.append(item.apply_map(rchar.strip()))
-            items[idx] = rlst
-        self.items = items
-        self.name = line
+            self.items = []
+            self.name = line[7:].lstrip()
         parent_name = getattr(self.parent, 'name', '')
         if self.name and self.name != parent_name:
             self.warning(
