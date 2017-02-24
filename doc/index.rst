@@ -75,6 +75,6 @@ Welcome to fparser's documentation!
 
    license
    introduction
-   fparser-l
-   fparser-e
+   fparser
+   fparser2
 

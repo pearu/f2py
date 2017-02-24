@@ -67,21 +67,24 @@ Fortran block statements.
 
 """
 
-__all__ = ['BeginSource','Module','PythonModule','Program','BlockData','Interface',
-           'Subroutine','Function','SelectCase','SelectType','WhereConstruct','ForallConstruct',
-           'IfThen','If','Do','Associate','TypeDecl','Enum',
-           'EndSource','EndModule','EndPythonModule','EndProgram','EndBlockData','EndInterface',
-           'EndSubroutine','EndFunction','EndSelect','EndWhere','EndForall',
-           'EndIfThen','EndDo','EndAssociate','EndType','EndEnum',
+__all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
+           'Interface', 'Subroutine', 'Function', 'SelectCase', 'SelectType',
+           'WhereConstruct', 'ForallConstruct', 'IfThen', 'If', 'Do',
+           'Associate', 'TypeDecl', 'Enum', 'EndSource', 'EndModule',
+           'EndPythonModule', 'EndProgram', 'EndBlockData', 'EndInterface',
+           'EndSubroutine', 'EndFunction', 'EndSelect', 'EndWhere',
+           'EndForall', 'EndIfThen', 'EndDo', 'EndAssociate', 'EndType',
+           'EndEnum',
            ]
 
 import re
 import sys
 
-from base_classes import BeginStatement, EndStatement, Statement,\
+from base_classes import BeginStatement, EndStatement, Statement, \
      AttributeHolder, ProgramBlock, Variable
 from readfortran import Line
-from utils import split_comma, filter_stmts, parse_bind, parse_result, AnalyzeError, is_name
+from utils import split_comma, filter_stmts, parse_bind, parse_result, \
+    AnalyzeError, is_name
 
 class HasImplicitStmt(object):
 
@@ -821,29 +824,31 @@ class SubprogramPrefix(Statement):
 
 # SelectCase
 
+
 class EndSelect(EndStatement):
     match = re.compile(r'end\s*select\s*\w*\Z', re.I).match
     blocktype = 'select'
+
 
 class Select(BeginStatement):
     """
     Base class for the Select (case/type) statement
 
     """
-    match = re.compile(r'select\s*case\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndSelect
     name = ''
 
     def process_item(self):
         ''' Populate the state of this Select object by parsing the
         associated line of code '''
-        self.expr = self.item.get_line()[6:].lstrip()[4:].\
-                    lstrip()[1:-1].strip()
+        item = self.item
+        # TODO make the following more robust, particularly to the
+        # presence of a name at the beginning
+        # (e.g. "a_name: select case(...)")
+        line = item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        self.expr = item.apply_map(line)
         self.construct_name = self.item.name
         return BeginStatement.process_item(self)
-
-    def get_classes(self):
-        return [Case] + execution_part_construct
 
 
 class SelectCase(Select):
@@ -855,6 +860,11 @@ class SelectCase(Select):
 
     def tostr(self):
         return 'SELECT CASE ( %s )' % (self.expr)
+
+    def get_classes(self):
+        ''' Return the list of classes that this instance may
+        have as children '''
+        return [Case] + execution_part_construct
 
 
 class SelectType(Select):
@@ -868,6 +878,8 @@ class SelectType(Select):
         return 'SELECT TYPE ( %s )' % (self.expr)
 
     def get_classes(self):
+        ''' Return the list of classes that this instance may
+        have as children '''
         return [TypeIs, ClassIs] + execution_part_construct
 
 
