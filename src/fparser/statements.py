@@ -230,7 +230,8 @@ class Call(Statement):
     # e.g.:
     #   call bob
     # is valid Fortran.
-    match = re.compile(r'call\b\s*\w*', re.I).match
+    match = re.compile(r'call\b\s*\w([\s\w\(\)\%]*\w)?\s*(\(.*\))?\s*$',
+                       re.I).match
     def process_item(self):
         item = self.item
         apply_map = item.apply_map
