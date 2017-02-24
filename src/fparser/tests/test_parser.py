@@ -574,4 +574,3 @@ def test_invalid_type_bound_array_access():
     with pytest.raises(ValueError) as excinfo:
         _ = parse(Call, 'call an_array(idx)%)')
     assert "with Call pattern failed" in str(excinfo)
- 

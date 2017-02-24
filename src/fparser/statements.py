@@ -201,6 +201,7 @@ class Assign(Statement):
                % (self.items[0], self.items[1])
     def analyze(self): return
 
+
 class Call(Statement):
     """Call statement class
     CALL <procedure-designator> [ ( [ <actual-arg-spec-list> ] ) ]
@@ -232,7 +233,10 @@ class Call(Statement):
     # is valid Fortran.
     match = re.compile(r'call\b\s*\w([\s\w\(\)\%]*\w)?\s*(\(.*\))?\s*$',
                        re.I).match
+
     def process_item(self):
+        ''' Parser the string containing the Call and store the
+        designator and list of arguments (if any) '''
         item = self.item
         apply_map = item.apply_map
         line = item.get_line()[4:].strip()
@@ -241,7 +245,7 @@ class Call(Statement):
         #     call my_type(1)%my_function(arg(2))
         # The following code will also support something like:
         #     call my_type(1)%my_function("(")
-        # because fparser will previously have identified the "(" as a 
+        # because fparser will previously have identified the "(" as a
         # string expression and replaced it with something like
         # "F2PY_EXPR_TUPLE_2"
         if line.endswith(')'):
@@ -272,10 +276,11 @@ class Call(Statement):
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'CALL ' + str(self.designator)
+        ''' Returns the Fortran representation of this object as a string '''
+        txt = self.get_indent_tab(isfix=isfix) + 'CALL ' + str(self.designator)
         if self.items:
-            s += '('+', '.join(map(str,self.items))+ ')'
-        return s
+            txt += '(' + ', '.join(map(str, self.items)) + ')'
+        return txt
 
     def analyze(self):
         a = self.programblock.a
