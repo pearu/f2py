@@ -164,6 +164,11 @@ being added on an as-required basis and currently consists of:
 
 * The SELECT TYPE block (including the TYPE IS, CLASS IS and CLASS
   DEFAULT clauses) - Fortran 2003
+* Calls to type-bound procedures (Fortran 2003), e.g.
+
+  ::
+
+       call an_array(3)%a_proc(an_arg)
 
 Reference
 ^^^^^^^^^
