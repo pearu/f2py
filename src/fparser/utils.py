@@ -98,7 +98,29 @@ is_entity_decl = re.compile(r'^[a-z_]\w*',re.I).match
 is_int_literal_constant = re.compile(r'^\d+(_\w+|)$').match
 module_file_extensions = ['.f', '.f90', '.f95', '.f03', '.f08']
 
-def split_comma(line, item = None, comma=',', keep_empty=False):
+
+def split_comma(line, item=None, comma=',', keep_empty=False,
+                brackets=None):
+    ''' Split (an optionally bracketed) comma-separated list into
+    items and return a list containing them. If supplied then
+    brackets must be a list of containing two strings, the first
+    being the opening bracket and the second the closing bracket. '''
+    # we may have blank space so strip the line
+    line = line.strip()
+    if not line:
+        return []
+    if brackets:
+        if not isinstance(brackets, tuple):
+            raise ParseError("split_comma: brackets must be a tuple")
+        if len(brackets) != 2:
+            raise ParseError("split_comma: brackets tuple must contain "
+                             "just two items but got: {0}", brackets)
+        open = brackets[0]
+        close = brackets[1]
+        if not line.startswith(open) or not line.endswith(close):
+            return []
+        line = line.strip(brackets[0])
+        line = line.strip(brackets[1])
     items = []
     if item is None:
         for s in line.split(comma):
@@ -106,8 +128,6 @@ def split_comma(line, item = None, comma=',', keep_empty=False):
             if not s and not keep_empty: continue
             items.append(s)
         return items
-    if not line.strip(): # we may have blank space so strip the line
-        return []
     newitem = item.copy(line, True)
     apply_map = newitem.apply_map
     for s in newitem.get_line().split(comma):
@@ -115,6 +135,34 @@ def split_comma(line, item = None, comma=',', keep_empty=False):
         if not s and not keep_empty: continue
         items.append(s)
     return items
+
+
+def extract_bracketed_list_items(line, item=None):
+    ''' Takes any line that contains "xxx (a,b,...) yyy" and returns
+    a list of items corresponding to a, b, ... Anything outside of
+    the parentheses is ignored. Only works for strings containing
+    a single set of parentheses. '''
+    if line.count('(') > 1 or line.count(')') > 1:
+        raise ParseError(
+            "parse_bracketed_list: more than one opening/closing parenthesis "
+            "found in string '{0}'; this is not supported".format(line))
+    idx1 = line.find('(')
+    idx2 = line.rfind(')')
+    if idx1 < 0 or idx2 < 0 or idx2 < idx1:
+        raise ParseError(
+            "parse_bracketed_list: failed to find expression within "
+            "parentheses in '{0}'".format(line))
+    items = split_comma(line[idx1:idx2+1], item,
+                        brackets=("(", ")"))
+    if item:
+        for idx in range(len(items)):
+            itm = item.copy(items[idx])
+            rlst = []
+            for rpart in itm.get_line().split(':'):
+                rlst.append(itm.apply_map(rpart.strip()))
+            items[idx] = rlst
+    return items
+
 
 def parse_array_spec(line, item = None):
     items = []

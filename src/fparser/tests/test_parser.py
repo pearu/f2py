@@ -62,25 +62,19 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
+# Original author: Pearu Peterson <pearu@cens.ioc.ee>
+# First version created: May 2006
+
 """
 Test parsing single Fortran lines.
 
------
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
------
 """
 
-# from numpy.testing import *
-
+import pytest
 from fparser.block_statements import *
 from fparser.readfortran import Line, FortranStringReader
-
 from nose.tools import assert_equal
+
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
     if label:
@@ -98,16 +92,19 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
             if r != r1:
                 raise ValueError, 'Failed to parse %r with %s pattern in pyf mode, got %r' % (r, cls.__name__, r1)
         return r
-    raise ValueError, 'parsing %r with %s pattern failed' % (line, cls.__name__)
+    raise ValueError('parsing %r with %s pattern failed'%(line, cls.__name__))
 
-def test_assignment():#self):
-    assert_equal(parse(Assignment,'a=b'), 'a = b')
+
+def test_assignment():
+    assert_equal(parse(Assignment, 'a=b'), 'a = b')
     assert_equal(parse(PointerAssignment,'a=>b'), 'a => b')
     assert_equal(parse(Assignment,'a (2)=b(n,m)'), 'a(2) = b(n,m)')
     assert_equal(parse(Assignment,'a % 2(2,4)=b(a(i))'), 'a%2(2,4) = b(a(i))')
 
+
 def test_assign():
     assert_equal(parse(Assign,'assign 10 to a'),'ASSIGN 10 TO a')
+
 
 def test_call():
     assert_equal(parse(Call,'call a'),'CALL a')
@@ -443,18 +440,6 @@ def test_else():
     assert_equal(parse(ElseIf,'else if (a.eq.b(1,2)) then'),
                  'ELSE IF (a.eq.b(1,2)) THEN')
 
-def test_case():
-    assert_equal(parse(Case,'case (1)'),'CASE ( 1 )')
-    assert_equal(parse(Case,'case (1:)'),'CASE ( 1 : )')
-    assert_equal(parse(Case,'case (:1)'),'CASE ( : 1 )')
-    assert_equal(parse(Case,'case (1:2)'),'CASE ( 1 : 2 )')
-    assert_equal(parse(Case,'case (a(1,2))'),'CASE ( a(1,2) )')
-    assert_equal(parse(Case,'case ("ab")'),'CASE ( "ab" )')
-    assert_equal(parse(Case,'case default'),'CASE DEFAULT')
-    assert_equal(parse(Case,'case (1:2 ,3:4)'),'CASE ( 1 : 2, 3 : 4 )')
-    assert_equal(parse(Case,'case (a(1,:):)'),'CASE ( a(1,:) : )')
-    assert_equal(parse(Case,'case default'),'CASE DEFAULT')
-
 def test_where():
     assert_equal(parse(WhereStmt,'where (1) a=1'),'WHERE ( 1 ) a = 1')
     assert_equal(parse(WhereStmt,'where (a(1,2)) a=1'),'WHERE ( a(1,2) ) a = 1')
@@ -555,4 +540,3 @@ def test_implicit():
                  'IMPLICIT INTEGER ( i-m, p, q-r )')
     assert_equal(parse(Implicit,'implicit integer (i-m), real (z)'),
                  'IMPLICIT INTEGER ( i-m ), REAL ( z )')
-

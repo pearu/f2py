@@ -77,7 +77,8 @@ __all__ = ['GeneralAssignment',
            'Inquire','Sequence','External','Namelist','Common','Optional','Intent',
            'Entry','Import','ForallStmt','SpecificBinding','GenericBinding',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
-           'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
+           'Case','TypeIs', 'ClassIs', 'WhereStmt', 'ElseWhere', 'Enumerator',
+           'FortranName', 'Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
            'Comment']
 
@@ -88,8 +89,9 @@ from base_classes import Statement, Variable
 
 # Auxiliary tools
 
-from utils import split_comma, specs_split_comma, AnalyzeError, ParseError,\
-     get_module_file, parse_bind, parse_result, is_name
+from utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
+     get_module_file, parse_bind, parse_result, is_name, \
+     extract_bracketed_list_items
 from utils import classes
 
 class StatementWithNamelist(Statement):
@@ -1736,11 +1738,12 @@ class ElseIf(Statement):
 
     def analyze(self): return
 
+
 # SelectCase construct statements
 
 class Case(Statement):
     """
-    CASE <case-selector> [ <case-constract-name> ]
+    CASE <case-selector> [ <case-construct-name> ]
     <case-selector> = ( <case-value-range-list> ) | DEFAULT
     <case-value-range> = <case-value>
                          | <case-value> :
@@ -1748,47 +1751,163 @@ class Case(Statement):
                          | <case-value> : <case-value>
     <case-value> = <scalar-(int|char|logical)-initialization-expr>
     """
-    match = re.compile(r'case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z',re.I).match
+    match = re.compile(r'case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z', re.I).match
+
     def process_item(self):
-        #assert self.parent.__class__.__name__=='Select',`self.parent.__class__`
+        ''' Populate the state of this item by parsing the associated line
+        of code '''
         line = self.item.get_line()[4:].lstrip()
-        if line.startswith('('):
-            i = line.find(')')
-            items = split_comma(line[1:i].strip(), self.item)
-            line = line[i+1:].lstrip()
-        else:
-            assert line.lower().startswith('default'),`line`
-            items = []
-            line = line[7:].lstrip()
-        for i in range(len(items)):
-            it = self.item.copy(items[i])
-            rl = []
-            for r in it.get_line().split(':'):
-                rl.append(it.apply_map(r.strip()))
-            items[i] = rl
-        self.items = items
-        self.name = line
+        try:
+            self.items = extract_bracketed_list_items(line, self.item)
+            idx = line.rfind(')')
+            self.name = line[idx+1:].lstrip()
+        except ParseError:
+            # No list in parentheses found so we must have a 'case default'
+            if not line.lower().startswith('default'):
+                # We should never get to here because such a string should
+                # not have generated a match
+                self.warning(
+                    "Internal error when parsing CASE statement: {0}".
+                    format(line))
+                self.isvalid = False
+                return
+            self.items = []
+            self.name = line[7:].lstrip()
         parent_name = getattr(self.parent, 'name', '')
-        if self.name and self.name!=parent_name:
-            self.warning('expected case-construct-name %r but got %r, skipping.'\
-                         % (parent_name, self.name))
+        if self.name and self.name != parent_name:
+            self.warning("Expected case-construct-name {0} but got {1}, "
+                         "skipping.".format(parent_name, self.name))
             self.isvalid = False
         return
 
     def tofortran(self, isfix=None):
+        ''' Return the Fortran for this object as a string '''
         tab = self.get_indent_tab(isfix=isfix)
-        s = 'CASE'
+        txt = tab + 'CASE'
         if self.items:
-            l = []
+            lst = []
             for item in self.items:
-                l.append((' : '.join(item)).strip())
-            s += ' ( %s )' % (', '.join(l))
+                lst.append((' : '.join(item)).strip())
+            txt += ' ( %s )' % (', '.join(lst))
         else:
-            s += ' DEFAULT'
+            txt += ' DEFAULT'
         if self.name:
-            s += ' ' + self.name
-        return s
-    def analyze(self): return
+            txt += ' ' + self.name
+        return txt
+
+    def analyze(self):
+        return
+
+
+class TypeIs(Statement):
+    """
+    TYPE IS <type-selector> [ <case-construct-name> ]
+    <type-selector> = ( <type-value-range-list> )
+    <type-value-range> = <case-value>
+    <case-value> = <char>
+    """
+    match = re.compile(r'type\b\s*is\b\s*\(.*\)\s*\w*\Z', re.I).match
+
+    def process_item(self):
+        ''' Populate the state of this object by parsing the associated
+        line of code '''
+        line = self.item.get_line()
+        # We have a 'type is (...)' statement. At this point
+        # any expression used for the type specifier will have
+        # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
+        # will not itself contain any parentheses.
+        self.items = extract_bracketed_list_items(line, self.item)
+        # Get and store the case-construct-name (if any)
+        idx2 = line.rfind(')')
+        self.name = line[idx2+1:].lstrip()
+        parent_name = getattr(self.parent, 'name', '')
+        if self.name and self.name != parent_name:
+            self.warning(
+                'expected type-is-construct-name %r but got %r, skipping.'
+                % (parent_name, self.name))
+            self.isvalid = False
+        return
+
+    def tofortran(self, isfix=None):
+        ''' Create the Fortran representation of this object and return
+        it as a string '''
+        tab = self.get_indent_tab(isfix=isfix)
+        text = tab + 'TYPE IS'
+        if self.items:
+            lst = []
+            for item in self.items:
+                lst.append((' : '.join(item)).strip())
+            text += ' ( %s )' % (', '.join(lst))
+        else:
+            raise ParseError("TYPE IS construct must have arguments")
+        if self.name:
+            text += ' ' + self.name
+        return text
+
+    def analyze(self):
+        return
+
+
+class ClassIs(Statement):
+    """
+    CLASS <class-selector>
+    <class-selector> = ( IS <type-value-range-list> | DEFAULT )
+    <type-value-range> = <case-value>
+    <case-value> = <char>
+    """
+    match = re.compile(r'class\b\s*(is\b\s*\(.*\)|default)\s*\w*\Z',
+                       re.I).match
+
+    def process_item(self):
+        ''' Populate the state of this object by parsing the string '''
+        line = self.item.get_line()[5:].lstrip()
+        try:
+            self.items = extract_bracketed_list_items(line, self.item)
+            # We have a 'class is ...' statement. At this point
+            # any expression used for the class specifier will have
+            # been replaced with e.g. F2PY_EXPR_TUPLE_3 and so
+            # will not contain any parentheses.
+            idx = line.rfind(')')
+            self.name = line[idx+1:].lstrip()
+        except ParseError:
+            # We have a 'class default' statement
+            if not line.lower().startswith('default'):
+                # We should never get here because such a string should
+                # not have generated a match
+                self.warning(
+                    "Internal error when parsing CLASS statement: {0}".
+                    format(line))
+                self.isvalid = False
+                return
+            self.items = []
+            self.name = line[7:].lstrip()
+        parent_name = getattr(self.parent, 'name', '')
+        if self.name and self.name != parent_name:
+            self.warning(
+                'expected class-construct-name %r but got %r, skipping.'
+                % (parent_name, self.name))
+            self.isvalid = False
+        return
+
+    def tofortran(self, isfix=None):
+        ''' Returns the Fortran for this object as a string '''
+        tab = self.get_indent_tab(isfix=isfix)
+        text = tab + 'CLASS'
+        if self.items:
+            text += ' IS'
+            lchar = []
+            for item in self.items:
+                lchar.append((' : '.join(item)).strip())
+            text += ' ( %s )' % (', '.join(lchar))
+        else:
+            text += ' DEFAULT'
+        if self.name:
+            text += ' ' + self.name
+        return text
+
+    def analyze(self):
+        return
+
 
 # Where construct statements
 
