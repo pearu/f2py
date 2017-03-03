@@ -4,6 +4,9 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+03/03/2017 #5 Support calls to type-bound procedures when
+	   accessed via array elements.
+
 09/02/2017 #2 Create initial documentation, mostly based on
 	   Pearu's previous work.
 
