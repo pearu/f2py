@@ -235,7 +235,7 @@ class Call(Statement):
                        re.I).match
 
     def process_item(self):
-        ''' Parser the string containing the Call and store the
+        ''' Parse the string containing the Call and store the
         designator and list of arguments (if any) '''
         item = self.item
         apply_map = item.apply_map
