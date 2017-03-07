@@ -201,6 +201,7 @@ class Assign(Statement):
                % (self.items[0], self.items[1])
     def analyze(self): return
 
+
 class Call(Statement):
     """Call statement class
     CALL <procedure-designator> [ ( [ <actual-arg-spec-list> ] ) ]
@@ -225,31 +226,61 @@ class Call(Statement):
       designator
       arg_list
     """
-    match = re.compile(r'call\b', re.I).match
+    # As indicated in the specification above, a call to a subroutine
+    # that has no arguments does *not* require parentheses.
+    # e.g.:
+    #   call bob
+    # is valid Fortran.
+    match = re.compile(r'call\b\s*\w([\s\w\(\)\%]*\w)?\s*(\(.*\))?\s*$',
+                       re.I).match
 
     def process_item(self):
+        ''' Parse the string containing the Call and store the
+        designator and list of arguments (if any) '''
         item = self.item
         apply_map = item.apply_map
         line = item.get_line()[4:].strip()
-        i = line.find('(')
-        items = []
-        if i==-1:
-            self.designator = apply_map(line).strip()
-        else:
-            j = line.find(')')
-            if j == -1 or len(line)-1 != j:
+        # Work backwards from the end of the line in order to allow
+        # for code like:
+        #     call my_type(1)%my_function(arg(2))
+        # The following code will also support something like:
+        #     call my_type(1)%my_function("(")
+        # because fparser will previously have identified the "(" as a
+        # string expression and replaced it with something like
+        # "F2PY_EXPR_TUPLE_2"
+        if line.endswith(')'):
+            # Work back down the line until we find the matching '('
+            i = len(line) - 2
+            nopen = 1
+            while i > 0:
+                if line[i] == ')':
+                    nopen += 1
+                elif line[i] == '(':
+                    nopen -= 1
+                if nopen == 0:
+                    # Have found the matching '(' at position i
+                    break
+                i -= 1
+            if i <= 0:
+                # Have reached the beginning of the string without
+                # finding the matching '('
                 self.isvalid = False
                 return
             self.designator = apply_map(line[:i]).strip()
             items = split_comma(line[i+1:-1], item)
+        else:
+            # Call has no argument list
+            items = []
+            self.designator = apply_map(line).strip()
         self.items = items
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'CALL '+str(self.designator)
+        ''' Returns the Fortran representation of this object as a string '''
+        txt = self.get_indent_tab(isfix=isfix) + 'CALL ' + str(self.designator)
         if self.items:
-            s += '('+', '.join(map(str,self.items))+ ')'
-        return s
+            txt += '(' + ', '.join(map(str, self.items)) + ')'
+        return txt
 
     def analyze(self):
         a = self.programblock.a

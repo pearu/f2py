@@ -83,14 +83,17 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
     reader.set_mode(isfree, isstrict)
     item = reader.next()
     if not cls.match(item.get_line()):
-        raise ValueError, '%r does not match %s pattern' % (line, cls.__name__)
+        raise ValueError('%r does not match %s pattern'%(line, cls.__name__))
     stmt = cls(item, item)
     if stmt.isvalid:
+        # Check that we can successfully parse the string representation
+        # of the parsed object
         r = str(stmt)
         if not isstrict:
             r1 = parse(cls, r, isstrict=True)
             if r != r1:
-                raise ValueError, 'Failed to parse %r with %s pattern in pyf mode, got %r' % (r, cls.__name__, r1)
+                raise ValueError('Failed to parse %r with %s pattern in Pyf '
+                                 'mode, got %r'%(r, cls.__name__, r1))
         return r
     raise ValueError('parsing %r with %s pattern failed'%(line, cls.__name__))
 
@@ -111,7 +114,7 @@ def test_call():
     assert_equal(parse(Call,'call a()'),'CALL a')
     assert_equal(parse(Call,'call a(1)'),'CALL a(1)')
     assert_equal(parse(Call,'call a(1,2)'),'CALL a(1, 2)')
-    assert_equal(parse(Call,'call a % 2 ( n , a+1 )'),'CALL a % 2(n, a+1)')
+    assert_equal(parse(Call,'call a % c ( n , a+1 )'),'CALL a % c(n, a+1)')
 
 def test_goto():
     assert_equal(parse(Goto,'go to 19'),'GO TO 19')
@@ -526,7 +529,8 @@ def test_character():
                  'CHARACTER(LEN=3, KIND=2)')
     assert_equal(parse(Character,'character(len=3,kind=2)', isstrict=True),
                  'CHARACTER(LEN=3, KIND=2)')
-    assert_equal(parse(Character,'chaRACTER(len=3,kind=fA(1,2))', isstrict=True),
+    assert_equal(parse(Character,'chaRACTER(len=3,kind=fA(1,2))',
+                       isstrict=True),
                  'CHARACTER(LEN=3, KIND=fA(1,2))')
     assert_equal(parse(Character,'character(len=3,kind=fA(1,2))'),
                  'CHARACTER(LEN=3, KIND=fa(1,2))')
@@ -540,3 +544,33 @@ def test_implicit():
                  'IMPLICIT INTEGER ( i-m, p, q-r )')
     assert_equal(parse(Implicit,'implicit integer (i-m), real (z)'),
                  'IMPLICIT INTEGER ( i-m ), REAL ( z )')
+
+
+def test_type_bound_array_access():
+    ''' Check that we can parse code that calls a type-bound procedure
+    on the element of an array (of derived types) '''
+    parsed_code = parse(Call, 'call an_array(idx)%a_func(arg)')
+    assert parsed_code == "CALL an_array(idx)%a_func(arg)"
+    # Routine being called has no arguments - it is valid Fortran to
+    # omit the parentheses entirely in this case
+    parsed_code = parse(Call, 'call an_array(idx)%a_func()')
+    assert parsed_code == "CALL an_array(idx)%a_func"
+    parsed_code = parse(Call, 'call an_array(idx)%a_func')
+    assert parsed_code == "CALL an_array(idx)%a_func"
+    # Perversely put in a character string arg containing '('
+    parsed_code = parse(Call, 'call an_array(idx)%a_func("(")')
+    assert parsed_code == 'CALL an_array(idx)%a_func("(")'
+    # Pass an array element as an argument
+    parsed_code = parse(Call, 'call an_array(idx)%a_func(b(3))')
+    assert parsed_code == 'CALL an_array(idx)%a_func(b(3))'
+
+
+def test_invalid_type_bound_array_access():
+    ''' Check that a call to a type-bound procedure with incorrect
+    syntax is flagged as invalid '''
+    with pytest.raises(ValueError) as excinfo:
+        _ = parse(Call, 'call an_array(idx)%a_func)')
+    assert "with Call pattern failed" in str(excinfo)
+    with pytest.raises(ValueError) as excinfo:
+        _ = parse(Call, 'call an_array(idx)%)')
+    assert "with Call pattern failed" in str(excinfo)
