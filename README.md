@@ -1,7 +1,7 @@
 # News #
 
   * 08/03/2017 Version 0.0.2 released. Documentation made available
-    on [ReadTheDocs](fparser.readthedocs.io).
+    on [ReadTheDocs](http://fparser.readthedocs.io).
   * 16/01/2017 Parser code extracted from F2PY project to form the
     base of the fparser project.
 
@@ -19,7 +19,7 @@ tarballs for each of the [releases](https://github.com/stfc/fparser/releases).
 
 # Documentation #
 
-The documentation for fparser is hosted on [ReadTheDocs](fparser.readthedocs.io).
+The documentation for fparser is hosted on [ReadTheDocs](http://fparser.readthedocs.io).
 
 # Code Metrics #
 
