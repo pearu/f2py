@@ -54,3 +54,5 @@ deploy:
   server: https://testpypi.python.org/pypi
   on:
     tags: true
+    branch: release_via_travis
+
