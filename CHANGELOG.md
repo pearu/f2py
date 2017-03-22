@@ -4,6 +4,11 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+## Release 0.0.2 ##
+
+22/03/2017 #11 Configure Travis to automatically release to
+           pypi when a tag is created. Create release 0.0.2.
+
 03/03/2017 #5 Extend fparser1 to support calls to type-bound
            procedures when accessed via array elements.
 
