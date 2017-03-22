@@ -1,6 +1,6 @@
 # News #
 
-  * 08/03/2017 Version 0.0.2 released. Documentation made available
+  * 22/03/2017 Version 0.0.2 released. Documentation made available
     on [ReadTheDocs](http://fparser.readthedocs.io).
   * 16/01/2017 Parser code extracted from F2PY project to form the
     base of the fparser project.
@@ -26,7 +26,7 @@ The documentation for fparser is hosted on [ReadTheDocs](http://fparser.readthed
 [![Build Status](https://travis-ci.org/stfc/fparser.svg?branch=master)](https://travis-ci.org/stfc/fparser)
 [![Coverage Status](https://coveralls.io/repos/github/stfc/fparser/badge.svg?branch=master)](https://coveralls.io/github/stfc/fparser?branch=master)
 [![Code Health](https://landscape.io/github/stfc/fparser/master/landscape.svg?style=flat)](https://landscape.io/github/stfc/fparser/master)
-[![Documentation Status](https://readthedocs.org/projects/fparser/badge/?version=latest)](http://fparser.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/fparser/badge/?version=stable)](http://fparser.readthedocs.io/en/stable/?badge=stable)
 
 # See also #
 
