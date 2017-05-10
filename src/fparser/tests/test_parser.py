@@ -213,6 +213,13 @@ def test_close():
     assert_equal(parse(Close,'close (12, err=99)'),'CLOSE (12, ERR = 99)')
     assert_equal(parse(Close,'close (12, status = a(1,2))'),'CLOSE (12, STATUS = a(1,2))')
 
+
+def test_class():
+    ''' Check that we correctly parse and generate a class declaration '''
+    assert parse(Class, 'class(runtime_constants_type) :: a') == \
+        "CLASS(runtime_constants_type) :: a"
+
+
 def test_cycle():
     assert_equal(parse(Cycle,'cycle'),'CYCLE')
     assert_equal(parse(Cycle,'cycle ab'),'CYCLE ab')
