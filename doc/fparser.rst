@@ -169,6 +169,10 @@ being added on an as-required basis and currently consists of:
   ::
 
        call an_array(3)%a_proc(an_arg)
+* Declaration of a CLASS variable (Fortran 2003), e.g.
+  ::
+
+     class(my_type) var
 
 Reference
 ^^^^^^^^^

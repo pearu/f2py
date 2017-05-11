@@ -4,6 +4,9 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+11/05/2017 #27 Fix a bug in fparser1 to support (Fortran2003)
+           class declarations e.g. CLASS(class_type) :: var
+
 ## Release 0.0.2 ##
 
 22/03/2017 #11 Configure Travis to automatically release to

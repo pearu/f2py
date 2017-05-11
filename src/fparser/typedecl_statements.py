@@ -303,32 +303,40 @@ class TypeDeclarationStatement(Statement):
         return l,kind
 
     def tostr(self):
+        ''' Create a text representation of this object and return it '''
         clsname = self.__class__.__name__.upper()
-        s = ''
+        text = ''
         length, kind = self.selector
         if isinstance(self, Character):
             if length and kind:
-                s += '(LEN=%s, KIND=%s)' % (length,kind)
+                text += '(LEN=%s, KIND=%s)' % (length, kind)
             elif length:
-                s += '(LEN=%s)' % (length)
+                text += '(LEN=%s)' % (length)
             elif kind:
-                s += '(KIND=%s)' % (kind)
+                text += '(KIND=%s)' % (kind)
+        elif isinstance(self, Type):
+            text += '(%s)' % (kind)
+        elif isinstance(self, Class):
+            if kind:
+                # For a class declaration, 'kind' is actually the class
+                # that the variable is an instance of. Therefore there
+                # is no "(KIND=xxx)", just (xxx).
+                text += "({0})".format(kind)
         else:
-            if isinstance(self, Type):
-                s += '(%s)' % (kind)
-            else:
-                if length:
-                    s += '*%s' % (length)
-                if kind:
-                    s += '(KIND=%s)' % (kind)
+            if length:
+                text += '*%s' % (length)
+            if kind:
+                text += '(KIND=%s)' % (kind)
 
-        return clsname + s
+        return clsname + text
 
     def tofortran(self,isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
         s = self.tostr()
         if self.attrspec:
             s += ', ' + ', '.join(self.attrspec)
+        # If we were to change fparser so that it always produces the
+        # '::' separator then we'd simply comment-out the if below.
         if self.attrspec or '=' in str(self.entity_decls):
             s += ' ::'
         if self.entity_decls:
