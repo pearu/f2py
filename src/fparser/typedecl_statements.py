@@ -303,31 +303,32 @@ class TypeDeclarationStatement(Statement):
         return l,kind
 
     def tostr(self):
+        ''' Create a text representation of this object and return it '''
         clsname = self.__class__.__name__.upper()
-        s = ''
+        text = ''
         length, kind = self.selector
         if isinstance(self, Character):
             if length and kind:
-                s += '(LEN=%s, KIND=%s)' % (length,kind)
+                text += '(LEN=%s, KIND=%s)' % (length, kind)
             elif length:
-                s += '(LEN=%s)' % (length)
+                text += '(LEN=%s)' % (length)
             elif kind:
-                s += '(KIND=%s)' % (kind)
+                text += '(KIND=%s)' % (kind)
         elif isinstance(self, Type):
-            s += '(%s)' % (kind)
+            text += '(%s)' % (kind)
         elif isinstance(self, Class):
             if kind:
                 # For a class declaration, 'kind' is actually the class
                 # that the variable is an instance of. Therefore there
                 # is no "(KIND=xxx)", just (xxx).
-                s += "({0})".format(kind)
+                text += "({0})".format(kind)
         else:
             if length:
-                s += '*%s' % (length)
+                text += '*%s' % (length)
             if kind:
-                s += '(KIND=%s)' % (kind)
+                text += '(KIND=%s)' % (kind)
 
-        return clsname + s
+        return clsname + text
 
     def tofortran(self,isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
