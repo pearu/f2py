@@ -313,14 +313,19 @@ class TypeDeclarationStatement(Statement):
                 s += '(LEN=%s)' % (length)
             elif kind:
                 s += '(KIND=%s)' % (kind)
+        elif isinstance(self, Type):
+            s += '(%s)' % (kind)
+        elif isinstance(self, Class):
+            if kind:
+                # For a class declaration, 'kind' is actually the class
+                # that the variable is an instance of. Therefore there
+                # is no "(KIND=xxx)", just (xxx).
+                s += "({0})".format(kind)
         else:
-            if isinstance(self, Type):
-                s += '(%s)' % (kind)
-            else:
-                if length:
-                    s += '*%s' % (length)
-                if kind:
-                    s += '(KIND=%s)' % (kind)
+            if length:
+                s += '*%s' % (length)
+            if kind:
+                s += '(KIND=%s)' % (kind)
 
         return clsname + s
 
@@ -329,6 +334,8 @@ class TypeDeclarationStatement(Statement):
         s = self.tostr()
         if self.attrspec:
             s += ', ' + ', '.join(self.attrspec)
+        # If we were to change fparser so that it always produces the
+        # '::' separator then we'd simply comment-out the if below.
         if self.attrspec or '=' in str(self.entity_decls):
             s += ' ::'
         if self.entity_decls:

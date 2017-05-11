@@ -217,7 +217,7 @@ def test_close():
 def test_class():
     ''' Check that we correctly parse and generate a class declaration '''
     assert parse(Class, 'class(runtime_constants_type) :: a') == \
-        "CLASS(runtime_constants_type) :: a"
+        "CLASS(runtime_constants_type) a"
 
 
 def test_cycle():
