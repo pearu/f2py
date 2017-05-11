@@ -4,6 +4,13 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+## Release 0.0.4 ##
+
+11/05/2017 pypi configuration was incorrect so 0.0.3 was
+           released on github but not on pypi. 0.0.4 has the
+           same functionality as 0.0.3 but is available on
+           both pypi and github.
+
 ## Release 0.0.3 ##
 
 11/05/2017 #27 Fix a bug in fparser1 to support (Fortran2003)
