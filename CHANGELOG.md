@@ -4,8 +4,10 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+## Release 0.0.3 ##
+
 11/05/2017 #27 Fix a bug in fparser1 to support (Fortran2003)
-           class declarations e.g. CLASS(class_type) :: var
+           class declarations e.g. CLASS(my_class) :: var
 
 ## Release 0.0.2 ##
 

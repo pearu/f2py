@@ -172,7 +172,7 @@ being added on an as-required basis and currently consists of:
 * Declaration of a CLASS variable (Fortran 2003), e.g.
   ::
 
-     class(my_type) var
+     class(my_class) var
 
 Reference
 ^^^^^^^^^
