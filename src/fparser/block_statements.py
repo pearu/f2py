@@ -688,7 +688,10 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
             elif isinstance(stmt, self.end_stmt_cls):
                 continue
             else:
-                stmt.analyze()
+                if hasattr(stmt, "analyze"):
+                    stmt.analyze()
+                else:
+                    raise AnalyzeError('Failed to parse: {0}'.format(str(stmt)))
 
         if content:
             logger.info('Not analyzed content: %s' % content)
