@@ -11,7 +11,7 @@ def test_procedure_interface():
     use field_mod,                   only: field_type, write_interface
     use fs_continuity_mod,           only: W3
     use psykal_lite_mod,             only: invoke_inner_prod
-    implicit none 
+    implicit none
     type(field_type), intent(in) :: u
     integer(i_def),   intent(in) :: t, mesh_id
 
@@ -21,8 +21,10 @@ def test_procedure_interface():
 
     procedure (write_interface), pointer  :: tmp_ptr
 
-    divergence =  field_type( vector_space = function_space_collection%get_fs(mesh_id,element_order, W3) )
-    div_u      =  field_type( vector_space = function_space_collection%get_fs(mesh_id,element_order, W3) )
+    divergence =  field_type( vector_space = &
+            function_space_collection%get_fs(mesh_id,element_order, W3) )
+    div_u = field_type( vector_space=function_space_collection%get_fs(mesh_id,&
+                        element_order, W3) )
     div    => get_div()
     m3_inv => get_mass_matrix(w3inv_id)
     call invoke( dg_matrix_vector_kernel_type( div_u, u, div) )
@@ -31,6 +33,5 @@ def test_procedure_interface():
 '''
     tree = api.parse(source_str, isfree=True, isstrict=False,
                      ignore_comments=False)
-    gen_code =  str(tree)
+    gen_code = str(tree)
     assert "PROCEDURE (write_interface) , POINTER :: tmp_ptr" in gen_code
-
