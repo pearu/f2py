@@ -1,5 +1,6 @@
 def test_procedure_interface():
-    ''' Functional test that parser copes with a procedure declaration '''
+    ''' Functional test that parser copes with a procedure declaration in
+    a subroutine '''
     from fparser import api
     source_str = '''  subroutine divergence_diagnostic_alg(u, t, mesh_id)
     use dg_matrix_vector_kernel_mod, only: dg_matrix_vector_kernel_type
@@ -10,10 +11,6 @@ def test_procedure_interface():
     use field_mod,                   only: field_type, write_interface
     use fs_continuity_mod,           only: W3
     use psykal_lite_mod,             only: invoke_inner_prod
-    use log_mod,                     only: log_event,         &
-                                           log_scratch_space, &
-                                           LOG_LEVEL_INFO
-
     implicit none 
     type(field_type), intent(in) :: u
     integer(i_def),   intent(in) :: t, mesh_id
@@ -22,8 +19,7 @@ def test_procedure_interface():
     type(operator_type), pointer :: div => null(), m3_inv => null()
     real(r_def)                  :: l2
 
-    !procedure (write_interface), pointer  :: tmp_ptr
-    procedure (a) :: tmp_ptr
+    procedure (write_interface), pointer  :: tmp_ptr
 
     divergence =  field_type( vector_space = function_space_collection%get_fs(mesh_id,element_order, W3) )
     div_u      =  field_type( vector_space = function_space_collection%get_fs(mesh_id,element_order, W3) )
@@ -35,6 +31,6 @@ def test_procedure_interface():
 '''
     tree = api.parse(source_str, isfree=True, isstrict=False,
                      ignore_comments=False)
-    print str(tree)
-    assert 0
+    gen_code =  str(tree)
+    assert "PROCEDURE (write_interface) , POINTER :: tmp_ptr" in gen_code
 
