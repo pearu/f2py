@@ -1,35 +1,58 @@
+# Copyright (c) 2017 Science and Technology Facilities Council
+
+# All rights reserved.
+
+# Modifications made as part of the fparser project are distributed
+# under the following license:
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+''' Module containing functional tests - i.e. tests of specific functionality
+    within the context of parsing a piece of compilable Fortran '''
+
+
 def test_procedure_interface():
-    ''' Functional test that parser copes with a procedure declaration in
+    ''' Test that parser copes with a procedure declaration in
     a subroutine '''
     from fparser import api
-    source_str = '''  subroutine divergence_diagnostic_alg(u, t, mesh_id)
-    use dg_matrix_vector_kernel_mod, only: dg_matrix_vector_kernel_type
-    use runtime_constants_mod,       only: get_mass_matrix, &
-                                           get_div, &
-                                           w3inv_id
-    use operator_mod,                only: operator_type
+    source_str = '''  subroutine proc_interface_test()
     use field_mod,                   only: field_type, write_interface
     use fs_continuity_mod,           only: W3
-    use psykal_lite_mod,             only: invoke_inner_prod
+    use io_mod,                      only: write_field
     implicit none
-    type(field_type), intent(in) :: u
-    integer(i_def),   intent(in) :: t, mesh_id
-
-    type(field_type)             :: divergence, div_u
-    type(operator_type), pointer :: div => null(), m3_inv => null()
-    real(r_def)                  :: l2
-
+    type(field_type)                      :: divergence
     procedure (write_interface), pointer  :: tmp_ptr
 
-    divergence =  field_type( vector_space = &
-            function_space_collection%get_fs(mesh_id,element_order, W3) )
-    div_u = field_type( vector_space=function_space_collection%get_fs(mesh_id,&
-                        element_order, W3) )
-    div    => get_div()
-    m3_inv => get_mass_matrix(w3inv_id)
-    call invoke( dg_matrix_vector_kernel_type( div_u, u, div) )
-
-  end subroutine divergence_diagnostic_alg
+    divergence = field_type( vector_space = &
+                    function_space_collection%get_fs(0, 0, W3) )
+    tmp_ptr => write_field
+    call divergence%set_write_field_behaviour(write_field)
+  end subroutine proc_interface_test
 '''
     tree = api.parse(source_str, isfree=True, isstrict=False,
                      ignore_comments=False)
