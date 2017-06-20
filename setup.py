@@ -102,7 +102,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 4
+MICRO = 5
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
