@@ -4,6 +4,10 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+20/06/2017 issue #30 pr #31 Extend fparser1 to support
+ 	   Fortran2003 procedure declarations
+
+
 ## Release 0.0.4 ##
 
 11/05/2017 pypi configuration was incorrect so 0.0.3 was
