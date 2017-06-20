@@ -688,7 +688,10 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
             elif isinstance(stmt, self.end_stmt_cls):
                 continue
             else:
-                stmt.analyze()
+                if hasattr(stmt, "analyze"):
+                    stmt.analyze()
+                else:
+                    raise AnalyzeError('Failed to parse: {0}'.format(str(stmt)))
 
         if content:
             logger.info('Not analyzed content: %s' % content)
@@ -1361,9 +1364,11 @@ internal_subprogram = [Function, Subroutine]
 
 internal_subprogram_part = [Contains, ] + internal_subprogram
 
+# In Fortran2003 we can have a Procedure declaration. We therefore
+# include SpecificBinding as a valid declaration construct.
 declaration_construct = [TypeDecl, Entry, Enum, Format, Interface,
-    Parameter, ModuleProcedure,] + specification_stmt + \
-    type_declaration_stmt
+                         Parameter, ModuleProcedure, SpecificBinding] + \
+    specification_stmt + type_declaration_stmt
 # stmt-function-stmt
 
 implicit_part = [ Implicit, Parameter, Format, Entry ]
