@@ -2539,20 +2539,29 @@ def test_Io_Unit(): # R901
         assert isinstance(a, Name),`a`
         assert_equal(str(a),'a')
 
+
 def test_Read_Stmt(): # R910
+    ''' Check that we successfully parse various forms of READ statement '''
     cls = Read_Stmt
-    a = cls('read(123)')
-    assert isinstance(a, cls),`a`
-    assert_equal(str(a), 'READ(UNIT = 123)')
+    obj = cls('read(123)')
+    assert isinstance(obj, cls), `obj`
+    assert str(obj) == 'READ(UNIT = 123)'
 
-    a = cls('read(123) a')
-    assert_equal(str(a), 'READ(UNIT = 123) a')
-    a = cls('read(123) a(  2)')
-    assert_equal(str(a), 'READ(UNIT = 123) a(2)')
+    obj = cls('read(123) a')
+    assert str(obj) == 'READ(UNIT = 123) a'
+    obj = cls('read(123) a(  2)')
+    assert str(obj) == 'READ(UNIT = 123) a(2)'
 
-    a = cls('read*, a(  2), b')
-    assert_equal(str(a), 'READ *, a(2), b')
+    obj = cls('read*, a(  2), b')
+    assert str(obj) == 'READ *, a(2), b'
     
+    # If there is no preceding "FMT=" or "NML=" then there is no way of
+    # knowing whether the second argument is a format string or a namelist
+    # without determining the actual type of the argument.
+    obj = cls('read(123, a_namelist)')
+    assert str(obj) == "READ(123, a_namelist)"
+
+
 def test_Write_Stmt(): # R911
 
         cls = Write_Stmt
