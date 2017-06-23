@@ -2545,12 +2545,12 @@ def test_Read_Stmt(): # R910
     cls = Read_Stmt
     obj = cls('read(123)')
     assert isinstance(obj, cls), `obj`
-    assert str(obj) == 'READ(UNIT = 123)'
+    assert str(obj) == 'READ(123)'
 
     obj = cls('read(123) a')
-    assert str(obj) == 'READ(UNIT = 123) a'
+    assert str(obj) == 'READ(123) a'
     obj = cls('read(123) a(  2)')
-    assert str(obj) == 'READ(UNIT = 123) a(2)'
+    assert str(obj) == 'READ(123) a(2)'
 
     obj = cls('read*, a(  2), b')
     assert str(obj) == 'READ *, a(2), b'
@@ -2563,12 +2563,23 @@ def test_Read_Stmt(): # R910
 
 
 def test_Write_Stmt(): # R911
+    ''' Tests for various forms of Write statement '''
+    cls = Write_Stmt
+    obj = cls('write (123)"hey"')
+    assert isinstance(obj, cls), `obj`
+    assert str(obj) == 'WRITE(123) "hey"'
+    assert (repr(obj) == "Write_Stmt(Io_Control_Spec_List(',', "
+            "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
+            "Char_Literal_Constant('\"hey\"', None))")
 
-        cls = Write_Stmt
-        a = cls('write (123)"hey"')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'WRITE(UNIT = 123) "hey"')
-        assert_equal(repr(a),'Write_Stmt(Io_Control_Spec_List(\',\', (Io_Control_Spec(\'UNIT\', Int_Literal_Constant(\'123\', None)),)), Char_Literal_Constant(\'"hey"\', None))')
+    obj = cls('WRITE (*,"(I3)") my_int')
+    assert isinstance(obj, cls), `obj`
+    assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
+
+    obj = cls('WRITE (*,namtest)')
+    assert isinstance(obj, cls), `obj`
+    assert str(obj) == 'WRITE(*, namtest)'
+
 
 def test_Print_Stmt(): # R912
 
@@ -2590,31 +2601,40 @@ def test_Io_Control_Spec(): # R913
         assert_equal(str(a),'END = 123')
         assert_equal(repr(a),"Io_Control_Spec('END', Label('123'))")
 
+
 def test_Io_Control_Spec_List(): # R913-list
 
         cls = Io_Control_Spec_List
         a = cls('end=123')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'END = 123')
-        assert_equal(repr(a),"Io_Control_Spec_List(',', (Io_Control_Spec('END', Label('123')),))")
+        assert isinstance(a, cls), `a`
+        assert str(a) == 'END = 123'
+        assert repr(a) == \
+            "Io_Control_Spec_List(',', (Io_Control_Spec('END', Label('123')),))"
 
-        a = cls('123')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'UNIT = 123')
+        obj = cls('123')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '123'
 
-        a = cls('123,*')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'UNIT = 123, FMT = *')
+        obj = cls('123,*')
+        assert isinstance(obj, cls), `obj`
+        assert str(obj) == '123, FMT = *'
 
-        a = cls('123,fmt=a')
-        assert isinstance(a, cls),`a`
-        assert_equal(str(a),'UNIT = 123, FMT = a')
+        obj = cls('123,fmt=a')
+        assert isinstance(obj, cls),`obj`
+        assert str(obj) == '123, FMT = a'
 
-        if 0:
-            # see todo note in Io_Control_Spec_List
-            a = cls('123,a')
-            assert isinstance(a, cls),`a`
-            assert_equal(str(a),'UNIT = 123, NML = a')
+        obj = cls('123,nml=a')
+        assert isinstance(obj, cls),`obj`
+        assert str(obj) == '123, NML = a'
+
+        obj = cls('123, "(I3)"')
+        assert isinstance(obj, cls),`obj`
+        assert str(obj) == '123, FMT = "(I3)"'
+
+        obj = cls('123,a')
+        assert isinstance(obj, cls), `obj`
+        assert_equal(str(obj), '123, a')
+
 
 def test_Format(): # R914
 
