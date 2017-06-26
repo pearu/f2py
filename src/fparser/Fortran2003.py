@@ -536,13 +536,10 @@ class KeywordValueBase(Base):
             return
         if isinstance(lhs_cls, (list, tuple)):
             for s in lhs_cls:
-                try:
-                    obj = KeywordValueBase.match(s, rhs_cls, string,
-                                                 require_lhs=require_lhs,
-                                                 upper_lhs=upper_lhs)
-                except NoMatchError:
-                    obj = None
-                if obj is not None:
+                obj = KeywordValueBase.match(s, rhs_cls, string,
+                                             require_lhs=require_lhs,
+                                             upper_lhs=upper_lhs)
+                if obj:
                     return obj
             return obj
         if "=" in string:
