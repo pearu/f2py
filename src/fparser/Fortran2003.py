@@ -5454,7 +5454,7 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
         char = line[0].upper()
         # No parentheses therefore first argument must be a format
         # specifier (either a string or a line/lable number
-        if 'A'<= char <= 'Z' or char == '_':
+        if 'A' <= char <= 'Z' or char == '_':
             return
         line, repmap = string_replace_map(line.lstrip())
         # There must be a comma betwee the format specifier and the following
@@ -5569,7 +5569,7 @@ class Io_Control_Spec_List(SequenceBase): # R913-list
                 # a namelist specifier. However, if it is a character
                 # constant or "*" then it must be a Format spec and we can
                 # prepend "FMT=" to it.
-                spec =  spec.lstrip().rstrip()
+                spec = spec.lstrip().rstrip()
                 if Char_Literal_Constant.match(spec) or \
                    StringBase.match("*", spec):
                     spec = "FMT={0}".format(spec)
@@ -5609,24 +5609,22 @@ class Io_Control_Spec(KeywordValueBase): # R913
                  'Iomsg_Variable', 'Scalar_Int_Expr']
     @staticmethod
     def match(string):
-        for (k, v) in [\
-            ('UNIT', Io_Unit),
-            ('FMT', Format),
-            ('NML', Namelist_Group_Name)]:
+        for (k, v) in [('UNIT', Io_Unit),
+                       ('FMT', Format),
+                       ('NML', Namelist_Group_Name)]:
             obj = KeywordValueBase.match(k, v, string,
                                          require_lhs=False,
                                          upper_lhs=True)
             if obj:
                 return obj
 
-        for (k, v) in [\
-            (['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD', 'ROUND', 'SIGN'],
-             Scalar_Default_Char_Expr),
-            ('ASYNCHRONOUS', Scalar_Char_Initialization_Expr),
-            (['END','EOR','ERR'], Label),
-            (['ID','IOSTAT','SIZE'], Scalar_Int_Variable),
-            ('IOMSG', Iomsg_Variable),
-            (['POS', 'REC'], Scalar_Int_Expr)]:
+        for (k, v) in [(['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
+                         'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
+                       ('ASYNCHRONOUS', Scalar_Char_Initialization_Expr),
+                       (['END', 'EOR', 'ERR'], Label),
+                       (['ID', 'IOSTAT', 'SIZE'], Scalar_Int_Variable),
+                       ('IOMSG', Iomsg_Variable),
+                       (['POS', 'REC'], Scalar_Int_Expr)]:
             obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
             if obj:
                 return obj
