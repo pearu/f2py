@@ -69,3 +69,23 @@ def test_read_stmt_errors():
     # Missing value/variable after comma
     obj = Read_Stmt.match("READ 13, ")
     assert obj is None
+
+
+def test_io_ctrl_spec_list_errs():
+    ''' Unit tests for the Io_Control_Spec_List class to ensure it
+    rejects invalid input '''
+    from fparser.Fortran2003 import Io_Control_Spec_List
+    # Positional arg following named arg
+    obj = Io_Control_Spec_List.match("unit=23, namvar")
+    assert obj is None
+
+
+def test_io_ctrl_spec_errs():
+    ''' Unit tests for the Io_Control_Spec class to ensure it
+    rejects invalid input '''
+    from fparser.Fortran2003 import Io_Control_Spec
+    # An argument with a name that is not valid within an IO control
+    # description
+    obj = Io_Control_Spec.match("not_unit=23")
+    assert obj is None
+

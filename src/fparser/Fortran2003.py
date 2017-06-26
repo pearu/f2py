@@ -5548,8 +5548,6 @@ class Io_Control_Spec_List(SequenceBase): # R913-list
     def match(string):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
-        if not splitted:
-            return
         lst = []
         unit_is_positional = False
         for idx in range(len(splitted)):
@@ -5615,13 +5613,10 @@ class Io_Control_Spec(KeywordValueBase): # R913
             ('UNIT', Io_Unit),
             ('FMT', Format),
             ('NML', Namelist_Group_Name)]:
-            try:
-                obj = KeywordValueBase.match(k, v, string,
-                                             require_lhs=False,
-                                             upper_lhs=True)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
+            obj = KeywordValueBase.match(k, v, string,
+                                         require_lhs=False,
+                                         upper_lhs=True)
+            if obj:
                 return obj
 
         for (k, v) in [\
@@ -5632,11 +5627,8 @@ class Io_Control_Spec(KeywordValueBase): # R913
             (['ID','IOSTAT','SIZE'], Scalar_Int_Variable),
             ('IOMSG', Iomsg_Variable),
             (['POS', 'REC'], Scalar_Int_Expr)]:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
+            obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
+            if obj:
                 return obj
         return
 
