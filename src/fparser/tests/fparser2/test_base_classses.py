@@ -53,3 +53,19 @@ def test_read_stmt_errors():
     # Missing closing parenthesis
     obj = Read_Stmt.match("READ(unit=23")
     assert obj is None
+    # Missing arguments
+    obj = Read_Stmt.match("READ()")
+    assert obj is None
+    obj = Read_Stmt.match("READ")
+    assert obj is None
+    # Wrong argument type
+    obj = Read_Stmt.match("READ a_var")
+    assert obj is None
+    obj = Read_Stmt.match("READ 13")
+    assert obj is None
+    # Missing comma
+    obj = Read_Stmt.match("READ * a_var")
+    assert obj is None
+    # Missing value/variable after comma
+    obj = Read_Stmt.match("READ 13, ")
+    assert obj is None

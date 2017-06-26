@@ -2554,7 +2554,10 @@ def test_Read_Stmt(): # R910
 
     obj = cls('read*, a(  2), b')
     assert str(obj) == 'READ *, a(2), b'
-    
+    # With format specified by label number
+    obj = cls("READ 13, a(2)")
+    assert str(obj) == 'READ 13, a(2)'
+
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
     # without determining the actual type of the argument.
