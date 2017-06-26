@@ -40,5 +40,7 @@ def test_keywordvaluebase():
     from fparser.Fortran2003 import KeywordValueBase, Io_Unit
     lhs_cls = 'UNIT'
     rhs_cls = Io_Unit
-    obj = KeywordValueBase.match(lhs_cls, rhs_cls, "gurgle")
-    assert obj
+    obj = KeywordValueBase.match(lhs_cls, rhs_cls, "  ", require_lhs=False)
+    assert obj is None
+    obj = KeywordValueBase.match(lhs_cls, rhs_cls, " = 36 ",)
+    assert obj is None
