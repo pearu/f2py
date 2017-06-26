@@ -44,3 +44,12 @@ def test_keywordvaluebase():
     assert obj is None
     obj = KeywordValueBase.match(lhs_cls, rhs_cls, " = 36 ",)
     assert obj is None
+
+
+def test_read_stmt_errors():
+    ''' Unit tests for the Read class to ensure it rejects invalid
+    inputs '''
+    from fparser.Fortran2003 import Read_Stmt
+    # Missing closing parenthesis
+    obj = Read_Stmt.match("READ(unit=23")
+    assert obj is None
