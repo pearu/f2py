@@ -5453,7 +5453,7 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
             return
         char = line[0].upper()
         # No parentheses therefore first argument must be a format
-        # specifier (either a string or a line/lable number
+        # specifier (either a string or a line/label number
         if 'A' <= char <= 'Z' or char == '_':
             return
         line, repmap = string_replace_map(line.lstrip())
