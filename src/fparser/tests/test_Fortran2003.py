@@ -2554,15 +2554,26 @@ def test_read_stmt(): # R910
 
     inst = rcls('read*, a(  2), b')
     assert str(inst) == 'READ *, a(2), b'
+    assert repr(inst) == (
+        "Read_Stmt(None, Format('*'), Output_Item_List(',', (Part_Ref("
+        "Name('a'), Int_Literal_Constant('2', None)), Name('b'))))")
+
     # With format specified by label number
     inst = rcls("READ 13, a(2)")
     assert str(inst) == 'READ 13, a(2)'
+    print repr(inst)
+    assert repr(inst) == ("Read_Stmt(None, Label('13'), Part_Ref(Name('a'), "
+                          "Int_Literal_Constant('2', None)))")
 
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
     # without determining the actual type of the argument.
     inst = rcls('read(123, a_namelist_or_format)')
     assert str(inst) == "READ(123, a_namelist_or_format)"
+    assert repr(inst) == ("Read_Stmt(Io_Control_Spec_List(',', "
+                          "(Io_Control_Spec(None, Int_Literal_Constant('123', "
+                          "None)), Io_Control_Spec(None, "
+                          "Name('a_namelist_or_format')))), None, None)")
 
 
 def test_write_stmt(): # R911
@@ -2571,17 +2582,26 @@ def test_write_stmt(): # R911
     inst = wcls('write (123)"hey"')
     assert isinstance(inst, wcls), `inst`
     assert str(inst) == 'WRITE(123) "hey"'
-    assert (repr(inst) == "Write_Stmt(Io_Control_Spec_List(',', "
-            "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
-            "Char_Literal_Constant('\"hey\"', None))")
+    assert repr(inst) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
+        "Char_Literal_Constant('\"hey\"', None))")
 
     inst = wcls('WRITE (*,"(I3)") my_int')
     assert isinstance(inst, wcls), `inst`
     assert str(inst) == 'WRITE(*, FMT = "(I3)") my_int'
+    assert repr(inst) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec('FMT', "
+        "Char_Literal_Constant('\"(I3)\"', None)))), Name('my_int'))")
 
     inst = wcls('WRITE (*,namtest)')
     assert isinstance(inst, wcls), `inst`
     assert str(inst) == 'WRITE(*, namtest)'
+    assert repr(inst) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
+        "Name('namtest')))), None)")
 
 
 def test_Print_Stmt(): # R912
@@ -2606,7 +2626,7 @@ def test_Io_Control_Spec(): # R913
 
 
 def test_Io_Control_Spec_List(): # R913-list
-    ''' Test that we correctly parser and then generate various
+    ''' Test that we correctly parse and then generate various
     forms of IO-control specification lists '''
     iocls = Io_Control_Spec_List
     inst = iocls('end=123')
@@ -2622,14 +2642,23 @@ def test_Io_Control_Spec_List(): # R913-list
     inst = iocls('123,*')
     assert isinstance(inst, iocls), `inst`
     assert str(inst) == '123, FMT = *'
+    assert repr(inst) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+                          "Int_Literal_Constant('123', None)), "
+                          "Io_Control_Spec('FMT', Format('*'))))")
 
     inst = iocls('123,fmt=a')
     assert isinstance(inst, iocls),`inst`
     assert str(inst) == '123, FMT = a'
+    assert repr(inst) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+                          "Int_Literal_Constant('123', None)), "
+                          "Io_Control_Spec('FMT', Name('a'))))")
 
     inst = iocls('123,nml=a')
     assert isinstance(inst, iocls),`inst`
     assert str(inst) == '123, NML = a'
+    assert repr(inst) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+                          "Int_Literal_Constant('123', None)), "
+                          "Io_Control_Spec('NML', Name('a'))))")
 
     inst = iocls('123, "(I3)"')
     assert isinstance(inst, iocls),`inst`

@@ -35,8 +35,9 @@
 ''' Module containing py.test tests for fparser2 base classes '''
 
 
-def test_keywordvaluebase():
-    ''' Unit tests for the KeywordValueBase class '''
+def test_keywordvaluebase_errors():
+    ''' Unit tests for the KeywordValueBase class to check that it rejects
+    invalid input '''
     from fparser.Fortran2003 import KeywordValueBase, Io_Unit
     lhs_cls = 'UNIT'
     rhs_cls = Io_Unit
@@ -71,7 +72,7 @@ def test_read_stmt_errors():
     assert obj is None
 
 
-def test_io_ctrl_spec_list_errs():
+def test_io_ctrl_spec_list_errors():
     ''' Unit tests for the Io_Control_Spec_List class to ensure it
     rejects invalid input '''
     from fparser.Fortran2003 import Io_Control_Spec_List
@@ -80,7 +81,7 @@ def test_io_ctrl_spec_list_errs():
     assert obj is None
 
 
-def test_io_ctrl_spec_errs():
+def test_io_ctrl_spec_errors():
     ''' Unit tests for the Io_Control_Spec class to ensure it
     rejects invalid input '''
     from fparser.Fortran2003 import Io_Control_Spec
