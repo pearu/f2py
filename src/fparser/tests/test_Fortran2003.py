@@ -2561,8 +2561,8 @@ def test_read_stmt(): # R910
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
     # without determining the actual type of the argument.
-    inst = rcls('read(123, a_namelist)')
-    assert str(inst) == "READ(123, a_namelist)"
+    inst = rcls('read(123, a_namelist_or_format)')
+    assert str(inst) == "READ(123, a_namelist_or_format)"
 
 
 def test_write_stmt(): # R911
