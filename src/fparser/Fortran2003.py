@@ -96,6 +96,7 @@ def show_result(func):
         return r
     return new_func
 
+
 class Base(object):
     """ Base class for Fortran 2003 syntax rules.
 
@@ -523,37 +524,48 @@ class SeparatorBase(Base):
             s += ' %s' % (self.items[1])
         return s
 
+
 class KeywordValueBase(Base):
     """
 ::
     <keyword-value-base> = [ <lhs> = ] <rhs>
     """
-    def match(lhs_cls, rhs_cls, string, require_lhs = True, upper_lhs = False):
-        if require_lhs and '=' not in string: return
+    @staticmethod
+    def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
+        if require_lhs and '=' not in string:
+            return
         if isinstance(lhs_cls, (list, tuple)):
             for s in lhs_cls:
-                try:
-                    obj = KeywordValueBase.match(s, rhs_cls, string, require_lhs=require_lhs, upper_lhs=upper_lhs)
-                except NoMatchError:
-                    obj = None
-                if obj is not None: return obj
+                obj = KeywordValueBase.match(s, rhs_cls, string,
+                                             require_lhs=require_lhs,
+                                             upper_lhs=upper_lhs)
+                if obj:
+                    return obj
             return obj
-        lhs,rhs = string.split('=',1)
-        lhs = lhs.rstrip()
+        if "=" in string:
+            lhs, rhs = string.split('=', 1)
+            lhs = lhs.rstrip()
+        else:
+            lhs = None
+            rhs = string.rstrip()
         rhs = rhs.lstrip()
-        if not rhs: return
+        if not rhs:
+            return
         if not lhs:
-            if require_lhs: return
+            if require_lhs:
+                return
             return None, rhs_cls(rhs)
         if isinstance(lhs_cls, str):
             if upper_lhs:
                 lhs = lhs.upper()
-            if lhs_cls!=lhs: return
+            if lhs_cls != lhs:
+                return
             return lhs, rhs_cls(rhs)
-        return lhs_cls(lhs),rhs_cls(rhs)
-    match = staticmethod(match)
+        return lhs_cls(lhs), rhs_cls(rhs)
+
     def tostr(self):
-        if self.items[0] is None: return str(self.items[1])
+        if self.items[0] is None:
+            return str(self.items[1])
         return '%s = %s' % tuple(self.items)
 
 class BracketBase(Base):
@@ -5407,6 +5419,7 @@ class Close_Spec(KeywordValueBase): # R909
         return 'UNIT', File_Unit_Number(string)
     match = staticmethod(match)
 
+
 class Read_Stmt(StmtBase): # R910
     """
 :F03R:`910`::
@@ -5421,30 +5434,43 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
     use_names = ['Io_Control_Spec_List', 'Input_Item_List', 'Format']
     @staticmethod
     def match(string):
-        if string[:4].upper()!='READ': return
+        if string[:4].upper() != 'READ':
+            return
         line = string[4:].lstrip()
         if line.startswith('('):
             line, repmap = string_replace_map(line)
-            i = line.find(')')
-            if i==-1: return
-            l = line[1:i].strip()
-            if not l: return
-            if i==len(line)-1:
-                return Io_Control_Spec_List(repmap(l)),None,None
-            return Io_Control_Spec_List(repmap(l)), None, Input_Item_List(repmap(line[i+1:].lstrip()))
-        if not line: return
-        c = line[0].upper()
-        if 'A'<=c<='Z' or c=='_' or '0'<=c<='9': return
+            idx = line.find(')')
+            if idx == -1:
+                return
+            trimline = line[1:idx].strip()
+            if not trimline:
+                return
+            if idx == len(line) - 1:
+                return Io_Control_Spec_List(repmap(trimline)), None, None
+            return Io_Control_Spec_List(repmap(trimline)), None, \
+                Input_Item_List(repmap(line[idx+1:].lstrip()))
+        if not line:
+            return
+        char = line[0].upper()
+        # No parentheses therefore first argument must be a format
+        # specifier (either a string or a line/label number
+        if 'A' <= char <= 'Z' or char == '_':
+            return
         line, repmap = string_replace_map(line.lstrip())
-        i = line.find(',')
-        if i==-1: return Format(repmap(line)),None,None
-        l = repmap(line[i+1:].lstrip())
-        if not l: return
-        return None, Format(repmap(line[:i].rstrip())), Output_Item_List(l)
+        # There must be a comma betwee the format specifier and the following
+        # list of values/variables
+        idx = line.find(',')
+        if idx == -1:
+            return None
+        trimline = repmap(line[idx+1:].lstrip())
+        if not trimline:
+            return
+        return (None, Format(repmap(line[:idx].rstrip())),
+                Output_Item_List(trimline))
     
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None,`self.items`
+            assert self.items[1] is None, `self.items`
             if self.items[2] is None:
                 return 'READ(%s)' % (self.items[0])
             return 'READ(%s) %s' % (self.items[0], self.items[2])
@@ -5506,9 +5532,11 @@ items : (Format, Output_Item_List)
         if not l: return
         return Format(repmap(line[:i].rstrip())), Output_Item_List(l)
     match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None: return 'PRINT %s' % (self.items[0])
         return 'PRINT %s, %s' % tuple(self.items)
+
 
 class Io_Control_Spec_List(SequenceBase): # R913-list
     """
@@ -5516,32 +5544,39 @@ class Io_Control_Spec_List(SequenceBase): # R913-list
     """
     subclass_names = []
     use_names = ['Io_Control_Spec']
+    @staticmethod
     def match(string):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
-        if not splitted: return
         lst = []
-        for i in range(len(splitted)):
-            p = splitted[i].strip()
-            if i==0:
-                if '=' not in p: p = 'UNIT=%s' % (repmap(p))
-                else: p = repmap(p)
-            elif i==1:
-                if '=' not in p:
-                    p = repmap(p)
-                    try:
-                        f = Format(p)
-                        # todo: make sure that f is char-expr, if not, raise NoMatchError
-                        p = 'FMT=%s' % (Format(p))
-                    except NoMatchError:
-                        p = 'NML=%s' % (Namelist_Group_Name(p))
-                else:
-                    p = repmap(p)
+        unit_is_positional = False
+        for idx in range(len(splitted)):
+            spec = splitted[idx].strip()
+            spec = repmap(spec)
+            if idx == 0 and "=" not in spec:
+                # Must be a unit number. However, we do not prepend "UNIT="
+                # to it in case the following Io_Control_Spec is positional
+                # (and therefore either a Format or Namelist spec).
+                lst.append(Io_Control_Spec(spec))
+                unit_is_positional = True
+            elif idx == 1 and "=" not in spec:
+                if not unit_is_positional:
+                    # Cannot have a positional argument following a
+                    # named argument
+                    return
+                # Without knowing the type of the variable named in spec
+                # we have no way of knowing whether this is a format or
+                # a namelist specifier. However, if it is a character
+                # constant or "*" then it must be a Format spec and we can
+                # prepend "FMT=" to it.
+                spec = spec.lstrip().rstrip()
+                if Char_Literal_Constant.match(spec) or \
+                   StringBase.match("*", spec):
+                    spec = "FMT={0}".format(spec)
+                lst.append(Io_Control_Spec(spec))
             else:
-                p = repmap(p)
-            lst.append(Io_Control_Spec(p))
+                lst.append(Io_Control_Spec(spec))
         return ',', tuple(lst)
-    match = staticmethod(match)
 
 class Io_Control_Spec(KeywordValueBase): # R913
     """
@@ -5567,28 +5602,34 @@ class Io_Control_Spec(KeywordValueBase): # R913
                         | SIZE = <scalar-int-variable>
     """
     subclass_names = []
-    use_names = ['Io_Unit', 'Format', 'Namelist_Group_Name', 'Scalar_Default_Char_Expr',
-                 'Scalar_Char_Initialization_Expr', 'Label', 'Scalar_Int_Variable',
+    use_names = ['Io_Unit', 'Format', 'Namelist_Group_Name',
+                 'Scalar_Default_Char_Expr',
+                 'Scalar_Char_Initialization_Expr', 'Label',
+                 'Scalar_Int_Variable',
                  'Iomsg_Variable', 'Scalar_Int_Expr']
+    @staticmethod
     def match(string):
-        for (k,v) in [\
-            (['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD', 'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
-            ('ASYNCHRONOUS', Scalar_Char_Initialization_Expr),
-            (['END','EOR','ERR'], Label),
-            (['ID','IOSTAT','SIZE'], Scalar_Int_Variable),
-            ('IOMSG', Iomsg_Variable),
-            (['POS', 'REC'], Scalar_Int_Expr),
-            ('UNIT', Io_Unit),
-            ('FMT', Format),
-            ('NML', Namelist_Group_Name)
-            ]:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs = True)
-            except NoMatchError:
-                obj = None
-            if obj is not None: return obj
+        for (k, v) in [('UNIT', Io_Unit),
+                       ('FMT', Format),
+                       ('NML', Namelist_Group_Name)]:
+            obj = KeywordValueBase.match(k, v, string,
+                                         require_lhs=False,
+                                         upper_lhs=True)
+            if obj:
+                return obj
+
+        for (k, v) in [(['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
+                         'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
+                       ('ASYNCHRONOUS', Scalar_Char_Initialization_Expr),
+                       (['END', 'EOR', 'ERR'], Label),
+                       (['ID', 'IOSTAT', 'SIZE'], Scalar_Int_Variable),
+                       ('IOMSG', Iomsg_Variable),
+                       (['POS', 'REC'], Scalar_Int_Expr)]:
+            obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
+            if obj:
+                return obj
         return
-    match = staticmethod(match)
+
 
 class Format(StringBase): # R914
     """
