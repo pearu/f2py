@@ -4,6 +4,9 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+06/09/2017 issue #34 pr #37 Fix a format statement parsing
+	   bug in fparser2
+
 ## Release 0.0.5 (20/06/2017) ##
 
 20/06/2017 issue #30 pr #31 Extend fparser1 to support
