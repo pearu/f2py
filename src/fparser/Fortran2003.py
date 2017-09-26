@@ -6011,6 +6011,7 @@ items : (str, instance)
                  'Scalar_Default_Logical_Variable', 'Scalar_Int_Variable',
                  'Scalar_Int_Expr', 'Label', 'Iomsg_Variable']
 
+    @staticmethod
     def match(string):
         for (keyword, value) in [
                 (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
@@ -6027,15 +6028,11 @@ items : (str, instance)
                 ('IOMSG', Iomsg_Variable),
                 ('FILE', File_Name_Expr),
                 ('UNIT', File_Unit_Number)]:
-            try:
-                obj = KeywordValueBase.match(keyword, value, string,
-                                             upper_lhs=True)
-            except NoMatchError:
-                obj = None
+            obj = KeywordValueBase.match(keyword, value, string,
+                                         upper_lhs=True)
             if obj is not None:
                 return obj
         return 'UNIT', File_Unit_Number(string)
-    match = staticmethod(match)
 
 ###############################################################################
 ############################### SECTION 10 ####################################
