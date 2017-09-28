@@ -5960,7 +5960,8 @@ items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
             return 'INQUIRE(IOLENGTH=%s) %s' % (self.items[1:])
         return 'INQUIRE(%s)' % (self.items[0])
 
-class Inquire_Spec(KeywordValueBase): # R930
+
+class Inquire_Spec(KeywordValueBase):  # R930
     """
 :F03R:`930`::
     <inquire-spec> = [ UNIT = ] <file-unit-number>
@@ -6005,30 +6006,33 @@ Attributes
 items : (str, instance)
     """
     subclass_names = []
-    use_names = ['File_Unit_Number', 'File_Name_Expr', 'Scalar_Default_Char_Variable',
-                 'Scalar_Default_Logical_Variable', 'Scalar_Int_Variable', 'Scalar_Int_Expr',
-                 'Label', 'Iomsg_Variable']
+    use_names = ['File_Unit_Number', 'File_Name_Expr',
+                 'Scalar_Default_Char_Variable',
+                 'Scalar_Default_Logical_Variable', 'Scalar_Int_Variable',
+                 'Scalar_Int_Expr', 'Label', 'Iomsg_Variable']
+
+    @staticmethod
     def match(string):
-        for (k,v) in [\
-            (['ACCESS','ACTION','ASYNCHRONOUS', 'BLANK', 'DECIMAL', 'DELIM',
-              'DIRECT','ENCODING','FORM','NAME','PAD', 'POSITION','READ','READWRITE',
-              'ROUND', 'SEQUENTIAL', 'SIGN','STREAM','UNFORMATTED','WRITE'],
-             Scalar_Default_Char_Variable),
-            ('ERR', Label),
-            (['EXIST','NAMED','PENDING'], Scalar_Default_Logical_Variable),
-            ('ID', Scalar_Int_Expr),
-            (['IOSTAT','NEXTREC','NUMBER','POS','RECL','SIZE'], Scalar_Int_Variable),
-            ('IOMSG', Iomsg_Variable),
-            ('FILE', File_Name_Expr),
-            ('UNIT', File_Unit_Number),
-            ]:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs = True)
-            except NoMatchError:
-                obj = None
-            if obj is not None: return obj
+        for (keyword, value) in [
+                (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
+                  'DELIM', 'DIRECT', 'ENCODING', 'FORM', 'NAME', 'PAD',
+                  'POSITION', 'READ', 'READWRITE', 'ROUND', 'SEQUENTIAL',
+                  'SIGN', 'STREAM', 'UNFORMATTED', 'WRITE'],
+                 Scalar_Default_Char_Variable),
+                ('ERR', Label),
+                (['EXIST', 'NAMED', 'PENDING', 'OPENED'],
+                 Scalar_Default_Logical_Variable),
+                ('ID', Scalar_Int_Expr),
+                (['IOSTAT', 'NEXTREC', 'NUMBER', 'POS', 'RECL', 'SIZE'],
+                 Scalar_Int_Variable),
+                ('IOMSG', Iomsg_Variable),
+                ('FILE', File_Name_Expr),
+                ('UNIT', File_Unit_Number)]:
+            obj = KeywordValueBase.match(keyword, value, string,
+                                         upper_lhs=True)
+            if obj is not None:
+                return obj
         return 'UNIT', File_Unit_Number(string)
-    match = staticmethod(match)
 
 ###############################################################################
 ############################### SECTION 10 ####################################

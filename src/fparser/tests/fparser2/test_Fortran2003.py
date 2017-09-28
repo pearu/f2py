@@ -2795,31 +2795,49 @@ def test_Flush_Spec(): # R928
     a = cls('iostat=a')
     assert_equal(str(a),'IOSTAT = a')
 
-def test_Inquire_Stmt(): # R929
 
+def test_Inquire_Stmt():  # R929
+    ''' Tests for the Inquire statement '''
     cls = Inquire_Stmt
-    a = cls('inquire(1,file=a)')
-    assert isinstance(a, cls),`a`
-    assert_equal(str(a),'INQUIRE(UNIT = 1, FILE = a)')
-    a = cls('inquire(iolength=n) a, b')
-    assert_equal(str(a),'INQUIRE(IOLENGTH=n) a, b')
+    inq = cls('inquire(1,file=a)')
+    assert isinstance(inq, cls), repr(inq)
+    assert str(inq) == 'INQUIRE(UNIT = 1, FILE = a)'
+    inq = cls('inquire(iolength=n) a, b')
+    assert str(inq) == 'INQUIRE(IOLENGTH=n) a, b'
+    inq = cls('inquire(unit=get_unit, opened=llopn)')
+    assert isinstance(inq, cls), repr(inq)
+    assert str(inq) == 'INQUIRE(UNIT = get_unit, OPENED = llopn)'
 
-def test_Inquire_Spec(): # R930
 
+def test_Inquire_Spec():  # R930
+    ''' Test that we recognise the various possible forms of
+    inquire list '''
     cls = Inquire_Spec
-    a = cls('1')
-    assert isinstance(a, cls),`a`
-    assert_equal(str(a),'UNIT = 1')
-    a = cls('file=fn')
-    assert isinstance(a, cls),`a`
-    assert_equal(str(a),'FILE = fn')
+    obj = cls('1')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'UNIT = 1')
+    obj = cls('file=fn')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'FILE = fn')
 
-    a = cls('access=a')
-    assert isinstance(a, cls),`a`
-    assert_equal(str(a),'ACCESS = a')
+    obj = cls('access=a')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'ACCESS = a')
+
+    obj = cls('opened=a')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'OPENED = a')
+
+    obj = cls('sequential=a')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'SEQUENTIAL = a')
+
+    obj = cls('direct=a')
+    assert isinstance(obj, cls), repr(obj)
+    assert_equal(str(obj), 'DIRECT = a')
 
 
-    
+
 ###############################################################################
 ############################### SECTION 10 ####################################
 ###############################################################################
