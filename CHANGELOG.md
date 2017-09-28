@@ -4,6 +4,9 @@ Original code by Pearu Peterson.
 Modifications by Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
 
+28/09/2017 issue #35 pr #39 add support for the 'opened' option
+	   in the inquire statement in fparser2.
+
 06/09/2017 issue #34 pr #37 Fix a format statement parsing
 	   bug in fparser2
 
