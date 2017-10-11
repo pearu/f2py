@@ -269,7 +269,7 @@ def test_nullify():
 def test_use():
     assert_equal(parse(Use, 'use a'), 'USE a')
     assert_equal(parse(Use, 'use :: a'), 'USE a')
-    assert_equal(parse(Use, 'use, intrinsic:: a'), 'USE INTRINSIC :: a')
+    assert_equal(parse(Use, 'use, intrinsic:: a'), 'USE, INTRINSIC :: a')
     assert_equal(parse(Use, 'use :: a ,only: b'), 'USE a, ONLY: b')
     assert_equal(parse(Use, 'use :: a , only: b=>c'), 'USE a, ONLY: b=>c')
     assert_equal(parse(Use, 'use :: a , b=>c'), 'USE a, b=>c')

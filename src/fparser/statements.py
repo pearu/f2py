@@ -979,7 +979,7 @@ class Use(Statement):
         tab = self.get_indent_tab(isfix=isfix)
         s = 'USE'
         if self.nature:
-            s += ' ' + self.nature + ' ::'
+            s += ' , ' + self.nature + ' ::'
         s += ' ' + self.name
         if self.isonly:
             s += ', ONLY:'
