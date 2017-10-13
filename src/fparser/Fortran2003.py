@@ -577,7 +577,7 @@ class BracketBase(Base):
     def match(brackets, cls, string, require_cls=True):
         ''' The generic match method for all types of bracketed
         expressions '''
-        bracket_len = len(brackets)/2
+        bracket_len = len(brackets)//2
         left = brackets[:bracket_len]
         right = brackets[-bracket_len:]
 
