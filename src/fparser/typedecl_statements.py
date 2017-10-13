@@ -563,7 +563,7 @@ class Implicit(Statement):
     """
     match = re.compile(r'implicit\b',re.I).match
 
-    letters = string.lowercase
+    letters = string.ascii_lowercase
 
     def process_item(self):
         line = self.item.get_line()[8:].lstrip()
