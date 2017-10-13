@@ -74,9 +74,9 @@ __all__ = ['Integer', 'Real', 'DoublePrecision', 'Complex', 'DoubleComplex',
 
 import re
 import string
-from base_classes import Statement, BeginStatement, EndStatement,\
+from .base_classes import Statement, BeginStatement, EndStatement,\
      AttributeHolder, Variable
-from utils import split_comma, AnalyzeError, name_re, is_entity_decl, is_name, CHAR_BIT, parse_array_spec
+from .utils import split_comma, AnalyzeError, name_re, is_entity_decl, is_name, CHAR_BIT, parse_array_spec
 
 # Intrinsic type specification statements
 
@@ -145,7 +145,7 @@ class TypeDeclarationStatement(Statement):
         apply_map = item.apply_map
         clsname = self.__class__.__name__.lower()
         line = item.get_line()
-        from block_statements import Function
+        from .block_statements import Function
 
         if not line.lower().startswith(clsname):
             i = 0
@@ -158,7 +158,7 @@ class TypeDeclarationStatement(Statement):
                     break
             line = line[:i].replace(' ','') + line[i:]
 
-        assert line.lower().startswith(clsname),`line,clsname`
+        assert line.lower().startswith(clsname),repr((line,clsname))
         line = line[len(clsname):].lstrip()
 
         if line.startswith('('):
@@ -221,12 +221,12 @@ class TypeDeclarationStatement(Statement):
 
         if isinstance(self.parent, Function) \
                and self.parent.name in self.entity_decls:
-            assert self.parent.typedecl is None,`self.parent.typedecl`
+            assert self.parent.typedecl is None,repr(self.parent.typedecl)
             self.parent.typedecl = self
             self.ignore = True
         if isinstance(self, Type):
             self.name = self.selector[1].lower()
-            assert is_name(self.name),`self.name`
+            assert is_name(self.name),repr(self.name)
         else:
             self.name = clsname
         return
@@ -238,14 +238,14 @@ class TypeDeclarationStatement(Statement):
         if selector.startswith('*'):
             length = selector[1:].lstrip()
         else:
-            assert selector[0]+selector[-1]=='()',`selector`
+            assert selector[0]+selector[-1]=='()',repr(selector)
             l = selector[1:-1].strip()
             if l.lower().startswith('kind'):
                 l = l[4:].lstrip()
                 if l[0]+l[-1]=='()':
                     kind = 'kind'+l
                 else:
-                    assert l.startswith('='),`l`
+                    assert l.startswith('='),repr(l)
                     kind = l[1:].lstrip()
             else:
                 kind = l
@@ -269,13 +269,13 @@ class TypeDeclarationStatement(Statement):
             l = selector[1:].lstrip()
             if l.startswith('('):
                 if l.endswith(','): l = l[:-1].rstrip()
-                assert l.endswith(')'),`l`
+                assert l.endswith(')'),repr(l)
                 l = l[1:-1].strip()
                 if l.lower().startswith('len'):
                     l = l[3:].lstrip()[1:].lstrip()
             kind=''
         else:
-            assert selector[0]+selector[-1]=='()',`selector`
+            assert selector[0]+selector[-1]=='()',repr(selector)
             l = split_comma(selector[1:-1].strip(), self.item)
             if len(l)==1:
                 l = l[0]
@@ -287,18 +287,18 @@ class TypeDeclarationStatement(Statement):
                 else:
                     kind = ''
             else:
-                assert len(l)==2,`l`
+                assert len(l)==2,repr(l)
                 key0, value0 = self._split_char_selector(l[0])
                 key1, value1 = self._split_char_selector(l[1])
                 if key0=='len':
-                    assert key1 in [None, 'kind'],`key1`
+                    assert key1 in [None, 'kind'],repr(key1)
                     l,kind = value0, value1
                 elif key0=='kind':
-                    assert key1=='len',`key1`
+                    assert key1=='len',repr(key1)
                     l,kind = value1, value0
                 else:
-                    assert key0 is None,`key0`
-                    assert key1 in [None,'kind'],`key1`
+                    assert key0 is None,repr(key0)
+                    assert key1 in [None,'kind'],repr(key1)
                     l, kind = value0, value1
         return l,kind
 
@@ -388,7 +388,7 @@ class TypeDeclarationStatement(Statement):
 
     def _parse_entity(self, line):
         m = name_re(line)
-        assert m,`line,self.item,self.__class__.__name__`
+        assert m,repr((line,self.item,self.__class__.__name__))
         name = line[:m.end()]
         line = line[m.end():].lstrip()
         array_spec = None
@@ -399,7 +399,7 @@ class TypeDeclarationStatement(Statement):
             line = item.get_line()
             if line.startswith('('):
                 i = line.find(')')
-                assert i!=-1,`line`
+                assert i!=-1,repr(line)
                 array_spec = parse_array_spec(line[1:i].strip(), item)
                 line = line[i+1:].lstrip()
 
@@ -416,7 +416,7 @@ class TypeDeclarationStatement(Statement):
         return name, array_spec, char_length, value
 
     def get_zero_value(self):
-        raise NotImplementedError,`self.__class__.__name__`
+        raise NotImplementedError(repr(self.__class__.__name__))
 
     def assign_expression(self, name, value):
         return '%s = %s' % (name, value)
@@ -544,7 +544,7 @@ class Type(TypeDeclarationStatement):
 
     def get_kind(self):
         # See 4.5.2, page 48
-        raise NotImplementedError,`self.__class__.__name__`
+        raise NotImplementedError(repr(self.__class__.__name__))
 
     def get_bit_size(self):
         return self.get_type_decl(self.name).get_bit_size()
@@ -573,17 +573,17 @@ class Implicit(Statement):
         items = []
         for item in split_comma(line, self.item):
             i = item.find('(')
-            assert i!=-1 and item.endswith(')'),`item`
+            assert i!=-1 and item.endswith(')'),repr(item)
             specs = []
             for spec in split_comma(item[i+1:-1].strip(), self.item):
                 if '-' in spec:
                     s,e = spec.lower().split('-')
                     s = s.strip()
                     e = e.strip()
-                    assert s in self.letters and e in self.letters,`s,e`
+                    assert s in self.letters and e in self.letters,repr((s,e))
                 else:
                     e = s = spec.lower().strip()
-                    assert s in self.letters,`s,e`
+                    assert s in self.letters,repr((s,e))
                 specs.append((s,e))
             tspec = item[:i].rstrip()
             stmt = None
@@ -592,7 +592,7 @@ class Implicit(Statement):
                     stmt = cls(self, self.item.copy(tspec))
                     if stmt.isvalid:
                         break
-            assert stmt is not None,`item,line`
+            assert stmt is not None,repr((item,line))
             items.append((stmt,specs))
         self.items = items
         return

@@ -81,7 +81,7 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
         line = label + ' : ' + line
     reader = FortranStringReader(line)
     reader.set_mode(isfree, isstrict)
-    item = reader.next()
+    item = next(reader)
     if not cls.match(item.get_line()):
         raise ValueError('%r does not match %s pattern'%(line, cls.__name__))
     stmt = cls(item, item)
