@@ -625,6 +625,9 @@ class FortranReaderBase(object):
         """
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self, ignore_comments = False):
         """ Return the next Fortran code item.
 
