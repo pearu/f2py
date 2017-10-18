@@ -1,3 +1,4 @@
+from __future__ import print_function
 #!/usr/bin/env python
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
@@ -140,6 +141,7 @@ __all__ = ['FortranFileReader',
 import re
 import os
 import sys
+import six
 import tempfile
 import traceback
 import logging
@@ -1265,7 +1267,7 @@ class FortranStringReader(FortranReaderBase):
 
     def __init__(self, string, include_dirs = None, source_only = None):
         self.id = 'string-'+str(id(string))
-        source = StringIO(string)
+        source = six.StringIO(string)
         isfree, isstrict = get_source_info_str(string)
         FortranReaderBase.__init__(self, source, isfree, isstrict)
         if include_dirs is not None:

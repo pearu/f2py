@@ -72,7 +72,9 @@ __all__ = ['Statement','BeginStatement','EndStatement', 'Variable',
 import re
 import sys
 import copy
+import string
 import logging
+from six import with_metaclass
 from .readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from .utils import split_comma, specs_split_comma, is_int_literal_constant
@@ -159,7 +161,7 @@ def get_base_classes(cls):
         bases += get_base_classes(c)
     return bases + cls.__bases__ + (cls,)
 
-class Variable(object, metaclass=classes):
+class Variable(object, with_metaclass(classes)):
     """
     Variable instance has attributes:
       name
@@ -253,7 +255,7 @@ class Variable(object, metaclass=classes):
 
     def set_dimension(self, dims):
         dims = [tuple(dim.split(':')) for dim in dims]
-        dims = [tuple(map(str.strip, dim)) for dim in dims]
+        dims = [tuple(map(string.strip, dim)) for dim in dims]
         if self.dimension is not None:
             if not self.dimension==dims:
                 self.parent.warning(\
@@ -484,11 +486,11 @@ class Variable(object, metaclass=classes):
     def info(self, message):
         return self.parent.info(message)
 
-class ProgramBlock(object, metaclass=classes):
+class ProgramBlock(object, with_metaclass(classes)):
 
     pass
 
-class Statement(object, metaclass=classes):
+class Statement(object, with_metaclass(classes)):
     """
     Statement instance has attributes:
       parent  - Parent BeginStatement or FortranParser instance

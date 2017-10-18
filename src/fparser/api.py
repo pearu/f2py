@@ -72,6 +72,7 @@ Module content
 
 __autodoc__ = ['get_reader', 'parse', 'walk']
 
+from six import string_types
 from . import Fortran2003
 # import all Statement classes:
 from .base_classes import EndStatement, classes
@@ -132,7 +133,7 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs = None, source_on
             if isstrict is None: isstrict = True
             return parse(c_input, isfree, isstrict, include_dirs)
         reader = FortranFileReader(input, include_dirs = include_dirs, source_only = source_only)
-    elif isinstance(input, str):
+    elif isinstance(input, string_types):
         reader = FortranStringReader(input, include_dirs = include_dirs, source_only = source_only)
     else:
         raise TypeError('Expected string or filename input but got %s' % (type(input)))
