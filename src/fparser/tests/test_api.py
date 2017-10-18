@@ -156,10 +156,10 @@ def test_provides():
     tree = api.parse(source_str, isfree=True, isstrict=False)
     mod5 = tree.a.module['mod5']
     mod6 = tree.a.module['mod6']
-    assert list(mod5.a.module_provides.keys()) == ['fp', 'dummy']
-    assert list(mod5.a.use_provides.keys()) == ['a', 'b', 'e', 'a2', 'b2', 'lgp']
+    assert list(mod5.a.module_provides.keys()).sort() == ['fp', 'dummy'].sort()
+    assert list(mod5.a.use_provides.keys()).sort() == ['a', 'b', 'e', 'a2', 'b2', 'lgp'].sort()
     assert list(mod6.a.module_provides.keys()) ==  []
-    assert list(mod6.a.use_provides.keys()) ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
+    assert list(mod6.a.use_provides.keys()).sort() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2'].sort()
     assert mod6.a.use_provides['qgp'].name == 'gp'
 
 def test_walk():
