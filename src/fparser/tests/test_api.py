@@ -90,12 +90,12 @@ def test_dimension_attr():
 
     assert avar.dimension == [('-10', '10'), ('-   2147483648', '2147483648')]
     assert avar.bounds == [('-2', '2'), ('1000000', '1000001')]
-    assert avar.shape == ['4', '1']
+    assert avar.shape == ['5', '2']
 
     bvar = subr.a.variables['b']
 
     assert bvar.dimension == [('-20', '20'), ('100', '113'), ('-  512', '713')]
-    assert bvar.shape == ['40', '13', '1225']
+    assert bvar.shape == ['41', '14', '1226']
 
 def test_provides():
     source_str = '''
