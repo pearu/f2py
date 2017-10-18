@@ -468,7 +468,7 @@ class Variable(object, metaclass=classes):
                         shape.append(spec[0])
                     else:
                         try:
-                            n = int(spec[1]) - int(spec[0])
+                            n = int(spec[1]) - (int(spec[0]) - 1)
                         except ValueError:
                             n = '(%s)-(%s)' % (spec[1], spec[0]) 
                         shape.append(str(n))
