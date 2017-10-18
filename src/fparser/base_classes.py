@@ -465,10 +465,12 @@ class Variable(object, metaclass=classes):
                 shape = []
                 for spec in array_spec:
                     if len(spec)==1:
-                        shape.append(spec[0])
+                        shape.append(spec[0].replace(' ',''))
                     else:
                         try:
-                            n = int(spec[1]) - (int(spec[0]) - 1)
+                            lss = int(spec[0].replace(' ','')) # lower subscript
+                            uss = int(spec[1].replace(' ','')) # upper subscript
+                            n = uss - (lss - 1)
                         except ValueError:
                             n = '(%s)-(%s)' % (spec[1], spec[0]) 
                         shape.append(str(n))
