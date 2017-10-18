@@ -195,9 +195,23 @@ def test_deallocate():
 
 def test_moduleprocedure():
     assert_equal(parse(ModuleProcedure,\
+                       'Procedure a'), 'MODULE PROCEDURE a')
+    assert_equal(parse(ModuleProcedure,\
+                       'procedure a , b'), 'MODULE PROCEDURE a, b')
+    assert_equal(parse(ModuleProcedure,\
+                       'procedure :: a '), 'MODULE PROCEDURE a')
+    assert_equal(parse(ModuleProcedure,\
+                       'procedure :: a , b'), 'MODULE PROCEDURE a, b')
+    assert_equal(parse(ModuleProcedure,\
                        'ModuleProcedure a'), 'MODULE PROCEDURE a')
     assert_equal(parse(ModuleProcedure,\
                        'module procedure a , b'), 'MODULE PROCEDURE a, b')
+    assert_equal(parse(ModuleProcedure,\
+                       'module procedure :: a '), 'MODULE PROCEDURE a')
+    assert_equal(parse(ModuleProcedure,\
+                       'module procedure :: a , b'), 'MODULE PROCEDURE a, b')
+    assert_equal(parse(ModuleProcedure,\
+                       'moduleprocedure::a,b'), 'MODULE PROCEDURE a, b')
 
 def test_access():
     assert_equal(parse(Public,'Public'),'PUBLIC')

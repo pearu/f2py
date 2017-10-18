@@ -630,9 +630,9 @@ class Deallocate(Statement):
 
 class ModuleProcedure(Statement):
     """
-    [ MODULE ] PROCEDURE <procedure-name-list>
+    [ MODULE ] PROCEDURE [::] <procedure-name-list>
     """
-    match = re.compile(r'(module\s*|)procedure\b',re.I).match
+    match = re.compile(r'(module\s*|)procedure\b *(::)?',re.I).match
     def process_item(self):
         line = self.item.get_line()
         m = self.match(line)
