@@ -2837,6 +2837,97 @@ def test_Inquire_Spec():  # R930
     assert_equal(str(obj), 'DIRECT = a')
 
 
+def test_Open_Stmt():
+    ''' Check that we correctly parse and re-generate the various forms
+    of OPEN statement (R904)'''
+    cls = Open_Stmt
+    obj = cls("open(23, file='some_file.txt')")
+    assert isinstance(obj, cls)
+    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
+    obj = cls("open(unit=23, file='some_file.txt')")
+    assert isinstance(obj, cls)
+    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
+
+
+def test_Connect_Spec_List():  # pylint: disable=invalid-name
+    '''
+    Check that we correctly parse the various valid forms of
+    connect specification (R905)
+    '''
+    cls = Connect_Spec_List
+    obj = cls("22, access='direct'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, ACCESS = 'direct'"
+
+    obj = cls("22, action='read'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, ACTION = 'read'"
+
+    obj = cls("22, asynchronous='YES'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, ASYNCHRONOUS = 'YES'"
+
+    obj = cls("22, blank='NULL'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, BLANK = 'NULL'"
+
+    obj = cls("22, decimal='COMMA'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, DECIMAL = 'COMMA'"
+
+    obj = cls("22, delim='APOSTROPHE'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, DELIM = 'APOSTROPHE'"
+
+    obj = cls("22, err=109")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, ERR = 109"
+
+    obj = cls("22, encoding='DEFAULT'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, ENCODING = 'DEFAULT'"
+
+    obj = cls("22, file='a_file.dat'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat'"
+
+    obj = cls("22, file='a_file.dat', form='FORMATTED'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', FORM = 'FORMATTED'"
+
+    obj = cls("22, file='a_file.dat', iomsg=my_string")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', IOMSG = my_string"
+
+    obj = cls("22, file='a_file.dat', iostat=ierr")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', IOSTAT = ierr"
+
+    obj = cls("22, file='a_file.dat', pad='YES'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', PAD = 'YES'"
+
+    obj = cls("22, file='a_file.dat', position='APPEND'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', POSITION = 'APPEND'"
+
+    obj = cls("22, file='a_file.dat', recl=100")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', RECL = 100"
+
+    obj = cls("22, file='a_file.dat', round='UP'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', ROUND = 'UP'"
+
+    obj = cls("22, file='a_file.dat', sign='PLUS'")
+    assert isinstance(obj, cls)
+    assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS'"
+
+    obj = cls("22, file='a_file.dat', sign='PLUS', status='OLD'")
+    assert isinstance(obj, cls)
+    assert str(obj) == ("UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS', "
+                        "STATUS = 'OLD'")
+
 
 ###############################################################################
 ############################### SECTION 10 ####################################
@@ -3664,42 +3755,43 @@ def test_Contains(): # R1237
 
 
 if 0:
-    nof_needed_tests = 0
-    nof_needed_match = 0
-    total_needs = 0
-    total_classes = 0
-    for name in dir():
-        obj = eval(name)
-        if not isinstance(obj, ClassType): continue
-        if not issubclass(obj, Base): continue
-        clsname = obj.__name__
-        if clsname.endswith('Base'): continue
-        total_classes += 1
-        subclass_names = obj.__dict__.get('subclass_names',None)
-        use_names = obj.__dict__.get('use_names',None)
-        if not use_names: continue
-        match = obj.__dict__.get('match',None)
+    NOF_NEEDED_TESTS = 0
+    NOF_NEEDED_MATCH = 0
+    TOTAL_NEEDS = 0
+    TOTAL_CLASSES = 0
+    for NAME in dir():
+        OBJ = eval(NAME)
+        if not isinstance(OBJ, ClassType): continue
+        if not issubclass(OBJ, Base): continue
+        CLSNAME = OBJ.__name__
+        if CLSNAME.endswith('Base'): continue
+        TOTAL_CLASSES += 1
+        SUBCLASS_NAMES = OBJ.__dict__.get('subclass_names', None)
+        USE_NAMES = OBJ.__dict__.get('use_names', None)
+        if not USE_NAMES: continue
+        MATCH = OBJ.__dict__.get('match', None)
         try:
-            test_cls = eval('test_%s' % (clsname))
+            TEST_CLS = eval('test_{0}'.format(CLSNAME))
         except NameError:
-            test_cls = None
-        total_needs += 1
-        if match is None:
-            if test_cls is None:
-                print('Needs tests:', clsname)
-                print('Needs match implementation:', clsname)
-                nof_needed_tests += 1
-                nof_needed_match += 1
+            TEST_CLS = None
+        TOTAL_NEEDS += 1
+        if MATCH is None:
+            if TEST_CLS is None:
+                print('Needs tests:', CLSNAME)
+                print('Needs match implementation:', CLSNAME)
+                NOF_NEEDED_TESTS += 1
+                NOF_NEEDED_MATCH += 1
             else:
-                print('Needs match implementation:', clsname)
-                nof_needed_match += 1
+                print('Needs match implementation:', CLSNAME)
+                NOF_NEEDED_MATCH += 1
         else:
-            if test_cls is None:
-                print('Needs tests:', clsname)
-                nof_needed_tests += 1
+            if TEST_CLS is None:
+                print('Needs tests:', CLSNAME)
+                NOF_NEEDED_TESTS += 1
         continue
     print('-----')
-    print('Nof match implementation needs:',nof_needed_match,'out of',total_needs)
-    print('Nof tests needs:',nof_needed_tests,'out of',total_needs)
-    print('Total number of classes:',total_classes)
+    print('Nof match implementation needs:', NOF_NEEDED_MATCH,
+          'out of', TOTAL_NEEDS)
+    print('Nof tests needs:', NOF_NEEDED_TESTS, 'out of', TOTAL_NEEDS)
+    print('Total number of classes:', TOTAL_CLASSES)
     print('-----')
