@@ -97,7 +97,54 @@ def show_result(func):
     return new_func
 
 
-class Base(object):
+class ComparableMixin(object):
+    """ Mixin class to provide rich comparison operators.
+
+    This mixin provides a set of rich comparison operators. Each class using
+    this mixin has to provide a _cmpkey() method that returns a key of objects
+    that can be compared.
+
+    See also http://python3porting.com/preparing.html#richcomparisons
+    """
+    # pylint: disable=too-few-public-methods
+
+    def _compare(self, other, method):
+        """ Call the method, if other is able to be used within it.
+
+        :param object other: The other object to compare with
+        :type other: object
+        :param method: The method to call to compare self and other.
+        :type method: LambdaType
+        """
+        try:
+            # This routine's purpose is to access the protected method _cmpkey()
+            # from client classes, therefore:
+            # pylint: disable=protected-access
+            return method(self._cmpkey(), other._cmpkey())
+        except (AttributeError, TypeError):
+            # _cmpkey not implemented, or return different type,
+            # so I can't compare with "other".
+            return NotImplemented
+
+    def __lt__(self, other):
+        return self._compare(other, lambda s, o: s < o)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s, o: s <= o)
+
+    def __eq__(self, other):
+        return self._compare(other, lambda s, o: s == o)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s, o: s >= o)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s, o: s > o)
+
+    def __ne__(self, other):
+        return self._compare(other, lambda s, o: s != o)
+
+class Base(ComparableMixin):
     """ Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
@@ -184,17 +231,14 @@ class Base(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
                                                                   self.items)))
 
-    def compare(self, other):
-        return cmp(self.items,other.items)
-
     def __str__(self): return self.tostr()
 
     def __repr__(self): return self.torepr()
 
-    def __cmp__(self, other):
-        if self is other: return 0
-        if not isinstance(other, self.__class__): return cmp(self.__class__, other.__class__)
-        return self.compare(other)
+    def _cmpkey(self):
+        """ Provides a key of objects to be used for comparing.
+        """
+        return self.items
 
     def tofortran(self, tab='', isfix=None):
         return tab + str(self)
@@ -364,11 +408,15 @@ content : tuple
     def init(self, content):
         self.content = content
         return
-    def compare(self, other):
-        return cmp(self.content,other.content)
+
+    def _cmpkey(self):
+        """ Provides a key of objects to be used for comparing.
+        """
+        return self.content
 
     def tostr(self):
         return self.tofortran()
+
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr, self.content)))
 
@@ -427,8 +475,11 @@ class SequenceBase(Base):
         else: s = ' ' + s + ' '
         return s.join(map(str, self.items))
     def torepr(self): return '%s(%r, %r)' % (self.__class__.__name__, self.separator, self.items)
-    def compare(self, other):
-        return cmp((self.separator,self.items),(other.separator,self.items))
+
+    def _cmpkey(self):
+        """ Provides a key of objects to be used for comparing.
+        """
+        return (self.separator, self.items)
 
 class UnaryOpBase(Base):
     """
@@ -637,8 +688,11 @@ class NumberBase(Base):
     def tostr(self):
         if self.items[1] is None: return str(self.items[0])
         return '%s_%s' % tuple(self.items)
-    def compare(self, other):
-        return cmp(self.items[0], other.items[0])
+
+    def _cmpkey(self):
+        """ Provides a key of objects to be used for comparing.
+        """
+        return self.items[0]
 
 class CallBase(Base):
     """
@@ -713,8 +767,11 @@ string
         return
     def tostr(self): return str(self.string)
     def torepr(self): return '%s(%r)' % (self.__class__.__name__, self.string)
-    def compare(self, other):
-        return cmp(self.string,other.string)
+
+    def _cmpkey(self):
+        """ Provides a key of objects to be used for comparing.
+        """
+        return self.string
 
 class STRINGBase(StringBase):
     """
