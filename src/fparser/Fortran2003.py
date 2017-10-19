@@ -115,6 +115,9 @@ class ComparableMixin(object):
         :type other: object
         :param method: The method to call to compare self and other.
         :type method: LambdaType
+        :return: NotImplemented, when the comparison for the given type
+                 combination can't be performed.
+        :rtype: :py:type:`NotImplementedType`
         """
         try:
             # This routine's purpose is to access the protected method _cmpkey()
@@ -124,6 +127,9 @@ class ComparableMixin(object):
         except (AttributeError, TypeError):
             # _cmpkey not implemented, or return different type,
             # so I can't compare with "other".
+            # According to the Python Language Reference Manual
+            # (http://www.network-theory.co.uk/docs/pylang/Coercionrules.html)
+            # return NotImplemented
             return NotImplemented
 
     def __lt__(self, other):
@@ -269,7 +275,7 @@ content : tuple
               enable_select_type_construct_hook = False,
               enable_case_construct_hook = False
               ):
-        assert isinstance(reader,FortranReaderBase),repr(reader)
+        assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
         if startcls is not None:
             try:
@@ -1939,7 +1945,7 @@ class Component_Decl(Base): # R442
         if newline.startswith('='):
             init = Component_Initialization(newline)
         else:
-            assert newline=='',repr(newline)
+            assert newline=='', repr(newline)
         return name, array_spec, char_length, init
     match = staticmethod(match)
     def tostr(self):
@@ -2534,7 +2540,7 @@ class Entity_Decl(Base): # R504
         elif newline:
             return
         else:
-            assert newline=='',repr((newline, string))
+            assert newline=='', repr((newline, string))
         return name, array_spec, char_length, init
     match = staticmethod(match)
     def tostr(self):
@@ -3257,7 +3263,7 @@ items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
         parts = line.split('/')
         items = []
         fst = parts.pop(0)
-        assert not fst,repr((fst, parts))
+        assert not fst, repr((fst, parts))
         while len(parts)>=2:
             name,lst = parts[:2]
             del parts[:2]
@@ -3266,7 +3272,7 @@ items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
             if lst.endswith(','):
                 lst = lst[:-1].rstrip()
             items.append((Namelist_Group_Name(name),Namelist_Group_Object_List(lst)))
-        assert not parts,repr(parts)
+        assert not parts, repr(parts)
         return tuple(items)
 
     def tostr(self):
@@ -3620,7 +3626,7 @@ class Allocate_Stmt(StmtBase): # R623
         opts = None
         if i!=-1:
             j = line[:i].rfind(',')
-            assert j!=-1,repr((i,j,line))
+            assert j !=- 1, repr((i, j, line))
             opts = Alloc_Opt_List(repmap(line[j+1:].lstrip()))
             line = line[:j].rstrip()        
         return spec, Allocation_List(repmap(line)), opts
@@ -3763,7 +3769,7 @@ class Deallocate_Stmt(StmtBase): # R635
         opts = None
         if i!=-1:
             j = line[:i].rfind(',')
-            assert j!=-1,repr((i,j,line))
+            assert j != -1, repr((i, j, line))
             opts = Dealloc_Opt_List(repmap(line[j+1:].lstrip()))
             line = line[:j].rstrip()
         return Allocate_Object_List(repmap(line)), opts
@@ -5085,7 +5091,8 @@ class Loop_Control(Base): # R830
         var,rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
         if not 2<=len(rhs)<=3: return
-        return Variable(repmap(var.rstrip())),list(map(Scalar_Int_Expr, list(map(repmap,rhs))))
+        return Variable(repmap(var.rstrip())), \
+                list(map(Scalar_Int_Expr, list(map(repmap,rhs))))
     match = staticmethod(match)
     def tostr(self):
         if len(self.items)==1: return ', WHILE (%s)' % (self.items[0])
@@ -6013,7 +6020,7 @@ items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
 
     def tostr(self):
         if self.items[0] is None:
-            assert None not in self.items[1:],repr(self.items)
+            assert None not in self.items[1:], repr(self.items)
             return 'INQUIRE(IOLENGTH=%s) %s' % (self.items[1:])
         return 'INQUIRE(%s)' % (self.items[0])
 
@@ -6293,7 +6300,7 @@ class Data_Edit_Desc_C1002(Base):
             if self.items[3] is None:
                 return '%s%s.%s' % (c, self.items[1], self.items[2])
             return '%s%s.%sE%s' % (c, self.items[1], self.items[2], self.items[3])
-        raise NotImpletenetedError(repr(c))
+        raise NotImplementedError(repr(c))
 
 class Data_Edit_Desc(Base): # R1005
     """
@@ -6367,7 +6374,7 @@ class Data_Edit_Desc(Base): # R1005
                     return '%s%s' % (c, self.items[1])
                 else:
                     return '%s%s(%s)' % (c, self.items[1], self.items[2])
-        raise NotImpletenetedError(repr(c))
+        raise NotImplementedError(repr(c))
 
 class W(Base): # R1006
     """

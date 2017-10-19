@@ -94,7 +94,7 @@ class AttributeHolder(object):
     def __init__(self, **kws):
         self._attributes = {}
         self._readonly = []
-        for k,v in list(kws.items()):
+        for k, v in list(kws.items()):
             self._attributes[k] = v
             if callable(v):
                 self._readonly.append(k)
@@ -364,25 +364,29 @@ class Variable(object, with_metaclass(classes)):
             if lattr.startswith('dimension'):
                 assert self.dimension is None, repr((self.dimension,attr))
                 l = attr[9:].lstrip()
-                assert l[0]+l[-1]=='()',repr(l)
-                self.set_dimension(split_comma(l[1:-1].strip(), self.parent.item))
+                assert l[0] + l[-1] == '()', repr(l)
+                self.set_dimension(
+                        split_comma(l[1:-1].strip(), self.parent.item))
                 continue
             if lattr.startswith('intent'):
                 l = attr[6:].lstrip()
-                assert l[0]+l[-1]=='()',repr(l)
+                assert l[0] + l[-1] == '()', repr(l)
                 self.set_intent(specs_split_comma(l[1:-1].strip(),
-                                                  self.parent.item, upper=True))
+                                                  self.parent.item,
+                                                  upper=True))
                 continue
             if lattr.startswith('bind'):
                 l = attr[4:].lstrip()
-                assert l[0]+l[-1]=='()',repr(l)
-                self.bind = specs_split_comma(l[1:-1].strip(), self.parent.item,
-                                              upper = True)
+                assert l[0] + l[-1] == '()', repr(l)
+                self.bind = specs_split_comma(l[1:-1].strip(),
+                                              self.parent.item,
+                                              upper=True)
                 continue
             if lattr.startswith('check'):
                 l = attr[5:].lstrip()
                 assert l[0]+l[-1]=='()',repr(l)
-                self.check.extend(split_comma(l[1:-1].strip(), self.parent.item))
+                self.check.extend(split_comma(l[1:-1].strip(),
+                                              self.parent.item))
                 continue
             if uattr not in attributes:
                 if uattr not in self.known_attributes:
@@ -466,15 +470,15 @@ class Variable(object, with_metaclass(classes)):
             elif self.is_explicit_shape_array():
                 shape = []
                 for spec in array_spec:
-                    if len(spec)==1:
-                        shape.append(spec[0].replace(' ',''))
+                    if len(spec) == 1:
+                        shape.append(spec[0].replace(' ', ''))
                     else:
                         try:
-                            lss = int(spec[0].replace(' ','')) # lower subscript
-                            uss = int(spec[1].replace(' ','')) # upper subscript
+                            lss = int(spec[0].replace(' ', '')) # lower subscript
+                            uss = int(spec[1].replace(' ', '')) # upper subscript
                             n = uss - (lss - 1)
                         except ValueError:
-                            n = '(%s)-(%s)' % (spec[1], spec[0]) 
+                            n = '(%s)-(%s)' % (spec[1], spec[0])
                         shape.append(str(n))
                 self.shape = shape
         return

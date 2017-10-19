@@ -88,12 +88,13 @@ from .utils import split_comma, filter_stmts, parse_bind, parse_result, \
 
 class HasImplicitStmt(object):
 
-    a = AttributeHolder(implicit_rules = {})
+    a = AttributeHolder(implicit_rules={})
 
     def get_type_by_name(self, name):
         implicit_rules = self.a.implicit_rules
         if implicit_rules is None:
-            raise AnalyzeError('Implicit rules mapping is null while getting %r type' % (name))
+            raise AnalyzeError('Implicit rules mapping is null '
+                               'while getting %r type' % (name))
         l = name[0].lower()
         if l in implicit_rules:
             return implicit_rules[l]
@@ -115,7 +116,7 @@ class HasImplicitStmt(object):
         if implicit_rules is None:
             return tab + 'IMPLICIT NONE\n'
         items = {}
-        for c,t in list(implicit_rules.items()):
+        for c, t in list(implicit_rules.items()):
             if c.startswith('default'):
                 continue
             st = t.tostr()
@@ -127,7 +128,7 @@ class HasImplicitStmt(object):
             return tab + '! default IMPLICIT rules apply\n'
         s = 'IMPLICIT'
         ls = []
-        for st,l in list(items.items()):
+        for st, l in list(items.items()):
             l.sort()
             ls.append(st + ' (%s)' % (', '.join(l)))
         s += ' ' + ', '.join(ls)
@@ -570,7 +571,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             if self.name in parent_interface:
                 p = parent_interface[self.name]
                 last = p.content.pop()
-                assert isinstance(last,EndInterface),repr(last.__class__)
+                assert isinstance(last,EndInterface), repr(last.__class__)
                 p.content += self.content
                 p.update_attributes(self.a.attributes)
             else:
@@ -605,14 +606,14 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         line = item.get_line()
         m = self.match(line)
         i = line.lower().find(clsname)
-        assert i!=-1,repr((clsname, line))
+        assert i != -1, repr((clsname, line))
         self.prefix = line[:i].rstrip()
         self.name = line[i:m.end()].lstrip()[len(clsname):].strip()
         line = line[m.end():].lstrip()
         args = []
         if line.startswith('('):
             i = line.find(')')
-            assert i!=-1,repr(line)
+            assert i != -1, repr(line)
             line2 = item.apply_map(line[:i+1])
             for a in line2[1:-1].split(','):
                 a=a.strip()
@@ -625,11 +626,11 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if isinstance(self, Function):
             self.result, suffix = parse_result(suffix, item)
             if suffix:
-                assert self.bind is None,repr(self.bind)
+                assert self.bind is None, repr(self.bind)
                 self.bind, suffix = parse_result(suffix, item)
             if self.result is None:
                 self.result = self.name
-        assert not suffix,repr(suffix)
+        assert not suffix, repr(suffix)
         self.args = args
         self.typedecl = None
         return BeginStatement.process_item(self)
@@ -640,7 +641,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if self.prefix:
             s += self.prefix + ' '
         if self.typedecl is not None:
-            assert isinstance(self, Function),repr(self.__class__.__name__)
+            assert isinstance(self, Function), repr(self.__class__.__name__)
             s += self.typedecl.tostr() + ' '
         s += clsname
         suf = ''
@@ -684,7 +685,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                 stmt = content.pop(0)
                 while isinstance (stmt, Comment):
                     stmt = content.pop(0)
-                assert isinstance(stmt, self.end_stmt_cls),repr(stmt)
+                assert isinstance(stmt, self.end_stmt_cls), repr(stmt)
             elif isinstance(stmt, self.end_stmt_cls):
                 continue
             else:
@@ -980,7 +981,7 @@ class IfThen(BeginStatement):
     def process_item(self):
         item = self.item
         line = item.get_line()[2:-4].strip()
-        assert line[0]=='(' and line[-1]==')',repr(line)
+        assert line[0] == '(' and line[-1] == ')', repr(line)
         self.expr = item.apply_map(line[1:-1].strip())
         self.construct_name = item.name
         return BeginStatement.process_item(self)
@@ -1027,7 +1028,7 @@ class If(BeginStatement):
         return
 
     def tostr(self):
-        assert len(self.content)==1,repr(self.content)
+        assert len(self.content) == 1, repr(self.content)
         return 'IF (%s) %s' % (self.expr, str(self.content[0]).lstrip())
 
     def tofortran(self,isfix=None):
@@ -1159,7 +1160,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         i = line.find('(')
         if i!=-1:
             self.name = line[:i].rstrip()
-            assert line[-1]==')',repr(line)
+            assert line[-1] == ')', repr(line)
             self.params = split_comma(line[i+1:-1].lstrip())
         else:
             self.name = line
@@ -1186,7 +1187,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         for spec in self.specs:
             i = spec.find('(')
             if i!=-1:
-                assert spec.endswith(')'),repr(spec)
+                assert spec.endswith(')'), repr(spec)
                 s = spec[:i].rstrip().upper()
                 n = spec[i+1:-1].strip()
                 if s=='EXTENDS':
@@ -1194,7 +1195,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
                     continue
                 elif s=='BIND':
                     args,rest = parse_bind(spec)
-                    assert not rest,repr(rest)
+                    assert not rest, repr(rest)
                     spec = 'BIND(%s)' % (', '.join(args))
                 else:
                     spec = '%s(%s)' % (s,n)

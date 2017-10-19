@@ -145,7 +145,6 @@ import six
 import tempfile
 import traceback
 import logging
-from io import StringIO
 from numpy.distutils.misc_util import yellow_text, red_text, blue_text
 
 from .sourceinfo import get_source_info, get_source_info_str
