@@ -628,15 +628,17 @@ class Deallocate(Statement):
         + 'DEALLOCATE (%s)' % (', '.join(self.items))
     def analyze(self): return
 
+
 class ModuleProcedure(Statement):
     """
     [ MODULE ] PROCEDURE [::] <procedure-name-list>
     """
-    match = re.compile(r'(module\s*|)procedure\b *(::)?',re.I).match
+    match = re.compile(r'(module\s*|)procedure\b\s*(::)?', re.I).match
+
     def process_item(self):
         line = self.item.get_line()
         m = self.match(line)
-        assert m,`line`
+        assert m, line.repr()
         items = split_comma(line[m.end():].strip(), self.item)
         for n in items:
             if not is_name(n):
@@ -654,6 +656,7 @@ class ModuleProcedure(Statement):
         module_procedures.extend(self.items)
         # XXX: add names to parent_provides
         return
+
 
 class Access(Statement):
     """
