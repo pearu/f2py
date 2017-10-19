@@ -255,7 +255,7 @@ class Variable(object, with_metaclass(classes)):
 
     def set_dimension(self, dims):
         dims = [tuple(dim.split(':')) for dim in dims]
-        dims = [tuple(map(string.strip, dim)) for dim in dims]
+        dims = [tuple(map(str.strip, dim)) for dim in dims]
         if self.dimension is not None:
             if not self.dimension==dims:
                 self.parent.warning(\
