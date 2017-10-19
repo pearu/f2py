@@ -219,11 +219,27 @@ def test_deallocate():
         'DEALLOCATE (a, STAT = b)'
 
 
+
 def test_moduleprocedure():
+    ''' Test  [ MODULE ] PROCEDURE [::] <procedure-name-list> '''
+
+    assert parse(ModuleProcedure, 'Procedure a') == 'MODULE PROCEDURE a'
+    assert parse(ModuleProcedure, 'procedure a , b') == \
+        'MODULE PROCEDURE a, b'
+    assert parse(ModuleProcedure, 'procedure :: a ') == \
+        'MODULE PROCEDURE a'
+    assert parse(ModuleProcedure, 'procedure :: a , b') == \
+        'MODULE PROCEDURE a, b'
     assert parse(ModuleProcedure, 'ModuleProcedure a') == \
         'MODULE PROCEDURE a'
     assert parse(ModuleProcedure, 'module procedure a , b') == \
         'MODULE PROCEDURE a, b'
+    assert parse(ModuleProcedure, 'module procedure :: a ') == \
+        'MODULE PROCEDURE a'
+    assert parse(ModuleProcedure, 'module procedure :: a , b') == \
+        'MODULE PROCEDURE a, b'
+    assert parse(ModuleProcedure, 'moduleprocedure::a,b') == \
+           'MODULE PROCEDURE a, b'
 
 
 def test_access():
