@@ -2866,6 +2866,15 @@ def test_Open_Stmt():
     assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
 
 
+def test_Connect_Spec():
+    ''' Tests for individual elements of Connect_Spec (R905) '''
+    cls = Connect_Spec
+    # Incorrect name for a member of the list
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls("afile='a_file.dat'")
+    assert 'NoMatchError: Connect_Spec: "afile=' in str(excinfo)
+
+
 def test_Connect_Spec_List():  # pylint: disable=invalid-name
     '''
     Check that we correctly parse the various valid forms of
@@ -2944,10 +2953,11 @@ def test_Connect_Spec_List():  # pylint: disable=invalid-name
     assert isinstance(obj, cls)
     assert str(obj) == ("UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS', "
                         "STATUS = 'OLD'")
+
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls("22, afile='a_file.dat', sign='PLUS', status='OLD'")
-    assert 'NoMatchError: Connect_Spec_List: "22, afile=' in str(excinfo)
+        _ = cls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
+    assert 'NoMatchError: Connect_Spec_List: "unit=22, afile=' in str(excinfo)
 
 
 ###############################################################################
