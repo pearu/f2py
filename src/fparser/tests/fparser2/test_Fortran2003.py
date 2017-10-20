@@ -2811,7 +2811,7 @@ def test_Inquire_Stmt():  # R929
 
 def test_Inquire_Spec():  # R930
     ''' Test that we recognise the various possible forms of
-    inquire list '''
+    entries in an inquire list '''
     cls = Inquire_Spec
     obj = cls('1')
     assert isinstance(obj, cls), repr(obj)
@@ -2835,6 +2835,23 @@ def test_Inquire_Spec():  # R930
     obj = cls('direct=a')
     assert isinstance(obj, cls), repr(obj)
     assert_equal(str(obj), 'DIRECT = a')
+
+
+def test_Inquire_Spec_List():  # pylint: disable=invalid-name
+    ''' Test that we recognise the various possible forms of
+    inquire list - R930
+    '''
+    # Inquire_Spec_List is generated at runtime in Fortran2003.py
+    cls = Inquire_Spec_List
+
+    obj = cls('unit=23, file="a_file.dat"')
+    assert isinstance(obj, cls)
+    assert str(obj) == 'UNIT = 23, FILE = "a_file.dat"'
+
+    # Invalid list (afile= instead of file=)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls('unit=23, afile="a_file.dat"')
+    assert "NoMatchError: Inquire_Spec_List: 'unit=23, afile=" in str(excinfo)
 
 
 def test_Open_Stmt():
@@ -2927,6 +2944,10 @@ def test_Connect_Spec_List():  # pylint: disable=invalid-name
     assert isinstance(obj, cls)
     assert str(obj) == ("UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS', "
                         "STATUS = 'OLD'")
+    # Incorrect name for a member of the list
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = cls("22, afile='a_file.dat', sign='PLUS', status='OLD'")
+    assert 'NoMatchError: Connect_Spec_List: "22, afile=' in str(excinfo)
 
 
 ###############################################################################

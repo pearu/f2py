@@ -161,8 +161,16 @@ class Base(ComparableMixin):
     subclasses = {}
 
     @show_result
-    def __new__(cls, string, parent_cls = None):
+    def __new__(cls, string, parent_cls=None):
         """
+        Create a new instance of this object.
+
+        :param cls: the class of object to create
+        :type cls: :py:type:`type`
+        :param string: (source of) Fortran string to parse
+        :type string: str or :py:class:`FortranReaderBase`
+        :param parent_cls: the parent class of this object
+        :type parent_cls: :py:type:`type`
         """
         if parent_cls is None:
             parent_cls = [cls]
@@ -5421,6 +5429,16 @@ class Connect_Spec(KeywordValueBase):
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing the keyword and value or None if the
+                 supplied string is not a match
+        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
+        '''
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return 'UNIT', File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
         for (keyword, value) in [
                 (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
                   'DELIM', 'ENCODING', 'FORM', 'PAD', 'POSITION', 'ROUND',
@@ -5438,7 +5456,7 @@ class Connect_Spec(KeywordValueBase):
                 obj = None
             if obj is not None:
                 return obj
-        return 'UNIT', File_Unit_Number(string)
+        return None
 
 
 class File_Name_Expr(Base): # R906
@@ -6084,6 +6102,18 @@ class Inquire_Spec(KeywordValueBase):  # R930
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: The string to check for conformance with an
+                           Inquire_Spec
+        :return: 2-tuple of name (e.g. "UNIT") and value or None if
+                 string is not a valid Inquire_Spec
+        :rtype: 2-tuple where first object represents the name and the
+                second the value.
+        '''
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return 'UNIT', File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
         for (keyword, value) in [
                 (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
                   'DELIM', 'DIRECT', 'ENCODING', 'FORM', 'NAME', 'PAD',
@@ -6106,7 +6136,7 @@ class Inquire_Spec(KeywordValueBase):  # R930
                 obj = None
             if obj is not None:
                 return obj
-        return 'UNIT', File_Unit_Number(string)
+        return None
 
 ###############################################################################
 ############################### SECTION 10 ####################################
