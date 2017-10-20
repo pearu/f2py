@@ -86,6 +86,15 @@ from fparser.readfortran import FortranStringReader
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
+    '''Tries to parse a Fortran line using the given class cls.
+    If successful, it then converts the parsed statement back to
+    a string. If isstrict is false, it will then try to parse
+    this string again (recursively calling itself, with isstrict
+    set to true) and make sure that the re-parsed string is
+    identical to the input.
+    It returns the string representation of the parsed input line.
+    '''
+
     if label:
         line = label + ' : ' + line
     reader = FortranStringReader(line)
@@ -97,13 +106,15 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
     if stmt.isvalid:
         # Check that we can successfully parse the string representation
         # of the parsed object
-        r = str(stmt)  # pylint: disable=invalid-name
+        stmt_string = str(stmt)
         if not isstrict:
-            r1 = parse(cls, r, isstrict=True) # pylint: disable=invalid-name
-            if r != r1:
+            reparsed_stmt_string = parse(cls, stmt_string, isstrict=True)
+            if stmt_string != reparsed_stmt_string:
                 raise ValueError('Failed to parse %r with %s pattern in Pyf '
-                                 'mode, got %r' % (r, cls.__name__, r1))
-        return r
+                                 'mode, got %r' %
+                                 (stmt_string, cls.__name__,
+                                  reparsed_stmt_string))
+        return stmt_string
     raise ValueError('parsing %r with %s pattern failed' %
                      (line, cls.__name__))
 
@@ -219,7 +230,6 @@ def test_deallocate():
         'DEALLOCATE (a, STAT = b)'
 
 
-
 def test_moduleprocedure():
     ''' Test  [ MODULE ] PROCEDURE [::] <procedure-name-list> '''
 
@@ -239,7 +249,7 @@ def test_moduleprocedure():
     assert parse(ModuleProcedure, 'module procedure :: a , b') == \
         'MODULE PROCEDURE a, b'
     assert parse(ModuleProcedure, 'moduleprocedure::a,b') == \
-           'MODULE PROCEDURE a, b'
+        'MODULE PROCEDURE a, b'
 
 
 def test_access():
@@ -691,7 +701,7 @@ def test_type_bound_array_access():
     assert parsed_code == 'CALL an_array(idx)%a_func(b(3))'
 
 
-def test_invalid_type_bound_array_access(): # pylint: disable=invalid-name
+def test_invalid_type_bound_array_access():  # pylint: disable=invalid-name
     ''' Check that a call to a type-bound procedure with incorrect
     syntax is flagged as invalid '''
     with pytest.raises(ValueError) as excinfo:
