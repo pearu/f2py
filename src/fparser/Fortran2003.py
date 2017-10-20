@@ -7601,7 +7601,7 @@ ClassType = type(Base)
 _names = dir()
 for clsname in _names:
     cls = eval(clsname)
-    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and \
+    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
             not cls.__name__.endswith('Base')):
         continue
     names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
