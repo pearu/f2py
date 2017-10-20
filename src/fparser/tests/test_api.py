@@ -90,12 +90,12 @@ def test_dimension_attr():
 
     assert avar.dimension == [('-10', '10'), ('-   2147483648', '2147483648')]
     assert avar.bounds == [('-2', '2'), ('1000000', '1000001')]
-    assert avar.shape == ['4', '1']
+    assert avar.shape == ['5', '2']
 
     bvar = subr.a.variables['b']
 
     assert bvar.dimension == [('-20', '20'), ('100', '113'), ('-  512', '713')]
-    assert bvar.shape == ['40', '13', '1225']
+    assert bvar.shape == ['41', '14', '1226']
 
 def test_provides():
     source_str = '''
@@ -156,10 +156,10 @@ def test_provides():
     tree = api.parse(source_str, isfree=True, isstrict=False)
     mod5 = tree.a.module['mod5']
     mod6 = tree.a.module['mod6']
-    assert mod5.a.module_provides.keys() == ['fp', 'dummy']
-    assert mod5.a.use_provides.keys() == ['a', 'b', 'e', 'a2', 'b2', 'lgp']
-    assert mod6.a.module_provides.keys() ==  []
-    assert mod6.a.use_provides.keys() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
+    assert list(mod5.a.module_provides.keys()).sort() == ['fp', 'dummy'].sort()
+    assert list(mod5.a.use_provides.keys()).sort() == ['a', 'b', 'e', 'a2', 'b2', 'lgp'].sort()
+    assert list(mod6.a.module_provides.keys()) ==  []
+    assert list(mod6.a.use_provides.keys()).sort() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2'].sort()
     assert mod6.a.use_provides['qgp'].name == 'gp'
 
 def test_walk():
@@ -175,4 +175,4 @@ def test_walk():
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False, ignore_comments=False)
     for stmt, depth in api.walk(tree, 1):
-        print depth, stmt.item
+        print(depth, stmt.item)

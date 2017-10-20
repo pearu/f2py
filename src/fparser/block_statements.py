@@ -80,20 +80,21 @@ __all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
 import re
 import sys
 
-from base_classes import BeginStatement, EndStatement, Statement, \
+from .base_classes import BeginStatement, EndStatement, Statement, \
      AttributeHolder, ProgramBlock, Variable
-from readfortran import Line
-from utils import split_comma, filter_stmts, parse_bind, parse_result, \
+from .readfortran import Line
+from .utils import split_comma, filter_stmts, parse_bind, parse_result, \
     AnalyzeError, is_name
 
 class HasImplicitStmt(object):
 
-    a = AttributeHolder(implicit_rules = {})
+    a = AttributeHolder(implicit_rules={})
 
     def get_type_by_name(self, name):
         implicit_rules = self.a.implicit_rules
         if implicit_rules is None:
-            raise AnalyzeError,'Implicit rules mapping is null while getting %r type' % (name)
+            raise AnalyzeError('Implicit rules mapping is null '
+                               'while getting %r type' % (name))
         l = name[0].lower()
         if l in implicit_rules:
             return implicit_rules[l]
@@ -115,7 +116,7 @@ class HasImplicitStmt(object):
         if implicit_rules is None:
             return tab + 'IMPLICIT NONE\n'
         items = {}
-        for c,t in implicit_rules.items():
+        for c, t in list(implicit_rules.items()):
             if c.startswith('default'):
                 continue
             st = t.tostr()
@@ -127,7 +128,7 @@ class HasImplicitStmt(object):
             return tab + '! default IMPLICIT rules apply\n'
         s = 'IMPLICIT'
         ls = []
-        for st,l in items.items():
+        for st, l in list(items.items()):
             l.sort()
             ls.append(st + ' (%s)' % (', '.join(l)))
         s += ' ' + ', '.join(ls)
@@ -139,7 +140,7 @@ class HasUseStmt(object):
                         use_provides = {})
 
     def get_entity(self, name):
-        for modname, modblock in self.top.a.module.items():
+        for modname, modblock in list(self.top.a.module.items()):
             for stmt in modblock.content:
                 if getattr(stmt,'name','') == name:
                     return stmt
@@ -185,7 +186,7 @@ class HasVariables(object):
     def topyf(self,tab='', only_variables = None):
         s = ''
         if only_variables is None:
-            only_variables = self.a.variables.keys()
+            only_variables = list(self.a.variables.keys())
         for name in only_variables:
             var = self.a.variables[name]
             s += tab + str(var) + '\n'
@@ -197,7 +198,7 @@ class HasTypeDecls(object):
 
     def topyf(self, tab=''):
         s = ''
-        for name, stmt in self.a.type_decls.items():
+        for name, stmt in list(self.a.type_decls.items()):
             s += stmt.topyf(tab='  '+tab)
         return s
 
@@ -318,11 +319,11 @@ class BeginSource(BeginStatement):
 
     def topyf(self, tab=''): # XXXX
         s = ''
-        for name, stmt in self.a.module.items():
+        for name, stmt in list(self.a.module.items()):
             s += stmt.topyf(tab=tab)
-        for name, stmt in self.a.external_subprogram.items():
+        for name, stmt in list(self.a.external_subprogram.items()):
             s += stmt.topyf(tab=tab)
-        for name, stmt in self.a.blockdata.items():
+        for name, stmt in list(self.a.blockdata.items()):
             s += stmt.topyf(tab=tab)
         return s
 # Module
@@ -386,7 +387,7 @@ class Module(BeginStatement, HasAttributes,
             # self.show_message('Not analyzed content: %s' % content)
 
         module_provides = self.a.module_provides
-        for name, var in self.a.variables.items():
+        for name, var in list(self.a.variables.items()):
             if var.is_public():
                 if name in module_provides:
                     self.warning('module data object name conflict with %s, overriding.' % (name))
@@ -401,10 +402,10 @@ class Module(BeginStatement, HasAttributes,
         s +=  HasAttributes.topyf(self, tab=tab+'  ')
         s +=  HasTypeDecls.topyf(self, tab=tab+'  ')
         s +=  HasVariables.topyf(self, tab=tab+'  ')
-        for name, stmt in self.a.module_interface.items():
+        for name, stmt in list(self.a.module_interface.items()):
             s += stmt.topyf(tab=tab+'    ')
         s +=  tab + '  CONTAINS\n'
-        for name, stmt in self.a.module_subprogram.items():
+        for name, stmt in list(self.a.module_subprogram.items()):
             s += stmt.topyf(tab=tab+'    ')
         s += tab + 'END MODULE ' + self.name + '\n'
         return s
@@ -570,7 +571,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             if self.name in parent_interface:
                 p = parent_interface[self.name]
                 last = p.content.pop()
-                assert isinstance(last,EndInterface),`last.__class__`
+                assert isinstance(last,EndInterface), repr(last.__class__)
                 p.content += self.content
                 p.update_attributes(self.a.attributes)
             else:
@@ -605,14 +606,14 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         line = item.get_line()
         m = self.match(line)
         i = line.lower().find(clsname)
-        assert i!=-1,`clsname, line`
+        assert i != -1, repr((clsname, line))
         self.prefix = line[:i].rstrip()
         self.name = line[i:m.end()].lstrip()[len(clsname):].strip()
         line = line[m.end():].lstrip()
         args = []
         if line.startswith('('):
             i = line.find(')')
-            assert i!=-1,`line`
+            assert i != -1, repr(line)
             line2 = item.apply_map(line[:i+1])
             for a in line2[1:-1].split(','):
                 a=a.strip()
@@ -625,11 +626,11 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if isinstance(self, Function):
             self.result, suffix = parse_result(suffix, item)
             if suffix:
-                assert self.bind is None,`self.bind`
+                assert self.bind is None, repr(self.bind)
                 self.bind, suffix = parse_result(suffix, item)
             if self.result is None:
                 self.result = self.name
-        assert not suffix,`suffix`
+        assert not suffix, repr(suffix)
         self.args = args
         self.typedecl = None
         return BeginStatement.process_item(self)
@@ -640,7 +641,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if self.prefix:
             s += self.prefix + ' '
         if self.typedecl is not None:
-            assert isinstance(self, Function),`self.__class__.__name__`
+            assert isinstance(self, Function), repr(self.__class__.__name__)
             s += self.typedecl.tostr() + ' '
         s += clsname
         suf = ''
@@ -684,7 +685,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                 stmt = content.pop(0)
                 while isinstance (stmt, Comment):
                     stmt = content.pop(0)
-                assert isinstance(stmt, self.end_stmt_cls),`stmt`
+                assert isinstance(stmt, self.end_stmt_cls), repr(stmt)
             elif isinstance(stmt, self.end_stmt_cls):
                 continue
             else:
@@ -794,7 +795,7 @@ class Function(SubProgramStatement):
 
     def subroutine_wrapper(self):
         code = self.subroutine_wrapper_code()
-        from api import parse
+        from .api import parse
         block = parse(code) # XXX: set include_dirs
         while len(block.content)==1:
             block = block.content[0]
@@ -980,7 +981,7 @@ class IfThen(BeginStatement):
     def process_item(self):
         item = self.item
         line = item.get_line()[2:-4].strip()
-        assert line[0]=='(' and line[-1]==')',`line`
+        assert line[0] == '(' and line[-1] == ')', repr(line)
         self.expr = item.apply_map(line[1:-1].strip())
         self.construct_name = item.name
         return BeginStatement.process_item(self)
@@ -1027,7 +1028,7 @@ class If(BeginStatement):
         return
 
     def tostr(self):
-        assert len(self.content)==1,`self.content`
+        assert len(self.content) == 1, repr(self.content)
         return 'IF (%s) %s' % (self.expr, str(self.content[0]).lstrip())
 
     def tofortran(self,isfix=None):
@@ -1159,7 +1160,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         i = line.find('(')
         if i!=-1:
             self.name = line[:i].rstrip()
-            assert line[-1]==')',`line`
+            assert line[-1] == ')', repr(line)
             self.params = split_comma(line[i+1:-1].lstrip())
         else:
             self.name = line
@@ -1186,7 +1187,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         for spec in self.specs:
             i = spec.find('(')
             if i!=-1:
-                assert spec.endswith(')'),`spec`
+                assert spec.endswith(')'), repr(spec)
                 s = spec[:i].rstrip().upper()
                 n = spec[i+1:-1].strip()
                 if s=='EXTENDS':
@@ -1194,7 +1195,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
                     continue
                 elif s=='BIND':
                     args,rest = parse_bind(spec)
-                    assert not rest,`rest`
+                    assert not rest, repr(rest)
                     spec = 'BIND(%s)' % (', '.join(args))
                 else:
                     spec = '%s(%s)' % (s,n)
@@ -1257,7 +1258,7 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
             return _cache[id(self)]
         except KeyError:
             s = 0
-            for name,var in self.a.components.items():
+            for name,var in list(self.a.components.items()):
                 s += var.get_bit_size()
             _cache[id(self)] = s
         return s
@@ -1296,13 +1297,13 @@ class Enum(BeginStatement):
 
 ###################################################
 
-import statements
-import typedecl_statements
+from . import statements
+from . import typedecl_statements
 __all__.extend(statements.__all__)
 __all__.extend(typedecl_statements.__all__)
 
-from statements import *
-from typedecl_statements import *
+from .statements import *
+from .typedecl_statements import *
 
 f2py_stmt = [Threadsafe, FortranName, Depend, Check, CallStatement,
              CallProtoArgument]

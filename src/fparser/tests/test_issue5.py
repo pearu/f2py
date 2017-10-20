@@ -78,14 +78,14 @@ def test_reproduce_issue():
     b = foo.get_variable('b')
     r = foo.get_variable('r')
     assert a.typedecl.__class__.__name__=='Character'
-    assert a.length == '8',`a.length`
+    assert a.length == '8',repr(a.length)
     assert a.name =='a'
     assert a.typedecl.selector==('','')
     assert r.typedecl.__class__.__name__=='Real'
     assert r.typedecl.selector==('4','')
 
     assert b.typedecl.__class__.__name__=='Character'
-    assert b.length == '4',`a.length`
+    assert b.length == '4',repr(a.length)
     assert b.name =='b'
     assert b.typedecl.selector==('2','')
 

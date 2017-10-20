@@ -79,7 +79,7 @@ import pytest
 def print_wrapper(arg):
     ''' A wrapper that allows us to call print as a function. Used for
     monkeypatching logging calls. '''
-    print arg
+    print(arg)
     return None
 
 
@@ -106,7 +106,7 @@ def test_case_internal_error(monkeypatch, capsys):
     from fparser.readfortran import FortranStringReader
     reader = FortranStringReader('CASE (yes)')
     reader.set_mode(True, False)
-    item = reader.next()
+    item = next(reader)
     stmt = Case(item, item)
     # Monkeypatch our valid Case object so that get_line() now
     # returns something invalid. We have to do it this way
@@ -120,7 +120,7 @@ def test_case_internal_error(monkeypatch, capsys):
     monkeypatch.setattr(stmt, "warning", print_wrapper)
     stmt.process_item()
     output, _ = capsys.readouterr()
-    print output
+    print(output)
     assert "Internal error when parsing CASE statement" in output
 
 
@@ -131,7 +131,7 @@ def test_class_internal_error(monkeypatch, capsys):
     from fparser.readfortran import FortranStringReader
     reader = FortranStringReader('CLASS IS (yes)')
     reader.set_mode(True, False)
-    item = reader.next()
+    item = next(reader)
     stmt = ClassIs(item, item)
     # Monkeypatch our valid Case object so that get_line() now
     # returns something invalid. We have to do it this way
@@ -184,7 +184,7 @@ def test_select_case():
         assert isinstance(statement.content[2], fparser.statements.Case)
         assert isinstance(statement.content[3], fparser.statements.Assignment)
     gen = str(tree)
-    print gen
+    print(gen)
     assert "SELECT CASE ( iflag )" in gen
 
 
@@ -218,7 +218,7 @@ def test_named_select_case():
         assert isinstance(statement.content[2], fparser.statements.Case)
         assert isinstance(statement.content[3], fparser.statements.Assignment)
     gen = str(tree)
-    print gen
+    print(gen)
     assert "incase: SELECT CASE ( iflag )" in gen
 
 
@@ -250,7 +250,7 @@ def test_select_case_brackets():
     assert isinstance(statement.content[2], fparser.statements.Case)
     assert isinstance(statement.content[3], fparser.statements.Assignment)
     gen = str(tree)
-    print gen
+    print(gen)
     assert "SELECT CASE ( iflag(1) )" in gen
 
 
@@ -295,7 +295,7 @@ def test_select_type():
         assert isinstance(statement.content[3], fparser.statements.Assignment)
         assert isinstance(statement.content[4], fparser.statements.ClassIs)
     gen = str(tree)
-    print gen
+    print(gen)
     assert "SELECT TYPE ( an_object )" in gen
     assert "TYPE IS ( some_type )" in gen
     assert "TYPE IS ( some_type(i), some_other_type )" in gen
@@ -338,7 +338,7 @@ def test_type_is_process_item(monkeypatch, capsys):
     monkeypatch.setattr(typeis, "warning", print_wrapper)
     typeis.process_item()
     output, _ = capsys.readouterr()
-    print output
+    print(output)
     assert "expected type-is-construct-name 'not_a_name' but got " in output
 
 
@@ -412,7 +412,7 @@ def test_class_is_process_item(monkeypatch, capsys):
     monkeypatch.setattr(clsis, "warning", print_wrapper)
     clsis.process_item()
     output, _ = capsys.readouterr()
-    print output
+    print(output)
     assert "expected class-construct-name 'not_a_name' but got " in output
 
 

@@ -77,9 +77,9 @@ import traceback
 import logging
 from numpy.distutils.misc_util import yellow_text, red_text
 
-from readfortran import FortranFileReader, FortranStringReader
-from block_statements import BeginSource
-from utils import AnalyzeError
+from .readfortran import FortranFileReader, FortranStringReader
+from .block_statements import BeginSource
+from .utils import AnalyzeError
 
 logger = logging.getLogger('fparser')
 
@@ -177,7 +177,7 @@ end python module foo
     reader = FortranStringReader(string, True, True)
     parser = FortranParser(reader)
     block = parser.parse()
-    print block
+    print(block)
 
 def test_free90():
     string = """
@@ -208,7 +208,7 @@ end module foo
     reader = FortranStringReader(string, True, False)
     parser = FortranParser(reader)
     block = parser.parse()
-    print block
+    print(block)
 
 def test_f77():
     string = """\
@@ -225,7 +225,7 @@ def test_f77():
     reader = FortranStringReader(string, False, True)
     parser = FortranParser(reader)
     block = parser.parse()
-    print block
+    print(block)
 
 def simple_main():
     import sys
@@ -233,11 +233,11 @@ def simple_main():
         return parse_all_f()
     for filename in sys.argv[1:]:
         reader = FortranFileReader(filename)
-        print yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode))
+        print(yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode)))
         parser = FortranParser(reader)
         parser.parse()
         parser.analyze()
-        print parser.block.torepr(4)
+        print(parser.block.torepr(4))
         #print parser.block
 
 def profile_main():
@@ -254,10 +254,10 @@ def parse_all_f():
     for filename in open('opt_all_f.txt'):
         filename = filename.strip()
         reader = FortranFileReader(filename)
-        print yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode))
+        print(yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode)))
         parser = FortranParser(reader)
         block = parser.parse()
-        print block
+        print(block)
 
 if __name__ == "__main__":
     #test_f77()

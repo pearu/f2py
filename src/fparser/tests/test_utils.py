@@ -44,12 +44,12 @@ from fparser.utils import split_comma, ParseError
 def test_split_comma():
     ''' Test the split_comma() function '''
     items = split_comma("hello, goodbye")
-    print items
+    print(items)
     assert items[0] == "hello"
     assert items[1] == "goodbye"
     # With trailing and leading white space
     items = split_comma("  hello, goodbye   ")
-    print items
+    print(items)
     assert items[0] == "hello"
     assert items[1] == "goodbye"
     items = split_comma("  ")
@@ -73,19 +73,19 @@ def test_split_comma_exceptions():
 def test_split_bracketed_list():
     ''' Test the splitting of a list bracketed with parentheses '''
     items = split_comma("(well(1), this(is), it)", brackets=("(", ")"))
-    print items
+    print(items)
     assert items[0] == "well(1)"
     assert items[1] == "this(is)"
     # With superfluous white space
     items = split_comma("  (  well(1), this(is), it  )  ",
                         brackets=("(", ")"))
-    print items
+    print(items)
     assert items[0] == "well(1)"
     assert items[1] == "this(is)"
     assert items[2] == "it"
     # Square brackets
     items = split_comma("[well(1), this(is), it]", brackets=("[", "]"))
-    print items
+    print(items)
     assert items[0] == "well(1)"
     assert items[1] == "this(is)"
     assert items[2] == "it"
