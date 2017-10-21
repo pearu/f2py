@@ -161,8 +161,16 @@ class Base(ComparableMixin):
     subclasses = {}
 
     @show_result
-    def __new__(cls, string, parent_cls = None):
+    def __new__(cls, string, parent_cls=None):
         """
+        Create a new instance of this object.
+
+        :param cls: the class of object to create
+        :type cls: :py:type:`type`
+        :param string: (source of) Fortran string to parse
+        :type string: str or :py:class:`FortranReaderBase`
+        :param parent_cls: the parent class of this object
+        :type parent_cls: :py:type:`type`
         """
         if parent_cls is None:
             parent_cls = [cls]
@@ -218,12 +226,9 @@ class Base(ComparableMixin):
                     obj = None
                 if obj is not None:
                     return obj
-
         else:
             raise AssertionError(repr(result))
         errmsg = '%s: %r' % (cls.__name__, string)
-        #if isinstance(string, FortranReaderBase) and string.fifo_item:
-        #    errmsg += ' while reaching %s' % (string.fifo_item[-1])
         raise NoMatchError(errmsg)
 
 ##     def restore_reader(self):
@@ -5379,6 +5384,7 @@ class Internal_File_Variable(Base): # R903
     """
     subclass_names = ['Char_Variable']
 
+
 class Open_Stmt(StmtBase, CALLBase): # R904
     """
     <open-stmt> = OPEN ( <connect-spec-list> )
@@ -5387,10 +5393,15 @@ class Open_Stmt(StmtBase, CALLBase): # R904
     use_names = ['Connect_Spec_List']
     @staticmethod
     def match(string):
-        return CALLBase.match('OPEN', Connect_Spec_List, string, require_rhs=True)
+        # The Connect_Spec_List class is generated automatically
+        # by code at the end of this module
+        return CALLBase.match('OPEN', Connect_Spec_List, string,
+                              require_rhs=True)
 
-class Connect_Spec(KeywordValueBase): # R905
+
+class Connect_Spec(KeywordValueBase):
     """
+    R905
     <connect-spec> = [ UNIT = ] <file-unit-number>
                      | ACCESS = <scalar-default-char-expr>
                      | ACTION = <scalar-default-char-expr>
@@ -5412,26 +5423,40 @@ class Connect_Spec(KeywordValueBase): # R905
                      | STATUS = <scalar-default-char-expr>
     """
     subclass_names = []
-    use_names = ['File_Unit_Number', 'Scalar_Default_Char_Expr', 'Label', 'File_Name_Expr', 'Iomsg_Variable',
+    use_names = ['File_Unit_Number', 'Scalar_Default_Char_Expr', 'Label',
+                 'File_Name_Expr', 'Iomsg_Variable',
                  'Scalar_Int_Expr', 'Scalar_Int_Variable']
+
+    @staticmethod
     def match(string):
-        for (k,v) in [\
-            (['ACCESS','ACTION','ASYNCHRONOUS','BLANK','DECIMAL','DELIM','ENCODING',
-              'FORM','PAD','POSITION','ROUND','SIGN','STATUS'], Scalar_Default_Char_Expr),
-            ('ERR', Label),
-            ('FILE',File_Name_Expr),
-            ('IOSTAT', Scalar_Int_Variable),
-            ('IOMSG', Iomsg_Variable),
-            ('RECL', Scalar_Int_Expr),
-            ('UNIT', File_Unit_Number),
-            ]:
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing the keyword and value or None if the
+                 supplied string is not a match
+        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
+        '''
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return 'UNIT', File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
+        for (keyword, value) in [
+                (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
+                  'DELIM', 'ENCODING', 'FORM', 'PAD', 'POSITION', 'ROUND',
+                  'SIGN', 'STATUS'], Scalar_Default_Char_Expr),
+                ('ERR', Label),
+                ('FILE', File_Name_Expr),
+                ('IOSTAT', Scalar_Int_Variable),
+                ('IOMSG', Iomsg_Variable),
+                ('RECL', Scalar_Int_Expr),
+                ('UNIT', File_Unit_Number)]:
             try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs = True)
+                obj = KeywordValueBase.match(keyword, value, string,
+                                             upper_lhs=True)
             except NoMatchError:
                 obj = None
-            if obj is not None: return obj
-        return 'UNIT', File_Unit_Number
-    match = staticmethod(match)
+            if obj is not None:
+                return obj
+        return None
 
 
 class File_Name_Expr(Base): # R906
@@ -6027,7 +6052,7 @@ items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
 
 class Inquire_Spec(KeywordValueBase):  # R930
     """
-:F03R:`930`::
+    :F03R:`930`::
     <inquire-spec> = [ UNIT = ] <file-unit-number>
                      | FILE = <file-name-expr>
                      | ACCESS = <scalar-default-char-variable>
@@ -6065,9 +6090,9 @@ class Inquire_Spec(KeywordValueBase):  # R930
                      | UNFORMATTED = <scalar-default-char-variable>
                      | WRITE = <scalar-default-char-variable>
 
-Attributes
-----------
-items : (str, instance)
+    Attributes
+    ----------
+    items : (str, instance)
     """
     subclass_names = []
     use_names = ['File_Unit_Number', 'File_Name_Expr',
@@ -6077,6 +6102,18 @@ items : (str, instance)
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: The string to check for conformance with an
+                           Inquire_Spec
+        :return: 2-tuple of name (e.g. "UNIT") and value or None if
+                 string is not a valid Inquire_Spec
+        :rtype: 2-tuple where first object represents the name and the
+                second the value.
+        '''
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return 'UNIT', File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
         for (keyword, value) in [
                 (['ACCESS', 'ACTION', 'ASYNCHRONOUS', 'BLANK', 'DECIMAL',
                   'DELIM', 'DIRECT', 'ENCODING', 'FORM', 'NAME', 'PAD',
@@ -6092,11 +6129,14 @@ items : (str, instance)
                 ('IOMSG', Iomsg_Variable),
                 ('FILE', File_Name_Expr),
                 ('UNIT', File_Unit_Number)]:
-            obj = KeywordValueBase.match(keyword, value, string,
-                                         upper_lhs=True)
+            try:
+                obj = KeywordValueBase.match(keyword, value, string,
+                                             upper_lhs=True)
+            except NoMatchError:
+                obj = None
             if obj is not None:
                 return obj
-        return 'UNIT', File_Unit_Number(string)
+        return None
 
 ###############################################################################
 ############################### SECTION 10 ####################################
@@ -7561,14 +7601,16 @@ ClassType = type(Base)
 _names = dir()
 for clsname in _names:
     cls = eval(clsname)
-    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and not cls.__name__.endswith('Base')): continue
+    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
+            not cls.__name__.endswith('Base')):
+        continue
     names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
     for n in names:
         if n in _names: continue
         if n.endswith('_List'):
             _names.append(n)
             n = n[:-5]
-            #print 'Generating %s_List' % (n)
+            # Generate 'list' class
             exec('''\
 class %s_List(SequenceBase):
     subclass_names = [\'%s\']
