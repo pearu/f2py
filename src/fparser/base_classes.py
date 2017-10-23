@@ -72,11 +72,14 @@ __all__ = ['Statement','BeginStatement','EndStatement', 'Variable',
 import re
 import sys
 import copy
+import string
 import logging
-from readfortran import Line, Comment
+from six import with_metaclass
+from .readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
-from utils import split_comma, specs_split_comma, is_int_literal_constant
-from utils import classes
+from .utils import split_comma, specs_split_comma, is_int_literal_constant
+from .utils import classes
+from functools import reduce
 
 logger = logging.getLogger('fparser')
 
@@ -91,7 +94,7 @@ class AttributeHolder(object):
     def __init__(self, **kws):
         self._attributes = {}
         self._readonly = []
-        for k,v in kws.items():
+        for k, v in list(kws.items()):
             self._attributes[k] = v
             if callable(v):
                 self._readonly.append(k)
@@ -99,10 +102,10 @@ class AttributeHolder(object):
 
     def __getattr__(self, name):
         if name not in self._attributes:
-            raise AttributeError,'%s instance has no attribute %r, '\
+            raise AttributeError('%s instance has no attribute %r, '\
                   'expected attributes: %s' \
                   % (self.__class__.__name__,name,
-                     ','.join(self._attributes.keys()))
+                     ','.join(list(self._attributes.keys()))))
         value = self._attributes[name]
         if callable(value):
             value = value()
@@ -114,16 +117,16 @@ class AttributeHolder(object):
             self.__dict__[name] = value
             return
         if name in self._readonly:
-            raise AttributeError,'%s instance attribute %r is readonly' \
-                  % (self.__class__.__name__, name)
+            raise AttributeError('%s instance attribute %r is readonly' \
+                  % (self.__class__.__name__, name))
         if name not in self._attributes:
-            raise AttributeError,'%s instance has no attribute %r, '\
+            raise AttributeError('%s instance has no attribute %r, '\
                   'expected attributes: %s' \
-                  % (self.__class__.__name__,name,','.join(self._attributes.keys()))
+                  % (self.__class__.__name__,name,','.join(list(self._attributes.keys()))))
         self._attributes[name] = value
 
     def isempty(self):
-        for k in self._attributes.keys():
+        for k in list(self._attributes.keys()):
             v = getattr(self,k)
             if v: return False
         return True
@@ -134,20 +137,20 @@ class AttributeHolder(object):
         if depth==0: return tab + self.__class__.__name__
         l = [self.__class__.__name__+':']
         ttab = tab + '    '
-        for k in self._attributes.keys():
+        for k in list(self._attributes.keys()):
             v = getattr(self,k)
             if v:
                 if isinstance(v,list):
                     l.append(ttab + '%s=<%s-list>' % (k,len(v)))
                 elif isinstance(v,dict):
-                    l.append(ttab + '%s=<dict with keys %s>' % (k,v.keys()))
+                    l.append(ttab + '%s=<dict with keys %s>' % (k,list(v.keys())))
                 else:
                     l.append(ttab + '%s=<%s>' % (k,type(v)))
         return '\n'.join(l)
 
     def todict(self):
         d = {}
-        for k in self._attributes.keys():
+        for k in list(self._attributes.keys()):
             v = getattr(self, k)
             d[k] = v
         return d
@@ -158,7 +161,7 @@ def get_base_classes(cls):
         bases += get_base_classes(c)
     return bases + cls.__bases__ + (cls,)
 
-class Variable(object):
+class Variable(object, with_metaclass(classes)):
     """
     Variable instance has attributes:
       name
@@ -168,8 +171,6 @@ class Variable(object):
       intent
       parent - Statement instances defining the variable
     """
-
-    __metaclass__ = classes
     
     def __init__(self, parent, name):
         self.parent = parent
@@ -227,7 +228,7 @@ class Variable(object):
         return self.typedecl
 
     def add_parent(self, parent):
-        if id(parent) not in map(id, self.parents):
+        if id(parent) not in list(map(id, self.parents)):
             self.parents.append(parent)
         self.parent = parent
         return
@@ -361,27 +362,31 @@ class Variable(object):
             lattr = attr.lower()
             uattr = attr.upper()
             if lattr.startswith('dimension'):
-                assert self.dimension is None, `self.dimension,attr`
+                assert self.dimension is None, repr((self.dimension,attr))
                 l = attr[9:].lstrip()
-                assert l[0]+l[-1]=='()',`l`
-                self.set_dimension(split_comma(l[1:-1].strip(), self.parent.item))
+                assert l[0] + l[-1] == '()', repr(l)
+                self.set_dimension(
+                        split_comma(l[1:-1].strip(), self.parent.item))
                 continue
             if lattr.startswith('intent'):
                 l = attr[6:].lstrip()
-                assert l[0]+l[-1]=='()',`l`
+                assert l[0] + l[-1] == '()', repr(l)
                 self.set_intent(specs_split_comma(l[1:-1].strip(),
-                                                  self.parent.item, upper=True))
+                                                  self.parent.item,
+                                                  upper=True))
                 continue
             if lattr.startswith('bind'):
                 l = attr[4:].lstrip()
-                assert l[0]+l[-1]=='()',`l`
-                self.bind = specs_split_comma(l[1:-1].strip(), self.parent.item,
-                                              upper = True)
+                assert l[0] + l[-1] == '()', repr(l)
+                self.bind = specs_split_comma(l[1:-1].strip(),
+                                              self.parent.item,
+                                              upper=True)
                 continue
             if lattr.startswith('check'):
                 l = attr[5:].lstrip()
-                assert l[0]+l[-1]=='()',`l`
-                self.check.extend(split_comma(l[1:-1].strip(), self.parent.item))
+                assert l[0]+l[-1]=='()',repr(l)
+                self.check.extend(split_comma(l[1:-1].strip(),
+                                              self.parent.item))
                 continue
             if uattr not in attributes:
                 if uattr not in self.known_attributes:
@@ -465,13 +470,15 @@ class Variable(object):
             elif self.is_explicit_shape_array():
                 shape = []
                 for spec in array_spec:
-                    if len(spec)==1:
-                        shape.append(spec[0])
+                    if len(spec) == 1:
+                        shape.append(spec[0].replace(' ', ''))
                     else:
                         try:
-                            n = int(spec[1]) - int(spec[0])
+                            lss = int(spec[0].replace(' ', '')) # lower subscript
+                            uss = int(spec[1].replace(' ', '')) # upper subscript
+                            n = uss - (lss - 1)
                         except ValueError:
-                            n = '(%s)-(%s)' % (spec[1], spec[0]) 
+                            n = '(%s)-(%s)' % (spec[1], spec[0])
                         shape.append(str(n))
                 self.shape = shape
         return
@@ -483,18 +490,17 @@ class Variable(object):
     def info(self, message):
         return self.parent.info(message)
 
-class ProgramBlock(object):
+class ProgramBlock(object, with_metaclass(classes)):
 
-    __metaclass__ = classes
+    pass
 
-class Statement(object):
+class Statement(object, with_metaclass(classes)):
     """
     Statement instance has attributes:
       parent  - Parent BeginStatement or FortranParser instance
       item    - Line instance containing the statement line
       isvalid - boolean, when False, the Statement instance will be ignored
     """
-    __metaclass__ = classes
 
     modes = ['free','fix','f77','pyf']
     _repr_attr_names = []
@@ -746,7 +752,7 @@ class BeginStatement(Statement):
                 # TODO: FIX ME, Comment content is a string
                 self.content.append(classes.Comment(self, item))
             else:
-                raise NotImplementedError(`item`)
+                raise NotImplementedError(repr(item))
             item = self.get_item()
 
         if not end_flag:

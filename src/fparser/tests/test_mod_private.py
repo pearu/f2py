@@ -74,9 +74,9 @@ end subroutine
 end module mod1
 '''
     mod1 = api.parse(src, isfree=True, isstrict=False).content[0]
-    assert mod1.get_provides() == {}, `mod1.get_provides()`
-    assert mod1.a.variables.keys() == ['i']
-    assert mod1.a.module_subprogram.keys() == ['s1']
+    assert mod1.get_provides() == {}, repr(mod1.get_provides())
+    assert list(mod1.a.variables.keys()) == ['i']
+    assert list(mod1.a.module_subprogram.keys()) == ['s1']
 
 def test_access_spec():
     src = '''\
