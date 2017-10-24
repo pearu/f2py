@@ -655,6 +655,7 @@ def test_integer():
     assert parse(Integer, 'integer*4 a ,b') == 'INTEGER*4 a, b'
     assert parse(Integer, 'integer*4 :: a ,b') == 'INTEGER*4 a, b'
     assert parse(Integer, 'integer*4 a(1,2)') == 'INTEGER*4 a(1,2)'
+    assert parse(Integer, 'integer*4 a(2*(1+2)-1)') == 'INTEGER*4 a(2*(1+2)-1)'
     assert parse(Integer, 'integer*4 :: a(1,2),b') == \
         'INTEGER*4 a(1,2), b'
     assert parse(Integer, 'integer*4 external :: a') == \
@@ -668,6 +669,22 @@ def test_integer():
     assert parse(Integer, 'integer(kind=2+2)') == 'INTEGER(KIND=2+2)'
     assert parse(Integer, 'integer(kind=f(4,5))') == \
         'INTEGER(KIND=f(4,5))'
+    assert parse(Integer, 'integer a = 5') == 'INTEGER :: a = 5'
+
+
+@pytest.mark.xfail(reason="Constant array assignment not yet supported.")
+def test_const_array_decl():
+    '''Tests declarations that set an initial value to an array.'''
+    assert parse(Integer, 'integer a(1) = (/1/)') == \
+        'INTEGER :: a(1) = (/1/)'
+    assert parse(Real, 'real a(3) = (/1.1, 2.2, 3.3/)') == \
+        'REAL :: a(3) = (/1.1, 2.2, 3.3/)'
+    assert parse(Logical, 'logical :: a(3) = (/true, false, true/)') == \
+        'LOGICAL :: a(3) = (/true, false, true/)'
+    assert parse(Integer, 'integer a(1) = [1]') == \
+        'INTEGER :: a(1) = [1]'
+    assert parse(Integer, 'integer a(3) = [1, 2, 3]') == \
+        'INTEGER :: a(3) = [1, 2, 3]'
 
 
 def test_logical():
