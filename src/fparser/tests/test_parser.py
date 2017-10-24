@@ -334,7 +334,6 @@ def test_nullify():
 
 
 def test_use():
-    '''Tests the correct parsing of the USE statement.'''
     assert parse(Use, 'use a') == 'USE a'
     assert parse(Use, 'use :: a') == 'USE a'
     assert parse(Use, 'use, intrinsic:: a') == 'USE, INTRINSIC :: a'
