@@ -69,19 +69,21 @@ Fortran single line statements.
 """
 
 __all__ = ['GeneralAssignment',
-           'Assignment','PointerAssignment','Assign','Call','Goto','ComputedGoto','AssignedGoto',
-           'Continue','Return','Stop','Print','Read','Read0','Read1','Write','Flush','Wait',
-           'Contains','Allocate','Deallocate','ModuleProcedure','Access','Public','Private',
-           'Close','Cycle','Backspace','Endfile','Rewind','Open','Format','Save',
-           'Data','Nullify','Use','Exit','Parameter','Equivalence','Dimension','Target',
-           'Pointer','Protected','Volatile','Value','ArithmeticIf','Intrinsic',
-           'Inquire','Sequence','External','Namelist','Common','Optional','Intent',
-           'Entry','Import','ForallStmt','SpecificBinding','GenericBinding',
-           'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
-           'Case','TypeIs', 'ClassIs', 'WhereStmt', 'ElseWhere', 'Enumerator',
-           'FortranName', 'Threadsafe',
-           'Depend','Check','CallStatement','CallProtoArgument','Pause',
-           'Comment']
+           'Assignment', 'PointerAssignment', 'Assign', 'Call', 'Goto',
+           'ComputedGoto', 'AssignedGoto', 'Continue', 'Return', 'Stop',
+           'Print', 'Read', 'Read0', 'Read1', 'Write', 'Flush', 'Wait',
+           'Contains', 'Allocate', 'Deallocate', 'ModuleProcedure', 'Access',
+           'Public', 'Private', 'Close', 'Cycle', 'Backspace', 'Endfile',
+           'Rewind', 'Open', 'Format', 'Save', 'Data', 'Nullify', 'Use',
+           'Exit', 'Parameter', 'Equivalence', 'Dimension', 'Target',
+           'Pointer', 'Protected', 'Volatile', 'Value', 'ArithmeticIf',
+           'Intrinsic', 'Inquire', 'Sequence', 'External', 'Namelist',
+           'Common', 'Optional', 'Intent', 'Entry', 'Import', 'ForallStmt',
+           'SpecificBinding', 'GenericBinding', 'FinalBinding', 'Allocatable',
+           'Asynchronous', 'Bind', 'Else', 'ElseIf', 'Case', 'TypeIs',
+           'ClassIs', 'WhereStmt', 'ElseWhere', 'Enumerator', 'FortranName',
+           'Threadsafe', 'Depend', 'Check', 'CallStatement',
+           'CallProtoArgument', 'Pause', 'Comment']
 
 import re
 import sys
@@ -104,7 +106,7 @@ class StatementWithNamelist(Statement):
         if self.item.has_map():
             self.isvalid = False
             return
-        if hasattr(self,'stmtname'):
+        if hasattr(self, 'stmtname'):
             clsname = self.stmtname
         else:
             clsname = self.__class__.__name__
@@ -119,8 +121,8 @@ class StatementWithNamelist(Statement):
             items.append(item)
         return
 
-    def tofortran(self,isfix=None):
-        if hasattr(self,'stmtname'):
+    def tofortran(self, isfix=None):
+        if hasattr(self, 'stmtname'):
             clsname = self.stmtname.upper()
         else:
             clsname = self.__class__.__name__.upper()
@@ -139,8 +141,8 @@ class GeneralAssignment(Statement):
     """
 
     match = re.compile(r'\w[^=]*\s*=\>?').match
-    item_re = re.compile(r'(?P<variable>\w[^=]*)\s*(?P<sign>=\>?)\s*(?P<expr>.*)\Z',re.I).match
-    _repr_attr_names = ['variable','sign','expr'] + Statement._repr_attr_names
+    item_re = re.compile(r'(?P<variable>\w[^=]*)\s*(?P<sign>=\>?)\s*(?P<expr>.*)\Z', re.I).match
+    _repr_attr_names = ['variable', 'sign', 'expr'] + Statement._repr_attr_names
 
     def process_item(self):
         m = self.item_re(self.item.get_line())
@@ -155,15 +157,15 @@ class GeneralAssignment(Statement):
             self.isvalid = False
             return
         else:
-            if sign=='=>':
+            if sign == '=>':
                 self.__class__ = PointerAssignment
             else:
                 self.__class__ = Assignment
         apply_map = self.item.apply_map
-        v1 = v = m.group('variable').replace(' ','')
+        v1 = v = m.group('variable').replace(' ', '')
         while True:
             i = v.find(')')
-            if i==-1:
+            if i == -1:
                 break
             v = v[i+1:]
             if v.startswith('(') or v.startswith(r'%'):
@@ -179,7 +181,8 @@ class GeneralAssignment(Statement):
         return self.get_indent_tab(isfix=isfix) + '%s %s %s' \
                % (self.variable, self.sign, self.expr)
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Assignment(GeneralAssignment):
