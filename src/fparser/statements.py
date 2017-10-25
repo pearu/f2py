@@ -141,7 +141,8 @@ class GeneralAssignment(Statement):
     """
 
     match = re.compile(r'\w[^=]*\s*=\>?').match
-    item_re = re.compile(r'(?P<variable>\w[^=]*)\s*(?P<sign>=\>?)\s*(?P<expr>.*)\Z', re.I).match
+    item_re = re.compile(
+        r'(?P<variable>\w[^=]*)\s*(?P<sign>=\>?)\s*(?P<expr>.*)\Z', re.I).match
     _repr_attr_names = ['variable', 'sign', 'expr'] + Statement._repr_attr_names
 
     def process_item(self):
