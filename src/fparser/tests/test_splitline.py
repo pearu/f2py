@@ -70,8 +70,6 @@ Test parsing single Fortran lines.
 
 """
 
-import pytest
-
 from fparser.splitline import splitparen
 
 
@@ -79,16 +77,12 @@ def test_splitparen():
     ''' Unit tests for splitparen function.'''
     assert splitparen('abc') == ['abc']
     assert splitparen('abc(1)') == ['abc', '(1)']
+    assert splitparen('abc(1) xyz') == ['abc', '(1)', ' xyz']
     assert splitparen('a(b) = b(x,y(1)) b((a))') == \
         ['a', '(b)', ' = b', '(x,y(1))', ' b', '((a))']
     # pylint: disable=anomalous-backslash-in-string
     assert splitparen('a(b) = b(x,y(1)) b\((a)\)') == \
         ['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)']
-
-
-@pytest.mark.xfail(reason="Square brackets not yet supported.")
-def test_splitparen_xfail():
-    ''' Currently failing unit tests for splitparen function - wip.'''
     assert splitparen('abc[1]') == ['abc', '[1]']
     assert splitparen('abc[1,2,3]') == ['abc', '[1,2,3]']
     assert splitparen('a[b] = b[x,y(1)] b((a))') == \
@@ -96,3 +90,9 @@ def test_splitparen_xfail():
     # pylint: disable=anomalous-backslash-in-string
     assert splitparen('a[b] = b[x,y(1)] b\((a)\)') == \
         ['a', '[b]', ' = b', '[x,y(1)]', ' b\\(', '(a)', '\\)']
+    assert splitparen('integer a(3) = ["a", "b", "c"]') == \
+        ['integer a', '(3)', ' = ', '["a", "b", "c"]']
+    assert splitparen(
+        'character(len=40) :: a(3) = ["a[),", ",b,[(", "c,][)("]') == \
+        ['character', '(len=40)', ' :: a', '(3)', ' = ',
+         '["a[),", ",b,[(", "c,][)("]']

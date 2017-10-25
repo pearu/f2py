@@ -672,7 +672,6 @@ def test_integer():
     assert parse(Integer, 'integer a = 5') == 'INTEGER :: a = 5'
 
 
-@pytest.mark.xfail(reason="Constant array assignment not yet supported.")
 def test_const_array_decl():
     '''Tests declarations that set an initial value to an array.'''
     assert parse(Integer, 'integer a(1) = (/1/)') == \
