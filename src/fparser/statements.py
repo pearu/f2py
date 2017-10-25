@@ -618,7 +618,7 @@ class Allocate(Statement):
                 | SOURCE = <source-expr>
     <allocation> = <allocate-object> [ ( <allocate-shape-spec-list> ) ]
     """
-    match = re.compile(r'allocate\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'allocate\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[8:].lstrip()[1:-1].strip()
@@ -650,7 +650,7 @@ class Allocate(Statement):
         if self.spec:
             t = self.spec.tostr() + ' :: '
         return self.get_indent_tab(isfix=isfix) \
-               + 'ALLOCATE (%s%s)' % (t,', '.join(self.items))
+               + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
 
     def analyze(self): return
 
@@ -664,7 +664,7 @@ class Deallocate(Statement):
     <dealloc-opt> = STAT = <stat-variable>
                     | ERRMSG = <errmsg-variable>
     """
-    match = re.compile(r'deallocate\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'deallocate\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[10:].lstrip()[1:-1].strip()
@@ -712,7 +712,7 @@ class Access(Statement):
     <access-spec> = PUBLIC | PRIVATE
     <access-id> = <use-name> | <generic-spec>
     """
-    match = re.compile(r'(public|private)\b',re.I).match
+    match = re.compile(r'(public|private)\b', re.I).match
 
     def process_item(self):
         clsname = self.__class__.__name__.lower()
@@ -749,7 +749,7 @@ class Access(Statement):
                           % (clsname.upper(), parentclsname.lower())
                 self.warning(message)
         access_id_list = self.parent.a.private_id_list + self.parent.a.public_id_list
-        if access_id_list.count('')>1:
+        if access_id_list.count('') > 1:
             message = 'C548 violation: only one access-stmt with omitted'\
                       ' access-id-list is permitted in'\
                       ' the module-specification-part.'
@@ -776,7 +776,7 @@ class Close(Statement):
                    | ERR = <label>
                    | STATUS = <scalar-default-char-expr>
     """
-    match = re.compile(r'close\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'close\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[5:].lstrip()[1:-1].strip()
@@ -794,7 +794,7 @@ class Cycle(Statement):
     """
     CYCLE [ <do-construct-name> ]
     """
-    match = re.compile(r'cycle\b\s*\w*\s*\Z',re.I).match
+    match = re.compile(r'cycle\b\s*\w*\s*\Z', re.I).match
 
     def process_item(self):
         self.name = self.item.get_line()[5:].lstrip()
@@ -818,7 +818,7 @@ class FilePositioningStatement(Statement):
                            | ERR = <label>
     The same for BACKSPACE, ENDFILE.
     """
-    match = re.compile(r'(rewind|backspace|endfile)\b',re.I).match
+    match = re.compile(r'(rewind|backspace|endfile)\b', re.I).match
 
     def process_item(self):
         clsname = self.__class__.__name__.lower()
@@ -828,7 +828,7 @@ class FilePositioningStatement(Statement):
             return
         line = line[len(clsname):].lstrip()
         if line.startswith('('):
-            assert line[-1]==')',repr(line)
+            assert line[-1] == ')', repr(line)
             spec = line[1:-1].strip()
         else:
             spec = line
@@ -858,7 +858,7 @@ class Open(Statement):
                      | ACCESS = <scalar-default-char-expr>
                      | ..
     """
-    match = re.compile(r'open\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'open\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[4:].lstrip()[1:-1].strip()
@@ -904,7 +904,7 @@ class Format(Statement):
             self.warning('FORMAT statement must be labeled (F2008:C1001).' \
                          % (item.label))
         line = item.get_line()[6:].lstrip()
-        assert line[0]+line[-1]=='()',repr(line)
+        assert line[0]+line[-1] == '()', repr(line)
         self.specs = split_comma(line[1:-1], item)
         return
 
@@ -923,7 +923,7 @@ class Save(Statement):
     <proc-pointer-name> = <name>
     <object-name> = <name>
     """
-    match = re.compile(r'save\b',re.I).match
+    match = re.compile(r'save\b', re.I).match
 
     def process_item(self):
         assert not self.item.has_map()
@@ -935,9 +935,9 @@ class Save(Statement):
             s = s.strip()
             if not s: continue
             if s.startswith('/'):
-                assert s.endswith('/'),repr(s)
+                assert s.endswith('/'), repr(s)
                 n = s[1:-1].strip()
-                assert is_name(n),repr(n)
+                assert is_name(n), repr(n)
                 items.append('/%s/' % (n))
             elif is_name(s):
                 items.append(s)
@@ -974,7 +974,7 @@ class Data(Statement):
     <array-section> = <data-ref> [ ( <substring-range> ) ]
 
     """
-    match = re.compile(r'data\b',re.I).match
+    match = re.compile(r'data\b', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[4:].lstrip()
@@ -982,13 +982,13 @@ class Data(Statement):
         self.isvalid = False
         while line:
             i = line.find('/')
-            if i==-1: return
-            j = line.find('/',i+1)
-            if j==-1: return
-            l1, l2 = line[:i].rstrip(),line[i+1:j].strip()
+            if i == -1: return
+            j = line.find('/', i+1)
+            if j == -1: return
+            l1, l2 = line[:i].rstrip(), line[i+1:j].strip()
             l1 = split_comma(l1, self.item)
             l2 = split_comma(l2, self.item)
-            stmts.append((l1,l2))
+            stmts.append((l1, l2))
             line = line[j+1:].lstrip()
             if line.startswith(','):
                 line = line[1:].lstrip()
@@ -999,8 +999,8 @@ class Data(Statement):
     def tofortran(self, isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
         l = []
-        for o,v in self.stmts:
-            l.append('%s / %s /' %(', '.join(o),', '.join(v)))
+        for o, v in self.stmts:
+            l.append('%s / %s /' %(', '.join(o), ', '.join(v)))
         return tab + 'DATA ' + ' '.join(l)
 
     def analyze(self): return
@@ -1011,7 +1011,7 @@ class Nullify(Statement):
     NULLIFY ( <pointer-object-list> )
     <pointer-object> = <variable-name>
     """
-    match = re.compile(r'nullify\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'nullify\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[7:].lstrip()[1:-1].strip()
@@ -1034,7 +1034,7 @@ class Use(Statement):
     <only> = <generic-spec> | <only-use-name> | <rename>
     <only-use-name> = <use-name>
     """
-    match = re.compile(r'use\b',re.I).match
+    match = re.compile(r'use\b', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[3:].lstrip()
@@ -1051,7 +1051,7 @@ class Use(Statement):
         self.nature = nature
         i = line.find(',')
         self.isonly = False
-        if i==-1:
+        if i == -1:
             self.name = line
             self.items = []
         else:
@@ -1121,7 +1121,7 @@ class Use(Statement):
             for rename, orig in renames:
                 self.populate_use_provides(all_mod_provides, use_provides, orig, rename)
             # get all the rest
-            unrenamed = set(all_mod_provides) - set([b for (a,b) in renames])
+            unrenamed = set(all_mod_provides) - set([b for (a, b) in renames])
             for name in unrenamed:
                 self.populate_use_provides(all_mod_provides, use_provides, name)
         return
@@ -1144,7 +1144,7 @@ class Exit(Statement):
     """
     EXIT [ <do-construct-name> ]
     """
-    match = re.compile(r'exit\b\s*\w*\s*\Z',re.I).match
+    match = re.compile(r'exit\b\s*\w*\s*\Z', re.I).match
 
     def process_item(self):
         self.name = self.item.get_line()[4:].lstrip()
@@ -1176,7 +1176,7 @@ class Parameter(Statement):
     def analyze(self):
         for item in self.items:
             i = item.find('=')
-            assert i!=-1,repr(item)
+            assert i != -1, repr(item)
             name = item[:i].rstrip()
             value = item[i+1:].lstrip()
             var = self.get_variable(name)
@@ -1197,7 +1197,7 @@ class Equivalence(Statement):
         items = []
         for s in self.item.get_line()[11:].lstrip().split(','):
             s = s.strip()
-            assert s[0]+s[-1]=='()',repr((s,self.item.get_line()))
+            assert s[0]+s[-1] == '()', repr((s, self.item.get_line()))
             s = ', '.join(split_comma(s[1:-1], self.item))
             items.append('('+s+')')
         self.items = items
@@ -1229,7 +1229,7 @@ class Dimension(Statement):
     def analyze(self):
         for line in self.items:
             i = line.find('(')
-            assert i!=-1 and line.endswith(')'),repr(line)
+            assert i != -1 and line.endswith(')'), repr(line)
             name = line[:i].rstrip()
             array_spec = split_comma(line[i+1:-1].strip(), self.item)
             var = self.get_variable(name)
@@ -1257,7 +1257,7 @@ class Target(Statement):
     def analyze(self):
         for line in self.items:
             i = line.find('(')
-            assert i!=-1 and line.endswith(')'),repr(line)
+            assert i != -1 and line.endswith(')'), repr(line)
             name = line[:i].rstrip()
             array_spec = split_comma(line[i+1:-1].strip(), self.item)
             var = self.get_variable(name)
@@ -1273,7 +1273,7 @@ class Pointer(Statement):
                    | <proc-entity-name>
 
     """
-    match = re.compile(r'pointer\b',re.I).match
+    match = re.compile(r'pointer\b', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[7:].lstrip()
@@ -1288,11 +1288,11 @@ class Pointer(Statement):
     def analyze(self):
         for line in self.items:
             i = line.find('(')
-            if i==-1:
+            if i == -1:
                 name = line
                 array_spec = None
             else:
-                assert line.endswith(')'),repr(line)
+                assert line.endswith(')'), repr(line)
                 name = line[:i].rstrip()
                 array_spec = split_comma(line[i+1:-1].strip(), self.item)
             var = self.get_variable(name)
@@ -1305,7 +1305,7 @@ class Protected(StatementWithNamelist):
     """
     PROTECTED [ :: ] <entity-name-list>
     """
-    match = re.compile(r'protected\b',re.I).match
+    match = re.compile(r'protected\b', re.I).match
 
     def analyze(self):
         for name in self.items:
@@ -1318,7 +1318,7 @@ class Volatile(StatementWithNamelist):
     """
     VOLATILE [ :: ] <object-name-list>
     """
-    match = re.compile(r'volatile\b',re.I).match
+    match = re.compile(r'volatile\b', re.I).match
 
     def analyze(self):
         for name in self.items:
@@ -1331,7 +1331,7 @@ class Value(StatementWithNamelist):
     """
     VALUE [ :: ] <dummy-arg-name-list>
     """
-    match = re.compile(r'value\b',re.I).match
+    match = re.compile(r'value\b', re.I).match
 
     def analyze(self):
         for name in self.items:
@@ -1348,16 +1348,17 @@ class ArithmeticIf(Statement):
 
     def process_item(self):
         line = self.item.get_line()[2:].lstrip()
-        line,l2,l3 = line.rsplit(',',2)
+        line, l2, l3 = line.rsplit(',', 2)
         i = line.rindex(')')
         l1 = line[i+1:]
         self.expr = self.item.apply_map(line[1:i]).strip()
-        self.labels = [l1.strip(),l2.strip(),l3.strip()]
+        self.labels = [l1.strip(), l2.strip(), l3.strip()]
         return
 
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'IF (%s) %s' \
-               % (self.expr,', '.join(self.labels))
+               % (self.expr, ', '.join(self.labels))
+
     def analyze(self): return
 
 
@@ -1365,7 +1366,7 @@ class Intrinsic(StatementWithNamelist):
     """
     INTRINSIC [ :: ] <intrinsic-procedure-name-list>
     """
-    match = re.compile(r'intrinsic\b',re.I).match
+    match = re.compile(r'intrinsic\b', re.I).match
 
     def analyze(self):
         for name in self.items:
@@ -1385,7 +1386,7 @@ class Inquire(Statement):
     <output-item> = <expr>
                   | <io-implied-do>
     """
-    match = re.compile(r'inquire\s*\(',re.I).match
+    match = re.compile(r'inquire\s*\(', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[7:].lstrip()
@@ -1408,7 +1409,7 @@ class Sequence(Statement):
     """
     SEQUENCE
     """
-    match = re.compile(r'sequence\Z',re.I).match
+    match = re.compile(r'sequence\Z', re.I).match
 
     def process_item(self):
         return
@@ -1438,34 +1439,34 @@ class Namelist(Statement):
     NAMELIST / <namelist-group-name> / <namelist-group-object-list> [ [ , ] / <namelist-group-name> / <namelist-group-object-list> ]...
     <namelist-group-object> = <variable-name>
     """
-    match = re.compile(r'namelist\b',re.I).match
+    match = re.compile(r'namelist\b', re.I).match
 
     def process_item(self):
         line = self.item.get_line()[8:].lstrip()
         items = []
         while line:
-            assert line.startswith('/'),repr(line)
-            i = line.find('/',1)
-            assert i!=-1,repr(line)
+            assert line.startswith('/'), repr(line)
+            i = line.find('/', 1)
+            assert i != -1, repr(line)
             name = line[:i+1]
             line = line[i+1:].lstrip()
             i = line.find('/')
-            if i==-1:
-                items.append((name,line))
+            if i == -1:
+                items.append((name, line))
                 line = ''
                 continue
             s = line[:i].rstrip()
             if s.endswith(','):
                 s = s[:-1].rstrip()
-            items.append((name,s))
+            items.append((name, s))
             line = line[i+1:].lstrip()
         self.items = items
         return
 
     def tofortran(self, isfix=None):
         l = []
-        for name,s in self.items:
-            l.append('%s %s' % (name,s))
+        for name, s in self.items:
+            l.append('%s %s' % (name, s))
         tab = self.get_indent_tab(isfix=isfix)
         return tab + 'NAMELIST ' + ', '.join(l)
 
@@ -1477,7 +1478,7 @@ class Common(Statement):
     <common-block-object> = <variable-name> [ ( <explicit-shape-spec-list> ) ]
                           | <proc-pointer-name>
     """
-    match = re.compile(r'common\b',re.I).match
+    match = re.compile(r'common\b', re.I).match
 
     def process_item(self):
         item = self.item
@@ -1486,30 +1487,31 @@ class Common(Statement):
         while line:
             if not line.startswith('/'):
                 name = ''
-                assert not items,repr(line)
+                assert not items, repr(line)
             else:
-                i = line.find('/',1)
-                assert i!=-1,repr(line)
+                i = line.find('/', 1)
+                assert i != -1, repr(line)
                 name = line[1:i].strip()
                 line = line[i+1:].lstrip()
             i = line.find('/')
-            if i==-1:
-                items.append((name,split_comma(line, item)))
+            if i == -1:
+                items.append((name, split_comma(line, item)))
                 line = ''
                 continue
             s = line[:i].rstrip()
             if s.endswith(','):
                 s = s[:-1].rstrip()
-            items.append((name,split_comma(s,item)))
+            items.append((name, split_comma(s, item)))
             line = line[i:].lstrip()
         self.items = items
         return
+
     def tofortran(self, isfix=None):
         l = []
-        for name,s in self.items:
+        for name, s in self.items:
             s = ', '.join(s)
             if name:
-                l.append('/ %s / %s' % (name,s))
+                l.append('/ %s / %s' % (name, s))
             else:
                 l.append(s)
         tab = self.get_indent_tab(isfix=isfix)
@@ -1519,8 +1521,8 @@ class Common(Statement):
         for cname, items in self.items:
             for item in items:
                 i = item.find('(')
-                if i!=-1:
-                    assert item.endswith(')'),repr(item)
+                if i != -1:
+                    assert item.endswith(')'), repr(item)
                     name = item[:i].rstrip()
                     shape = split_comma(item[i+1:-1].strip(), self.item)
                 else:
@@ -1538,7 +1540,7 @@ class Optional(StatementWithNamelist):
     OPTIONAL [ :: ] <dummy-arg-name-list>
     <dummy-arg-name> = <name>
     """
-    match = re.compile(r'optional\b',re.I).match
+    match = re.compile(r'optional\b', re.I).match
 
     def analyze(self):
         for name in self.items:
