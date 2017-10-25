@@ -90,6 +90,12 @@ def test_splitparen():
     # pylint: disable=anomalous-backslash-in-string
     assert splitparen('a[b] = b[x,y(1)] b\((a)\)') == \
         ['a', '[b]', ' = b', '[x,y(1)]', ' b\\(', '(a)', '\\)']
+    assert splitparen('integer a(3) = (/"a", "b", "c"/)') == \
+        ['integer a', '(3)', ' = ', '(/"a", "b", "c"/)']
+    assert splitparen(
+        'character(len=40) :: a(3) = (/"a[),", ",b,[(", "c,][)("/)') == \
+        ['character', '(len=40)', ' :: a', '(3)', ' = ',
+         '(/"a[),", ",b,[(", "c,][)("/)']
     assert splitparen('integer a(3) = ["a", "b", "c"]') == \
         ['integer a', '(3)', ' = ', '["a", "b", "c"]']
     assert splitparen(
