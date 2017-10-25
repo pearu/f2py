@@ -738,7 +738,8 @@ class Access(Statement):
         l = getattr(self.parent.a, clsname.lower() + '_id_list')
         if self.items:
             for name in self.items:
-                if name not in l: l.append(name)
+                if name not in l:
+                    l.append(name)
         else:
             if '' not in l:
                 l.append('')
