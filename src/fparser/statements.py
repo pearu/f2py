@@ -934,7 +934,8 @@ class Save(Statement):
         items = []
         for s in line.split(','):
             s = s.strip()
-            if not s: continue
+            if not s:
+                continue
             if s.startswith('/'):
                 assert s.endswith('/'), repr(s)
                 n = s[1:-1].strip()
