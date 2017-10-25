@@ -79,13 +79,6 @@ import re
 class String(str): pass
 class ParenString(str): pass
 
-def split2(line, lower=False):
-    """
-    Split line into non-string part and into a start of a string part.
-    Returns 2-tuple. The second item either is empty string or start
-    of a string part.
-    """
-    return LineSplitter(line,lower=lower).split2()
 
 _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
 _is_name = re.compile(r'\w*\Z',re.I).match
@@ -231,6 +224,8 @@ class LineSplitterBase(object):
             item = self.get_item() # get_item raises StopIteration
         return item
 
+# FIXME: this function is not used
+#        (only in commented out code in readfortran)
 class LineSplitter(LineSplitterBase):
     """ Splits a line into non strings and strings. E.g.
     abc=\"123\" -> ['abc=','\"123\"']
@@ -245,19 +240,6 @@ class LineSplitter(LineSplitterBase):
         self.quotechar = quotechar
         self.lower = lower
 
-    def split2(self):
-        """
-        Split line until the first start of a string.
-        """
-        try:
-            item1 = self.get_item()
-        except StopIteration:
-            return '',''
-        i = len(item1)
-        l = self.fifo_line[:]
-        l.reverse()
-        item2 = ''.join(l)
-        return item1,item2
 
     def get_item(self):
         fifo_pop = self.fifo_line.pop
@@ -375,70 +357,6 @@ def splitparen(line,paren='()'):
         items.append(item)
     return items
 
-class LineSplitterParen(LineSplitterBase):
-    """ Splits a line into strings and strings with parenthesis. E.g.
-    a(x) = b(c,d) -> ['a','(x)',' = b','(c,d)']
-    """
-    def __init__(self, line, paren = '()'):
-        self.fifo_line = [c for c in line]
-        self.fifo_line.reverse()
-        self.startchar = paren[0]
-        self.endchar = paren[1]
-        self.stopchar = None
-
-    def get_item(self):
-        fifo_pop = self.fifo_line.pop
-        try:
-            char = fifo_pop()
-        except IndexError:
-            raise StopIteration
-        fifo_append = self.fifo_line.append
-        startchar = self.startchar
-        endchar = self.endchar
-        stopchar = self.stopchar
-        l = []
-        l_append = l.append
-
-        nofslashes = 0
-        if stopchar is None:
-            # search for parenthesis start
-            while 1:
-                if char==startchar and not nofslashes % 2:
-                    self.stopchar = endchar
-                    fifo_append(char)
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                l_append(char)
-                try:
-                    char = fifo_pop()
-                except IndexError:
-                    break
-            item = ''.join(l)
-            return item
-
-        nofstarts = 0
-        while 1:
-            if char==stopchar and not nofslashes % 2 and nofstarts==1:
-                l_append(char)
-                self.stopchar = None
-                break
-            if char=='\\':
-                nofslashes += 1
-            else:
-                nofslashes = 0
-            if char==startchar:
-                nofstarts += 1
-            elif char==endchar:
-                nofstarts -= 1
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                break
-        return ParenString(''.join(l))
 
 def test():
     splitter = LineSplitter('abc\\\' def"12\\"3""56"dfad\'a d\'')
@@ -464,21 +382,6 @@ def test():
     l,stopchar = splitquote(' &abc"123','"')
     assert l==[' &abc"','123']
     assert stopchar is None
-
-    l = split2('')
-    assert l==('',''),`l`
-    l = split2('12')
-    assert l==('12',''),`l`
-    l = split2('1"a"//"b"')
-    assert l==('1','"a"//"b"'),`l`
-    l = split2('"ab"')
-    assert l==('','"ab"'),`l`
-
-    splitter = LineSplitterParen('a(b) = b(x,y(1)) b\((a)\)')
-    l = [item for item in splitter]
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],`l`
-    l = splitparen('a(b) = b(x,y(1)) b\((a)\)')
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],`l`
 
     l = string_replace_map('a()')
     print l
