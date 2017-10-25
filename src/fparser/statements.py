@@ -984,11 +984,9 @@ class Data(Statement):
         self.isvalid = False
         while line:
             i = line.find('/')
-            if i == -1:
-                return
+            if i == -1: return
             j = line.find('/', i+1)
-            if j == -1:
-                return
+            if j == -1: return
             l1, l2 = line[:i].rstrip(), line[i+1:j].strip()
             l1 = split_comma(l1, self.item)
             l2 = split_comma(l2, self.item)
@@ -1135,7 +1133,7 @@ class Use(Statement):
         if ovar is None:
             raise AnalyzeError("entity name '%s' is not in module '%s'" % (name, self.name))
         if rename:
-            name_idx = rename  #XXX: rename != ovar.name -- should mark this somehow?
+            name_idx = rename #XXX: rename != ovar.name -- should mark this somehow?
         else:
             name_idx = name
         if name_idx in use_provides:
