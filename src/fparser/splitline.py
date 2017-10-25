@@ -297,64 +297,71 @@ class LineSplitter(LineSplitterBase):
                 break
         return String(''.join(l))
 
-def splitparen(line,paren='()'):
+
+def splitparen(line, paren_open="([", paren_close=")]"):
     """
-    Fast LineSplitterParen.
+    Splits a line into top-level parenthesis and not-parenthesised
+    parts. E.g.: "a( (1+2)*3) = b(x)" becomes:
+    ["a", "( (1+2)*3)", " = b", "(x)"]
+    Line: the string to split.
+    paren_open/close: The characters that define the parentheses.
+    They must be matched in order: paren_open[x] is closed by
+    paren_close[x].
     """
-    stopchar = None
-    startchar, endchar = paren[0],paren[1]
 
-    items = []
-    i = 0
-    while 1:
-        try:
-            char = line[i]; i += 1
-        except IndexError:
-            break
-        nofslashes = 0
-        charlist = []
-        if stopchar is None:
-            # search for parenthesis start
-            while 1:
-                if char==startchar and not nofslashes % 2:
-                    stopchar = endchar
-                    i -= 1
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                charlist.append(char)
-                try:
-                    char = line[i]; i += 1
-                except IndexError:
-                    break
-            item = ''.join(charlist)
-        else:
-            nofstarts = 0
-            while 1:
-                if char==stopchar and not nofslashes % 2 and nofstarts==1:
-                    charlist.append(char)
-                    stopchar = None
-                    break
+    assert len(paren_open) == len(paren_close)
 
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
+    items = []   # Result list
+    i = 0        # Index of current character
+    num_backslashes = 0   # Counts consecutivre "\" characters
+    # Empty if outside quotes, or set to the starting (and therefore
+    # also the ending) character.
+    inside_quotes_char = ""
+    start = 0    # Index of start of current part.
+    stack = []   # Stack keeping track of required closing brackets
 
-                if char==startchar:
-                    nofstarts += 1
-                elif char==endchar:
-                    nofstarts -= 1
+    i = -1
+    for char in line:
+        i += 1
+        char = line[i]
+        if char == "\\":
+            num_backslashes = (num_backslashes+1) % 2
+            continue
 
-                charlist.append(char)
-                try:
-                    char = line[i]; i += 1
-                except IndexError:
-                    break
-            item = ParenString(''.join(charlist))
-        items.append(item)
+        # We had an odd number of \, so the next character is neither
+        # a real quote or parenthesis character, and can just be added.
+        if num_backslashes == 1:
+            num_backslashes = 0
+            continue
+
+        # If we are reading a quote, keep on reading till closing
+        # quote is reached
+        if inside_quotes_char != '':
+            # Reset inside_quotes_char if we find the closing quote
+            if char == inside_quotes_char:
+                inside_quotes_char = ''
+            continue
+
+        pos = paren_open.find(char)
+        if pos > -1:
+            if len(stack) == 0:
+                # New part starts:
+                items.append(line[start:i])
+                start = i
+            stack.append(paren_close[pos])
+            continue
+
+        # Found closing bracket
+        if len(stack) > 0 and char == stack[-1]:
+            stack.pop()
+            if len(stack) == 0:
+                # Found last closing bracket
+                items.append(ParenString(line[start:i+1]))
+                start = i+1
+
+    # Add any leftover characters as a separate item
+    if start != len(line):
+        items.append(line[start:])
     return items
 
 
