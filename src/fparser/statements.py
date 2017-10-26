@@ -854,13 +854,16 @@ class FilePositioningStatement(Statement):
     def analyze(self): return
 
 
-class Backspace(FilePositioningStatement): pass
+class Backspace(FilePositioningStatement):
+    pass
 
 
-class Endfile(FilePositioningStatement): pass
+class Endfile(FilePositioningStatement):
+    pass
 
 
-class Rewind(FilePositioningStatement): pass
+class Rewind(FilePositioningStatement):
+    pass
 
 
 class Open(Statement):
@@ -1001,9 +1004,11 @@ class Data(Statement):
         self.isvalid = False
         while line:
             i = line.find('/')
-            if i == -1: return
+            if i == -1:
+                return
             j = line.find('/', i+1)
-            if j == -1: return
+            if j == -1:
+                return
             l1, l2 = line[:i].rstrip(), line[i+1:j].strip()
             l1 = split_comma(l1, self.item)
             l2 = split_comma(l2, self.item)
@@ -2217,8 +2222,8 @@ class ElseWhere(Statement):
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
         if self.name and not self.name == parent_name:
-            self.warning('expected where-construct-name %r but got %r, skipping.'
-                         % (parent_name, self.name))
+            self.warning('expected where-construct-name %r but got %r, '
+                         'skipping.' % (parent_name, self.name))
             self.isvalid = False
         return
 
