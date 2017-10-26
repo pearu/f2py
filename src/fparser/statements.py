@@ -1082,13 +1082,14 @@ class Use(Statement):
         else:
             self.name = line[:i].rstrip()
             line = line[i+1:].lstrip()
-            if line.lower().startswith('only') and line[4:].lstrip().startswith(':'):
+            if line.lower().startswith('only') and \
+               line[4:].lstrip().startswith(':'):
                 self.isonly = True
                 line = line[4:].lstrip()[1:].lstrip()
             self.items = split_comma(line, self.item)
         return
 
-    def tofortran(self, isfix=None):
+    def tofortran(self, isfix=None):  # pylint: disable=invalid-name
         tab = self.get_indent_tab(isfix=isfix)
         s = 'USE'
         if self.nature:
@@ -1102,7 +1103,7 @@ class Use(Statement):
             s += ' ' + ', '.join(self.items)
         return tab + s
 
-    def analyze(self):
+    def analyze(self):  # pylint: disable=invalid-name
         use = self.parent.a.use
         if self.name in use:
             return
@@ -1114,7 +1115,9 @@ class Use(Statement):
                 from .readfortran import FortranFileReader
                 from .parsefortran import FortranParser
                 self.info('looking module information from %r' % (fn))
-                reader = FortranFileReader(fn, include_dirs=self.reader.include_dirs, source_only=self.reader.source_only)
+                reader = FortranFileReader(
+                    fn, include_dirs=self.reader.include_dirs,
+                    source_only=self.reader.source_only)
                 parser = FortranParser(reader)
                 parser.parse()
                 parser.block.a.module.update(modules)
@@ -1122,7 +1125,8 @@ class Use(Statement):
                 modules.update(parser.block.a.module)
 
         if self.name not in modules:
-            self.warning('no information about the module %r in use statement' % (self.name))
+            self.warning('no information about the module %r in use statement'
+                         % (self.name))
             return
 
         module = modules[self.name]
@@ -1141,7 +1145,8 @@ class Use(Statement):
         else:
             # norenames should be empty
             if norenames:
-                self.warning("'use' without 'only' clause does not rename the variables '%s'" % ', '.join(norenames))
+                self.warning("'use' without 'only' clause does not rename the "
+                             "variables '%s'" % ', '.join(norenames))
             # populate use_provides with renamed vars from module.
             for rename, orig in renames:
                 self.populate_use_provides(all_mod_provides, use_provides, orig, rename)
@@ -1151,7 +1156,8 @@ class Use(Statement):
                 self.populate_use_provides(all_mod_provides, use_provides, name)
         return
 
-    def populate_use_provides(self, all_mod_provides, use_provides, name, rename=None):
+    def populate_use_provides(self, all_mod_provides, use_provides, name,
+                              rename=None):
         ovar = all_mod_provides.get(name, None)
         if ovar is None:
             raise AnalyzeError("entity name '%s' is not in module '%s'" % (name, self.name))
