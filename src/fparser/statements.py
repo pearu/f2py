@@ -441,7 +441,9 @@ class Print(Statement):
     <output-item> = <expr> | <io-implied-do>
     <io-implied-do> = ( <io-implied-do-object-list> , <implied-do-control> )
     <io-implied-do-object> = <input-item> | <output-item>
-    <implied-do-control> = <do-variable> = <scalar-int-expr> , <scalar-int-expr> [ , <scalar-int-expr> ]
+    <implied-do-control> = <do-variable>
+                         = <scalar-int-expr> ,
+                           <scalar-int-expr> [ , <scalar-int-expr> ]
     <input-item> = <variable> | <io-implied-do>
     """
     match = re.compile(r'print\s*(\'\w*\'|\"\w*\"|\d+|[*]|\b\w)', re.I).match
@@ -501,7 +503,8 @@ class Read0(Read):
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'READ (%s)' % (', '.join(self.specs))
+        s = self.get_indent_tab(isfix=isfix) \
+            + 'READ (%s)' % (', '.join(self.specs))
         if self.items:
             return s + ' ' + ', '.join(self.items)
         return s
@@ -538,7 +541,8 @@ class Write(Statement):
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'WRITE (%s)' % ', '.join(self.specs)
+        s = self.get_indent_tab(isfix=isfix) \
+            + 'WRITE (%s)' % ', '.join(self.specs)
         if self.items:
             s += ' ' + ', '.join(self.items)
         return s
