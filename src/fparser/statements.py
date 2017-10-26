@@ -1001,9 +1001,11 @@ class Data(Statement):
         self.isvalid = False
         while line:
             i = line.find('/')
-            if i == -1: return
+            if i == -1:
+                return
             j = line.find('/', i+1)
-            if j == -1: return
+            if j == -1:
+                return
             l1, l2 = line[:i].rstrip(), line[i+1:j].strip()
             l1 = split_comma(l1, self.item)
             l2 = split_comma(l2, self.item)
