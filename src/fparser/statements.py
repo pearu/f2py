@@ -214,7 +214,8 @@ class Assign(Statement):
         return self.get_indent_tab(isfix=isfix) + 'ASSIGN %s TO %s' \
                % (self.items[0], self.items[1])
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Call(Statement):
@@ -321,7 +322,8 @@ class Goto(Statement):
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'GO TO %s' % (self.label)
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class ComputedGoto(Statement):
@@ -345,7 +347,8 @@ class ComputedGoto(Statement):
         return self.get_indent_tab(isfix=isfix) + 'GO TO (%s) %s' \
                % (', '.join(self.items), self.expr)
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class AssignedGoto(Statement):
@@ -391,7 +394,8 @@ class Continue(Statement):
     def tofortran(self, isfix=None):
         return self.get_indent_tab(deindent=True) + 'CONTINUE'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Return(Statement):
@@ -410,7 +414,8 @@ class Return(Statement):
             return tab + 'RETURN %s' % (self.expr)
         return tab + 'RETURN'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Stop(Statement):
@@ -430,7 +435,8 @@ class Stop(Statement):
             return tab + 'STOP %s' % (self.code)
         return tab + 'STOP'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Print(Statement):
@@ -461,7 +467,8 @@ class Print(Statement):
         return self.get_indent_tab(isfix=isfix) + 'PRINT %s' \
                % (', '.join([self.format]+self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Read(Statement):
@@ -489,7 +496,8 @@ Read1:    READ <format> [, <input-item-list>]
         self.process_item()
         return
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Read0(Read):
@@ -547,7 +555,8 @@ class Write(Statement):
             s += ' ' + ', '.join(self.items)
         return s
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Flush(Statement):
@@ -577,7 +586,8 @@ class Flush(Statement):
         tab = self.get_indent_tab(isfix=isfix)
         return tab + 'FLUSH (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Wait(Statement):
@@ -603,7 +613,8 @@ class Wait(Statement):
         tab = self.get_indent_tab(isfix=isfix)
         return tab + 'WAIT (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Contains(Statement):
@@ -612,7 +623,8 @@ class Contains(Statement):
     """
     match = re.compile(r'contains\Z', re.I).match
 
-    def process_item(self): return
+    def process_item(self):
+        return
 
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'CONTAINS'
@@ -660,7 +672,8 @@ class Allocate(Statement):
         return self.get_indent_tab(isfix=isfix) \
             + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Deallocate(Statement):
@@ -682,7 +695,8 @@ class Deallocate(Statement):
     def tofortran(self, isfix=None): return self.get_indent_tab(isfix=isfix) \
         + 'DEALLOCATE (%s)' % (', '.join(self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class ModuleProcedure(Statement):
@@ -798,7 +812,8 @@ class Close(Statement):
         tab = self.get_indent_tab(isfix=isfix)
         return tab + 'CLOSE (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Cycle(Statement):
@@ -816,7 +831,8 @@ class Cycle(Statement):
             return self.get_indent_tab(isfix=isfix) + 'CYCLE ' + self.name
         return self.get_indent_tab(isfix=isfix) + 'CYCLE'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class FilePositioningStatement(Statement):
@@ -851,7 +867,8 @@ class FilePositioningStatement(Statement):
         return self.get_indent_tab(isfix=isfix) + clsname \
             + ' (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Backspace(FilePositioningStatement):
@@ -884,7 +901,8 @@ class Open(Statement):
         return self.get_indent_tab(isfix=isfix) \
             + 'OPEN (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Format(Statement):
@@ -928,7 +946,8 @@ class Format(Statement):
         return self.get_indent_tab(isfix=isfix) \
             + 'FORMAT (%s)' % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Save(Statement):
@@ -971,7 +990,8 @@ class Save(Statement):
             return tab + 'SAVE'
         return tab + 'SAVE %s' % (', '.join(self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Data(Statement):
@@ -1027,7 +1047,8 @@ class Data(Statement):
             l.append('%s / %s /' % (', '.join(o), ', '.join(v)))
         return tab + 'DATA ' + ' '.join(l)
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Nullify(Statement):
@@ -1046,7 +1067,8 @@ class Nullify(Statement):
         return self.get_indent_tab(isfix=isfix) \
             + 'NULLIFY (%s)' % (', '.join(self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Use(Statement):
@@ -1202,7 +1224,8 @@ class Exit(Statement):
             return self.get_indent_tab(isfix=isfix) + 'EXIT ' + self.name
         return self.get_indent_tab(isfix=isfix) + 'EXIT'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Parameter(Statement):
@@ -1255,7 +1278,8 @@ class Equivalence(Statement):
         return self.get_indent_tab(isfix=isfix) \
             + 'EQUIVALENCE %s' % (', '.join(self.items))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Dimension(Statement):
@@ -1414,7 +1438,8 @@ class ArithmeticIf(Statement):
         return self.get_indent_tab(isfix=isfix) + 'IF (%s) %s' \
                % (self.expr, ', '.join(self.labels))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Intrinsic(StatementWithNamelist):
@@ -1457,7 +1482,8 @@ class Inquire(Statement):
         return self.get_indent_tab(isfix=isfix) + 'INQUIRE (%s)' \
             % (', '.join(self.specs))
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Sequence(Statement):
@@ -1761,7 +1787,8 @@ class Forall(Statement):
         return tab + 'FORALL (%s) %s' % \
             (s, str(self.content[0]).lstrip())
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 ForallStmt = Forall
 
@@ -1966,7 +1993,8 @@ class Else(Statement):
             return self.get_indent_tab(deindent=True) + 'ELSE ' + self.name
         return self.get_indent_tab(deindent=True) + 'ELSE'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class ElseIf(Statement):
@@ -1996,7 +2024,8 @@ class ElseIf(Statement):
         return self.get_indent_tab(deindent=True) + 'ELSE IF (%s) THEN%s' \
             % (self.expr, s)
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 # SelectCase construct statements
@@ -2199,7 +2228,8 @@ class Where(Statement):
         return tab + 'WHERE ( %s ) %s' % (self.expr,
                                           str(self.content[0]).lstrip())
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 WhereStmt = Where
 
@@ -2236,7 +2266,8 @@ class ElseWhere(Statement):
             s += ' ' + self.name
         return tab + s
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 # Enum construct statements
 
@@ -2381,7 +2412,8 @@ class Pause(Statement):
             return self.get_indent_tab(isfix=isfix) + 'PAUSE ' + self.value
         return self.get_indent_tab(isfix=isfix) + 'PAUSE'
 
-    def analyze(self): return
+    def analyze(self):
+        return
 
 
 class Comment(Statement):
@@ -2411,4 +2443,5 @@ class Comment(Statement):
             tab = self.get_indent_tab(isfix=isfix) + '!'
         return tab + self.content
 
-    def analyze(self): return
+    def analyze(self):
+        return
