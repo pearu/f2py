@@ -144,7 +144,8 @@ class GeneralAssignment(Statement):
     match = re.compile(r'\w[^=]*\s*=\>?').match
     item_re = re.compile(
         r'(?P<variable>\w[^=]*)\s*(?P<sign>=\>?)\s*(?P<expr>.*)\Z', re.I).match
-    _repr_attr_names = ['variable', 'sign', 'expr'] + Statement._repr_attr_names
+    _repr_attr_names = ['variable', 'sign', 'expr'] + \
+        Statement._repr_attr_names
 
     def process_item(self):
         m = self.item_re(self.item.get_line())
@@ -500,7 +501,8 @@ class Read0(Read):
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'READ (%s)' % (', '.join(self.specs))
+        s = self.get_indent_tab(isfix=isfix) \
+            + 'READ (%s)' % (', '.join(self.specs))
         if self.items:
             return s + ' ' + ', '.join(self.items)
         return s
@@ -537,7 +539,8 @@ class Write(Statement):
         return
 
     def tofortran(self, isfix=None):
-        s = self.get_indent_tab(isfix=isfix) + 'WRITE (%s)' % ', '.join(self.specs)
+        s = self.get_indent_tab(isfix=isfix) \
+            + 'WRITE (%s)' % ', '.join(self.specs)
         if self.items:
             s += ' ' + ', '.join(self.items)
         return s
@@ -651,8 +654,8 @@ class Allocate(Statement):
         t = ''
         if self.spec:
             t = self.spec.tostr() + ' :: '
-        return self.get_indent_tab(isfix=isfix) \
-               + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
+            return self.get_indent_tab(isfix=isfix) \
+                + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
 
     def analyze(self): return
 
@@ -751,13 +754,15 @@ class Access(Statement):
                           ' specification-part of a module, not in a %s.'\
                           % (clsname.upper(), parentclsname.lower())
                 self.warning(message)
-        access_id_list = self.parent.a.private_id_list + self.parent.a.public_id_list
+        access_id_list = self.parent.a.private_id_list \
+            + self.parent.a.public_id_list
         if access_id_list.count('') > 1:
             message = 'C548 violation: only one access-stmt with omitted'\
                       ' access-id-list is permitted in'\
                       ' the module-specification-part.'
             self.warning(message)
-        # todo: check for conflicting access statement usages (e.g. private foo; public foo)
+        # todo: check for conflicting access statement usages
+        #       (e.g. private foo; public foo)
         # todo: check for conflicting generic-spec id-s.
         return
 
@@ -840,7 +845,8 @@ class FilePositioningStatement(Statement):
 
     def tofortran(self, isfix=None):
         clsname = self.__class__.__name__.upper()
-        return self.get_indent_tab(isfix=isfix) + clsname + ' (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) \
+            + clsname + ' (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
@@ -869,7 +875,8 @@ class Open(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'OPEN (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'OPEN (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
@@ -912,7 +919,8 @@ class Format(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'FORMAT (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'FORMAT (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
