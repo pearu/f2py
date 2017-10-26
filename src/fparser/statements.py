@@ -614,7 +614,8 @@ class Contains(Statement):
 
     def process_item(self): return
 
-    def tofortran(self, isfix=None): return self.get_indent_tab(isfix=isfix) + 'CONTAINS'
+    def tofortran(self, isfix=None):
+        return self.get_indent_tab(isfix=isfix) + 'CONTAINS'
 
 
 class Allocate(Statement):
