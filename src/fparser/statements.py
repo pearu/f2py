@@ -1,4 +1,3 @@
-from __future__ import print_function
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -68,6 +67,20 @@ Fortran single line statements.
 
 """
 
+from __future__ import print_function
+
+import re
+import sys
+
+from .base_classes import Statement, Variable
+
+# Auxiliary tools
+
+from .utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
+     get_module_file, parse_bind, parse_result, is_name, \
+     extract_bracketed_list_items
+from .utils import classes
+
 __all__ = ['GeneralAssignment',
            'Assignment', 'PointerAssignment', 'Assign', 'Call', 'Goto',
            'ComputedGoto', 'AssignedGoto', 'Continue', 'Return', 'Stop',
@@ -84,18 +97,6 @@ __all__ = ['GeneralAssignment',
            'ClassIs', 'WhereStmt', 'ElseWhere', 'Enumerator', 'FortranName',
            'Threadsafe', 'Depend', 'Check', 'CallStatement',
            'CallProtoArgument', 'Pause', 'Comment']
-
-import re
-import sys
-
-from .base_classes import Statement, Variable
-
-# Auxiliary tools
-
-from .utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
-     get_module_file, parse_bind, parse_result, is_name, \
-     extract_bracketed_list_items
-from .utils import classes
 
 
 class StatementWithNamelist(Statement):
