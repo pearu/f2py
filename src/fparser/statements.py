@@ -854,8 +854,7 @@ class FilePositioningStatement(Statement):
     def analyze(self): return
 
 
-class Backspace(FilePositioningStatement):
-    pass
+class Backspace(FilePositioningStatement): pass
 
 
 class Endfile(FilePositioningStatement): pass
