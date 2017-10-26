@@ -1048,6 +1048,7 @@ class Use(Statement):
     """Parses USE statement.
 
     :param class Statement: Base fparser class.
+    :raises AnalyzeError: If entity name is not in module.
 
     Fortran syntax construct:
 
