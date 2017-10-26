@@ -756,13 +756,15 @@ class Access(Statement):
                           ' specification-part of a module, not in a %s.'\
                           % (clsname.upper(), parentclsname.lower())
                 self.warning(message)
-        access_id_list = self.parent.a.private_id_list + self.parent.a.public_id_list
+        access_id_list = self.parent.a.private_id_list \
+            + self.parent.a.public_id_list
         if access_id_list.count('') > 1:
             message = 'C548 violation: only one access-stmt with omitted'\
                       ' access-id-list is permitted in'\
                       ' the module-specification-part.'
             self.warning(message)
-        # todo: check for conflicting access statement usages (e.g. private foo; public foo)
+        # todo: check for conflicting access statement usages
+        #       (e.g. private foo; public foo)
         # todo: check for conflicting generic-spec id-s.
         return
 
