@@ -589,7 +589,7 @@ class Wait(Statement):
     match = re.compile(r'wait\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
-        self.specs = specs_split_comma(\
+        self.specs = specs_split_comma(
             self.item.get_line()[4:].lstrip()[1:-1], self.item)
         return
 
@@ -903,7 +903,7 @@ class Format(Statement):
         item = self.item
         if item.label is None:
             # R1001:
-            self.warning('FORMAT statement must be labeled (F2008:C1001).' \
+            self.warning('FORMAT statement must be labeled (F2008:C1001).'
                          % (item.label))
         line = item.get_line()[6:].lstrip()
         assert line[0]+line[-1] == '()', repr(line)
@@ -1134,7 +1134,7 @@ class Use(Statement):
         if ovar is None:
             raise AnalyzeError("entity name '%s' is not in module '%s'" % (name, self.name))
         if rename:
-            name_idx = rename #XXX: rename != ovar.name -- should mark this somehow?
+            name_idx = rename  #XXX: rename != ovar.name -- should mark this somehow?
         else:
             name_idx = name
         if name_idx in use_provides:
@@ -1892,7 +1892,7 @@ class Else(Statement):
         self.name = item.get_line()[4:].strip()
         parent_name = getattr(self.parent, 'name', '')
         if self.name and self.name != parent_name:
-            self.warning('expected if-construct-name %r but got %r, skipping.'\
+            self.warning('expected if-construct-name %r but got %r, skipping.'
                          % (parent_name, self.name))
             self.isvalid = False
         return
@@ -1920,7 +1920,7 @@ class ElseIf(Statement):
         self.name = line[i+1:].lstrip()[4:].strip()
         parent_name = getattr(self.parent, 'name', '')
         if self.name and self.name != parent_name:
-            self.warning('expected if-construct-name %r but got %r, skipping.'\
+            self.warning('expected if-construct-name %r but got %r, skipping.'
                          % (parent_name, self.name))
             self.isvalid = False
         return
@@ -2157,7 +2157,7 @@ class ElseWhere(Statement):
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
         if self.name and not self.name==parent_name:
-            self.warning('expected where-construct-name %r but got %r, skipping.'\
+            self.warning('expected where-construct-name %r but got %r, skipping.'
                          % (parent_name, self.name))
             self.isvalid = False
         return
