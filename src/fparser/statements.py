@@ -1642,7 +1642,8 @@ class Entry(Statement):
     <suffix> = <proc-language-binding-spec> [ RESULT ( <result-name> ) ]
              | RESULT ( <result-name> ) [ <proc-language-binding-spec> ]
     <proc-language-binding-spec> = <language-binding-spec>
-    <language-binding-spec> = BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
+    <language-binding-spec> =
+                      BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
     <dummy-arg> = <dummy-arg-name> | *
     """
     match = re.compile(r'entry\s+[a-zA-Z]', re.I).match
@@ -1761,7 +1762,8 @@ ForallStmt = Forall
 
 class SpecificBinding(Statement):
     """
-    PROCEDURE [ ( <interface-name> ) ]  [ [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
+    PROCEDURE [ ( <interface-name> ) ]  [ [ , <binding-attr-list> ] :: ]
+              <binding-name> [ => <procedure-name> ]
     <binding-attr> = PASS [ ( <arg-name> ) ]
                    | NOPASS
                    | NON_OVERRIDABLE
@@ -1795,7 +1797,8 @@ class SpecificBinding(Statement):
             else:
                 i = attr.find('(')
                 assert i != -1 and attr.endswith(')'), repr(attr)
-                attr = '%s (%s)' % (attr[:i].rstrip().upper(), attr[i+1:-1].strip())
+                attr = '%s (%s)' % (attr[:i].rstrip().upper(),
+                                    attr[i+1:-1].strip())
             attrs1.append(attr)
         self.attrs = attrs1
         i = line.find('=')
@@ -1858,7 +1861,10 @@ class FinalBinding(StatementWithNamelist):
 
 class Allocatable(Statement):
     """
-    ALLOCATABLE [ :: ] <object-name> [ ( <deferred-shape-spec-list> ) ] [ , <object-name> [ ( <deferred-shape-spec-list> ) ] ]...
+    ALLOCATABLE [ :: ] <object-name> [ ( <deferred-shape-spec-list> ) ]
+                                     [ , <object-name>
+                                         [ ( <deferred-shape-spec-list> ) ]
+                                     ]...
     """
     match = re.compile(r'allocatable\b', re.I).match
 
@@ -1906,7 +1912,8 @@ class Asynchronous(StatementWithNamelist):
 class Bind(Statement):
     """
     <language-binding-spec> [ :: ] <bind-entity-list>
-    <language-binding-spec> = BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
+    <language-binding-spec> =
+                      BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
     <bind-entity> = <entity-name> | / <common-block-name> /
     """
     match = re.compile(r'bind\s*\(.*\)', re.I).match
@@ -2183,7 +2190,8 @@ class Where(Statement):
 
     def tofortran(self, isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
-        return tab + 'WHERE ( %s ) %s' % (self.expr, str(self.content[0]).lstrip())
+        return tab + 'WHERE ( %s ) %s' % (self.expr,
+                                          str(self.content[0]).lstrip())
 
     def analyze(self): return
 
