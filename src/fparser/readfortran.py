@@ -810,23 +810,30 @@ class FortranReaderBase(object):
                 else:
                     l1 = sourceline[startcolno:endcolno]
                     l2 = sourceline[endcolno:]
-                r.append('%s%s%s <== %s' % (l0,yellow_text(l1),l2,red_text(message)))
+                r.append('%s%s%s <== %s' % (l0, yellow_text(l1), l2,
+                                            red_text(message)))
             else:
-                r.append(linenostr+ self.source_lines[i-1])
+                r.append(linenostr + self.source_lines[i-1])
         return '\n'.join(r)
 
     def format_error_message(self, message, startlineno, endlineno,
                              startcolno=0, endcolno=-1):
-        return self.format_message('ERROR',message, startlineno,
+        '''Create a string with an error message.'''
+        return self.format_message('ERROR', message, startlineno,
                                    endlineno, startcolno, endcolno)
 
-    def format_warning_message(self, message, startlineno, endlineno,
-                               startcolno=0, endcolno=-1):
-        return self.format_message('WARNING',message, startlineno,
+    def format_warning_message(self, message, startlineno=None,
+                               endlineno=None, startcolno=0, endcolno=-1):
+        '''Create a string with a warning message.'''
+        if startlineno is None:
+            startlineno = self.linecount-2
+        if endlineno is None:
+            endlineno = self.linecount
+        return self.format_message('WARNING', message, startlineno,
                                    endlineno, startcolno, endcolno)
 
     def info(self, message, item=None):
-        if item is None:            
+        if item is None:
             m = self.format_message('INFORMATION',
                                       message,
                                       len(self.source_lines)-2, len(self.source_lines))

@@ -67,19 +67,18 @@
 Module content
 --------------
 """
-#Author: Pearu Peterson <pearu@cens.ioc.ee>
-#Created: Oct 2006
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: Oct 2006
+
+
+from six import string_types
+# import all Statement classes:
+from .base_classes import classes
+
+from .utils import AnalyzeError
 
 __autodoc__ = ['get_reader', 'parse', 'walk']
 
-from six import string_types
-from . import Fortran2003
-# import all Statement classes:
-from .base_classes import EndStatement, classes
-from .block_statements import *
-
-# CHAR_BIT is used to convert object bit sizes to byte sizes
-from .utils import CHAR_BIT
 
 def get_reader(input, isfree=None, isstrict=None, include_dirs = None, source_only = None,
                ignore_comments = True):
@@ -216,13 +215,18 @@ def parse(input, isfree=None, isstrict=None, include_dirs = None, source_only = 
     """
     from .parsefortran import FortranParser
     reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
-    parser = FortranParser(reader, ignore_comments = ignore_comments)
+    parser = FortranParser(reader, ignore_comments=ignore_comments)
     parser.parse()
     if analyze:
         parser.analyze()
+    if not parser.block:
+        message = reader.format_warning_message("Parser Error")
+        raise AnalyzeError(message)
+
     return parser.block
 
-def walk(stmt, depth=-1, _initial_depth = None):
+
+def walk(stmt, depth=-1, _initial_depth=None):
     """ Generate Fortran statements by walking the stmt tree until given depth.
 
     For each block statement in stmt, the walk functions yields a
@@ -269,7 +273,7 @@ def walk(stmt, depth=-1, _initial_depth = None):
 
     """
     if _initial_depth is None:
-        if depth==0:
+        if depth == 0:
             return
         _initial_depth = depth
     if not isinstance(stmt, classes.BeginSource):
