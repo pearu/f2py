@@ -1404,7 +1404,7 @@ class Inquire(Statement):
             return self.get_indent_tab(isfix=isfix) + 'INQUIRE (%s) %s' \
                    % (', '.join(self.specs), ', '.join(self.items))
         return self.get_indent_tab(isfix=isfix) + 'INQUIRE (%s)' \
-                   % (', '.join(self.specs))
+            % (', '.join(self.specs))
 
     def analyze(self): return
 
