@@ -652,7 +652,7 @@ class Allocate(Statement):
         if self.spec:
             t = self.spec.tostr() + ' :: '
         return self.get_indent_tab(isfix=isfix) \
-               + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
+            + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
 
     def analyze(self): return
 
@@ -1004,7 +1004,7 @@ class Data(Statement):
         tab = self.get_indent_tab(isfix=isfix)
         l = []
         for o, v in self.stmts:
-            l.append('%s / %s /' %(', '.join(o), ', '.join(v)))
+            l.append('%s / %s /' % (', '.join(o), ', '.join(v)))
         return tab + 'DATA ' + ' '.join(l)
 
     def analyze(self): return
