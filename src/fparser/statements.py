@@ -1679,11 +1679,12 @@ class Forall(Statement):
             k = l.split(':')
             if len(k) == 3:
                 s1, s2, s3 = list(map(it.apply_map,
-                                 [k[0].strip(), k[1].strip(), k[2].strip()]))
+                                      [k[0].strip(), k[1].strip(),
+                                       k[2].strip()]))
             else:
                 assert len(k) == 2, repr(k)
                 s1, s2 = list(map(it.apply_map,
-                             [k[0].strip(), k[1].strip()]))
+                                  [k[0].strip(), k[1].strip()]))
                 s3 = '1'
             specs.append((index, s1, s2, s3))
 
@@ -1703,7 +1704,7 @@ class Forall(Statement):
         if self.mask:
             s += ', ' + self.mask
         return tab + 'FORALL (%s) %s' % \
-               (s, str(self.content[0]).lstrip())
+            (s, str(self.content[0]).lstrip())
 
     def analyze(self): return
 
@@ -1931,7 +1932,7 @@ class ElseIf(Statement):
         if self.name:
             s = ' ' + self.name
         return self.get_indent_tab(deindent=True) + 'ELSE IF (%s) THEN%s' \
-               % (self.expr, s)
+            % (self.expr, s)
 
     def analyze(self): return
 
@@ -2157,7 +2158,7 @@ class ElseWhere(Statement):
             line = line[i+1:].lstrip()
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
-        if self.name and not self.name==parent_name:
+        if self.name and not self.name == parent_name:
             self.warning('expected where-construct-name %r but got %r, skipping.'
                          % (parent_name, self.name))
             self.isvalid = False
