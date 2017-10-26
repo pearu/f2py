@@ -1037,7 +1037,8 @@ class Nullify(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'NULLIFY (%s)' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'NULLIFY (%s)' % (', '.join(self.items))
 
     def analyze(self): return
 
@@ -1048,7 +1049,8 @@ class Use(Statement):
     USE [ [ , <module-nature> ] :: ] <module-name> , ONLY : [ <only-list> ]
     <module-nature> = INTRINSIC | NON_INTRINSIC
     <rename> = <local-name> => <use-name>
-               | OPERATOR ( <local-defined-operator> ) => OPERATOR ( <use-defined-operator> )
+               | OPERATOR ( <local-defined-operator> ) =>
+                            OPERATOR ( <use-defined-operator> )
     <only> = <generic-spec> | <only-use-name> | <rename>
     <only-use-name> = <use-name>
     """
@@ -1149,7 +1151,7 @@ class Use(Statement):
         if ovar is None:
             raise AnalyzeError("entity name '%s' is not in module '%s'" % (name, self.name))
         if rename:
-            name_idx = rename  #XXX: rename != ovar.name -- should mark this somehow?
+            name_idx = rename  # XXX: rename != ovar.name -- should mark this somehow?
         else:
             name_idx = name
         if name_idx in use_provides:
@@ -1189,7 +1191,8 @@ class Parameter(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'PARAMETER (%s)' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'PARAMETER (%s)' % (', '.join(self.items))
 
     def analyze(self):
         for item in self.items:
@@ -1222,7 +1225,8 @@ class Equivalence(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'EQUIVALENCE %s' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'EQUIVALENCE %s' % (', '.join(self.items))
 
     def analyze(self): return
 
@@ -1242,7 +1246,8 @@ class Dimension(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'DIMENSION %s' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'DIMENSION %s' % (', '.join(self.items))
 
     def analyze(self):
         for line in self.items:
@@ -1270,7 +1275,8 @@ class Target(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'TARGET %s' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'TARGET %s' % (', '.join(self.items))
 
     def analyze(self):
         for line in self.items:
@@ -1301,7 +1307,8 @@ class Pointer(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'POINTER %s' % (', '.join(self.items))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'POINTER %s' % (', '.join(self.items))
 
     def analyze(self):
         for line in self.items:
@@ -1362,7 +1369,8 @@ class ArithmeticIf(Statement):
     """
     IF ( <scalar-numeric-expr> ) <label> , <label> , <label>
     """
-    match = re.compile(r'if\s*\(.*\)\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\Z', re.I).match
+    match = re.compile(r'if\s*\(.*\)\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\Z',
+                       re.I).match
 
     def process_item(self):
         line = self.item.get_line()[2:].lstrip()
@@ -1454,7 +1462,8 @@ class External(StatementWithNamelist):
 
 class Namelist(Statement):
     """
-    NAMELIST / <namelist-group-name> / <namelist-group-object-list> [ [ , ] / <namelist-group-name> / <namelist-group-object-list> ]...
+    NAMELIST / <namelist-group-name> / <namelist-group-object-list> [ [ , ]
+             / <namelist-group-name> / <namelist-group-object-list> ]...
     <namelist-group-object> = <variable-name>
     """
     match = re.compile(r'namelist\b', re.I).match
@@ -1659,7 +1668,8 @@ class Forall(Statement):
     """
     FORALL <forall-header> <forall-assignment-stmt>
     <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    <forall-triplet-spec> = <index-name> = <subscript> : <subscript> [ : <stride> ]
+    <forall-triplet-spec> = <index-name> 
+                          = <subscript> : <subscript> [ : <stride> ]
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
@@ -1836,7 +1846,8 @@ class Allocatable(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'ALLOCATABLE ' + ', '.join(self.items)
+        return self.get_indent_tab(isfix=isfix) \
+            + 'ALLOCATABLE ' + ', '.join(self.items)
 
     def analyze(self):
         for line in self.items:
@@ -2207,7 +2218,8 @@ class Enumerator(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'ENUMERATOR ' + ', '.join(self.items)
+        return self.get_indent_tab(isfix=isfix) + 'ENUMERATOR ' \
+            + ', '.join(self.items)
 
 # F2PY specific statements
 
@@ -2223,7 +2235,8 @@ class FortranName(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'FORTRANNAME ' + self.value
+        return self.get_indent_tab(isfix=isfix) + 'FORTRANNAME ' \
+            + self.value
 
 
 class Threadsafe(Statement):
@@ -2309,7 +2322,8 @@ class CallProtoArgument(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'CALLPROTOARGUMENT ' + self.specs
+        return self.get_indent_tab(isfix=isfix) + 'CALLPROTOARGUMENT ' \
+            + self.specs
 
 # Non-standard statements
 
