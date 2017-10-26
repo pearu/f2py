@@ -1254,7 +1254,8 @@ class Equivalence(Statement):
 
 class Dimension(Statement):
     """
-    DIMENSION [ :: ] <array-name> ( <array-spec> ) [ , <array-name> ( <array-spec> ) ]...
+    DIMENSION [ :: ] <array-name> ( <array-spec> )
+                                    [ , <array-name> ( <array-spec> ) ]...
 
     """
     match = re.compile(r'dimension\b', re.I).match
@@ -1283,7 +1284,8 @@ class Dimension(Statement):
 
 class Target(Statement):
     """
-    TARGET [ :: ] <object-name> ( <array-spec> ) [ , <object-name> ( <array-spec> ) ]...
+    TARGET [ :: ] <object-name> ( <array-spec> )
+                                  [ , <object-name> ( <array-spec> ) ]...
 
     """
     match = re.compile(r'target\b', re.I).match
@@ -1461,7 +1463,8 @@ class Sequence(Statement):
     def process_item(self):
         return
 
-    def tofortran(self, isfix=None): return self.get_indent_tab(isfix=isfix) + 'SEQUENCE'
+    def tofortran(self, isfix=None):
+        return self.get_indent_tab(isfix=isfix) + 'SEQUENCE'
 
     def analyze(self):
         self.parent.update_attributes('SEQUENCE')
