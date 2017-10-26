@@ -1132,16 +1132,19 @@ class Use(Statement):
         module = modules[self.name]
         use[self.name] = module
         use_provides = self.parent.a.use_provides
-        renames = [split_comma(item, comma='=>') for item in self.items if '=>' in item]
+        renames = [split_comma(item, comma='=>')
+                   for item in self.items if '=>' in item]
         norenames = [item for item in self.items if '=>' not in item]
         all_mod_provides = dict(module.a.module_provides)
         all_mod_provides.update(module.a.use_provides)
         if self.isonly:
             # populate use_provides with items/renames only.
             for rename, orig in renames:
-                self.populate_use_provides(all_mod_provides, use_provides, orig, rename)
+                self.populate_use_provides(
+                    all_mod_provides, use_provides, orig, rename)
             for name in norenames:
-                self.populate_use_provides(all_mod_provides, use_provides, name)
+                self.populate_use_provides(
+                    all_mod_provides, use_provides, name)
         else:
             # norenames should be empty
             if norenames:
@@ -1149,25 +1152,31 @@ class Use(Statement):
                              "variables '%s'" % ', '.join(norenames))
             # populate use_provides with renamed vars from module.
             for rename, orig in renames:
-                self.populate_use_provides(all_mod_provides, use_provides, orig, rename)
+                self.populate_use_provides(
+                    all_mod_provides, use_provides, orig, rename)
             # get all the rest
             unrenamed = set(all_mod_provides) - set([b for (a, b) in renames])
             for name in unrenamed:
-                self.populate_use_provides(all_mod_provides, use_provides, name)
+                self.populate_use_provides(
+                    all_mod_provides, use_provides, name)
         return
 
     def populate_use_provides(self, all_mod_provides, use_provides, name,
                               rename=None):
         ovar = all_mod_provides.get(name, None)
         if ovar is None:
-            raise AnalyzeError("entity name '%s' is not in module '%s'" % (name, self.name))
+            raise AnalyzeError("entity name '%s' is not in module '%s'"
+                               % (name, self.name))
         if rename:
-            name_idx = rename  # XXX: rename != ovar.name -- should mark this somehow?
+            # XXX: rename != ovar.name -- should mark this somehow?
+            name_idx = rename
         else:
             name_idx = name
         if name_idx in use_provides:
             if ovar != use_provides[name_idx]:
-                self.warning("entity name '%s' is already declared in module '%s' while adding it to '%s', overriding." % (name, self.name, self.parent.name))
+                self.warning("entity name '%s' is already declared in module "
+                             "'%s' while adding it to '%s', overriding."
+                             % (name, self.name, self.parent.name))
         use_provides[name_idx] = ovar
 
 
