@@ -334,7 +334,7 @@ def test_nullify():
 
 
 def test_use():
-    ''' Tests USE statement. '''
+    ''' Check that we can parse USE statement. '''
     assert parse(Use, 'use a') == 'USE a'
     assert parse(Use, 'use :: a') == 'USE a'
     assert parse(Use, 'use, intrinsic:: a') == 'USE, INTRINSIC :: a'

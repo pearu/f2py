@@ -1044,7 +1044,12 @@ class Nullify(Statement):
 
 
 class Use(Statement):
-    """
+    """Parses USE statement.
+
+    :param class Statement: Base fparser class.
+
+    Fortran syntax construct:
+
     USE [ [ , <module-nature> ] :: ] <module-name> [ , <rename-list> ]
     USE [ [ , <module-nature> ] :: ] <module-name> , ONLY : [ <only-list> ]
     <module-nature> = INTRINSIC | NON_INTRINSIC
@@ -1668,7 +1673,7 @@ class Forall(Statement):
     """
     FORALL <forall-header> <forall-assignment-stmt>
     <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    <forall-triplet-spec> = <index-name> 
+    <forall-triplet-spec> = <index-name>
                           = <subscript> : <subscript> [ : <stride> ]
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
