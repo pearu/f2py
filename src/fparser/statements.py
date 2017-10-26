@@ -2216,8 +2216,8 @@ class ElseWhere(Statement):
         self.name = line
         parent_name = getattr(self.parent, 'name', '')
         if self.name and not self.name == parent_name:
-            self.warning('expected where-construct-name %r but got %r, '
-                         'skipping.' % (parent_name, self.name))
+            self.warning('expected where-construct-name %r but got %r, skipping.'
+                         % (parent_name, self.name))
             self.isvalid = False
         return
 
