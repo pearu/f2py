@@ -847,7 +847,8 @@ class FilePositioningStatement(Statement):
 
     def tofortran(self, isfix=None):
         clsname = self.__class__.__name__.upper()
-        return self.get_indent_tab(isfix=isfix) + clsname + ' (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) + clsname \
+            + ' (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
@@ -876,7 +877,8 @@ class Open(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'OPEN (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'OPEN (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
@@ -919,7 +921,8 @@ class Format(Statement):
         return
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'FORMAT (%s)' % (', '.join(self.specs))
+        return self.get_indent_tab(isfix=isfix) \
+            + 'FORMAT (%s)' % (', '.join(self.specs))
 
     def analyze(self): return
 
@@ -972,8 +975,12 @@ class Data(Statement):
     DATA <data-stmt-set> [ [ , ] <data-stmt-set> ]...
     <data-stmt-set> = <data-stmt-object-list> / <data-stmt-value-list> /
     <data-stmt-object> = <variable> | <data-implied-do>
-    <data-implied-do> = ( <data-i-do-object-list> , <data-i-do-variable> = <scalar-int-expr> , <scalar-int-expr> [ , <scalar-int-expr> ] )
-    <data-i-do-object> = <array-element> | <scalar-structure-component> | <data-implied-do>
+    <data-implied-do> = ( <data-i-do-object-list> ,
+                          <data-i-do-variable> = <scalar-int-expr> ,
+                          <scalar-int-expr> [ , <scalar-int-expr> ] )
+    <data-i-do-object> = <array-element>
+                         | <scalar-structure-component>
+                         | <data-implied-do>
     <data-i-do-variable> = <scalar-int-variable>
     <variable> = <designator>
     <designator> = <object-name>
