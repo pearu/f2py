@@ -920,10 +920,6 @@ class FortranReaderBase(object):
                 if self.isf77 or not line[i:].startswith('!f2py'):
                     put_item(self.comment_item(line[i:], lineno, lineno))
                     return newline, quotechar, True
-        # handle cases where comment char may be a part of a character content
-        #splitter = LineSplitter(line, quotechar)
-        #items = [item for item in splitter]
-        #newquotechar = splitter.quotechar
         items, newquotechar = splitquote(line, quotechar)
 
         noncomment_items = []

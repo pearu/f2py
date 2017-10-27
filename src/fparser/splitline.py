@@ -213,90 +213,6 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
             items.append(item)
     return items, stopchar
 
-class LineSplitterBase(object):
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        item = ''
-        while not item:
-            item = self.get_item() # get_item raises StopIteration
-        return item
-
-# FIXME: this function is not used
-#        (only in commented out code in readfortran)
-class LineSplitter(LineSplitterBase):
-    """ Splits a line into non strings and strings. E.g.
-    abc=\"123\" -> ['abc=','\"123\"']
-    Handles splitting lines with incomplete string blocks.
-    """
-    def __init__(self, line,
-                 quotechar = None,
-                 lower=False,
-                 ):
-        self.fifo_line = [c for c in line]
-        self.fifo_line.reverse()
-        self.quotechar = quotechar
-        self.lower = lower
-
-
-    def get_item(self):
-        fifo_pop = self.fifo_line.pop
-        try:
-            char = fifo_pop()
-        except IndexError:
-            raise StopIteration
-        fifo_append = self.fifo_line.append
-        quotechar = self.quotechar
-        l = []
-        l_append = l.append
-
-        nofslashes = 0
-        if quotechar is None:
-            # search for string start
-            while 1:
-                if char in '"\'' and not nofslashes % 2:
-                    self.quotechar = char
-                    fifo_append(char)
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                l_append(char)
-                try:
-                    char = fifo_pop()
-                except IndexError:
-                    break
-            item = ''.join(l)
-            if self.lower: item = item.lower()
-            return item
-
-        if char==quotechar:
-            # string starts with quotechar
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                return String(''.join(l))
-        # else continued string
-        while 1:
-            if char==quotechar and not nofslashes % 2:
-                l_append(char)
-                self.quotechar = None
-                break
-            if char=='\\':
-                nofslashes += 1
-            else:
-                nofslashes = 0
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                break
-        return String(''.join(l))
-
 
 def splitparen(line, paren_open="([", paren_close=")]"):
     """
@@ -372,22 +288,6 @@ def test():
     assert splitter.quotechar is None
     l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
     assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],`l`
-    assert stopchar is None
-
-    splitter = LineSplitter('"abc123&')
-    l = [item for item in splitter]
-    assert l==['"abc123&'],`l`
-    assert splitter.quotechar=='"'
-    l,stopchar = splitquote('"abc123&')
-    assert l==['"abc123&'],`l`
-    assert stopchar=='"'
-
-    splitter = LineSplitter(' &abc"123','"')
-    l = [item for item in splitter]
-    assert l==[' &abc"','123']
-    assert splitter.quotechar is None
-    l,stopchar = splitquote(' &abc"123','"')
-    assert l==[' &abc"','123']
     assert stopchar is None
 
     l = string_replace_map('a()')
