@@ -78,7 +78,7 @@ from six import with_metaclass
 from .readfortran import Line, Comment
 from numpy.distutils.misc_util import yellow_text, red_text
 from .utils import split_comma, specs_split_comma, is_int_literal_constant
-from .utils import classes
+from .utils import classes, AnalyzeError
 from functools import reduce
 
 logger = logging.getLogger('fparser')
@@ -853,15 +853,16 @@ class BeginStatement(Statement):
         return
 
     def handle_unknown_item(self, item):
-        message = item.reader.format_message(\
-                        'WARNING',
-                        'no parse pattern found for "%s" in %r block.'\
-                        % (item.get_line(),self.__class__.__name__),
-                        item.span[0], item.span[1])
+        message = item.reader.format_message(
+            'WARNING',
+            'no parse pattern found for "%s" in %r block.'
+            % (item.get_line(), self.__class__.__name__),
+            item.span[0], item.span[1])
         logger.warning(message)
         # self.show_message(message)
         self.content.append(item)
-        #sys.exit()
+        raise AnalyzeError(message)
+        # sys.exit()
         return
 
     def analyze(self):

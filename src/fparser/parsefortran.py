@@ -107,7 +107,7 @@ class FortranParser(object):
 
     def get_item(self):
         try:
-            item = self.reader.next(ignore_comments = self.ignore_comments)
+            item = self.reader.next(ignore_comments=self.ignore_comments)
             return item
         except StopIteration:
             pass
@@ -118,22 +118,27 @@ class FortranParser(object):
         return
 
     def parse(self):
+        '''Parses the program specified in the reader object.'''
         if self.block is not None:
             return
         try:
-            block = self.block = BeginSource(self)
+            self.block = BeginSource(self)
+        except AnalyzeError:
+            raise
         except KeyboardInterrupt:
             raise
         except:
             reader = self.reader
             while reader is not None:
-                message = reader.format_message('FATAL ERROR',
-                                                'while processing line',
-                                                reader.linecount, reader.linecount)
+                message = \
+                    reader.format_message('FATAL ERROR',
+                                          'while processing line',
+                                          reader.linecount, reader.linecount)
                 logger.critical(message)
                 # reader.show_message(message, sys.stderr)
                 reader = reader.reader
-            logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack() ))))
+            logger.debug(''.join(('Traceback\n',
+                                  ''.join(traceback.format_stack()))))
             # traceback.print_exc(file=sys.stderr)
             logger.critical(red_text('STOPPED PARSING'))
             # self.reader.show_message(red_text('STOPPED PARSING'), sys.stderr)
