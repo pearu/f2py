@@ -1091,6 +1091,8 @@ class Use(Statement):
     match = re.compile(r'use\b', re.I).match
 
     def process_item(self):
+        ''' Parse the string containing the Use and store the
+        module name and list of attributes (if any) '''
         line = self.item.get_line()[3:].lstrip()
         nature = ''
         if line.startswith(','):
@@ -1119,6 +1121,7 @@ class Use(Statement):
         return
 
     def tofortran(self, isfix=None):  # pylint: disable=invalid-name
+        ''' Returns the Fortran representation of this object as a string '''
         tab = self.get_indent_tab(isfix=isfix)
         s = 'USE'
         if self.nature:
@@ -1133,6 +1136,7 @@ class Use(Statement):
         return tab + s
 
     def analyze(self):  # pylint: disable=invalid-name
+        ''' Returns warnings if this object is incorrect '''
         use = self.parent.a.use
         if self.name in use:
             return
@@ -1192,6 +1196,7 @@ class Use(Statement):
 
     def populate_use_provides(self, all_mod_provides, use_provides, name,
                               rename=None):
+        ''' Checks for entity name in the module '''
         ovar = all_mod_provides.get(name, None)
         if ovar is None:
             raise AnalyzeError("entity name '%s' is not in module '%s'"
@@ -1725,8 +1730,8 @@ class Forall(Statement):
     """
     FORALL <forall-header> <forall-assignment-stmt>
     <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    <forall-triplet-spec> = <index-name>
-                          = <subscript> : <subscript> [ : <stride> ]
+    <forall-triplet-spec> =
+                    <index-name> = <subscript> : <subscript> [ : <stride> ]
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
