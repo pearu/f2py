@@ -1121,7 +1121,13 @@ class Use(Statement):
         return
 
     def tofortran(self, isfix=None):  # pylint: disable=invalid-name
-        ''' Returns the Fortran representation of this object as a string '''
+        '''
+        Returns the Fortran representation of this object as a string
+
+        :param bool isfix: Whether or not to generated fixed-format Fortran
+        :return: Fortran representation of this object
+        :rtype: str
+        '''
         tab = self.get_indent_tab(isfix=isfix)
         s = 'USE'
         if self.nature:

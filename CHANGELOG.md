@@ -1,8 +1,17 @@
 # Change log for the fparser package #
 
 Original code by Pearu Peterson.
-Modifications by Andrew Porter and Rupert Ford of the Science
+
+Modifications by:
+
+Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
+P. Vitt, University of Siegen, Germany
+I. Kavcic, UK Met Office.
+J. Henrichs, Australia Bureau of Meteorology
+
+09/11/2017 Issue #40 and PR #56 bug fix for missing comma when
+           generating "USE, intrinsic :: ..."
 
 21/10/2017 issue #36 and PR #47 generate correct open statement in
            fparser2 when the 'UNIT' keyword is not provided
