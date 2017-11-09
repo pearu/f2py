@@ -334,9 +334,13 @@ def test_nullify():
 
 
 def test_use():
+    ''' Check that we can parse USE statement. '''
     assert parse(Use, 'use a') == 'USE a'
     assert parse(Use, 'use :: a') == 'USE a'
-    assert parse(Use, 'use, intrinsic:: a') == 'USE INTRINSIC :: a'
+    assert parse(Use, 'use, intrinsic:: a') == 'USE, INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a') == 'USE, NON_INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a , only: b') == \
+        'USE, NON_INTRINSIC :: a, ONLY: b'
     assert parse(Use, 'use :: a ,only: b') == 'USE a, ONLY: b'
     assert parse(Use, 'use :: a , only: b=>c') == 'USE a, ONLY: b=>c'
     assert parse(Use, 'use :: a , b=>c') == 'USE a, b=>c'
