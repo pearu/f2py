@@ -83,6 +83,7 @@ from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
      Read, Return, Rewind, Save, Sequence, SpecificBinding, Stop, Target, \
      Threadsafe, Use, Value, Volatile, Wait, WhereStmt, Write
 from fparser.readfortran import FortranStringReader
+from fparser.utils import AnalyzeError
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -710,3 +711,14 @@ def test_invalid_type_bound_array_access():  # pylint: disable=invalid-name
     with pytest.raises(ValueError) as excinfo:
         _ = parse(Call, 'call an_array(idx)%)')
     assert "with Call pattern failed" in str(excinfo)
+
+
+def test_analyze_errors():
+    ''' Tests that AnalyzeErrors are raised as expected.'''
+    from fparser import api
+    source_str = """none subroutine test()
+      end
+    """
+    with pytest.raises(AnalyzeError) as error:
+        _ = api.parse(source_str, isfree=True, isstrict=False)
+    assert "no parse pattern found" in str(error.value)

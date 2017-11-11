@@ -65,8 +65,8 @@
 
 """Provides FortranParser.
 """
-#Author: Pearu Peterson <pearu@cens.ioc.ee>
-#Created: May 2006
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: May 2006
 
 __autodoc__ = ['FortranParser']
 __all__ = ['FortranParser']
@@ -123,9 +123,7 @@ class FortranParser(object):
             return
         try:
             self.block = BeginSource(self)
-        except AnalyzeError:
-            raise
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, AnalyzeError):
             raise
         except:
             reader = self.reader
@@ -142,7 +140,7 @@ class FortranParser(object):
             # traceback.print_exc(file=sys.stderr)
             logger.critical(red_text('STOPPED PARSING'))
             # self.reader.show_message(red_text('STOPPED PARSING'), sys.stderr)
-            return
+            raise AnalyzeError(message)
         return
 
     def analyze(self):
