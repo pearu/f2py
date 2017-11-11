@@ -73,15 +73,19 @@ Test parsing single Fortran lines.
 import pytest
 from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
      AssignedGoto, Assign, Assignment, Asynchronous, Backspace, Bind, Call, \
-     CallProtoArgument, CallStatement, Character, Check, Close, Common, \
+     CallProtoArgument, CallStatement, Check, Close, Common, \
      ComputedGoto, Contains, Continue, Cycle, Data, Deallocate, Depend, \
      Dimension, Else, ElseIf, ElseWhere, Endfile, Entry, Enumerator, \
      Equivalence, Exit, External, FinalBinding, Flush, Format, ForallStmt, \
-     FortranName, GenericBinding, Goto, Implicit, Import, Inquire, Integer, \
+     FortranName, GenericBinding, Goto, Implicit, Import, Inquire, \
      Intent, Intrinsic, ModuleProcedure, Nullify, Open, Optional, Parameter, \
      Pointer, PointerAssignment, Pause, Print, Private, Protected, Public, \
      Read, Return, Rewind, Save, Sequence, SpecificBinding, Stop, Target, \
      Threadsafe, Use, Value, Volatile, Wait, WhereStmt, Write
+
+from fparser.typedecl_statements import Byte, Character, Complex, \
+     DoubleComplex, DoublePrecision, Integer, Logical, Real
+
 from fparser.readfortran import FortranStringReader
 from fparser.utils import AnalyzeError
 
@@ -335,9 +339,13 @@ def test_nullify():
 
 
 def test_use():
+    ''' Check that we can parse USE statement. '''
     assert parse(Use, 'use a') == 'USE a'
     assert parse(Use, 'use :: a') == 'USE a'
-    assert parse(Use, 'use, intrinsic:: a') == 'USE INTRINSIC :: a'
+    assert parse(Use, 'use, intrinsic:: a') == 'USE, INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a') == 'USE, NON_INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a , only: b') == \
+        'USE, NON_INTRINSIC :: a, ONLY: b'
     assert parse(Use, 'use :: a ,only: b') == 'USE a, ONLY: b'
     assert parse(Use, 'use :: a , only: b=>c') == 'USE a, ONLY: b=>c'
     assert parse(Use, 'use :: a , b=>c') == 'USE a, b=>c'
@@ -625,7 +633,26 @@ def test_pause():
     assert parse(Pause, 'pause "hey pa"') == 'PAUSE "hey pa"'
 
 
+def test_byte():
+    '''Tests various declarations of byte variables.'''
+    assert parse(Byte, 'byte') == 'BYTE'
+    assert parse(Byte, 'byte a') == 'BYTE a'
+    assert parse(Byte, 'byte, a') == 'BYTE a'
+    assert parse(Byte, 'byte a ,b') == 'BYTE a, b'
+    assert parse(Byte, 'byte :: a ,b') == 'BYTE a, b'
+    assert parse(Byte, 'byte a(1,2)') == 'BYTE a(1,2)'
+    assert parse(Byte, 'byte :: a(1,2),b') == \
+        'BYTE a(1,2), b'
+    assert parse(Byte, 'byte external :: a') == \
+        'BYTE, external :: a'
+    assert parse(Byte, 'byte, external :: a') == \
+        'BYTE, external :: a'
+    assert parse(Byte, 'byte external , intent(in) :: a') == \
+        'BYTE, external, intent(in) :: a'
+
+
 def test_integer():
+    '''Tests various declarations of integer variables.'''
     assert parse(Integer, 'integer') == 'INTEGER'
     assert parse(Integer, 'integer*4') == 'INTEGER*4'
     assert parse(Integer, 'integer*4 a') == 'INTEGER*4 a'
@@ -646,6 +673,138 @@ def test_integer():
     assert parse(Integer, 'integer(kind=2+2)') == 'INTEGER(KIND=2+2)'
     assert parse(Integer, 'integer(kind=f(4,5))') == \
         'INTEGER(KIND=f(4,5))'
+
+
+def test_logical():
+    '''Tests various declarations of logical variables.'''
+    assert parse(Logical, 'logical') == 'LOGICAL'
+    assert parse(Logical, 'logical*4') == 'LOGICAL*4'
+    assert parse(Logical, 'logical*4 a') == 'LOGICAL*4 a'
+    assert parse(Logical, 'logical*4, a') == 'LOGICAL*4 a'
+    assert parse(Logical, 'logical*4 a ,b') == 'LOGICAL*4 a, b'
+    assert parse(Logical, 'logical*4 :: a ,b') == 'LOGICAL*4 a, b'
+    assert parse(Logical, 'logical*4 a(1,2)') == 'LOGICAL*4 a(1,2)'
+    assert parse(Logical, 'logical*4 :: a(1,2),b') == \
+        'LOGICAL*4 a(1,2), b'
+    assert parse(Logical, 'logical*4 external :: a') == \
+        'LOGICAL*4, external :: a'
+    assert parse(Logical, 'logical*4, external :: a') == \
+        'LOGICAL*4, external :: a'
+    assert parse(Logical, 'logical*4 external , intent(in) :: a') == \
+        'LOGICAL*4, external, intent(in) :: a'
+    assert parse(Logical, 'logical(kind=4)') == 'LOGICAL(KIND=4)'
+    assert parse(Logical, 'logical ( kind = 4)') == 'LOGICAL(KIND=4)'
+    assert parse(Logical, 'logical(kind=2+2)') == 'LOGICAL(KIND=2+2)'
+    assert parse(Logical, 'logical(kind=f(4,5))') == \
+        'LOGICAL(KIND=f(4,5))'
+
+
+def test_real():
+    '''Test various declarations of real variables. '''
+
+    assert parse(Real, 'real') == 'REAL'
+    assert parse(Real, 'real*4') == 'REAL*4'
+    assert parse(Real, 'real*4 a') == 'REAL*4 a'
+    assert parse(Real, 'real*4, a') == 'REAL*4 a'
+    assert parse(Real, 'real*4 a ,b') == 'REAL*4 a, b'
+    assert parse(Real, 'real*4 :: a ,b') == 'REAL*4 a, b'
+    assert parse(Real, 'real*4 a(1,2)') == 'REAL*4 a(1,2)'
+    assert parse(Real, 'real*4 :: a(1,2),b') == \
+        'REAL*4 a(1,2), b'
+    assert parse(Real, 'real*4 external :: a') == \
+        'REAL*4, external :: a'
+    assert parse(Real, 'real*4, external :: a') == \
+        'REAL*4, external :: a'
+    assert parse(Real, 'real*4 external , intent(in) :: a') == \
+        'REAL*4, external, intent(in) :: a'
+    assert parse(Real, 'real(kind=4)') == 'REAL(KIND=4)'
+    assert parse(Real, 'real ( kind = 4)') == 'REAL(KIND=4)'
+    assert parse(Real, 'real(kind=2+2)') == 'REAL(KIND=2+2)'
+    assert parse(Real, 'real(kind=f(4,5))') == \
+        'REAL(KIND=f(4,5))'
+
+
+def test_double_precision():
+    '''Test various declarations of double precision variables. '''
+
+    assert parse(DoublePrecision, 'doubleprecision') == 'DOUBLEPRECISION'
+    assert parse(DoublePrecision, 'double precision') == 'DOUBLEPRECISION'
+    assert parse(DoublePrecision, 'doubleprecision a') == \
+        'DOUBLEPRECISION a'
+    assert parse(DoublePrecision, 'double precision, a') == \
+        'DOUBLEPRECISION a'
+    assert parse(DoublePrecision, 'doubleprecision a ,b') == \
+        'DOUBLEPRECISION a, b'
+    assert parse(DoublePrecision, 'double precision :: a ,b') == \
+        'DOUBLEPRECISION a, b'
+    assert parse(DoublePrecision, 'doubleprecision a(1,2)') == \
+        'DOUBLEPRECISION a(1,2)'
+    assert parse(DoublePrecision, 'double precision :: a(1,2),b') == \
+        'DOUBLEPRECISION a(1,2), b'
+    assert parse(DoublePrecision, 'doubleprecision external :: a') == \
+        'DOUBLEPRECISION, external :: a'
+    assert parse(DoublePrecision, 'double precision, external :: a') == \
+        'DOUBLEPRECISION, external :: a'
+    assert parse(DoublePrecision,
+                 'double precision external , intent(in) :: a') == \
+        'DOUBLEPRECISION, external, intent(in) :: a'
+
+
+def test_complex():
+    '''Test various declarations of complex variables. '''
+
+    assert parse(Complex, 'complex') == 'COMPLEX'
+    assert parse(Complex, 'complex') == 'COMPLEX'
+    assert parse(Complex, 'complex*8 a') == 'COMPLEX*8 a'
+    assert parse(Complex, 'complex*16, a') == 'COMPLEX*16 a'
+    assert parse(Complex, 'complex a ,b') == 'COMPLEX a, b'
+    assert parse(Complex, 'complex :: a ,b') == 'COMPLEX a, b'
+    assert parse(Complex, 'complex a(1,2)') == 'COMPLEX a(1,2)'
+    assert parse(Complex, 'complex :: a(1,2),b') == \
+        'COMPLEX a(1,2), b'
+    assert parse(Complex, 'complex external :: a') == \
+        'COMPLEX, external :: a'
+    assert parse(Complex, 'complex, external :: a') == \
+        'COMPLEX, external :: a'
+    assert parse(Complex, 'complex external , intent(in) :: a') == \
+        'COMPLEX, external, intent(in) :: a'
+    assert parse(Complex, 'complex(kind=8)') == 'COMPLEX(KIND=8)'
+    assert parse(Complex, 'complex ( kind = 16)') == 'COMPLEX(KIND=16)'
+    assert parse(Complex, 'complex(kind=4+4)') == 'COMPLEX(KIND=4+4)'
+    assert parse(Complex, 'complex(kind=f(4,5))') == \
+        'COMPLEX(KIND=f(4,5))'
+
+
+def test_double_complex():
+    '''Test various declarations of double complex variables. '''
+
+    assert parse(DoubleComplex, 'double complex') == 'DOUBLECOMPLEX'
+    assert parse(DoubleComplex, 'double complex') == 'DOUBLECOMPLEX'
+    assert parse(DoubleComplex, 'double complex a') == 'DOUBLECOMPLEX a'
+    assert parse(DoubleComplex, 'double complex, a') == 'DOUBLECOMPLEX a'
+    assert parse(DoubleComplex, 'double complex a ,b') == \
+        'DOUBLECOMPLEX a, b'
+    assert parse(DoubleComplex, 'double complex :: a ,b') == \
+        'DOUBLECOMPLEX a, b'
+    assert parse(DoubleComplex, 'double complex a(1,2)') == \
+        'DOUBLECOMPLEX a(1,2)'
+    assert parse(DoubleComplex, 'double complex :: a(1,2),b') == \
+        'DOUBLECOMPLEX a(1,2), b'
+    assert parse(DoubleComplex, 'double complex external :: a') == \
+        'DOUBLECOMPLEX, external :: a'
+    assert parse(DoubleComplex, 'double complex, external :: a') == \
+        'DOUBLECOMPLEX, external :: a'
+    assert parse(DoubleComplex,
+                 'double complex external , intent(in) :: a') == \
+        'DOUBLECOMPLEX, external, intent(in) :: a'
+    assert parse(DoubleComplex, 'double complex(kind=4)') == \
+        'DOUBLECOMPLEX(KIND=4)'
+    assert parse(DoubleComplex, 'double complex ( kind = 4)') == \
+        'DOUBLECOMPLEX(KIND=4)'
+    assert parse(DoubleComplex, 'double complex(kind=2+2)') == \
+        'DOUBLECOMPLEX(KIND=2+2)'
+    assert parse(DoubleComplex, 'double complex(kind=f(4,5))') == \
+        'DOUBLECOMPLEX(KIND=f(4,5))'
 
 
 def test_character():
