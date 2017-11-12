@@ -103,7 +103,7 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
         line = label + ' : ' + line
     reader = FortranStringReader(line)
     reader.set_mode(isfree, isstrict)
-    item = reader.next()
+    item = next(reader)
     if not cls.match(item.get_line()):
         raise ValueError('%r does not match %s pattern' % (line, cls.__name__))
     stmt = cls(item, item)
@@ -338,9 +338,13 @@ def test_nullify():
 
 
 def test_use():
+    ''' Check that we can parse USE statement. '''
     assert parse(Use, 'use a') == 'USE a'
     assert parse(Use, 'use :: a') == 'USE a'
-    assert parse(Use, 'use, intrinsic:: a') == 'USE INTRINSIC :: a'
+    assert parse(Use, 'use, intrinsic:: a') == 'USE, INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a') == 'USE, NON_INTRINSIC :: a'
+    assert parse(Use, 'use, non_intrinsic:: a , only: b') == \
+        'USE, NON_INTRINSIC :: a, ONLY: b'
     assert parse(Use, 'use :: a ,only: b') == 'USE a, ONLY: b'
     assert parse(Use, 'use :: a , only: b=>c') == 'USE a, ONLY: b=>c'
     assert parse(Use, 'use :: a , b=>c') == 'USE a, b=>c'
@@ -739,57 +743,49 @@ def test_double_precision():
     '''Test various declarations of double precision variables. '''
 
     assert parse(DoublePrecision, 'doubleprecision') == 'DOUBLEPRECISION'
-    assert parse(DoublePrecision, 'double precision*4') == 'DOUBLEPRECISION*4'
-    assert parse(DoublePrecision, 'doubleprecision*4 a') == \
-        'DOUBLEPRECISION*4 a'
-    assert parse(DoublePrecision, 'double precision*4, a') == \
-        'DOUBLEPRECISION*4 a'
-    assert parse(DoublePrecision, 'doubleprecision*4 a ,b') == \
-        'DOUBLEPRECISION*4 a, b'
-    assert parse(DoublePrecision, 'double precision*4 :: a ,b') == \
-        'DOUBLEPRECISION*4 a, b'
-    assert parse(DoublePrecision, 'doubleprecision*4 a(1,2)') == \
-        'DOUBLEPRECISION*4 a(1,2)'
-    assert parse(DoublePrecision, 'double precision*4 :: a(1,2),b') == \
-        'DOUBLEPRECISION*4 a(1,2), b'
-    assert parse(DoublePrecision, 'doubleprecision*4 external :: a') == \
-        'DOUBLEPRECISION*4, external :: a'
-    assert parse(DoublePrecision, 'double precision*4, external :: a') == \
-        'DOUBLEPRECISION*4, external :: a'
+    assert parse(DoublePrecision, 'double precision') == 'DOUBLEPRECISION'
+    assert parse(DoublePrecision, 'doubleprecision a') == \
+        'DOUBLEPRECISION a'
+    assert parse(DoublePrecision, 'double precision, a') == \
+        'DOUBLEPRECISION a'
+    assert parse(DoublePrecision, 'doubleprecision a ,b') == \
+        'DOUBLEPRECISION a, b'
+    assert parse(DoublePrecision, 'double precision :: a ,b') == \
+        'DOUBLEPRECISION a, b'
+    assert parse(DoublePrecision, 'doubleprecision a(1,2)') == \
+        'DOUBLEPRECISION a(1,2)'
+    assert parse(DoublePrecision, 'double precision :: a(1,2),b') == \
+        'DOUBLEPRECISION a(1,2), b'
+    assert parse(DoublePrecision, 'doubleprecision external :: a') == \
+        'DOUBLEPRECISION, external :: a'
+    assert parse(DoublePrecision, 'double precision, external :: a') == \
+        'DOUBLEPRECISION, external :: a'
     assert parse(DoublePrecision,
-                 'double precision*4 external , intent(in) :: a') == \
-        'DOUBLEPRECISION*4, external, intent(in) :: a'
-    assert parse(DoublePrecision, 'doubleprecision(kind=4)') == \
-        'DOUBLEPRECISION(KIND=4)'
-    assert parse(DoublePrecision, 'double precision ( kind = 4)') == \
-        'DOUBLEPRECISION(KIND=4)'
-    assert parse(DoublePrecision, 'doubleprecision(kind=2+2)') == \
-        'DOUBLEPRECISION(KIND=2+2)'
-    assert parse(DoublePrecision, 'double precision(kind=f(4,5))') == \
-        'DOUBLEPRECISION(KIND=f(4,5))'
+                 'double precision external , intent(in) :: a') == \
+        'DOUBLEPRECISION, external, intent(in) :: a'
 
 
 def test_complex():
     '''Test various declarations of complex variables. '''
 
     assert parse(Complex, 'complex') == 'COMPLEX'
-    assert parse(Complex, 'complex*4') == 'COMPLEX*4'
-    assert parse(Complex, 'complex*4 a') == 'COMPLEX*4 a'
-    assert parse(Complex, 'complex*4, a') == 'COMPLEX*4 a'
-    assert parse(Complex, 'complex*4 a ,b') == 'COMPLEX*4 a, b'
-    assert parse(Complex, 'complex*4 :: a ,b') == 'COMPLEX*4 a, b'
-    assert parse(Complex, 'complex*4 a(1,2)') == 'COMPLEX*4 a(1,2)'
-    assert parse(Complex, 'complex*4 :: a(1,2),b') == \
-        'COMPLEX*4 a(1,2), b'
-    assert parse(Complex, 'complex*4 external :: a') == \
-        'COMPLEX*4, external :: a'
-    assert parse(Complex, 'complex*4, external :: a') == \
-        'COMPLEX*4, external :: a'
-    assert parse(Complex, 'complex*4 external , intent(in) :: a') == \
-        'COMPLEX*4, external, intent(in) :: a'
-    assert parse(Complex, 'complex(kind=4)') == 'COMPLEX(KIND=4)'
-    assert parse(Complex, 'complex ( kind = 4)') == 'COMPLEX(KIND=4)'
-    assert parse(Complex, 'complex(kind=2+2)') == 'COMPLEX(KIND=2+2)'
+    assert parse(Complex, 'complex') == 'COMPLEX'
+    assert parse(Complex, 'complex*8 a') == 'COMPLEX*8 a'
+    assert parse(Complex, 'complex*16, a') == 'COMPLEX*16 a'
+    assert parse(Complex, 'complex a ,b') == 'COMPLEX a, b'
+    assert parse(Complex, 'complex :: a ,b') == 'COMPLEX a, b'
+    assert parse(Complex, 'complex a(1,2)') == 'COMPLEX a(1,2)'
+    assert parse(Complex, 'complex :: a(1,2),b') == \
+        'COMPLEX a(1,2), b'
+    assert parse(Complex, 'complex external :: a') == \
+        'COMPLEX, external :: a'
+    assert parse(Complex, 'complex, external :: a') == \
+        'COMPLEX, external :: a'
+    assert parse(Complex, 'complex external , intent(in) :: a') == \
+        'COMPLEX, external, intent(in) :: a'
+    assert parse(Complex, 'complex(kind=8)') == 'COMPLEX(KIND=8)'
+    assert parse(Complex, 'complex ( kind = 16)') == 'COMPLEX(KIND=16)'
+    assert parse(Complex, 'complex(kind=4+4)') == 'COMPLEX(KIND=4+4)'
     assert parse(Complex, 'complex(kind=f(4,5))') == \
         'COMPLEX(KIND=f(4,5))'
 
@@ -798,24 +794,24 @@ def test_double_complex():
     '''Test various declarations of double complex variables. '''
 
     assert parse(DoubleComplex, 'double complex') == 'DOUBLECOMPLEX'
-    assert parse(DoubleComplex, 'double complex*4') == 'DOUBLECOMPLEX*4'
-    assert parse(DoubleComplex, 'double complex*4 a') == 'DOUBLECOMPLEX*4 a'
-    assert parse(DoubleComplex, 'double complex*4, a') == 'DOUBLECOMPLEX*4 a'
-    assert parse(DoubleComplex, 'double complex*4 a ,b') == \
-        'DOUBLECOMPLEX*4 a, b'
-    assert parse(DoubleComplex, 'double complex*4 :: a ,b') == \
-        'DOUBLECOMPLEX*4 a, b'
-    assert parse(DoubleComplex, 'double complex*4 a(1,2)') == \
-        'DOUBLECOMPLEX*4 a(1,2)'
-    assert parse(DoubleComplex, 'double complex*4 :: a(1,2),b') == \
-        'DOUBLECOMPLEX*4 a(1,2), b'
-    assert parse(DoubleComplex, 'double complex*4 external :: a') == \
-        'DOUBLECOMPLEX*4, external :: a'
-    assert parse(DoubleComplex, 'double complex*4, external :: a') == \
-        'DOUBLECOMPLEX*4, external :: a'
+    assert parse(DoubleComplex, 'double complex') == 'DOUBLECOMPLEX'
+    assert parse(DoubleComplex, 'double complex a') == 'DOUBLECOMPLEX a'
+    assert parse(DoubleComplex, 'double complex, a') == 'DOUBLECOMPLEX a'
+    assert parse(DoubleComplex, 'double complex a ,b') == \
+        'DOUBLECOMPLEX a, b'
+    assert parse(DoubleComplex, 'double complex :: a ,b') == \
+        'DOUBLECOMPLEX a, b'
+    assert parse(DoubleComplex, 'double complex a(1,2)') == \
+        'DOUBLECOMPLEX a(1,2)'
+    assert parse(DoubleComplex, 'double complex :: a(1,2),b') == \
+        'DOUBLECOMPLEX a(1,2), b'
+    assert parse(DoubleComplex, 'double complex external :: a') == \
+        'DOUBLECOMPLEX, external :: a'
+    assert parse(DoubleComplex, 'double complex, external :: a') == \
+        'DOUBLECOMPLEX, external :: a'
     assert parse(DoubleComplex,
-                 'double complex*4 external , intent(in) :: a') == \
-        'DOUBLECOMPLEX*4, external, intent(in) :: a'
+                 'double complex external , intent(in) :: a') == \
+        'DOUBLECOMPLEX, external, intent(in) :: a'
     assert parse(DoubleComplex, 'double complex(kind=4)') == \
         'DOUBLECOMPLEX(KIND=4)'
     assert parse(DoubleComplex, 'double complex ( kind = 4)') == \

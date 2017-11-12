@@ -72,7 +72,7 @@ def test_reproduce_issue():
 '''
     tree = api.parse(source_str, isfree=False, isstrict=False,
                      ignore_comments=False)
-    print tree
+    print(tree)
     return
     assert str(tree).strip().split('\n')[1:]=='''
     '''.strip().split('\n')[1:]

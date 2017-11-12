@@ -1,8 +1,30 @@
 # Change log for the fparser package #
 
 Original code by Pearu Peterson.
-Modifications by Andrew Porter and Rupert Ford of the Science
+
+Modifications by:
+
+Andrew Porter and Rupert Ford of the Science
 and Technology Facilities Council, UK.
+P. Vitt, University of Siegen, Germany
+I. Kavcic, UK Met Office.
+J. Henrichs, Australia Bureau of Meteorology
+
+09/11/2017 Issue #40 and PR #56 bug fix for missing comma when
+           generating "USE, intrinsic :: ..."
+
+21/10/2017 issue #36 and PR #47 generate correct open statement in
+           fparser2 when the 'UNIT' keyword is not provided
+
+20/10/2017 PR #49 pep8, pylint and nose->pytest changes for test_parse.py
+
+20/10/2017 issue #43 and PR #48 add support for Python 3.
+
+19/10/2017 issue #45 and PR #46 - bug fix for optional '::'
+           between MODULE PROCEDURE and <procedure name>
+
+13/10/2017 issue #41 and PR #42 - removed __init__.py files from
+           directories that do not contain package code
 
 28/09/2017 issue #35 pr #39 add support for the 'opened' option
 	   in the inquire statement in fparser2.

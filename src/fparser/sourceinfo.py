@@ -169,7 +169,7 @@ def is_free_format(file):
 def simple_main():
     for filename in sys.argv[1:]:
         isfree, isstrict = get_source_info(filename)
-        print '%s: isfree=%s, isstrict=%s'  % (filename, isfree, isstrict)
+        print('%s: isfree=%s, isstrict=%s'  % (filename, isfree, isstrict))
 
 if __name__ == '__main__':
     simple_main()

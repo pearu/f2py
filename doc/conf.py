@@ -115,8 +115,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'fparser'
-copyright = u'2017, Science and Technology Facilities Council'
+project = 'fparser'
+copyright = '2017, Science and Technology Facilities Council'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -268,8 +268,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'fparser.tex', u'fparser Documentation',
-   u'Andrew Porter, Rupert Ford and Pearu Peterson', 'manual'),
+  ('index', 'fparser.tex', 'fparser Documentation',
+   'Andrew Porter, Rupert Ford and Pearu Peterson', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -298,8 +298,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'fparser', u'fparser Documentation',
-     [u'Andrew Porter, Rupert Ford and Pearu Peterson'], 1)
+    ('index', 'fparser', 'fparser Documentation',
+     ['Andrew Porter, Rupert Ford and Pearu Peterson'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -312,8 +312,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'fparser', u'fparser Documentation',
-   u'Andrew Porter, Rupert Ford and Pearu Peterson', 'fparser', 'One line description of project.',
+  ('index', 'fparser', 'fparser Documentation',
+   'Andrew Porter, Rupert Ford and Pearu Peterson', 'fparser', 'One line description of project.',
    'Miscellaneous'),
 ]
 
