@@ -761,7 +761,7 @@ class BeginStatement(Statement):
 
     def process_subitem(self, item):
         """
-        Check is item is blocks start statement, if it is, read the block.
+        Check if item is blocks start statement, if it is, read the block.
 
         Return True to stop adding items to given block.
         """
@@ -853,17 +853,20 @@ class BeginStatement(Statement):
         return
 
     def handle_unknown_item(self, item):
+        '''Called when process_subitem does not find a start or end of block.
+        It adds the item (which is an instance of Line) to the content, but
+        then raises an AnalyzeError. An instance of Line in content typically
+        results in other errors later (e.g. because Line has no analyze
+        method).
+        '''
         message = item.reader.format_message(
             'WARNING',
             'no parse pattern found for "%s" in %r block.'
             % (item.get_line(), self.__class__.__name__),
             item.span[0], item.span[1])
         logger.warning(message)
-        # self.show_message(message)
         self.content.append(item)
         raise AnalyzeError(message)
-        # sys.exit()
-        return
 
     def analyze(self):
         for stmt in self.content:

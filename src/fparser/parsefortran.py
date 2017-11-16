@@ -65,14 +65,12 @@
 
 """Provides FortranParser.
 """
-#Author: Pearu Peterson <pearu@cens.ioc.ee>
-#Created: May 2006
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: May 2006
 
 __autodoc__ = ['FortranParser']
 __all__ = ['FortranParser']
 
-import re
-import sys
 import traceback
 import logging
 from numpy.distutils.misc_util import yellow_text, red_text
@@ -123,11 +121,9 @@ class FortranParser(object):
             return
         try:
             self.block = BeginSource(self)
-        except AnalyzeError:
-            raise
         except KeyboardInterrupt:
             raise
-        except:
+        except Exception, error:
             reader = self.reader
             while reader is not None:
                 message = \
@@ -142,7 +138,7 @@ class FortranParser(object):
             # traceback.print_exc(file=sys.stderr)
             logger.critical(red_text('STOPPED PARSING'))
             # self.reader.show_message(red_text('STOPPED PARSING'), sys.stderr)
-            return
+            raise error
         return
 
     def analyze(self):
