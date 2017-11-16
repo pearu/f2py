@@ -823,19 +823,9 @@ class FortranReaderBase(object):
         return self.format_message('ERROR', message, startlineno,
                                    endlineno, startcolno, endcolno)
 
-    def format_warning_message(self, message, startlineno=None,
-                               endlineno=None, startcolno=0, endcolno=-1):
-        '''Create a string with a warning message. If startlineno is None
-        (default), the current line number-2 is used. If endlineno is None
-        (default), the current line number is used. This gives some
-        context for the error tha triggered the warning.
-        '''
-        if startlineno is None:
-            startlineno = self.linecount-2
-            if startlineno < 0:
-                startlineno = 1
-        if endlineno is None:
-            endlineno = self.linecount
+    def format_warning_message(self, message, startlineno, endlineno,
+                               startcolno=0, endcolno=-1):
+        '''Create a string with a warning message. '''
         return self.format_message('WARNING', message, startlineno,
                                    endlineno, startcolno, endcolno)
 
