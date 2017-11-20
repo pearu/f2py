@@ -2,8 +2,6 @@
 '''
 Tests that the parser understands deferred methods.
 '''
-from nose.tools import assert_equal
-
 import fparser.api
 import fparser.readfortran
 
@@ -40,4 +38,4 @@ END MODULE abstract_test
     program_unit = fparser.api.Fortran2003.Program(reader)
     result = str(program_unit).strip().split('\n')
 
-    assert_equal(result, expected)
+    assert result == expected
