@@ -2089,7 +2089,7 @@ class Specific_Binding(StmtBase): # R451
         if line.startswith('('):
             i = line.find(')')
             if i==-1: return
-            iname = Interface_Name(line[1:-1].strip())
+            iname = Interface_Name(line[1:i].strip())
             line = line[i+1:].lstrip()
         l = None
         i = line.find('::')
@@ -2154,10 +2154,11 @@ class Binding_Attr(STRINGBase): # R453
     <binding-attr> = PASS [ ( <arg-name> ) ]
                      | NOPASS
                      | NON_OVERRIDABLE
+                     | DEFERRED
                      | <access-spec>
     """
     subclass_names = ['Access_Spec', 'Binding_PASS_Arg_Name']
-    def match(string): return STRINGBase.match(['PASS', 'NOPASS', 'NON_OVERRIDABLE'], string)
+    def match(string): return STRINGBase.match(['PASS', 'NOPASS', 'NON_OVERRIDABLE', 'DEFERRED'], string)
     match = staticmethod(match)
 
 class Final_Binding(StmtBase, WORDClsBase): # R454
