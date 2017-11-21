@@ -72,18 +72,28 @@ First version created: May 2006
 -----
 """
 
-__all__ = ['String','string_replace_map','splitquote','splitparen']
 
 import re
 
-class String(str): pass
-class ParenString(str): pass
 
+class String(str):
+    '''Dummy string class'''
+    pass
+
+
+class ParenString(str):
+    '''Class representing a parenthesis string.'''
+    pass
+
+
+__all__ = ['String', 'string_replace_map', 'splitquote', 'splitparen']
 
 _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
-_is_name = re.compile(r'\w*\Z',re.I).match
-_is_simple_str = re.compile(r'\w*\Z',re.I).match
-_f2py_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
+_is_name = re.compile(r'\w*\Z', re.I).match
+_is_simple_str = re.compile(r'\w*\Z', re.I).match
+_f2py_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)'
+                           ).findall
+
 
 class string_replace_dict(dict):
     """
@@ -95,8 +105,9 @@ class string_replace_dict(dict):
             line = line.replace(k, self[k])
         return line
 
+
 def string_replace_map(line, lower=False,
-                       _cache={'index':0,'pindex':0}):
+                       _cache={'index': 0, 'pindex': 0}):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
     2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
@@ -148,7 +159,8 @@ def string_replace_map(line, lower=False,
         del string_map[k]
     return ''.join(items), string_map
 
-def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
+
+def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
     """
     Fast LineSplitter
     """
@@ -156,7 +168,8 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
     i = 0
     while 1:
         try:
-            char = line[i]; i += 1
+            char = line[i]
+            i += 1
         except IndexError:
             break
         l = []
@@ -169,25 +182,29 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
                     stopchar = char
                     i -= 1
                     break
-                if char=='\\':
+                if char == '\\':
                     nofslashes += 1
                 else:
                     nofslashes = 0
                 l_append(char)
                 try:
-                    char = line[i]; i += 1
+                    char = line[i]
+                    i += 1
                 except IndexError:
                     break
-            if not l: continue
+            if not l:
+                continue
             item = ''.join(l)
-            if lower: item = item.lower()
+            if lower:
+                item = item.lower()
             items.append(item)
             continue
-        if char==stopchar:
+        if char == stopchar:
             # string starts with quotechar
             l_append(char)
             try:
-                char = line[i]; i += 1
+                char = line[i]
+                i += 1
             except IndexError:
                 if l:
                     item = String(''.join(l))
@@ -195,17 +212,18 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
                 break
         # else continued string
         while 1:
-            if char==stopchar and not nofslashes % 2:
+            if char == stopchar and not nofslashes % 2:
                 l_append(char)
                 stopchar = None
                 break
-            if char=='\\':
+            if char == '\\':
                 nofslashes += 1
             else:
                 nofslashes = 0
             l_append(char)
             try:
-                char = line[i]; i += 1
+                char = line[i]
+                i += 1
             except IndexError:
                 break
         if l:

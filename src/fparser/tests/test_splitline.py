@@ -83,6 +83,7 @@ def test_splitparen():
     # pylint: disable=anomalous-backslash-in-string
     assert splitparen('a(b) = b(x,y(1)) b\((a)\)') == \
         ['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)']
+    # pylint: enable=anomalous-backslash-in-string
     assert splitparen('abc[1]') == ['abc', '[1]']
     assert splitparen('abc[1,2,3]') == ['abc', '[1,2,3]']
     assert splitparen('a[b] = b[x,y(1)] b((a))') == \
@@ -90,6 +91,7 @@ def test_splitparen():
     # pylint: disable=anomalous-backslash-in-string
     assert splitparen('a[b] = b[x,y(1)] b\((a)\)') == \
         ['a', '[b]', ' = b', '[x,y(1)]', ' b\\(', '(a)', '\\)']
+    # pylint: enable=anomalous-backslash-in-string
     assert splitparen('integer a(3) = (/"a", "b", "c"/)') == \
         ['integer a', '(3)', ' = ', '(/"a", "b", "c"/)']
     assert splitparen(
@@ -102,31 +104,36 @@ def test_splitparen():
         'character(len=40) :: a(3) = ["a[),", ",b,[(", "c,][)("]') == \
         ['character', '(len=40)', ' :: a', '(3)', ' = ',
          '["a[),", ",b,[(", "c,][)("]']
-    l = splitparen('a(1),b\\((2,3),c\\\((1)),c"("')
-    EXPECTED=['a', '(1)', ',b\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
-    assert l==EXPECTED
+    # pylint: disable=anomalous-backslash-in-string
+    result = splitparen('a(1),b\\((2,3),c\\\((1)),c"("')
+    expected = ['a', '(1)', ',b\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
+    # pylint: enable=anomalous-backslash-in-string
+    assert result == expected
     # Useful for debugging:
     # for i in range(len(EXPECTED)):
     #     print i,l[i],EXPECTED[i],l[i]==EXPECTED[i]
 
 
 def test_splitquote():
+    '''Tests splitquote function.'''
     split_list, stopchar = splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    assert split_list==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\'']
+    assert split_list == ['abc\\\' def', '"12\\"3"', '"56"', 'dfad', '\'a d\'']
     assert stopchar is None
-    l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
+    result, stopchar = splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
+    assert result == ['abc\\\' def', '"12\\"3"', '"56"', 'dfad', '\'a d\'']
     assert stopchar is None
 
     split_list, stopchar = splitquote('a\'')
-    assert split_list==['a', '\'']
+    assert split_list == ['a', '\'']
     assert stopchar == '\''
 
     split_list, stopchar = splitquote('a\'b')
-    assert split_list==['a', '\'b']
-    assert stopchar =='\''
+    assert split_list == ['a', '\'b']
+    assert stopchar == '\''
 
 
-    l, string_map = string_replace_map('a()')
-    assert l=='a()'
+def test_string_replace_map():
+    '''Tests string_replace_map function.'''
+    result, string_map = string_replace_map('a()')
+    assert result == 'a()'
     assert string_map == {}
