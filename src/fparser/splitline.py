@@ -258,6 +258,10 @@ def splitparen(line, paren_open="([", paren_close=")]"):
                 inside_quotes_char = ''
             continue
 
+        if char == "\'" or char == '"':
+            inside_quotes_char = char
+            continue
+
         pos = paren_open.find(char)
         if pos > -1:
             if len(stack) == 0:
@@ -279,20 +283,3 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     if start != len(line):
         items.append(line[start:])
     return items
-
-
-def test():
-    splitter = LineSplitter('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    l = [item for item in splitter]
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
-    assert splitter.quotechar is None
-    l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
-    assert stopchar is None
-
-    l = string_replace_map('a()')
-    print(l)
-    print('ok')
-
-if __name__ == '__main__':
-    test()

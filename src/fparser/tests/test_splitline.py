@@ -70,7 +70,7 @@ Test parsing single Fortran lines.
 
 """
 
-from fparser.splitline import splitparen
+from fparser.splitline import splitparen, splitquote, string_replace_map
 
 
 def test_splitparen():
@@ -102,3 +102,31 @@ def test_splitparen():
         'character(len=40) :: a(3) = ["a[),", ",b,[(", "c,][)("]') == \
         ['character', '(len=40)', ' :: a', '(3)', ' = ',
          '["a[),", ",b,[(", "c,][)("]']
+    l = splitparen('a(1),b\\((2,3),c\\\((1)),c"("')
+    EXPECTED=['a', '(1)', ',b\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
+    assert l==EXPECTED
+    # Useful for debugging:
+    # for i in range(len(EXPECTED)):
+    #     print i,l[i],EXPECTED[i],l[i]==EXPECTED[i]
+
+
+def test_splitquote():
+    split_list, stopchar = splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
+    assert split_list==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\'']
+    assert stopchar is None
+    l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
+    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
+    assert stopchar is None
+
+    split_list, stopchar = splitquote('a\'')
+    assert split_list==['a', '\'']
+    assert stopchar == '\''
+
+    split_list, stopchar = splitquote('a\'b')
+    assert split_list==['a', '\'b']
+    assert stopchar =='\''
+
+
+    l, string_map = string_replace_map('a()')
+    assert l=='a()'
+    assert string_map == {}
