@@ -80,9 +80,8 @@ order to support some of the aspects of more recent versions of
 Fortran (see :ref:`beyond_f90`). In order to use it you will need to
 have installed the fparser package which is available from the Python
 Packagage Index (pypi) or github (https://github.com/stfc/fparser). In
-turn fparser requires the numpy and nose packages. When installing
-using pip these dependencies should be installed automatically for
-you.
+turn fparser requires the nose package. When installing using pip this
+dependency should be installed automatically for you.
 
 Once installed, you should be able to open the python interpreter and
 try it out, e.g.:
