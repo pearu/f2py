@@ -119,7 +119,7 @@ if __name__ == '__main__':
         classifiers=CLASSIFIERS,
         packages=PACKAGES,
         package_dir={"": "src"},
-        install_requires=['nose'],
+        install_requires=['nose', 'six'],
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
         include_package_data=True)
