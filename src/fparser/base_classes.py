@@ -199,28 +199,6 @@ class Variable(object, with_metaclass(classes)):
                 l.append('%s=%r' % (a,v))
         return 'Variable: ' + ', '.join(l)
 
-    def get_bit_size(self):
-        typesize = self.typedecl.get_bit_size()
-        if self.is_pointer():
-            # The size of pointer descriptor is compiler version dependent. Read:
-            #   http://www.nersc.gov/vendor_docs/intel/f_ug1/pgwarray.htm
-            #   https://www.cca-forum.org/pipermail/cca-fortran/2003-February/000123.html
-            #   https://www.cca-forum.org/pipermail/cca-fortran/2003-February/000122.html
-            # On sgi descriptor size may be 128+ bits!
-            if self.is_array():
-                wordsize = 4 # XXX: on a 64-bit system it is 8.
-                rank = len(self.bounds or self.dimension)
-                return 6 * wordsize + 12 * rank
-            return typesize
-        if self.is_array():
-            size = reduce(lambda x,y:x*y,self.bounds or self.dimension,1)
-            if self.length:
-                size *= self.length
-            return size * typesize
-        if self.length:
-            return self.length * typesize
-        return typesize
-
     def get_typedecl(self):
         if self.typedecl is None:
             self.set_type(self.parent.get_type(self.name))
