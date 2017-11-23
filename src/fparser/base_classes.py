@@ -76,7 +76,6 @@ import string
 import logging
 from six import with_metaclass
 from .readfortran import Line, Comment
-from numpy.distutils.misc_util import yellow_text, red_text
 from .utils import split_comma, specs_split_comma, is_int_literal_constant
 from .utils import classes
 from functools import reduce
@@ -199,28 +198,6 @@ class Variable(object, with_metaclass(classes)):
             if v:
                 l.append('%s=%r' % (a,v))
         return 'Variable: ' + ', '.join(l)
-
-    def get_bit_size(self):
-        typesize = self.typedecl.get_bit_size()
-        if self.is_pointer():
-            # The size of pointer descriptor is compiler version dependent. Read:
-            #   http://www.nersc.gov/vendor_docs/intel/f_ug1/pgwarray.htm
-            #   https://www.cca-forum.org/pipermail/cca-fortran/2003-February/000123.html
-            #   https://www.cca-forum.org/pipermail/cca-fortran/2003-February/000122.html
-            # On sgi descriptor size may be 128+ bits!
-            if self.is_array():
-                wordsize = 4 # XXX: on a 64-bit system it is 8.
-                rank = len(self.bounds or self.dimension)
-                return 6 * wordsize + 12 * rank
-            return typesize
-        if self.is_array():
-            size = reduce(lambda x,y:x*y,self.bounds or self.dimension,1)
-            if self.length:
-                size *= self.length
-            return size * typesize
-        if self.length:
-            return self.length * typesize
-        return typesize
 
     def get_typedecl(self):
         if self.typedecl is None:
@@ -548,7 +525,7 @@ class Statement(object, with_metaclass(classes)):
     def torepr(self, depth=-1,incrtab=''):
         tab = incrtab + self.get_indent_tab()
         clsname = self.__class__.__name__
-        l = [tab + yellow_text(clsname)]
+        l = [tab + clsname]
         if depth==0:
             return '\n'.join(l)
         ttab = tab + '  '
@@ -620,13 +597,13 @@ class Statement(object, with_metaclass(classes)):
     #     return
 
     def error(self, message):
-        message = self.format_message('ERROR', red_text(message))
+        message = self.format_message('ERROR', message)
         logger.error(message)
         # self.show_message(message)
         return
 
     def warning(self, message):
-        message = self.format_message('WARNING', yellow_text(message))
+        message = self.format_message('WARNING', message)
         logger.warning(message)
         # self.show_message(message)
         return

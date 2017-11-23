@@ -145,7 +145,6 @@ import six
 import tempfile
 import traceback
 import logging
-from numpy.distutils.misc_util import yellow_text, red_text, blue_text
 
 from .sourceinfo import get_source_info, get_source_info_str
 from .splitline import String, string_replace_map, splitquote
@@ -692,8 +691,8 @@ class FortranReaderBase(object):
             # self.show_message(message, sys.stderr)
             # traceback.print_exc(file=sys.stderr)
             logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack()))))
-            logger.critical(red_text('STOPPED READING'))
-            # self.show_message(red_text('STOPPED READING'), sys.stderr)
+            logger.critical('STOPPED READING')
+            # self.show_message('STOPPED READING', sys.stderr)
             raise StopIteration
 
     def _next(self, ignore_comments = False):
@@ -810,7 +809,7 @@ class FortranReaderBase(object):
                 else:
                     l1 = sourceline[startcolno:endcolno]
                     l2 = sourceline[endcolno:]
-                r.append('%s%s%s <== %s' % (l0,yellow_text(l1),l2,red_text(message)))
+                r.append('%s%s%s <== %s' % (l0,l1,l2,message))
             else:
                 r.append(linenostr+ self.source_lines[i-1])
         return '\n'.join(r)
