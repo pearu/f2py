@@ -4,11 +4,12 @@ Original code by Pearu Peterson.
 
 Modifications by:
 
-A. R. Porter and R. W. Ford of the Science
-and Technology Facilities Council, UK.
-P. Vitt, University of Siegen, Germany
-I. Kavcic and M. Hambley, UK Met Office.
-J. Henrichs, Australia Bureau of Meteorology
+* R. W. Ford, Science & Technology Facilities Council, UK
+* M. Hambley, UK Met Office
+* J. Henrichs, Australia Bureau of Meteorology
+* I. Kavcic, UK Met Office
+* A. R. Porter, Science & Technology Facilities Council, UK
+* P. Vitt, University of Siegen, Germany
 
 24/11/2017 PR #60. Add fparser2 support for the 'deferred' attribute on a
            procedure declaration.
