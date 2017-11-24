@@ -250,7 +250,7 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     i = 0        # Index of current character
     num_backslashes = 0   # Counts consecutivre "\" characters
     # Empty if outside quotes, or set to the starting (and therefore
-    # also the ending) character.
+    # also the ending) quote character while reading text inside quotes.
     inside_quotes_char = ""
     start = 0    # Index of start of current part.
     stack = []   # Stack keeping track of required closing brackets
