@@ -76,8 +76,7 @@ import re
 import string
 from .base_classes import Statement, BeginStatement, EndStatement,\
      AttributeHolder, Variable
-from .utils import split_comma, AnalyzeError, name_re, is_entity_decl, \
-                   is_name, parse_array_spec
+from .utils import split_comma, AnalyzeError, name_re, is_entity_decl, is_name, CHAR_BIT, parse_array_spec
 
 # Intrinsic type specification statements
 
@@ -434,6 +433,9 @@ class TypeDeclarationStatement(Statement):
         if kind: return int(kind)
         return self.default_kind
 
+    def get_bit_size(self):
+        return CHAR_BIT * int(self.get_byte_size())
+
     def is_intrinsic(self): return not isinstance(self,(Type,Class))
     def is_derived(self): return isinstance(self,Type)
 
@@ -510,6 +512,12 @@ class Character(TypeDeclarationStatement):
     match = re.compile(r'character\b',re.I).match
     default_kind = 1
 
+    def get_bit_size(self):
+        length = self.get_length()
+        if length=='*':
+            return 0  # model for character*(*)
+        return CHAR_BIT * int(length) * int(self.get_kind())
+
     def get_zero_value(self):
         return "''"
 
@@ -537,6 +545,9 @@ class Type(TypeDeclarationStatement):
     def get_kind(self):
         # See 4.5.2, page 48
         raise NotImplementedError(repr(self.__class__.__name__))
+
+    def get_bit_size(self):
+        return self.get_type_decl(self.name).get_bit_size()
 
 TypeStmt = Type
 

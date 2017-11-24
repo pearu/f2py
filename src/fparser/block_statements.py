@@ -1253,6 +1253,16 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
 
     # Wrapper methods:
 
+    def get_bit_size(self, _cache={}):
+        try:
+            return _cache[id(self)]
+        except KeyError:
+            s = 0
+            for name,var in list(self.a.components.items()):
+                s += var.get_bit_size()
+            _cache[id(self)] = s
+        return s
+
     def is_public(self): return not self.is_private()
 
     def is_private(self):
