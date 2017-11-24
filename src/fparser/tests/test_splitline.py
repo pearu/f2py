@@ -106,7 +106,7 @@ def test_splitparen():
          '["a[),", ",b,[(", "c,][)("]']
     # pylint: disable=anomalous-backslash-in-string
     result = splitparen('a(1),b\\((2,3),c\\\((1)),c"("')
-    expected = ['a', '(1)', ',b\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
+    expected = ['a', '(1)', ',b\\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
     # pylint: enable=anomalous-backslash-in-string
     assert result == expected
     # Useful for debugging:
