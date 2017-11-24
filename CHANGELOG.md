@@ -4,11 +4,14 @@ Original code by Pearu Peterson.
 
 Modifications by:
 
-Andrew Porter and Rupert Ford of the Science
+A. R. Porter and R. W. Ford of the Science
 and Technology Facilities Council, UK.
 P. Vitt, University of Siegen, Germany
 I. Kavcic, UK Met Office.
 J. Henrichs, Australia Bureau of Meteorology
+
+24/11/2017 PR #54. Add support for array initialisation using square
+	   brackets in fparser1, e.g. 'integer :: a(2) = [x, y]'
 
 09/11/2017 Issue #40 and PR #56 bug fix for missing comma when
            generating "USE, intrinsic :: ..."
