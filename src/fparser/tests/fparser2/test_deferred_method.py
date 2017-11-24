@@ -34,6 +34,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
+# Modified M. Hambley, UK Met Office
+##############################################################################
 '''
 Tests that the parser understands deferred methods.
 '''
