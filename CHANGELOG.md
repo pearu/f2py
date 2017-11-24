@@ -7,8 +7,11 @@ Modifications by:
 A. R. Porter and R. W. Ford of the Science
 and Technology Facilities Council, UK.
 P. Vitt, University of Siegen, Germany
-I. Kavcic, UK Met Office.
+I. Kavcic and M. Hambley, UK Met Office.
 J. Henrichs, Australia Bureau of Meteorology
+
+24/11/2017 PR #60. Add fparser2 support for the 'deferred' attribute on a
+           procedure declaration.
 
 24/11/2017 PR #54. Add support for array initialisation using square
 	   brackets in fparser1, e.g. 'integer :: a(2) = [x, y]'
