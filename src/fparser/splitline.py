@@ -256,8 +256,7 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     stack = []   # Stack keeping track of required closing brackets
 
     i = -1
-    for char in line:
-        i += 1
+    for i, char in enumerate(line):
         char = line[i]
         if char == "\\":
             num_backslashes = (num_backslashes+1) % 2
