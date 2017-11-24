@@ -64,6 +64,7 @@
 
 # Original author: Pearu Peterson <pearu@cens.ioc.ee>
 # First version created: May 2006
+# Modified by J. Henrichs, Bureau of Meteorology <joerg.henrichs@bom.gov.au>
 
 """
 Test parsing single Fortran lines.
