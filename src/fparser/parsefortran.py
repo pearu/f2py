@@ -123,7 +123,7 @@ class FortranParser(object):
             self.block = BeginSource(self)
         except KeyboardInterrupt:
             raise
-        except Exception, error:
+        except Exception as error:
             reader = self.reader
             while reader is not None:
                 message = \
