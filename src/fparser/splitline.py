@@ -237,10 +237,11 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     Splits a line into top-level parenthesis and not-parenthesised
     parts. E.g.: "a( (1+2)*3) = b(x)" becomes:
     ["a", "( (1+2)*3)", " = b", "(x)"]
-    Line: the string to split.
-    paren_open/close: The characters that define the parentheses.
-    They must be matched in order: paren_open[x] is closed by
-    paren_close[x].
+    :param str line: the string to split.
+    :param str paren_open: The characters that define an open parentheses.
+    :param str paren_close: The characters that define a closing parentheses.
+    The paren_open and paren_close strings must be matched in order:
+    paren_open[x] is closed by paren_close[x].
     """
 
     assert len(paren_open) == len(paren_close)
@@ -249,14 +250,13 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     i = 0        # Index of current character
     num_backslashes = 0   # Counts consecutivre "\" characters
     # Empty if outside quotes, or set to the starting (and therefore
-    # also the ending) character.
+    # also the ending) quote character while reading text inside quotes.
     inside_quotes_char = ""
     start = 0    # Index of start of current part.
     stack = []   # Stack keeping track of required closing brackets
 
     i = -1
-    for char in line:
-        i += 1
+    for i, char in enumerate(line):
         char = line[i]
         if char == "\\":
             num_backslashes = (num_backslashes+1) % 2
