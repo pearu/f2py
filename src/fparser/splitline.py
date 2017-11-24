@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -69,28 +70,32 @@ Defines LineSplitter and helper functions.
 
 Original Author: Pearu Peterson <pearu@cens.ioc.ee>
 First version created: May 2006
+
 -----
 """
 
-__all__ = ['String','string_replace_map','splitquote','splitparen']
 
 import re
 
-class String(str): pass
-class ParenString(str): pass
 
-def split2(line, lower=False):
-    """
-    Split line into non-string part and into a start of a string part.
-    Returns 2-tuple. The second item either is empty string or start
-    of a string part.
-    """
-    return LineSplitter(line,lower=lower).split2()
+class String(str):
+    '''Dummy string class'''
+    pass
+
+
+class ParenString(str):
+    '''Class representing a parenthesis string.'''
+    pass
+
+
+__all__ = ['String', 'string_replace_map', 'splitquote', 'splitparen']
 
 _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
-_is_name = re.compile(r'\w*\Z',re.I).match
-_is_simple_str = re.compile(r'\w*\Z',re.I).match
-_f2py_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
+_is_name = re.compile(r'\w*\Z', re.I).match
+_is_simple_str = re.compile(r'\w*\Z', re.I).match
+_f2py_findall = re.compile(
+    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
+
 
 class string_replace_dict(dict):
     """
@@ -102,8 +107,9 @@ class string_replace_dict(dict):
             line = line.replace(k, self[k])
         return line
 
+
 def string_replace_map(line, lower=False,
-                       _cache={'index':0,'pindex':0}):
+                       _cache={'index': 0, 'pindex': 0}):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
     2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
@@ -155,7 +161,8 @@ def string_replace_map(line, lower=False,
         del string_map[k]
     return ''.join(items), string_map
 
-def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
+
+def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
     """
     Fast LineSplitter
     """
@@ -163,7 +170,8 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
     i = 0
     while 1:
         try:
-            char = line[i]; i += 1
+            char = line[i]
+            i += 1
         except IndexError:
             break
         l = []
@@ -176,25 +184,29 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
                     stopchar = char
                     i -= 1
                     break
-                if char=='\\':
+                if char == '\\':
                     nofslashes += 1
                 else:
                     nofslashes = 0
                 l_append(char)
                 try:
-                    char = line[i]; i += 1
+                    char = line[i]
+                    i += 1
                 except IndexError:
                     break
-            if not l: continue
+            if not l:
+                continue
             item = ''.join(l)
-            if lower: item = item.lower()
+            if lower:
+                item = item.lower()
             items.append(item)
             continue
-        if char==stopchar:
+        if char == stopchar:
             # string starts with quotechar
             l_append(char)
             try:
-                char = line[i]; i += 1
+                char = line[i]
+                i += 1
             except IndexError:
                 if l:
                     item = String(''.join(l))
@@ -202,17 +214,18 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
                 break
         # else continued string
         while 1:
-            if char==stopchar and not nofslashes % 2:
+            if char == stopchar and not nofslashes % 2:
                 l_append(char)
                 stopchar = None
                 break
-            if char=='\\':
+            if char == '\\':
                 nofslashes += 1
             else:
                 nofslashes = 0
             l_append(char)
             try:
-                char = line[i]; i += 1
+                char = line[i]
+                i += 1
             except IndexError:
                 break
         if l:
@@ -220,269 +233,72 @@ def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
             items.append(item)
     return items, stopchar
 
-class LineSplitterBase(object):
 
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        item = ''
-        while not item:
-            item = self.get_item() # get_item raises StopIteration
-        return item
-
-class LineSplitter(LineSplitterBase):
-    """ Splits a line into non strings and strings. E.g.
-    abc=\"123\" -> ['abc=','\"123\"']
-    Handles splitting lines with incomplete string blocks.
+def splitparen(line, paren_open="([", paren_close=")]"):
     """
-    def __init__(self, line,
-                 quotechar = None,
-                 lower=False,
-                 ):
-        self.fifo_line = [c for c in line]
-        self.fifo_line.reverse()
-        self.quotechar = quotechar
-        self.lower = lower
-
-    def split2(self):
-        """
-        Split line until the first start of a string.
-        """
-        try:
-            item1 = self.get_item()
-        except StopIteration:
-            return '',''
-        i = len(item1)
-        l = self.fifo_line[:]
-        l.reverse()
-        item2 = ''.join(l)
-        return item1,item2
-
-    def get_item(self):
-        fifo_pop = self.fifo_line.pop
-        try:
-            char = fifo_pop()
-        except IndexError:
-            raise StopIteration
-        fifo_append = self.fifo_line.append
-        quotechar = self.quotechar
-        l = []
-        l_append = l.append
-
-        nofslashes = 0
-        if quotechar is None:
-            # search for string start
-            while 1:
-                if char in '"\'' and not nofslashes % 2:
-                    self.quotechar = char
-                    fifo_append(char)
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                l_append(char)
-                try:
-                    char = fifo_pop()
-                except IndexError:
-                    break
-            item = ''.join(l)
-            if self.lower: item = item.lower()
-            return item
-
-        if char==quotechar:
-            # string starts with quotechar
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                return String(''.join(l))
-        # else continued string
-        while 1:
-            if char==quotechar and not nofslashes % 2:
-                l_append(char)
-                self.quotechar = None
-                break
-            if char=='\\':
-                nofslashes += 1
-            else:
-                nofslashes = 0
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                break
-        return String(''.join(l))
-
-def splitparen(line,paren='()'):
+    Splits a line into top-level parenthesis and not-parenthesised
+    parts. E.g.: "a( (1+2)*3) = b(x)" becomes:
+    ["a", "( (1+2)*3)", " = b", "(x)"]
+    :param str line: the string to split.
+    :param str paren_open: The characters that define an open parentheses.
+    :param str paren_close: The characters that define a closing parentheses.
+    :return: List of parenthesised and not-parenthesised parts
+    :rtype: list of str
+    The paren_open and paren_close strings must be matched in order:
+    paren_open[x] is closed by paren_close[x].
     """
-    Fast LineSplitterParen.
-    """
-    stopchar = None
-    startchar, endchar = paren[0],paren[1]
 
-    items = []
-    i = 0
-    while 1:
-        try:
-            char = line[i]; i += 1
-        except IndexError:
-            break
-        nofslashes = 0
-        charlist = []
-        if stopchar is None:
-            # search for parenthesis start
-            while 1:
-                if char==startchar and not nofslashes % 2:
-                    stopchar = endchar
-                    i -= 1
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                charlist.append(char)
-                try:
-                    char = line[i]; i += 1
-                except IndexError:
-                    break
-            item = ''.join(charlist)
-        else:
-            nofstarts = 0
-            while 1:
-                if char==stopchar and not nofslashes % 2 and nofstarts==1:
-                    charlist.append(char)
-                    stopchar = None
-                    break
+    assert len(paren_open) == len(paren_close)
 
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
+    items = []   # Result list
+    num_backslashes = 0   # Counts consecutive "\" characters
+    # Empty if outside quotes, or set to the starting (and therefore
+    # also the ending) quote character while reading text inside quotes.
+    inside_quotes_char = ""
+    start = 0    # Index of start of current part.
+    stack = []   # Stack keeping track of required closing brackets
 
-                if char==startchar:
-                    nofstarts += 1
-                elif char==endchar:
-                    nofstarts -= 1
+    for idx, char in enumerate(line):
+        if char == "\\":
+            num_backslashes = (num_backslashes+1) % 2
+            continue
 
-                charlist.append(char)
-                try:
-                    char = line[i]; i += 1
-                except IndexError:
-                    break
-            item = ParenString(''.join(charlist))
-        items.append(item)
+        # We had an odd number of \, so the next character is neither
+        # a real quote or parenthesis character, and can just be added.
+        if num_backslashes == 1:
+            num_backslashes = 0
+            continue
+
+        # If we are reading a quote, keep on reading till closing
+        # quote is reached
+        if inside_quotes_char != '':
+            # Reset inside_quotes_char if we find the closing quote
+            if char == inside_quotes_char:
+                inside_quotes_char = ''
+            continue
+
+        if char == "\'" or char == '"':
+            inside_quotes_char = char
+            continue
+
+        pos = paren_open.find(char)
+        if pos > -1:
+            if len(stack) == 0:
+                # New part starts:
+                items.append(line[start:idx])
+                start = idx
+            stack.append(paren_close[pos])
+            continue
+
+        # Found closing bracket
+        if len(stack) > 0 and char == stack[-1]:
+            stack.pop()
+            if len(stack) == 0:
+                # Found last closing bracket
+                items.append(ParenString(line[start:idx+1]))
+                start = idx+1
+
+    # Add any leftover characters as a separate item
+    if start != len(line):
+        items.append(line[start:])
     return items
-
-class LineSplitterParen(LineSplitterBase):
-    """ Splits a line into strings and strings with parenthesis. E.g.
-    a(x) = b(c,d) -> ['a','(x)',' = b','(c,d)']
-    """
-    def __init__(self, line, paren = '()'):
-        self.fifo_line = [c for c in line]
-        self.fifo_line.reverse()
-        self.startchar = paren[0]
-        self.endchar = paren[1]
-        self.stopchar = None
-
-    def get_item(self):
-        fifo_pop = self.fifo_line.pop
-        try:
-            char = fifo_pop()
-        except IndexError:
-            raise StopIteration
-        fifo_append = self.fifo_line.append
-        startchar = self.startchar
-        endchar = self.endchar
-        stopchar = self.stopchar
-        l = []
-        l_append = l.append
-
-        nofslashes = 0
-        if stopchar is None:
-            # search for parenthesis start
-            while 1:
-                if char==startchar and not nofslashes % 2:
-                    self.stopchar = endchar
-                    fifo_append(char)
-                    break
-                if char=='\\':
-                    nofslashes += 1
-                else:
-                    nofslashes = 0
-                l_append(char)
-                try:
-                    char = fifo_pop()
-                except IndexError:
-                    break
-            item = ''.join(l)
-            return item
-
-        nofstarts = 0
-        while 1:
-            if char==stopchar and not nofslashes % 2 and nofstarts==1:
-                l_append(char)
-                self.stopchar = None
-                break
-            if char=='\\':
-                nofslashes += 1
-            else:
-                nofslashes = 0
-            if char==startchar:
-                nofstarts += 1
-            elif char==endchar:
-                nofstarts -= 1
-            l_append(char)
-            try:
-                char = fifo_pop()
-            except IndexError:
-                break
-        return ParenString(''.join(l))
-
-def test():
-    splitter = LineSplitter('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    l = [item for item in splitter]
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
-    assert splitter.quotechar is None
-    l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
-    assert stopchar is None
-
-    splitter = LineSplitter('"abc123&')
-    l = [item for item in splitter]
-    assert l==['"abc123&'],repr(l)
-    assert splitter.quotechar=='"'
-    l,stopchar = splitquote('"abc123&')
-    assert l==['"abc123&'],repr(l)
-    assert stopchar=='"'
-
-    splitter = LineSplitter(' &abc"123','"')
-    l = [item for item in splitter]
-    assert l==[' &abc"','123']
-    assert splitter.quotechar is None
-    l,stopchar = splitquote(' &abc"123','"')
-    assert l==[' &abc"','123']
-    assert stopchar is None
-
-    l = split2('')
-    assert l==('',''),repr(l)
-    l = split2('12')
-    assert l==('12',''),repr(l)
-    l = split2('1"a"//"b"')
-    assert l==('1','"a"//"b"'),repr(l)
-    l = split2('"ab"')
-    assert l==('','"ab"'),repr(l)
-
-    splitter = LineSplitterParen('a(b) = b(x,y(1)) b\((a)\)')
-    l = [item for item in splitter]
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],repr(l)
-    l = splitparen('a(b) = b(x,y(1)) b\((a)\)')
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],repr(l)
-
-    l = string_replace_map('a()')
-    print(l)
-    print('ok')
-
-if __name__ == '__main__':
-    test()
