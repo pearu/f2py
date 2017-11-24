@@ -2158,7 +2158,9 @@ class Binding_Attr(STRINGBase): # R453
                      | <access-spec>
     """
     subclass_names = ['Access_Spec', 'Binding_PASS_Arg_Name']
-    def match(string): return STRINGBase.match(['PASS', 'NOPASS', 'NON_OVERRIDABLE', 'DEFERRED'], string)
+    def match(string):
+        return STRINGBase.match(['PASS', 'NOPASS',
+                                 'NON_OVERRIDABLE', 'DEFERRED'], string)
     match = staticmethod(match)
 
 class Final_Binding(StmtBase, WORDClsBase): # R454
