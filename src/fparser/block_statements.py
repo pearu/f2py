@@ -1212,8 +1212,8 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
             stmt.analyze()
 
         if content:
-            logging.info('Not analyzed content: %s' % content)
-            # self.show_message('Not analyzed content: %s' % content)
+            message = 'Not analyzed content: %s' % content
+            logging.getLogger(__class__).info(message)
 
         parameters = self.a.parameters
         components = self.a.components

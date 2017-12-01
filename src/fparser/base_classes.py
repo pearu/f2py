@@ -80,8 +80,6 @@ from .utils import split_comma, specs_split_comma, is_int_literal_constant
 from .utils import classes, AnalyzeError
 from functools import reduce
 
-logger = logging.getLogger('fparser')
-
 class AttributeHolder(object):
     # copied from symbolic.base module
     """
@@ -598,20 +596,17 @@ class Statement(object, with_metaclass(classes)):
 
     def error(self, message):
         message = self.format_message('ERROR', message)
-        logger.error(message)
-        # self.show_message(message)
+        logging.getLogger(__name__).error(message)
         return
 
     def warning(self, message):
         message = self.format_message('WARNING', message)
-        logger.warning(message)
-        # self.show_message(message)
+        logging.getLogger(__name__).warning(message)
         return
 
     def info(self, message):
         message = self.format_message('INFO', message)
-        logger.info(message)
-        # self.show_message(message)
+        logging.getLogger(__name__).info(message)
         return
 
     def analyze(self):
@@ -780,8 +775,7 @@ class BeginStatement(Statement):
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.
-                logger.warning(message)
-                # self.show_message(message)
+                logging.getLogger(__name__).warning(message)
                 if line[:i]:
                     newitem = item.copy(line[:i].rstrip())
                     return self.process_subitem(newitem)
@@ -802,8 +796,7 @@ class BeginStatement(Statement):
                         ' Trying f90 fix mode patterns..'\
                         % (item.get_line(),self.__class__.__name__),
                         item.span[0], item.span[1])
-                logger.warning(message)
-                # self.show_message(message)
+                logging.getLogger(__name__).warning(message)
 
                 item.reader.set_mode(False, False)
                 self.classes = classes
@@ -819,8 +812,7 @@ class BeginStatement(Statement):
                         'The f90 fix mode resolved the parse pattern issue.'\
                         ' Setting reader to f90 fix mode.',
                         item.span[0], item.span[1])
-                    logger.info(message)
-                    # self.show_message(message)
+                    logging.getLogger(__name__).info(message)
                     # set f90 fix mode
                     self.classes = f77_classes + classes
                     self.reader.set_mode(False, False)
@@ -841,7 +833,7 @@ class BeginStatement(Statement):
             'no parse pattern found for "%s" in %r block.'
             % (item.get_line(), self.__class__.__name__),
             item.span[0], item.span[1])
-        logger.warning(message)
+        logging.getLogger(__name__).warning(message)
         self.content.append(item)
         raise AnalyzeError(message)
 

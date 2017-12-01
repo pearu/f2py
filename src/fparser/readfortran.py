@@ -150,8 +150,6 @@ from .sourceinfo import get_source_info, get_source_info_str
 from .splitline import String, string_replace_map, splitquote
 from .utils import is_name
 
-logger = logging.getLogger('fparser')
-
 _spacedigits=' 0123456789'
 _cf2py_re = re.compile(r'(?P<indent>\s*)!f2py(?P<rest>.*)',re.I)
 _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==5*' '
@@ -687,12 +685,11 @@ class FortranReaderBase(object):
             message = self.format_message('FATAL ERROR',
                                           'while processing line',
                                           self.linecount, self.linecount)
-            logger.critical(message)
-            # self.show_message(message, sys.stderr)
-            # traceback.print_exc(file=sys.stderr)
-            logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack()))))
-            logger.critical('STOPPED READING')
-            # self.show_message('STOPPED READING', sys.stderr)
+            logging.getLogger(__name__).critical(message)
+            message = ''.join(('Traceback\n',
+                              ''.join( traceback.format_stack())))
+            logging.getLogger(__name__).debug(message)
+            logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
     def _next(self, ignore_comments = False):
@@ -837,8 +834,7 @@ class FortranReaderBase(object):
             m = self.format_message('INFORMATION',
                                     message,
                                     item.span[0], item.span[1])
-        logger.info(m)
-        # self.show_message(m, sys.stderr)
+        logging.getLogger(__name__).info(m)
         return
 
     def error(self, message, item=None):
@@ -847,8 +843,7 @@ class FortranReaderBase(object):
                                           len(self.source_lines))
         else:
             m = self.format_error_message(message, item.span[0], item.span[1])
-        logger.error(m)
-        # self.show_message(m, sys.stderr)
+        logging.getLogger(__name__).error(m)
         if self.exit_on_error:
             sys.exit(1)
         return
@@ -858,8 +853,7 @@ class FortranReaderBase(object):
             m = self.format_warning_message(message, len(self.source_lines)-2, len(self.source_lines))
         else:
             m = self.format_warning_message(message, item.span[0], item.span[1])
-        logger.warning(m)
-        # self.show_message(m, sys.stderr)
+        logging.getLogger(__name__).warning(m)
         return
 
     # Auxiliary methods for processing raw source lines:
@@ -972,8 +966,7 @@ class FortranReaderBase(object):
                             'multiline prefix contains odd number of %r characters' \
                             % (quote), startlineno, startlineno,
                             0, len(prefix))
-                    logger.warning(message)
-                    # self.show_message(message, sys.stderr)
+                    logging.getLogger(__name__).warning(message)
 
             suffix = None
             multilines = []
@@ -1000,8 +993,7 @@ class FortranReaderBase(object):
                             'ASSERTION FAILURE(pyf)',
                         'following character continuation: %r, expected None.' % (qc),
                             startlineno, self.linecount)
-                logger.warning(message)
-                # self.show_message(message, sys.stderr)
+                logging.getLogger(__name__).warning(message)
             # XXX: should we do line.replace('\\'+mlstr[0],mlstr[0])
             #      for line in multilines?
             return self.multiline_item(prefix,multilines,suffix,
@@ -1053,8 +1045,7 @@ class FortranReaderBase(object):
                             message = message + ', switching to free format mode'
                         message = self.format_warning_message(\
                             message,startlineno, self.linecount)
-                        logger.warning(message)
-                        # self.show_message(message, sys.stderr)
+                        logging.getLogger(__name__).warning(message)
                         if i==0:
                             # non standard comment line:
                             return self.comment_item(line, startlineno, startlineno)                           
@@ -1063,8 +1054,7 @@ class FortranReaderBase(object):
                         if i==0:
                             message = self.format_warning_message(\
                             message,startlineno, self.linecount)
-                            logger.warning(message)
-                            # self.show_message(message, sys.stderr)
+                            logging.getLogger(__name__).warning(message)
                             # non standard comment line:
                             return self.comment_item(line, startlineno, startlineno)                           
                         # return line item with error message
@@ -1134,8 +1124,7 @@ class FortranReaderBase(object):
                             'ASSERTION FAILURE(fix)',
                             'following character continuation: %r, expected None.'\
                             % (qc), startlineno, self.linecount)
-                logger.warning(message)
-                # self.show_message(message, sys.stderr)
+                logging.getLogger(__name__).warning(message)
             if len(lines)>1:
                 for i in range(len(lines)):
                     l = lines[i]
@@ -1144,13 +1133,12 @@ class FortranReaderBase(object):
                         'free format line continuation character `&\' detected'\
                         ' in fix format code',
                         startlineno + i, startlineno + i, l.rfind('&')+5)
-                        logger.warning(message)
-                        # self.show_message(message, sys.stderr)
+                        logging.getLogger(__name__).warning(message)
             return self.line_item(''.join(lines),startlineno, endlineno,label,name)
 
         # line is free format or fixed format with f2py directive (that
         # will be interpretted as free format line).
-        
+
         start_index = 0
         if self.isfix:
             start_index = 6
@@ -1227,8 +1215,7 @@ class FortranReaderBase(object):
             message = self.format_message('ASSERTION FAILURE(free)',
                 'following character continuation: %r, expected None.' % (qc),
                 startlineno, endlineno)
-            logger.error(message)
-            # self.show_message(message, sys.stderr)
+            logging.getLogger(__name__).error(message)
         line_content = ''.join(lines).strip()
         if line_content:
             return self.line_item(line_content,startlineno,endlineno,label,name)
