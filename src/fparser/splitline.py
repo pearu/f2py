@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -69,6 +70,7 @@ Defines LineSplitter and helper functions.
 
 Original Author: Pearu Peterson <pearu@cens.ioc.ee>
 First version created: May 2006
+
 -----
 """
 
@@ -91,8 +93,8 @@ __all__ = ['String', 'string_replace_map', 'splitquote', 'splitparen']
 _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
 _is_name = re.compile(r'\w*\Z', re.I).match
 _is_simple_str = re.compile(r'\w*\Z', re.I).match
-_f2py_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)'
-                           ).findall
+_f2py_findall = re.compile(
+    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
 
 
 class string_replace_dict(dict):
@@ -240,6 +242,8 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     :param str line: the string to split.
     :param str paren_open: The characters that define an open parentheses.
     :param str paren_close: The characters that define a closing parentheses.
+    :return: List of parenthesised and not-parenthesised parts
+    :rtype: list of str
     The paren_open and paren_close strings must be matched in order:
     paren_open[x] is closed by paren_close[x].
     """
@@ -247,17 +251,14 @@ def splitparen(line, paren_open="([", paren_close=")]"):
     assert len(paren_open) == len(paren_close)
 
     items = []   # Result list
-    i = 0        # Index of current character
-    num_backslashes = 0   # Counts consecutivre "\" characters
+    num_backslashes = 0   # Counts consecutive "\" characters
     # Empty if outside quotes, or set to the starting (and therefore
     # also the ending) quote character while reading text inside quotes.
     inside_quotes_char = ""
     start = 0    # Index of start of current part.
     stack = []   # Stack keeping track of required closing brackets
 
-    i = -1
-    for i, char in enumerate(line):
-        char = line[i]
+    for idx, char in enumerate(line):
         if char == "\\":
             num_backslashes = (num_backslashes+1) % 2
             continue
@@ -284,8 +285,8 @@ def splitparen(line, paren_open="([", paren_close=")]"):
         if pos > -1:
             if len(stack) == 0:
                 # New part starts:
-                items.append(line[start:i])
-                start = i
+                items.append(line[start:idx])
+                start = idx
             stack.append(paren_close[pos])
             continue
 
@@ -294,8 +295,8 @@ def splitparen(line, paren_open="([", paren_close=")]"):
             stack.pop()
             if len(stack) == 0:
                 # Found last closing bracket
-                items.append(ParenString(line[start:i+1]))
-                start = i+1
+                items.append(ParenString(line[start:idx+1]))
+                start = idx+1
 
     # Add any leftover characters as a separate item
     if start != len(line):

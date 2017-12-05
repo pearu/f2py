@@ -4,11 +4,22 @@ Original code by Pearu Peterson.
 
 Modifications by:
 
-Andrew Porter and Rupert Ford of the Science
-and Technology Facilities Council, UK.
-P. Vitt, University of Siegen, Germany
-I. Kavcic, UK Met Office.
-J. Henrichs, Australia Bureau of Meteorology
+* R. W. Ford, Science & Technology Facilities Council, UK
+* M. Hambley, UK Met Office
+* J. Henrichs, Australia Bureau of Meteorology
+* I. Kavcic, UK Met Office
+* A. R. Porter, Science & Technology Facilities Council, UK
+* P. Vitt, University of Siegen, Germany
+
+## Release 0.0.6 (04/12/2017) ##
+
+04/12/2017 PRs #61 and #62. Remove the dependence on numpy.
+
+24/11/2017 PR #60. Add fparser2 support for the 'deferred' attribute on a
+           procedure declaration.
+
+24/11/2017 PR #54. Add support for array initialisation using square
+	   brackets in fparser1, e.g. 'integer :: a(2) = [x, y]'
 
 09/11/2017 Issue #40 and PR #56 bug fix for missing comma when
            generating "USE, intrinsic :: ..."

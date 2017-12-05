@@ -1,25 +1,27 @@
+# -*- coding: utf-8 -*-
+##############################################################################
 # Copyright (c) 2017 Science and Technology Facilities Council
-
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -31,27 +33,43 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-language: python
-python:
-  - 2.7
-  - 3.6
-# command to install dependencies
-before_install:
-  - pip install coveralls
-install:
-  - "pip install ."
-script:
-  - coverage run --source=fparser -m py.test
-  - coverage report -m
-after_success:
-  - coveralls
-# Configure travis to deploy to the pypi server when a new
-# version is tagged on master
-deploy:
-  provider: pypi
-  user: "trackstand"
-  password:
-    secure: "A9BpeNY9Yvwqs7Z51dLS8OAd4iKvnsIF7t5xO/V5tS3t63xM9I6mC1mYm3TbT8eLAEje78JPXPIIAzLbOiGyaL59h01Qh3jA7AtK7tqTV3zQt5nQf6vKs0Uv1Bep65eTD8eIO7J3IM0nswk8aSeKWBkHO7rwuOOeAAI/aU3XFU0hXkMjpXz8om/crj1tfKvHdJ8X+Bzlslau4X1Q1oW33QJy0c+verHW4Ux/eAV365C6KkhRKCmaU0VHutwtVcplSulq4nvVTYCIoC1NL7wf7eR9LAkzaXAuo1aPcr3Gcw+TfQgxw28+w+jtq+OwEh9HSiw64FyaVl8utotm4hbRLR6xru4qpH2Sm7HzB1VSHS9Oi4REap2c1kxjfV6C7OEVxfrIEHBZVs59VIyg5+qlvSaKJLnNIngEXJu6jdNJFwYAUpViglWR43SaqcErDPbliAD9cdIpibWv2zT6O5gISv/aiPfL4qKINcEEPM6uONb5BWSgvMmLQuQXIsihvvRYtQWqJytqfX7HGm0rjWBWruPMl2WYEuYZ0IldIRREhSNBgryaKp1ikzUgAndMBJstb+CYvy30rMcxJESyVs5vJkwqYkw/vIbvjEsZZ5i2Y8Lh92Jb4XVuaJGUEldnN9e/cJaexuZT8eVbwhon3rBNWTMldGm+eng7u1FQmLEMFJo="
-  on:
-    tags: true
+##############################################################################
+# Modified M.Hambley, UK Met Office
+##############################################################################
+'''
+Test battery associated with fparser.readfortran package.
+'''
+import logging
+import fparser.readfortran
+import fparser.tests.logging_utils
+import pytest
 
+
+def test_fortranreaderbase(monkeypatch):
+    '''
+    Tests the FortranReaderBase class.
+
+    Currently only tests logging functionality.
+    '''
+    logger = logging.getLogger('fparser')
+    log = fparser.tests.logging_utils.CaptureLoggingHandler()
+    logger.addHandler(log)
+
+    class BrokenFile(object):
+        '''
+        A file-like object which unexpectedly fails.
+        '''
+        def next(self):
+            '''
+            Failing method.
+            '''
+            raise Exception('None shall pass')
+
+    monkeypatch.setattr(fparser.readfortran.FortranReaderBase,
+                        'id', lambda x: None, raising=False)
+    unit_under_test = fparser.readfortran.FortranReaderBase(BrokenFile(),
+                                                            True, True)
+    with pytest.raises(StopIteration):
+        unit_under_test.next()
+
+    assert 'STOPPED READING' in log.messages['critical']
