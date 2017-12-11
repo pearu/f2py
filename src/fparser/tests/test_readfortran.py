@@ -39,9 +39,9 @@
 '''
 Test battery associated with fparser.readfortran package.
 '''
-import logging
 import fparser.readfortran
 import fparser.tests.logging_utils
+import logging
 import pytest
 
 
@@ -73,3 +73,161 @@ def test_fortranreaderbase(monkeypatch):
         unit_under_test.next()
 
     assert 'STOPPED READING' in log.messages['critical']
+
+@pytest.fixture
+def log():
+    logger = logging.getLogger('fparser')
+    log = fparser.tests.logging_utils.CaptureLoggingHandler()
+    logger.addHandler( log )
+    yield log
+    logger.removeHandler( log )
+
+def test_fortranreaderbase_next(log):
+    code = 'include nonexistant.f90'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code, True, True )
+    expected = 'nonexistant.f90 not found in foo. INLCUDE line treated as comment line.'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    code = 'include modfile.f95'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code, True, True )
+    expected ='including file modfile.f95'
+    assert log.messages == {'debug':    [],
+                           'info':     [expected],
+                           'warning':  [],
+                           'error':    [],
+                           'critical': []}
+
+    class FaultyFile:
+      def next():
+        raise Exception('Stop! Hammer time!')
+
+    log.reset()
+    unit_under_test = fparser.readfortran.FortranReaderBase( 'x=1',
+                                                             True, True )
+    critical = ['FATAL ERROR while processing line', 'STOPPED READING']
+    debug = ['Traceback\n']
+    assert log.messages == {'debug':    debug,
+                           'info':     [],
+                           'warning':  [],
+                           'error':    [],
+                           'critical': critical}
+
+def test_fortranreaderbase_info( log ):
+    unit_under_test = fparser.readfortran.FortranReaderBase( 'x=1',
+                                                             True, True )
+    unit_under_test.info( 'Mighty Whirlitzer' )
+    assert log.messages == {'debug':    [],
+                           'info':     ['Mighty foo'],
+                           'warning':  [],
+                           'error':    [],
+                           'critical': []}
+
+def test_fortranreaderbase_error( log ):
+    unit_under_test = fparser.readfortran.FortranReaderBase( 'x=1',
+                                                             True, True )
+    unit_under_test.error( 'Thundering Chalmer' )
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [],
+                           'error':    ['Thundering foo'],
+                           'critical': []}
+
+def test_fortranreaderbase_warning( log ):
+    unit_under_test = fparser.readfortran.FortranReaderBase( 'x=1',
+                                                             True, True )
+    unit_under_test.info( 'Flatulent Hermit' )
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  ['Flatulent foo'],
+                           'error':    [],
+                           'critical': []}
+
+def test_fortranreaderbase_handle_multilines( log ):
+    code = '" """x=1\ny=2"""'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             True, True )
+    expected = 'multiline prefix contains odd number of foo characters'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    code = '"""boo &\n & goo"""'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             True, True )
+    expected = 'ASSERTION FAILURE(pyf)', \
+               'following character continuation: foo, expected None.'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+def test_fortranreaderbase_get_source_item( log ):
+    code = 'w'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             False, True )
+    expected = 'non-space/digit char foo found in column 0', \
+               ' of fixed Fortran code', \
+               ', interpreting line as comment line'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             False, False )
+    expected = 'non-space/digit char foo found in column 0', \
+               ' of fixed Fortran code', \
+               ', interpreting line as comment line', \
+               ', switching to free format mode'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    code = ''
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             False, False )
+    expected = 'ASSERTION FAILURE(fix)', \
+               'following character continuation: foo, expected None.'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    code = 'x=1 &\n  +1'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             False, True )
+    expected = 'free format line continuation character `&\' detected' \
+               ' in fix format code'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [expected],
+                           'error':    [],
+                           'critical': []}
+
+    log.reset()
+    code = '"""boo & que'
+    unit_under_test = fparser.readfortran.FortranReaderBase( code,
+                                                             True, True )
+    expected = 'ASSERTION FAILURE(free)', \
+               'following character continuation: foo, expected None.'
+    assert log.messages == {'debug':    [],
+                           'info':     [],
+                           'warning':  [],
+                           'error':    [expected],
+                           'critical': []}

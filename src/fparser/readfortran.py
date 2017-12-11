@@ -512,7 +512,7 @@ class FortranReaderBase(object):
         else:
             raise NotImplementedError(repr(mode))
         self.set_mode(isfree, isstrict)
-    
+
     def close_source(self):
         """ Called when self.source.next() raises StopIteration.
         """
@@ -526,7 +526,7 @@ class FortranReaderBase(object):
         ``linecount`` will be decremented, that is, the line was
         returned by ``get_single_line`` call then it will be
         un-consumed.
-        
+
         See also
         --------
         get_single_line, get_next_line
@@ -579,7 +579,7 @@ class FortranReaderBase(object):
 
         if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict):
             return self.get_single_line(ignore_empty, ignore_comments)
-        
+
         if ignore_empty and not line:
             return self.get_single_line(ignore_empty, ignore_comments)
 
@@ -668,13 +668,6 @@ class FortranReaderBase(object):
                                    % (filename, dirs), item)
                     item = self.next(ignore_comments)
                     return item
-                    # To keep the information, we are turning the
-                    # INCLUDE line to a comment:
-                    reader.warning('%r not found in %r. '\
-                                   'The INCLUDE line will be turned to a comment.'\
-                                   % (filename, dirs), item)
-                    return self.comment_item('!'+item.get_line(apply_map=True),
-                                             item.span[0], item.span[1])
                 reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(path, include_dirs=include_dirs)
                 return self.reader.next(ignore_comments = ignore_comments)
@@ -1005,7 +998,7 @@ class FortranReaderBase(object):
 
     def get_source_item(self):
         """ Return next source item.
-        
+
         A source item is ..
         - a fortran line
         - a list of continued fortran lines
@@ -1022,7 +1015,7 @@ class FortranReaderBase(object):
         have_comment = False
         label = None
         name = None
-        
+
         if self.ispyf:
             # handle multilines
             for mlstr in ['"""',"'''"]:
@@ -1040,7 +1033,7 @@ class FortranReaderBase(object):
                               ' of fixed Fortran code' % (line[i],i+1)
                     if i==0:
                         message += ', interpreting line as comment line'
-                    if self.isfix:     
+                    if self.isfix:
                         if i!=0:
                             message = message + ', switching to free format mode'
                         message = self.format_warning_message(\
