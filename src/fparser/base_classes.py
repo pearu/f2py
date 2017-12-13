@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -862,6 +863,7 @@ class EndStatement(Statement):
         line = item.get_line().replace(' ','')[3:]
         line = item.apply_map(line)
         blocktype = self.blocktype
+
         if line.lower().startswith(blocktype):
             line = line[len(blocktype):].strip()
         else:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -77,6 +78,7 @@ __all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
            'EndEnum',
            ]
 
+import logging
 import re
 import sys
 

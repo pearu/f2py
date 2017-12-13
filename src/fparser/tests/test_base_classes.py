@@ -39,26 +39,30 @@
 '''
 Test battery associated with fparser.base_classes package.
 '''
-import logging
-import fparser.tests.logging_utils
-
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
+import fparser.tests.logging_utils
+import fparser.utils
+import logging
+import pytest
+import re
 
 
-def test_statement(monkeypatch):
+@pytest.fixture
+def log():
+    logger = logging.getLogger('fparser')
+    log = fparser.tests.logging_utils.CaptureLoggingHandler()
+    logger.addHandler( log )
+    yield log
+    logger.removeHandler( log )
+
+def test_statement_logging(log, monkeypatch):
     '''
-    Tests the Statement class.
-
-    Only exercises the logging functionality at the moment.
+    Tests the Statement class' logging methods.
     '''
     reader = fparser.readfortran.FortranStringReader("dummy = 1")
     parser = fparser.parsefortran.FortranParser(reader)
-
-    logger = logging.getLogger('fparser')
-    log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(log)
 
     monkeypatch.setattr(fparser.base_classes.Statement,
                         'process_item', lambda x: None, raising=False)
@@ -70,3 +74,62 @@ def test_statement(monkeypatch):
                             'error':    ['Scary biscuits'],
                             'info':     [],
                             'warning':  []})
+
+    log.reset()
+    unit_under_test.warning('Trepidacious Cetations')
+    assert(log.messages == {'critical': [],
+                            'debug':    [],
+                            'error':    [],
+                            'info':     [],
+                            'warning':  ['Trepidacious Cetations']})
+
+    log.reset()
+    unit_under_test.info('Hilarious Ontologies')
+    assert(log.messages == {'critical': [],
+                            'debug':    [],
+                            'error':    [],
+                            'info':     ['Hilarious Ontologies'],
+                            'warning':  []})
+
+def test_begin_statement_logging_comment_mix( log ):
+    class EndDummy(fparser.base_classes.EndStatement):
+        match = re.compile(r'\s*end(\s*thing\s*\w*|)\s*\Z', re.I).match
+
+    class BeginHarness(fparser.base_classes.BeginStatement):
+      end_stmt_cls = EndDummy
+      classes = []
+      get_classes = lambda x: []
+      match = re.compile(r'\s*thing\s+(\w*)\s*\Z', re.I).match
+
+    code = '      x=1 ! Cheese'
+    parent = fparser.readfortran.FortranStringReader( code )
+    parent.set_mode( False, True )
+    item = fparser.readfortran.Line( code, (1,1), None, None, parent )
+    with pytest.raises(fparser.utils.AnalyzeError):
+        unit_under_test = BeginHarness( parent, item )
+    expected = '    1:      x=1 ! Cheese <== ' \
+   + 'no parse pattern found for "x=1 ! cheese" in \'BeginHarness\' block, ' \
+               + 'trying to remove inline comment (not in Fortran 77).'
+    result = log.messages['warning'][0].split('\n')[1]
+    assert result == expected
+
+def test_begin_statement_logging_unknown( log ):
+    class EndThing(fparser.base_classes.EndStatement):
+        isvalid = True
+        match = re.compile(r'\s*end(\s+thing(\s+\w+)?)?\s*$', re.I).match
+
+    class BeginThing(fparser.base_classes.BeginStatement):
+        end_stmt_cls = EndThing
+        classes = []
+        get_classes = lambda x: []
+        match = re.compile(r'\s*thing\s+(\w+)?\s*$', re.I).match
+
+    code = ['      jumper', '      end thing']
+    parent = fparser.readfortran.FortranStringReader( '\n'.join(code) )
+    parent.set_mode( False, True )
+    item = fparser.readfortran.Line( code[0], (1,1), None, None, parent )
+    with pytest.raises( fparser.utils.AnalyzeError ):
+         unit_under_test = BeginThing( parent, item )
+    expected = '    1:      jumper <== no parse pattern found for "jumper" in \'BeginThing\' block.'
+    result = log.messages['warning'][0].split('\n')[1]
+    assert result == expected

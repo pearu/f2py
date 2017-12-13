@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 #!/usr/bin/env python
 # Modified work Copyright (c) 2017 Science and Technology Facilities Council
@@ -1041,37 +1042,39 @@ class FortranReaderBase(object):
                         logging.getLogger(__name__).warning(message)
                         if i==0:
                             # non standard comment line:
-                            return self.comment_item(line, startlineno, startlineno)                           
+                            return self.comment_item(line, startlineno, startlineno)
                         self.set_mode(True, False)
                     else:
+                        message = self.format_warning_message(message,
+                                                              startlineno,
+                                                              self.linecount)
+                        logging.getLogger(__name__).warning(message)
                         if i==0:
-                            message = self.format_warning_message(\
-                            message,startlineno, self.linecount)
-                            logging.getLogger(__name__).warning(message)
                             # non standard comment line:
-                            return self.comment_item(line, startlineno, startlineno)                           
+                            return self.comment_item(line, startlineno, startlineno)
                         # return line item with error message
                         # TODO: handle cases with line[6:]==''
                         return self.line_item(line[6:], startlineno, self.linecount,
                                            label, name, self.format_error_message(\
                             message, startlineno, self.linecount))
-            # check for label
-            s = line[:5].strip().lower()
-            if s:
-                label = int(s)
-            if not self.isf77:
-                m = _construct_name_re.match(line[6:])
-                if m:
-                    name = m.group('name')
-                    line = line[:6] + line[6:][m.end():].lstrip()
-            if not line[6:].strip():
-                # check for a blank line
-                if name is not None:
-                    self.error('No construct following construct-name.')
-                elif label is not None:
-                    self.warning('Label must follow nonblank character (F2008:3.2.5_2)')
-                return self.comment_item('', startlineno, self.linecount)
-            # line is not a comment and the start of the line is valid
+            if self.isfixed: # Check that we haven't switched to free format
+                # check for label
+                s = line[:5].strip().lower()
+                if s:
+                    label = int(s)
+                if not self.isf77:
+                    m = _construct_name_re.match(line[6:])
+                    if m:
+                        name = m.group('name')
+                        line = line[:6] + line[6:][m.end():].lstrip()
+                if not line[6:].strip():
+                    # check for a blank line
+                    if name is not None:
+                        self.error('No construct following construct-name.')
+                    elif label is not None:
+                        self.warning('Label must follow nonblank character (F2008:3.2.5_2)')
+                    return self.comment_item('', startlineno, self.linecount)
+                # line is not a comment and the start of the line is valid
 
         if self.isf77 and not is_f2py_directive:
             # Fortran 77 is easy..
