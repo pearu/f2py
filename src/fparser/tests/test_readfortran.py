@@ -39,21 +39,23 @@
 '''
 Test battery associated with fparser.readfortran package.
 '''
-import fparser.readfortran
-import fparser.tests.logging_utils
 import os.path
 import pytest
-import re
+import fparser.readfortran
+import fparser.tests.logging_utils
 
 
 @pytest.fixture
 def log():
+    '''
+    Prepares the logging system to capture events for future inspection.
+    '''
     import logging
     logger = logging.getLogger('fparser')
-    log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(log)
-    yield log
-    logger.removeHandler(log)
+    handler = fparser.tests.logging_utils.CaptureLoggingHandler()
+    logger.addHandler(handler)
+    yield handler
+    logger.removeHandler(handler)
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -63,12 +65,22 @@ def test_111fortranreaderbase(log, monkeypatch):
     Currently only tests logging functionality.
     '''
     class FailFile(object):
+        '''
+        A "file-like" object which returns a line of Fortran source followed
+        by raising a StopIteration exception.
+        '''
         _stuff = ['x=1']
 
-        def next(self):  # For Python 2.7
+        def next(self):
+            '''
+            Used by Python 2.7.
+            '''
             return self.__next__()
 
-        def __next__(self):  # For Python 3
+        def __next__(self):
+            '''
+            Used by Python 3.
+            '''
             return self._stuff.pop()
 
     monkeypatch.setattr('fparser.readfortran.FortranReaderBase.id',
@@ -89,7 +101,11 @@ def test_111fortranreaderbase(log, monkeypatch):
     assert log.messages['debug'][0][:len(expected)] == expected
 
 
-def test_fortranreaderbase_next_bad_include(log):
+def test_base_next_bad_include(log):
+    '''
+    Tests that FortranReaderBase.next() causes a message to be logged when an
+    included file does not exist.
+    '''
     code = "include 'nonexistant.f90'\nx=1"
     unit_under_test = fparser.readfortran.FortranStringReader(code)
     line = unit_under_test.next()
@@ -105,11 +121,15 @@ def test_fortranreaderbase_next_bad_include(log):
     assert result == expected
 
 
-def test_fortranreaderbase_next_good_include(log):
+def test_base_next_good_include(log):
+    '''
+    Tests that FortranReaderBase.next() causes a message to be logged when a
+    file is included.
+    '''
     code = "include 'modfile.f95'\nx=2"
-    includeDirectories = [os.path.dirname(__file__)]
+    include_directories = [os.path.dirname(__file__)]
     unit_under_test = fparser.readfortran \
-        .FortranStringReader(code, includeDirectories)
+        .FortranStringReader(code, include_directories)
     line = unit_under_test.next()
     assert str(line)[:19] == "Comment('! Modified"  # First line of inclusion
     assert log.messages['debug'] == []
@@ -119,10 +139,13 @@ def test_fortranreaderbase_next_good_include(log):
     expected = "    1:include 'modfile.f95' " \
                + "<== including file '{path}/modfile.f95'"
     result = log.messages['info'][0].split('\n')[1]
-    assert result == expected.format(path=includeDirectories[0])
+    assert result == expected.format(path=include_directories[0])
 
 
 def test_fortranreaderbase_info(log):
+    '''
+    Tests that FortranReaderBase.info() causes a message to be logged.
+    '''
     unit_under_test = fparser.readfortran.FortranStringReader('x=3')
     thing = unit_under_test.get_source_item()
     unit_under_test.info('Mighty Whirlitzer', thing)
@@ -136,6 +159,9 @@ def test_fortranreaderbase_info(log):
 
 
 def test_fortranreaderbase_error(log):
+    '''
+    Tests that FortranReaderBase.error() causes a message to be logged.
+    '''
     unit_under_test = fparser.readfortran.FortranStringReader('x=2')
     thing = unit_under_test.get_source_item()
     with pytest.raises(SystemExit):
@@ -150,6 +176,9 @@ def test_fortranreaderbase_error(log):
 
 
 def test_fortranreaderbase_warning(log):
+    '''
+    Tests that FortranReaderBase.warning() causes a message to be logged.
+    '''
     unit_under_test = fparser.readfortran.FortranStringReader('x=1')
     thing = unit_under_test.get_source_item()
     unit_under_test.warning('Flatulent Hermit', thing)
@@ -162,7 +191,11 @@ def test_fortranreaderbase_warning(log):
     assert result == expected
 
 
-def test_fortranreaderbase_handle_multilines(log):
+def test_base_handle_multilines(log):
+    '''
+    Tests that FortranReaderBase.get_source_item() logs the correct messages
+    when there are quote discrepancies.
+    '''
     code = 'character(8) :: test = \'foo"""bar'
     log.reset()
     unit_under_test = fparser.readfortran.FortranStringReader(code)
@@ -190,7 +223,11 @@ def test_fortranreaderbase_handle_multilines(log):
     assert result == expected
 
 
-def test_fortranreaderbase_get_source_item_fixed_nonlabel(log):
+def test_base_fixed_nonlabel(log):
+    '''
+    Tests that FortranReaderBase.get_source_item() logs the correct messages
+    when there is an unexpected character in the initial 6 columns.
+    '''
     for i in range(1, 4):
         code = ' '*i + 'w' + ' '*(4-i) + 'integer :: i'
         log.reset()
@@ -235,7 +272,11 @@ def test_fortranreaderbase_get_source_item_fixed_nonlabel(log):
     assert result == expected
 
 
-def test_fortranreaderbase_get_source_item_fixed_continuation(log):
+def test_base_fixed_continuation(log):
+    '''
+    Tests that FortranReaderBase.get_source_item() logs the correct messages
+    when there are quote mismatches across a continuation in fixed format.
+    '''
     code = '     character(4) :: cheese = "a & !\n     & b'
     log.reset()
     unit_under_test = fparser.readfortran.FortranStringReader(code)
@@ -264,7 +305,11 @@ def test_fortranreaderbase_get_source_item_fixed_continuation(log):
     assert result == expected
 
 
-def test_fortranreaderbase_get_source_item_free_continuation(log):
+def test_base_free_continuation(log):
+    '''
+    Tests that FortranReaderBase.get_source_item() logs the correct messages
+    when there are quote mismatches across a continuation in free format.
+    '''
     code = 'character(4) :: "boo & que'
     log.reset()
     unit_under_test = fparser.readfortran.FortranStringReader(code)

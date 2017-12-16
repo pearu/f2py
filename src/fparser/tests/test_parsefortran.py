@@ -35,11 +35,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
+'''
+Tests the fparser.parsefortran module.
+'''
 
-import fparser.parsefortran
-import fparser.readfortran
 import logging
 import pytest
+import fparser.parsefortran
+import fparser.readfortran
 
 
 @pytest.fixture
@@ -51,8 +54,14 @@ def log():
     logger.removeHandler(log)
 
 
-def test_logEmpty(log):
+def test_log_empty(log):
+    '''
+    Tests that a reader without next() method causes an event to be logged.
+    '''
     class EmptyReader(object):
+        '''
+        A faux reader with no next() method.
+        '''
         id = 'thingumy'
 
     unit_under_test = fparser.parsefortran.FortranParser(EmptyReader())
@@ -64,11 +73,21 @@ def test_logEmpty(log):
                             'critical': []}
 
 
-def test_logCache(log):
+def test_log_cache(log):
+    '''
+    Tests that using a chached reader object logs an event.
+    '''
     class Readerlike(object):
+        '''
+        Dummy reader class, the only purpose of which is to have an id and not
+        cause the parser to fail.
+        '''
         id = 'thisun'
 
-        def next():
+        def next(self):
+            '''
+            Simple non-failure-causing method.
+            '''
             yield 'NOT A THING'
             yield 'MODULE foo_mod'
             raise StopIteration
@@ -91,12 +110,25 @@ def test_logCache(log):
                             'critical': []}
 
 
-def test_logFailure(log):
+def test_log_failure(log):
+    '''
+    Tests that an unexpected read failure causes an event to be logged.
+    '''
     class FailyReader(fparser.readfortran.FortranStringReader):
+        '''
+        Modifies the FortranStringReader class to raise an exception from
+        the next() method.
+        '''
         def __init__(self):
+            '''
+            Default constructor.
+            '''
             super(FailyReader, self).__init__('The end')
 
         def next(self, ignore_comments=False):
+            '''
+            Failing method.
+            '''
             raise Exception('That''s all folks!')
 
     unit_under_test = fparser.parsefortran.FortranParser(FailyReader())

@@ -39,17 +39,20 @@
 '''
 Test battery associated with fparser.base_classes package.
 '''
+import re
+import pytest
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
 import fparser.tests.logging_utils
 import fparser.utils
-import pytest
-import re
 
 
 @pytest.fixture
 def log():
+    '''
+    Prepare a fixture to capture logged events for inspection.
+    '''
     import logging
     logger = logging.getLogger('fparser')
     log = fparser.tests.logging_utils.CaptureLoggingHandler()
@@ -93,16 +96,28 @@ def test_statement_logging(log, monkeypatch):
                             'warning':  []})
 
 
-def test_begin_statement_logging_comment_mix(log):
+def test_log_comment_mix(log):
+    '''
+    Tests that unexpected Fortran 90 comment in fixed format source is logged.
+    '''
     class EndDummy(fparser.base_classes.EndStatement):
+        '''
+        Dummy EndStatement.
+        '''
         match = re.compile(r'\s*end(\s*thing\s*\w*|)\s*\Z', re.I).match
 
     class BeginHarness(fparser.base_classes.BeginStatement):
+        '''
+        Dummy BeginStatement.
+        '''
         end_stmt_cls = EndDummy
         classes = []
         match = re.compile(r'\s*thing\s+(\w*)\s*\Z', re.I).match
 
         def get_classes(self):
+            '''
+            Returns an empty list of contained statements.
+            '''
             return []
 
     code = '      x=1 ! Cheese'
@@ -119,17 +134,30 @@ def test_begin_statement_logging_comment_mix(log):
     assert result == expected
 
 
-def test_begin_statement_logging_unknown(log):
+def test_log_unexpected(log):
+    '''
+    Tests that an unexpected thing between begin and end statements logs an
+    event.
+    '''
     class EndThing(fparser.base_classes.EndStatement):
+        '''
+        Dummy EndStatement class.
+        '''
         isvalid = True
         match = re.compile(r'\s*end(\s+thing(\s+\w+)?)?\s*$', re.I).match
 
     class BeginThing(fparser.base_classes.BeginStatement):
+        '''
+        Dummy BeginStatement class.
+        '''
         end_stmt_cls = EndThing
         classes = []
         match = re.compile(r'\s*thing\s+(\w+)?\s*$', re.I).match
 
         def get_classes(self):
+            '''
+            Returns an empty list of contained classes.
+            '''
             return []
 
     code = ['      jumper', '      end thing']
