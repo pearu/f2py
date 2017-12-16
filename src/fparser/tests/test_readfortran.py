@@ -41,7 +41,6 @@ Test battery associated with fparser.readfortran package.
 '''
 import fparser.readfortran
 import fparser.tests.logging_utils
-import logging
 import os.path
 import pytest
 import re
@@ -49,6 +48,7 @@ import re
 
 @pytest.fixture
 def log():
+    import logging
     logger = logging.getLogger('fparser')
     log = fparser.tests.logging_utils.CaptureLoggingHandler()
     logger.addHandler( log )
@@ -62,9 +62,11 @@ def test_111fortranreaderbase(log, monkeypatch):
     Currently only tests logging functionality.
     '''
     class FailFile(object):
-      _buffer = ['x=1']
-      def next(self):
-        return self._buffer.pop()
+      _stuff = ['x=1']
+      def next(self): # For Python 2.7
+        return self.__next__()
+      def __next__(self): # For Python 3
+        return self._stuff.pop()
 
     monkeypatch.setattr('fparser.readfortran.FortranReaderBase.id',
                         lambda x:'foo', raising=False)

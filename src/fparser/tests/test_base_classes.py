@@ -44,13 +44,13 @@ import fparser.parsefortran
 import fparser.readfortran
 import fparser.tests.logging_utils
 import fparser.utils
-import logging
 import pytest
 import re
 
 
 @pytest.fixture
 def log():
+    import logging
     logger = logging.getLogger('fparser')
     log = fparser.tests.logging_utils.CaptureLoggingHandler()
     logger.addHandler( log )
