@@ -41,28 +41,30 @@ import fparser.readfortran
 import logging
 import pytest
 
+
 @pytest.fixture
 def log():
     logger = logging.getLogger('fparser')
     log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler( log )
+    logger.addHandler(log)
     yield log
-    logger.removeHandler( log )
+    logger.removeHandler(log)
 
 
-def test_logEmpty( log ):
+def test_logEmpty(log):
     class EmptyReader(object):
-      id = 'thingumy'
+        id = 'thingumy'
 
-    unit_under_test = fparser.parsefortran.FortranParser( EmptyReader() )
+    unit_under_test = fparser.parsefortran.FortranParser(EmptyReader())
     unit_under_test.analyze()
     assert log.messages == {'debug':    [],
-                           'info':     ['Nothing to analyze.'],
-                           'warning':  [],
-                           'error':    [],
-                           'critical': []}
+                            'info':     ['Nothing to analyze.'],
+                            'warning':  [],
+                            'error':    [],
+                            'critical': []}
 
-def test_logCache( log ):
+
+def test_logCache(log):
     class Readerlike(object):
         id = 'thisun'
 
@@ -73,7 +75,7 @@ def test_logCache( log ):
 
     # Expect everything to go okay, no log messages.
     log.reset()
-    unit_under_test = fparser.parsefortran.FortranParser( Readerlike() )
+    unit_under_test = fparser.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
                             'info':     [],
                             'warning':  [],
@@ -81,25 +83,26 @@ def test_logCache( log ):
                             'critical': []}
 
     # This time we should use a cached log.
-    unit_under_test = fparser.parsefortran.FortranParser( Readerlike() )
+    unit_under_test = fparser.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
-                           'info':     ['using cached thisun'],
-                           'warning':  [],
-                           'error':    [],
-                           'critical': []}
+                            'info':     ['using cached thisun'],
+                            'warning':  [],
+                            'error':    [],
+                            'critical': []}
 
-def test_logFailure( log ):
+
+def test_logFailure(log):
     class FailyReader(fparser.readfortran.FortranStringReader):
         def __init__(self):
-          super(FailyReader,self).__init__( 'The end' )
+            super(FailyReader, self).__init__('The end')
 
-        def next( self, ignore_comments = False ):
-          raise Exception('That''s all folks!')
+        def next(self, ignore_comments=False):
+            raise Exception('That''s all folks!')
 
-    unit_under_test = fparser.parsefortran.FortranParser( FailyReader() )
+    unit_under_test = fparser.parsefortran.FortranParser(FailyReader())
     with pytest.raises(Exception):
         unit_under_test.parse()
-    assert log.messages['debug'][0].startswith( 'Traceback\n' )
+    assert log.messages['debug'][0].startswith('Traceback\n')
     assert log.messages['info'] == []
     assert log.messages['warning'] == []
     assert log.messages['error'] == []

@@ -53,9 +53,10 @@ def log():
     import logging
     logger = logging.getLogger('fparser')
     log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler( log )
+    logger.addHandler(log)
     yield log
-    logger.removeHandler( log )
+    logger.removeHandler(log)
+
 
 def test_statement_logging(log, monkeypatch):
     '''
@@ -91,29 +92,34 @@ def test_statement_logging(log, monkeypatch):
                             'info':     ['Hilarious Ontologies'],
                             'warning':  []})
 
-def test_begin_statement_logging_comment_mix( log ):
+
+def test_begin_statement_logging_comment_mix(log):
     class EndDummy(fparser.base_classes.EndStatement):
         match = re.compile(r'\s*end(\s*thing\s*\w*|)\s*\Z', re.I).match
 
     class BeginHarness(fparser.base_classes.BeginStatement):
-      end_stmt_cls = EndDummy
-      classes = []
-      get_classes = lambda x: []
-      match = re.compile(r'\s*thing\s+(\w*)\s*\Z', re.I).match
+        end_stmt_cls = EndDummy
+        classes = []
+        match = re.compile(r'\s*thing\s+(\w*)\s*\Z', re.I).match
+
+        def get_classes(self):
+            return []
 
     code = '      x=1 ! Cheese'
-    parent = fparser.readfortran.FortranStringReader( code )
-    parent.set_mode( False, True )
-    item = fparser.readfortran.Line( code, (1,1), None, None, parent )
+    parent = fparser.readfortran.FortranStringReader(code)
+    parent.set_mode(False, True)
+    item = fparser.readfortran.Line(code, (1, 1), None, None, parent)
     with pytest.raises(fparser.utils.AnalyzeError):
-        unit_under_test = BeginHarness( parent, item )
+        unit_under_test = BeginHarness(parent, item)
     expected = '    1:      x=1 ! Cheese <== ' \
-   + 'no parse pattern found for "x=1 ! cheese" in \'BeginHarness\' block, ' \
+               + 'no parse pattern found for "x=1 ! cheese" ' \
+               + "in 'BeginHarness' block, " \
                + 'trying to remove inline comment (not in Fortran 77).'
     result = log.messages['warning'][0].split('\n')[1]
     assert result == expected
 
-def test_begin_statement_logging_unknown( log ):
+
+def test_begin_statement_logging_unknown(log):
     class EndThing(fparser.base_classes.EndStatement):
         isvalid = True
         match = re.compile(r'\s*end(\s+thing(\s+\w+)?)?\s*$', re.I).match
@@ -121,15 +127,18 @@ def test_begin_statement_logging_unknown( log ):
     class BeginThing(fparser.base_classes.BeginStatement):
         end_stmt_cls = EndThing
         classes = []
-        get_classes = lambda x: []
         match = re.compile(r'\s*thing\s+(\w+)?\s*$', re.I).match
 
+        def get_classes(self):
+            return []
+
     code = ['      jumper', '      end thing']
-    parent = fparser.readfortran.FortranStringReader( '\n'.join(code) )
-    parent.set_mode( False, True )
-    item = fparser.readfortran.Line( code[0], (1,1), None, None, parent )
-    with pytest.raises( fparser.utils.AnalyzeError ):
-         unit_under_test = BeginThing( parent, item )
-    expected = '    1:      jumper <== no parse pattern found for "jumper" in \'BeginThing\' block.'
+    parent = fparser.readfortran.FortranStringReader('\n'.join(code))
+    parent.set_mode(False, True)
+    item = fparser.readfortran.Line(code[0], (1, 1), None, None, parent)
+    with pytest.raises(fparser.utils.AnalyzeError):
+        unit_under_test = BeginThing(parent, item)
+    expected = '    1:      jumper <== no parse pattern found for "jumper" ' \
+               "in 'BeginThing' block."
     result = log.messages['warning'][0].split('\n')[1]
     assert result == expected
