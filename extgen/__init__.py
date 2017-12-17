@@ -1,14 +1,15 @@
 """
 Python Extensions Generator
 """
+from __future__ import absolute_import
 
 __all__ = ['Component']
 
-from base import Component
+from .base import Component
 
 for _m in ['utils', 'c_support', 'py_support', 'setup_py']:
-    exec 'from %s import *' % (_m)
-    exec 'import %s as _m' % (_m)
+    exec('from %s import *' % (_m))
+    exec('import %s as _m' % (_m))
     __all__.extend(_m.__all__)
 
 #from pyc_function import PyCFunction

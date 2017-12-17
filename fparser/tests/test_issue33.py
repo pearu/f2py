@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 from fparser import api
 
@@ -23,4 +24,4 @@ end module foo
     END INTERFACE assignment(=)
 
   END MODULE foo
-    '''.strip().split('\n')[1:],`r`
+    '''.strip().split('\n')[1:],repr(r)

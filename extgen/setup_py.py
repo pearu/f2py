@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import map
+from six.moves import range
 
 __all__ = ['SetupPy']
 
@@ -6,12 +10,12 @@ import re
 import sys
 from numpy.distutils.exec_command import exec_command
 from numpy.distutils.misc_util import yellow_text, red_text, cyan_text
-from base import Component
-from utils import FileSource
+from .base import Component
+from .utils import FileSource
 
 def write_files(container):
     s = ['creating files and directories:']
-    for filename, i in container.label_map.items():
+    for filename, i in list(container.label_map.items()):
         content = container.list[i]
         d,f = os.path.split(filename)
         if d and not os.path.isdir(d):
@@ -23,7 +27,7 @@ def write_files(container):
             overwrite = True
             if os.path.isfile(filename):
                 overwrite = False
-                f = file(filename, 'r')
+                f = open(filename, 'r')
                 i = 0
                 for line in f:
                     if 'is generated using ExtGen tool' in line:
@@ -36,7 +40,7 @@ def write_files(container):
                 else:
                     s[-1] += ' - extgen generated file exists, overwriting'
             if overwrite:
-                f = file(filename,'w')
+                f = open(filename,'w')
                 f.write(content)
                 f.close()
     return '\n'.join(s)
@@ -91,7 +95,7 @@ if __name__ == "__main__":
         self += init_py
         self += setup_py
 
-        map(self.add, components)
+        list(map(self.add, components))
 
         return self
 
@@ -116,7 +120,7 @@ if __name__ == "__main__":
         else:
             try:
                 self._show_warnings_errors(r[1])
-            except Exception, msg:
+            except Exception as msg:
                 #print msg
                 self.warning(r[1])
             if not r[0]:
@@ -143,7 +147,7 @@ if __name__ == "__main__":
                 fn = os.path.normpath(os.path.join(self.path, r.group('filename')))
                 n = int(r.group('lineno'))-1
                 m = r.group('message')
-                if messages.has_key(n):
+                if n in messages:
                     if m not in messages[n]:
                         messages[n].append(m)
                 else:
@@ -152,7 +156,7 @@ if __name__ == "__main__":
                     messages[n] = [m]
         if not messages:
             return
-        keys = messages.keys()
+        keys = list(messages.keys())
         keys.sort()
         for n in keys:
             m = messages[n]
@@ -162,17 +166,17 @@ if __name__ == "__main__":
                 color_text = yellow_text
             elif t=='error':
                 color_text = red_text
-            print fn
+            print(fn)
             f = open(fn,'r')
             content = f.readlines()
             f.close()
-            print '%s: compile %s message:' % (fn, t)
+            print('%s: compile %s message:' % (fn, t))
             for i in range(n-3, n+3):
                 if i<0 or i>=len(content): continue
                 if i==n:
-                    print '%d: %s <-- %s' % (i+1, color_text(content[i].rstrip()), cyan_text('\n'.join(m)))
+                    print('%d: %s <-- %s' % (i+1, color_text(content[i].rstrip()), cyan_text('\n'.join(m))))
                 else:
-                    print '%d: %s' % (i+1, content[i].rstrip())
+                    print('%d: %s' % (i+1, content[i].rstrip()))
 
 def _test():
     import doctest

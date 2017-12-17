@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
 
 import numpy
 from numpy.testing import *
 from extgen import *
 import unittest
+import six
 NumpyTestCase = unittest.TestCase
 
 class _test_PyCArrayTypeSpec(NumpyTestCase):
@@ -15,7 +18,7 @@ class _test_PyCArrayTypeSpec(NumpyTestCase):
     def check_simple(self):
         f = PyCFunction('func')
         f += PyCArgument('i8', PyCArrayTypeSpec(numpy.int8,[3]))
-        print f.generate()
+        print(f.generate())
 
 
 class test_PyCModule(NumpyTestCase):
@@ -86,7 +89,7 @@ pyc_function_foo(PyObject *pyc_self, PyObject *pyc_args, PyObject *pyc_keywds) {
         f += CCode('r = a1; Py_INCREF(r);')
         #print PyCModule('aa',f).build()
         #print
-        print f.generate()
+        print(f.generate())
         #foo = f.build()
         #foo()
 
@@ -98,7 +101,7 @@ pyc_function_foo(PyObject *pyc_self, PyObject *pyc_args, PyObject *pyc_keywds) {
         f += Variable('a4', 'c_long', 'in, out')
         f += Variable('a5', 'c_long_long', 'in, out')
         f += Variable('a6', 'c_Py_ssize_t', 'in, out')
-        print f.generate()
+        print(f.generate())
         foo = f.build()
         args = (2,2,2,2,2,2)
         assert_equal(foo(*args),args)
@@ -183,15 +186,15 @@ pyc_function_foo(PyObject *pyc_self, PyObject *pyc_args, PyObject *pyc_keywds) {
     def check_py_argument_return_immutable(self):
         f = PyCFunction('foo')
         f += Variable('a1', int, 'in, out')
-        f += Variable('a2', long, 'in, out')
+        f += Variable('a2', int, 'in, out')
         f += Variable('a3', float, 'in, out')
         f += Variable('a4', complex, 'in, out')
         f += Variable('a5', str, 'in, out')
-        f += Variable('a6', unicode, 'in, out')
+        f += Variable('a6', six.text_type, 'in, out')
         f += Variable('a7', bool, 'in, out')
         foo = f.build()
 
-        args = 2, 2L, 1.2, 1+2j,'hei',u'tere', True
+        args = 2, 2, 1.2, 1+2j,'hei',u'tere', True
         assert_equal(foo(*args),args)
 
     def check_py_argument_return_containers(self):
@@ -405,7 +408,7 @@ pyc_function_foo(PyObject *pyc_self, PyObject *pyc_args, PyObject *pyc_keywds) {
         f = PyCFunction('foo')
         f += Variable('a1', numpy.int_, 'in, out', (3))
         foo = f.build()
-        print foo([1,2])
+        print(foo([1,2]))
 
 if __name__ == "__main__":
-    print NumpyTest().run()
+    print(NumpyTest().run())

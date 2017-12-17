@@ -1,4 +1,5 @@
+from __future__ import absolute_import
 
 from .component import Component
-import basic
-import c
+from . import basic
+from . import c

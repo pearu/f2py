@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 from fparser import api
 
@@ -44,4 +45,4 @@ END MODULE testa
     END SUBROUTINE f
   END MODULE testa
 
-    '''.strip().split('\n')[1:],`r`
+    '''.strip().split('\n')[1:],repr(r)

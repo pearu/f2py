@@ -1,5 +1,10 @@
 """ Defines Joiner class.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import map
+from six.moves import range
+from six.moves import zip
 __version__ = '1.0'
 __author__ = 'Pearu Peterson <pearu.peterson@gmail.com>'
 __all__ = ['Joiner']
@@ -149,7 +154,7 @@ class Joiner(object):
             if o not in self.default_options:
                 raise KeyError("Unsupported keyword arguments: %r" % (o))
         self.options = options.copy()
-        map(self.add, args)
+        list(map(self.add, args))
 
     @property
     def use_indent(self):
@@ -165,10 +170,10 @@ class Joiner(object):
         return getattr(super(Joiner, self), name)
 
     def add(self, value, key=None):
-        assert isinstance(value, str),`type(value)`
+        assert isinstance(value, str),repr(type(value))
         if key is None:
             key = time.time()
-        for old, new in self.replace_map.items():
+        for old, new in list(self.replace_map.items()):
             value = value.replace(old, new)
         if key in self.dict:
             v = self.dict[key]
@@ -279,4 +284,4 @@ def _test():
 
 if __name__ == "__main__":
     _test()
-    print 'ok'
+    print('ok')

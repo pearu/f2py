@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #!/usr/bin/env python
 
 import os
@@ -62,6 +63,8 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 def write_version_py(filename='f2py/version.py'):
     cnt = """
 # THIS FILE IS GENERATED FROM F2PY SETUP.PY
+from __future__ import print_function
+
 short_version='%(version)s'
 version='%(version)s'
 release=%(isrelease)s
@@ -108,7 +111,7 @@ if not release:
         else:
             version += hg_version.strip()
 
-print version
+print(version)
 """
     a = open(filename, 'w')
     try:
@@ -201,6 +204,7 @@ if __name__ == '__main__':
         download_url = DOWNLOAD_URL,
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
-        classifiers = filter(None, CLASSIFIERS.split('\n')),
+        install_requires=["six"],
+        classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms = PLATFORMS,
         configuration=configuration)

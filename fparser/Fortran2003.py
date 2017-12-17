@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 """Fortran 2003 Syntax Rules.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
 
 import re
 import logging
-from splitline import string_replace_map
-import pattern_tools as pattern
-from readfortran import FortranReaderBase
+from .splitline import string_replace_map
+from . import pattern_tools as pattern
+from .readfortran import FortranReaderBase
+from six.moves import map
+from six.moves import range
 
 logger = logging.getLogger("fparser")
 
@@ -27,7 +31,7 @@ def show_result(func):
     def new_func(cls, string, **kws):
         r = func(cls, string, **kws)
         if r is not None and isinstance(r, StmtBase):
-            print '%s(%r) -> %r' % (cls.__name__, string, str(r))
+            print('%s(%r) -> %r' % (cls.__name__, string, str(r)))
         return r
     return new_func
 
@@ -72,7 +76,7 @@ class Base(object):
             # restore readers content when no match is found.
             try:
                 result = cls.match(string)
-            except NoMatchError, msg:
+            except NoMatchError as msg:
                 if str(msg)=='%s: %r' % (cls.__name__, string): # avoid recursion 1.
                     raise
 
@@ -92,17 +96,17 @@ class Base(object):
                 #print '%s:%s: %r' % (cls.__name__,subcls.__name__,string)
                 try:
                     obj = subcls(string, parent_cls = parent_cls)
-                except NoMatchError, msg:
+                except NoMatchError as msg:
                     obj = None
                 if obj is not None:
                     return obj
 
         else:
-            raise AssertionError,`result`
+            raise AssertionError(repr(result))
         errmsg = '%s: %r' % (cls.__name__, string)
         #if isinstance(string, FortranReaderBase) and string.fifo_item:
         #    errmsg += ' while reaching %s' % (string.fifo_item[-1])
-        raise NoMatchError,errmsg
+        raise NoMatchError(errmsg)
 
 ##     def restore_reader(self):
 ##         self._item.reader.put_item(self._item)
@@ -154,7 +158,7 @@ content : tuple
               enable_select_type_construct_hook = False,
               enable_case_construct_hook = False
               ):
-        assert isinstance(reader,FortranReaderBase),`reader`
+        assert isinstance(reader,FortranReaderBase),repr(reader)
         content = []
         if startcls is not None:
             try:
@@ -488,7 +492,8 @@ class BracketBase(Base):
     <bracket-base> = <left-bracket-base> <something> <right-bracket>
     """
     def match(brackets, cls, string, require_cls=True):
-        i = len(brackets)/2
+        i = len(brackets)//2
+        print(i)
         left = brackets[:i]
         right = brackets[-i:]
         if string.startswith(left) and string.endswith(right):
@@ -1761,7 +1766,7 @@ class Component_Decl(Base): # R442
         if newline.startswith('='):
             init = Component_Initialization(newline)
         else:
-            assert newline=='',`newline`
+            assert newline=='',repr(newline)
         return name, array_spec, char_length, init
     match = staticmethod(match)
     def tostr(self):
@@ -2353,7 +2358,7 @@ class Entity_Decl(Base): # R504
         elif newline:
             return
         else:
-            assert newline=='',`newline, string`
+            assert newline=='',repr((newline, string))
         return name, array_spec, char_length, init
     match = staticmethod(match)
     def tostr(self):
@@ -3076,7 +3081,7 @@ items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
         parts = line.split('/')
         items = []
         fst = parts.pop(0)
-        assert not fst,`fst, parts`
+        assert not fst,repr((fst, parts))
         while len(parts)>=2:
             name,lst = parts[:2]
             del parts[:2]
@@ -3085,7 +3090,7 @@ items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
             if lst.endswith(','):
                 lst = lst[:-1].rstrip()
             items.append((Namelist_Group_Name(name),Namelist_Group_Object_List(lst)))
-        assert not parts,`parts`
+        assert not parts,repr(parts)
         return tuple(items)
 
     def tostr(self):
@@ -3439,7 +3444,7 @@ class Allocate_Stmt(StmtBase): # R623
         opts = None
         if i!=-1:
             j = line[:i].rfind(',')
-            assert j!=-1,`i,j,line`
+            assert j!=-1,repr((i,j,line))
             opts = Alloc_Opt_List(repmap(line[j+1:].lstrip()))
             line = line[:j].rstrip()        
         return spec, Allocation_List(repmap(line)), opts
@@ -3582,7 +3587,7 @@ class Deallocate_Stmt(StmtBase): # R635
         opts = None
         if i!=-1:
             j = line[:i].rfind(',')
-            assert j!=-1,`i,j,line`
+            assert j!=-1,repr((i,j,line))
             opts = Dealloc_Opt_List(repmap(line[j+1:].lstrip()))
             line = line[:j].rstrip()
         return Allocate_Object_List(repmap(line)), opts
@@ -3670,7 +3675,7 @@ class Defined_Op(STRINGBase): # R703, 723
     subclass_names = []
     def match(string):
         if pattern.non_defined_binary_op.match(string):
-            raise NoMatchError,'%s: %r' % (Defined_Unary_Op.__name__, string)
+            raise NoMatchError('%s: %r' % (Defined_Unary_Op.__name__, string))
         return STRINGBase.match(pattern.abs_defined_op, string)
     match = staticmethod(match)
 
@@ -3922,13 +3927,13 @@ class Pointer_Assignment_Stmt(StmtBase): # R735
             l = repmap(lhs[i+1:-1].strip())
             try:
                 return Data_Pointer_Object(o), Bounds_Spec_List(l), Data_Target(rhs)
-            except NoMatchError, msg:
+            except NoMatchError as msg:
                 return Data_Pointer_Object(o), Bounds_Remapping_List(l), Data_Target(rhs)
         else:
             lhs = repmap(lhs)
         try:
             return Data_Pointer_Object(lhs), None, Data_Target(rhs)
-        except NoMatchError, msg:
+        except NoMatchError as msg:
             return Proc_Pointer_Object(lhs), None, Proc_Target(rhs)
 
     def tostr(self):
@@ -4225,7 +4230,7 @@ class Forall_Triplet_Spec(Base): # R755
         if i==-1: return
         n = Index_Name(repmap(line[:i].rstrip()))
         line = line[i+1:].lstrip()
-        s = map(lambda s: repmap(s.strip()), line.split(':'))
+        s = [repmap(s.strip()) for s in line.split(':')]
         if len(s)==2:
             return n, Subscript(s[0]), Subscript(s[1]), None
         if len(s)==3:
@@ -4890,7 +4895,7 @@ class Loop_Control(Base): # R830
         var,rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
         if not 2<=len(rhs)<=3: return
-        return Variable(repmap(var.rstrip())),map(Scalar_Int_Expr, map(repmap,rhs))
+        return Variable(repmap(var.rstrip())),list(map(Scalar_Int_Expr, list(map(repmap,rhs))))
     match = staticmethod(match)
     def tostr(self):
         if len(self.items)==1: return ', WHILE (%s)' % (self.items[0])
@@ -5318,11 +5323,11 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
     
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None,`self.items`
+            assert self.items[1] is None,repr(self.items)
             if self.items[2] is None:
                 return 'READ(%s)' % (self.items[0])
             return 'READ(%s) %s' % (self.items[0], self.items[2])
-        assert self.items[1] is not None, `self.items`
+        assert self.items[1] is not None, repr(self.items)
         if self.items[2] is None:
             return 'READ %s' % (self.items[1])
         return 'READ %s, %s' % (self.items[1], self.items[2])
@@ -5619,7 +5624,7 @@ items : (File_Unit_Number, Position_Spec_List)
 
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None, `self.items`
+            assert self.items[1] is None, repr(self.items)
             return 'BACKSPACE %s' % (self.items[0])
         return 'BACKSPACE(%s)' % (self.items[1])
 
@@ -5647,7 +5652,7 @@ items : (File_Unit_Number, Position_Spec_List)
 
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None, `self.items`
+            assert self.items[1] is None, repr(self.items)
             return 'ENDFILE %s' % (self.items[0])
         return 'ENDFILE(%s)' % (self.items[1])
 
@@ -5675,7 +5680,7 @@ items : (File_Unit_Number, Position_Spec_List)
 
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None, `self.items`
+            assert self.items[1] is None, repr(self.items)
             return 'REWIND %s' % (self.items[0])
         return 'REWIND(%s)' % (self.items[1])
 
@@ -5727,7 +5732,7 @@ items : (File_Unit_Number, Position_Spec_List)
 
     def tostr(self):
         if self.items[0] is not None:
-            assert self.items[1] is None, `self.items`
+            assert self.items[1] is None, repr(self.items)
             return 'FLUSH %s' % (self.items[0])
         return 'FLUSH(%s)' % (self.items[1])
 
@@ -5789,7 +5794,7 @@ items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
 
     def tostr(self):
         if self.items[0] is None:
-            assert None not in self.items[1:],`self.items`
+            assert None not in self.items[1:],repr(self.items)
             return 'INQUIRE(IOLENGTH=%s) %s' % (self.items[1:])
         return 'INQUIRE(%s)' % (self.items[0])
 
@@ -6043,7 +6048,7 @@ class Data_Edit_Desc_C1002(Base):
             if self.items[3] is None:
                 return '%s%s.%s' % (c, self.items[1], self.items[2])
             return '%s%s.%sE%s' % (c, self.items[1], self.items[2], self.items[3])
-        raise NotImpletenetedError,`c`
+        raise NotImpletenetedError(repr(c))
 
 class Data_Edit_Desc(Base): # R1005
     """
@@ -6117,7 +6122,7 @@ class Data_Edit_Desc(Base): # R1005
                     return '%s%s' % (c, self.items[1])
                 else:
                     return '%s%s(%s)' % (c, self.items[1], self.items[2])
-        raise NotImpletenetedError,`c`
+        raise NotImpletenetedError(repr(c))
 
 class W(Base): # R1006
     """
@@ -7309,29 +7314,29 @@ for clsname in _names:
             _names.append(n)
             n = n[:-5]
             #print 'Generating %s_List' % (n)
-            exec '''\
+            exec('''\
 class %s_List(SequenceBase):
     subclass_names = [\'%s\']
     use_names = []
     def match(string): return SequenceBase.match(r\',\', %s, string)
     match = staticmethod(match)
-''' % (n, n, n)
+''' % (n, n, n))
         elif n.endswith('_Name'):
             _names.append(n)
             n = n[:-5]
             #print 'Generating %s_Name' % (n)
-            exec '''\
+            exec('''\
 class %s_Name(Base):
     subclass_names = [\'Name\']
-''' % (n)
+''' % (n))
         elif n.startswith('Scalar_'):
             _names.append(n)
             n = n[7:]
             #print 'Generating Scalar_%s' % (n)
-            exec '''\
+            exec('''\
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
-''' % (n,n)
+''' % (n,n))
 
 
 __autodoc__ = []
@@ -7365,7 +7370,7 @@ if 1: # Optimize subclass tree:
                     l.append(n1)
         return l
 
-    for cls in Base_classes.values():
+    for cls in list(Base_classes.values()):
         if not hasattr(cls, 'subclass_names'): continue
         opt_subclass_names = []
         for n in cls.subclass_names:
@@ -7379,7 +7384,7 @@ if 1: # Optimize subclass tree:
 
 
 # Initialize Base.subclasses dictionary:
-for clsname, cls in Base_classes.items():
+for clsname, cls in list(Base_classes.items()):
     subclass_names = getattr(cls, 'subclass_names', None)
     if subclass_names is None:
         logger.debug('%s class is missing subclass_names list' % (clsname))
@@ -7397,7 +7402,7 @@ for clsname, cls in Base_classes.items():
             # print '%s not implemented needed by %s' % (n,clsname)
 
 if 1:
-    for cls in Base_classes.values():
+    for cls in list(Base_classes.values()):
         subclasses = Base.subclasses.get(cls.__name__,[])
         subclasses_names = [c.__name__ for c in subclasses]
         subclass_names = getattr(cls,'subclass_names', [])

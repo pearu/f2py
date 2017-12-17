@@ -25,6 +25,7 @@ Modules
   fparser.parsefortran
   
 """
+from __future__ import absolute_import
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
 

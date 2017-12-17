@@ -11,6 +11,8 @@ Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
 -----
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 __all__ = ['String','string_replace_map','splitquote','splitparen']
 
@@ -381,18 +383,18 @@ class LineSplitterParen(LineSplitterBase):
 def test():
     splitter = LineSplitter('abc\\\' def"12\\"3""56"dfad\'a d\'')
     l = [item for item in splitter]
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],`l`
+    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
     assert splitter.quotechar is None
     l,stopchar=splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
-    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],`l`
+    assert l==['abc\\\' def','"12\\"3"','"56"','dfad','\'a d\''],repr(l)
     assert stopchar is None
 
     splitter = LineSplitter('"abc123&')
     l = [item for item in splitter]
-    assert l==['"abc123&'],`l`
+    assert l==['"abc123&'],repr(l)
     assert splitter.quotechar=='"'
     l,stopchar = splitquote('"abc123&')
-    assert l==['"abc123&'],`l`
+    assert l==['"abc123&'],repr(l)
     assert stopchar=='"'
 
     splitter = LineSplitter(' &abc"123','"')
@@ -404,23 +406,23 @@ def test():
     assert stopchar is None
 
     l = split2('')
-    assert l==('',''),`l`
+    assert l==('',''),repr(l)
     l = split2('12')
-    assert l==('12',''),`l`
+    assert l==('12',''),repr(l)
     l = split2('1"a"//"b"')
-    assert l==('1','"a"//"b"'),`l`
+    assert l==('1','"a"//"b"'),repr(l)
     l = split2('"ab"')
-    assert l==('','"ab"'),`l`
+    assert l==('','"ab"'),repr(l)
 
     splitter = LineSplitterParen('a(b) = b(x,y(1)) b\((a)\)')
     l = [item for item in splitter]
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],`l`
+    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],repr(l)
     l = splitparen('a(b) = b(x,y(1)) b\((a)\)')
-    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],`l`
+    assert l==['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)'],repr(l)
 
     l = string_replace_map('a()')
-    print l
-    print 'ok'
+    print(l)
+    print('ok')
 
 if __name__ == '__main__':
     test()

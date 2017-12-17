@@ -1,5 +1,7 @@
 
 # THIS FILE IS GENERATED FROM F2PY SETUP.PY
+from __future__ import print_function
+
 short_version='0.3.1'
 version='0.3.1'
 release=False
@@ -46,4 +48,4 @@ if not release:
         else:
             version += hg_version.strip()
 
-print version
+print(version)

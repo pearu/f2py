@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 __all__ = ['set_read_options', 'set_parse_options',
            'get_fortran_code_group']
