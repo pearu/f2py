@@ -500,7 +500,7 @@ class Implicit(Statement):
     """
     match = re.compile(r'implicit\b',re.I).match
 
-    letters = str.lower
+    letters = 'abcdefghijklmnopqrstuvwxyz'
 
     def process_item(self):
         line = self.item.get_line()[8:].lstrip()
