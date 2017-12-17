@@ -1202,7 +1202,7 @@ class FortranFileReader(FortranReaderBase):
 class FortranStringReader(FortranReaderBase):
 
     def __init__(self, string, include_dirs = None, source_only = None):
-        self.id = 'string-'+str(id(string))
+        self.id = 'string-'+string
         source = StringIO(string)
         isfree, isstrict = get_source_info_str(string)
         FortranReaderBase.__init__(self, source, isfree, isstrict)
