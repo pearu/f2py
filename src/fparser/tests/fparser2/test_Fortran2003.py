@@ -2603,8 +2603,25 @@ def test_write_stmt(): # R911
         "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
         "Name('namtest')))), None)")
 
-    inst = wcls("WRITE(*,'(5X,\"q_mesh =\",4F12.8)') 1.d0, 2.d0, 3.d0, 4.d0")
+    # Test when format specifier contains an '=' character
+    iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
+    assert isinstance(iolist, Io_Control_Spec_List)
+    inst = wcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(inst, wcls)
+    assert repr(inst) == (
+        "Write_Stmt(Io_Control_Spec_List(\',\', "
+        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
+        "Io_Control_Spec(None, "
+        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
+        "None)))), Real_Literal_Constant(\'1.D0\', None))")
+    inst = wcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(inst, wcls)
+    assert repr(inst) == (
+        "Write_Stmt(Io_Control_Spec_List(\',\', "
+        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
+        "Io_Control_Spec(\'FMT\', "
+        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
+        "None)))), Real_Literal_Constant(\'1.D0\', None))")
 
 
 def test_Print_Stmt(): # R912
