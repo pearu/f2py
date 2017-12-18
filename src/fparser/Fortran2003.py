@@ -596,8 +596,9 @@ class KeywordValueBase(Base):
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
         '''
         :param lhs_cls: list, tuple or single value of classes to attempt to
-                        match LHS against (in order)
-        :type lhs_cls: names of classes deriving from `:py:class:Base`
+                        match LHS against (in order), or string containing
+                        keyword to match
+        :type lhs_cls: names of classes deriving from `:py:class:Base` or str
         :param rhs_cls: name of class to match RHS against
         :type rhs_cls: name of a class deriving from `:py:class:Base`
         :param str string: text to be matched
