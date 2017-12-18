@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from fparser import api
 
 def test_reproduce_issue():

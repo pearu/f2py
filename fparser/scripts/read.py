@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 #!/usr/bin/env python
 import os
 import sys
@@ -15,10 +17,10 @@ def runner (parser, options, args):
         reader = FortranFileReader(filename)
         if options.task=='show':
             for item in reader:
-                print >> sys.stdout, item
+                print(item, file=sys.stdout)
                 sys.stdout.flush()
         else:
-            raise NotImplementedError(`options.task`)
+            raise NotImplementedError(repr(options.task))
         
 
 def main ():

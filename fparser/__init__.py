@@ -25,16 +25,19 @@ Modules
   fparser.parsefortran
   
 """
+from __future__ import absolute_import
 #Author: Pearu Peterson <pearu@cens.ioc.ee>
 #Created: Oct 2006
 
-import os
-import logging, logging.config
+def enable_logging():
+    import os
+    import logging, logging.config
 
-# Default logging configuration file
-_DEFAULT_LOG_CONFIG_PATH = os.path.join(os.path.dirname(__file__),'log.config')
+    # Default logging configuration file
+    _DEFAULT_LOG_CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), 'log.config')
 
-# Setup loggers
-logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
+    # Setup loggers
+    logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
 
 __autodoc__ = ['api', 'Fortran2003', 'readfortran', 'parsefortran']

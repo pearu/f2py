@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+from six.moves import map
 
 __all__ = ['Word', 'Line', 'Code', 'FileSource', 'Flags']
 
-from base import Component
+from .base import Component
 
 class Word(Component):
     template = '%(word)s'
@@ -37,7 +39,7 @@ class Line(Component):
 
     def initialize(self, *strings):
         self.line = ''
-        map(self.add, strings)
+        list(map(self.add, strings))
         return self
 
     def add(self, component, container_label=None):
@@ -79,12 +81,12 @@ class Code(Component):
     default_component_class_name = 'Line'
 
     def initialize(self, *lines):
-        map(self.add, lines)
+        list(map(self.add, lines))
         return self
 
     def add(self, component, label=None):
         if isinstance(component, Code):
-            assert label is None,`label`
+            assert label is None,repr(label)
             self.components += component.components
         else:
             Component.add(self, component, label)
@@ -107,7 +109,7 @@ class FileSource(Component):
 
     def initialize(self, path, *components, **options):
         self.path = path
-        map(self.add, components)
+        list(map(self.add, components))
         self._provides = options.pop('provides', path)
         if options: self.warning('%s unused options: %s\n' % (self.__class__.__name__, options))
         return self
@@ -137,7 +139,7 @@ class Flags(Component):
 
     def initialize(self, *words, **options):
         self.words = []
-        map(self.add, words)
+        list(map(self.add, words))
         if options: self.warning('%s unused options: %s\n' \
                                  % (self.__class__.__name__, options))
         return self
@@ -162,13 +164,13 @@ class Flags(Component):
             w = self.is_valid(word)
             if w is not None:
                 if isinstance(w, list):
-                    map(self.add, w)
+                    list(map(self.add, w))
                 else:
                     self.words.append(w)
         elif component is None:
             pass
         elif isinstance(component, self.__class__):
-            map(self.add, component.words)
+            list(map(self.add, component.words))
         elif isinstance(component, Word):
             self.add(component.word)
         else:

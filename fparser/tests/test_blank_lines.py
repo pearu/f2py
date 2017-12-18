@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from fparser import api
 
 def test_reproduce_issue():
@@ -30,7 +32,7 @@ c a third annoying comment
 '''
     tree = api.parse(source_str, isfree=False, isstrict=True,
             analyze=False)
-    print tree
+    print(tree)
     assert str(tree).strip().split('\n')[1:] == '''
       !      BEGINSOURCE <cStringIO.StringI object at 0x3723710> mode=f77
         SUBROUTINE bl(a, b, c)

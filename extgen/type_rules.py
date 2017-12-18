@@ -1,9 +1,10 @@
 """
 TODO: npy_void
 """
+from __future__ import absolute_import
 
 import numpy
-from capi import sctypebits
+from .capi import sctypebits
 
 scalar = dict(
 c_char = dict(\
@@ -523,7 +524,7 @@ scalar['numpy_unicode0'] = scalar['numpy_unicode_'] = scalar['numpy_unicode']
 scalar['npy_str'] = scalar['npy_string']
 scalar['numpy_void0'] = scalar['numpy_void']
 
-for Cls_name, bits_list in sctypebits.items():
+for Cls_name, bits_list in list(sctypebits.items()):
     if Cls_name=='Complex':
         init = ' = {0.0, 0.0}'
         t = 'complex'

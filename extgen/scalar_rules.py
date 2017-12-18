@@ -1,9 +1,10 @@
 """
 TODO: npy_void
 """
+from __future__ import absolute_import
 
 import numpy
-from capi import sctypebits
+from .capi import sctypebits
 
 c_char = dict(\
     ctype = 'signed char',
@@ -545,7 +546,7 @@ numpy_void0 = numpy_void
 
 def _generate():
   scalars = {}  
-  for Cls_name, bits_list in sctypebits.items():
+  for Cls_name, bits_list in list(sctypebits.items()):
     if Cls_name=='Complex':
         init = ' = {0.0, 0.0}'
         t = 'complex'
@@ -588,8 +589,8 @@ def _generate():
             )
   return scalars
 
-for _k, _d in _generate().items():
-    exec _k + ' = _d'
+for _k, _d in list(_generate().items()):
+    exec(_k + ' = _d')
 
 npy_intp = eval('npy_'+numpy.intp.__name__)
 npy_int_ = eval('npy_'+numpy.int_.__name__)

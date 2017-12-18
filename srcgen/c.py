@@ -1,5 +1,7 @@
 """ Implements components for C programs.
 """
+from __future__ import absolute_import
+from six.moves import zip
 # Created: April, 2008
 # Author: Pearu Peterson
 
@@ -26,7 +28,7 @@ short_type_spec_map = dict(
     int='i',unsignedint='ui',signedint='i',
     char='c',unsignedchar='uC', signedchar='C',
     short='s', shortint='s', unsignedshort='us', signedshort='s',
-    long='l', longint='l',
+    int='l', longint='l',
     signedlong='l', signedlongint='l', longsignedint='l',
     unsignedlong='ul', unsignedlongint='ul', longunsignedint='ul',
     longlong='L', longlongint='L',

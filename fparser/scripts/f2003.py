@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 #!/usr/bin/env python
 import os
 import sys
@@ -18,11 +20,11 @@ def runner (parser, options, args):
             reader.set_mode_from_str(options.mode)
         try:
             program = Fortran2003.Program(reader)
-            print program
-        except Fortran2003.NoMatchError, msg:
-            print 'parsing %r failed at %s' % (filename, reader.fifo_item[-1])
-            print 'started at %s' % (reader.fifo_item[0])
-            print 'quiting'
+            print(program)
+        except Fortran2003.NoMatchError as msg:
+            print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
+            print('started at %s' % (reader.fifo_item[0]))
+            print('quiting')
             return
 
 def main ():

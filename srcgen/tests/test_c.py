@@ -1,5 +1,7 @@
+from __future__ import absolute_import
 import sys
 import difflib
+from six.moves import range
 def equal_strings(text1, text2, _cache=set()):
     if text1==text2:
         return True

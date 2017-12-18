@@ -1,6 +1,8 @@
 """
 Test parsing of whole fortran files; 'blackbox' tests here.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from fparser import api
 import sys
@@ -92,10 +94,10 @@ def test_provides():
     tree = api.parse(source_str, isfree=True, isstrict=False)
     mod5 = tree.a.module['mod5']
     mod6 = tree.a.module['mod6']
-    assert mod5.a.module_provides.keys() == ['fp', 'dummy']
-    assert mod5.a.use_provides.keys() == ['a', 'b', 'e', 'a2', 'b2', 'lgp']
-    assert mod6.a.module_provides.keys() ==  []
-    assert mod6.a.use_provides.keys() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
+    assert list(mod5.a.module_provides.keys()) == ['fp', 'dummy']
+    assert list(mod5.a.use_provides.keys()) == ['a', 'b', 'e', 'a2', 'b2', 'lgp']
+    assert list(mod6.a.module_provides.keys()) ==  []
+    assert list(mod6.a.use_provides.keys()) ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2']
     assert mod6.a.use_provides['qgp'].name == 'gp'
 
 def test_walk():
@@ -111,4 +113,4 @@ def test_walk():
     '''
     tree = api.parse(source_str, isfree=True, isstrict=False, ignore_comments=False)
     for stmt, depth in api.walk(tree, 1):
-        print depth, stmt.item
+        print(depth, stmt.item)

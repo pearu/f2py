@@ -9,6 +9,9 @@ Defines classes
       PyCTypeSpec - represents scalar type of arguments and return values
       PyCArrayTypeSpec - represents numpy array type of arguments and return values
 """
+from __future__ import absolute_import
+from six.moves import map
+from six.moves import range
 
 
 __all__ = ['PySource', 'PyCFunction', 'PyCModule', 'PyCTypeSpec', 'PyCArgument',
@@ -20,12 +23,12 @@ import sys
 import time
 import tempfile
 
-from base import Component
-from utils import *
-from c_support import *
+from .base import Component
+from .utils import *
+from .c_support import *
 
-import scalar_rules
-import array_rules
+from . import scalar_rules
+from . import array_rules
 
 class PySource(FileSource):
 
@@ -93,7 +96,7 @@ static PyObject* extgen_module;
 
         self.main = PyCModuleInitFunction(pyname)
         self += self.main
-        map(self.add, components)
+        list(map(self.add, components))
         return self
 
     def update_SetupPy(self):
@@ -331,7 +334,7 @@ class FunctionSignature(Component):
         )
     def initialize(self, name, *components, **options):
         self.name = name
-        map(self.add, components)
+        list(map(self.add, components))
         return self
     def update_containers(self):
         self.container_OptExtArg += self.container_OptArg + self.container_ExtArg
@@ -457,7 +460,7 @@ PyObject*
             self.add(self.title, 'Title')
         if self.description:
             self.add(self.description, 'Description')
-        map(self.add, components)
+        list(map(self.add, components))
         return self
 
     def __repr__(self):
@@ -506,8 +509,8 @@ PyObject*
 
     def add_implementation(self, resource):
         if resource is None: return
-        import capi
-        if not capi.implementation.has_key(resource):
+        from . import capi
+        if resource not in capi.implementation:
             raise NotImplementedError('capi.implementation[%r]' % (resource))
         d = capi.implementation[resource]
         for r in d.get('depends',[]):
@@ -516,8 +519,8 @@ PyObject*
 
     def add_typedef(self, resource):
         if resource is None: return
-        import capi
-        if not capi.typedefs.has_key(resource):
+        from . import capi
+        if resource not in capi.typedefs:
             raise NotImplementedError('capi.typedefs[%r]' % (resource))
         d = capi.typedefs[resource]
         for r in d.get('depends',[]):
@@ -526,8 +529,8 @@ PyObject*
 
     def add_macro(self, resource):
         if resource is None: return
-        import capi
-        if not capi.macros.has_key(resource):
+        from . import capi
+        if resource not in capi.macros:
             raise NotImplementedError('capi.macros[%r]' % (resource))
         d = capi.macros[resource]
         for r in d.get('depends',[]):
@@ -752,7 +755,7 @@ class Bound(Component):
                 value = eval(value, {}, {})
             except NameError:
                 pass
-        assert isinstance(value, (str,int)),`value`
+        assert isinstance(value, (str,int)),repr(value)
         self.is_defined = isinstance(value, int) and value >= 0
         self.is_undefined = isinstance(value, int) and value < 0
         self.is_variable = isinstance(value, str)
@@ -779,7 +782,7 @@ class Shape(Component):
     default_component_class_name = 'Bound'
 
     def initialize(self, *bounds):
-        map(self.add, bounds)
+        list(map(self.add, bounds))
         return self
 
     @property
@@ -874,7 +877,7 @@ class Variable(Component):
         self.init = options.pop('init', None)
         if options: self.warning('%s unused options: %s\n' \
                                  % (self.__class__.__name__, options))
-        map(self.add, components)
+        list(map(self.add, components))
         return self
 
     def add(self, component, label=None):
@@ -937,8 +940,8 @@ class Variable(Component):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__,
-                           ', '.join([`self.name`]+\
-                                     [`c` for (c,l) in self.components]))
+                           ', '.join([repr(self.name)]+\
+                                     [repr(c) for (c,l) in self.components]))
 
     def get_implementation_name(self):
         prefix = 'array_'
@@ -1062,7 +1065,7 @@ class Intent(Flags):
                 if w in self.words:
                     self.words.remove(w)
             break
-        assert word in self._intent_list+self._mutability_list+self._storage_list,`word`
+        assert word in self._intent_list+self._mutability_list+self._storage_list,repr(word)
         return word
 
 class PyCType(Component):
@@ -1088,8 +1091,8 @@ class PyCType(Component):
                            dims = dims or typeobj.dims,
                            init = init or typeobj.init)
         if isinstance(typeobj, tuple):
-            assert dims is None,`typeobj,dims`
-            assert init is None,`typeobj,init`
+            assert dims is None,repr((typeobj,dims))
+            assert init is None,repr((typeobj,init))
             return PyCType(*typeobj)
 
         self.name = typeobj2key(typeobj)
@@ -1111,7 +1114,7 @@ class PyCType(Component):
             raise NotImplementedError('%s: %s typeobj argument value %r' \
                                       % (self.__class__.__name__,
                                          self.name, typeobj))
-        for k,v in typeinfo.items():
+        for k,v in list(typeinfo.items()):
             setattr(self, k, v)
 
         if init is not None: # restore init attribute when specified
@@ -1125,11 +1128,11 @@ class PyCType(Component):
         return self
 
     def __repr__(self):
-        l = [`self.name`]
+        l = [repr(self.name)]
         if self.dims:
-            l.append('dims = %s' % (`self.dims`))
+            l.append('dims = %s' % (repr(self.dims)))
         if self.init:
-            l.append('init = %s' % (`self.init`))
+            l.append('init = %s' % (repr(self.init)))
         return '%s(%s)' % (self.__class__.__name__, ', '.join(l))
 
 
@@ -1176,7 +1179,7 @@ class PyCVariable(Component):
         return not not self.pyctype.dims
 
     def __repr__(self):
-        l = [`self.name`, `self.pyctype`]
+        l = [repr(self.name), repr(self.pyctype)]
         if self.intent.words:
             l.append('intent=%r' % (self.intent))
         if self.depends:
@@ -1310,7 +1313,7 @@ class PyCArgument(PyCVariable):
         if intent is None:
             self.intent = Intent('required')
         else:
-            assert isinstance(intent, Intent),`intent.__class__`
+            assert isinstance(intent, Intent),repr(intent.__class__)
             self.intent = intent
         self += self.intent
 
@@ -1355,7 +1358,7 @@ class PyCArgument(PyCVariable):
 
         ctype.set_titles(self)
 
-        map(self.add, components)
+        list(map(self.add, components))
         return self
 
     def add(self, component, container_label=None):

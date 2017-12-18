@@ -1,5 +1,7 @@
+from __future__ import absolute_import
 
-from __init__ import *
+from .__init__ import *
+from six.moves import map
 
 class Source(Component):
 
@@ -13,7 +15,7 @@ class Source(Component):
         
     def initialize(self, name, *components, **options):
         self.name = name
-        map(self.add, components)
+        list(map(self.add, components))
         return self
 
 class Block(Component):

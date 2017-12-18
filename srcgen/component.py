@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import map
 
 __all__ = ['Component']
 
 import re
-from joiner import Joiner
+from .joiner import Joiner
 
 DEBUG = True
 parts_re = re.compile(r'%\([\w.]+\)[rs]')
@@ -125,7 +128,7 @@ class Component(object):
     def __init__(self, *leafs):
         self.leafs = []
         self._nof_saved_leafs = [0]
-        map(self.add, leafs)
+        list(map(self.add, leafs))
 
     @classmethod
     def _check_options(cls, options, *expected_names):
@@ -140,7 +143,7 @@ class Component(object):
             else:
                 self.leafs.append(obj)
         elif isinstance(obj, list):
-            map(self.add, obj)
+            list(map(self.add, obj))
         else:
             raise TypeError("%s.add: %r" % (type(self).__name__, type(obj)))
 
@@ -184,7 +187,7 @@ class Component(object):
             d = {}
             flag = True
 
-        for name, template in cls.templates.items():
+        for name, template in list(cls.templates.items()):
             if name not in d:
                 d[name] = template
                     
@@ -195,9 +198,9 @@ class Component(object):
                 if issubclass(c, Component):
                     c._show_views(d)
         if flag:
-            print 'Class %r instances provide the following views:' % (cls)
-            for name, template in d.items():
-                print '%s: %r' % (name, template)
+            print('Class %r instances provide the following views:' % (cls))
+            for name, template in list(d.items()):
+                print('%s: %r' % (name, template))
 
     def get_view(self, view_name, parents=None, ignore_missing_view=False):
         """ Return a named view of a component using parents.
@@ -207,7 +210,7 @@ class Component(object):
             if ignore_missing_view:
                 return
             if DEBUG:
-                print '%s does not provide view %r' % (type(self).__name__, view_name)
+                print('%s does not provide view %r' % (type(self).__name__, view_name))
             return
 
         if parents is None:
@@ -230,12 +233,12 @@ class Component(object):
                 part_names.append((subs_name, n))
                 v = Joiner(**opts)
             else:
-                assert name==subs_name==n,`name, subs_name, n`
+                assert name==subs_name==n,repr((name, subs_name, n))
                 try:
                     v = branch.get_attr(n)
-                except AttributeError, msg:
+                except AttributeError as msg:
                     if DEBUG:
-                        print '%s, using value %r' % (msg, n1)
+                        print('%s, using value %r' % (msg, n1))
                     v = n1
             part_containers[n] = v
 
@@ -251,7 +254,7 @@ class Component(object):
                     part_containers[n] += data
                 else:
                     if DEBUG and 0:
-                        print '%s.get_view:%s does not provide %r' % (type(self).__name__, type(leaf).__name__, name)
+                        print('%s.get_view:%s does not provide %r' % (type(self).__name__, type(leaf).__name__, name))
 
         result = template % part_containers
 
@@ -383,4 +386,4 @@ def _test():
 
 if __name__ == '__main__':
     _test()
-    print 'ok'
+    print('ok')

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 import numpy
 
@@ -200,7 +201,7 @@ static int pyobj_to_%(ctype_name)s(PyObject* obj, %(ctype)s* ptr) {
 }
 '''
 
-for Cls_name, bits_list in sctypebits.items():
+for Cls_name, bits_list in list(sctypebits.items()):
     for bits in bits_list:
         n = Cls_name.lower() + str(bits)
         Cls = Cls_name + str(bits)
