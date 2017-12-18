@@ -60,6 +60,8 @@ def test_keywordvaluebase_errors():
                                       require_lhs=True)
     assert lhs == "FMT"
     assert isinstance(obj, Char_Literal_Constant)
+    # Try to trigger an error by specifying that a "LHS =" is required but
+    # then omitting it while having the RHS contain a '=' character
     obj = KeywordValueBase.match("FMT", Format,
                                  "'(\"my_var =  \", (A))'",
                                  require_lhs=True)
