@@ -176,7 +176,32 @@ being added on an as-required basis and currently consists of:
   ::
 
      procedure(interface_name) :: proc
-     
+
+Logging
+^^^^^^^
+
+fparser uses the standard Python logging package in order to note various
+events which occur while parsing. Following standard Python practice it uses a
+logger named after the module which raises the event. As such they all have
+their root in the name "fparser". This name may be used by the calling program
+to handle logged messages as it sees fit.
+
+For instance, to just dump them to a file the following may be used::
+
+  handler = logging.FileHandler(filename, mode='a')
+  logging.getLogger('fparser').addhandler(handler)
+
+Fparser does not set a handler by default which can cause the library to fail
+when it can't find one. For this reason you will want to at least add a
+`NullHandler`.
+
+If you want to intercept fparser's messages and handle them as part of your own
+logging regime you will need to write a handler which repeats them::
+
+  class MyHandler(logging.Handler):
+      def emit(self, record):
+          logging.getLogger('myApp').handle(record)
+
 Reference
 ^^^^^^^^^
 
