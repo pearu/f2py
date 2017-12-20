@@ -40,6 +40,7 @@
 Helps with testing methods which write to the standard logger.
 '''
 import logging
+import pytest
 
 
 class CaptureLoggingHandler(logging.Handler):
@@ -82,3 +83,19 @@ class CaptureLoggingHandler(logging.Handler):
                          'warning': [],
                          'error': [],
                          'critical': []}
+
+
+@pytest.fixture
+def log():
+    '''
+    Prepare a fixture to capture logged events for inspection.
+    '''
+    logger = logging.getLogger('fparser')
+    handler = CaptureLoggingHandler()
+    logger.addHandler(handler)
+    yield handler
+    # When the fixture function is a generator, i.e. it uses "yield" rather
+    # than "return", it will be called a second time after the test has
+    # completed. Thus anything appearing after the "yield" is teardown which
+    # happens after the test.
+    logger.removeHandler(handler)

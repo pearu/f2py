@@ -39,19 +39,10 @@
 Tests the fparser.parsefortran module.
 '''
 
-import logging
 import pytest
+from fparser.tests.logging_utils import log
 import fparser.parsefortran
 import fparser.readfortran
-
-
-@pytest.fixture
-def log():
-    logger = logging.getLogger('fparser')
-    log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(log)
-    yield log
-    logger.removeHandler(log)
 
 
 def test_log_empty(log):
@@ -75,7 +66,7 @@ def test_log_empty(log):
 
 def test_log_cache(log):
     '''
-    Tests that using a chached reader object logs an event.
+    Tests that using a cached reader object logs an event.
     '''
     class Readerlike(object):
         '''
@@ -89,7 +80,6 @@ def test_log_cache(log):
             Simple non-failure-causing method.
             '''
             yield 'NOT A THING'
-            yield 'MODULE foo_mod'
             raise StopIteration
 
     # Expect everything to go okay, no log messages.
@@ -110,28 +100,20 @@ def test_log_cache(log):
                             'critical': []}
 
 
-def test_log_failure(log):
+def test_log_failure(log, monkeypatch):
     '''
     Tests that an unexpected read failure causes an event to be logged.
     '''
-    class FailyReader(fparser.readfortran.FortranStringReader):
+    def faulty_next(self, ignore_comments=False):
         '''
-        Modifies the FortranStringReader class to raise an exception from
-        the next() method.
+        Raies any old exception.
         '''
-        def __init__(self):
-            '''
-            Default constructor.
-            '''
-            super(FailyReader, self).__init__('The end')
+        raise Exception('That''s all folks!')
 
-        def next(self, ignore_comments=False):
-            '''
-            Failing method.
-            '''
-            raise Exception('That''s all folks!')
-
-    unit_under_test = fparser.parsefortran.FortranParser(FailyReader())
+    monkeypatch.setattr('fparser.readfortran.FortranStringReader.next',
+                        faulty_next)
+    reader = fparser.readfortran.FortranStringReader('')
+    unit_under_test = fparser.parsefortran.FortranParser(reader)
     with pytest.raises(Exception):
         unit_under_test.parse()
     assert log.messages['debug'][0].startswith('Traceback\n')

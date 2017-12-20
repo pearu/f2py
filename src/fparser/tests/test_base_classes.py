@@ -41,24 +41,11 @@ Test battery associated with fparser.base_classes package.
 '''
 import re
 import pytest
+from fparser.tests.logging_utils import log
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
-import fparser.tests.logging_utils
 import fparser.utils
-
-
-@pytest.fixture
-def log():
-    '''
-    Prepare a fixture to capture logged events for inspection.
-    '''
-    import logging
-    logger = logging.getLogger('fparser')
-    log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(log)
-    yield log
-    logger.removeHandler(log)
 
 
 def test_statement_logging(log, monkeypatch):

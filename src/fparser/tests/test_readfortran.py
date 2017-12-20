@@ -41,21 +41,9 @@ Test battery associated with fparser.readfortran package.
 '''
 import os.path
 import pytest
+from fparser.tests.logging_utils import log
 import fparser.readfortran
 import fparser.tests.logging_utils
-
-
-@pytest.fixture
-def log():
-    '''
-    Prepares the logging system to capture events for future inspection.
-    '''
-    import logging
-    logger = logging.getLogger('fparser')
-    handler = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(handler)
-    yield handler
-    logger.removeHandler(handler)
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -228,21 +216,8 @@ def test_base_fixed_nonlabel(log):
     Tests that FortranReaderBase.get_source_item() logs the correct messages
     when there is an unexpected character in the initial 6 columns.
     '''
-    for i in range(1, 4):
-        code = ' '*i + 'w' + ' '*(4-i) + 'integer :: i'
-        log.reset()
-        unit_under_test = fparser.readfortran.FortranStringReader(code)
-        unit_under_test.set_mode(False, True)  # Force strict fixed format
-        unit_under_test.get_source_item()
-        assert log.messages['debug'] == []
-        assert log.messages['info'] == []
-        assert log.messages['error'] == []
-        assert log.messages['critical'] == []
-        result = log.messages['warning'][0].split('<==')[1].lstrip()
-        expected = "non-space/digit char 'w' found in column {col} " \
-                   + "of fixed Fortran code"
-        assert result == expected.format(col=i+1)
-
+    # Checks that a bad character in the first column causes an event to be
+    # logged.
     code = 'w    integer :: i'
     log.reset()
     unit_under_test = fparser.readfortran.FortranStringReader(code)
@@ -257,6 +232,24 @@ def test_base_fixed_nonlabel(log):
                + "Fortran code, interpreting line as comment line"
     assert result == expected
 
+    # Checks a bad character in columns 2-6
+    for i in range(1, 5):
+        code = ' '*i + 'w' + ' '*(5-i) + 'integer :: i'
+        log.reset()
+        unit_under_test = fparser.readfortran.FortranStringReader(code)
+        unit_under_test.set_mode(False, True)  # Force strict fixed format
+        unit_under_test.get_source_item()
+        assert log.messages['debug'] == []
+        assert log.messages['info'] == []
+        assert log.messages['error'] == []
+        assert log.messages['critical'] == []
+        result = log.messages['warning'][0].split('<==')[1].lstrip()
+        expected = "non-space/digit char 'w' found in column {col} " \
+                   + "of fixed Fortran code"
+        assert result == expected.format(col=i+1)
+
+    # Checks for a bad character, not in the first column, with "sloppy" mode
+    # engaged.
     code = ' w   integer :: i'
     log.reset()
     unit_under_test = fparser.readfortran.FortranStringReader(code)
