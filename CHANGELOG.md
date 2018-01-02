@@ -11,6 +11,10 @@ Modifications by:
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+## Release 0.0.6 (04/12/2017) ##
+
+04/12/2017 PRs #61 and #62. Remove the dependence on numpy.
+
 24/11/2017 PR #60. Add fparser2 support for the 'deferred' attribute on a
            procedure declaration.
 

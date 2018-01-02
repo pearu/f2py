@@ -73,7 +73,6 @@ __all__ = ['FortranParser']
 
 import traceback
 import logging
-from numpy.distutils.misc_util import yellow_text, red_text
 
 from .readfortran import FortranFileReader, FortranStringReader
 from .block_statements import BeginSource
@@ -136,8 +135,8 @@ class FortranParser(object):
             logger.debug(''.join(('Traceback\n',
                                   ''.join(traceback.format_stack()))))
             # traceback.print_exc(file=sys.stderr)
-            logger.critical(red_text('STOPPED PARSING'))
-            # self.reader.show_message(red_text('STOPPED PARSING'), sys.stderr)
+            logger.critical('STOPPED PARSING')
+            # self.reader.show_message('STOPPED PARSING', sys.stderr)
             raise error
         return
 
@@ -158,8 +157,8 @@ class FortranParser(object):
             # if str(msg) != '123454321':
                 # #print self.block
                 # logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack() ))))
-                # logger.critical(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ))
-                # # self.reader.show_message(red_text('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) ), sys.stderr)
+                # logger.critical('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) )
+                # # self.reader.show_message('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source), sys.stderr)
                 # sys.exit(123454321)
             # return
         self.is_analyzed = True
@@ -234,7 +233,7 @@ def simple_main():
         return parse_all_f()
     for filename in sys.argv[1:]:
         reader = FortranFileReader(filename)
-        print(yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode)))
+        print('Processing '+filename+' (mode=%r)' % (reader.mode))
         parser = FortranParser(reader)
         parser.parse()
         parser.analyze()
@@ -255,7 +254,7 @@ def parse_all_f():
     for filename in open('opt_all_f.txt'):
         filename = filename.strip()
         reader = FortranFileReader(filename)
-        print(yellow_text('Processing '+filename+' (mode=%r)' % (reader.mode)))
+        print('Processing '+filename+' (mode=%r)' % (reader.mode))
         parser = FortranParser(reader)
         block = parser.parse()
         print(block)
