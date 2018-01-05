@@ -112,7 +112,7 @@ def test_log_comment_mix(log):
     parent.set_mode(False, True)
     item = fparser.readfortran.Line(code, (1, 1), None, None, parent)
     with pytest.raises(fparser.utils.AnalyzeError):
-        unit_under_test = BeginHarness(parent, item)
+        __ = BeginHarness(parent, item)
     expected = '    1:      x=1 ! Cheese <== ' \
                + 'no parse pattern found for "x=1 ! cheese" ' \
                + "in 'BeginHarness' block, " \

@@ -84,7 +84,7 @@ def test_log_cache(log):
 
     # Expect everything to go okay, no log messages.
     log.reset()
-    unit_under_test = fparser.parsefortran.FortranParser(Readerlike())
+    __ = fparser.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
                             'info':     [],
                             'warning':  [],
@@ -92,7 +92,7 @@ def test_log_cache(log):
                             'critical': []}
 
     # This time we should use a cached log.
-    unit_under_test = fparser.parsefortran.FortranParser(Readerlike())
+    __ = fparser.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
                             'info':     ['using cached thisun'],
                             'warning':  [],

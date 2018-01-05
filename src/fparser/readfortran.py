@@ -1057,7 +1057,7 @@ class FortranReaderBase(object):
                         return self.line_item(line[6:], startlineno, self.linecount,
                                            label, name, self.format_error_message(\
                             message, startlineno, self.linecount))
-            if self.isfixed: # Check that we haven't switched to free format
+            if self.isfixed:  # Check that we haven't switched to free format
                 # check for label
                 s = line[:5].strip().lower()
                 if s:
@@ -1072,7 +1072,8 @@ class FortranReaderBase(object):
                     if name is not None:
                         self.error('No construct following construct-name.')
                     elif label is not None:
-                        self.warning('Label must follow nonblank character (F2008:3.2.5_2)')
+                        self.warning('Label must follow nonblank character'
+                                     + ' (F2008:3.2.5_2)')
                     return self.comment_item('', startlineno, self.linecount)
                 # line is not a comment and the start of the line is valid
 

@@ -7692,7 +7692,7 @@ for clsname, cls in list(Base_classes.items()):
         if n in Base_classes:
             l.append(Base_classes[n])
         else:
-            message = '%s not implemented needed by %s' % (n,clsname)
+            message = '%s not implemented needed by %s' % (n, clsname)
             logging.getLogger(__name__).debug(message)
 
 if 1:
@@ -7705,13 +7705,13 @@ if 1:
             break
             if n not in subclass_names:
                 message = '%s needs to be added to %s subclasses_name list' \
-                          % (n,cls.__name__)
+                          % (n, cls.__name__)
                 logging.getLogger(__name__).debug(message)
         for n in subclass_names:
             break
             if n not in subclasses_names:
                 message = '%s needs to be added to %s subclass_name list' \
-                          % (n,cls.__name__)
+                          % (n, cls.__name__)
                 logging.getLogger(__name__).debug(message)
         for n in use_names + subclass_names:
             if n not in Base_classes:
