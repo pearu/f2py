@@ -41,7 +41,6 @@ Test battery associated with fparser.base_classes package.
 '''
 import re
 import pytest
-from fparser.tests.logging_utils import log
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
@@ -152,7 +151,7 @@ def test_log_unexpected(log):
     parent.set_mode(False, True)
     item = fparser.readfortran.Line(code[0], (1, 1), None, None, parent)
     with pytest.raises(fparser.utils.AnalyzeError):
-        unit_under_test = BeginThing(parent, item)
+        __ = BeginThing(parent, item)
     expected = '    1:      jumper <== no parse pattern found for "jumper" ' \
                "in 'BeginThing' block."
     result = log.messages['warning'][0].split('\n')[1]

@@ -40,7 +40,6 @@ Tests the fparser.parsefortran module.
 '''
 
 import pytest
-from fparser.tests.logging_utils import log
 import fparser.parsefortran
 import fparser.readfortran
 

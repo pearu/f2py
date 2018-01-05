@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -34,51 +35,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
-# Modified M.Hambley, UK Met Office
-##############################################################################
 '''
-Helps with testing methods which write to the standard logger.
+Shared fixtures.
 '''
+
 import logging
+import fparser.tests.logging_utils
+import pytest
 
 
-class CaptureLoggingHandler(logging.Handler):
+@pytest.fixture
+def log():
     '''
-    Records logged output for later examination.
-
-    This is a standard handler for the built-in Python logging system.
-    To make use of it simply register an instance with the logger using a
-    command such as
-    "logging.getLogger(__class__).addHandler( CaptureLoggingHandler() )"
-
-    Any log message raised while this handler is in use will be recorded to
-    a memory buffer for later use. This object has attributes 'debug', 'info',
-    'warning', 'error' and 'critical', each of which is a list of logged
-    messages. Only the message text is recorded, everything else is lost.
+    Prepare a fixture to capture logged events for inspection.
     '''
-    def __init__(self, *args, **kwargs):
-        '''
-        Constructs an instance of CaptureLoggingHandler using the arguments
-        accepted by logging.Handler.
-        '''
-        super(CaptureLoggingHandler, self).__init__(*args, **kwargs)
-        self.reset()
-
-    def emit(self, record):
-        '''
-        Handles a logged event. The event is passed from the logging system
-        and recorded for future inspection.
-
-        :param :py:class:`logging.LogRecord` record The event being logged.
-        '''
-        self.messages[record.levelname.lower()].append(record.getMessage())
-
-    def reset(self):
-        '''
-        Empties the log of previous messages.
-        '''
-        self.messages = {'debug': [],
-                         'info': [],
-                         'warning': [],
-                         'error': [],
-                         'critical': []}
+    logger = logging.getLogger('fparser')
+    handler = fparser.tests.logging_utils.CaptureLoggingHandler()
+    logger.addHandler(handler)
+    yield handler
+    # When the fixture function is a generator, i.e. it uses "yield" rather
+    # than "return", it will be called a second time after the test has
+    # completed. Thus anything appearing after the "yield" is teardown which
+    # happens after the test.
+    logger.removeHandler(handler)

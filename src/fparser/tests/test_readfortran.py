@@ -41,7 +41,6 @@ Test battery associated with fparser.readfortran package.
 '''
 import os.path
 import pytest
-from fparser.tests.logging_utils import log
 import fparser.readfortran
 import fparser.tests.logging_utils
 
