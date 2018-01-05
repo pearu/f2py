@@ -191,16 +191,16 @@ For instance, to just dump them to a file the following may be used::
   handler = logging.FileHandler(filename, mode='a')
   logging.getLogger('fparser').addhandler(handler)
 
-Fparser does not set a handler by default which can cause the library to fail
-when it can't find one. For this reason you will want to at least add a
-`NullHandler`.
+Fparser sets a default `NullHandler`. This prevents missing handler errors but
+also eats all logged messages. You will need to add additional handlers if you
+wish to do something with these messages.
 
 If you want to intercept fparser's messages and handle them as part of your own
 logging regime you will need to write a handler which repeats them::
 
   class MyHandler(logging.Handler):
       def emit(self, record):
-          logging.getLogger('myApp').handle(record)
+          logging.getLogger(__name__).handle(record)
 
 Reference
 ^^^^^^^^^

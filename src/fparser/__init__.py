@@ -64,3 +64,8 @@
 
 # First version by: Pearu Peterson <pearu@cens.ioc.ee>
 # First created: Oct 2006
+
+import logging
+
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
