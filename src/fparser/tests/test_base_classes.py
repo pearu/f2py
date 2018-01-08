@@ -39,26 +39,20 @@
 '''
 Test battery associated with fparser.base_classes package.
 '''
-import logging
-import fparser.tests.logging_utils
-
+import re
+import pytest
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
+import fparser.utils
 
 
-def test_statement(monkeypatch):
+def test_statement_logging(log, monkeypatch):
     '''
-    Tests the Statement class.
-
-    Only exercises the logging functionality at the moment.
+    Tests the Statement class' logging methods.
     '''
     reader = fparser.readfortran.FortranStringReader("dummy = 1")
     parser = fparser.parsefortran.FortranParser(reader)
-
-    logger = logging.getLogger('fparser')
-    log = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(log)
 
     monkeypatch.setattr(fparser.base_classes.Statement,
                         'process_item', lambda x: None, raising=False)
@@ -70,3 +64,95 @@ def test_statement(monkeypatch):
                             'error':    ['Scary biscuits'],
                             'info':     [],
                             'warning':  []})
+
+    log.reset()
+    unit_under_test.warning('Trepidacious Cetations')
+    assert(log.messages == {'critical': [],
+                            'debug':    [],
+                            'error':    [],
+                            'info':     [],
+                            'warning':  ['Trepidacious Cetations']})
+
+    log.reset()
+    unit_under_test.info('Hilarious Ontologies')
+    assert(log.messages == {'critical': [],
+                            'debug':    [],
+                            'error':    [],
+                            'info':     ['Hilarious Ontologies'],
+                            'warning':  []})
+
+
+def test_log_comment_mix(log):
+    '''
+    Tests that unexpected Fortran 90 comment in fixed format source is logged.
+    '''
+    class EndDummy(fparser.base_classes.EndStatement):
+        '''
+        Dummy EndStatement.
+        '''
+        match = re.compile(r'\s*end(\s*thing\s*\w*|)\s*\Z', re.I).match
+
+    class BeginHarness(fparser.base_classes.BeginStatement):
+        '''
+        Dummy BeginStatement.
+        '''
+        end_stmt_cls = EndDummy
+        classes = []
+        match = re.compile(r'\s*thing\s+(\w*)\s*\Z', re.I).match
+
+        def get_classes(self):
+            '''
+            Returns an empty list of contained statements.
+            '''
+            return []
+
+    code = '      x=1 ! Cheese'
+    parent = fparser.readfortran.FortranStringReader(code)
+    parent.set_mode(False, True)
+    item = fparser.readfortran.Line(code, (1, 1), None, None, parent)
+    with pytest.raises(fparser.utils.AnalyzeError):
+        __ = BeginHarness(parent, item)
+    expected = '    1:      x=1 ! Cheese <== ' \
+               + 'no parse pattern found for "x=1 ! cheese" ' \
+               + "in 'BeginHarness' block, " \
+               + 'trying to remove inline comment (not in Fortran 77).'
+    result = log.messages['warning'][0].split('\n')[1]
+    assert result == expected
+
+
+def test_log_unexpected(log):
+    '''
+    Tests that an unexpected thing between begin and end statements logs an
+    event.
+    '''
+    class EndThing(fparser.base_classes.EndStatement):
+        '''
+        Dummy EndStatement class.
+        '''
+        isvalid = True
+        match = re.compile(r'\s*end(\s+thing(\s+\w+)?)?\s*$', re.I).match
+
+    class BeginThing(fparser.base_classes.BeginStatement):
+        '''
+        Dummy BeginStatement class.
+        '''
+        end_stmt_cls = EndThing
+        classes = []
+        match = re.compile(r'\s*thing\s+(\w+)?\s*$', re.I).match
+
+        def get_classes(self):
+            '''
+            Returns an empty list of contained classes.
+            '''
+            return []
+
+    code = ['      jumper', '      end thing']
+    parent = fparser.readfortran.FortranStringReader('\n'.join(code))
+    parent.set_mode(False, True)
+    item = fparser.readfortran.Line(code[0], (1, 1), None, None, parent)
+    with pytest.raises(fparser.utils.AnalyzeError):
+        __ = BeginThing(parent, item)
+    expected = '    1:      jumper <== no parse pattern found for "jumper" ' \
+               "in 'BeginThing' block."
+    result = log.messages['warning'][0].split('\n')[1]
+    assert result == expected

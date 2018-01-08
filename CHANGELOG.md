@@ -11,6 +11,9 @@ Modifications by:
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+08/01/2017 PR #65 and issue #59. fparser no longer presumes to set-up
+           logging - this is left to the master application.
+
 ## Release 0.0.6 (04/12/2017) ##
 
 04/12/2017 PRs #61 and #62. Remove the dependence on numpy.
