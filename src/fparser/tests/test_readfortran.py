@@ -39,7 +39,10 @@
 '''
 Test battery associated with fparser.readfortran package.
 '''
+from __future__ import print_function
+
 import os.path
+import tempfile
 import pytest
 import fparser.readfortran
 import fparser.tests.logging_utils
@@ -314,3 +317,156 @@ def test_base_free_continuation(log):
     expected = 'following character continuation: \'"\', expected None.'
     result = log.messages['error'][0].split('<==')[1].lstrip()
     assert result == expected
+
+
+def test_inherited_f77():
+    '''
+    A grab back of functional tests inherited from readfortran.py.
+    '''
+    string_f77 = """c -*- f77 -*-
+c12346 comment
+      subroutine foo
+      call foo
+     'bar
+a    'g
+      abc=2
+cf2py call me ! hey
+      call you ! hi
+      end
+     '"""
+    expected = ["Comment('c -*- f77 -*-',(1, 1))",
+                "Comment('c12346 comment',(2, 2))",
+                "line #3'subroutine foo'",
+                "line #4'call foobar'",
+                'Comment("a    \'g",(6, 6))',
+                "line #7'abc=2'",
+                "line #9'call you ! hi'",
+                "line #10'end'"]
+
+    # Reading from buffer
+    reader = fparser.readfortran.FortranStringReader(string_f77)
+    assert reader.mode == 'f77', repr(reader.mode)
+    stack = expected[:]
+    for item in reader:
+        assert str(item) == stack.pop(0)
+
+    # Reading from file
+    handle, filename = tempfile.mkstemp(suffix='.f', text=True)
+    os.close(handle)
+    with open(filename, 'w') as fortran_file:
+        print(string_f77, file=fortran_file)
+
+    reader = fparser.readfortran.FortranFileReader(filename)
+    stack = expected[:]
+    for item in reader:
+        assert str(item) == stack.pop(0)
+
+
+def test_pyf():
+    string_pyf = """! -*- pyf -*-
+python module foo
+  interface
+  beginml '''1st line
+  2nd line
+  end line'''endml='tere!fake comment'!should be a comment
+  a = 2
+  'charc\"onstant' ''' single line mline '''a='hi!fake comment'!should be a comment
+  a=\\\\\\\\\\'''not a multiline'''
+  !blah='''never ending multiline
+  b=3! hey, fake line continuation:&
+  c=4& !line cont
+  &45
+  thisis_label_2 : c = 3
+   xxif_isotropic_2 :     if ( string_upper_compare ( o%opt_aniso, 'ISOTROPIC' ) ) then
+   g=3
+   endif
+  end interface
+  if ( pc_get_lun() .ne. 6) &
+
+    write ( pc_get_lun(), '( &
+    & /, a, /, " p=", i4, " stopping c_flag=", a, &
+    & /, " print unit=", i8)') &
+    trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()
+end python module foo
+! end of file
+"""
+    expected = ["Comment('! -*- pyf -*-',(1, 1))",
+                "line #2'python module foo'",
+                "line #3'interface'",
+                "MultiLine('  beginml ',"
+                + "['1st line', '  2nd line', '  end line'],"
+                + "\"endml='tere!fake comment'\",(4, 6))",
+                "Comment('!should be a comment',(6, 6))",
+                "line #7'a = 2'",
+                "MultiLine('  \\'charc\"onstant\\' ',"
+                + "[' single line mline '],"
+                + "\"a='hi!fake comment'\",(8, 8))",
+                "Comment('!should be a comment',(8, 8))",
+                'line #9"a=\\\\\\\\\\\\\\\\\\\\\'\'\'not a multiline\'\'\'"',
+                'Comment("!blah=\'\'\'never ending multiline",(10, 10))',
+                "line #11'b=3'",
+                "Comment('! hey, fake line continuation:&',(11, 11))",
+                "line #12'c=445'",
+                "Comment('!line cont',(12, 12))",
+                "line #14thisis_label_2: 'c = 3'",
+                'line #15xxif_isotropic_2: '
+                + '"if ( string_upper_compare ( o%opt_aniso,'
+                + ' \'ISOTROPIC\' ) ) then"',
+                "line #16'g=3'",
+                "line #17'endif'",
+                "line #18'end interface'",
+                'line #19\'if ( pc_get_lun() .ne. 6)'
+                + '     write ( pc_get_lun(), \\\'(  /, a, /, " p=", i4,'
+                + ' " stopping c_flag=", a,  /, " print unit=", i8)\\\')'
+                + '     trim(title), pcpsx_i_pel(), trim(c_flag),'
+                + ' pc_get_lun()\'',
+                "line #25'end python module foo'",
+                "Comment('! end of file',(26, 26))"]
+
+    reader = fparser.readfortran.FortranStringReader(string_pyf)
+    assert reader.mode == 'pyf', repr(reader.mode)
+    for item in reader:
+        assert str(item) == expected.pop(0)
+
+def test_fix90():
+    string_fix90 = """c -*- fix -*-
+      subroutine foo
+cComment
+ 1234 a = 3 !inline comment
+      b = 3
+!
+     !4!line cont. with comment symbol
+     &5
+      a = 3!f2py.14 ! pi!
+!   KDMO
+      write (obj%print_lun, *) ' KDMO : '
+      write (obj%print_lun, *) '  COORD = ',coord, '  BIN_WID = ',             &
+       obj%bin_wid,'  VEL_DMO = ', obj%vel_dmo
+      end subroutine foo
+      subroutine
+
+     & foo
+      end
+"""
+    expected = ["Comment('c -*- fix -*-',(1, 1))",
+                "line #2'subroutine foo'",
+                "Comment('cComment',(3, 3))",
+                "line #4 1234 'a = 3'",
+                "Comment('!inline comment',(4, 4))",
+                "line #5'b = 345'",
+                "Comment('!',(6, 6))",
+                "Comment('!line cont. with comment symbol',(7, 7))",
+                "line #9'a = 3.14'",
+                "Comment('! pi!',(9, 9))",
+                "Comment('!   KDMO',(10, 10))",
+                'line #11"write (obj%print_lun, *) \' KDMO : \'"',
+                'line #12"write (obj%print_lun, *) \'  COORD = \',coord, \'  BIN_WID = \',             &"',
+                'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
+                "line #14'end subroutine foo'",
+                "line #15'subroutine foo'",
+                "Comment('',(16, 16))",
+                "line #18'end'"]
+    reader = fparser.readfortran.FortranStringReader(string_fix90)
+    assert reader.mode == 'fix', repr(reader.mode)
+    for item in reader:
+        assert str(item) == expected.pop(0)
