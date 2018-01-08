@@ -78,11 +78,14 @@ from .readfortran import FortranFileReader, FortranStringReader
 from .block_statements import BeginSource
 from .utils import AnalyzeError
 
-class FortranParser(object):
-    """Parser of FortranReader structure.
 
-    Use .parse() method for parsing, parsing result is saved in .block attribute.
-    """
+class FortranParser(object):
+    '''
+    Parser of FortranReader structure.
+
+    Use .parse() method for parsing, parsing result is saved in .block
+    attribute.
+    '''
     cache = {}
 
     def __init__(self, reader, ignore_comments=True):
@@ -128,8 +131,8 @@ class FortranParser(object):
                                           reader.linecount, reader.linecount)
                 logging.getLogger(__name__).critical(message)
                 reader = reader.reader
-            logging.getLogger(__name__).debug(''.join(('Traceback\n',
-                                  ''.join(traceback.format_stack()))))
+            backtrace = ''.join(traceback.format_stack())
+            logging.getLogger(__name__).debug('Traceback\n' + backtrace)
             logging.getLogger(__name__).critical('STOPPED PARSING')
             raise error
         return

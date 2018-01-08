@@ -363,6 +363,9 @@ cf2py call me ! hey
 
 
 def test_pyf():
+    '''
+    Tests inherited from implementation.
+    '''
     string_pyf = """! -*- pyf -*-
 python module foo
   interface
@@ -428,7 +431,11 @@ end python module foo
     for item in reader:
         assert str(item) == expected.pop(0)
 
+
 def test_fix90():
+    '''
+    Tests inherited from implementation.
+    '''
     string_fix90 = """c -*- fix -*-
       subroutine foo
 cComment
@@ -460,7 +467,8 @@ cComment
                 "Comment('! pi!',(9, 9))",
                 "Comment('!   KDMO',(10, 10))",
                 'line #11"write (obj%print_lun, *) \' KDMO : \'"',
-                'line #12"write (obj%print_lun, *) \'  COORD = \',coord, \'  BIN_WID = \',             &"',
+                'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
+                + ' \'  BIN_WID = \',             &"',
                 'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
                 "line #14'end subroutine foo'",
                 "line #15'subroutine foo'",

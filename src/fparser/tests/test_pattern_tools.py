@@ -40,57 +40,84 @@
 Test battery associated with fparser.pattern_tools package.
 '''
 
-import re
 import fparser.pattern_tools
 
+
 def test_name_pattern():
+    '''
+    Tests inherited from implementation source.
+    '''
     assert fparser.pattern_tools.name.match('a1_a')
     assert abs(fparser.pattern_tools.name).match('a1_a')
     assert not abs(fparser.pattern_tools.name).match('a1_a[]')
 
-def test_kind_param_pattern():
-    m = abs(fparser.pattern_tools.kind_param)
-    assert m.match('23')
-    assert m.match('SHORT')
 
-def test_signed_digit_string_pattern():
-    m = abs(fparser.pattern_tools.signed_digit_string)
-    assert m.match('23')
-    assert m.match('+ 23')
-    assert m.match('- 23')
-    assert m.match('-23')
-    assert not m.match('+n')
+def test_kind_param_pattern():
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = abs(fparser.pattern_tools.kind_param)
+    assert match.match('23')
+    assert match.match('SHORT')
+
+
+def test_signed_digit_pattern():
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = abs(fparser.pattern_tools.signed_digit_string)
+    assert match.match('23')
+    assert match.match('+ 23')
+    assert match.match('- 23')
+    assert match.match('-23')
+    assert not match.match('+n')
+
 
 def test_thing():
-    m = ~fparser.pattern_tools.sign.named() \
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = ~fparser.pattern_tools.sign.named() \
         + fparser.pattern_tools.digit_string.named('number')
-    r = m.match('23')
-    assert r.groupdict()=={'number': '23', 'sign': None}
-    r = m.match('- 23')
-    assert r.groupdict()=={'number': '23', 'sign': '-'}
+    result = match.match('23')
+    assert result.groupdict() == {'number': '23', 'sign': None}
+    result = match.match('- 23')
+    assert result.groupdict() == {'number': '23', 'sign': '-'}
 
-def test_char_literal_constant_pattern():
-    m = abs(fparser.pattern_tools.char_literal_constant)
-    assert m.match('"adadfa"')
-    assert m.match('"adadfa""adad"')
-    assert m.match('HEY_"adadfa"')
-    assert m.match('HEY _ "ad\tadfa"')
-    assert not m.match('adadfa')
+
+def test_char_literal_const_pattern():
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = abs(fparser.pattern_tools.char_literal_constant)
+    assert match.match('"adadfa"')
+    assert match.match('"adadfa""adad"')
+    assert match.match('HEY_"adadfa"')
+    assert match.match('HEY _ "ad\tadfa"')
+    assert not match.match('adadfa')
+
 
 def test_multi_op_pattern():
-    m = fparser.pattern_tools.mult_op.named()
-    assert m.rsplit('a *  b')
-    assert m.lsplit('a * c* b') == ('a','*','c* b')
-    assert m.rsplit('a * c* b') == ('a * c','*','b')
-    assert m.lsplit('a * b ** c') == ('a','*','b ** c')
-    assert m.rsplit('a * b ** c') == ('a','*','b ** c')
-    assert m.lsplit('a * b ** c * d') == ('a','*','b ** c * d')
-    assert m.rsplit('a * b ** c * d') == ('a * b ** c','*','d')
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = fparser.pattern_tools.mult_op.named()
+    assert match.rsplit('a *  b')
+    assert match.lsplit('a * c* b') == ('a', '*', 'c* b')
+    assert match.rsplit('a * c* b') == ('a * c', '*', 'b')
+    assert match.lsplit('a * b ** c') == ('a', '*', 'b ** c')
+    assert match.rsplit('a * b ** c') == ('a', '*', 'b ** c')
+    assert match.lsplit('a * b ** c * d') == ('a', '*', 'b ** c * d')
+    assert match.rsplit('a * b ** c * d') == ('a * b ** c', '*', 'd')
+
 
 def test_power_op_pattern():
-    m = fparser.pattern_tools.power_op.named()
-    assert m.rsplit('a **  b')
-    assert m.lsplit('a * b ** c') == ('a * b','**','c')
-    assert m.rsplit('a * b ** c') == ('a * b','**','c')
-    assert m.lsplit('a ** b ** c') == ('a','**','b ** c')
-    assert m.rsplit('a ** b ** c') == ('a ** b','**','c')
+    '''
+    Tests inherited from implementation source.
+    '''
+    match = fparser.pattern_tools.power_op.named()
+    assert match.rsplit('a **  b')
+    assert match.lsplit('a * b ** c') == ('a * b', '**', 'c')
+    assert match.rsplit('a * b ** c') == ('a * b', '**', 'c')
+    assert match.lsplit('a ** b ** c') == ('a', '**', 'b ** c')
+    assert match.rsplit('a ** b ** c') == ('a ** b', '**', 'c')
