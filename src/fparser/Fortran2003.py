@@ -75,8 +75,6 @@ from .splitline import string_replace_map
 from . import pattern_tools as pattern
 from .readfortran import FortranReaderBase
 
-logger = logging.getLogger("fparser")
-
 ###############################################################################
 ############################## BASE CLASSES ###################################
 ###############################################################################
@@ -6534,8 +6532,8 @@ items : ({R, K, None}, {'/', 'P', ':'})
     def match(string):
         if len(string)==1 and string in '/:$':
             if string=='$':
-                logger.debug('non-standard <control-edit-desc>: %r' % (string))
-                # print ('non-standard <control-edit-desc>: %r' % (string))
+                message = 'non-standard <control-edit-desc>: %r' % (string)
+                logging.getLogger(__name__).debug(message)
             return None, string
         if string[-1]=='/':
             return R(string[:-1].rstrip()), '/'
@@ -7690,8 +7688,7 @@ if 1: # Optimize subclass tree:
 
     def _rpl_list(clsname):
         if clsname not in Base_classes:
-            logger.debug('Not implemented: %s' % clsname)
-            # print 'Not implemented:',clsname
+            logging.getLogger(__name__).debug('Not implemented: %s' % clsname)
             return [] # remove this code when all classes are implemented
         cls = Base_classes[clsname]
         if 'match' in cls.__dict__:
@@ -7711,18 +7708,15 @@ if 1: # Optimize subclass tree:
             for n1 in _rpl_list(n):
                 if n1 not in opt_subclass_names:  opt_subclass_names.append(n1)
         if not opt_subclass_names==cls.subclass_names:
-            #print cls.__name__,':',', '.join(cls.subclass_names),'->',', '.join(opt_subclass_names)
             cls.subclass_names[:] = opt_subclass_names
-        #else:
-        #    print cls.__name__,':',opt_subclass_names
 
 
 # Initialize Base.subclasses dictionary:
 for clsname, cls in list(Base_classes.items()):
     subclass_names = getattr(cls, 'subclass_names', None)
     if subclass_names is None:
-        logger.debug('%s class is missing subclass_names list' % (clsname))
-        # print '%s class is missing subclass_names list' % (clsname)
+        message = '%s class is missing subclass_names list' % (clsname)
+        logging.getLogger(__name__).debug(message)
         continue
     try:
         l = Base.subclasses[clsname]
@@ -7732,8 +7726,8 @@ for clsname, cls in list(Base_classes.items()):
         if n in Base_classes:
             l.append(Base_classes[n])
         else:
-            logger.debug('%s not implemented needed by %s' % (n,clsname))
-            # print '%s not implemented needed by %s' % (n,clsname)
+            message = '%s not implemented needed by %s' % (n, clsname)
+            logging.getLogger(__name__).debug(message)
 
 if 1:
     for cls in list(Base_classes.values()):
@@ -7744,17 +7738,19 @@ if 1:
         for n in subclasses_names:
             break
             if n not in subclass_names:
-                logger.debug('%s needs to be added to %s subclasses_name list' % (n,cls.__name__))
-                # print '%s needs to be added to %s subclasses_name list' % (n,cls.__name__)
+                message = '%s needs to be added to %s subclasses_name list' \
+                          % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
         for n in subclass_names:
             break
             if n not in subclasses_names:
-                logger.debug('%s needs to be added to %s subclass_name list' % (n,cls.__name__))
-                # print '%s needs to be added to %s subclass_name list' % (n,cls.__name__)
+                message = '%s needs to be added to %s subclass_name list' \
+                          % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
         for n in use_names + subclass_names:
             if n not in Base_classes:
-                logger.debug('%s not defined used by %s' % (n, cls.__name__))
-                # print '%s not defined used by %s' % (n, cls.__name__)
+                message = '%s not defined used by %s' % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
 
 
 #EOF

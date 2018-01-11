@@ -78,11 +78,9 @@ from .readfortran import FortranFileReader, FortranStringReader
 from .block_statements import BeginSource
 from .utils import AnalyzeError
 
-logger = logging.getLogger('fparser')
-
 class FortranParser(object):
     """Parser of FortranReader structure.
-    
+
     Use .parse() method for parsing, parsing result is saved in .block attribute.
     """
     cache = {}
@@ -93,8 +91,7 @@ class FortranParser(object):
             parser = self.cache[reader.id]
             self.block = parser.block
             self.is_analyzed = parser.is_analyzed
-            logger.info('using cached %s' % (reader.id))
-            # self.block.show_message('using cached %s' % (reader.id))
+            logging.getLogger(__name__).info('using cached %s' % (reader.id))
         else:
             self.cache[reader.id] = self
             self.block = None
@@ -129,14 +126,11 @@ class FortranParser(object):
                     reader.format_message('FATAL ERROR',
                                           'while processing line',
                                           reader.linecount, reader.linecount)
-                logger.critical(message)
-                # reader.show_message(message, sys.stderr)
+                logging.getLogger(__name__).critical(message)
                 reader = reader.reader
-            logger.debug(''.join(('Traceback\n',
+            logging.getLogger(__name__).debug(''.join(('Traceback\n',
                                   ''.join(traceback.format_stack()))))
-            # traceback.print_exc(file=sys.stderr)
-            logger.critical('STOPPED PARSING')
-            # self.reader.show_message('STOPPED PARSING', sys.stderr)
+            logging.getLogger(__name__).critical('STOPPED PARSING')
             raise error
         return
 
@@ -144,23 +138,13 @@ class FortranParser(object):
         if self.is_analyzed:
             return
         if self.block is None:
-            logger.info('Nothing to analyze.')
-            # self.reader.show_message('Nothing to analyze.')
+            logging.getLogger(__name__).info('Nothing to analyze.')
             return
 
         try:
             self.block.analyze()
         except AnalyzeError:
             pass
-        # except Exception, msg:
-            # import pdb; pdb.set_trace()
-            # if str(msg) != '123454321':
-                # #print self.block
-                # logger.debug(''.join(('Traceback\n',''.join( traceback.format_stack() ))))
-                # logger.critical('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source) )
-                # # self.reader.show_message('FATAL ERROR: STOPPED ANALYSING %r CONTENT' % (self.reader.source), sys.stderr)
-                # sys.exit(123454321)
-            # return
         self.is_analyzed = True
         return
 
