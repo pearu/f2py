@@ -3814,9 +3814,9 @@ def test_comments():
     cls = Program
     reader = get_reader('''\
       program foo
+        integer :: my_int
+        ! A full comment line
       end program foo''')
-#        integer :: my_int
-#        ! A full comment line
 #        integer :: my_int ! an in-inline comment
     obj = cls(reader)
     print type(obj)

@@ -180,7 +180,8 @@ class Base(ComparableMixin):
         match = cls.__dict__.get('match')
 
         result = None
-        if isinstance(string, FortranReaderBase):
+        if isinstance(string, FortranReaderBase) and \
+           match and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
             if item is None:
@@ -188,28 +189,24 @@ class Base(ComparableMixin):
 
             # Is this item a comment?
             if isinstance(item, readfortran.Comment):
-                print str(item)
-                return
+                print "Potential comment: '{0}'".format(str(item))
                 if item.comment and not item.comment.isspace():
                     print "COMMENT: '{0}'".format(item.comment)
-                    print dir(item)
-                    print type(item)
-                    print str(item)
                     com = Comment(item.comment)
                     return com
                 else:
+                    # It's just white space
                     return
 
-            if match and not issubclass(cls, BlockBase):
-                try:
-                    obj = item.parse_line(cls, parent_cls)
-                except NoMatchError:
-                    obj = None
-                if obj is None:
-                    reader.put_item(item)
-                    return
-                obj.item = item
-                return obj
+            try:
+                obj = item.parse_line(cls, parent_cls)
+            except NoMatchError:
+                obj = None
+            if obj is None:
+                reader.put_item(item)
+                return
+            obj.item = item
+            return obj
 
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
@@ -230,6 +227,7 @@ class Base(ComparableMixin):
         elif isinstance(result, Base):
             return result
         elif result is None:
+            print "string = '{0}'".format(string)
             for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls: # avoid recursion 2.
                     continue
@@ -241,7 +239,6 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
-        print result
         errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
