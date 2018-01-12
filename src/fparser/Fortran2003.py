@@ -170,6 +170,7 @@ class Base(ComparableMixin):
         :param parent_cls: the parent class of this object
         :type parent_cls: :py:type:`type`
         """
+        from . import readfortran
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:
@@ -179,21 +180,36 @@ class Base(ComparableMixin):
         match = cls.__dict__.get('match')
 
         result = None
-        if isinstance(string, FortranReaderBase) and \
-           match and not issubclass(cls, BlockBase):
+        if isinstance(string, FortranReaderBase):
             reader = string
             item = reader.get_item()
-            if item is None: return
-            try:
-                obj = item.parse_line(cls, parent_cls)
-                #obj = cls(item.line, parent_cls = parent_cls)
-            except NoMatchError:
-                obj = None
-            if obj is None:
-                reader.put_item(item)
+            if item is None:
                 return
-            obj.item = item
-            return obj
+
+            # Is this item a comment?
+            if isinstance(item, readfortran.Comment):
+                print str(item)
+                return
+                if item.comment and not item.comment.isspace():
+                    print "COMMENT: '{0}'".format(item.comment)
+                    print dir(item)
+                    print type(item)
+                    print str(item)
+                    com = Comment(item.comment)
+                    return com
+                else:
+                    return
+
+            if match and not issubclass(cls, BlockBase):
+                try:
+                    obj = item.parse_line(cls, parent_cls)
+                except NoMatchError:
+                    obj = None
+                if obj is None:
+                    reader.put_item(item)
+                    return
+                obj.item = item
+                return obj
 
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
@@ -201,10 +217,10 @@ class Base(ComparableMixin):
             try:
                 result = cls.match(string)
             except NoMatchError as msg:
-                if str(msg)=='%s: %r' % (cls.__name__, string): # avoid recursion 1.
+                if str(msg)=='%s: %r' % (cls.__name__, string):
+                    # avoid recursion 1.
                     raise
 
-        #print '__new__:result:',cls.__name__,`string,result`
         if isinstance(result, tuple):
             obj = object.__new__(cls)
             obj.string = string
@@ -214,10 +230,9 @@ class Base(ComparableMixin):
         elif isinstance(result, Base):
             return result
         elif result is None:
-            for subcls in Base.subclasses.get(cls.__name__,[]):
+            for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls: # avoid recursion 2.
                     continue
-                #print '%s:%s: %r' % (cls.__name__,subcls.__name__,string)
                 try:
                     obj = subcls(string, parent_cls = parent_cls)
                 except NoMatchError as msg:
@@ -226,16 +241,14 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
-        errmsg = '%s: %r' % (cls.__name__, string)
+        print result
+        errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
-
-##     def restore_reader(self):
-##         self._item.reader.put_item(self._item)
-##         return
 
     def init(self, *items):
         self.items = items
         return
+
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
                                                                   self.items)))
@@ -254,6 +267,26 @@ class Base(ComparableMixin):
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
+
+
+class Comment(Base):
+    '''
+    '''
+    _regex = re.compile(r'.*!.*', re.I)
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: string to match against
+        :return: If matched then tuple of comment string and None
+                 otherwise None
+        :rtype: 2-tuple or None
+        '''
+        print "Comment.match: str={0}".format(string)
+        if not Comment._regex.match(string):
+            return
+        idx = string.find('!')
+        return string[idx+1:], 
+
 
 class BlockBase(Base):
     """
@@ -702,6 +735,7 @@ class BracketBase(Base):
         if self.items[1] is None:
             return '%s%s' % (self.items[0], self.items[2])
         return '%s%s%s' % tuple(self.items)
+
 
 class NumberBase(Base):
     """

@@ -3809,6 +3809,23 @@ def test_Contains(): # R1237
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
 
 
+def test_comments():
+    ''' Unit tests for lines containing comments '''
+    cls = Program
+    reader = get_reader('''\
+      program foo
+      end program foo''')
+#        integer :: my_int
+#        ! A full comment line
+#        integer :: my_int ! an in-inline comment
+    obj = cls(reader)
+    print type(obj)
+    print dir(obj)
+    from habakkuk.parse2003 import walk_ast
+    walk_ast(obj.content, [object], debug=True)
+    assert 0
+
+
 if 0:
     NOF_NEEDED_TESTS = 0
     NOF_NEEDED_MATCH = 0
