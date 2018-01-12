@@ -74,7 +74,7 @@ except ImportError:
 from fparser.script_options import set_f2003_options
 
 def runner (parser, options, args):
-    from fparser.api import Fortran2003
+    from fparser import Fortran2003
     from fparser.readfortran import  FortranFileReader
     for filename in args:
         reader = FortranFileReader(filename)

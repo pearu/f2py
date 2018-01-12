@@ -2059,7 +2059,7 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
                                                string.upper())
     match = staticmethod(match)
 
-class Private_Components_Stmt(StmtBase): # R447
+class Private_Components_Stmt(STRINGBase): # R447
     """
     <private-components-stmt> = PRIVATE
     """
@@ -5108,26 +5108,43 @@ class Loop_Control(Base): # R830
     """
     subclass_names = []
     use_names = ['Do_Variable', 'Scalar_Int_Expr', 'Scalar_Logical_Expr']
+    
     def match(string):
+
+        optional_comma = None
+        while_expression = (False, None)
+        counter_expression = (None, None)
+
         if string.startswith(','):
             line, repmap = string_replace_map(string[1:].lstrip())
+            optional_comma = ","
         else:
             line, repmap = string_replace_map(string)
-        if line[:5].upper()=='WHILE' and line[5:].lstrip().startswith('('):
+        if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
             l = line[5:].lstrip()
             i = l.find(')')
-            if i!=-1 and i==len(l)-1:
-                return Scalar_Logical_Expr(repmap(l[1:i].strip())),
-        if line.count('=')!=1: return
+            if i != -1 and i == len(l)-1:
+               while_expression = (True, Scalar_Logical_Expr(repmap(l[1:i].strip())))
+        if line.count('=') != 1:
+            return
         var,rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
-        if not 2<=len(rhs)<=3: return
-        return Variable(repmap(var.rstrip())), \
-                list(map(Scalar_Int_Expr, list(map(repmap,rhs))))
+        if not 2 <= len(rhs) <= 3:
+            return
+        counter_expression = (Variable(repmap(var.rstrip())), \
+             list(map(Scalar_Int_Expr, list(map(repmap,rhs)))))
+        return while_expression, counter_expression, optional_comma
     match = staticmethod(match)
-    def tostr(self):
-        if len(self.items)==1: return ', WHILE (%s)' % (self.items[0])
-        return ', %s = %s' % (self.items[0], ', '.join(map(str,self.items[1])))
+
+    def tostr(self):   
+        s = None
+        if self.items[0][0]: 
+            s = 'WHILE (%s)' % (self.items[0][1])
+        elif self.items[1][0] is not None: 
+            s = '%s = %s' % (self.items[1][0], ', '.join(map(str,self.items[1][1])))
+        if self.items[2] is not None: 
+            s += " " + s
+        return s     
 
 class Do_Variable(Base): # R831
     """

@@ -714,6 +714,14 @@ def test_Proc_Component_Def_Stmt(): # R445
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b')
 
+def test_Private_Components_Stmt(): # R447
+
+        cls = Private_Components_Stmt
+        a = cls('private')
+        assert isinstance(a, cls),repr(a)
+        assert_equal(str(a),'PRIVATE')
+        assert_equal(repr(a),"Private_Components_Stmt('PRIVATE')")
+
 def test_Type_Bound_Procedure_Part(): # R448
     cls = Type_Bound_Procedure_Part
     a = cls(get_reader('''
@@ -2442,6 +2450,7 @@ def test_Block_Nonlabel_Do_Construct(): # # R826_2
     '''))
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'DO , i = 1, 10\n  a = 1\nEND DO')
+   ### assert_equal(str(a),'DO i = 1, 10\n  a = 1\nEND DO')
 
     a = cls(get_reader('''
       foo:do i=1,10
