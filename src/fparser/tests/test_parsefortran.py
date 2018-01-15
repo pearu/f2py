@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-##############################################################################
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+#############################################################################
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 #
 # All rights reserved.
 #

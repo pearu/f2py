@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017-2018 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
