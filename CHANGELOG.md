@@ -14,7 +14,11 @@ Modifications by (in alphabetical order):
 15/01/2017 PR #67. Move old testing code from source files into test
 	   framework.
 
-08/01/2017 PR #65 and issue #59. fparser no longer presumes to set-up
+12/01/2018 PR #66 and issue #64. Fix bug where = in a string was being
+           treated like an assignment, causing parse errors in some
+           format statements
+
+08/01/2018 PR #65 and issue #59. fparser no longer presumes to set-up
            logging - this is left to the master application.
 
 ## Release 0.0.6 (04/12/2017) ##
