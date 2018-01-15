@@ -76,9 +76,9 @@ import copy
 import string
 import logging
 from six import with_metaclass
-from .readfortran import Line, Comment
-from .utils import split_comma, specs_split_comma, is_int_literal_constant
-from .utils import classes, AnalyzeError
+from fparser.common.readfortran import Line, Comment
+from fparser.common.utils import split_comma, specs_split_comma, is_int_literal_constant
+from fparser.common.utils import classes, AnalyzeError
 from functools import reduce
 
 class AttributeHolder(object):

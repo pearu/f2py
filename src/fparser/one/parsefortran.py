@@ -75,9 +75,9 @@ __all__ = ['FortranParser']
 import traceback
 import logging
 
-from .readfortran import FortranFileReader, FortranStringReader
-from .block_statements import BeginSource
-from .utils import AnalyzeError
+from fparser.common.readfortran import FortranFileReader, FortranStringReader
+from fparser.one.block_statements import BeginSource
+from fparser.common.utils import AnalyzeError
 
 
 class FortranParser(object):

@@ -71,7 +71,7 @@ Test parsing single Fortran lines.
 """
 
 import pytest
-from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
+from fparser.one.block_statements import Allocatable, Allocate, ArithmeticIf, \
      AssignedGoto, Assign, Assignment, Asynchronous, Backspace, Bind, Call, \
      CallProtoArgument, CallStatement, Check, Close, Common, \
      ComputedGoto, Contains, Continue, Cycle, Data, Deallocate, Depend, \
@@ -83,11 +83,11 @@ from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
      Read, Return, Rewind, Save, Sequence, SpecificBinding, Stop, Target, \
      Threadsafe, Use, Value, Volatile, Wait, WhereStmt, Write
 
-from fparser.typedecl_statements import Byte, Character, Complex, \
+from fparser.one.typedecl_statements import Byte, Character, Complex, \
      DoubleComplex, DoublePrecision, Integer, Logical, Real
 
-from fparser.readfortran import FortranStringReader
-from fparser.utils import AnalyzeError
+from fparser.common.readfortran import FortranStringReader
+from fparser.common.utils import AnalyzeError
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -276,7 +276,7 @@ def test_close():
 
 def test_class():
     ''' Check that we correctly parse and generate a class declaration '''
-    from fparser.typedecl_statements import Class
+    from fparser.one.typedecl_statements import Class
     assert parse(Class, 'class(runtime_constants_type) :: a') == \
         "CLASS(runtime_constants_type) a"
 
@@ -911,7 +911,7 @@ def test_analyze_errors():
     source_str = """subroutine test()
       end
     """
-    from fparser.parsefortran import FortranParser
+    from fparser.one.parsefortran import FortranParser
     reader = api.get_reader(source_str)
     parser = FortranParser(reader)
 

@@ -62,7 +62,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-from fparser.Fortran2003 import *
+from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
 
 from nose.tools import assert_equal

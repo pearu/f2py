@@ -72,14 +72,14 @@ from __future__ import print_function
 import re
 import sys
 
-from .base_classes import Statement, Variable
+from fparser.common.base_classes import Statement, Variable
 
 # Auxiliary tools
 
-from .utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
+from fparser.common.utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
      get_module_file, parse_bind, parse_result, is_name, \
      extract_bracketed_list_items
-from .utils import classes
+from fparser.common.utils import classes
 
 __all__ = ['GeneralAssignment',
            'Assignment', 'PointerAssignment', 'Assign', 'Call', 'Goto',
@@ -1151,8 +1151,8 @@ class Use(Statement):
         if self.name not in modules:
             fn = self.reader.find_module_source_file(self.name)
             if fn is not None:
-                from .readfortran import FortranFileReader
-                from .parsefortran import FortranParser
+                from fparser.common.readfortran import FortranFileReader
+                from fparser.one.parsefortran import FortranParser
                 self.info('looking module information from %r' % (fn))
                 reader = FortranFileReader(
                     fn, include_dirs=self.reader.include_dirs,

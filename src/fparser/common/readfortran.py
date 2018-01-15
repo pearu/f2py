@@ -148,9 +148,9 @@ import tempfile
 import traceback
 import logging
 
-from .sourceinfo import get_source_info, get_source_info_str
-from .splitline import String, string_replace_map, splitquote
-from .utils import is_name
+from fparser.common.sourceinfo import get_source_info, get_source_info_str
+from fparser.common.splitline import String, string_replace_map, splitquote
+from fparser.common.utils import is_name
 
 _spacedigits=' 0123456789'
 _cf2py_re = re.compile(r'(?P<indent>\s*)!f2py(?P<rest>.*)',re.I)

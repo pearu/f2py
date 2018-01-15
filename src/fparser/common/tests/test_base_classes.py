@@ -37,26 +37,30 @@
 # Modified M.Hambley, UK Met Office
 ##############################################################################
 '''
-Test battery associated with fparser.base_classes package.
+Test battery associated with fparser.common.base_classes package.
 '''
 import re
 import pytest
-import fparser.base_classes
-import fparser.parsefortran
-import fparser.readfortran
-import fparser.utils
+import fparser.two.base_classes
+import fparser.one.parsefortran
+import fparser.common.readfortran
+import fparser.common.utils
 
 
 def test_statement_logging(log, monkeypatch):
     '''
     Tests the Statement class' logging methods.
     '''
-    reader = fparser.readfortran.FortranStringReader("dummy = 1")
-    parser = fparser.parsefortran.FortranParser(reader)
+    class dummy_parser:
+        def __init__(self, reader):
+            self.reader = reader
 
-    monkeypatch.setattr(fparser.base_classes.Statement,
+    reader = fparser.common.readfortran.FortranStringReader("dummy = 1")
+    parser = dummy_parser(reader)
+
+    monkeypatch.setattr(fparser.common.base_classes.Statement,
                         'process_item', lambda x: None, raising=False)
-    unit_under_test = fparser.base_classes.Statement(parser, None)
+    unit_under_test = fparser.common.base_classes.Statement(parser, None)
 
     unit_under_test.error('Scary biscuits')
     assert(log.messages == {'critical': [],
@@ -86,13 +90,13 @@ def test_log_comment_mix(log):
     '''
     Tests that unexpected Fortran 90 comment in fixed format source is logged.
     '''
-    class EndDummy(fparser.base_classes.EndStatement):
+    class EndDummy(fparser.common.base_classes.EndStatement):
         '''
         Dummy EndStatement.
         '''
         match = re.compile(r'\s*end(\s*thing\s*\w*|)\s*\Z', re.I).match
 
-    class BeginHarness(fparser.base_classes.BeginStatement):
+    class BeginHarness(fparser.common.base_classes.BeginStatement):
         '''
         Dummy BeginStatement.
         '''
@@ -107,10 +111,10 @@ def test_log_comment_mix(log):
             return []
 
     code = '      x=1 ! Cheese'
-    parent = fparser.readfortran.FortranStringReader(code)
+    parent = fparser.common.readfortran.FortranStringReader(code)
     parent.set_mode(False, True)
-    item = fparser.readfortran.Line(code, (1, 1), None, None, parent)
-    with pytest.raises(fparser.utils.AnalyzeError):
+    item = fparser.common.readfortran.Line(code, (1, 1), None, None, parent)
+    with pytest.raises(fparser.common.utils.AnalyzeError):
         __ = BeginHarness(parent, item)
     expected = '    1:      x=1 ! Cheese <== ' \
                + 'no parse pattern found for "x=1 ! cheese" ' \
@@ -125,14 +129,14 @@ def test_log_unexpected(log):
     Tests that an unexpected thing between begin and end statements logs an
     event.
     '''
-    class EndThing(fparser.base_classes.EndStatement):
+    class EndThing(fparser.common.base_classes.EndStatement):
         '''
         Dummy EndStatement class.
         '''
         isvalid = True
         match = re.compile(r'\s*end(\s+thing(\s+\w+)?)?\s*$', re.I).match
 
-    class BeginThing(fparser.base_classes.BeginStatement):
+    class BeginThing(fparser.common.base_classes.BeginStatement):
         '''
         Dummy BeginStatement class.
         '''
@@ -147,10 +151,10 @@ def test_log_unexpected(log):
             return []
 
     code = ['      jumper', '      end thing']
-    parent = fparser.readfortran.FortranStringReader('\n'.join(code))
+    parent = fparser.common.readfortran.FortranStringReader('\n'.join(code))
     parent.set_mode(False, True)
-    item = fparser.readfortran.Line(code[0], (1, 1), None, None, parent)
-    with pytest.raises(fparser.utils.AnalyzeError):
+    item = fparser.common.readfortran.Line(code[0], (1, 1), None, None, parent)
+    with pytest.raises(fparser.common.utils.AnalyzeError):
         __ = BeginThing(parent, item)
     expected = '    1:      jumper <== no parse pattern found for "jumper" ' \
                "in 'BeginThing' block."

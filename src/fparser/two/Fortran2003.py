@@ -71,9 +71,9 @@
 
 import re
 import logging
-from .splitline import string_replace_map
-from . import pattern_tools as pattern
-from .readfortran import FortranReaderBase
+from fparser.common.splitline import string_replace_map
+from fparser.two import pattern_tools as pattern
+from fparser.common.readfortran import FortranReaderBase
 
 ###############################################################################
 ############################## BASE CLASSES ###################################

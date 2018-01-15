@@ -74,9 +74,9 @@ __all__ = ['Integer', 'Real', 'DoublePrecision', 'Complex', 'DoubleComplex',
 
 import re
 import string
-from .base_classes import Statement, BeginStatement, EndStatement,\
+from fparser.common.base_classes import Statement, BeginStatement, EndStatement,\
      AttributeHolder, Variable
-from .utils import split_comma, AnalyzeError, name_re, is_entity_decl, \
+from fparser.common.utils import split_comma, AnalyzeError, name_re, is_entity_decl, \
                    is_name, parse_array_spec
 
 # Intrinsic type specification statements

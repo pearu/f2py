@@ -82,10 +82,10 @@ import logging
 import re
 import sys
 
-from .base_classes import BeginStatement, EndStatement, Statement, \
+from fparser.common.base_classes import BeginStatement, EndStatement, Statement, \
      AttributeHolder, ProgramBlock, Variable
-from .readfortran import Line
-from .utils import split_comma, filter_stmts, parse_bind, parse_result, \
+from fparser.common.readfortran import Line
+from fparser.common.utils import split_comma, filter_stmts, parse_bind, parse_result, \
     AnalyzeError, is_name
 
 class HasImplicitStmt(object):

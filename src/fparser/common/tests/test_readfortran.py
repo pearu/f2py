@@ -37,15 +37,15 @@
 # Modified M.Hambley, UK Met Office
 ##############################################################################
 '''
-Test battery associated with fparser.readfortran package.
+Test battery associated with fparser.common.readfortran package.
 '''
 from __future__ import print_function
 
 import os.path
 import tempfile
 import pytest
-import fparser.readfortran
-import fparser.tests.logging_utils
+import fparser.common.readfortran
+import fparser.common.tests.logging_utils
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -73,9 +73,9 @@ def test_111fortranreaderbase(log, monkeypatch):
             '''
             return self._stuff.pop()
 
-    monkeypatch.setattr('fparser.readfortran.FortranReaderBase.id',
+    monkeypatch.setattr('fparser.common.readfortran.FortranReaderBase.id',
                         lambda x: 'foo', raising=False)
-    unit_under_test = fparser.readfortran.FortranReaderBase(FailFile(),
+    unit_under_test = fparser.common.readfortran.FortranReaderBase(FailFile(),
                                                             True, False)
     assert str(unit_under_test.next()) == "line #1'x=1'"
     with pytest.raises(StopIteration):
@@ -97,7 +97,7 @@ def test_base_next_bad_include(log):
     included file does not exist.
     '''
     code = "include 'nonexistant.f90'\nx=1"
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     line = unit_under_test.next()
     assert str(line) == 'line #2\'x=1\''
     assert log.messages['debug'] == []
@@ -118,7 +118,7 @@ def test_base_next_good_include(log):
     '''
     code = "include 'modfile.f95'\nx=2"
     include_directories = [os.path.dirname(__file__)]
-    unit_under_test = fparser.readfortran \
+    unit_under_test = fparser.common.readfortran \
         .FortranStringReader(code, include_directories)
     line = unit_under_test.next()
     assert str(line)[:19] == "Comment('! Modified"  # First line of inclusion
@@ -136,7 +136,7 @@ def test_fortranreaderbase_info(log):
     '''
     Tests that FortranReaderBase.info() causes a message to be logged.
     '''
-    unit_under_test = fparser.readfortran.FortranStringReader('x=3')
+    unit_under_test = fparser.common.readfortran.FortranStringReader('x=3')
     thing = unit_under_test.get_source_item()
     unit_under_test.info('Mighty Whirlitzer', thing)
     assert log.messages['debug'] == []
@@ -152,7 +152,7 @@ def test_fortranreaderbase_error(log):
     '''
     Tests that FortranReaderBase.error() causes a message to be logged.
     '''
-    unit_under_test = fparser.readfortran.FortranStringReader('x=2')
+    unit_under_test = fparser.common.readfortran.FortranStringReader('x=2')
     thing = unit_under_test.get_source_item()
     with pytest.raises(SystemExit):
         unit_under_test.error('Thundering Chalmer', thing)
@@ -169,7 +169,7 @@ def test_fortranreaderbase_warning(log):
     '''
     Tests that FortranReaderBase.warning() causes a message to be logged.
     '''
-    unit_under_test = fparser.readfortran.FortranStringReader('x=1')
+    unit_under_test = fparser.common.readfortran.FortranStringReader('x=1')
     thing = unit_under_test.get_source_item()
     unit_under_test.warning('Flatulent Hermit', thing)
     assert log.messages['debug'] == []
@@ -188,7 +188,7 @@ def test_base_handle_multilines(log):
     '''
     code = 'character(8) :: test = \'foo"""bar'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(True, True)  # Force strict free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -201,7 +201,7 @@ def test_base_handle_multilines(log):
 
     code = 'goo """boo\n doo""" soo \'foo'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(True, True)  # Force strict free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -222,7 +222,7 @@ def test_base_fixed_nonlabel(log):
     # logged.
     code = 'w    integer :: i'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(False, True)  # Force fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -238,7 +238,7 @@ def test_base_fixed_nonlabel(log):
     for i in range(1, 5):
         code = ' '*i + 'w' + ' '*(5-i) + 'integer :: i'
         log.reset()
-        unit_under_test = fparser.readfortran.FortranStringReader(code)
+        unit_under_test = fparser.common.readfortran.FortranStringReader(code)
         unit_under_test.set_mode(False, True)  # Force strict fixed format
         unit_under_test.get_source_item()
         assert log.messages['debug'] == []
@@ -254,7 +254,7 @@ def test_base_fixed_nonlabel(log):
     # engaged.
     code = ' w   integer :: i'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(False, False)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -274,7 +274,7 @@ def test_base_fixed_continuation(log):
     '''
     code = '     character(4) :: cheese = "a & !\n     & b'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(False, False)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -287,7 +287,7 @@ def test_base_fixed_continuation(log):
 
     code = '     x=1 &\n     +1 &\n     -2'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(False, False)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -307,7 +307,7 @@ def test_base_free_continuation(log):
     '''
     code = 'character(4) :: "boo & que'
     log.reset()
-    unit_under_test = fparser.readfortran.FortranStringReader(code)
+    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     unit_under_test.set_mode(True, False)  # Force sloppy free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -344,7 +344,7 @@ cf2py call me ! hey
                 "line #10'end'"]
 
     # Reading from buffer
-    reader = fparser.readfortran.FortranStringReader(string_f77)
+    reader = fparser.common.readfortran.FortranStringReader(string_f77)
     assert reader.mode == 'f77', repr(reader.mode)
     stack = expected[:]
     for item in reader:
@@ -356,7 +356,7 @@ cf2py call me ! hey
     with open(filename, 'w') as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = fparser.readfortran.FortranFileReader(filename)
+    reader = fparser.common.readfortran.FortranFileReader(filename)
     stack = expected[:]
     for item in reader:
         assert str(item) == stack.pop(0)
@@ -426,7 +426,7 @@ end python module foo
                 "line #25'end python module foo'",
                 "Comment('! end of file',(26, 26))"]
 
-    reader = fparser.readfortran.FortranStringReader(string_pyf)
+    reader = fparser.common.readfortran.FortranStringReader(string_pyf)
     assert reader.mode == 'pyf', repr(reader.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
@@ -474,7 +474,7 @@ cComment
                 "line #15'subroutine foo'",
                 "Comment('',(16, 16))",
                 "line #18'end'"]
-    reader = fparser.readfortran.FortranStringReader(string_fix90)
+    reader = fparser.common.readfortran.FortranStringReader(string_fix90)
     assert reader.mode == 'fix', repr(reader.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
