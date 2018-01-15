@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-##############################################################################
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+#############################################################################
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 #
 # All rights reserved.
 #
@@ -121,3 +122,125 @@ def test_log_failure(log, monkeypatch):
     assert log.messages['error'] == []
     assert log.messages['critical'][0].startswith('While processing')
     assert log.messages['critical'][1] == 'STOPPED PARSING'
+
+
+def test_pyf():
+    '''
+    Tests inherited from implementation code.
+    '''
+    string = """
+python module foo
+  interface tere
+    subroutine bar
+    real r
+    end subroutine bar
+  end interface tere
+end python module foo
+"""
+    expected = ['  PYTHONMODULE foo',
+                '    INTERFACE tere',
+                '      SUBROUTINE bar()',
+                '        REAL r',
+                '      END SUBROUTINE bar',
+                '    END INTERFACE tere',
+                '  END PYTHONMODULE foo']
+
+    reader = fparser.readfortran.FortranStringReader(string)
+    reader.set_mode_from_str('pyf')
+    parser = fparser.parsefortran.FortranParser(reader)
+    parser.parse()
+    caught = parser.block.tofortran().splitlines()
+    assert caught[0][:13] == '!BEGINSOURCE '
+    assert caught[1:] == expected
+
+
+def test_free90():
+    '''
+    Tests inherited from implementation code.
+    '''
+    string = """
+module foo
+
+   subroutine bar
+    real r
+    if ( pc_get_lun() .ne. 6) &
+    write ( pc_get_lun(), '( &
+    & /, a, /, " p=", i4, " stopping c_flag=", a, &
+    & /, " print unit=", i8)') &
+    trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()
+    if (.true.) then
+      call smth
+    end if
+    aaa : if (.false.) then
+    else if (a) then
+    else
+    end if aaa
+    hey = 1
+    end subroutine bar
+    abstract interface
+
+    end interface
+
+end module foo
+"""
+    expected = ['  MODULE foo',
+                '    SUBROUTINE bar()',
+                '      REAL r',
+                '      IF (pc_get_lun() .ne. 6)'
+                + ' WRITE (pc_get_lun(), \'(  /, A, /, " P = ", i4,'
+                + ' " stopping c_flag=", a,  /, " print unit=", i8)\')'
+                + ' trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()',
+                '      IF (.true.) THEN',
+                '        CALL smth',
+                '      END IF ',
+                '      aaa: IF (.false.) THEN',
+                '      ELSE IF (a) THEN',
+                '      ELSE',
+                '      END IF aaa',
+                '      hey = 1',
+                '    END SUBROUTINE bar',
+                '    ABSTRACT INTERFACE',
+                '    END INTERFACE ',
+                '  END MODULE foo']
+
+    reader = fparser.readfortran.FortranStringReader(string)
+    reader.set_mode_from_str('free')
+    parser = fparser.parsefortran.FortranParser(reader)
+    parser.parse()
+    caught = parser.block.tofortran().splitlines()
+    assert caught[0][:13] == '!BEGINSOURCE '
+    assert caught[1:] == expected
+
+
+def test_f77():
+    '''
+    Tests inherited from implementation code.
+    '''
+    string = """\
+      program foo
+      a = 3
+      end
+      subroutine bar
+      end
+      pure function foo(a)
+      end
+      pure real*4 recursive function bar()
+      end
+"""
+    expected = ['        PROGRAM foo',
+                '          a = 3',
+                '        END PROGRAM foo',
+                '        SUBROUTINE bar()',
+                '        END SUBROUTINE bar',
+                '        pure FUNCTION foo(a)',
+                '        END FUNCTION foo',
+                '        pure recursive REAL*4 FUNCTION bar()',
+                '        END FUNCTION bar']
+
+    reader = fparser.readfortran.FortranStringReader(string)
+    parser = fparser.parsefortran.FortranParser(reader)
+    parser.parse()
+    assert isinstance(parser.block, fparser.block_statements.BeginSource)
+    caught = parser.block.tofortran().splitlines()
+    assert caught[0][:25] == '      !      BEGINSOURCE '
+    assert caught[1:] == expected
