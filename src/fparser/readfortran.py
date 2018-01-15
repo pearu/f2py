@@ -265,8 +265,11 @@ class Line(object):
             s += '%s: ' % (self.name)
         return s + repr(self.line)
 
+
     def isempty(self, ignore_comments=False):
-        return not (self.line or self.label is not None or self.name is not None)
+        return not (self.line or self.label is not None or
+                    self.name is not None)
+
 
     def get_line(self, apply_map=False):
         if apply_map:
@@ -351,8 +354,19 @@ class Comment(object):
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s)' \
                % (self.comment, self.span)
+
     def isempty(self, ignore_comments=False):
-        return ignore_comments # or len(self.comment)<2
+        '''
+        Whether or not this comment is in fact empty (or we are ignoring
+        it)
+
+        :param bool ignore_comments: whether we ignore non-empty comments
+        :return: True if we are ignoring comments or the comment is empty,
+                 False otherwise
+        :rtype: bool
+        '''
+        return ignore_comments or len(self.comment)<2
+
 
 class MultiLine(object):
     """ Holds PYF file multiline.
@@ -711,7 +725,7 @@ class FortranReaderBase(object):
                 item = self.get_source_item()
                 if item is None:
                     raise StopIteration
-            if not (item.isempty(ignore_comments) and ignore_comments):
+            if not (item.isempty(ignore_comments)):# and ignore_comments):
                 break
             # else ignore empty lines and comments
         if not isinstance(item, Comment):

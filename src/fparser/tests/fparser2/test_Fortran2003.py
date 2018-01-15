@@ -2386,7 +2386,14 @@ PRINT *, A%X, A%Y, A%Z
 END SELECT n
     '''))
     assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'n:SELECT TYPE(A=>P_OR_C)\n  CLASS IS (POINT)\n  PRINT *, A % X, A % Y\n  TYPE IS (POINT_3D)\n  PRINT *, A % X, A % Y, A % Z\nEND SELECT n')
+    print str(a)
+    assert (str(a) == "n:SELECT TYPE(A=>P_OR_C)\n"
+            "  CLASS IS (POINT)\n"
+            "  PRINT *, A % X, A % Y\n"
+            "  TYPE IS (POINT_3D)\n"
+            "  PRINT *, A % X, A % Y, A % Z\n"
+            "END SELECT n")
+
 
 def test_Select_Type_Stmt(): # R822
     cls = Select_Type_Stmt

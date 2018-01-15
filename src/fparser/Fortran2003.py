@@ -191,7 +191,6 @@ class Base(ComparableMixin):
             if isinstance(item, readfortran.Comment):
                 print "Potential comment: '{0}'".format(str(item))
                 if item.comment and not item.comment.isspace():
-                    print "COMMENT: '{0}'".format(item.comment)
                     com = Comment(item.comment)
                     return com
                 else:
@@ -269,7 +268,7 @@ class Base(ComparableMixin):
 class Comment(Base):
     '''
     '''
-    _regex = re.compile(r'.*!.*', re.I)
+    _regex = re.compile(r'\s*!.*', re.I)
     @staticmethod
     def match(string):
         '''
@@ -278,12 +277,17 @@ class Comment(Base):
                  otherwise None
         :rtype: 2-tuple or None
         '''
-        print "Comment.match: str={0}".format(string)
         if not Comment._regex.match(string):
             return
         idx = string.find('!')
         return string[idx+1:], 
 
+    def tostr(self):
+        '''
+        :return: this comment as a string
+        :rtype: str
+        '''
+        return "!" + str(self.items[0])
 
 class BlockBase(Base):
     """
