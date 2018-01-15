@@ -41,8 +41,7 @@ Test battery associated with fparser.common.base_classes package.
 '''
 import re
 import pytest
-import fparser.two.base_classes
-import fparser.one.parsefortran
+import fparser.common.base_classes
 import fparser.common.readfortran
 import fparser.common.utils
 

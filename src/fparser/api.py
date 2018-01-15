@@ -73,8 +73,7 @@ Module content
 
 from six import string_types
 # import all Statement classes:
-from fparser.two.base_classes import classes
-
+from fparser.common.base_classes import classes
 from fparser.common.utils import AnalyzeError
 
 __autodoc__ = ['get_reader', 'parse', 'walk']
