@@ -2386,7 +2386,7 @@ PRINT *, A%X, A%Y, A%Z
 END SELECT n
     '''))
     assert isinstance(a,cls),repr(a)
-    print str(a)
+    print(str(a))
     assert (str(a) == "n:SELECT TYPE(A=>P_OR_C)\n"
             "  CLASS IS (POINT)\n"
             "  PRINT *, A % X, A % Y\n"
@@ -2899,7 +2899,7 @@ def test_Connect_Spec():
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("afile='a_file.dat'")
-    assert 'NoMatchError: Connect_Spec: "afile=' in str(excinfo)
+    assert 'NoMatchError: Connect_Spec: \'afile=' in str(excinfo)
 
 
 def test_Connect_Spec_List():  # pylint: disable=invalid-name
@@ -2984,7 +2984,7 @@ def test_Connect_Spec_List():  # pylint: disable=invalid-name
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
-    assert 'NoMatchError: Connect_Spec_List: "unit=22, afile=' in str(excinfo)
+    assert 'NoMatchError: Connect_Spec_List: \'unit=22, afile=' in str(excinfo)
 
 
 ###############################################################################
@@ -3127,7 +3127,7 @@ def test_Edit_Desc():
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("DT'a_name'()")
-    assert '''Data_Edit_Desc: "DT'a_name'()"''' in str(excinfo)
+    assert '''Data_Edit_Desc: \'DT\'a_name\'()\'''' in str(excinfo)
 
 
 def test_Format_Item_List():
@@ -3823,14 +3823,17 @@ def test_comments():
       program foo
         integer :: my_int
         ! A full comment line
+        my_int = 1
+        write(*,*) my_int
       end program foo''')
 #        integer :: my_int ! an in-inline comment
     obj = cls(reader)
-    print type(obj)
-    print dir(obj)
+    print(type(obj))
+    print(dir(obj))
     from habakkuk.parse2003 import walk_ast
-    walk_ast(obj.content, [object], debug=True)
-    assert 0
+    nodes = walk_ast(obj.content, [Comment], debug=True)
+    assert len(nodes) == 1
+    assert str(nodes[0]) == "! A full comment line"
 
 
 if 0:

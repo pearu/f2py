@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -189,7 +190,6 @@ class Base(ComparableMixin):
 
             # Is this item a comment?
             if isinstance(item, readfortran.Comment):
-                print "Potential comment: '{0}'".format(str(item))
                 if item.comment and not item.comment.isspace():
                     com = Comment(item.comment)
                     return com
@@ -226,7 +226,6 @@ class Base(ComparableMixin):
         elif isinstance(result, Base):
             return result
         elif result is None:
-            print "string = '{0}'".format(string)
             for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls: # avoid recursion 2.
                     continue
@@ -321,6 +320,8 @@ content : tuple
                 obj = None
             if obj is None:
                 return
+            if isinstance(obj, Comment):
+                return obj
             content.append(obj)
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
