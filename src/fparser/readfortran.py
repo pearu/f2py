@@ -680,13 +680,14 @@ class FortranReaderBase(object):
                     dirs = os.pathsep.join(include_dirs)
                     # According to Fortran standard, INCLUDE line is
                     # not a Fortran statement.
-                    reader.warning('%r not found in %r. INLCUDE line treated as comment line.'\
-                                   % (filename, dirs), item)
+                    reader.warning(
+                        '%r not found in %r. INLCUDE line treated as '
+                        'comment line.' % (filename, dirs), item)
                     item = self.next(ignore_comments)
                     return item
                 reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(path, include_dirs=include_dirs)
-                return self.reader.next(ignore_comments = ignore_comments)
+                return self.reader.next(ignore_comments=ignore_comments)
             return item
         except StopIteration:
             raise
