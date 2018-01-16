@@ -5111,40 +5111,40 @@ class Loop_Control(Base): # R830
     
     def match(string):
 
-        optional_comma = None
-        while_expression = (False, None)
-        counter_expression = (None, None)
+        optional_delim = None
+        scalar_logical_expr = None
+        counter_expr = (None, None)
 
         if string.startswith(','):
             line, repmap = string_replace_map(string[1:].lstrip())
-            optional_comma = ","
+            optional_delim = ", "
         else:
             line, repmap = string_replace_map(string)
         if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
             l = line[5:].lstrip()
             i = l.find(')')
             if i != -1 and i == len(l)-1:
-               while_expression = (True, Scalar_Logical_Expr(repmap(l[1:i].strip())))
+               scalar_logical_expr = Scalar_Logical_Expr(repmap(l[1:i].strip()))
         if line.count('=') != 1:
             return
         var,rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
         if not 2 <= len(rhs) <= 3:
             return
-        counter_expression = (Variable(repmap(var.rstrip())), \
+        counter_expr = (Variable(repmap(var.rstrip())), \
              list(map(Scalar_Int_Expr, list(map(repmap,rhs)))))
-        return while_expression, counter_expression, optional_comma
+        return scalar_logical_expr, counter_expr, optional_delim
     match = staticmethod(match)
 
-    def tostr(self):   
-        s = None
-        if self.items[0][0]: 
-            s = 'WHILE (%s)' % (self.items[0][1])
-        elif self.items[1][0] is not None: 
-            s = '%s = %s' % (self.items[1][0], ', '.join(map(str,self.items[1][1])))
-        if self.items[2] is not None: 
-            s += " " + s
-        return s     
+    def tostr(self):
+        scalar_logical_expr, counter_expr, optional_delim = self.items
+        if scalar_logical_expr is not None:
+            s = 'WHILE (%s)' % scalar_logical_expr
+        elif counter_expr[0] is not None and counter_expr[1] is not None:
+            s = '%s = %s' % (counter_expr[0], ', '.join(map(str,counter_expr[1])))
+        if optional_delim is not None:
+            s = optional_delim + s
+        return s
 
 class Do_Variable(Base): # R831
     """

@@ -2317,7 +2317,7 @@ endif
     assert len(a.content)==3,repr(a)
     a = a.content[1]
     assert isinstance(a, Action_Term_Do_Construct),repr(a)
-    assert_equal(str(a),'DO 20 , i = 1, 3\n  a = 1\n  DO 20 , j = 1, 3\n    a = 2\n    DO 20 , k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
+    assert_equal(str(a),'DO 20 i = 1, 3\n  a = 1\n  DO 20 j = 1, 3\n    a = 2\n    DO 20 k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
 if (expr) then
@@ -2449,8 +2449,7 @@ def test_Block_Nonlabel_Do_Construct(): # # R826_2
       end do
     '''))
     assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO , i = 1, 10\n  a = 1\nEND DO')
-   ### assert_equal(str(a),'DO i = 1, 10\n  a = 1\nEND DO')
+    assert_equal(str(a),'DO i = 1, 10\n  a = 1\nEND DO')
 
     a = cls(get_reader('''
       foo:do i=1,10
@@ -2458,7 +2457,7 @@ def test_Block_Nonlabel_Do_Construct(): # # R826_2
       end do foo
     '''))
     assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'foo:DO , i = 1, 10\n  a = 1\nEND DO foo')
+    assert_equal(str(a),'foo:DO i = 1, 10\n  a = 1\nEND DO foo')
 
     a = cls(get_reader('''
       do j=1,2
@@ -2468,7 +2467,7 @@ def test_Block_Nonlabel_Do_Construct(): # # R826_2
       end do
     '''))
     assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO , j = 1, 2\n  foo:DO , i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
+    assert_equal(str(a),'DO j = 1, 2\n  foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
 
 def test_Label_Do_Stmt(): # R828
 
@@ -2481,34 +2480,38 @@ def test_Label_Do_Stmt(): # R828
 def test_Nonblock_Do_Construct(): # R835
     cls = Nonblock_Do_Construct
     a = cls(get_reader('''
-      do  20  i = 1, 3
+      do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    print str(a)
     assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
-      do  20  i = 1, 3
+      do  20,  i = 1, 3
       k = 3
-      do  20  j = 1, 3
+      do  20,  j = 1, 3
       l = 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    print str(a)
     assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
-      do  20  i = 1, 3
+      do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    print str(a)
     assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
-    do  50  i = n, m, -1
+    do  50,  i = n, m, -1
   50 call foo(a)
     '''))
     assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    print str(a)
     assert_equal(str(a),'DO 50 , i = n, m, - 1\n50 CALL foo(a)')
     
 def test_Continue_Stmt(): # R848
