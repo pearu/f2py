@@ -7679,6 +7679,28 @@ class Stmt_Function_Stmt(StmtBase): # R1238
             return '%s () = %s' % (self.items[0], self.items[2])
         return '%s (%s) = %s' % self.items
 
+def walk_ast(children, my_types=None, indent=0, debug=False):
+    '''' Walk down the tree produced by fparser2 where children
+    are listed under 'content'.  Returns a list of all nodes with the
+    specified type(s). '''
+    local_list = []
+    for child in children:
+        if debug:
+            print indent*"  " + "child type = ", type(child)
+        if my_types is None or type(child) in my_types:
+            local_list.append(child)
+
+        # Depending on their level in the tree produced by fparser2003,
+        # some nodes have children listed in .content and some have them
+        # listed under .items. If a node has neither then it has no
+        # children.
+        if hasattr(child, "content"):
+            local_list += walk_ast(child.content, my_types, indent+1, debug)
+        elif hasattr(child, "items"):
+            local_list += walk_ast(child.items, my_types, indent+1, debug)
+
+    return local_list
+
 ###############################################################################
 ################ GENERATE Scalar_, _List, _Name CLASSES #######################
 ###############################################################################
