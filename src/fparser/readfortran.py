@@ -189,10 +189,6 @@ _is_call_stmt = re.compile(r'call\b', re.I).match
 
 class FortranReaderError(Exception): 
     pass
-    # def __init__(self, message):
-    #     self.message = message
-    #     print >> sys.stderr,message
-    #     sys.stderr.flush()
 
 class Line(object):
     """ Holds a Fortran source line.
@@ -317,7 +313,6 @@ class Line(object):
             self.parse_cache[cls] = obj
         else:
             obj = self.parse_cache[cls]
-            #print self.line, cls.__name__,obj
         return obj
 
     def parse_block(self, reader, cls, parent_cls):
@@ -366,6 +361,14 @@ class Comment(object):
         :rtype: bool
         '''
         return ignore_comments or len(self.comment)<2
+
+    def parse_line(self, cls, parent_cls):
+        '''
+        Equivalent of Line.parse_line() for comments
+        '''
+        import Fortran2003
+        obj = Fortran2003.Comment(self.comment, parent_cls=[Comment])
+        return obj
 
 
 class MultiLine(object):
