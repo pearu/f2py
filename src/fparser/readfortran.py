@@ -94,7 +94,8 @@ Examples
 
 Note that the ``.next()`` method may return `Line`, `SyntaxErrorLine`,
 `Comment`, `MultiLine`, or `SyntaxErrorMultiLine` instance.
-Let us continue with the above example session to illustrate the `Line` methods and attributes::
+Let us continue with the above example session to illustrate the `Line`
+methods and attributes::
 
     >>> item = reader.next()
     >>> item
@@ -213,7 +214,9 @@ class Line(object):
 
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
-        assert self.line, repr((line, linenospan, label))
+        if not self.line:
+            raise Exception("Got empty line: '{0}'. linenospan={1}, "
+                            "label='{2}'".format(line, linenospan, label))
         self.span = linenospan
         assert label is None or isinstance(label,int),repr(label)
         assert name is None or isinstance(name,str) and name!='',repr(name)
@@ -456,6 +459,7 @@ class FortranReaderBase(object):
 
         self.exit_on_error = True
         self.restore_cache = []
+
         return
 
     def __repr__(self):
@@ -595,7 +599,6 @@ class FortranReaderBase(object):
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace('\xa0',' ').rstrip()
         self.source_lines.append(line)
-
         if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict):
             return self.get_single_line(ignore_empty, ignore_comments)
 
@@ -615,7 +618,8 @@ class FortranReaderBase(object):
         get_single_line, put_single_line
         """
         line = self.get_single_line(ignore_empty, ignore_comments)
-        if line is None: return
+        if line is None:
+            return
         self.put_single_line(line)
         return line
 
@@ -705,7 +709,7 @@ class FortranReaderBase(object):
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
-    def _next(self, ignore_comments = False):
+    def _next(self, ignore_comments=False):
         """ Return the next item from FIFO item buffer or construct
         one from source line.
 
@@ -899,44 +903,45 @@ class FortranReaderBase(object):
         if m:
             newline = m.group('indent')+5*' '+m.group('rest')
             self.f2py_comment_lines.append(self.linecount)
-            assert len(newline)==len(line),repr((newlinel,line))
+            assert len(newline)==len(line), repr((newline, line))
             return newline
         return line
 
-    def handle_inline_comment(self, line, lineno, quotechar=None):
+    def handle_inline_comment(self, line, lineno, quotechar=None,
+                              keep_inline_comments=False):
         """
-        Parameters
-        ----------
-        line : str
-        lineno : int
-        quotechar : {None, str}
+        Any in-line comment is extracted from line. If
+        keep_inline_comments==True then the extracted comments are put back
+        into the fifo sequence where they will subsequently be processed as
+        a comment line.
 
-        Returns
-        -------
-        line_with_no_comments : str
-        quotechar : {None, str}
-        had_comment : bool
+        :param str line: line of code from which to remove in-line comment
+        :param int lineno: line-no. in orig. file
+        :param quotechar: String to use as character-string delimiter
+        :type quotechar: {None, str}
 
-        Notes
-        -----
-        In-line comments are separated from line and put back to fifo
-        sequence where it will be processed as comment line.
+        :return: line_with_no_comments, quotechar, had_comment
+        :rtype: 3-tuple of str, str, bool
         """
         had_comment = False
         if quotechar is None and '!' not in line and \
            '"' not in line and "'" not in line:
+            # There's no comment on this line
             return line, quotechar, had_comment
-        i = line.find('!')
-        put_item = self.fifo_item.append
-        if quotechar is None and i!=-1:
-            # first try a quick method:
-            newline = line[:i]
-            if '"' not in newline and '\'' not in newline:
-                if self.isf77 or not line[i:].startswith('!f2py'):
-                    put_item(self.comment_item(line[i:], lineno, lineno))
-                    return newline, quotechar, True
-        items, newquotechar = splitquote(line, quotechar)
 
+        idx = line.find('!')
+        put_item = self.fifo_item.append
+        if quotechar is None and idx != -1:
+            # first try a quick method:
+            newline = line[:idx]
+            if '"' not in newline and '\'' not in newline:
+                if self.isf77 or not line[idx:].startswith('!f2py'):
+                    if keep_inline_comments or not newline.lstrip():
+                        put_item(self.comment_item(line[idx:], lineno, lineno))
+                    return newline, quotechar, True
+
+        # We must allow for quotes...
+        items, newquotechar = splitquote(line, quotechar)
         noncomment_items = []
         noncomment_items_append = noncomment_items.append
         n = len(items)
@@ -957,7 +962,8 @@ class FortranReaderBase(object):
                 newline = ''.join(noncomment_items) + commentline[5:]
                 self.f2py_comment_lines.append(lineno)
                 return self.handle_inline_comment(newline, lineno, quotechar)
-            put_item(self.comment_item(commentline, lineno, lineno))
+            if keep_inline_comments: #   or not noncomment_items:
+                put_item(self.comment_item(commentline, lineno, lineno))
             had_comment = True
         return ''.join(noncomment_items), newquotechar, had_comment
 
@@ -1099,7 +1105,8 @@ class FortranReaderBase(object):
         if self.isf77 and not is_f2py_directive:
             # Fortran 77 is easy..
             lines = [line[6:72]]
-            while _is_fix_cont(self.get_next_line(ignore_empty=True, ignore_comments=True)):
+            while _is_fix_cont(self.get_next_line(ignore_empty=True,
+                                                  ignore_comments=True)):
                 # handle fix format line continuations for F77 code
                 line = get_single_line()
                 lines.append(line[6:72])
@@ -1185,7 +1192,11 @@ class FortranReaderBase(object):
                         line = get_single_line()
                         continue
                 else:
-                    # first line, check for a label
+                    # first line
+                    if line_lstrip.startswith('!'):
+                        return self.comment_item(line_lstrip,
+                                                 self.linecount, self.linecount)
+                    # check for a label
                     m = _label_re.match(line)
                     if m:
                         assert not label,repr(label)
