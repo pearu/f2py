@@ -3816,8 +3816,8 @@ def test_Contains(): # R1237
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
 
 
-def test_comments():
-    ''' Unit tests for lines containing comments '''
+def test_prog_comments():
+    ''' Unit tests for lines in programs containing comments '''
     cls = Program
     reader = get_reader('''\
       ! A troublesome comment
@@ -3833,13 +3833,38 @@ def test_comments():
     #   |--> Main_Program
     #   .      |--> Program_Stmt
     #          |--> Specification_Part
-    #          |           |--> Comment
+    #          |      |--> Comment
+    #          |--> Execution_Part
+    #          |      |--> Write_Stmt
     #          .           .
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
     assert type(obj.content[1].content[1].content[0]) == Comment
     assert str(obj.content[1].content[1].content[0]) == "! A full comment line"
+    assert type(obj.content[1].content[2].content[0]) == Write_Stmt
+    # Check that we have removed the in-line comment
+    assert len(obj.content[1].content[2].content) == 1
+    assert type(obj.content[1].content[3]) == End_Program_Stmt
+    assert "An in-line comment" not in str(obj)
+
+
+def test_module_comments():
+    ''' Tests for comments in modules '''
+    source = '''! This is a module
+      module my_mod
+        implicit none
+        private
+      end module my_mod
+'''
+    # Test when the reader is explicitly set to free-form mode
+    reader = get_reader(source, isfree=True)
+    prog_unit = Program(reader)
+    walk_ast(prog_unit.content, debug=True)
+    print str(prog_unit)
+    print type(prog_unit)
+    assert type(prog_unit.content[0]) == Comment
+    assert str(prog_unit.content[0]) == "! This is a module"
 
 
 def test_multi_unit():

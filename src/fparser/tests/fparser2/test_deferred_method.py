@@ -60,8 +60,7 @@ module abstract_test
 
 end module abstract_test
 '''
-    expected = '''
-! Abstract type
+    expected = '''! Abstract type
 MODULE abstract_test
   IMPLICIT NONE
   PRIVATE
@@ -75,5 +74,4 @@ END MODULE abstract_test
     reader = fparser.readfortran.FortranStringReader(source)
     program_unit = fparser.Fortran2003.Program(reader)
     result = str(program_unit).strip().split('\n')
-
     assert result == expected
