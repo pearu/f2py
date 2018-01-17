@@ -61,6 +61,7 @@ module abstract_test
 end module abstract_test
 '''
     expected = '''
+! Abstract type
 MODULE abstract_test
   IMPLICIT NONE
   PRIVATE
