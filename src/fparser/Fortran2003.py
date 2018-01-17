@@ -190,10 +190,7 @@ class Base(ComparableMixin):
 
             # Is this item a comment?
             if isinstance(item, readfortran.Comment):
-                if item.comment and not item.comment.isspace():
-                    com = Comment(item.comment)
-                    return com
-                else:
+                if not item.comment or item.comment.isspace():
                     # It's just white space
                     return
 
@@ -221,7 +218,8 @@ class Base(ComparableMixin):
             obj = object.__new__(cls)
             obj.string = string
             obj.item = None
-            if hasattr(cls, 'init'): obj.init(*result)
+            if hasattr(cls, 'init'):
+                obj.init(*result)
             return obj
         elif isinstance(result, Base):
             return result
@@ -264,30 +262,6 @@ class Base(ComparableMixin):
         reader.put_item(self.item)
 
 
-class Comment(Base):
-    '''
-    '''
-    _regex = re.compile(r'\s*!.*', re.I)
-    @staticmethod
-    def match(string):
-        '''
-        :param str string: string to match against
-        :return: If matched then tuple of comment string and None
-                 otherwise None
-        :rtype: 2-tuple or None
-        '''
-        if not Comment._regex.match(string):
-            return
-        idx = string.find('!')
-        return string[idx+1:], 
-
-    def tostr(self):
-        '''
-        :return: this comment as a string
-        :rtype: str
-        '''
-        return "!" + str(self.items[0])
-
 class BlockBase(Base):
     """
 ::
@@ -302,15 +276,17 @@ Attributes
 content : tuple
     """
     def match(startcls, subclasses, endcls, reader,
-              match_labels = False,
-              match_names = False, set_unspecified_end_name = False,
-              match_name_classes = (),
-              enable_do_label_construct_hook = False,
-              enable_if_construct_hook = False,
-              enable_where_construct_hook = False,
-              enable_select_type_construct_hook = False,
-              enable_case_construct_hook = False
-              ):
+              match_labels=False,
+              match_names=False,
+              set_unspecified_end_name=False,
+              match_name_classes=(),
+              enable_do_label_construct_hook=False,
+              enable_if_construct_hook=False,
+              enable_where_construct_hook=False,
+              enable_select_type_construct_hook=False,
+              enable_case_construct_hook=False):
+        '''
+        '''
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
         if startcls is not None:
@@ -320,8 +296,6 @@ content : tuple
                 obj = None
             if obj is None:
                 return
-            if isinstance(obj, Comment):
-                return obj
             content.append(obj)
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
@@ -365,22 +339,27 @@ content : tuple
                     i = j
             if obj is not None:
                 content.append(obj)
-                if match_names and isinstance(obj,match_name_classes):
+                if match_names and isinstance(obj, match_name_classes):
                     end_name = obj.get_end_name()
                     if end_name != start_name:
-                        reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
+                        reader.warning('expected construct name "%s" but '
+                                       'got "%s"' % (start_name, end_name))
                     
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
-                        start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
+                        start_label, end_label = content[0].get_start_label(),\
+                                                 content[-1].get_end_label()
                         if start_label != end_label:
                             continue
                     if match_names:
-                        start_name, end_name = content[0].get_start_name(), content[-1].get_end_name()
-                        if set_unspecified_end_name and end_name is None and start_name is not None:
+                        start_name, end_name = content[0].get_start_name(), \
+                                               content[-1].get_end_name()
+                        if set_unspecified_end_name and end_name is None and \
+                           start_name is not None:
                             content[-1].set_name(start_name)
                         elif start_name != end_name:
-                            reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
+                            reader.warning('expected construct name "%s" but '
+                                           'got "%s"' % (start_name, end_name))
                             continue
                     break
                 if enable_if_construct_hook:
@@ -405,24 +384,27 @@ content : tuple
                         enable_case_construct_hook = False
                 continue
             if endcls is not None:
-                if 1:
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
+                for obj in reversed(content):
+                    obj.restore_reader(reader)
+                return
                 item = reader.get_item()
                 if item is not None:
                     if 0:
                         pass
                     elif content:
-                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item), item=content[0].item)
+                        reader.info('closing <%s> not found while '
+                                    'reaching %s' % (endcls.__name__.lower(),
+                                                     item),
+                                    item=content[0].item)
                     else:
-                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item))
+                        reader.info('closing <%s> not found while reaching %s'
+                                    % (endcls.__name__.lower(), item))
                     # no match found, restoring consumed reader items
                     reader.put_item(item)
                     for obj in reversed(content):
                         obj.restore_reader(reader)
                     return
-                if content:# and hasattr(content[0],'name'):
+                if content:
                     reader.info('closing <%s> not found while reaching eof' % (endcls.__name__.lower()), item=content[0].item)
                     for obj in reversed(content):
                         obj.restore_reader(reader)
@@ -431,7 +413,8 @@ content : tuple
                     reader.error('unexpected eof file while looking line for <%s>.'\
                                  % (classes[-1].__name__.lower().replace('_','-')))
             break
-        if not content: return
+        if not content:
+            return
         if startcls is not None and endcls is not None:
             # check names of start and end statements:
             start_stmt = content[0]
@@ -462,7 +445,8 @@ content : tuple
         return self.tofortran()
 
     def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr, self.content)))
+        return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr,
+                                                                 self.content)))
 
     def tofortran(self, tab='', isfix=None):
         l = []
@@ -478,13 +462,6 @@ content : tuple
         if len(self.content)>1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
-
-##     def restore_reader(self):
-##         content = self.content[:]
-##         content.reverse()
-##         for obj in content:
-##             obj.restore_reader()
-##         return
 
     def restore_reader(self, reader):
         for obj in reversed(self.content):
@@ -1066,14 +1043,47 @@ class Program(BlockBase): # R201
     
     @staticmethod
     def match(reader):
-        #return Program_Unit(reader)
         try:
-            result = BlockBase.match(Program_Unit, [Program_Unit], None, reader)
+            result = BlockBase.match(Program_Unit, [Program_Unit],
+                                     None, reader)
         except NoMatchError:
             result = None
         if result is not None:
             return result
         return BlockBase.match(Main_Program0, [], None, reader)
+
+
+class Comment(Base):
+    '''
+    '''
+    subclass_names = []
+
+    _regex = re.compile(r'\s*!.*', re.I)
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: string to match against
+        :return: If matched then tuple of comment string and None
+                 otherwise None
+        :rtype: 2-tuple or None
+        '''
+        print("COMMENT: trying to match '{0}'".format(string))
+        if not Comment._regex.match(string):
+            return
+        # TODO allow for ! inside strings?
+        idx = string.find('!')
+        return string[idx+1:], 
+
+    def tostr(self):
+        '''
+        :return: this comment as a string
+        :rtype: str
+        '''
+        return "!" + str(self.items[0])
+
+    def restore_reader(self, reader):
+        reader.put_item(self.item)
+
 
 class Program_Unit(Base): # R202
     """
@@ -1083,7 +1093,7 @@ class Program_Unit(Base): # R202
                      | <module>
                      | <block-data>
     """
-    subclass_names = ['Main_Program', 'External_Subprogram', 'Module', 'Block_Data']
+    subclass_names = ['Comment', 'Main_Program', 'External_Subprogram', 'Module', 'Block_Data']
 
 class External_Subprogram(Base): # R203
     """
@@ -4564,7 +4574,8 @@ class Block(BlockBase): # R801
     subclass_names = []
     use_names = ['Execution_Part_Construct']
     @staticmethod
-    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
+    def match(string):
+        return BlockBase.match(None, [Execution_Part_Construct], None, string)
 
 class If_Construct(BlockBase): # R802
     """
@@ -6707,11 +6718,15 @@ class Main_Program0(BlockBase):
                          <end-program-stmt>
     """
     subclass_names = []
-    use_names = ['Program_Stmt', 'Specification_Part', 'Execution_Part', 'Internal_Subprogram_Part',
+    use_names = ['Comment', 'Program_Stmt', 'Specification_Part',
+                 'Execution_Part', 'Internal_Subprogram_Part',
                  'End_Program_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(None, [Specification_Part, Execution_Part, Internal_Subprogram_Part], End_Program_Stmt, reader)
+        return BlockBase.match(None,
+                               [Specification_Part, Execution_Part,
+                                Internal_Subprogram_Part, Comment],
+                               End_Program_Stmt, reader)
 
 class Program_Stmt(StmtBase, WORDClsBase): # R1102
     """

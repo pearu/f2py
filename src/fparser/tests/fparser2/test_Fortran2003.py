@@ -3820,20 +3820,48 @@ def test_comments():
     ''' Unit tests for lines containing comments '''
     cls = Program
     reader = get_reader('''\
+      ! A troublesome comment
+      program foo
+        ! A full comment line
+        write(*,*) my_int ! An in-line comment
+      end program foo''')
+    obj = cls(reader)
+    assert type(obj) == Program
+    # Check that the AST has the expected structure:
+    # Program
+    #   |--> Comment
+    #   |--> Main_Program
+    #   .      |--> Program_Stmt
+    #          |--> Specification_Part
+    #          |           |--> Comment
+    #          .           .
+    assert type(obj.content[0]) == Comment
+    assert str(obj.content[0]) == "! A troublesome comment"
+    assert type(obj.content[1]) == Main_Program
+    assert type(obj.content[1].content[1].content[0]) == Comment
+    assert str(obj.content[1].content[1].content[0]) == "! A full comment line"
+
+
+def test_multi_unit():
+    ''' Check what happens when we have more than one program/routine
+    in a file '''
+    cls = Program
+    reader = get_reader('''\
       program foo
         integer :: my_int
-        ! A full comment line
-        my_int = 1
+        my_int = my_func()
         write(*,*) my_int
-      end program foo''')
-#        integer :: my_int ! an in-inline comment
+      end program
+      function my_func()
+        integer :: my_func
+        my_func = 2
+      end function''')
     obj = cls(reader)
-    print(type(obj))
-    print(dir(obj))
-    from habakkuk.parse2003 import walk_ast
-    nodes = walk_ast(obj.content, [Comment], debug=True)
-    assert len(nodes) == 1
-    assert str(nodes[0]) == "! A full comment line"
+    assert type(obj) == Program
+    output = str(obj)
+    assert "PROGRAM foo" in output
+    assert "FUNCTION my_func()" in output
+    assert output.endswith("END FUNCTION")
 
 
 if 0:
