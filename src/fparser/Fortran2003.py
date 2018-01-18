@@ -189,10 +189,10 @@ class Base(ComparableMixin):
                 return
 
             # Is this item a comment?
-            if isinstance(item, readfortran.Comment):
-                if not item.comment or item.comment.isspace():
-                    # It's just white space
-                    return
+            #if isinstance(item, readfortran.Comment):
+            #    if not item.comment or item.comment.isspace():
+            #        # It's just white space
+            #        return
 
             try:
                 obj = item.parse_line(cls, parent_cls)
@@ -290,12 +290,22 @@ content : tuple
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
         if startcls is not None:
-            try:
-                obj = startcls(reader)
-            except NoMatchError:
-                obj = None
-            if obj is None:
-                return
+            while 1:
+                try:
+                    obj = startcls(reader)
+                except NoMatchError:
+                    obj = None
+                if obj is None:
+                    return
+                if isinstance(obj, Comment):
+                    # Allow for comments immediately before the start
+                    # of the block
+                    content.append(obj)
+                else:
+                    break
+            # Store the index of the start of this block proper (i.e.
+            # excluding any comments)
+            start_idx = len(content)
             content.append(obj)
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
@@ -315,7 +325,8 @@ content : tuple
                 except NoMatchError:
                     obj = None
                 if obj is not None:
-                    if start_label == obj.get_start_label():
+                    if isinstance(obj, Comment) or \
+                       start_label == obj.get_start_label():
                         content.append(obj)
                         continue
                     else:
@@ -347,12 +358,12 @@ content : tuple
                     
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
-                        start_label, end_label = content[0].get_start_label(),\
+                        start_label, end_label = content[start_idx].get_start_label(),\
                                                  content[-1].get_end_label()
                         if start_label != end_label:
                             continue
                     if match_names:
-                        start_name, end_name = content[0].get_start_name(), \
+                        start_name, end_name = content[start_idx].get_start_name(), \
                                                content[-1].get_end_name()
                         if set_unspecified_end_name and end_name is None and \
                            start_name is not None:
@@ -1068,18 +1079,25 @@ class Comment(Base):
         :rtype: 2-tuple or None
         '''
         print("COMMENT: trying to match '{0}'".format(string))
+        if not string.strip():
+            print("match: returning '{0}'".format(string))
+            return string,
         if not Comment._regex.match(string):
             return
-        # TODO allow for ! inside strings?
         idx = string.find('!')
-        return string[idx+1:], 
+        return string[idx+1:],
 
     def tostr(self):
         '''
         :return: this comment as a string
         :rtype: str
         '''
-        return "!" + str(self.items[0])
+        if self.items[0].strip():
+            # Only prefix the comment with a '!' if it actually
+            # contains something
+            return "!" + str(self.items[0])
+        else:
+            return str(self.items[0])
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
