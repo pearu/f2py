@@ -81,7 +81,8 @@ __autodoc__ = ['get_reader', 'parse', 'walk']
 
 
 def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
-               source_only=None, ignore_comments=True):
+               source_only=None, ignore_comments=True,
+               ignore_inline_comments=False):
     """ Returns Fortran reader instance.
 
     Parameters
@@ -146,12 +147,13 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
         isfree = reader.isfree
     if isstrict is None:
         isstrict = reader.isstrict
-    reader.set_mode(isfree, isstrict)
+    reader.set_mode(isfree, isstrict, ignore_inline_comments)
     return reader
 
 
 def parse(input, isfree=None, isstrict=None, include_dirs=None,
-          source_only=None, ignore_comments=True, analyze=True):
+          source_only=None, ignore_comments=True, analyze=True,
+          ignore_inline_comments=False):
     """ Parse input and return Statement tree. Raises an AnalyzeError if the
     parser can not parse the Fortran code.
 
@@ -171,6 +173,7 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
       ``USE`` statement is encountered.
     ignore_comments : bool
       When True then discard all comment lines in the Fortran code.
+    :param bool ignore_inline_comments: if True then ignore in-line comments
     analyze : bool
       When True then apply run analyze method on the Fortran code tree.
 
@@ -224,7 +227,8 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
     get_reader
     """
     from .parsefortran import FortranParser
-    reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
+    reader = get_reader(input, isfree, isstrict, include_dirs, source_only,
+                        ignore_inline_comments=ignore_inline_comments)
     parser = FortranParser(reader, ignore_comments=ignore_comments)
     try:
         parser.parse()

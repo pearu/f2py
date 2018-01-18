@@ -2377,19 +2377,35 @@ END ASSOCIATE
 
 def test_Select_Type_Construct(): # R821
     cls = Select_Type_Construct
-    a = cls(get_reader('''
+    tree = cls(get_reader('''
 n:SELECT TYPE ( A => P_OR_C )
 CLASS IS ( POINT )
 PRINT *, A%X, A%Y ! This block gets executed
 TYPE IS ( POINT_3D )
 PRINT *, A%X, A%Y, A%Z
 END SELECT n
-    '''))
-    assert isinstance(a,cls),repr(a)
-    print(str(a))
-    assert (str(a) == "n:SELECT TYPE(A=>P_OR_C)\n"
+    ''', ignore_inline_comments=True))
+    assert isinstance(tree, cls), repr(tree)
+    print(str(tree))
+    assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
             "  CLASS IS (POINT)\n"
             "  PRINT *, A % X, A % Y\n"
+            "  TYPE IS (POINT_3D)\n"
+            "  PRINT *, A % X, A % Y, A % Z\n"
+            "END SELECT n")
+    tree = cls(get_reader('''
+n:SELECT TYPE ( A => P_OR_C )
+CLASS IS ( POINT )
+PRINT *, A%X, A%Y ! This block gets executed
+TYPE IS ( POINT_3D )
+PRINT *, A%X, A%Y, A%Z
+END SELECT n
+    ''', ignore_inline_comments=False))
+    print(str(tree))
+    assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
+            "  CLASS IS (POINT)\n"
+            "  PRINT *, A % X, A % Y\n"
+            "  ! This block gets executed\n"
             "  TYPE IS (POINT_3D)\n"
             "  PRINT *, A % X, A % Y, A % Z\n"
             "END SELECT n")
@@ -3824,7 +3840,8 @@ def test_prog_comments():
       program foo
         ! A full comment line
         write(*,*) my_int ! An in-line comment
-      end program foo''')
+      end program foo''',
+                        ignore_inline_comments=True)
     obj = cls(reader)
     assert type(obj) == Program
     # Check that the AST has the expected structure:

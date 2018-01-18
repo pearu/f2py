@@ -77,10 +77,10 @@ end subroutine f !comment line 5
 end module foo
     '''
     tree = parse(source_str, isfree=True, isstrict=False,
-                 ignore_comments=False)
+                 ignore_comments=False, ignore_inline_comments=False)
 
     print str(tree)
-    assert str(tree).strip().split('\n')[1:]=='''
+    assert str(tree).strip().split('\n')[1:] == '''
 !BEGINSOURCE <cStringIO.StringI object at 0x1518de0> mode=free90
   !comment line 1
 
