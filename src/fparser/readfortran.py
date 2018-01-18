@@ -359,13 +359,14 @@ class Comment(object):
         '''
         Whether or not this comment is in fact empty (or we are ignoring
         it)
+        TODO should this routine be called isempty since it doesn't actually
+        test for that?
 
         :param bool ignore_comments: whether we ignore non-empty comments
-        :return: True if we are ignoring comments or the comment is empty,
-                 False otherwise
+        :return: True if we are ignoring comments, False otherwise
         :rtype: bool
         '''
-        return ignore_comments or len(self.comment)<2
+        return ignore_comments
 
     def parse_line(self, cls, parent_cls):
         '''
@@ -743,7 +744,8 @@ class FortranReaderBase(object):
                     raise StopIteration
             if not (item.isempty(ignore_comments)): # and ignore_comments):
                 break
-            # else ignore empty lines and comments
+            # else ignore empty lines and comments by getting next line
+
         if not isinstance(item, Comment):
             # resolve `;` statement terminations
             if not self.ispyf and isinstance(item, Line) \
@@ -762,24 +764,24 @@ class FortranReaderBase(object):
             return item
         return item
         # collect subsequent comments to one comment instance
-        comments = []
-        start = item.span[0]
-        while isinstance(item, Comment):
-            comments.append(item.comment)
-            end = item.span[1]
-            while 1:
-                try:
-                    item = fifo_item_pop(0)
-                except IndexError:
-                    item = self.get_source_item()
-                if item is None or not item.isempty(ignore_comments):
-                    break
-            if item is None:
-                break # hold raising StopIteration for the next call.
-        if item is not None:
-            self.fifo_item.insert(0,item)
-        item = self.comment_item('\n'.join(comments), start, end)
-        return item
+        #comments = []
+        #start = item.span[0]
+        #while isinstance(item, Comment):
+        #    comments.append(item.comment)
+        #    end = item.span[1]
+        #    while 1:
+        #        try:
+        #            item = fifo_item_pop(0)
+        #        except IndexError:
+        #            item = self.get_source_item()
+        #        if item is None or not item.isempty(ignore_comments):
+        #            break
+        #    if item is None:
+        #        break # hold raising StopIteration for the next call.
+        #if item is not None:
+        #    self.fifo_item.insert(0,item)
+        #item = self.comment_item('\n'.join(comments), start, end)
+        #return item
 
     # Interface to returned items:
 
