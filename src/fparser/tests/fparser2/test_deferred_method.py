@@ -62,16 +62,24 @@ end module abstract_test
 '''
     expected = '''! Abstract type
 MODULE abstract_test
+
   IMPLICIT NONE
   PRIVATE
+
   TYPE, ABSTRACT, PUBLIC :: test_type
     CONTAINS
     PROCEDURE(method_interface), DEFERRED :: method
   END TYPE test_type
+
 END MODULE abstract_test
 '''.strip().split('\n')
 
     reader = fparser.readfortran.FortranStringReader(source)
     program_unit = fparser.Fortran2003.Program(reader)
+#    print str(program_unit)
+#    from fparser.Fortran2003 import walk_ast
+#    walk_ast(program_unit.content, [object], debug=True)
     result = str(program_unit).strip().split('\n')
+#    print result
+#    print expected
     assert result == expected
