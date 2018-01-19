@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017-2018 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -57,9 +57,11 @@ module abstract_test
   contains
     procedure(method_interface), deferred :: method
   end type test_type
+  ! A comment at the end
 
 end module abstract_test
 '''
+
     expected = '''! Abstract type
 MODULE abstract_test
 
@@ -70,16 +72,13 @@ MODULE abstract_test
     CONTAINS
     PROCEDURE(method_interface), DEFERRED :: method
   END TYPE test_type
+  ! A comment at the end
 
 END MODULE abstract_test
 '''.strip().split('\n')
 
     reader = fparser.readfortran.FortranStringReader(source)
     program_unit = fparser.Fortran2003.Program(reader)
-#    print str(program_unit)
-#    from fparser.Fortran2003 import walk_ast
-#    walk_ast(program_unit.content, [object], debug=True)
+    print str(program_unit)
     result = str(program_unit).strip().split('\n')
-#    print result
-#    print expected
     assert result == expected
