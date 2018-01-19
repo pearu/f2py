@@ -246,9 +246,11 @@ class Base(ComparableMixin):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
                                                                   self.items)))
 
-    def __str__(self): return self.tostr()
+    def __str__(self):
+        return self.tostr()
 
-    def __repr__(self): return self.torepr()
+    def __repr__(self):
+        return self.torepr()
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -256,7 +258,13 @@ class Base(ComparableMixin):
         return self.items
 
     def tofortran(self, tab='', isfix=None):
-        return tab + str(self)
+        this_str = str(self)
+        if this_str.strip():
+            return tab + this_str
+        else:
+            # If this_str is empty then don't prepend any spaces
+            # to it
+            return this_str
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
@@ -1080,7 +1088,6 @@ class Comment(Base):
         '''
         print("COMMENT: trying to match '{0}'".format(string))
         if not string.strip():
-            print("match: returning '{0}'".format(string))
             return string,
         if not Comment._regex.match(string):
             return
@@ -1092,12 +1099,14 @@ class Comment(Base):
         :return: this comment as a string
         :rtype: str
         '''
-        if self.items[0].strip():
+        body = str(self.items[0])
+        if body.strip():
             # Only prefix the comment with a '!' if it actually
             # contains something
-            return "!" + str(self.items[0])
+            return "!" + body
         else:
-            return str(self.items[0])
+            print("COMMENT: returning {0}".format(repr(self.items[0])))
+            return body
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
@@ -7704,7 +7713,7 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     local_list = []
     for child in children:
         if debug:
-            print indent*"  " + "child type = ", type(child)
+            print(indent*"  " + "child type = ", type(child), repr(child))
         if my_types is None or type(child) in my_types:
             local_list.append(child)
 
