@@ -2059,13 +2059,17 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
                                                string.upper())
     match = staticmethod(match)
 
-class Private_Components_Stmt(STRINGBase): # R447
+
+class Private_Components_Stmt(STRINGBase):  # R447
     """
     <private-components-stmt> = PRIVATE
     """
     subclass_names = []
-    def match(string): return StringBase.match('PRIVATE', string.upper())
+
+    def match(string):
+        return StringBase.match('PRIVATE', string.upper())
     match = staticmethod(match)
+
 
 class Type_Bound_Procedure_Part(BlockBase): # R448
     """
@@ -5101,14 +5105,17 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase): # R829
     def match(string): return WORDClsBase.match('DO', Loop_Control, string)
     match = staticmethod(match)
 
-class Loop_Control(Base): # R830
+
+class Loop_Control(Base):  # R830
     """
-    <loop-control> = [ , ] <do-variable> = <scalar-int-expr> , <scalar-int-expr> [ , <scalar-int-expr> ]
+    <loop-control> = [ , ] <do-variable> = <scalar-int-expr> ,
+                                           <scalar-int-expr>
+                                           [ , <scalar-int-expr> ]
                      | [ , ] WHILE ( <scalar-logical-expr> )
     """
     subclass_names = []
     use_names = ['Do_Variable', 'Scalar_Int_Expr', 'Scalar_Logical_Expr']
-    
+
     def match(string):
 
         optional_delim = None
@@ -5121,18 +5128,19 @@ class Loop_Control(Base): # R830
         else:
             line, repmap = string_replace_map(string)
         if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
-            l = line[5:].lstrip()
-            i = l.find(')')
-            if i != -1 and i == len(l)-1:
-               scalar_logical_expr = Scalar_Logical_Expr(repmap(l[1:i].strip()))
+            lbrac = line[5:].lstrip()
+            i = lbrac.find(')')
+            if i != -1 and i == len(lbrac)-1:
+                scalar_logical_expr = \
+                    Scalar_Logical_Expr(repmap(lbrac[1:i].strip()))
         if line.count('=') != 1:
             return
-        var,rhs = line.split('=')
+        var, rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
         if not 2 <= len(rhs) <= 3:
             return
-        counter_expr = (Variable(repmap(var.rstrip())), \
-             list(map(Scalar_Int_Expr, list(map(repmap,rhs)))))
+        counter_expr = (Variable(repmap(var.rstrip())),
+                        list(map(Scalar_Int_Expr, list(map(repmap, rhs)))))
         return scalar_logical_expr, counter_expr, optional_delim
     match = staticmethod(match)
 
@@ -5141,10 +5149,12 @@ class Loop_Control(Base): # R830
         if scalar_logical_expr is not None:
             s = 'WHILE (%s)' % scalar_logical_expr
         elif counter_expr[0] is not None and counter_expr[1] is not None:
-            s = '%s = %s' % (counter_expr[0], ', '.join(map(str,counter_expr[1])))
+            s = '%s = %s' % \
+                (counter_expr[0], ', '.join(map(str, counter_expr[1])))
         if optional_delim is not None:
             s = optional_delim + s
         return s
+
 
 class Do_Variable(Base): # R831
     """
@@ -6768,7 +6778,8 @@ class Module_Subprogram(Base): # R1108
     """
     subclass_names = ['Function_Subprogram', 'Subroutine_Subprogram']
 
-class Use_Stmt(StmtBase): # R1109
+
+class Use_Stmt(StmtBase):  # R1109
     """
     <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name> [ , <rename-list> ]
                  | USE [ [ , <module-nature> ] :: ] <module-name> , ONLY: [ <only-list> ]
@@ -6777,45 +6788,62 @@ class Use_Stmt(StmtBase): # R1109
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
     def match(string):
-        if string[:3].upper() != 'USE': return
+        if string[:3].upper() != 'USE':
+            return
         line = string[3:]
-        if not line: return
-        if isalnum(line[0]): return
+        if not line:
+            return
+        if isalnum(line[0]):
+            return
         line = line.lstrip()
         i = line.find('::')
         nature = None
-        if i!=-1:
+        dcolon = None
+        if i != -1:
+            dcolon = '::'
             if line.startswith(','):
-                l = line[1:i].strip()
-                if not l: return
-                nature = Module_Nature(l)
+                line_nat = line[1:i].strip()
+                if not line_nat:
+                    return
+                nature = Module_Nature(line_nat)
             line = line[i+2:].lstrip()
-            if not line: return
+            if not line:
+                return
         i = line.find(',')
-        if i==-1: return nature, Module_Name(line), '', None
+        if i == -1:
+            return nature, dcolon, Module_Name(line), '', None
         name = line[:i].rstrip()
-        if not name: return
+        if not name:
+            return
         name = Module_Name(name)
         line = line[i+1:].lstrip()
-        if not line: return
+        if not line:
+            return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
             if line[0] != ':':
                 return
             line = line[1:].lstrip()
             if not line:
-                return nature, name, ', ONLY:', None
-            return nature, name, ', ONLY:', Only_List(line)
-        return nature, name, ',', Rename_List(line)
+                return nature, dcolon, name, ', ONLY:', None
+            return nature, dcolon, name, ', ONLY:', Only_List(line)
+        return nature, dcolon, name, ',', Rename_List(line)
     match = staticmethod(match)
+
     def tostr(self):
         s = 'USE'
-        if self.items[0] is not None:
-            s += ', %s' % (self.items[0])
-        s += ' :: %s%s' % (self.items[1], self.items[2])
-        if self.items[3] is not None:
-            s += ' %s' % (self.items[3])
+        if self.items[0] is not None and self.items[1] is not None:
+            s += ', %s %s' % (self.items[0], self.items[1])      
+        elif self.items[0] is not None and self.items[1] is None: 
+            message = 'Module nature must be followed by "::"'
+            logging.getLogger(__name__).debug(message)
+        elif self.items[0] is None and self.items[1] is not None: 
+            s += ' %s' % (self.items[1])
+        s += ' %s%s' % (self.items[2], self.items[3])
+        if self.items[4] is not None:
+            s += ' %s' % (self.items[4])
         return s
+
 
 class Module_Nature(STRINGBase): # R1110
     """

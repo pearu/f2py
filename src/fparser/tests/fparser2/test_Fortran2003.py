@@ -714,13 +714,16 @@ def test_Proc_Component_Def_Stmt(): # R445
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b')
 
-def test_Private_Components_Stmt(): # R447
 
-        cls = Private_Components_Stmt
-        a = cls('private')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'PRIVATE')
-        assert_equal(repr(a),"Private_Components_Stmt('PRIVATE')")
+def test_Private_Components_Stmt():  # R447
+    '''Tests that declaration of PRIVATE components in a type definition
+    is parsed correctly'''
+    cls = Private_Components_Stmt
+    a = cls('private')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'PRIVATE')
+    assert_equal(repr(a), "Private_Components_Stmt('PRIVATE')")
+
 
 def test_Type_Bound_Procedure_Part(): # R448
     cls = Type_Bound_Procedure_Part
@@ -2299,9 +2302,12 @@ end if
         endif
 
     '''))
-    
+
+
 def test_if_nonblock_do():
+    '''Tests that conditional nonblock DO construct is parsed correctly'''
     cls = If_Construct
+
     a = cls(get_reader('''
 if (expr) then
    do  20  i = 1, 3
@@ -2312,22 +2318,25 @@ if (expr) then
          a = 3
 20 rotm(i,j) = r2(j,i)
 endif
-'''))    
-    assert isinstance(a,cls),repr(a)
-    assert len(a.content)==3,repr(a)
+'''))
+    assert isinstance(a, cls), repr(a)
+    assert len(a.content) == 3, repr(a)
     a = a.content[1]
-    assert isinstance(a, Action_Term_Do_Construct),repr(a)
-    assert_equal(str(a),'DO 20 i = 1, 3\n  a = 1\n  DO 20 j = 1, 3\n    a = 2\n    DO 20 k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
+    assert_equal(str(a),
+                 'DO 20 i = 1, 3\n  a = 1\n  DO 20 j = 1, 3\n    a = 2\n    '
+                 'DO 20 k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
 if (expr) then
     do  50  i = n, m, -1
   50 call foo(a)
 endif'''))
-    assert isinstance(a,cls),repr(a)
-    assert len(a.content)==3,repr(a)
+    assert isinstance(a, cls), repr(a)
+    assert len(a.content) == 3, repr(a)
     a = a.content[1]
-    assert isinstance(a, Action_Term_Do_Construct),repr(a)
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
+
 
 def test_Case_Construct(): # R808
     cls = Case_Construct
@@ -2420,15 +2429,18 @@ def test_Type_Guard_Stmt(): # R823
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'CLASS DEFAULT')
 
-def test_Block_Label_Do_Construct(): # R826_1
+
+def test_Block_Label_Do_Construct():  # R826_1
+    '''Tests that block labeled DO construct is parsed correctly'''
     cls = Block_Label_Do_Construct
+
     a = cls(get_reader('''
       do 12
         a = 1
  12   continue
     '''))
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO 12\n  a = 1\n12 CONTINUE')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'DO 12\n  a = 1\n12 CONTINUE')
 
     a = cls(get_reader('''
       do 12
@@ -2437,27 +2449,30 @@ def test_Block_Label_Do_Construct(): # R826_1
  13   continue
  12   continue
     '''))
-    assert_equal(str(a),'DO 12\n  DO 13\n    a = 1\n13 CONTINUE\n12 CONTINUE')
-    assert len(a.content)==3,repr(len(a.content))
+    assert_equal(str(a), 'DO 12\n  DO 13\n    a = 1\n13 CONTINUE\n12 CONTINUE')
+    assert len(a.content) == 3, repr(len(a.content))
     assert_equal(str(a.content[1]), 'DO 13\n  a = 1\n13 CONTINUE')
 
-def test_Block_Nonlabel_Do_Construct(): # # R826_2
+
+def test_Block_Nonlabel_Do_Construct():  # R826_2
+    '''Tests that block nonlabeled DO construct is parsed correctly'''
     cls = Block_Nonlabel_Do_Construct
+
     a = cls(get_reader('''
       do i=1,10
         a = 1
       end do
     '''))
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO i = 1, 10\n  a = 1\nEND DO')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'DO i = 1, 10\n  a = 1\nEND DO')
 
     a = cls(get_reader('''
       foo:do i=1,10
         a = 1
       end do foo
     '''))
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'foo:DO i = 1, 10\n  a = 1\nEND DO foo')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'foo:DO i = 1, 10\n  a = 1\nEND DO foo')
 
     a = cls(get_reader('''
       do j=1,2
@@ -2466,26 +2481,30 @@ def test_Block_Nonlabel_Do_Construct(): # # R826_2
       end do foo
       end do
     '''))
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO j = 1, 2\n  foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'DO j = 1, 2\n  '
+                         'foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
 
-def test_Label_Do_Stmt(): # R828
 
+def test_Label_Do_Stmt():  # R828
+    '''Tests that labeled DO statement is parsed correctly'''
     cls = Label_Do_Stmt
     a = cls('do 12')
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'DO 12')
-    assert_equal(repr(a),"Label_Do_Stmt(None, Label('12'), None)")
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'DO 12')
+    assert_equal(repr(a), "Label_Do_Stmt(None, Label('12'), None)")
 
-def test_Nonblock_Do_Construct(): # R835
+
+def test_Nonblock_Do_Construct():  # R835
+    '''Tests that nonblock DO construct is parsed correctly'''
     cls = Nonblock_Do_Construct
     a = cls(get_reader('''
       do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
-    assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
     print str(a)
-    assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
+    assert_equal(str(a), 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
       do  20,  i = 1, 3
@@ -2494,26 +2513,29 @@ def test_Nonblock_Do_Construct(): # R835
       l = 3
  20     rotm(i,j) = r2(j,i)
     '''))
-    assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
     print str(a)
-    assert_equal(str(a),'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n20 rotm(i, j) = r2(j, i)')
+    assert_equal(str(a),
+                 'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n'
+                 '20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
       do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
-    assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
     print str(a)
-    assert_equal(str(a),'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
+    assert_equal(str(a), 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
     do  50,  i = n, m, -1
   50 call foo(a)
     '''))
-    assert isinstance(a,Action_Term_Do_Construct),repr(a)
+    assert isinstance(a, Action_Term_Do_Construct), repr(a)
     print str(a)
-    assert_equal(str(a),'DO 50 , i = n, m, - 1\n50 CALL foo(a)')
-    
+    assert_equal(str(a), 'DO 50 , i = n, m, - 1\n50 CALL foo(a)')
+
+
 def test_Continue_Stmt(): # R848
 
     cls = Continue_Stmt
@@ -3227,41 +3249,87 @@ contains
     '''))
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a\n  a = 1.0\nEND SUBROUTINE foo')
-    
-def test_Use_Stmt(): # R1109
+
+
+def test_Use_Stmt():  # R1109
 
     cls = Use_Stmt
     a = cls('use a')
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'USE :: a')
-    assert_equal(repr(a),"Use_Stmt(None, Name('a'), '', None)")
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'USE a')
+    assert_equal(repr(a), "Use_Stmt(None, None, Name('a'), '', None)")
+
+    cls = Use_Stmt
+    a = cls('use :: a')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'USE :: a')
+    assert_equal(repr(a), "Use_Stmt(None, '::', Name('a'), '', None)")
 
     a = cls('use a, only: b')
     assert isinstance(a, cls), repr(a)
-    assert str(a) == 'USE :: a, ONLY: b'
-    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+    assert str(a) == 'USE a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))"
 
     a = cls('use a, only : b')
     assert isinstance(a, cls), repr(a)
+    assert str(a) == 'USE a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))"
+
+    a = cls('use :: a, only: b')
+    assert isinstance(a, cls), repr(a)
     assert str(a) == 'USE :: a, ONLY: b'
-    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+    assert repr(a) == "Use_Stmt(None, '::', Name('a'), ', ONLY:', Name('b'))"
 
     a = cls('use a, ONLY : b')
     assert isinstance(a, cls), repr(a)
-    assert str(a) == 'USE :: a, ONLY: b'
-    assert repr(a) == "Use_Stmt(None, Name('a'), ', ONLY:', Name('b'))"
+    assert str(a) == 'USE a, ONLY: b'
+    assert repr(a) == "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))"
 
-    a = cls('use :: a, c=>d')
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'USE :: a, c => d')
+    a = cls('use, intrinsic :: a, ONLY: b')
+    assert isinstance(a, cls), repr(a)
+    assert str(a) == 'USE, INTRINSIC :: a, ONLY: b'
+    assert repr(a) == (
+        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('a'), "
+        "', ONLY:', Name('b'))")
+
+    a = cls('use, non_intrinsic :: a, ONLY: b, c, d')
+    assert isinstance(a, cls), repr(a)
+    assert str(a) == 'USE, NON_INTRINSIC :: a, ONLY: b, c, d'
+    assert repr(a) == (
+        "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
+        "', ONLY:', Only_List(',', (Name('b'), Name('c'), Name('d'))))")
+
+    a = cls('use a, c=>d')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'USE a, c => d')
+    assert repr(a) == (
+        "Use_Stmt(None, None, Name('a'), "
+        "',', Rename(None, Name('c'), Name('d')))")
 
     a = cls('use :: a, operator(.hey.)=>operator(.hoo.)')
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)')
+    assert repr(a) == (
+        "Use_Stmt(None, '::', Name('a'), ',', "
+        "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')))")
 
     a = cls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'USE, INTRINSIC :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
+    assert isinstance(a, cls), repr(a)
+    assert_equal(str(a), 'USE, INTRINSIC :: a, '
+                         'OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
+    assert repr(a) == (
+        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('a'), "
+        "',', Rename_List(',', ("
+        "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')), "
+        "Rename(None, Name('c'), Name('g')))))")
+
+    a = cls('use, non_intrinsic :: a, ONLY: b => c')
+    assert isinstance(a, cls), repr(a)
+    assert str(a) == 'USE, NON_INTRINSIC :: a, ONLY: b => c'
+    assert repr(a) == (
+        "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
+        "', ONLY:', Rename(None, Name('b'), Name('c')))")
+
 
 def test_Module_Nature(): # R1110
 
