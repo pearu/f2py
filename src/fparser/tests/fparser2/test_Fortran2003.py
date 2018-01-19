@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -3860,11 +3861,11 @@ def test_prog_comments():
     # Program
     #   |--> Comment
     #   |--> Main_Program
-    #   .      |--> Program_Stmt
-    #          |--> Specification_Part
-    #          |      |--> Comment
-    #          |--> Execution_Part
-    #          |      |--> Write_Stmt
+    #   .    |--> Program_Stmt
+    #        |--> Specification_Part
+    #        |    |--> Comment
+    #        |--> Execution_Part
+    #        |    |--> Write_Stmt
     #          .           .
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
@@ -3890,8 +3891,6 @@ def test_module_comments():
     reader = get_reader(source, isfree=True)
     prog_unit = Program(reader)
     walk_ast(prog_unit.content, debug=True)
-    print str(prog_unit)
-    print type(prog_unit)
     assert type(prog_unit.content[0]) == Comment
     assert str(prog_unit.content[0]) == "! This is a module"
 
