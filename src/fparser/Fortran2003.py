@@ -1085,6 +1085,7 @@ class Program(BlockBase): # R201
 
 class Comment(Base):
     '''
+    Represents a Fortran Comment
     '''
     subclass_names = []
 
@@ -1126,6 +1127,13 @@ class Comment(Base):
             return body
 
     def restore_reader(self, reader):
+        '''
+        Undo the read of this comment by putting its content back
+        into the reader (which has a FIFO buffer)
+
+        :param reader: the reader instance to return the comment to
+        :type reader: :py:class:`fparser.readfortran.FortranReaderBase`
+        '''
         reader.put_item(self.item)
 
 

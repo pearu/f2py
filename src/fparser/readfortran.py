@@ -742,7 +742,7 @@ class FortranReaderBase(object):
                 item = self.get_source_item()
                 if item is None:
                     raise StopIteration
-            if not (item.isempty(ignore_comments)): # and ignore_comments):
+            if not (item.isempty(ignore_comments)):
                 break
             # else ignore empty lines and comments by getting next line
 
@@ -1116,7 +1116,7 @@ class FortranReaderBase(object):
                 line = get_single_line()
                 lines.append(line[6:72])
             return self.line_item(''.join(lines), startlineno,
-                                  self.linecount, label,name)
+                                  self.linecount, label, name)
 
         handle_inline_comment = self.handle_inline_comment
 
