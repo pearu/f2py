@@ -187,13 +187,6 @@ class Base(ComparableMixin):
             item = reader.get_item()
             if item is None:
                 return
-
-            # Is this item a comment?
-            #if isinstance(item, readfortran.Comment):
-            #    if not item.comment or item.comment.isspace():
-            #        # It's just white space
-            #        return
-
             try:
                 obj = item.parse_line(cls, parent_cls)
             except NoMatchError:
@@ -262,8 +255,8 @@ class Base(ComparableMixin):
         if this_str.strip():
             return tab + this_str
         else:
-            # If this_str is empty then don't prepend any spaces
-            # to it
+            # If this_str is empty (i.e this Comment is a blank line) then
+            # don't prepend any spaces to it
             return this_str
 
     def restore_reader(self, reader):
@@ -283,6 +276,7 @@ Attributes
 ----------
 content : tuple
     """
+    @staticmethod
     def match(startcls, subclasses, endcls, reader,
               match_labels=False,
               match_names=False,
@@ -304,6 +298,11 @@ content : tuple
                 except NoMatchError:
                     obj = None
                 if obj is None:
+                    # Ultimately we failed to find a match for the
+                    # start of the block so put back any comments that
+                    # we processed along the way
+                    for obj in reversed(content):
+                        obj.restore_reader(reader)
                     return
                 if isinstance(obj, Comment):
                     # Allow for comments immediately before the start
@@ -408,9 +407,7 @@ content : tuple
                 return
                 item = reader.get_item()
                 if item is not None:
-                    if 0:
-                        pass
-                    elif content:
+                    if content:
                         reader.info('closing <%s> not found while '
                                     'reaching %s' % (endcls.__name__.lower(),
                                                      item),
@@ -436,7 +433,7 @@ content : tuple
             return
         if startcls is not None and endcls is not None:
             # check names of start and end statements:
-            start_stmt = content[0]
+            start_stmt = content[start_idx]
             end_stmt = content[-1]
             if isinstance(end_stmt, endcls_all) and \
                hasattr(end_stmt, 'get_name') and \
@@ -449,7 +446,6 @@ content : tuple
                 else:
                     end_stmt.set_name(start_stmt.get_name())
         return content,
-    match = staticmethod(match)
 
     def init(self, content):
         self.content = content
@@ -468,17 +464,32 @@ content : tuple
                                                                  self.content)))
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Create a string containing the Fortran representation of this class
+
+        :param str tab: Indent to prefix to code
+        :param bool isfix: Whether or not to generate fixed-format code
+        :return: Fortran representation of this class
+        :rtype: str
+        '''
         l = []
-        start = self.content[0]
+        # Deal with any comments that come before the block
+        for idx, node in enumerate(self.content):
+            if isinstance(node, Comment):
+                l.append(node.tofortran(tab=tab, isfix=isfix))
+            else:
+                break
+        start_idx = idx  # Save the index of the first non-comment
+        start = node
         end = self.content[-1]
         extra_tab = ''
         if isinstance(end, EndStmtBase):
             extra_tab = '  '
         if start is not None:
             l.append(start.tofortran(tab=tab,isfix=isfix))
-        for item in self.content[1:-1]:
+        for item in self.content[start_idx+1:-1]:
             l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
-        if len(self.content)>1:
+        if (len(self.content) - start_idx) > 1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
 
@@ -1086,13 +1097,20 @@ class Comment(Base):
                  otherwise None
         :rtype: 2-tuple or None
         '''
-        print("COMMENT: trying to match '{0}'".format(string))
         if not string.strip():
             return string,
         if not Comment._regex.match(string):
             return
         idx = string.find('!')
         return string[idx+1:],
+
+    def init(self, string):
+        '''
+        Initialise this Comment
+
+        :param str string: The content of the comment
+        '''
+        self.items = [string]
 
     def tostr(self):
         '''
@@ -1105,7 +1123,6 @@ class Comment(Base):
             # contains something
             return "!" + body
         else:
-            print("COMMENT: returning {0}".format(repr(self.items[0])))
             return body
 
     def restore_reader(self, reader):
@@ -1120,7 +1137,8 @@ class Program_Unit(Base): # R202
                      | <module>
                      | <block-data>
     """
-    subclass_names = ['Comment', 'Main_Program', 'External_Subprogram', 'Module', 'Block_Data']
+    subclass_names = ['Comment', 'Main_Program', 'External_Subprogram',
+                      'Module', 'Block_Data']
 
 class External_Subprogram(Base): # R203
     """
@@ -7713,7 +7731,10 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     local_list = []
     for child in children:
         if debug:
-            print(indent*"  " + "child type = ", type(child), repr(child))
+            if isinstance(child, str):
+                print(indent*"  " + "child type = ", type(child), child)
+            else:
+                print(indent*"  " + "child type = ", type(child))
         if my_types is None or type(child) in my_types:
             local_list.append(child)
 
