@@ -2503,7 +2503,6 @@ def test_Nonblock_Do_Construct():  # R835
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a, Action_Term_Do_Construct), repr(a)
-    print str(a)
     assert_equal(str(a), 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
@@ -2514,7 +2513,6 @@ def test_Nonblock_Do_Construct():  # R835
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a, Action_Term_Do_Construct), repr(a)
-    print str(a)
     assert_equal(str(a),
                  'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n'
                  '20 rotm(i, j) = r2(j, i)')
@@ -2524,7 +2522,6 @@ def test_Nonblock_Do_Construct():  # R835
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(a, Action_Term_Do_Construct), repr(a)
-    print str(a)
     assert_equal(str(a), 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)')
 
     a = cls(get_reader('''
@@ -2532,7 +2529,6 @@ def test_Nonblock_Do_Construct():  # R835
   50 call foo(a)
     '''))
     assert isinstance(a, Action_Term_Do_Construct), repr(a)
-    print str(a)
     assert_equal(str(a), 'DO 50 , i = n, m, - 1\n50 CALL foo(a)')
 
 
@@ -3252,7 +3248,7 @@ contains
 
 
 def test_Use_Stmt():  # R1109
-
+    '''Tests that USE statement is parsed correctly'''
     cls = Use_Stmt
     a = cls('use a')
     assert isinstance(a, cls), repr(a)
