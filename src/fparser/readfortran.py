@@ -372,8 +372,7 @@ class Comment(object):
         '''
         Equivalent of Line.parse_line() for comments
         '''
-        from fparser import Fortran2003
-        obj = Fortran2003.Comment(self.comment, parent_cls=[Comment])
+        obj = cls(self.comment, parent_cls=[parent_cls])
         return obj
 
 

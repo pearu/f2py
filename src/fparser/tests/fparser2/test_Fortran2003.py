@@ -2300,9 +2300,7 @@ end if
             do  82  k = 1, n
    82       xnew(k) = xin(k) + betx*(xnew(k)-xin(k))
           endif
-        endif
-
-    '''))
+        endif'''))
 
 
 def test_if_nonblock_do():
@@ -3862,16 +3860,17 @@ def test_prog_comments():
     #   |--> Comment
     #   |--> Main_Program
     #   .    |--> Program_Stmt
-    #        |--> Specification_Part
-    #        |    |--> Comment
+    #        |--> Comment
     #        |--> Execution_Part
     #        |    |--> Write_Stmt
-    #          .           .
+    #        .    .
+    from fparser.Fortran2003 import walk_ast
+    walk_ast(obj.content, [Comment], debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
-    assert type(obj.content[1].content[1].content[0]) == Comment
-    assert str(obj.content[1].content[1].content[0]) == "! A full comment line"
+    assert type(obj.content[1].content[1]) == Comment
+    assert str(obj.content[1].content[1]) == "! A full comment line"
     assert type(obj.content[1].content[2].content[0]) == Write_Stmt
     # Check that we have removed the in-line comment
     assert len(obj.content[1].content[2].content) == 1

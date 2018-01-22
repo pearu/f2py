@@ -149,6 +149,7 @@ class ComparableMixin(object):
     def __ne__(self, other):
         return self._compare(other, lambda s, o: s != o)
 
+
 class Base(ComparableMixin):
     """ Base class for Fortran 2003 syntax rules.
 
@@ -157,6 +158,9 @@ class Base(ComparableMixin):
                 is either str or FortranReaderBase.
       .item   - Line instance (holds label) or None.
     """
+    # This dict of subclasses is set-up dynamically by code at the end
+    # of this module. That code uses the entries in the
+    # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
     @show_result
@@ -292,24 +296,12 @@ content : tuple
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
         if startcls is not None:
-            while 1:
-                try:
-                    obj = startcls(reader)
-                except NoMatchError:
-                    obj = None
-                if obj is None:
-                    # Ultimately we failed to find a match for the
-                    # start of the block so put back any comments that
-                    # we processed along the way
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                if isinstance(obj, Comment):
-                    # Allow for comments immediately before the start
-                    # of the block
-                    content.append(obj)
-                else:
-                    break
+            try:
+                obj = startcls(reader)
+            except NoMatchError:
+                obj = None
+            if obj is None:
+                return
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
             start_idx = len(content)
@@ -318,10 +310,12 @@ content : tuple
                 start_label = obj.get_start_label()
             if match_names:
                 start_name = obj.get_start_name()
+        # A comment is always a valid sub-class
+        classes = [Comment]
         if endcls is not None:
-            classes = subclasses + [endcls]
+            classes += subclasses + [endcls]
         else:
-            classes = subclasses[:]
+            classes += subclasses[:]
         if endcls is not None:
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
         i = 0
@@ -473,14 +467,8 @@ content : tuple
         :rtype: str
         '''
         l = []
-        # Deal with any comments that come before the block
-        for idx, node in enumerate(self.content):
-            if isinstance(node, Comment):
-                l.append(node.tofortran(tab=tab, isfix=isfix))
-            else:
-                break
-        start_idx = idx  # Save the index of the first non-comment
-        start = node
+        start_idx = 0
+        start = self.content[0]
         end = self.content[-1]
         extra_tab = ''
         if isinstance(end, EndStmtBase):
@@ -1154,7 +1142,7 @@ class External_Subprogram(Base): # R203
     <external-subprogram> = <function-subprogram>
                             | <subroutine-subprogram>
     """
-    subclass_names = ['Function_Subprogram', 'Subroutine_Subprogram']
+    subclass_names = ['Comment', 'Function_Subprogram', 'Subroutine_Subprogram']
 
 
 class Specification_Part(BlockBase): # R204
@@ -1166,10 +1154,14 @@ class Specification_Part(BlockBase): # R204
                              [ <declaration-construct> ]...
     """
     subclass_names = []
-    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part', 'Declaration_Construct']
+    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part',
+                 'Declaration_Construct']
     @staticmethod
     def match(reader):
-        return BlockBase.match(None, [Use_Stmt, Import_Stmt, Implicit_Part, Declaration_Construct], None, reader)
+        return BlockBase.match(None, [Use_Stmt, Import_Stmt,
+                                      Implicit_Part, Declaration_Construct],
+                               None, reader)
+
 
 class Implicit_Part(BlockBase): # R205
     """
@@ -1191,7 +1183,8 @@ class Implicit_Part_Stmt(Base): # R206
                            | <format-stmt>
                            | <entry-stmt>
     """
-    subclass_names = ['Implicit_Stmt', 'Parameter_Stmt', 'Format_Stmt', 'Entry_Stmt']
+    subclass_names = ['Comment', 'Implicit_Stmt', 'Parameter_Stmt',
+                      'Format_Stmt', 'Entry_Stmt']
 
 class Declaration_Construct(Base): # R207
     """
@@ -1207,9 +1200,10 @@ class Declaration_Construct(Base): # R207
                               | <type-declaration-stmt>
                               | <stmt-function-stmt>
     """
-    subclass_names = ['Derived_Type_Def', 'Entry_Stmt', 'Enum_Def', 'Format_Stmt',
-                      'Interface_Block', 'Parameter_Stmt', 'Procedure_Declaration_Stmt',
-                      'Specification_Stmt', 'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
+    subclass_names = ['Comment', 'Derived_Type_Def', 'Entry_Stmt', 'Enum_Def',
+                      'Format_Stmt', 'Interface_Block', 'Parameter_Stmt',
+                      'Procedure_Declaration_Stmt', 'Specification_Stmt',
+                      'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
 
 class Execution_Part(BlockBase): # R208
     """
@@ -1231,10 +1225,12 @@ class Execution_Part_Construct(Base): # R209
                                  | <entry-stmt>
                                  | <data-stmt>
     """
-    subclass_names = ['Executable_Construct', 'Format_Stmt', 'Entry_Stmt', 'Data_Stmt']
+    subclass_names = ['Comment', 'Executable_Construct', 'Format_Stmt',
+                      'Entry_Stmt', 'Data_Stmt']
 
 class Execution_Part_Construct_C201(Base):
-    subclass_names = ['Executable_Construct_C201', 'Format_Stmt', 'Entry_Stmt', 'Data_Stmt']
+    subclass_names = ['Comment', 'Executable_Construct_C201', 'Format_Stmt',
+                      'Entry_Stmt', 'Data_Stmt']
 
 class Internal_Subprogram_Part(BlockBase): # R210
     """
@@ -1278,7 +1274,7 @@ class Specification_Stmt(Base):# R212
                            | <value-stmt>
     """
     subclass_names = ['Access_Stmt', 'Allocatable_Stmt', 'Asynchronous_Stmt','Bind_Stmt',
-                      'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt', 'Equivalence_Stmt',
+                      'Comment', 'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt', 'Equivalence_Stmt',
                       'External_Stmt', 'Intent_Stmt', 'Intrinsic_Stmt', 'Namelist_Stmt',
                       'Optional_Stmt','Pointer_Stmt','Protected_Stmt','Save_Stmt',
                       'Target_Stmt','Volatile_Stmt', 'Value_Stmt']
@@ -1294,7 +1290,7 @@ class Executable_Construct(Base):# R213
                              | <select-type-construct>
                              | <where-construct>
     """
-    subclass_names = ['Action_Stmt', 'Associate_Stmt', 'Case_Construct', 'Do_Construct',
+    subclass_names = ['Action_Stmt', 'Associate_Stmt', 'Case_Construct', 'Comment', 'Do_Construct',
                       'Forall_Construct', 'If_Construct', 'Select_Type_Construct', 'Where_Construct']
 
 class Executable_Construct_C201(Base):
@@ -1336,13 +1332,16 @@ class Action_Stmt(Base):# R214
                     | <arithmetic-if-stmt>
                     | <computed-goto-stmt>
     """
-    subclass_names = ['Allocate_Stmt', 'Assignment_Stmt', 'Backspace_Stmt', 'Call_Stmt',
-                      'Close_Stmt', 'Continue_Stmt', 'Cycle_Stmt', 'Deallocate_Stmt',
-                      'Endfile_Stmt', 'End_Function_Stmt', 'End_Subroutine_Stmt', 'Exit_Stmt',
-                      'Flush_Stmt', 'Forall_Stmt', 'Goto_Stmt', 'If_Stmt', 'Inquire_Stmt',
-                      'Nullify_Stmt', 'Open_Stmt', 'Pointer_Assignment_Stmt', 'Print_Stmt',
-                      'Read_Stmt', 'Return_Stmt', 'Rewind_Stmt', 'Stop_Stmt', 'Wait_Stmt',
-                      'Where_Stmt', 'Write_Stmt', 'Arithmetic_If_Stmt', 'Computed_Goto_Stmt']
+    subclass_names = ['Allocate_Stmt', 'Assignment_Stmt', 'Backspace_Stmt',
+                      'Call_Stmt', 'Close_Stmt', 'Comment', 'Continue_Stmt',
+                      'Cycle_Stmt', 'Deallocate_Stmt', 'Endfile_Stmt',
+                      'End_Function_Stmt', 'End_Subroutine_Stmt', 'Exit_Stmt',
+                      'Flush_Stmt', 'Forall_Stmt', 'Goto_Stmt', 'If_Stmt',
+                      'Inquire_Stmt', 'Nullify_Stmt', 'Open_Stmt',
+                      'Pointer_Assignment_Stmt', 'Print_Stmt', 'Read_Stmt',
+                      'Return_Stmt', 'Rewind_Stmt', 'Stop_Stmt', 'Wait_Stmt',
+                      'Where_Stmt', 'Write_Stmt', 'Arithmetic_If_Stmt',
+                      'Computed_Goto_Stmt']
 
 class Action_Stmt_C201(Base):
     """
@@ -5141,7 +5140,7 @@ class Block_Nonlabel_Do_Construct(BlockBase): # R826_2
     use_names = ['Nonlabel_Do_Stmt', 'Execution_Part_Construct', 'End_Do_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
+        return BlockBase.match(Nonlabel_Do_Stmt, [Comment, Execution_Part_Construct],
                                End_Do_Stmt, reader
                                )
 
@@ -5310,7 +5309,8 @@ class Do_Body(BlockBase): # R837
     """
     subclass_names = []
     use_names = ['Execution_Part_Construct']
-    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
+    def match(string): return BlockBase.match(None,
+                                              [Execution_Part_Construct], None, string)
     match = staticmethod(match)
 
 class Do_Term_Action_Stmt(StmtBase): # R838
@@ -7740,7 +7740,7 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     for child in children:
         if debug:
             if isinstance(child, str):
-                print(indent*"  " + "child type = ", type(child), child)
+                print(indent*"  " + "child type = ", type(child), repr(child))
             else:
                 print(indent*"  " + "child type = ", type(child))
         if my_types is None or type(child) in my_types:
@@ -7785,7 +7785,6 @@ class %s_List(SequenceBase):
         elif n.endswith('_Name'):
             _names.append(n)
             n = n[:-5]
-            #print 'Generating %s_Name' % (n)
             exec('''\
 class %s_Name(Base):
     subclass_names = [\'Name\']
@@ -7793,7 +7792,6 @@ class %s_Name(Base):
         elif n.startswith('Scalar_'):
             _names.append(n)
             n = n[7:]
-            #print 'Generating Scalar_%s' % (n)
             exec('''\
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
