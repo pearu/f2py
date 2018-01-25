@@ -65,12 +65,7 @@
 # First version by: Pearu Peterson <pearu@cens.ioc.ee>
 # First created: Oct 2006
 
-import os
-# Make logging available within the fparser namespace
-import logging, logging.config
+import logging
 
-# Default logging configuration file
-_DEFAULT_LOG_CONFIG_PATH = os.path.join(os.path.dirname(__file__),
-                                        'log.config')
-# Setup loggers
-logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())

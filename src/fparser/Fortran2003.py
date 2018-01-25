@@ -75,8 +75,6 @@ from .splitline import string_replace_map
 from . import pattern_tools as pattern
 from .readfortran import FortranReaderBase
 
-logger = logging.getLogger("fparser")
-
 ###############################################################################
 ############################## BASE CLASSES ###################################
 ###############################################################################
@@ -594,6 +592,22 @@ class KeywordValueBase(Base):
     """
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
+        '''
+        :param lhs_cls: list, tuple or single value of classes to attempt to
+                        match LHS against (in order), or string containing
+                        keyword to match
+        :type lhs_cls: names of classes deriving from `:py:class:Base` or str
+        :param rhs_cls: name of class to match RHS against
+        :type rhs_cls: name of a class deriving from `:py:class:Base`
+        :param str string: text to be matched
+        :param bool require_lhs: whether the expression to be matched must
+                                 contain a LHS that is assigned to
+        :param bool upper_lhs: whether or not to convert the LHS of the
+                               matched expression to upper case
+        :return: instances of the classes representing quantities on the LHS
+                 and RHS (LHS is optional) or nothing if no match is found
+        :rtype: 2-tuple of objects or nothing
+        '''
         if require_lhs and '=' not in string:
             return
         if isinstance(lhs_cls, (list, tuple)):
@@ -604,7 +618,10 @@ class KeywordValueBase(Base):
                 if obj:
                     return obj
             return obj
-        if "=" in string:
+        # We can't just blindly check whether 'string' contains an '='
+        # character as it could itself hold a string constant containing
+        # an '=', e.g. FMT='("Hello = False")'
+        if not Char_Literal_Constant.match(string) and "=" in string:
             lhs, rhs = string.split('=', 1)
             lhs = lhs.rstrip()
         else:
@@ -629,6 +646,7 @@ class KeywordValueBase(Base):
         if self.items[0] is None:
             return str(self.items[1])
         return '%s = %s' % tuple(self.items)
+
 
 class BracketBase(Base):
     """
@@ -1636,12 +1654,17 @@ class Char_Literal_Constant(Base): # R427
     """
     subclass_names = []
     rep = pattern.char_literal_constant
+
+    @staticmethod
     def match(string):
-        if string[-1] not in '"\'': return
+        if string[-1] not in '"\'':
+            return
         if string[-1]=='"':
-            abs_a_n_char_literal_constant_named = pattern.abs_a_n_char_literal_constant_named2
+            abs_a_n_char_literal_constant_named = \
+                    pattern.abs_a_n_char_literal_constant_named2
         else:
-            abs_a_n_char_literal_constant_named = pattern.abs_a_n_char_literal_constant_named1
+            abs_a_n_char_literal_constant_named = \
+                    pattern.abs_a_n_char_literal_constant_named1
         line, repmap = string_replace_map(string)
         m = abs_a_n_char_literal_constant_named.match(line)
         if not m: return
@@ -1649,7 +1672,7 @@ class Char_Literal_Constant(Base): # R427
         line = m.group('value')
         line = repmap(line)
         return line, kind_param
-    match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None: return str(self.items[0])
         return '%s_%s' % (self.items[1], self.items[0])
@@ -5571,6 +5594,7 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
             return 'READ %s' % (self.items[1])
         return 'READ %s, %s' % (self.items[1], self.items[2])
 
+
 class Write_Stmt(StmtBase): # R911
     """
 :F03R:`911`::
@@ -5583,19 +5607,25 @@ items : (Io_Control_Spec_List, Output_Item_List)
     subclass_names = []
     use_names = ['Io_Control_Spec_List', 'Output_Item_List']
     def match(string):
-        if string[:5].upper()!='WRITE': return
+        if string[:5].upper() != 'WRITE':
+            return
         line = string[5:].lstrip()
-        if not line.startswith('('): return
+        if not line.startswith('('):
+            return
         line, repmap = string_replace_map(line)
         i = line.find(')')
-        if i==-1: return
+        if i == -1:
+            return
         l = line[1:i].strip()
-        if not l: return
+        if not l:
+            return
         l = repmap(l)
-        if i==len(line)-1:
-            return Io_Control_Spec_List(l),None
-        return Io_Control_Spec_List(l), Output_Item_List(repmap(line[i+1:].lstrip()))
+        if i == len(line)-1:
+            return Io_Control_Spec_List(l), None
+        return Io_Control_Spec_List(l), \
+            Output_Item_List(repmap(line[i+1:].lstrip()))
     match = staticmethod(match)
+
     def tostr(self):
         if self.items[1] is None: return 'WRITE(%s)' % (self.items[0])
         return 'WRITE(%s) %s' % tuple(self.items)
@@ -5730,8 +5760,10 @@ class Format(StringBase): # R914
                | *
     """
     subclass_names = ['Label', 'Default_Char_Expr']
-    def match(string): return StringBase.match('*', string)
-    match = staticmethod(match)
+    @staticmethod
+    def match(string):
+        return StringBase.match('*', string)
+
 
 class Input_Item(Base): # R915
     """
@@ -6500,8 +6532,8 @@ items : ({R, K, None}, {'/', 'P', ':'})
     def match(string):
         if len(string)==1 and string in '/:$':
             if string=='$':
-                logger.debug('non-standard <control-edit-desc>: %r' % (string))
-                # print ('non-standard <control-edit-desc>: %r' % (string))
+                message = 'non-standard <control-edit-desc>: %r' % (string)
+                logging.getLogger(__name__).debug(message)
             return None, string
         if string[-1]=='/':
             return R(string[:-1].rstrip()), '/'
@@ -7656,8 +7688,7 @@ if 1: # Optimize subclass tree:
 
     def _rpl_list(clsname):
         if clsname not in Base_classes:
-            logger.debug('Not implemented: %s' % clsname)
-            # print 'Not implemented:',clsname
+            logging.getLogger(__name__).debug('Not implemented: %s' % clsname)
             return [] # remove this code when all classes are implemented
         cls = Base_classes[clsname]
         if 'match' in cls.__dict__:
@@ -7677,18 +7708,15 @@ if 1: # Optimize subclass tree:
             for n1 in _rpl_list(n):
                 if n1 not in opt_subclass_names:  opt_subclass_names.append(n1)
         if not opt_subclass_names==cls.subclass_names:
-            #print cls.__name__,':',', '.join(cls.subclass_names),'->',', '.join(opt_subclass_names)
             cls.subclass_names[:] = opt_subclass_names
-        #else:
-        #    print cls.__name__,':',opt_subclass_names
 
 
 # Initialize Base.subclasses dictionary:
 for clsname, cls in list(Base_classes.items()):
     subclass_names = getattr(cls, 'subclass_names', None)
     if subclass_names is None:
-        logger.debug('%s class is missing subclass_names list' % (clsname))
-        # print '%s class is missing subclass_names list' % (clsname)
+        message = '%s class is missing subclass_names list' % (clsname)
+        logging.getLogger(__name__).debug(message)
         continue
     try:
         l = Base.subclasses[clsname]
@@ -7698,8 +7726,8 @@ for clsname, cls in list(Base_classes.items()):
         if n in Base_classes:
             l.append(Base_classes[n])
         else:
-            logger.debug('%s not implemented needed by %s' % (n,clsname))
-            # print '%s not implemented needed by %s' % (n,clsname)
+            message = '%s not implemented needed by %s' % (n, clsname)
+            logging.getLogger(__name__).debug(message)
 
 if 1:
     for cls in list(Base_classes.values()):
@@ -7710,17 +7738,19 @@ if 1:
         for n in subclasses_names:
             break
             if n not in subclass_names:
-                logger.debug('%s needs to be added to %s subclasses_name list' % (n,cls.__name__))
-                # print '%s needs to be added to %s subclasses_name list' % (n,cls.__name__)
+                message = '%s needs to be added to %s subclasses_name list' \
+                          % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
         for n in subclass_names:
             break
             if n not in subclasses_names:
-                logger.debug('%s needs to be added to %s subclass_name list' % (n,cls.__name__))
-                # print '%s needs to be added to %s subclass_name list' % (n,cls.__name__)
+                message = '%s needs to be added to %s subclass_name list' \
+                          % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
         for n in use_names + subclass_names:
             if n not in Base_classes:
-                logger.debug('%s not defined used by %s' % (n, cls.__name__))
-                # print '%s not defined used by %s' % (n, cls.__name__)
+                message = '%s not defined used by %s' % (n, cls.__name__)
+                logging.getLogger(__name__).debug(message)
 
 
 #EOF

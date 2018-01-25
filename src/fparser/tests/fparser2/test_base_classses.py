@@ -38,12 +38,33 @@
 def test_keywordvaluebase_errors():
     ''' Unit tests for the KeywordValueBase class to check that it rejects
     invalid input '''
-    from fparser.Fortran2003 import KeywordValueBase, Io_Unit
+    from fparser.Fortran2003 import KeywordValueBase, Io_Unit, Format, \
+        Char_Literal_Constant
     lhs_cls = 'UNIT'
     rhs_cls = Io_Unit
     obj = KeywordValueBase.match(lhs_cls, rhs_cls, "  ", require_lhs=False)
     assert obj is None
     obj = KeywordValueBase.match(lhs_cls, rhs_cls, " = 36 ",)
+    assert obj is None
+    _, obj = KeywordValueBase.match("FMT", Format, "'(A)'", require_lhs=False)
+    assert isinstance(obj, Char_Literal_Constant)
+    _, obj = KeywordValueBase.match("FMT", Format, "FMT='(A)'",
+                                    require_lhs=False)
+    assert isinstance(obj, Char_Literal_Constant)
+    _, obj = KeywordValueBase.match("FMT", Format,
+                                    "FMT='(\"my_var =  \", (A))'",
+                                    require_lhs=False)
+    assert isinstance(obj, Char_Literal_Constant)
+    lhs, obj = KeywordValueBase.match("FMT", Format,
+                                      "FMT='(\"my_var =  \", (A))'",
+                                      require_lhs=True)
+    assert lhs == "FMT"
+    assert isinstance(obj, Char_Literal_Constant)
+    # Try to trigger an error by specifying that a "LHS =" is required but
+    # then omitting it while having the RHS contain a '=' character
+    obj = KeywordValueBase.match("FMT", Format,
+                                 "'(\"my_var =  \", (A))'",
+                                 require_lhs=True)
     assert obj is None
 
 
