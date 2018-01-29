@@ -5039,16 +5039,16 @@ class Block_Label_Do_Construct(BlockBase):  # R826_1
                                enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
-        l = []
+        lblock = []
         start = self.content[0]
         end = self.content[-1]
         extra_tab = '  '
-        l.append(start.tofortran(tab=tab,isfix=isfix))
+        lblock.append(start.tofortran(tab=tab, isfix=isfix))
         for item in self.content[1:-1]:
-            l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
-        if len(self.content)>1:
-            l.append(end.tofortran(tab=tab,isfix=isfix))
-        return '\n'.join(l)
+            lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
+        if len(self.content) > 1:
+            lblock.append(end.tofortran(tab=tab, isfix=isfix))
+        return '\n'.join(lblock)
 
 
 class Block_Nonlabel_Do_Construct(BlockBase):  # R826_2
@@ -5081,13 +5081,16 @@ class Label_Do_Stmt(StmtBase):  # R828
     """
     subclass_names = []
     use_names = ['Do_Construct_Name', 'Label', 'Loop_Control']
+
     @staticmethod
     def match(string):
         # do-construct-name is determined by reader
-        if string[:2].upper()!='DO': return
+        if string[:2].upper() != 'DO':
+            return
         line = string[2:].lstrip()
         m = pattern.label.match(line)
-        if m is None: return
+        if m is None:
+            return
         label = m.group()
         line = line[m.end():].lstrip()
         if line:
@@ -5115,7 +5118,7 @@ class Label_Do_Stmt(StmtBase):  # R828
     loop_control = property(lambda self: self.items[2])
 
 
-class Nonlabel_Do_Stmt(StmtBase, WORDClsBase): # R829
+class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # R829
     """
     <nonlabel-do-stmt> = [ <do-construct-name> : ] DO [ <loop-control> ]
     """
@@ -6885,11 +6888,11 @@ class Use_Stmt(StmtBase):  # R1109
         '''
         s = 'USE'
         if self.items[0] is not None and self.items[1] is not None:
-            s += ', %s %s' % (self.items[0], self.items[1])      
-        elif self.items[0] is not None and self.items[1] is None: 
+            s += ', %s %s' % (self.items[0], self.items[1])
+        elif self.items[0] is not None and self.items[1] is None:
             message = 'Module nature must be followed by "::"'
             logging.getLogger(__name__).debug(message)
-        elif self.items[0] is None and self.items[1] is not None: 
+        elif self.items[0] is None and self.items[1] is not None:
             s += ' %s' % (self.items[1])
         s += ' %s%s' % (self.items[2], self.items[3])
         if self.items[4] is not None:
