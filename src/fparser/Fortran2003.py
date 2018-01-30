@@ -5040,6 +5040,8 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         '''
         :param reader: instance of `FortranReaderBase` class
         :type reader: :py:class:`FortranReaderBase`
+        :return: code block matching the labeled "DO" construct
+        :rtype: string
         '''
         return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
                                End_Do, reader,
@@ -5050,6 +5052,8 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         '''
         :param str tab:
         :param bool isfix: whether the reader is in fixed format
+        :return: parsed representation of the labeled "DO" construct
+        :rtype: string
         '''
         lblock = []
         start = self.content[0]
@@ -5216,9 +5220,10 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
             lbrak = line[5:].lstrip()
             i = lbrak.find(')')
+            print str(i)
             if i != -1 and i == len(lbrak)-1:
                 scalar_logical_expr = \
-                    Scalar_Logical_Expr(repmap(lbrak[1:i].strip()))
+                    Scalar_Logical_Expr(repmap(lbrak[1:i].strip())),
         if line.count('=') != 1:
             return
         var, rhs = line.split('=')

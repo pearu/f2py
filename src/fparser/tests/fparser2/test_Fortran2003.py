@@ -2468,6 +2468,14 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert str(inst) == 'DO i = 1, 10\n  a = 1\nEND DO'
 
     inst = docls(get_reader('''
+      do while (a < 10)
+        a = a + 1
+      end do
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'DO WHILE (a < 10)\n  a = a + 1\nEND DO'
+
+    inst = docls(get_reader('''
       foo:do i=1,10
         a = 1
       end do foo
