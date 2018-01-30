@@ -5219,7 +5219,6 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
             lbrak = line[5:].lstrip()
             i = lbrak.find(')')
-            print str(i)
             if i != -1 and i == len(lbrak)-1:
                 scalar_logical_expr = \
                     Scalar_Logical_Expr(repmap(lbrak[1:i].strip()))
