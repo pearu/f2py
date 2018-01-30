@@ -5209,21 +5209,22 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         :rtype: 3-tuple of objects or nothing for an "infinite loop"
         '''
         optional_delim = None
-        scalar_logical_expr = None
-        counter_expr = (None, None)
-
+        # Match optional delimiter
         if string.startswith(','):
             line, repmap = string_replace_map(string[1:].lstrip())
             optional_delim = ", "
         else:
             line, repmap = string_replace_map(string)
+        # Match "WHILE" scalar logical expression
         if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
             lbrak = line[5:].lstrip()
             i = lbrak.find(')')
             print str(i)
             if i != -1 and i == len(lbrak)-1:
                 scalar_logical_expr = \
-                    Scalar_Logical_Expr(repmap(lbrak[1:i].strip())),
+                    Scalar_Logical_Expr(repmap(lbrak[1:i].strip()))
+                return scalar_logical_expr, None, optional_delim
+        # Match counter expression
         if line.count('=') != 1:
             return
         var, rhs = line.split('=')
@@ -5233,7 +5234,7 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         # pylint: disable=unbalanced-tuple-unpacking
         counter_expr = (Variable(repmap(var.rstrip())),
                         list(map(Scalar_Int_Expr, list(map(repmap, rhs)))))
-        return scalar_logical_expr, counter_expr, optional_delim
+        return None, counter_expr, optional_delim
 
     def tostr(self):
         '''

@@ -2443,6 +2443,23 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert str(inst) == 'DO 12\n  a = 1\n12 CONTINUE'
 
     inst = docls(get_reader('''
+      do 51 while (a < 10)
+        a = a + 1
+ 51   continue
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'DO 51 WHILE (a < 10)\n  a = a + 1\n51 CONTINUE'
+
+    inst = docls(get_reader('''
+      do 52
+        a = a + 1
+        if (a > 10) exit
+ 52   continue
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'DO 52\n  a = a + 1\n  IF (a > 10) EXIT\n52 CONTINUE'
+
+    inst = docls(get_reader('''
       do 12
         do 13
           a = 1
@@ -2452,6 +2469,19 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert str(inst) == 'DO 12\n  DO 13\n    a = 1\n13 CONTINUE\n12 CONTINUE'
     assert len(inst.content) == 3, repr(len(inst.content))
     assert str(inst.content[1]) == 'DO 13\n  a = 1\n13 CONTINUE'
+
+    inst = docls(get_reader('''
+      do 52, i = 1,10
+        do 53, while (j /= n)
+        j = j + i
+ 53   continue
+ 52   continue
+    '''))
+    assert len(inst.content) == 3, repr(len(inst.content))
+    assert str(inst) == ('DO 52 , i = 1, 10\n  DO 53 , WHILE (j /= n)\n'
+                         '    j = j + i\n53 CONTINUE\n52 CONTINUE')
+    assert str(inst.content[1]) == (
+        'DO 53 , WHILE (j /= n)\n  j = j + i\n53 CONTINUE')
 
 
 def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
@@ -2476,12 +2506,29 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert str(inst) == 'DO WHILE (a < 10)\n  a = a + 1\nEND DO'
 
     inst = docls(get_reader('''
+      do
+        a = a + 1
+        if (a > 10) exit
+      end do
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'DO\n  a = a + 1\n  IF (a > 10) EXIT\nEND DO'
+
+    inst = docls(get_reader('''
       foo:do i=1,10
         a = 1
       end do foo
     '''))
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'foo:DO i = 1, 10\n  a = 1\nEND DO foo'
+
+    inst = docls(get_reader('''
+      foo:do while (a < 10)
+        a = a + 1
+      end do foo
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'foo:DO WHILE (a < 10)\n  a = a + 1\nEND DO foo'
 
     inst = docls(get_reader('''
       do j=1,2
@@ -2491,8 +2538,36 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
       end do
     '''))
     assert isinstance(inst, docls), repr(inst)
-    assert str(inst) == ('DO j = 1, 2\n  '
-                         'foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
+    assert str(inst) == ('DO j = 1, 2\n'
+                         '  foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
+
+    inst = docls(get_reader('''
+      do while (j >= n)
+      bar:do i=1,10
+        a = i + j
+      end do bar
+      j = j - 1
+      end do
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == ('DO WHILE (j >= n)\n'
+                         '  bar:DO i = 1, 10\n    a = i + j\n  END DO bar\n'
+                         '  j = j - 1\nEND DO')
+
+    inst = docls(get_reader('''
+      do, i = 1,10
+      bar: do, while (j /= n)
+        a = i - j
+      end do bar
+      end do
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == ('DO , i = 1, 10\n'
+                         '  bar:DO , WHILE (j /= n)\n    a = i - j\n  END DO bar\n'
+                         'END DO')
+    assert len(inst.content) == 3, repr(len(inst.content))
+    assert str(inst.content[1]) == (
+        'bar:DO , WHILE (j /= n)\n  a = i - j\nEND DO bar')
 
 
 def test_Label_Do_Stmt():  # pylint: disable=invalid-name
