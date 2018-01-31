@@ -158,7 +158,7 @@ class Base(ComparableMixin):
                 is either str or FortranReaderBase.
       .item   - Line instance (holds label) or None.
     """
-    # This dict of subclasses is set-up dynamically by code at the end
+    # This dict of subclasses is populated dynamically by code at the end
     # of this module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
@@ -168,8 +168,7 @@ class Base(ComparableMixin):
         """
         Create a new instance of this object.
 
-        :param cls: the class of object to create
-        :type cls: :py:type:`type`
+        :param type cls: the class of object to create
         :param string: (source of) Fortran string to parse
         :type string: str or :py:class:`FortranReaderBase`
         :param parent_cls: the parent class of this object
@@ -184,23 +183,41 @@ class Base(ComparableMixin):
         # Get the class' match method if it has one
         match = cls.__dict__.get('match')
 
-        result = None
+        if cls == Comment and isinstance(string, FortranReaderBase):
+            reader = string
+            item = reader.get_item()
+            if item is None:
+                return
+            if isinstance(item, readfortran.Comment):
+                return Comment(item)
+            else:
+                reader.put_item(item)
+                return
+
+        print("NEW: class = ", cls)
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
             if item is None:
                 return
-            try:
-                obj = item.parse_line(cls, parent_cls)
-            except NoMatchError:
+            if isinstance(item, readfortran.Comment):
+                # We got a comment but we weren't after a comment (we handle
+                # cls==Comment just above)
                 obj = None
+            else:
+                try:
+                    obj = item.parse_line(cls, parent_cls)
+                except NoMatchError:
+                    obj = None
             if obj is None:
+                # No match so give the item back to the reader
                 reader.put_item(item)
                 return
             obj.item = item
             return obj
 
+        result = None
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
@@ -211,6 +228,7 @@ class Base(ComparableMixin):
                     # avoid recursion 1.
                     raise
 
+        print("RESULT = ", result)
         if isinstance(result, tuple):
             obj = object.__new__(cls)
             obj.string = string
@@ -221,6 +239,8 @@ class Base(ComparableMixin):
         elif isinstance(result, Base):
             return result
         elif result is None:
+            # Loop over the possible sub-classes of this class and
+            # check for matches
             for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls: # avoid recursion 2.
                     continue
@@ -293,14 +313,34 @@ content : tuple
               enable_case_construct_hook=False):
         '''
         '''
+#        import pdb; pdb.set_trace()
+
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
+
         if startcls is not None:
+            # Deal with any preceding comments
+            try:
+                while True:
+                    obj = Comment(reader)
+                    if obj:
+                        print("CONTENT: ", str(obj))
+                        content.append(obj)
+                    else:
+                        break
+            except NoMatchError:
+                pass
+            # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
             except NoMatchError:
                 obj = None
             if obj is None:
+                # Ultimately we failed to find a match for the
+                # start of the block so put back any comments that
+                # we processed along the way
+                for obj in reversed(content):
+                    obj.restore_reader(reader)
                 return
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
@@ -1050,48 +1090,12 @@ class Type_Declaration_StmtBase(StmtBase):
 ############################### SECTION  2 ####################################
 ###############################################################################
 
-class Program(BlockBase): # R201
-    """
-:F03R:`201`::
-    <program> = <program-unit>
-                  [ <program-unit> ] ...
-    """
-    subclass_names = []
-    use_names = ['Program_Unit']
-    
-    @staticmethod
-    def match(reader):
-        try:
-            result = BlockBase.match(Program_Unit, [Program_Unit],
-                                     None, reader)
-        except NoMatchError:
-            result = None
-        if result is not None:
-            return result
-        return BlockBase.match(Main_Program0, [], None, reader)
-
 
 class Comment(Base):
     '''
     Represents a Fortran Comment
     '''
     subclass_names = []
-
-    _regex = re.compile(r'\s*!.*', re.I)
-    @staticmethod
-    def match(string):
-        '''
-        :param str string: string to match against
-        :return: If matched then tuple of comment string and None
-                 otherwise None
-        :rtype: 2-tuple or None
-        '''
-        if not string.strip():
-            return string,
-        if not Comment._regex.match(string):
-            return
-        idx = string.find('!')
-        return string[idx+1:],
 
     def init(self, string):
         '''
@@ -1124,6 +1128,26 @@ class Comment(Base):
         '''
         reader.put_item(self.item)
 
+class Program(BlockBase): # R201
+    """
+:F03R:`201`::
+    <program> = <program-unit>
+                  [ <program-unit> ] ...
+    """
+    subclass_names = ['Comment']
+    use_names = ['Program_Unit']
+    
+    @staticmethod
+    def match(reader):
+        try:
+            result = BlockBase.match(Program_Unit, [Program_Unit],
+                                     None, reader)
+        except NoMatchError:
+            result = None
+        if result is not None:
+            return result
+        return BlockBase.match(Main_Program0, [], None, reader)
+
 
 class Program_Unit(Base): # R202
     """
@@ -1135,6 +1159,7 @@ class Program_Unit(Base): # R202
     """
     subclass_names = ['Comment', 'Main_Program', 'External_Subprogram',
                       'Module', 'Block_Data']
+
 
 class External_Subprogram(Base): # R203
     """
@@ -7768,6 +7793,7 @@ for clsname in _names:
     if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
             not cls.__name__.endswith('Base')):
         continue
+
     names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
     for n in names:
         if n in _names: continue

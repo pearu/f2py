@@ -372,8 +372,9 @@ class Comment(object):
         '''
         Equivalent of Line.parse_line() for comments
         '''
-        obj = cls(self.comment, parent_cls=[parent_cls])
-        return obj
+        # If we get here it's an error!
+        # TODO remove this function altogether?
+        raise Exception("Shouldn't have called parse_line for a Comment")
 
 
 class MultiLine(object):
@@ -1127,7 +1128,6 @@ class FortranReaderBase(object):
             have_comment |= had_comment
             lines = [newline]
             next_line = self.get_next_line()
-
             while _is_fix_cont(next_line) or _is_fix_comment(next_line,
                                                              isstrict):
                 # handle fix format line continuations for F90 or
