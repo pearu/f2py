@@ -2062,7 +2062,7 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
 
 class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
     """
-    R447 private-components-stmt
+    R447
 
     <private-components-stmt> = PRIVATE
     """
@@ -5050,7 +5050,7 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
 
     def tofortran(self, tab='', isfix=None):
         '''
-        :param str tab:
+        :param str tab: tab character or empty string
         :param bool isfix: whether the reader is in fixed format
         :return: parsed representation of the labeled "DO" construct
         :rtype: string
@@ -5138,6 +5138,7 @@ class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
         :return: parsed representation of labeled "DO" statement
         :rtype: string
         '''
+        # pylint: disable=unbalanced-tuple-unpacking
         name, label, loop_control = self.items
         if name is None:
             dostmt = 'DO %s' % (label)
@@ -5208,6 +5209,7 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
                  counter and scalar integer expression)
         :rtype: 3-tuple of objects or nothing for an "infinite loop"
         '''
+        # pylint: disable=unbalanced-tuple-unpacking
         optional_delim = None
         # Match optional delimiter
         if string.startswith(','):
@@ -5230,7 +5232,6 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
         if not 2 <= len(rhs) <= 3:
             return
-        # pylint: disable=unbalanced-tuple-unpacking
         counter_expr = (Variable(repmap(var.rstrip())),
                         list(map(Scalar_Int_Expr, list(map(repmap, rhs)))))
         return None, counter_expr, optional_delim
@@ -5240,6 +5241,7 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         :return: parsed representation of loop control construct
         :rtype: string
         '''
+        # pylint: disable=unbalanced-tuple-unpacking
         scalar_logical_expr, counter_expr, optional_delim = self.items
         if scalar_logical_expr is not None:
             loopctrl = 'WHILE (%s)' % scalar_logical_expr

@@ -2507,12 +2507,14 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
 
     inst = docls(get_reader('''
       do
-        a = a + 1
-        if (a > 10) exit
+        a = a - 1
+        if (a < 10) exit
       end do
     '''))
     assert isinstance(inst, docls), repr(inst)
-    assert str(inst) == 'DO\n  a = a + 1\n  IF (a > 10) EXIT\nEND DO'
+    assert str(inst) == 'DO\n  a = a - 1\n  IF (a < 10) EXIT\nEND DO'
+    assert len(inst.content) == 4, repr(len(inst.content))
+    assert str(inst.content[2]) == 'IF (a < 10) EXIT'
 
     inst = docls(get_reader('''
       foo:do i=1,10
@@ -2562,9 +2564,10 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
       end do
     '''))
     assert isinstance(inst, docls), repr(inst)
-    assert str(inst) == ('DO , i = 1, 10\n'
-                         '  bar:DO , WHILE (j /= n)\n    a = i - j\n  END DO bar\n'
-                         'END DO')
+    assert str(inst) == (
+        'DO , i = 1, 10\n'
+        '  bar:DO , WHILE (j /= n)\n    a = i - j\n  END DO bar\n'
+        'END DO')
     assert len(inst.content) == 3, repr(len(inst.content))
     assert str(inst.content[1]) == (
         'bar:DO , WHILE (j /= n)\n  a = i - j\nEND DO bar')
@@ -2602,11 +2605,11 @@ def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
         '20 rotm(i, j) = r2(j, i)')
 
     inst = docls(get_reader('''
-      do  20,  i = 1, 3
+      do  20  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(inst, Action_Term_Do_Construct), repr(inst)
-    assert str(inst) == 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)'
+    assert str(inst) == 'DO 20 i = 1, 3\n20 rotm(i, j) = r2(j, i)'
 
     inst = docls(get_reader('''
     do  50,  i = n, m, -1
