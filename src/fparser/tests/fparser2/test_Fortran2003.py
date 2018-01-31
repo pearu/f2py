@@ -2443,6 +2443,14 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert str(inst) == 'DO 12\n  a = 1\n12 CONTINUE'
 
     inst = docls(get_reader('''
+      foo: do 21, i=1,10
+        a = 1
+ 21   end do foo
+    '''))
+    assert isinstance(inst, docls), repr(inst)
+    assert str(inst) == 'foo:DO 21 , i = 1, 10\n  a = 1\n21 END DO foo'
+
+    inst = docls(get_reader('''
       do 51 while (a < 10)
         a = a + 1
  51   continue
