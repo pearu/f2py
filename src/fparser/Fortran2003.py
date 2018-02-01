@@ -183,18 +183,28 @@ class Base(ComparableMixin):
         # Get the class' match method if it has one
         match = cls.__dict__.get('match')
 
-        if cls == Comment and isinstance(string, FortranReaderBase):
-            reader = string
-            item = reader.get_item()
-            if item is None:
-                return
-            if isinstance(item, readfortran.Comment):
-                return Comment(item)
+        if cls == Comment:
+            if isinstance(string, readfortran.Comment):
+                # We were after a comment and we got a comment. Construct
+                # one manually to avoid recursively calling this __new__
+                # method again...
+                obj = object.__new__(cls)
+                obj.init(string)
+                return obj
+            elif isinstance(string, FortranReaderBase):
+                reader = string
+                item = reader.get_item()
+                if item is None:
+                    return
+                if isinstance(item, readfortran.Comment):
+                    return Comment(item)
+                else:
+                    reader.put_item(item)
+                    return
             else:
-                reader.put_item(item)
+                # We didn't get a comment
                 return
 
-        print("NEW: class = ", cls)
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
             reader = string
@@ -253,6 +263,9 @@ class Base(ComparableMixin):
         else:
             raise AssertionError(repr(result))
         errmsg = "{0}: '{1}'".format(cls.__name__, string)
+        if isinstance(string, FortranReaderBase):
+            print("FIFO: ", string.fifo_item)
+            #import pdb; pdb.set_trace()
         raise NoMatchError(errmsg)
 
     def init(self, *items):
@@ -313,8 +326,6 @@ content : tuple
               enable_case_construct_hook=False):
         '''
         '''
-#        import pdb; pdb.set_trace()
-
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
@@ -324,7 +335,7 @@ content : tuple
                 while True:
                     obj = Comment(reader)
                     if obj:
-                        print("CONTENT: ", str(obj))
+                        print("CONTENT: ", str(obj), type(obj))
                         content.append(obj)
                     else:
                         break
@@ -439,6 +450,7 @@ content : tuple
                 for obj in reversed(content):
                     obj.restore_reader(reader)
                 return
+                # TODO remove unreachable code after the above return
                 item = reader.get_item()
                 if item is not None:
                     if content:
@@ -1097,13 +1109,15 @@ class Comment(Base):
     '''
     subclass_names = []
 
-    def init(self, string):
+    def init(self, comment):
         '''
         Initialise this Comment
 
-        :param str string: The content of the comment
+        :param  comment: The comment object produced by the reader
+        :type comment: :py:class:`readfortran.Comment`
         '''
-        self.items = [string]
+        self.items = [comment.comment]
+        self.item = comment
 
     def tostr(self):
         '''
