@@ -368,14 +368,6 @@ class Comment(object):
         '''
         return ignore_comments
 
-    def parse_line(self, cls, parent_cls):
-        '''
-        Equivalent of Line.parse_line() for comments
-        '''
-        # If we get here it's an error!
-        # TODO remove this function altogether?
-        raise Exception("Shouldn't have called parse_line for a Comment")
-
 
 class MultiLine(object):
     """ Holds PYF file multiline.
@@ -481,18 +473,13 @@ class FortranReaderBase(object):
                 if fn is not None:
                     return fn
 
-    def set_mode(self, isfree, isstrict, ignore_inline_comments=False):
+    def set_mode(self, isfree, isstrict):
         """
         Set Fortran code mode.
 
         :param bool isfree: Whether or not source if free-format
         :param bool isstrict: whether or not parser strictly enforces
                               free/fixed format
-        :param bool ignore_inline_comments: Whether or not to ignore in-line
-                                            comments. (If they are kept then
-                                            they become a new comment line
-                                            immediate following the current
-                                            line of code.)
 
         See also
         --------
@@ -519,7 +506,6 @@ class FortranReaderBase(object):
             assert False
         self.mode = mode
         self.name = '%s mode=%s' % (self.source, mode)
-        self.ignore_inline_comments = ignore_inline_comments
         return
 
     def set_mode_from_str(self, mode):
@@ -640,6 +626,7 @@ class FortranReaderBase(object):
             item = self.next(ignore_comments=False)
         except StopIteration:
             return
+        print("get_item: ", str(item))
         return item
 
     def put_item(self, item):
@@ -658,7 +645,7 @@ class FortranReaderBase(object):
     def __next__(self):
         return self.next()
 
-    def next(self, ignore_comments = False):
+    def next(self, ignore_comments=False):
         """ Return the next Fortran code item.
 
         Include statements are realized.
@@ -707,7 +694,7 @@ class FortranReaderBase(object):
             return item
         except StopIteration:
             raise
-        except:
+        except Exception as err:
             message = self.format_message('FATAL ERROR',
                                           'while processing line',
                                           self.linecount, self.linecount)
@@ -716,6 +703,7 @@ class FortranReaderBase(object):
                               ''.join( traceback.format_stack())))
             logging.getLogger(__name__).debug(message)
             logging.getLogger(__name__).critical('STOPPED READING')
+            #import pdb; pdb.set_trace()
             raise StopIteration
 
     def _next(self, ignore_comments=False):
@@ -936,10 +924,13 @@ class FortranReaderBase(object):
         if quotechar is None and idx != -1:
             # first try a quick method:
             newline = line[:idx]
+            print("newline = ", newline)
+
             if '"' not in newline and '\'' not in newline:
                 if self.isf77 or not line[idx:].startswith('!f2py'):
-                    if not self.ignore_inline_comments or not newline.lstrip():
-                        put_item(self.comment_item(line[idx:], lineno, lineno))
+#                    if not newline.lstrip():
+                    print("Returning comment to fifo: ", line[idx:])
+                    put_item(self.comment_item(line[idx:], lineno, lineno))
                     return newline, quotechar, True
 
         # We must allow for quotes...
@@ -964,8 +955,7 @@ class FortranReaderBase(object):
                 newline = ''.join(noncomment_items) + commentline[5:]
                 self.f2py_comment_lines.append(lineno)
                 return self.handle_inline_comment(newline, lineno, quotechar)
-            if not self.ignore_inline_comments:
-                put_item(self.comment_item(commentline, lineno, lineno))
+            put_item(self.comment_item(commentline, lineno, lineno))
             had_comment = True
         return ''.join(noncomment_items), newquotechar, had_comment
 
@@ -1173,7 +1163,6 @@ class FortranReaderBase(object):
         start_index = 0
         if self.isfix:
             start_index = 6
-
         lines = []
         lines_append = lines.append
         put_item = self.fifo_item.append
