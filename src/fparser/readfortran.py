@@ -159,15 +159,20 @@ _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==
 _label_re = re.compile(r'\s*(?P<label>\d+)\s*(\b|(?=&)|\Z)',re.I)
 _construct_name_re = re.compile(r'\s*(?P<name>\w+)\s*:\s*(\b|(?=&)|\Z)',re.I)
 _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).match
-def _is_fix_comment(line, isstrict):
-    """ Check if line is a comment line in fixed format Fortran source.
+def _is_fix_comment(line, isstrict, isfix=True):
+    """ 
+    Check if line is a comment line in fixed format Fortran source.
+
+    :param str line: Line of code to check
+    :param bool isstrict: Whether we are strictly enforcing fixed/free fmt
+    :param bool isfix: Whether code is fixed format
 
     References
     ----------
     :f2008:`3.3.3`
     """
     if line:
-        if line[0] in '*cC!':
+        if line[0] in '*cC!' and isfix:
             return True
         if not isstrict:
             i = line.find('!')
@@ -185,6 +190,7 @@ def _is_fix_comment(line, isstrict):
     elif line=='':
         return True
     return False
+
 _hollerith_start_search = re.compile(r'(?P<pre>\A|,\s*)(?P<num>\d+)h',re.I).search
 _is_call_stmt = re.compile(r'call\b', re.I).match
 
@@ -599,7 +605,8 @@ class FortranReaderBase(object):
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace('\xa0',' ').rstrip()
         self.source_lines.append(line)
-        if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict):
+        if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict,
+                                               isfix=self.isfix):
             return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
