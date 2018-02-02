@@ -2301,6 +2301,7 @@ end if
    82       xnew(k) = xin(k) + betx*(xnew(k)-xin(k))
           endif
         endif'''))
+    assert isinstance(a, cls)
 
 
 def test_if_nonblock_do():
@@ -2386,6 +2387,7 @@ END ASSOCIATE
     '''))
     assert_equal(str(a),'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
 
+
 def test_Select_Type_Construct(): # R821
     cls = Select_Type_Construct
     tree = cls(get_reader('''\
@@ -2395,23 +2397,7 @@ PRINT *, A%X, A%Y ! This block gets executed
 TYPE IS ( POINT_3D )
 PRINT *, A%X, A%Y, A%Z
 END SELECT n
-    ''', ignore_inline_comments=True))
-    assert isinstance(tree, cls), repr(tree)
-    print(str(tree))
-    assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
-            "  CLASS IS (POINT)\n"
-            "  PRINT *, A % X, A % Y\n"
-            "  TYPE IS (POINT_3D)\n"
-            "  PRINT *, A % X, A % Y, A % Z\n"
-            "END SELECT n")
-    tree = cls(get_reader('''\
-n:SELECT TYPE ( A => P_OR_C )
-CLASS IS ( POINT )
-PRINT *, A%X, A%Y ! This block gets executed
-TYPE IS ( POINT_3D )
-PRINT *, A%X, A%Y, A%Z
-END SELECT n
-    ''', ignore_inline_comments=False))
+    ''', ignore_comments=False))
     print(str(tree))
     assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
             "  CLASS IS (POINT)\n"
@@ -3238,6 +3224,7 @@ end
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b\nEND MODULE m')
 
+
 def test_Module_Subprogram_Part(): # R1107
     cls = Module_Subprogram_Part
     a = cls(get_reader('''\
@@ -3248,8 +3235,11 @@ contains
   end
     '''))
     assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a\n  a = 1.0\nEND SUBROUTINE foo')
-    
+    print str(a)
+    assert (str(a) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
+            '\n  a = 1.0\nEND SUBROUTINE foo\n')
+
+
 def test_Use_Stmt(): # R1109
 
     cls = Use_Stmt
@@ -3728,6 +3718,7 @@ def test_End_Function_Stmt(): # R1230
     a = cls('endfunction foo')
     assert_equal(str(a), 'END FUNCTION foo')
 
+
 def test_Subroutine_Subprogram(): # R1231
 
         reader = get_reader('''\
@@ -3735,9 +3726,12 @@ def test_Subroutine_Subprogram(): # R1231
       end subroutine foo''')
         cls = Subroutine_Subprogram
         a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'SUBROUTINE foo\nEND SUBROUTINE foo')
-        assert_equal(repr(a),"Subroutine_Subprogram(Subroutine_Stmt(None, Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', Name('foo')))")
+        print str(a)
+        assert isinstance(a, cls), repr(a)
+        assert str(a) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
+        assert (repr(a) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
+                "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
+                "Name('foo')))")
 
         reader = get_reader('''\
       subroutine foo
@@ -3745,8 +3739,9 @@ def test_Subroutine_Subprogram(): # R1231
       end subroutine foo''')
         cls = Subroutine_Subprogram
         a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'SUBROUTINE foo\n  INTEGER :: a\nEND SUBROUTINE foo')
+        assert isinstance(a, cls), repr(a)
+        assert (str(a) == 'SUBROUTINE foo\n  INTEGER :: a\nEND SUBROUTINE foo')
+
 
 def test_Subroutine_Stmt(): # R1232
 
@@ -3851,7 +3846,7 @@ def test_prog_comments():
    program foo
      ! A full comment line
      write(*,*) my_int ! An in-line comment
-    end program foo''', ignore_inline_comments=True, isfree=True)
+    end program foo''', isfree=True)
 
     obj = cls(reader)
     assert type(obj) == Program
@@ -3860,22 +3855,28 @@ def test_prog_comments():
     #   |--> Comment
     #   |--> Main_Program
     #   .    |--> Program_Stmt
-    #        |--> Comment
+    #   .    |--> Specification_Part
+    #   .    .    \--> Implicit_Part
+    #   .    .         \--> Comment
     #        |--> Execution_Part
     #        |    |--> Write_Stmt
-    #        .    .
+    #        |    \--> Comment
+    #        .    
     from fparser.Fortran2003 import walk_ast
     walk_ast(obj.content, [Comment], debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
-    assert type(obj.content[1].content[1]) == Comment
-    assert str(obj.content[1].content[1]) == "! A full comment line"
-    assert type(obj.content[1].content[2].content[0]) == Write_Stmt
-    # Check that we have removed the in-line comment
-    assert len(obj.content[1].content[2].content) == 1
-    assert type(obj.content[1].content[3]) == End_Program_Stmt
-    assert "An in-line comment" not in str(obj)
+    main_prog = obj.content[1]
+    assert type(main_prog.content[1].content[0].content[0]) == Comment
+    assert str(main_prog.content[1].content[0].content[0]) == "! A full comment line"
+    exec_part = main_prog.content[2]
+    assert type(exec_part.content[0]) == Write_Stmt
+    # Check that we have the in-line comment as a second statement
+    assert len(exec_part.content) == 2
+    assert type(exec_part.content[1]) == Comment
+    assert type(main_prog.content[3]) == End_Program_Stmt
+    assert "! An in-line comment" in str(obj)
 
 
 def test_module_comments():

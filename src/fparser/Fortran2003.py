@@ -238,7 +238,6 @@ class Base(ComparableMixin):
                     # avoid recursion 1.
                     raise
 
-        print("RESULT = ", result)
         if isinstance(result, tuple):
             obj = object.__new__(cls)
             obj.string = string
@@ -263,9 +262,6 @@ class Base(ComparableMixin):
         else:
             raise AssertionError(repr(result))
         errmsg = "{0}: '{1}'".format(cls.__name__, string)
-        if isinstance(string, FortranReaderBase):
-            print("FIFO: ", string.fifo_item)
-            #import pdb; pdb.set_trace()
         raise NoMatchError(errmsg)
 
     def init(self, *items):
@@ -335,7 +331,6 @@ content : tuple
                 while True:
                     obj = Comment(reader)
                     if obj:
-                        print("CONTENT: ", str(obj), type(obj))
                         content.append(obj)
                     else:
                         break
@@ -362,119 +357,107 @@ content : tuple
             if match_names:
                 start_name = obj.get_start_name()
         # A comment is always a valid sub-class
-        classes = [Comment]
         if endcls is not None:
-            classes += subclasses + [endcls]
+            classes = subclasses + [Comment, endcls]
         else:
-            classes += subclasses[:]
+            classes = subclasses[:] + [Comment]
         if endcls is not None:
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
+
+        # Start trying to match the various subclasses, starting from
+        # the beginning of the list (where else?)
         i = 0
-        while classes:
+        had_match = False
+        found_end = False
+        while i < len(classes):
             if enable_do_label_construct_hook:
                 try:
                     obj = startcls(reader)
                 except NoMatchError:
                     obj = None
                 if obj is not None:
-                    if isinstance(obj, Comment) or \
-                       start_label == obj.get_start_label():
+                    if start_label == obj.get_start_label():
                         content.append(obj)
                         continue
                     else:
                         obj.restore_reader(reader)
+            # Attempt to match the i'th subclass
             cls = classes[i]
             try:
                 obj = cls(reader)
             except NoMatchError:
                 obj = None
             if obj is None:
-                j = i
-                for cls in classes[i+1:]:
-                    j += 1
-                    try:
-                        obj = cls(reader)
-                    except NoMatchError:
-                        obj = None
-                    if obj is not None:
-                        break
-                if obj is not None:
-                    i = j
-            if obj is not None:
-                content.append(obj)
-                if match_names and isinstance(obj, match_name_classes):
-                    end_name = obj.get_end_name()
-                    if end_name != start_name:
+                # No match for this class, continue checking the list
+                # starting from the i+1'th...
+                i += 1
+                continue
+
+            # We got a match for this class
+            print("Matched class {0}: {1}".format(classes[i], str(obj)))
+            had_match = True
+            content.append(obj)
+
+            if match_names and isinstance(obj, match_name_classes):
+                end_name = obj.get_end_name()
+                if end_name != start_name:
+                    reader.warning('expected construct name "%s" but '
+                                   'got "%s"' % (start_name, end_name))
+
+            if endcls is not None and isinstance(obj, endcls_all):
+                if match_labels:
+                    start_label, end_label = content[start_idx].get_start_label(),\
+                                             content[-1].get_end_label()
+                    if start_label != end_label:
+                        continue
+                if match_names:
+                    start_name, end_name = content[start_idx].get_start_name(), \
+                                           content[-1].get_end_name()
+                    if set_unspecified_end_name and end_name is None and \
+                       start_name is not None:
+                        content[-1].set_name(start_name)
+                    elif start_name != end_name:
                         reader.warning('expected construct name "%s" but '
                                        'got "%s"' % (start_name, end_name))
-                    
-                if endcls is not None and isinstance(obj, endcls_all):
-                    if match_labels:
-                        start_label, end_label = content[start_idx].get_start_label(),\
-                                                 content[-1].get_end_label()
-                        if start_label != end_label:
-                            continue
-                    if match_names:
-                        start_name, end_name = content[start_idx].get_start_name(), \
-                                               content[-1].get_end_name()
-                        if set_unspecified_end_name and end_name is None and \
-                           start_name is not None:
-                            content[-1].set_name(start_name)
-                        elif start_name != end_name:
-                            reader.warning('expected construct name "%s" but '
-                                           'got "%s"' % (start_name, end_name))
-                            continue
-                    break
-                if enable_if_construct_hook:
-                    if isinstance(obj, Else_If_Stmt):
-                        i = 0
-                    if isinstance(obj, (Else_Stmt, End_If_Stmt)):
-                        enable_if_construct_hook = False
-                if enable_where_construct_hook:
-                    if isinstance(obj, Masked_Elsewhere_Stmt):
-                        i = 0
-                    if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
-                        enable_where_construct_hook = False
-                if enable_select_type_construct_hook:
-                    if isinstance(obj, Type_Guard_Stmt):
-                        i = 1
-                    if isinstance(obj, End_Select_Type_Stmt):
-                        enable_select_type_construct_hook = False
-                if enable_case_construct_hook:
-                    if isinstance(obj, Case_Stmt):
-                        i = 1
-                    if isinstance(obj, End_Select_Stmt):
-                        enable_case_construct_hook = False
-                continue
+                        continue
+                # We've found the enclosing end statement so break out
+                found_end = True
+                break
+            # Return to start of classes list now that we've matched
+            i = 0
+            if enable_if_construct_hook:
+                if isinstance(obj, Else_If_Stmt):
+                    # Got an else-if so go back to start of possible
+                    # classes to match
+                    i = 0
+                if isinstance(obj, (Else_Stmt, End_If_Stmt)):
+                    # Found end-if
+                    enable_if_construct_hook = False
+            if enable_where_construct_hook:
+                if isinstance(obj, Masked_Elsewhere_Stmt):
+                    i = 0
+                if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
+                    enable_where_construct_hook = False
+            if enable_select_type_construct_hook:
+                if isinstance(obj, Type_Guard_Stmt):
+                    i = 1
+                if isinstance(obj, End_Select_Type_Stmt):
+                    enable_select_type_construct_hook = False
+            if enable_case_construct_hook:
+                if isinstance(obj, Case_Stmt):
+                    i = 1
+                if isinstance(obj, End_Select_Stmt):
+                    enable_case_construct_hook = False
+            continue
+
+        if not had_match or endcls and not found_end:
+            # We did not get a match from any of the subclasses or
+            # failed to find the endcls
             if endcls is not None:
                 for obj in reversed(content):
                     obj.restore_reader(reader)
                 return
-                # TODO remove unreachable code after the above return
-                item = reader.get_item()
-                if item is not None:
-                    if content:
-                        reader.info('closing <%s> not found while '
-                                    'reaching %s' % (endcls.__name__.lower(),
-                                                     item),
-                                    item=content[0].item)
-                    else:
-                        reader.info('closing <%s> not found while reaching %s'
-                                    % (endcls.__name__.lower(), item))
-                    # no match found, restoring consumed reader items
-                    reader.put_item(item)
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                if content:
-                    reader.info('closing <%s> not found while reaching eof' % (endcls.__name__.lower()), item=content[0].item)
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                else:
-                    reader.error('unexpected eof file while looking line for <%s>.'\
-                                 % (classes[-1].__name__.lower().replace('_','-')))
-            break
+
         if not content:
             return
         if startcls is not None and endcls is not None:
@@ -519,6 +502,15 @@ content : tuple
         :rtype: str
         '''
         l = []
+#TODO does this commented-out code need to be re-instated?
+#        # Deal with any comments that come before the block
+#        for idx, node in enumerate(self.content):
+#            if isinstance(node, Comment):
+#                l.append(node.tofortran(tab=tab, isfix=isfix))
+#            else:
+#                break
+#        start_idx = idx  # Save the index of the first non-comment
+#        start = node
         start_idx = 0
         start = self.content[0]
         end = self.content[-1]
@@ -1124,13 +1116,7 @@ class Comment(Base):
         :return: this comment as a string
         :rtype: str
         '''
-        body = str(self.items[0])
-        if body.strip():
-            # Only prefix the comment with a '!' if it actually
-            # contains something
-            return "!" + body
-        else:
-            return body
+        return str(self.items[0])
 
     def restore_reader(self, reader):
         '''

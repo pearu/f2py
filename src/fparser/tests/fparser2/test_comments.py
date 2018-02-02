@@ -1,0 +1,124 @@
+# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# All rights reserved.
+
+# Modifications made as part of the fparser project are distributed
+# under the following license:
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+''' Module containing tests for aspects of fparser2 related to comments '''
+
+from fparser.Fortran2003 import *
+from fparser.api import get_reader
+
+
+def test_simple_prog():
+    ''' Tests simplest case of comments in a program unit '''
+    cls = Program
+    tree = cls(get_reader('''\
+PROGRAM a_prog
+! A full line comment
+PRINT *, "Hello" ! This block gets executed
+END PROGRAM a_prog
+    ''', ignore_comments=False))
+    print(str(tree))
+    assert (str(tree) == "PROGRAM a_prog\n"
+            "  ! A full line comment\n"
+            "  PRINT *, \"Hello\"\n"
+            "  ! This block gets executed\n"
+            "END PROGRAM a_prog\n")
+
+
+def test_ifthen():
+    ''' Tests for comments within an if-then block '''
+    cls = Program
+    tree = cls(get_reader('''\
+PROGRAM a_prog
+IF(.TRUE.)THEN
+! A full line comment
+PRINT *, "Hello"
+! Another full line comment
+END IF
+END PROGRAM a_prog
+    ''', ignore_comments=False))
+    print(str(tree))
+    assert (str(tree) == "PROGRAM a_prog\n"
+            "  IF (.TRUE.) THEN\n"
+            "    ! A full line comment\n"
+            "    PRINT *, \"Hello\"\n"
+            "    ! Another full line comment\n"
+            "  END IF\n"
+            "END PROGRAM a_prog\n")
+
+
+def test_inline_ifthen():
+    ''' Tests for in-line comments within an if-then block '''
+    tree = Program(get_reader('''\
+PROGRAM a_prog
+IF(.TRUE.)THEN
+PRINT *, "Hello" ! An in-line comment here
+END IF
+END PROGRAM a_prog
+    ''', ignore_comments=False))
+    assert isinstance(tree, Program)
+    print(str(tree))
+    assert (str(tree) == "PROGRAM a_prog\n"
+            "  IF (.TRUE.) THEN\n"
+            "    PRINT *, \"Hello\"\n"
+            "    ! An in-line comment here\n"
+            "  END IF\n"
+            "END PROGRAM a_prog\n")
+
+
+def test_fixed_fmt():
+    ''' Test that we handle comments in fixed-format mode '''
+    reader = get_reader('''\
+      subroutine foo
+c this is a subroutine
+        end subroutine foo''', isfree=False, ignore_comments=True)
+    cls = Subroutine_Subprogram
+    obj = cls(reader)
+    print str(obj)
+    assert isinstance(obj, cls), repr(obj)
+    assert str(obj) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
+    assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
+            "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
+            "Name('foo')))")
+    reader = get_reader('''\
+      subroutine foo
+c this is a subroutine
+      end subroutine foo''', isfree=False, ignore_comments=False)
+    cls = Subroutine_Subprogram
+    obj = cls(reader)
+    print str(obj)
+    assert isinstance(obj, cls), repr(obj)
+    assert (str(obj) == 'SUBROUTINE foo\nc this is a subroutine\n'
+            'END SUBROUTINE foo')
+    assert (repr(a) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
+            "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
+            "Name('foo')))")
