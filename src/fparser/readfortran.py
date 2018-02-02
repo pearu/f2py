@@ -159,20 +159,21 @@ _is_fix_cont = lambda line: line and len(line)>5 and line[5]!=' ' and line[:5]==
 _label_re = re.compile(r'\s*(?P<label>\d+)\s*(\b|(?=&)|\Z)',re.I)
 _construct_name_re = re.compile(r'\s*(?P<name>\w+)\s*:\s*(\b|(?=&)|\Z)',re.I)
 _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).match
-def _is_fix_comment(line, isstrict, isfix=True):
+
+
+def _is_fix_comment(line, isstrict):
     """ 
     Check if line is a comment line in fixed format Fortran source.
 
     :param str line: Line of code to check
     :param bool isstrict: Whether we are strictly enforcing fixed/free fmt
-    :param bool isfix: Whether code is fixed format
 
     References
     ----------
     :f2008:`3.3.3`
     """
     if line:
-        if line[0] in '*cC!' and isfix:
+        if line[0] in '*cC!':
             return True
         if not isstrict:
             i = line.find('!')
@@ -605,9 +606,9 @@ class FortranReaderBase(object):
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace('\xa0',' ').rstrip()
         self.source_lines.append(line)
-        if ignore_comments and _is_fix_comment(line, isstrict=self.isstrict,
-                                               isfix=self.isfix):
-            return self.get_single_line(ignore_empty, ignore_comments)
+        if ignore_comments and (self.isfix or self.isf77):
+            if _is_fix_comment(line, isstrict=self.isstrict):
+                return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
             return self.get_single_line(ignore_empty, ignore_comments)
@@ -1119,6 +1120,8 @@ class FortranReaderBase(object):
         if self.isf77 and not is_f2py_directive:
             # Fortran 77 is easy..
             lines = [line[6:72]]
+            # get_next_line does not actually consume lines - they are put
+            # into the FILO buffer as well as being returned
             while _is_fix_cont(self.get_next_line(ignore_empty=True,
                                                   ignore_comments=True)):
                 # handle fix format line continuations for F77 code
