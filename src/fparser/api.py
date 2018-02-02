@@ -135,10 +135,12 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
                 isstrict = True
             return parse(c_input, isfree, isstrict, include_dirs)
         reader = FortranFileReader(input, include_dirs=include_dirs,
-                                   source_only=source_only)
+                                   source_only=source_only,
+                                   ignore_comments=ignore_comments)
     elif isinstance(input, string_types):
         reader = FortranStringReader(input, include_dirs=include_dirs,
-                                     source_only=source_only)
+                                     source_only=source_only,
+                                     ignore_comments=ignore_comments)
     else:
         raise TypeError('Expected string or filename input but got %s' %
                         (type(input)))
@@ -224,7 +226,8 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
     get_reader
     """
     from .parsefortran import FortranParser
-    reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
+    reader = get_reader(input, isfree, isstrict, include_dirs, source_only,
+                        ignore_comments=ignore_comments)
     parser = FortranParser(reader, ignore_comments=ignore_comments)
     try:
         parser.parse()
