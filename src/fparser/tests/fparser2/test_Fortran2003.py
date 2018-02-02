@@ -3233,11 +3233,11 @@ contains
   real a
   a = 1.0
   end
-    '''))
+    ''', isfree=True))
     assert isinstance(a, cls),repr(a)
     print str(a)
     assert (str(a) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
-            '\n  a = 1.0\nEND SUBROUTINE foo\n')
+            '\n  a = 1.0\nEND SUBROUTINE foo')
 
 
 def test_Use_Stmt(): # R1109
@@ -3846,7 +3846,7 @@ def test_prog_comments():
    program foo
      ! A full comment line
      write(*,*) my_int ! An in-line comment
-    end program foo''', isfree=True)
+    end program foo''', isfree=True, ignore_comments=False)
 
     obj = cls(reader)
     assert type(obj) == Program
@@ -3888,7 +3888,7 @@ def test_module_comments():
       end module my_mod
 '''
     # Test when the reader is explicitly set to free-form mode
-    reader = get_reader(source, isfree=True)
+    reader = get_reader(source, isfree=True, ignore_comments=False)
     prog_unit = Program(reader)
     walk_ast(prog_unit.content, debug=True)
     assert type(prog_unit.content[0]) == Comment
