@@ -76,7 +76,8 @@ C
 C
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     s, u, c, e = tree[:3]+tree[-1:]
     assert s.span==(1,1),repr(s.span)
@@ -92,12 +93,13 @@ c
 c
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=True)
+    tree = api.get_reader(source_str, isfree=False, isstrict=True,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
-    assert a.span==(2,4),repr(a.span)
-    assert comment.span==(5,5),repr(comment.span)
+    assert a.span==(2,2),repr(a.span)
+    assert comment.span==(3,3),repr(comment.span)
     assert end.span==(5,5),repr(end.span)
 
 def test_reproduce_issue_fix90():
@@ -122,7 +124,8 @@ c-
 c
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment,end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
@@ -136,7 +139,8 @@ c
 c
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
@@ -153,7 +157,8 @@ c 1
 c 2
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
@@ -169,7 +174,8 @@ c
 c 2
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
@@ -185,7 +191,8 @@ c 1
 c
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
@@ -202,7 +209,8 @@ c 2
      &,b
       end
 '''
-    tree = api.get_reader(source_str, isfree=False, isstrict=False)
+    tree = api.get_reader(source_str, isfree=False, isstrict=False,
+                          ignore_comments=False)
     tree = list(tree)
     foo, ab, comment, end = tree[:3]+tree[-1:]
     assert foo.span==(1,1)
