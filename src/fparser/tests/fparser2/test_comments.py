@@ -33,6 +33,7 @@
 
 ''' Module containing tests for aspects of fparser2 related to comments '''
 
+import pytest
 from fparser.Fortran2003 import *
 from fparser.api import get_reader
 
@@ -94,7 +95,7 @@ END PROGRAM a_prog
             "  END IF\n"
             "END PROGRAM a_prog\n")
 
-
+@pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
 def test_fixed_fmt():
     ''' Test that we handle comments in fixed-format mode '''
     reader = get_reader('''\
@@ -115,10 +116,11 @@ c this is a subroutine
       end subroutine foo''', isfree=False, ignore_comments=False)
     cls = Subroutine_Subprogram
     obj = cls(reader)
-    print str(obj)
+    fort = obj.tofortran(isfix=True)
+    print fort
     assert isinstance(obj, cls), repr(obj)
-    assert (str(obj) == 'SUBROUTINE foo\nc this is a subroutine\n'
-            'END SUBROUTINE foo')
-    assert (repr(a) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
+    assert (fort == '      SUBROUTINE foo\nc this is a subroutine\n'
+            '      END SUBROUTINE foo')
+    assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
             "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
             "Name('foo')))")
