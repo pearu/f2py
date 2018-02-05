@@ -947,8 +947,6 @@ class FortranReaderBase(object):
         if quotechar is None and idx != -1:
             # first try a quick method:
             newline = line[:idx]
-            print("newline = ", newline)
-
             if '"' not in newline and '\'' not in newline:
                 if self.isf77 or not line[idx:].startswith('!f2py'):
                     put_item(self.comment_item(line[idx:], lineno, lineno))

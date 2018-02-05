@@ -499,16 +499,6 @@ content : tuple
         :rtype: str
         '''
         l = []
-#TODO does this commented-out code need to be re-instated?
-#        # Deal with any comments that come before the block
-#        for idx, node in enumerate(self.content):
-#            if isinstance(node, Comment):
-#                l.append(node.tofortran(tab=tab, isfix=isfix))
-#            else:
-#                break
-#        start_idx = idx  # Save the index of the first non-comment
-#        start = node
-        start_idx = 0
         start = self.content[0]
         end = self.content[-1]
         extra_tab = ''
@@ -516,9 +506,9 @@ content : tuple
             extra_tab = '  '
         if start is not None:
             l.append(start.tofortran(tab=tab,isfix=isfix))
-        for item in self.content[start_idx+1:-1]:
+        for item in self.content[1:-1]:
             l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
-        if (len(self.content) - start_idx) > 1:
+        if len(self.content) > 1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
 
