@@ -183,28 +183,6 @@ class Base(ComparableMixin):
         # Get the class' match method if it has one
         match = cls.__dict__.get('match')
 
-        if cls == Comment:
-            if isinstance(string, readfortran.Comment):
-                # We were after a comment and we got a comment. Construct
-                # one manually to avoid recursively calling this __new__
-                # method again...
-                obj = object.__new__(cls)
-                obj.init(string)
-                return obj
-            elif isinstance(string, FortranReaderBase):
-                reader = string
-                item = reader.get_item()
-                if item is None:
-                    return
-                if isinstance(item, readfortran.Comment):
-                    return Comment(item)
-                else:
-                    reader.put_item(item)
-                    return
-            else:
-                # We didn't get a comment
-                return
-
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
             reader = string
@@ -213,7 +191,7 @@ class Base(ComparableMixin):
                 return
             if isinstance(item, readfortran.Comment):
                 # We got a comment but we weren't after a comment (we handle
-                # cls==Comment just above)
+                # those in Comment.__new__)
                 obj = None
             else:
                 try:
@@ -1100,6 +1078,42 @@ class Comment(Base):
     Represents a Fortran Comment
     '''
     subclass_names = []
+
+    @show_result
+    def __new__(cls, string, parent_cls=None):
+        """
+        Create a new Comment instance.
+
+        :param type cls: the class of object to create
+        :param string: (source of) Fortran string to parse
+        :type string: str or :py:class:`FortranReaderBase`
+        :param parent_cls: the parent class of this object
+        :type parent_cls: :py:type:`type`
+        """
+        from . import readfortran
+
+        if isinstance(string, readfortran.Comment):
+            # We were after a comment and we got a comment. Construct
+            # one manually to avoid recursively calling this __new__
+            # method again...
+            obj = object.__new__(cls)
+            obj.init(string)
+            return obj
+        elif isinstance(string, FortranReaderBase):
+            reader = string
+            item = reader.get_item()
+            if item is None:
+                return
+            if isinstance(item, readfortran.Comment):
+                # This effectively recursively calls this routine
+                return Comment(item)
+            else:
+                # We didn't get a comment so put the item back in the FIFO
+                reader.put_item(item)
+                return
+        else:
+            # We didn't get a comment
+            return
 
     def init(self, comment):
         '''
