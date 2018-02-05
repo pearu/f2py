@@ -3725,7 +3725,6 @@ def test_Subroutine_Subprogram(): # R1231
       end subroutine foo''')
         cls = Subroutine_Subprogram
         a = cls(reader)
-        print str(a)
         assert isinstance(a, cls), repr(a)
         assert str(a) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
         assert (repr(a) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
