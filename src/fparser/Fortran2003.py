@@ -299,6 +299,27 @@ content : tuple
               enable_select_type_construct_hook=False,
               enable_case_construct_hook=False):
         '''
+        Checks whether the content in reader matches the given
+        type of block statement (e.g. DO..END DO, IF...END IF etc.)
+
+        :param type startcls: The class marking the beginning of the block
+        :param list subclasses: List of classes that can be children of
+                                the block
+        :param type endcls: The class marking the end of the block
+        :param reader: Content to check for match
+        :type reader: str or instance of :py:class:`FortranReaderBase`
+        :param bool match_labels: TBD
+        :param bool match_names: TBD
+        :param bool set_unspecified_end_name: TBD
+        :param tuple match_name_classes: TBD
+        :param bool enable_do_label_construct_hook: TBD
+        :param bool enable_if_construct_hook: TBD
+        :param bool enable_where_construct_hook: TBD
+        :param bool enable_select_type_construct_hook: TBD
+        :param bool enable_case_construct_hook: TBD
+
+        :return: instance of startcls or None if no match is found
+        :rtype: startcls
         '''
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
@@ -334,12 +355,11 @@ content : tuple
                 start_label = obj.get_start_label()
             if match_names:
                 start_name = obj.get_start_name()
+
         # A comment is always a valid sub-class
+        classes = subclasses + [Comment]
         if endcls is not None:
-            classes = subclasses + [Comment, endcls]
-        else:
-            classes = subclasses[:] + [Comment]
-        if endcls is not None:
+            classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
 
         # Start trying to match the various subclasses, starting from
@@ -372,7 +392,6 @@ content : tuple
                 continue
 
             # We got a match for this class
-            print("Matched class {0}: {1}".format(classes[i], str(obj)))
             had_match = True
             content.append(obj)
 
