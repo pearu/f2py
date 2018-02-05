@@ -47,7 +47,6 @@ PROGRAM a_prog
 PRINT *, "Hello" ! This block gets executed
 END PROGRAM a_prog
     ''', ignore_comments=False))
-    print(str(tree))
     assert (str(tree) == "PROGRAM a_prog\n"
             "  ! A full line comment\n"
             "  PRINT *, \"Hello\"\n"
@@ -67,7 +66,6 @@ PRINT *, "Hello"
 END IF
 END PROGRAM a_prog
     ''', ignore_comments=False))
-    print(str(tree))
     assert (str(tree) == "PROGRAM a_prog\n"
             "  IF (.TRUE.) THEN\n"
             "    ! A full line comment\n"
@@ -87,7 +85,6 @@ END IF
 END PROGRAM a_prog
     ''', ignore_comments=False))
     assert isinstance(tree, Program)
-    print(str(tree))
     assert (str(tree) == "PROGRAM a_prog\n"
             "  IF (.TRUE.) THEN\n"
             "    PRINT *, \"Hello\"\n"
@@ -104,7 +101,6 @@ c this is a subroutine
         end subroutine foo''', isfree=False, ignore_comments=True)
     cls = Subroutine_Subprogram
     obj = cls(reader)
-    print str(obj)
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
     assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
@@ -117,7 +113,6 @@ c this is a subroutine
     cls = Subroutine_Subprogram
     obj = cls(reader)
     fort = obj.tofortran(isfix=True)
-    print fort
     assert isinstance(obj, cls), repr(obj)
     assert (fort == '      SUBROUTINE foo\nc this is a subroutine\n'
             '      END SUBROUTINE foo')

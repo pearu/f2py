@@ -3235,7 +3235,6 @@ contains
   end
     ''', isfree=True))
     assert isinstance(a, cls),repr(a)
-    print str(a)
     assert (str(a) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
             '\n  a = 1.0\nEND SUBROUTINE foo')
 
