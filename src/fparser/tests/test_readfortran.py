@@ -344,7 +344,8 @@ cf2py call me ! hey
                 "line #10'end'"]
 
     # Reading from buffer
-    reader = fparser.readfortran.FortranStringReader(string_f77)
+    reader = fparser.readfortran.FortranStringReader(string_f77,
+                                                     ignore_comments=False)
     assert reader.mode == 'f77', repr(reader.mode)
     stack = expected[:]
     for item in reader:
@@ -356,7 +357,8 @@ cf2py call me ! hey
     with open(filename, 'w') as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = fparser.readfortran.FortranFileReader(filename)
+    reader = fparser.readfortran.FortranFileReader(filename,
+                                                   ignore_comments=False)
     stack = expected[:]
     for item in reader:
         assert str(item) == stack.pop(0)
@@ -426,7 +428,8 @@ end python module foo
                 "line #25'end python module foo'",
                 "Comment('! end of file',(26, 26))"]
 
-    reader = fparser.readfortran.FortranStringReader(string_pyf)
+    reader = fparser.readfortran.FortranStringReader(string_pyf,
+                                                     ignore_comments=False)
     assert reader.mode == 'pyf', repr(reader.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
@@ -474,7 +477,8 @@ cComment
                 "line #15'subroutine foo'",
                 "Comment('',(16, 16))",
                 "line #18'end'"]
-    reader = fparser.readfortran.FortranStringReader(string_fix90)
+    reader = fparser.readfortran.FortranStringReader(string_fix90,
+                                                     ignore_comments=False)
     assert reader.mode == 'fix', repr(reader.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
