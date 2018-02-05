@@ -1157,7 +1157,7 @@ class Program(BlockBase): # R201
     <program> = <program-unit>
                   [ <program-unit> ] ...
     """
-    subclass_names = ['Comment']
+    subclass_names = []
     use_names = ['Program_Unit']
     
     @staticmethod
@@ -5188,7 +5188,7 @@ class Block_Nonlabel_Do_Construct(BlockBase): # R826_2
     use_names = ['Nonlabel_Do_Stmt', 'Execution_Part_Construct', 'End_Do_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(Nonlabel_Do_Stmt, [Comment, Execution_Part_Construct],
+        return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
                                End_Do_Stmt, reader
                                )
 
@@ -6819,14 +6819,14 @@ class Main_Program0(BlockBase):
                          <end-program-stmt>
     """
     subclass_names = []
-    use_names = ['Comment', 'Program_Stmt', 'Specification_Part',
+    use_names = ['Program_Stmt', 'Specification_Part',
                  'Execution_Part', 'Internal_Subprogram_Part',
                  'End_Program_Stmt']
     @staticmethod
     def match(reader):
         return BlockBase.match(None,
                                [Specification_Part, Execution_Part,
-                                Internal_Subprogram_Part, Comment],
+                                Internal_Subprogram_Part],
                                End_Program_Stmt, reader)
 
 class Program_Stmt(StmtBase, WORDClsBase): # R1102
