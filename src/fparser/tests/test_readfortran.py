@@ -76,7 +76,7 @@ def test_111fortranreaderbase(log, monkeypatch):
     monkeypatch.setattr('fparser.readfortran.FortranReaderBase.id',
                         lambda x: 'foo', raising=False)
     unit_under_test = fparser.readfortran.FortranReaderBase(FailFile(),
-                                                            True, False)
+                                                            True, False, False)
     assert str(unit_under_test.next()) == "line #1'x=1'"
     with pytest.raises(StopIteration):
         unit_under_test.next()
@@ -119,7 +119,7 @@ def test_base_next_good_include(log):
     code = "include 'modfile.f95'\nx=2"
     include_directories = [os.path.dirname(__file__)]
     unit_under_test = fparser.readfortran \
-        .FortranStringReader(code, include_directories)
+        .FortranStringReader(code, include_directories, ignore_comments=False)
     line = unit_under_test.next()
     assert str(line)[:19] == "Comment('! Modified"  # First line of inclusion
     assert log.messages['debug'] == []

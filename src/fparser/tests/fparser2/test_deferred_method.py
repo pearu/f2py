@@ -77,7 +77,8 @@ MODULE abstract_test
 END MODULE abstract_test
 '''.strip().split('\n')
 
-    reader = fparser.readfortran.FortranStringReader(source)
+    reader = fparser.readfortran.FortranStringReader(source,
+                                                     ignore_comments=False)
     program_unit = fparser.Fortran2003.Program(reader)
     result = str(program_unit).strip().split('\n')
     assert result == expected

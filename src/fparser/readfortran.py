@@ -709,7 +709,9 @@ class FortranReaderBase(object):
                     item = self.next(ignore_comments)
                     return item
                 reader.info('including file %r' % (path), item)
-                self.reader = FortranFileReader(path, include_dirs=include_dirs)
+                self.reader = FortranFileReader(path,
+                                                include_dirs=include_dirs,
+                                                ignore_comments=ignore_comments)
                 return self.reader.next(ignore_comments=ignore_comments)
             return item
         except StopIteration:
@@ -1068,7 +1070,8 @@ class FortranReaderBase(object):
                 return self.comment_item(line, startlineno, startlineno)
 
             for i in range(min(5,len(line))):
-                # check that fixed format line starts according to Fortran standard
+                # check that fixed format line starts according to Fortran
+                # standard
                 if line[i] not in _spacedigits:
                     message =  'non-space/digit char %r found in column %i'\
                               ' of fixed Fortran code' % (line[i],i+1)

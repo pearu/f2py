@@ -85,6 +85,7 @@ C
     assert c.span==(3,3),repr(c.span)
     assert e.span==(9,9),repr(e.span)
 
+
 def test_reproduce_issue_fix77():
     source_str = '''\
       subroutine foo()
@@ -97,10 +98,11 @@ c
                           ignore_comments=False)
     tree = list(tree)
     foo, a, comment, end = tree[:3]+tree[-1:]
-    assert foo.span==(1,1)
-    assert a.span==(2,2),repr(a.span)
-    assert comment.span==(3,3),repr(comment.span)
-    assert end.span==(5,5),repr(end.span)
+    assert foo.span == (1, 1)
+    assert a.span == (2, 4), repr(a)
+    assert comment.span == (5, 5), repr(comment.span)
+    assert end.span == (5, 5), repr(end.span)
+
 
 def test_reproduce_issue_fix90():
     source_str = '''\
