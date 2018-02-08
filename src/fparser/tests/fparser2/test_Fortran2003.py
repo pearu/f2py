@@ -82,7 +82,7 @@ def assertRaises(exc, cls, s):
 ###############################################################################
 
 def test_Program(): # R201
-
+    ''' Tests for parsing top-level program unit '''
     cls = Program
     reader = get_reader('''\
       subroutine foo
@@ -90,41 +90,41 @@ def test_Program(): # R201
       subroutine bar
       end
       ''')
-    a = cls(reader)
-    assert isinstance(a, cls), repr(a)
-    print(str(a))
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    print(str(obj))
     assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
-        "END SUBROUTINE bar" in str(a)
+        "END SUBROUTINE bar" in str(obj)
 
     reader = get_reader('''\
       subroutine foo (*)
       end subroutine foo
       ''')
-    a = cls(reader)
-    assert isinstance(a, cls), repr(a)
-    assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(a)
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(obj)
 
 
 def test_Specification_Part(): # R204
-
+    ''' Tests for parsing specification-part '''
     reader = get_reader('''\
     integer a''')
     cls = Specification_Part
-    a = cls(reader)
-    assert isinstance(a, cls),repr(a)
-    assert str(a) == 'INTEGER :: a'
-    assert (repr(a) == "Specification_Part(Type_Declaration_Stmt("
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    assert str(obj) == 'INTEGER :: a'
+    assert (repr(obj) == "Specification_Part(Type_Declaration_Stmt("
             "Intrinsic_Type_Spec('INTEGER', None), None, "
             "Entity_Decl(Name('a'), None, None, None)))")
 
-    a = cls(get_reader('''\
+    obj = cls(get_reader('''\
 type a
 end type a
 type b
 end type b
 '''))
-    assert isinstance(a, cls), repr(a)
-    assert 'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b' in str(a)
+    assert isinstance(obj, cls), repr(obj)
+    assert 'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b' in str(obj)
 
 ###############################################################################
 ############################### SECTION  3 ####################################
@@ -720,13 +720,14 @@ def test_Proc_Component_Def_Stmt(): # R445
     assert_equal(str(a),'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b')
 
 
-def test_Type_Bound_Procedure_Part(): # R448
+def test_Type_Bound_Procedure_Part():
+    ''' Tests for type-bound procedure, R448 '''
     cls = Type_Bound_Procedure_Part
-    a = cls(get_reader('''\
+    obj = cls(get_reader('''\
 contains
 procedure, pass :: length => point_length'''))
-    assert isinstance(a, cls), repr(a)
-    assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(a)
+    assert isinstance(obj, cls), repr(obj)
+    assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
 
 
 def test_Proc_Binding_Stmt(): # R450
@@ -3834,63 +3835,6 @@ def test_Contains(): # R1237
         assert isinstance(a, cls),repr(a)
         assert_equal(str(a),'CONTAINS')
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
-
-
-def test_prog_comments():
-    ''' Unit tests for lines in programs containing comments '''
-    cls = Program
-    reader = get_reader('''\
-   ! A troublesome comment
-   program foo
-     ! A full comment line
-     write(*,*) my_int ! An in-line comment
-    end program foo''', isfree=True, ignore_comments=False)
-
-    obj = cls(reader)
-    assert type(obj) == Program
-    # Check that the AST has the expected structure:
-    # Program
-    #   |--> Comment
-    #   |--> Main_Program
-    #   .    |--> Program_Stmt
-    #   .    |--> Specification_Part
-    #   .    .    \--> Implicit_Part
-    #   .    .         \--> Comment
-    #        |--> Execution_Part
-    #        |    |--> Write_Stmt
-    #        |    \--> Comment
-    #        .    
-    from fparser.Fortran2003 import walk_ast
-    walk_ast(obj.content, [Comment], debug=True)
-    assert type(obj.content[0]) == Comment
-    assert str(obj.content[0]) == "! A troublesome comment"
-    assert type(obj.content[1]) == Main_Program
-    main_prog = obj.content[1]
-    assert type(main_prog.content[1].content[0].content[0]) == Comment
-    assert str(main_prog.content[1].content[0].content[0]) == "! A full comment line"
-    exec_part = main_prog.content[2]
-    assert type(exec_part.content[0]) == Write_Stmt
-    # Check that we have the in-line comment as a second statement
-    assert len(exec_part.content) == 2
-    assert type(exec_part.content[1]) == Comment
-    assert type(main_prog.content[3]) == End_Program_Stmt
-    assert "! An in-line comment" in str(obj)
-
-
-def test_module_comments():
-    ''' Tests for comments in modules '''
-    source = '''! This is a module
-      module my_mod
-        implicit none
-        private
-      end module my_mod
-'''
-    # Test when the reader is explicitly set to free-form mode
-    reader = get_reader(source, isfree=True, ignore_comments=False)
-    prog_unit = Program(reader)
-    walk_ast(prog_unit.content, debug=True)
-    assert type(prog_unit.content[0]) == Comment
-    assert str(prog_unit.content[0]) == "! This is a module"
 
 
 def test_multi_unit():

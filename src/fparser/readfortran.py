@@ -163,7 +163,7 @@ _is_include_line = re.compile(r'\s*include\s*("[^"]+"|\'[^\']+\')\s*\Z',re.I).ma
 
 def _is_fix_comment(line, isstrict):
     """ 
-    Check if line is a comment line in fixed format Fortran source.
+    Check whether line is a comment line in fixed format Fortran source.
 
     :param str line: Line of code to check
     :param bool isstrict: Whether we are strictly enforcing fixed/free fmt
@@ -365,9 +365,7 @@ class Comment(object):
     def isempty(self, ignore_comments=False):
         '''
         Whether or not this comment is in fact empty (or we are ignoring
-        it)
-        TODO should this routine be called isempty since it doesn't actually
-        test for that?
+        it). Provided for compatibility with Line.isempty()
 
         :param bool ignore_comments: whether we ignore comments
         :return: True if we are ignoring comments, False otherwise
@@ -434,8 +432,8 @@ class FortranReaderBase(object):
         ----------
         source :
           A file-like object with .next() method used to retrive a line.
-        :param bool isfree:
-        :param bool isstrict:
+        :param bool isfree: Whether source is free-format
+        :param bool isstrict: Whether we are strictly enforcing fixed format
         :param bool ignore_comments: Whether or not to discard comments
 
         See also
@@ -446,6 +444,8 @@ class FortranReaderBase(object):
         self.linecount = 0     # the current number of consumed lines
         self.source = source
         self.isclosed = False
+        # This value for ignore_comments can be overridden by using the
+        # ignore_comments optional argument to e.g. get_single_line()
         self._ignore_comments = ignore_comments
 
         self.filo_line = []    # used for un-consuming lines.
@@ -576,10 +576,9 @@ class FortranReaderBase(object):
         In both situations ``linecount`` will be incremented, that is,
         the line will be consumed.
 
-        Parameters
-        ----------
-        ignore_empty : bool
-          If True the ignore empty lines.
+        :param bool ignore_empty: If True then ignore empty lines.
+        :param bool ignore_comments: If True then ignore comments (overrides
+                                     self._ignore_comments)
 
         See also
         --------
@@ -724,18 +723,19 @@ class FortranReaderBase(object):
             message = ''.join(('Traceback\n',
                               ''.join( traceback.format_stack())))
             logging.getLogger(__name__).debug(message)
+            logging.getLogger(__name__).debug(str(err))
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
     def _next(self, ignore_comments=None):
-        """ Return the next item from FIFO item buffer or construct
+        """
+        Return the next item from FIFO item buffer or construct
         one from source line.
 
         Resolves ``;`` statement terminations.
 
-        Parameters
-        ----------
-        ignore_comments : bool
+        :param bool ignore_comments: Whether or not to ignore comments
+                                     (overrides self._ignore_comments)
 
         See also
         --------
@@ -772,27 +772,7 @@ class FortranReaderBase(object):
                 for newitem in items:
                     self.fifo_item.insert(0, newitem)
                 return fifo_item_pop(0)
-            return item
         return item
-        # collect subsequent comments to one comment instance
-        #comments = []
-        #start = item.span[0]
-        #while isinstance(item, Comment):
-        #    comments.append(item.comment)
-        #    end = item.span[1]
-        #    while 1:
-        #        try:
-        #            item = fifo_item_pop(0)
-        #        except IndexError:
-        #            item = self.get_source_item()
-        #        if item is None or not item.isempty(ignore_comments):
-        #            break
-        #    if item is None:
-        #        break # hold raising StopIteration for the next call.
-        #if item is not None:
-        #    self.fifo_item.insert(0,item)
-        #item = self.comment_item('\n'.join(comments), start, end)
-        #return item
 
     # Interface to returned items:
 
@@ -1213,9 +1193,6 @@ class FortranReaderBase(object):
                         continue
                 else:
                     # first line
-                    #if line_lstrip.startswith('!'):
-                    #    return self.comment_item(line_lstrip,
-                    #                             self.linecount, self.linecount)
                     # check for a label
                     m = _label_re.match(line)
                     if m:
@@ -1280,8 +1257,14 @@ class FortranReaderBase(object):
 
 class FortranFileReader(FortranReaderBase):
 
-    def __init__(self, filename, include_dirs = None, source_only=None,
+    def __init__(self, filename, include_dirs=None, source_only=None,
                  ignore_comments=True):
+        '''
+        :param str filename: Name of file to read
+        :param list include_dirs: List of dirs to search for include files
+        :param source_only: TBD
+        :param bool ignore_comments: Whether or not to ignore comments
+        '''
         isfree, isstrict = get_source_info(filename)
         self.id = filename
         self.file = open(filename,'r')
@@ -1302,6 +1285,12 @@ class FortranStringReader(FortranReaderBase):
 
     def __init__(self, string, include_dirs=None, source_only=None,
                  ignore_comments=True):
+        '''
+        :param str string: string to read
+        :param list include_dirs: List of dirs to search for include files
+        :param source_only: TBD
+        :param bool ignore_comments: Whether or not to ignore comments
+        '''
         self.id = 'string-'+str(id(string))
         source = six.StringIO(string)
         isfree, isstrict = get_source_info_str(string)

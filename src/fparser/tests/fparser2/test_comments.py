@@ -119,3 +119,60 @@ c this is a subroutine
     assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
             "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
             "Name('foo')))")
+
+
+def test_prog_comments():
+    ''' Unit tests for lines in programs containing comments '''
+    cls = Program
+    reader = get_reader('''\
+   ! A troublesome comment
+   program foo
+     ! A full comment line
+     write(*,*) my_int ! An in-line comment
+    end program foo''', isfree=True, ignore_comments=False)
+
+    obj = cls(reader)
+    assert type(obj) == Program
+    # Check that the AST has the expected structure:
+    # Program
+    #   |--> Comment
+    #   |--> Main_Program
+    #   .    |--> Program_Stmt
+    #   .    |--> Specification_Part
+    #   .    .    \--> Implicit_Part
+    #   .    .         \--> Comment
+    #        |--> Execution_Part
+    #        |    |--> Write_Stmt
+    #        |    \--> Comment
+    #        .
+    from fparser.Fortran2003 import walk_ast
+    walk_ast(obj.content, [Comment], debug=True)
+    assert type(obj.content[0]) == Comment
+    assert str(obj.content[0]) == "! A troublesome comment"
+    assert type(obj.content[1]) == Main_Program
+    main_prog = obj.content[1]
+    assert type(main_prog.content[1].content[0].content[0]) == Comment
+    assert str(main_prog.content[1].content[0].content[0]) == "! A full comment line"
+    exec_part = main_prog.content[2]
+    assert type(exec_part.content[0]) == Write_Stmt
+    # Check that we have the in-line comment as a second statement
+    assert len(exec_part.content) == 2
+    assert type(exec_part.content[1]) == Comment
+    assert type(main_prog.content[3]) == End_Program_Stmt
+    assert "! An in-line comment" in str(obj)
+
+
+def test_module_comments():
+    ''' Tests for comments in modules '''
+    source = '''! This is a module
+      module my_mod
+        implicit none
+        private
+      end module my_mod
+'''
+    # Test when the reader is explicitly set to free-form mode
+    reader = get_reader(source, isfree=True, ignore_comments=False)
+    prog_unit = Program(reader)
+    walk_ast(prog_unit.content, debug=True)
+    assert type(prog_unit.content[0]) == Comment
+    assert str(prog_unit.content[0]) == "! This is a module"
