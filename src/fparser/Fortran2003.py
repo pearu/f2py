@@ -910,6 +910,7 @@ item : readfortran.Line
             else:
                 tab = tab[len(t):] or ' '
         else:
+            # BUG allow for fixed format here
             t = ''
         if name:
             return t + tab + name+':' + str(self)
