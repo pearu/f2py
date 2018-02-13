@@ -724,6 +724,7 @@ def test_Private_Components_Stmt():  # pylint: disable=invalid-name
     assert str(inst) == 'PRIVATE'
     assert repr(inst) == "Private_Components_Stmt('PRIVATE')"
 
+    # Statement not 'private'
     with pytest.raises(NoMatchError) as excinfo:
         _ = pcls('public')
     assert "Private_Components_Stmt: 'public'" in str(excinfo)
@@ -2600,13 +2601,18 @@ def test_Loop_Control():  # pylint: disable=invalid-name
     and test_Nonblock_Label_Do_Construct() '''
     lccls = Loop_Control
 
+    # More than one '=' in counter expression
     with pytest.raises(NoMatchError) as excinfo:
         _ = lccls('j = 1 = 10')
     assert "Loop_Control: 'j = 1 = 10'" in str(excinfo)
 
+    # Incorrect number of elements in counter expression
     with pytest.raises(NoMatchError) as excinfo:
         _ = lccls('k = 10, -10, -2, -1')
     assert "Loop_Control: 'k = 10, -10, -2, -1'" in str(excinfo)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = lccls('l = 5')
+    assert "Loop_Control: 'l = 5'" in str(excinfo)
 
 
 def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
@@ -3437,6 +3443,17 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
         "', ONLY:', Rename(None, Name('b'), Name('c')))")
 
+    # Checks that no match is found for incorrect "USE" statement contructs
+    # Empty string after "USE"
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use')
+    assert "Use_Stmt: 'use'" in str(excinfo)
+
+    # Missing module nature between ',' and '::'
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use, ::')
+    assert "Use_Stmt: 'use, ::'" in str(excinfo)
+
 
 def test_Module_Nature():  # pylint: disable=invalid-name
     ''' Tests that a module nature statement is parsed correctly
@@ -3451,7 +3468,8 @@ def test_Module_Nature():  # pylint: disable=invalid-name
     assert isinstance(inst, mncls), repr(inst)
     assert str(inst) == 'NON_INTRINSIC'
     assert repr(inst) == "Module_Nature('NON_INTRINSIC')"
-
+    
+    # Incorrect module nature
     with pytest.raises(NoMatchError) as excinfo:
         _ = mncls('other_nature')
     assert "Module_Nature: 'other_nature'" in str(excinfo)
