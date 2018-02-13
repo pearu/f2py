@@ -5135,7 +5135,8 @@ class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
 
     def tostr(self):
         '''
-        :return: parsed representation of labeled "DO" statement
+        :return: string containing Fortran code for the parsed
+                 labeled "DO" statement
         :rtype: string
         '''
         # pylint: disable=unbalanced-tuple-unpacking
@@ -5243,11 +5244,16 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
         '''
         # pylint: disable=unbalanced-tuple-unpacking
         scalar_logical_expr, counter_expr, optional_delim = self.items
+        # Return loop control construct containing "WHILE" condition and
+        # its <scalar-logical-expr>
         if scalar_logical_expr is not None:
             loopctrl = 'WHILE (%s)' % scalar_logical_expr
+        # Return loop control construct containing counter expression:
+        # <do-variable> as LHS and <scalar-int-expr> list as RHS
         elif counter_expr[0] is not None and counter_expr[1] is not None:
             loopctrl = '%s = %s' % \
                 (counter_expr[0], ', '.join(map(str, counter_expr[1])))
+        # Add optional delimiter to loop control construct if present
         if optional_delim is not None:
             loopctrl = optional_delim + loopctrl
         return loopctrl
@@ -6940,6 +6946,8 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         nature = None
         dcolon = None
         if i != -1:
+            # The nature of the module ("intrinsic" or
+            # "non-intrinsic") is specified
             dcolon = '::'
             if line.startswith(','):
                 line_nat = line[1:i].strip()
@@ -6975,14 +6983,22 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         :rtype: string
         '''
         usestmt = 'USE'
+        # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
+        # followed by a double colon to "USE" statement
         if self.items[0] is not None and self.items[1] is not None:
             usestmt += ', %s %s' % (self.items[0], self.items[1])
+        # Return warning message if Module_Nature is not followed
+        # by a double colon after "USE" statement (invalid Fortran)
         elif self.items[0] is not None and self.items[1] is None:
             message = 'Module nature must be followed by "::"'
             logging.getLogger(__name__).debug(message)
+        # Add optional double colon after "USE" statement without
+        # Module_Nature (valid Fortran)
         elif self.items[0] is None and self.items[1] is not None:
             usestmt += ' %s' % (self.items[1])
+        # Add Module_Name and optional "ONLY" specifier if present
         usestmt += ' %s%s' % (self.items[2], self.items[3])
+        # Add optional Only_List or Rename_List if present
         if self.items[4] is not None:
             usestmt += ' %s' % (self.items[4])
         return usestmt

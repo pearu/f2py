@@ -724,6 +724,10 @@ def test_Private_Components_Stmt():  # pylint: disable=invalid-name
     assert str(inst) == 'PRIVATE'
     assert repr(inst) == "Private_Components_Stmt('PRIVATE')"
 
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = pcls('public')
+    assert "Private_Components_Stmt: 'public'" in str(excinfo)
+
 
 def test_Type_Bound_Procedure_Part(): # R448
     cls = Type_Bound_Procedure_Part
@@ -2590,6 +2594,21 @@ def test_Label_Do_Stmt():  # pylint: disable=invalid-name
     assert repr(inst) == "Label_Do_Stmt(None, Label('12'), None)"
 
 
+def test_Loop_Control():  # pylint: disable=invalid-name
+    ''' Tests incorrect loop control constructs (R829). Correct loop
+    control constructs are tested in test_Block_Label_Do_Construct()
+    and test_Nonblock_Label_Do_Construct() '''
+    lccls = Loop_Control
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = lccls('j = 1 = 10')
+    assert "Loop_Control: 'j = 1 = 10'" in str(excinfo)
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = lccls('k = 10, -10, -2, -1')
+    assert "Loop_Control: 'k = 10, -10, -2, -1'" in str(excinfo)
+
+
 def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
     ''' Tests that nonblock DO construct is parsed correctly (R835) '''
     docls = Nonblock_Do_Construct
@@ -3361,12 +3380,6 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
     assert repr(inst) == (
         "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
 
-    inst = ucls('use a, only : b')
-    assert isinstance(inst, ucls), repr(inst)
-    assert str(inst) == 'USE a, ONLY: b'
-    assert repr(inst) == (
-        "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
-
     inst = ucls('use :: a, only: b')
     assert isinstance(inst, ucls), repr(inst)
     assert str(inst) == 'USE :: a, ONLY: b'
@@ -3438,6 +3451,10 @@ def test_Module_Nature():  # pylint: disable=invalid-name
     assert isinstance(inst, mncls), repr(inst)
     assert str(inst) == 'NON_INTRINSIC'
     assert repr(inst) == "Module_Nature('NON_INTRINSIC')"
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = mncls('other_nature')
+    assert "Module_Nature: 'other_nature'" in str(excinfo)
 
 
 def test_Rename(): # R1111
