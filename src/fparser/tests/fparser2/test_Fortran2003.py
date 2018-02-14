@@ -3443,16 +3443,36 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
         "', ONLY:', Rename(None, Name('b'), Name('c')))")
 
-    # Checks that no match is found for incorrect "USE" statement contructs
-    # Empty string after "USE"
+    # Checks that no match is found for incorrect 'USE' statement contructs
+    # Empty string after 'USE'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use')
     assert "Use_Stmt: 'use'" in str(excinfo)
 
-    # Missing module nature between ',' and '::'
+    # Missing Module_Nature between ',' and '::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use, ::')
     assert "Use_Stmt: 'use, ::'" in str(excinfo)
+
+    # No Module_Name after 'USE, module_nature ::'
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use, intrinsic ::')
+    assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
+
+    # Missing Module_Name before Only_List
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use , only: b')
+    assert "Use_Stmt: 'use , only: b'" in str(excinfo)
+
+    # Missing Only_List after 'USE module_name,'
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use a,')
+    assert "Use_Stmt: 'use a,'" in str(excinfo)
+
+    # Missing ':' after 'ONLY' specification
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use a, only b')
+    assert "Use_Stmt: 'use a, only b" in str(excinfo)
 
 
 def test_Module_Nature():  # pylint: disable=invalid-name
