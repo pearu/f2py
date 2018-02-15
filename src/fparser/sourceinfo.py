@@ -62,21 +62,11 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""
-Provides get_source_info(<filename>) function to determine the format
-(free|fixed|strict|pyf) of a Fortran file.
-
------
-Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
-
-NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
-Author: Pearu Peterson <pearu@cens.ioc.ee>
-Created: May 2006
------
-"""
-
-__all__ = ['get_source_info', 'get_source_info_str']
+'''
+Provides functions to determine whether a piece of Fortran source is free or
+fixed format. It also tries to differentiate between strict and "pyf" although
+I'm not sure what that is.
+'''
 
 import re
 import os
@@ -91,6 +81,72 @@ _has_free_header = re.compile(r'-[*]-\s*(f90|f95|f03|f08)\s*-[*]-',re.I).search
 _has_fix_header = re.compile(r'-[*]-\s*fix\s*-[*]-',re.I).search
 _has_pyf_header = re.compile(r'-[*]-\s*pyf\s*-[*]-',re.I).search
 _free_format_start = re.compile(r'[^c*!]\s*[^\s\d\t]',re.I).match
+
+##############################################################################
+
+class FortranFormat(object):
+    def __init__( self, is_free, is_strict ):
+        self._is_free   = is_free
+        self._is_strict    = is_strict
+
+    def __eq__(self, other):
+        if isinstance( other, FortranFormat):
+            return self._is_free == other._is_free \
+                   and self._is_strict == other._is_strict
+        raise NotImplemented
+
+    def __repr__(self):
+        if self._is_strict:
+            string = 'Strict'
+        else:
+            string = 'Non-strict'
+
+        if self._is_free:
+            string += ' free'
+        else:
+            string += ' fixed'
+
+        return string + ' format'
+
+    def is_free( self ):
+        return self._is_free
+
+    def is_strict( self ):
+        return self._is_strict
+
+##############################################################################
+
+def get_source_info_str( source ):
+    '''
+    Determines the format of Fortran source held in a string.
+
+    Returns a FortranFormat object.
+    '''
+
+    lines = source.splitlines()
+    if not lines:
+        return FortranFormat(False, False)
+
+    firstline = lines[0].lstrip()
+    if _has_f_header(firstline):    return FortranFormat(False, True)
+    if _has_fix_header(firstline):  return FortranFormat(False, False)
+    if _has_free_header(firstline): return FortranFormat(True,  False)
+    if _has_pyf_header(firstline):  return FortranFormat(True,  True)
+
+    n = 10000 # Check up to this number of non-comment lines for hints.
+    is_free = False
+    while n>0 and lines:
+        line = lines.pop(0).rstrip()
+        if line and line[0] != '!':
+            n -= 1
+            if line[0] != '\t' and _free_format_start(line[:5]) \
+               or line[-1:] == '&':
+                is_free = True
+                break
+
+    return FortranFormat(is_free, False)
+
+##############################################################################
 
 def get_source_info(filename):
     """
@@ -108,39 +164,16 @@ def get_source_info(filename):
     f = open(filename,'r')
     firstline = f.readline()
     f.close()
-    if _has_f_header(firstline): return False, True
-    if _has_fix_header(firstline): return False, False
-    if _has_free_header(firstline): return True, False
-    if _has_pyf_header(firstline): return True, True
+    if _has_f_header(firstline):    return False, True
+    if _has_fix_header(firstline):  return False, True
+    if _has_free_header(firstline): return True,  False
+    if _has_pyf_header(firstline):  return True,  True
     if _has_f_extension(filename) and \
        not (_has_free_header(firstline) or _has_fix_header(firstline)):
         isstrict = True
     elif is_free_format(filename) and not _has_fix_header(firstline):
         isfree = True
     return isfree,isstrict
-
-def get_source_info_str(code):
-    """
-    Determine the format of Fortran code.
-    See get_source_info() for the meaning of return values.
-    """
-    firstline = code.lstrip().split('\n',1)[0]
-    if _has_f_header(firstline): return False, True
-    if _has_fix_header(firstline): return False, False
-    if _has_free_header(firstline): return True, False
-    if _has_pyf_header(firstline): return True, True
-    n = 10000 # the number of non-comment lines to scan for hints
-    lines = code.splitlines()
-    isfree = False
-    while n>0 and lines:
-        line = lines.pop(0).rstrip()
-        if line and line[0]!='!':
-            n -= 1
-            if line[0]!='\t' and _free_format_start(line[:5]) or line[-1:]=='&':
-                isfree = True
-                break
-        
-    return isfree, False # assume free f90 or fix f90.
 
 def is_free_format(file):
     """Check if file is in free format Fortran."""

@@ -42,17 +42,17 @@ Test battery associated with fparser.sourceinfo package.
 from __future__ import print_function
 
 import pytest
-import fparser.sourceinfo
+from fparser.sourceinfo import FortranFormat, get_source_info_str
 
 @pytest.fixture(scope="module",
-                params=[('', True, True),
-                        ("-*- fortran -*-", False, True),
-                        ("-*- f77 -*-",     False, True),
-                        ('-*- f90 -*-',     True,  False),
-                        ('-*- f03 -*-',     True,  False),
-                        ('-*- f08 -*-',     True,  False),
-                        ('-*- fix -*-',     False, False),
-                        ('-*- pyf -*-',     True,  True)])
+                params=[('', FortranFormat(True, True)),
+                        ("-*- fortran -*-", FortranFormat(False, True)),
+                        ("-*- f77 -*-",     FortranFormat(False, True)),
+                        ('-*- f90 -*-',     FortranFormat(True,  False)),
+                        ('-*- f03 -*-',     FortranFormat(True,  False)),
+                        ('-*- f08 -*-',     FortranFormat(True,  False)),
+                        ('-*- fix -*-',     FortranFormat(False, False)),
+                        ('-*- pyf -*-',     FortranFormat(True,  True))])
 def header(request):
     return request.param
 
@@ -64,7 +64,7 @@ _free_source = '''program main
 end program main
 '''
 
-_fixed_with_continuation = '''      program main
+_fixed_with_continue = '''      program main
           implicit none
           integer :: foo, &
                      bar
@@ -88,21 +88,20 @@ _initial_tab = "\tprogram main\n"
 _middle_tab = " \tprogram main\n"
 
 @pytest.fixture(scope="module",
-                params=[(_fixed_source,            False, False),
-                        (_free_source,             True,  False),
-                        (_fixed_with_continuation, True,  False),
-                        (_fixed_with_comments,     False, False),
-                        (_initial_tab,             False, False),
-                        (_middle_tab,              True,  False)])
+                params=[('',                   FortranFormat(False, False)),
+                        (_fixed_source,        FortranFormat(False, False)),
+                        (_free_source,         FortranFormat(True,  False)),
+                        (_fixed_with_continue, FortranFormat(True,  False)),
+                        (_fixed_with_comments, FortranFormat(False, False)),
+                        (_initial_tab,         FortranFormat(False, False)),
+                        (_middle_tab,          FortranFormat(True,  False))])
 def content(request):
     return request.param
 
 def test_get_source_info_str(header, content):
     full_source = header[0] + '\n' + content[0]
-    fixed, strict = fparser.sourceinfo.get_source_info_str(full_source)
+    format = get_source_info_str(full_source)
     if header[0]:
-      assert fixed  == header[1]
-      assert strict == header[2]
+      assert format == header[1]
     else: # No header
-      assert fixed  == content[1]
-      assert strict == content[2]
+      assert format == content[1]
