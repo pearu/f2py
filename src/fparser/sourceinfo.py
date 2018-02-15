@@ -176,12 +176,18 @@ def get_source_info(file_candidate):
     Returns a FortranFormat object.
     '''
     if hasattr(file_candidate, 'name'):
-        if file_candidate.name.startswith('<') \
-           and file_candidate.name.endswith('>'):
+        filename = file_candidate.name
+        # The behaviour of file.name when associated with a file without a
+        # file name has changed between Python 2 and 3.
+        #
+        # Under Python 3 file.name holds an integer file handle.
+        if isinstance(filename, int):
             filename = None
-        else:  # It's an actual file.
-            filename = file_candidate.name
-    else:  # It's a filename
+
+        # Under Python 2 file.name holds a string of the form "<..>".
+        elif filename.startswith('<') and filename.endswith('>'):
+            filename = None
+    else:  # Candidate is a filename
         filename = file_candidate
 
     if filename:
