@@ -42,7 +42,10 @@ Test battery associated with fparser.sourceinfo package.
 from __future__ import print_function
 
 import pytest
-from fparser.sourceinfo import FortranFormat, get_source_info_str
+import tempfile
+
+from fparser.sourceinfo import FortranFormat, \
+                               get_source_info_str, get_source_info
 
 @pytest.fixture(scope="module",
                 params=[('', FortranFormat(True, True)),
@@ -105,3 +108,21 @@ def test_get_source_info_str(header, content):
       assert format == header[1]
     else: # No header
       assert format == content[1]
+
+@pytest.fixture(scope="module",
+                params=[('.f', FortranFormat(False, True))])
+def extension(request):
+    return request.param
+
+def test_get_source_info_filename(extension, header, content):
+    full_source = header[0] + '\n' + content[0]
+    with tempfile.NamedTemporaryFile(mode='w+', suffix=extension[0]) as source_file:
+        print(full_source, file=source_file)
+        source_file.seek(0)
+        format = get_source_info(source_file.name)
+        if extension[0] == '.pyf':
+            assert format == extension[1]
+        elif header[0]:
+            assert format == header[1]
+        else: # No header
+            assert format == content[1]
