@@ -70,30 +70,26 @@ I'm not sure what that is.
 
 import re
 import os
-import sys
 
-_has_f_extension = re.compile(r'.*[.](for|ftn|f77|f)\Z',re.I).match
-_has_f_header = re.compile(r'-[*]-\s*(fortran|f77)\s*-[*]-',re.I).search
-_has_f90_header = re.compile(r'-[*]-\s*f90\s*-[*]-',re.I).search
-_has_f03_header = re.compile(r'-[*]-\s*f03\s*-[*]-',re.I).search
-_has_f08_header = re.compile(r'-[*]-\s*f08\s*-[*]-',re.I).search
-_has_free_header = re.compile(r'-[*]-\s*(f90|f95|f03|f08)\s*-[*]-',re.I).search
-_has_fix_header = re.compile(r'-[*]-\s*fix\s*-[*]-',re.I).search
-_has_pyf_header = re.compile(r'-[*]-\s*pyf\s*-[*]-',re.I).search
-_free_format_start = re.compile(r'[^c*!]\s*[^\s\d\t]',re.I).match
 
 ##############################################################################
 
 class FortranFormat(object):
-    def __init__( self, is_free, is_strict ):
-        self._is_free   = is_free
-        self._is_strict    = is_strict
+    '''
+    Describes the nature of a piece of Fortran source.
+
+    Source can be fixed or free format. It can also be "strict" or
+    "not strict" although it's not entirely clear what that means.
+    '''
+    def __init__(self, is_free, is_strict):
+        self._is_free = is_free
+        self._is_strict = is_strict
 
     def __eq__(self, other):
-        if isinstance( other, FortranFormat):
-            return self._is_free == other._is_free \
-                   and self._is_strict == other._is_strict
-        raise NotImplemented
+        if isinstance(other, FortranFormat):
+            return self._is_free == other.is_free() \
+                   and self._is_strict == other.is_strict()
+        raise NotImplementedError
 
     def __repr__(self):
         if self._is_strict:
@@ -108,15 +104,36 @@ class FortranFormat(object):
 
         return string + ' format'
 
-    def is_free( self ):
+    def is_free(self):
+        '''
+        Returns true if the "free format" flag is set.
+        '''
         return self._is_free
 
-    def is_strict( self ):
+    def is_strict(self):
+        '''
+        Returns true if the "strict" flag is set.
+        '''
         return self._is_strict
+
 
 ##############################################################################
 
-def get_source_info_str( source ):
+_HAS_F_EXTENSION = re.compile(r'.*[.](for|ftn|f77|f)\Z', re.I).match
+
+_HAS_F_HEADER = re.compile(r'-[*]-\s*(fortran|f77)\s*-[*]-', re.I).search
+_HAS_F90_HEADER = re.compile(r'-[*]-\s*f90\s*-[*]-', re.I).search
+_HAS_F03_HEADER = re.compile(r'-[*]-\s*f03\s*-[*]-', re.I).search
+_HAS_F08_HEADER = re.compile(r'-[*]-\s*f08\s*-[*]-', re.I).search
+_HAS_FREE_HEADER = re.compile(r'-[*]-\s*(f90|f95|f03|f08)\s*-[*]-',
+                              re.I).search
+_HAS_FIX_HEADER = re.compile(r'-[*]-\s*fix\s*-[*]-', re.I).search
+_HAS_PYF_HEADER = re.compile(r'-[*]-\s*pyf\s*-[*]-', re.I).search
+
+_FREE_FORMAT_START = re.compile(r'[^c*!]\s*[^\s\d\t]', re.I).match
+
+
+def get_source_info_str(source):
     '''
     Determines the format of Fortran source held in a string.
 
@@ -127,23 +144,28 @@ def get_source_info_str( source ):
         return FortranFormat(False, False)
 
     firstline = lines[0].lstrip()
-    if _has_f_header(firstline):    return FortranFormat(False, True)
-    if _has_fix_header(firstline):  return FortranFormat(False, False)
-    if _has_free_header(firstline): return FortranFormat(True,  False)
-    if _has_pyf_header(firstline):  return FortranFormat(True,  True)
+    if _HAS_F_HEADER(firstline):
+        return FortranFormat(False, True)
+    if _HAS_FIX_HEADER(firstline):
+        return FortranFormat(False, False)
+    if _HAS_FREE_HEADER(firstline):
+        return FortranFormat(True, False)
+    if _HAS_PYF_HEADER(firstline):
+        return FortranFormat(True, True)
 
-    n = 10000 # Check up to this number of non-comment lines for hints.
+    line_tally = 10000  # Check up to this number of non-comment lines
     is_free = False
-    while n>0 and lines:
+    while line_tally > 0 and lines:
         line = lines.pop(0).rstrip()
         if line and line[0] != '!':
-            n -= 1
-            if line[0] != '\t' and _free_format_start(line[:5]) \
+            line_tally -= 1
+            if line[0] != '\t' and _FREE_FORMAT_START(line[:5]) \
                or line[-1:] == '&':
                 is_free = True
                 break
 
     return FortranFormat(is_free, False)
+
 
 ##############################################################################
 
@@ -154,18 +176,27 @@ def get_source_info(file_candidate):
     Returns a FortranFormat object.
     '''
     if hasattr(file_candidate, 'name'):
-        base, ext = os.path.splitext(file_candidate)
+        if file_candidate.name.startswith('<') \
+           and file_candidate.name.endswith('>'):
+            filename = None
+        else:  # It's an actual file.
+            filename = file_candidate.name
+    else:  # It's a filename
+        filename = file_candidate
+
+    if filename:
+        _, ext = os.path.splitext(filename)
         if ext == '.pyf':
             return FortranFormat(True, True)
 
     if hasattr(file_candidate, 'read'):
         pointer = file_candidate.tell()
         file_candidate.seek(0)
-        return get_source_info_str(file_candidate.read())
+        source_info = get_source_info_str(file_candidate.read())
         file_candidate.seek(pointer)
+        return source_info
     else:
         with open(file_candidate, 'r') as file_object:
             return get_source_info_str(file_object.read())
-
 
 ##############################################################################

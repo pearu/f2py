@@ -41,40 +41,50 @@ Test battery associated with fparser.sourceinfo package.
 '''
 from __future__ import print_function
 
-import pytest
+import os
 import tempfile
+import pytest
 
 from fparser.sourceinfo import FortranFormat, \
                                get_source_info_str, get_source_info
 
+
+##############################################################################
+
 @pytest.fixture(scope="module",
-                params=[('', FortranFormat(True, True)),
-                        ("-*- fortran -*-", FortranFormat(False, True)),
-                        ("-*- f77 -*-",     FortranFormat(False, True)),
-                        ('-*- f90 -*-',     FortranFormat(True,  False)),
-                        ('-*- f03 -*-',     FortranFormat(True,  False)),
-                        ('-*- f08 -*-',     FortranFormat(True,  False)),
-                        ('-*- fix -*-',     FortranFormat(False, False)),
-                        ('-*- pyf -*-',     FortranFormat(True,  True))])
+                params=[(None, FortranFormat(True, True)),
+                        ("! -*- fortran -*-", FortranFormat(False, True)),
+                        ("! -*- f77 -*-", FortranFormat(False, True)),
+                        ('! -*- f90 -*-', FortranFormat(True, False)),
+                        ('! -*- f03 -*-', FortranFormat(True, False)),
+                        ('! -*- f08 -*-', FortranFormat(True, False)),
+                        ('! -*- fix -*-', FortranFormat(False, False)),
+                        ('! -*- pyf -*-', FortranFormat(True, True))])
 def header(request):
+    '''
+    Returns parameters for header tests.
+    '''
     return request.param
 
-_fixed_source = '''      program main
+
+##############################################################################
+
+_FIXED_SOURCE = '''      program main
       end program main
 '''
 
-_free_source = '''program main
+_FREE_SOURCE = '''program main
 end program main
 '''
 
-_fixed_with_continue = '''      program main
+_FIXED_WITH_CONTINUE = '''      program main
           implicit none
           integer :: foo, &
                      bar
       end program main
 '''
 
-_fixed_with_comments = '''!     The program
+_FIXED_WITH_COMMENTS = '''!     The program
       program main
 c         Enforce explicit variable declaration
           implicit none
@@ -87,42 +97,110 @@ c         Enforce explicit variable declaration
 # them in the past even if it shouldn't have. We have to continue handling
 # them for the time being until we work out why they were supported.
 #
-_initial_tab = "\tprogram main\n"
-_middle_tab = " \tprogram main\n"
+_INITIAL_TAB = "\tprogram main\n"
+_MIDDLE_TAB = " \tprogram main\n"
+
 
 @pytest.fixture(scope="module",
-                params=[('',                   FortranFormat(False, False)),
-                        (_fixed_source,        FortranFormat(False, False)),
-                        (_free_source,         FortranFormat(True,  False)),
-                        (_fixed_with_continue, FortranFormat(True,  False)),
-                        (_fixed_with_comments, FortranFormat(False, False)),
-                        (_initial_tab,         FortranFormat(False, False)),
-                        (_middle_tab,          FortranFormat(True,  False))])
+                params=[(None, FortranFormat(False, False)),
+                        (_FIXED_SOURCE, FortranFormat(False, False)),
+                        (_FREE_SOURCE, FortranFormat(True, False)),
+                        (_FIXED_WITH_CONTINUE, FortranFormat(True, False)),
+                        (_FIXED_WITH_COMMENTS, FortranFormat(False, False)),
+                        (_INITIAL_TAB, FortranFormat(False, False)),
+                        (_MIDDLE_TAB, FortranFormat(True, False))])
 def content(request):
+    '''
+    Returns parameters for content tests.
+    '''
     return request.param
+
+
+##############################################################################
 
 def test_get_source_info_str(header, content):
-    full_source = header[0] + '\n' + content[0]
-    format = get_source_info_str(full_source)
+    '''
+    Tests that source format is correctly identified when read from a string.
+    '''
+    full_source = ''
+    if header[0] is not None:
+        full_source += header[0] + '\n'
+    if content[0] is not None:
+        full_source += content[0]
+
+    source_info = get_source_info_str(full_source)
     if header[0]:
-      assert format == header[1]
-    else: # No header
-      assert format == content[1]
+        assert source_info == header[1]
+    else:  # No header
+        assert source_info == content[1]
+
+
+##############################################################################
 
 @pytest.fixture(scope="module",
-                params=[('.f', FortranFormat(False, True))])
+                params=[('.f', None),
+                        ('.f90', None),
+                        ('.pyf', FortranFormat(True, True)),
+                        ('.guff', None)])
 def extension(request):
+    '''
+    Returns parameters for extension tests.
+    '''
     return request.param
 
+##############################################################################
+
+
 def test_get_source_info_filename(extension, header, content):
-    full_source = header[0] + '\n' + content[0]
-    with tempfile.NamedTemporaryFile(mode='w+', suffix=extension[0]) as source_file:
+    '''
+    Tests that source format is correctly identified when read from a file.
+    '''
+    full_source = ''
+    if header[0] is not None:
+        full_source += header[0] + '\n'
+    if content[0] is not None:
+        full_source += content[0]
+
+    source_file, filename = tempfile.mkstemp(suffix=extension[0], text=True)
+    os.close(source_file)
+
+    with open(filename, 'w') as source_file:
+        print(full_source, file=source_file)
+
+    try:
+        source_info = get_source_info(filename)
+        if extension[1] is not None:
+            assert source_info == extension[1]
+        elif header[0] is not None:
+            assert source_info == header[1]
+        else:  # No header
+            assert source_info == content[1]
+    except Exception as ex:
+        os.remove(filename)
+        raise ex
+
+##############################################################################
+
+
+def test_get_source_info_file(extension, header, content):
+    '''
+    Tests that source format is correctly identified when read from a file.
+    '''
+    full_source = ''
+    if header[0] is not None:
+        full_source += header[0] + '\n'
+    if content[0] is not None:
+        full_source += content[0]
+
+    with tempfile.TemporaryFile(mode='w+',
+                                suffix=extension[0]) as source_file:
         print(full_source, file=source_file)
         source_file.seek(0)
-        format = get_source_info(source_file.name)
-        if extension[0] == '.pyf':
-            assert format == extension[1]
-        elif header[0]:
-            assert format == header[1]
-        else: # No header
-            assert format == content[1]
+
+        source_info = get_source_info(source_file)
+        if header[0] is not None:
+            assert source_info == header[1]
+        else:  # No header
+            assert source_info == content[1]
+
+##############################################################################
