@@ -6936,13 +6936,15 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  "ONLY" specification and optional "Rename" or "Only" list)
         :rtype: 5-tuple of objects (module name and 4 optional)
         '''
+        # Incorrect 'USE' statement
         if string[:3].upper() != 'USE':
             return
         line = string[3:]
         # Empty string after 'USE'
         if not line:
             return
-        if isalnum(line[0]):
+        # No separation between 'USE' statement and its specifiers
+        if line[0].isalnum():
             return
         line = line.lstrip()
         i = line.find('::')

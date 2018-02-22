@@ -3444,15 +3444,21 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         "', ONLY:', Rename(None, Name('b'), Name('c')))")
 
     # Checks that no match is found for incorrect 'USE' statement contructs
+
+    # Incorrect 'USE' statement
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('8se')
+    assert "Use_Stmt: '8se'" in str(excinfo)
+
     # Empty string after 'USE'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use')
     assert "Use_Stmt: 'use'" in str(excinfo)
 
-    # 'USE' statement contains numbers
+    # No separation between 'USE' statement and its specifiers
     with pytest.raises(NoMatchError) as excinfo:
-        _ = ucls('8se')
-    assert "Use_Stmt: '8se'" in str(excinfo)
+        _ = ucls('usemodulename')
+    assert "Use_Stmt: 'usemodulename'" in str(excinfo)
 
     # Missing Module_Nature between ',' and '::'
     with pytest.raises(NoMatchError) as excinfo:
