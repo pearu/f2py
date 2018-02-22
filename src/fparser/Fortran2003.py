@@ -5227,10 +5227,12 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
                     Scalar_Logical_Expr(repmap(lbrak[1:i].strip()))
                 return scalar_logical_expr, None, optional_delim
         # Match counter expression
+        # More than one '=' in counter expression
         if line.count('=') != 1:
             return
         var, rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
+        # Incorrect number of elements in counter expression
         if not 2 <= len(rhs) <= 3:
             return
         counter_expr = (Variable(repmap(var.rstrip())),
@@ -6980,6 +6982,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             return
         name = Module_Name(name)
         line = line[i+1:].lstrip()
+        # Missing 'ONLY' specification after 'USE Module_Name,'
         if not line:
             return
         if line[:4].upper() == 'ONLY':
@@ -6988,7 +6991,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if line[0] != ':':
                 return
             line = line[1:].lstrip()
-            # Missing Only_List/Rename_List after 'USE Module_Name,'
+            # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
             if not line:
                 return
             return nature, dcolon, name, ', ONLY:', Only_List(line)

@@ -3474,7 +3474,7 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         _ = ucls('use , only: b')
     assert "Use_Stmt: 'use , only: b'" in str(excinfo)
 
-    # Missing Only_List/Rename_List after 'USE Module_Name,'
+    # Missing 'ONLY' specification after 'USE Module_Name,'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use a,')
     assert "Use_Stmt: 'use a,'" in str(excinfo)
@@ -3483,6 +3483,11 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use a, only b')
     assert "Use_Stmt: 'use a, only b" in str(excinfo)
+
+    # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use a, only:')
+    assert "Use_Stmt: 'use a, only:" in str(excinfo)
 
 
 def test_Module_Nature():  # pylint: disable=invalid-name
