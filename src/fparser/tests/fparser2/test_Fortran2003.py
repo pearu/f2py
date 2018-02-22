@@ -3459,15 +3459,15 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         _ = ucls('use, ::')
     assert "Use_Stmt: 'use, ::'" in str(excinfo)
 
-    # Missing '::' after Module_Nature
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = ucls('use, intrinsic a')
-    assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
-
     # No Module_Name after 'USE, Module_Nature ::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use, intrinsic ::')
     assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
+
+    # Missing '::' after Module_Nature
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use, intrinsic a')
+    assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
 
     # Missing Module_Name before Only_List
     with pytest.raises(NoMatchError) as excinfo:

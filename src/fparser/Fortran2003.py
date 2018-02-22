@@ -6937,6 +6937,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         if string[:3].upper() != 'USE':
             return
         line = string[3:]
+        # Empty string after 'USE'
         if not line:
             return
         if isalnum(line[0]):
@@ -6951,10 +6952,12 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             dcolon = '::'
             if line.startswith(','):
                 line_nat = line[1:i].strip()
+                # Missing Module_Nature between ',' and '::'
                 if not line_nat:
                     return
                 nature = Module_Nature(line_nat)
             line = line[i+2:].lstrip()
+            # No Module_Name after 'USE, Module_Nature ::'
             if not line:
                 return
         else:
@@ -6964,6 +6967,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                     nature = Module_Nature(item)
                 except NoMatchError:
                     pass
+            # Missing '::' after Module_Nature
             if nature is not None:
                 return
 
@@ -6971,6 +6975,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         if i == -1:
             return nature, dcolon, Module_Name(line), '', None
         name = line[:i].rstrip()
+        # Missing Module_Name before Only_List
         if not name:
             return
         name = Module_Name(name)
@@ -6979,11 +6984,13 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
+            # Missing ':' after ', ONLY' specification
             if line[0] != ':':
                 return
             line = line[1:].lstrip()
+            # Missing Only_List/Rename_List after 'USE Module_Name,'
             if not line:
-                return nature, dcolon, name, ', ONLY:', None
+                return
             return nature, dcolon, name, ', ONLY:', Only_List(line)
         return nature, dcolon, name, ',', Rename_List(line)
 
