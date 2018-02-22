@@ -3449,12 +3449,22 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         _ = ucls('use')
     assert "Use_Stmt: 'use'" in str(excinfo)
 
+    # 'USE' statement contains numbers
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('8se')
+    assert "Use_Stmt: '8se'" in str(excinfo)
+
     # Missing Module_Nature between ',' and '::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use, ::')
     assert "Use_Stmt: 'use, ::'" in str(excinfo)
 
-    # No Module_Name after 'USE, module_nature ::'
+    # Missing '::' after Module_Nature
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = ucls('use, intrinsic a')
+    assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
+
+    # No Module_Name after 'USE, Module_Nature ::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use, intrinsic ::')
     assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
@@ -3464,12 +3474,12 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         _ = ucls('use , only: b')
     assert "Use_Stmt: 'use , only: b'" in str(excinfo)
 
-    # Missing Only_List after 'USE module_name,'
+    # Missing Only_List/Rename_List after 'USE Module_Name,'
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use a,')
     assert "Use_Stmt: 'use a,'" in str(excinfo)
 
-    # Missing ':' after 'ONLY' specification
+    # Missing ':' after ', ONLY' specification
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('use a, only b')
     assert "Use_Stmt: 'use a, only b" in str(excinfo)
@@ -3488,7 +3498,7 @@ def test_Module_Nature():  # pylint: disable=invalid-name
     assert isinstance(inst, mncls), repr(inst)
     assert str(inst) == 'NON_INTRINSIC'
     assert repr(inst) == "Module_Nature('NON_INTRINSIC')"
-    
+
     # Incorrect module nature
     with pytest.raises(NoMatchError) as excinfo:
         _ = mncls('other_nature')

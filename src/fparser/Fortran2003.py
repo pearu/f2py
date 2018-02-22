@@ -6957,6 +6957,16 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             line = line[i+2:].lstrip()
             if not line:
                 return
+        else:
+            items = re.findall(r"[\w']+", line)
+            for item in items:
+                try:
+                    nature = Module_Nature(item)
+                except NoMatchError:
+                    pass
+            if nature is not None:
+                return
+
         i = line.find(',')
         if i == -1:
             return nature, dcolon, Module_Name(line), '', None
@@ -6987,11 +6997,6 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         # followed by a double colon to "USE" statement
         if self.items[0] is not None and self.items[1] is not None:
             usestmt += ', %s %s' % (self.items[0], self.items[1])
-        # Return warning message if Module_Nature is not followed
-        # by a double colon after "USE" statement (invalid Fortran)
-        elif self.items[0] is not None and self.items[1] is None:
-            message = 'Module nature must be followed by "::"'
-            logging.getLogger(__name__).debug(message)
         # Add optional double colon after "USE" statement without
         # Module_Nature (valid Fortran)
         elif self.items[0] is None and self.items[1] is not None:
