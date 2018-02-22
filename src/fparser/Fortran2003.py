@@ -6965,6 +6965,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if not line:
                 return
         else:
+            # Check for missing '::' after Module_Nature
             items = re.findall(r"[\w']+", line)
             for item in items:
                 try:

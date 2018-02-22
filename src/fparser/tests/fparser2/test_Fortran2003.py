@@ -3444,7 +3444,6 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         "', ONLY:', Rename(None, Name('b'), Name('c')))")
 
     # Checks that no match is found for incorrect 'USE' statement contructs
-
     # Incorrect 'USE' statement
     with pytest.raises(NoMatchError) as excinfo:
         _ = ucls('8se')
