@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+26/02/2017 PR #72 and issue #69. Fixes for bugs found when using fparser2
+	   to parse and then re-generate LFRic code.
+
 15/01/2017 PR #67. Move old testing code from source files into test
 	   framework.
 
