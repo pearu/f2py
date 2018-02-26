@@ -106,7 +106,7 @@ def test_fortranformat_invalid():
     and oranges.
     '''
     unit_under_test = FortranFormat(True, False)
-    with pytest.raises(Exception):
+    with pytest.raises(NotImplementedError):
         if unit_under_test == 'oranges':
             raise Exception("That shouldn't have happened")
 
