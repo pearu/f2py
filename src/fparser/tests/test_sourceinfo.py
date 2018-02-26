@@ -61,6 +61,9 @@ from fparser.sourceinfo import FortranFormat, \
 # argument list will be run once with "header" equal to "! -*- fortran -*-",
 # then with "header" equal to "! -*- f77 -*-" and so on.
 #
+# If a test includes multiple parameter fixtures it will be called for every
+# permutation thus afforded.
+#
 @pytest.fixture(scope="module",
                 params=[(None, FortranFormat(True, True)),
                         ("! -*- fortran -*-", FortranFormat(False, True)),
