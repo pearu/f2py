@@ -64,7 +64,10 @@ def pretty(request):
 
 ##############################################################################
 
-def test_FortranFormat_string(pretty):
+def test_fortranformat_string(pretty):
+    '''
+    Tests for the correct string representations.
+    '''
     unit_under_test = FortranFormat(pretty[0], pretty[1])
     assert str(unit_under_test) == pretty[2]
 
@@ -84,9 +87,12 @@ def permutations(request):
 
 ##############################################################################
 
-def test_FortranFormat_equality(permutations, pretty):
+def test_fortranformat_equality(permutations, pretty):
+    '''
+    Tests that the equality operator works as expected.
+    '''
     expected = (permutations[0] == pretty[0]) \
-               and (permutations[1] == pretty[1])
+        and (permutations[1] == pretty[1])
     unit_under_test = FortranFormat(permutations[0], permutations[1])
     candidate = FortranFormat(pretty[0], pretty[1])
     assert (unit_under_test == candidate) == expected
