@@ -1236,7 +1236,7 @@ class FortranFileReader(FortranReaderBase):
         self.id = filename
         self.file = open(filename,'r')
         FortranReaderBase.__init__(self, self.file,
-                                   format.is_free(), format.is_strict())
+                                   format.is_free, format.is_strict)
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(filename))
         else:
@@ -1255,7 +1255,7 @@ class FortranStringReader(FortranReaderBase):
         source = six.StringIO(string)
         format = get_source_info_str(string)
         FortranReaderBase.__init__(self, source,
-                                   format.is_free(), format.is_strict())
+                                   format.is_free, format.is_strict)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:

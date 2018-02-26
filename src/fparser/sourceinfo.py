@@ -79,16 +79,25 @@ class FortranFormat(object):
     Describes the nature of a piece of Fortran source.
 
     Source can be fixed or free format. It can also be "strict" or
-    "not strict" although it's not entirely clear what that means.
+    "not strict" although it's not entirely clear what that means. It may
+    refer to the strictness of adherance to fixed format although what that
+    means in the context of free format I don't know.
     '''
     def __init__(self, is_free, is_strict):
+        '''
+        Constructs a FortranFormat object from the describing parameters.
+
+        Arguments:
+            is_free   - (Boolean) True for free format, False for fixed.
+            is_strict - (Boolean) Some amount of strictness.
+        '''
         self._is_free = is_free
         self._is_strict = is_strict
 
     def __eq__(self, other):
         if isinstance(other, FortranFormat):
-            return self._is_free == other.is_free() \
-                   and self._is_strict == other.is_strict()
+            return self._is_free == other.is_free \
+                   and self._is_strict == other.is_strict
         raise NotImplementedError
 
     def __repr__(self):
@@ -104,12 +113,14 @@ class FortranFormat(object):
 
         return string + ' format'
 
+    @property
     def is_free(self):
         '''
         Returns true if the "free format" flag is set.
         '''
         return self._is_free
 
+    @property
     def is_strict(self):
         '''
         Returns true if the "strict" flag is set.
