@@ -99,6 +99,18 @@ def test_fortranformat_equality(permutations, pretty):
 
 
 ##############################################################################
+
+def test_fortranformat_invalid():
+    '''
+    Tests that the equality operator understands that it can't compare apples
+    and oranges.
+    '''
+    unit_under_test = FortranFormat(True, False)
+    with pytest.raises(Exception):
+        unit_under_test == 'oranges'
+
+
+##############################################################################
 # Setting up a pytest fixture in this way is a mechanism for creating
 # parameterised tests.
 #
