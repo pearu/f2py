@@ -50,7 +50,17 @@ from fparser.sourceinfo import FortranFormat, \
 
 
 ##############################################################################
-
+# Setting up a pytest fixture in this way is a mechanism for creating
+# parameterised tests.
+#
+# Normally when a test includes a fixture in its argument list the
+# corresponding function will be called and the result passed in to the test.
+#
+# When used like this the test will be called once for each value the fixture
+# function returns. So in this case any test including "header" in its
+# argument list will be run once with "header" equal to "! -*- fortran -*-",
+# then with "header" equal to "! -*- f77 -*-" and so on.
+#
 @pytest.fixture(scope="module",
                 params=[(None, FortranFormat(True, True)),
                         ("! -*- fortran -*-", FortranFormat(False, True)),
@@ -101,6 +111,8 @@ _INITIAL_TAB = "\tprogram main\n"
 _MIDDLE_TAB = " \tprogram main\n"
 
 
+# Another parameterised test fixture. See "header" above.
+#
 @pytest.fixture(scope="module",
                 params=[(None, FortranFormat(False, False)),
                         (_FIXED_SOURCE, FortranFormat(False, False)),
@@ -137,6 +149,8 @@ def test_get_source_info_str(header, content):
 
 ##############################################################################
 
+# Another parameterised test fixture. See "header" above.
+#
 @pytest.fixture(scope="module",
                 params=[('.f', None),
                         ('.f90', None),
