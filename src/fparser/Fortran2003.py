@@ -5350,20 +5350,21 @@ class Action_Term_Do_Construct(BlockBase): # R836
     def match(reader):
         return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
                                Do_Term_Action_Stmt, reader,
-                               match_labels=True, enable_do_label_construct_hook=True)
+                               match_labels=True,
+                               enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
         line = []
         start = self.content[0]
         end = self.content[-1]
         extra_tab = '  '
-        line.append(start.tofortran(tab=tab,isfix=isfix))
+        line.append(start.tofortran(tab=tab, isfix=isfix))
         for item in self.content[1:-1]:
-            line.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
+            line.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
             if isinstance(item, Label_Do_Stmt):
                 extra_tab += '  '
         if len(self.content)>1:
-            line.append(end.tofortran(tab=tab,isfix=isfix))
+            line.append(end.tofortran(tab=tab, isfix=isfix))
         return '\n'.join(line)
 
 class Do_Body(BlockBase): # R837
