@@ -188,6 +188,7 @@ def get_source_info(file_candidate):
     '''
     if hasattr(file_candidate, 'name'):
         filename = file_candidate.name
+
         # The behaviour of file.name when associated with a file without a
         # file name has changed between Python 2 and 3.
         #
@@ -207,12 +208,25 @@ def get_source_info(file_candidate):
             return FortranFormat(True, True)
 
     if hasattr(file_candidate, 'read'):
+        # If the candidate object has a "read" method we assume it's a file
+        # object.
+        #
+        # If it is a file object then it may be in the process of being read.
+        # As such we need to take a note of the current state of the file
+        # pointer so we can restore it when we've finished what we're doing.
+        #
         pointer = file_candidate.tell()
         file_candidate.seek(0)
         source_info = get_source_info_str(file_candidate.read())
         file_candidate.seek(pointer)
         return source_info
     else:
+        # No "read" method so presumably it's a filename string. In which case
+        # we need to open the named file so we can read it.
+        #
+        # It is closed on completion so as to return it to the state it was
+        # found in.
+        #
         with open(file_candidate, 'r') as file_object:
             return get_source_info_str(file_object.read())
 
