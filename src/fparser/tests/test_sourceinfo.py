@@ -55,7 +55,7 @@ from fparser.sourceinfo import FortranFormat, \
                         (False, True, 'Strict fixed format'),
                         (True, False, 'Non-strict free format'),
                         (True, True, 'Strict free format')])
-def format(request):
+def pretty(request):
     '''
     Returns parameters for format tests.
     '''
@@ -64,9 +64,32 @@ def format(request):
 
 ##############################################################################
 
-def test_FortranFormat(format):
-    unit_under_test = FortranFormat(format[0], format[1])
-    assert str(unit_under_test) == format[2]
+def test_FortranFormat_string(pretty):
+    unit_under_test = FortranFormat(pretty[0], pretty[1])
+    assert str(unit_under_test) == pretty[2]
+
+
+##############################################################################
+@pytest.fixture(scope="module",
+                params=[(False, False),
+                        (False, True),
+                        (True, False),
+                        (True, True)])
+def permutations(request):
+    '''
+    Returns all possible permutations of the input arguments.
+    '''
+    return request.param
+
+
+##############################################################################
+
+def test_FortranFormat_equality(permutations, pretty):
+    expected = (permutations[0] == pretty[0]) \
+               and (permutations[1] == pretty[1])
+    unit_under_test = FortranFormat(permutations[0], permutations[1])
+    candidate = FortranFormat(pretty[0], pretty[1])
+    assert (unit_under_test == candidate) == expected
 
 
 ##############################################################################
