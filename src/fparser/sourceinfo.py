@@ -100,7 +100,7 @@ class FortranFormat(object):
                    and self._is_strict == other.is_strict
         raise NotImplementedError
 
-    def __repr__(self):
+    def __str__(self):
         if self._is_strict:
             string = 'Strict'
         else:

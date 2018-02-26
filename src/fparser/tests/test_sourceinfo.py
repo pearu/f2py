@@ -50,6 +50,26 @@ from fparser.sourceinfo import FortranFormat, \
 
 
 ##############################################################################
+@pytest.fixture(scope="module",
+                params=[(False, False, 'Non-strict fixed format'),
+                        (False, True, 'Strict fixed format'),
+                        (True, False, 'Non-strict free format'),
+                        (True, True, 'Strict free format')])
+def format(request):
+    '''
+    Returns parameters for format tests.
+    '''
+    return request.param
+
+
+##############################################################################
+
+def test_FortranFormat(format):
+    unit_under_test = FortranFormat(format[0], format[1])
+    assert str(unit_under_test) == format[2]
+
+
+##############################################################################
 # Setting up a pytest fixture in this way is a mechanism for creating
 # parameterised tests.
 #
