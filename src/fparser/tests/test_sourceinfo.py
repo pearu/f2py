@@ -227,8 +227,8 @@ def extension(request):
     '''
     return request.param
 
-##############################################################################
 
+##############################################################################
 
 def test_get_source_info_filename(extension, header, content):
     '''
@@ -258,8 +258,8 @@ def test_get_source_info_filename(extension, header, content):
         os.remove(filename)
         raise ex
 
-##############################################################################
 
+##############################################################################
 
 def test_get_source_info_file(extension, header, content):
     '''
@@ -281,5 +281,19 @@ def test_get_source_info_file(extension, header, content):
             assert source_info == header[1]
         else:  # No header
             assert source_info == content[1]
+
+
+##############################################################################
+
+def test_get_source_info_wrong():
+    '''
+    Tests that get_source_info throws an exception if passed the wrong type
+    of argument.
+    '''
+    with pytest.raises(ValueError):
+        source_info = get_source_info(42)  # Obviously wrong
+
+    with pytest.raises(ValueError):
+        source_info = get_source_info(['one'])  # Less obviously wrong
 
 ##############################################################################

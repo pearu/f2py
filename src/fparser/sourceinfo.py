@@ -186,7 +186,7 @@ def get_source_info(file_candidate):
 
     Returns a FortranFormat object.
     '''
-    if hasattr(file_candidate, 'name'):
+    if hasattr(file_candidate, 'name') and hasattr(file_candidate, 'read'):
         filename = file_candidate.name
 
         # The behaviour of file.name when associated with a file without a
@@ -199,8 +199,14 @@ def get_source_info(file_candidate):
         # Under Python 2 file.name holds a string of the form "<..>".
         elif filename.startswith('<') and filename.endswith('>'):
             filename = None
-    else:  # Candidate is a filename
+    elif isinstance(file_candidate,
+                    str) or isinstance(file_candidate, basestring):
+        # The preferred method for identifying strings changed between Python2
+        # and Python3.
         filename = file_candidate
+    else:
+        message = 'Argument must be a file or filename.'
+        raise ValueError(message)
 
     if filename:
         _, ext = os.path.splitext(filename)
@@ -221,8 +227,11 @@ def get_source_info(file_candidate):
         file_candidate.seek(pointer)
         return source_info
     else:
-        # No "read" method so presumably it's a filename string. In which case
-        # we need to open the named file so we can read it.
+        # It isn't a file and it passed the type check above so it must be
+        # a string.
+        #
+        # If it's a string we assume it is a filename. In which case we need
+        # to open the named file so we can read it.
         #
         # It is closed on completion so as to return it to the state it was
         # found in.
