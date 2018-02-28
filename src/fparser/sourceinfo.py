@@ -68,8 +68,9 @@ fixed format. It also tries to differentiate between strict and "pyf" although
 I'm not sure what that is.
 '''
 
-import re
 import os
+import re
+import six
 
 
 ##############################################################################
@@ -199,8 +200,7 @@ def get_source_info(file_candidate):
         # Under Python 2 file.name holds a string of the form "<..>".
         elif filename.startswith('<') and filename.endswith('>'):
             filename = None
-    elif isinstance(file_candidate,
-                    str) or isinstance(file_candidate, basestring):
+    elif isinstance(file_candidate, six.string_types):
         # The preferred method for identifying strings changed between Python2
         # and Python3.
         filename = file_candidate
