@@ -11,10 +11,13 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-26/02/2017 PR #72 and issue #69. Fixes for bugs found when using fparser2
+05/03/2018 PR #73. Improvements to SourceInfo so that it can take either
+	   a filename or a file handle.
+
+26/02/2018 PR #72 and issue #69. Fixes for bugs found when using fparser2
 	   to parse and then re-generate LFRic code.
 
-15/01/2017 PR #67. Move old testing code from source files into test
+15/01/2018 PR #67. Move old testing code from source files into test
 	   framework.
 
 12/01/2018 PR #66 and issue #64. Fix bug where = in a string was being
