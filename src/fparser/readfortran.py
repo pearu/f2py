@@ -359,7 +359,7 @@ class MultiLine(object):
 
     PYF file multiline is represented as follows::
       prefix+'''+lines+'''+suffix.
-    
+
     Attributes
     ----------
     prefix : str
@@ -389,6 +389,8 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
+##############################################################################
+
 class FortranReaderBase(object):
     """
     Base class for reading Fortran sources.
@@ -397,7 +399,7 @@ class FortranReaderBase(object):
     method) and it may hold Fortran 77 code, fixed format Fortran
     code, free format Fortran code, or PYF signatures (with extended
     free format Fortran syntax).
-    
+
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
 
@@ -412,8 +414,8 @@ class FortranReaderBase(object):
         ----------
         source :
           A file-like object with .next() method used to retrive a line.
-        isfree : bool
-        isstrict : bool
+        format :
+          A FortranFormat object as returned by sourceinfo.get_source_info()
 
         See also
         --------
@@ -1225,28 +1227,47 @@ class FortranReaderBase(object):
             return next(self)
         return self.comment_item('', startlineno, endlineno)
 
-    ##  FortranReaderBase
 
-# Fortran file and string readers:
+##############################################################################
 
 class FortranFileReader(FortranReaderBase):
 
-    def __init__(self, filename, include_dirs = None, source_only=None):
-        format = get_source_info(filename)
-        self.id = filename
-        self.file = open(filename,'r')
-        FortranReaderBase.__init__(self, self.file,
-                                   format.is_free, format.is_strict)
+    def __init__(self, file_candidate, include_dirs = None, source_only=None):
+        format = get_source_info(file_candidate)
+        if isinstance(file_candidate, six.string_types):
+            self.id = file_candidate
+            self.file = open(file_candidate,'r')
+            self._close_on_destruction = True
+        elif hasattr(file_candidate,
+                     'next') and hasattr(file_candidate,
+                                         'name'):  # Is likely a file
+            self.id = file_candidate.name
+            self.file = file_candidate
+            self._close_on_destruction = False
+        else:  # Probably not something we can deal with
+            message = 'FortranFileReader is used with a filename'
+            message += ' or file-like object.'
+            raise Exception(message)
+
+        FortranReaderBase.__init__(self, self.file, format.is_free, format.is_strict)
+
         if include_dirs is None:
-            self.include_dirs.insert(0, os.path.dirname(filename))
+            self.include_dirs.insert(0, os.path.dirname(self.id))
         else:
             self.include_dirs = include_dirs[:]
         if source_only is not None:
             self.source_only = source_only[:]
         return
 
+    def __del__(self):
+        if self._close_on_destruction:
+            self.file.close()
+
     def close_source(self):
         self.file.close()
+
+
+##############################################################################
 
 class FortranStringReader(FortranReaderBase):
 
