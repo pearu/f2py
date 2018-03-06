@@ -116,6 +116,8 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
     import os
     import re
     from .readfortran import FortranFileReader, FortranStringReader
+    from fparser.sourceinfo import FortranFormat
+
     if os.path.isfile(input):
         name, ext = os.path.splitext(input)
         if ext.lower() in ['.c']:
@@ -143,10 +145,10 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
         raise TypeError('Expected string or filename input but got %s' %
                         (type(input)))
     if isfree is None:
-        isfree = reader.isfree
+        isfree = reader.format.is_free
     if isstrict is None:
-        isstrict = reader.isstrict
-    reader.set_mode(isfree, isstrict)
+        isstrict = reader.format.is_strict
+    reader.set_format(FortranFormat(isfree, isstrict))
     return reader
 
 
@@ -224,6 +226,7 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
     get_reader
     """
     from .parsefortran import FortranParser
+
     reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
     parser = FortranParser(reader, ignore_comments=ignore_comments)
     try:

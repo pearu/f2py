@@ -68,6 +68,7 @@ Test fparser support for parsing select-case and select-type blocks
 """
 
 import pytest
+import fparser.sourceinfo
 
 
 # We need to monkeypatch the logger used by fparser because it grabs
@@ -105,7 +106,7 @@ def test_case_internal_error(monkeypatch, capsys):
     from fparser.block_statements import Case
     from fparser.readfortran import FortranStringReader
     reader = FortranStringReader('CASE (yes)')
-    reader.set_mode(True, False)
+    reader.set_format(fparser.sourceinfo.FortranFormat(True, False))
     item = next(reader)
     stmt = Case(item, item)
     # Monkeypatch our valid Case object so that get_line() now
@@ -130,7 +131,7 @@ def test_class_internal_error(monkeypatch, capsys):
     from fparser.block_statements import ClassIs
     from fparser.readfortran import FortranStringReader
     reader = FortranStringReader('CLASS IS (yes)')
-    reader.set_mode(True, False)
+    reader.set_format(fparser.sourceinfo.FortranFormat(True, False))
     item = next(reader)
     stmt = ClassIs(item, item)
     # Monkeypatch our valid Case object so that get_line() now

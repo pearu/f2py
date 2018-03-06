@@ -50,6 +50,20 @@ from fparser.sourceinfo import FortranFormat, \
 
 
 ##############################################################################
+
+def test_fortranformat_constructor():
+    '''
+    Tests that the constructor correctly rejects attempts to create an object
+    with "None" arguments.
+    '''
+    with pytest.raises(Exception):
+        unit_under_test = FortranFormat(True, None)
+
+    with pytest.raises(Exception):
+        unit_under_test = FortranFormat(None, True)
+
+
+##############################################################################
 @pytest.fixture(scope="module",
                 params=[(False, False, 'Non-strict fixed format'),
                         (False, True, 'Strict fixed format'),

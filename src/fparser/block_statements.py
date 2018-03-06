@@ -268,7 +268,7 @@ class BeginSource(BeginStatement):
         else:
             tab = self.get_indent_tab(isfix=isfix) + '!'
         return tab + BeginStatement.tofortran(self, isfix=isfix)
-        
+
     def tostr(self):
         return self.blocktype.upper() + ' '+ self.name
 
@@ -294,7 +294,7 @@ class BeginSource(BeginStatement):
         return
 
     def get_classes(self):
-        if self.reader.ispyf:
+        if self.reader.format.is_pyf:
             return [PythonModule] + program_unit
         return program_unit
 
@@ -303,7 +303,7 @@ class BeginSource(BeginStatement):
         # so it should never end until all lines are read.
         # However, sometimes F77 programs lack the PROGRAM statement,
         # and here we fix that:
-        if self.reader.isf77:
+        if self.reader.format.is_f77:
             line = item.get_line()
             if line=='end':
                 message = item.reader.format_message(\
@@ -528,7 +528,7 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
 
     def get_classes(self):
         l = intrinsic_type_spec + interface_specification
-        if self.reader.mode=='pyf':
+        if self.reader.format.mode=='pyf':
             return [Subroutine, Function] + l
         return l
 
@@ -1000,7 +1000,7 @@ class If(BeginStatement):
 
     def process_item(self):
         item = self.item
-        mode = self.reader.mode
+        mode = self.reader.format.mode
         classes = self.get_classes()
         classes = [cls for cls in classes if mode in cls.modes]
 

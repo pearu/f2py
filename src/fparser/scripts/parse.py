@@ -65,6 +65,7 @@
 
 import os
 import sys
+import fparser.sourceinfo
 ### START UPDATE SYS.PATH ###
 ### END UPDATE SYS.PATH ###
 try:
@@ -79,7 +80,8 @@ def runner (parser, options, args):
     for filename in args:
         reader = FortranFileReader(filename)
         if options.mode != 'auto':
-            reader.set_mode_from_str(options.mode)
+            mode = fparser.sourceinfo.FortranFormat.from_mode(options.mode)
+            reader.set_mode(mode)
         parser = FortranParser(reader)
         parser.parse()
         parser.analyze()

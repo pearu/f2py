@@ -82,7 +82,7 @@ from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
      Pointer, PointerAssignment, Pause, Print, Private, Protected, Public, \
      Read, Return, Rewind, Save, Sequence, SpecificBinding, Stop, Target, \
      Threadsafe, Use, Value, Volatile, Wait, WhereStmt, Write
-
+import fparser.sourceinfo
 from fparser.typedecl_statements import Byte, Character, Complex, \
      DoubleComplex, DoublePrecision, Integer, Logical, Real
 
@@ -103,7 +103,7 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
     if label:
         line = label + ' : ' + line
     reader = FortranStringReader(line)
-    reader.set_mode(isfree, isstrict)
+    reader.set_format(fparser.sourceinfo.FortranFormat(isfree, isstrict))
     item = next(reader)
     if not cls.match(item.get_line()):
         raise ValueError('%r does not match %s pattern' % (line, cls.__name__))

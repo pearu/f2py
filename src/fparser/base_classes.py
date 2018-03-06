@@ -544,7 +544,7 @@ class Statement(object, with_metaclass(classes)):
         return '\n'.join(l)
 
     def get_indent_tab(self,deindent=False,isfix=None):
-        if isfix is None: isfix = self.reader.isfixed
+        if isfix is None: isfix = self.reader.format.is_fixed
         if isfix:
             tab = ' '*6
         else:
@@ -710,7 +710,7 @@ class BeginStatement(Statement):
         Fills blocks content until the end of block statement.
         """
 
-        mode = self.reader.mode
+        mode = self.reader.format.mode
         class_list = self.get_classes()
         self.classes = [cls for cls in class_list if mode in cls.modes]
         self.pyf_classes = [cls for cls in class_list if 'pyf' in cls.modes]
@@ -766,7 +766,7 @@ class BeginStatement(Statement):
 
         # Check if f77 code contains inline comments or other f90
         # constructs that got undetected by get_source_info.
-        if item.reader.isf77:
+        if item.reader.format.is_f77:
             i = line.find('!')
             if i != -1:
                 message = item.reader.format_message(\
