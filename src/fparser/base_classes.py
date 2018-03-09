@@ -67,19 +67,17 @@
 Base classes for all Fortran statement types
 """
 
-__all__ = ['Statement','BeginStatement','EndStatement', 'Variable',
-           'AttributeHolder','ProgramBlock']
+__all__ = ['Statement', 'BeginStatement', 'EndStatement', 'Variable',
+           'AttributeHolder', 'ProgramBlock']
 
-import re
-import sys
 import copy
-import string
 import logging
+
 from six import with_metaclass
 from .readfortran import Line, Comment
 from .utils import split_comma, specs_split_comma, is_int_literal_constant
 from .utils import classes, AnalyzeError
-from functools import reduce
+
 
 class AttributeHolder(object):
     # copied from symbolic.base module
@@ -100,10 +98,12 @@ class AttributeHolder(object):
 
     def __getattr__(self, name):
         if name not in self._attributes:
-            raise AttributeError('%s instance has no attribute %r, '\
-                  'expected attributes: %s' \
-                  % (self.__class__.__name__,name,
-                     ','.join(list(self._attributes.keys()))))
+            message = '%s instance has no attribute %r, '\
+                      + 'expected attributes: %s'
+            attributes = ', '.join(list(self._attributes.keys()))
+            raise AttributeError(message % (self.__class__.__name__,
+                                            name,
+                                            attributes))
         value = self._attributes[name]
         if callable(value):
             value = value()
@@ -111,40 +111,47 @@ class AttributeHolder(object):
         return value
 
     def __setattr__(self, name, value):
-        if name in ['_attributes','_readonly']:
+        if name in ['_attributes', '_readonly']:
             self.__dict__[name] = value
             return
         if name in self._readonly:
-            raise AttributeError('%s instance attribute %r is readonly' \
-                  % (self.__class__.__name__, name))
+            message = '%s instance attribute %r is readonly'
+            raise AttributeError(message % (self.__class__.__name__, name))
         if name not in self._attributes:
-            raise AttributeError('%s instance has no attribute %r, '\
-                  'expected attributes: %s' \
-                  % (self.__class__.__name__,name,','.join(list(self._attributes.keys()))))
+            message = '%s instance has no attribute %r, ' \
+                      + 'expected attributes: %s'
+            attributes = ','.join(list(self._attributes.keys()))
+            raise AttributeError(message % (self.__class__.__name__,
+                                            name,
+                                            attributes))
         self._attributes[name] = value
 
     def isempty(self):
         for k in list(self._attributes.keys()):
-            v = getattr(self,k)
-            if v: return False
+            v = getattr(self, k)
+            if v:
+                return False
         return True
 
-    def __repr__(self): return self.torepr()
+    def __repr__(self):
+        return self.torepr()
 
-    def torepr(self, depth=-1, tab = ''):
-        if depth==0: return tab + self.__class__.__name__
-        l = [self.__class__.__name__+':']
+    def torepr(self, depth=-1, tab=''):
+        if depth == 0:
+            return tab + self.__class__.__name__
+        lines = [self.__class__.__name__+':']
         ttab = tab + '    '
         for k in list(self._attributes.keys()):
-            v = getattr(self,k)
+            v = getattr(self, k)
             if v:
-                if isinstance(v,list):
-                    l.append(ttab + '%s=<%s-list>' % (k,len(v)))
-                elif isinstance(v,dict):
-                    l.append(ttab + '%s=<dict with keys %s>' % (k,list(v.keys())))
+                if isinstance(v, list):
+                    lines.append(ttab + '%s=<%s-list>' % (k, len(v)))
+                elif isinstance(v, dict):
+                    lines.append(ttab + '%s=<dict with keys %s>'
+                                 % (k, list(v.keys())))
                 else:
-                    l.append(ttab + '%s=<%s>' % (k,type(v)))
-        return '\n'.join(l)
+                    lines.append(ttab + '%s=<%s>' % (k, type(v)))
+        return '\n'.join(lines)
 
     def todict(self):
         d = {}
@@ -153,11 +160,13 @@ class AttributeHolder(object):
             d[k] = v
         return d
 
+
 def get_base_classes(cls):
     bases = ()
     for c in cls.__bases__:
         bases += get_base_classes(c)
-    return bases + cls.__bases__ + (cls,)
+    return bases + cls.__bases__ + (cls, )
+
 
 class Variable(object, with_metaclass(classes)):
     """
@@ -169,7 +178,7 @@ class Variable(object, with_metaclass(classes)):
       intent
       parent - Statement instances defining the variable
     """
-    
+
     def __init__(self, parent, name):
         self.parent = parent
         self.parents = [parent]
@@ -191,12 +200,13 @@ class Variable(object, with_metaclass(classes)):
         return
 
     def __repr__(self):
-        l = []
-        for a in ['name','typedecl','dimension','bounds','length','attributes','intent','bind','check','init']:
-            v = getattr(self,a)
+        line = []
+        for a in ['name', 'typedecl', 'dimension', 'bounds', 'length',
+                  'attributes', 'intent', 'bind', 'check', 'init']:
+            v = getattr(self, a)
             if v:
-                l.append('%s=%r' % (a,v))
-        return 'Variable: ' + ', '.join(l)
+                line.append('%s=%r' % (a, v))
+        return 'Variable: ' + ', '.join(line)
 
     def get_typedecl(self):
         if self.typedecl is None:
@@ -211,20 +221,20 @@ class Variable(object, with_metaclass(classes)):
 
     def set_type(self, typedecl):
         if self.typedecl is not None:
-            if not self.typedecl==typedecl:
-                self.parent.warning(\
-                    'variable %r already has type %s,'\
-                    ' resetting to %s' \
-                    % (self.name, self.typedecl.tostr(),typedecl.tostr()))
+            if not self.typedecl == typedecl:
+                self.parent.warning(
+                    'variable %r already has type %s, '
+                    ' resetting to %s'
+                    % (self.name, self.typedecl.tostr(), typedecl.tostr()))
         assert typedecl is not None
         self.typedecl = typedecl
         return
 
     def set_init(self, expr):
         if self.init is not None:
-            if not self.init==expr:
-                self.parent.warning(\
-                    'variable %r already has initialization %r, '\
+            if not self.init == expr:
+                self.parent.warning(
+                    'variable %r already has initialization %r, '
                     ' resetting to %r' % (self.name, self.expr, expr))
         self.init = expr
         return
@@ -233,32 +243,32 @@ class Variable(object, with_metaclass(classes)):
         dims = [tuple(dim.split(':')) for dim in dims]
         dims = [tuple(map(str.strip, dim)) for dim in dims]
         if self.dimension is not None:
-            if not self.dimension==dims:
-                self.parent.warning(\
-                    'variable %r already has dimension %r, '\
+            if not self.dimension == dims:
+                self.parent.warning(
+                    'variable %r already has dimension %r, '
                     ' resetting to %r' % (self.name, self.dimension, dims))
         self.dimension = dims
         return
 
     def set_bounds(self, bounds):
         if self.bounds is not None:
-            if not self.bounds==bounds:
-                self.parent.warning(\
-                    'variable %r already has bounds %r, '\
+            if not self.bounds == bounds:
+                self.parent.warning(
+                    'variable %r already has bounds %r, '
                     ' resetting to %r' % (self.name, self.bounds, bounds))
         self.bounds = bounds
         return
 
     def set_length(self, length):
         if self.length is not None:
-            if not self.length==length:
-                self.parent.warning(\
-                    'variable %r already has length %r, '\
+            if not self.length == length:
+                self.parent.warning(
+                    'variable %r already has length %r, '
                     ' resetting to %r' % (self.name, self.length, length))
         self.length = length
         return
 
-    known_intent_specs = ['IN','OUT','INOUT','CACHE','HIDE', 'COPY',
+    known_intent_specs = ['IN', 'OUT', 'INOUT', 'CACHE', 'HIDE', 'COPY',
                           'OVERWRITE', 'CALLBACK', 'AUX', 'C', 'INPLACE',
                           'OUT=']
 
@@ -268,7 +278,7 @@ class Variable(object, with_metaclass(classes)):
         for i in intent:
             if i not in self.intent:
                 if i not in self.known_intent_specs:
-                    self.parent.warning('unknown intent-spec %r for %r'\
+                    self.parent.warning('unknown intent-spec %r for %r'
                                         % (i, self.name))
                 self.intent.append(i)
         return
@@ -279,89 +289,141 @@ class Variable(object, with_metaclass(classes)):
                         'VOLATILE', 'REQUIRED']
 
     def is_intent_in(self):
-        if not self.intent: return True
-        if 'HIDE' in self.intent: return False
-        if 'INPLACE' in self.intent: return False
-        if 'IN' in self.intent: return True
-        if 'OUT' in self.intent: return False
-        if 'INOUT' in self.intent: return False
-        if 'OUTIN' in self.intent: return False
+        if not self.intent:
+            return True
+        if 'HIDE' in self.intent:
+            return False
+        if 'INPLACE' in self.intent:
+            return False
+        if 'IN' in self.intent:
+            return True
+        if 'OUT' in self.intent:
+            return False
+        if 'INOUT' in self.intent:
+            return False
+        if 'OUTIN' in self.intent:
+            return False
         return True
 
     def is_intent_inout(self):
-        if not self.intent: return False
+        if not self.intent:
+            return False
         if 'INOUT' in self.intent:
-            if 'IN' in self.intent or 'HIDE' in self.intent or 'INPLACE' in self.intent:
-                self.warning('INOUT ignored in INPUT(%s)' % (', '.join(self.intent)))
+            if 'IN' in self.intent \
+               or 'HIDE' in self.intent \
+               or 'INPLACE' in self.intent:
+                message = 'INOUT ignored in INPUT(%s)'
+                self.warning(message % (', '.join(self.intent)))
                 return False
             return True
         return False
 
     def is_intent_hide(self):
-        if not self.intent: return False
-        if 'HIDE' in self.intent: return True
+        if not self.intent:
+            return False
+        if 'HIDE' in self.intent:
+            return True
         if 'OUT' in self.intent:
-            return 'IN' not in self.intent and 'INPLACE' not in self.intent and 'INOUT' not in self.intent
+            return 'IN' not in self.intent \
+                   and 'INPLACE' not in self.intent \
+                   and 'INOUT' not in self.intent
         return False
 
-    def is_intent_inplace(self): return self.intent and 'INPLACE' in self.intent
-    def is_intent_out(self): return  self.intent and 'OUT' in self.intent
-    def is_intent_c(self): return  self.intent and 'C' in self.intent
-    def is_intent_cache(self): return  self.intent and 'CACHE' in self.intent
-    def is_intent_copy(self): return  self.intent and 'COPY' in self.intent
-    def is_intent_overwrite(self): return  self.intent and 'OVERWRITE' in self.intent
-    def is_intent_callback(self): return  self.intent and 'CALLBACK' in self.intent
-    def is_intent_aux(self): return  self.intent and 'AUX' in self.intent
+    def is_intent_inplace(self):
+        return self.intent and 'INPLACE' in self.intent
+
+    def is_intent_out(self):
+        return self.intent and 'OUT' in self.intent
+
+    def is_intent_c(self):
+        return self.intent and 'C' in self.intent
+
+    def is_intent_cache(self):
+        return self.intent and 'CACHE' in self.intent
+
+    def is_intent_copy(self):
+        return self.intent and 'COPY' in self.intent
+
+    def is_intent_overwrite(self):
+        return self.intent and 'OVERWRITE' in self.intent
+
+    def is_intent_callback(self):
+        return self.intent and 'CALLBACK' in self.intent
+
+    def is_intent_aux(self):
+        return self.intent and 'AUX' in self.intent
 
     def is_private(self):
-        if 'PUBLIC' in self.attributes: return False
-        if 'PRIVATE' in self.attributes: return True
+        if 'PUBLIC' in self.attributes:
+            return False
+        if 'PRIVATE' in self.attributes:
+            return True
         return self.parent.parent.check_private(self.name)
-    def is_public(self): return not self.is_private()
 
-    def is_allocatable(self): return 'ALLOCATABLE' in self.attributes
-    def is_external(self): return 'EXTERNAL' in self.attributes
-    def is_intrinsic(self): return 'INTRINSIC' in self.attributes
-    def is_parameter(self): return 'PARAMETER' in self.attributes
-    def is_optional(self): return 'OPTIONAL' in self.attributes and 'REQUIRED' not in self.attributes and not self.is_intent_hide()
-    def is_required(self): return self.is_optional() and not self.is_intent_hide()
-    def is_pointer(self): return 'POINTER' in self.attributes
+    def is_public(self):
+        return not self.is_private()
 
-    def is_array(self): return not not (self.bounds or self.dimension)
-    def is_scalar(self): return not self.is_array()
+    def is_allocatable(self):
+        return 'ALLOCATABLE' in self.attributes
+
+    def is_external(self):
+        return 'EXTERNAL' in self.attributes
+
+    def is_intrinsic(self):
+        return 'INTRINSIC' in self.attributes
+
+    def is_parameter(self):
+        return 'PARAMETER' in self.attributes
+
+    def is_optional(self):
+        return 'OPTIONAL' in self.attributes \
+               and 'REQUIRED' not in self.attributes \
+               and not self.is_intent_hide()
+
+    def is_required(self):
+        return self.is_optional() and not self.is_intent_hide()
+
+    def is_pointer(self):
+        return 'POINTER' in self.attributes
+
+    def is_array(self):
+        return not not (self.bounds or self.dimension)
+
+    def is_scalar(self):
+        return not self.is_array()
 
     def update(self, *attrs):
         attributes = self.attributes
-        if len(attrs)==1 and isinstance(attrs[0],(tuple,list)):
+        if len(attrs) == 1 and isinstance(attrs[0], (tuple, list)):
             attrs = attrs[0]
         for attr in attrs:
             lattr = attr.lower()
             uattr = attr.upper()
             if lattr.startswith('dimension'):
-                assert self.dimension is None, repr((self.dimension,attr))
-                l = attr[9:].lstrip()
-                assert l[0] + l[-1] == '()', repr(l)
+                assert self.dimension is None, repr((self.dimension, attr))
+                line = attr[9:].lstrip()
+                assert line[0] + line[-1] == '()', repr(line)
                 self.set_dimension(
-                        split_comma(l[1:-1].strip(), self.parent.item))
+                        split_comma(line[1:-1].strip(), self.parent.item))
                 continue
             if lattr.startswith('intent'):
-                l = attr[6:].lstrip()
-                assert l[0] + l[-1] == '()', repr(l)
-                self.set_intent(specs_split_comma(l[1:-1].strip(),
+                line = attr[6:].lstrip()
+                assert line[0] + line[-1] == '()', repr(line)
+                self.set_intent(specs_split_comma(line[1:-1].strip(),
                                                   self.parent.item,
                                                   upper=True))
                 continue
             if lattr.startswith('bind'):
-                l = attr[4:].lstrip()
-                assert l[0] + l[-1] == '()', repr(l)
-                self.bind = specs_split_comma(l[1:-1].strip(),
+                line = attr[4:].lstrip()
+                assert line[0] + line[-1] == '()', repr(line)
+                self.bind = specs_split_comma(line[1:-1].strip(),
                                               self.parent.item,
                                               upper=True)
                 continue
             if lattr.startswith('check'):
-                l = attr[5:].lstrip()
-                assert l[0]+l[-1]=='()',repr(l)
-                self.check.extend(split_comma(l[1:-1].strip(),
+                line = attr[5:].lstrip()
+                assert line[0] + line[-1] == '()', repr(line)
+                self.check.extend(split_comma(line[1:-1].strip(),
                                               self.parent.item))
                 continue
             if uattr not in attributes:
@@ -377,7 +439,8 @@ class Variable(object, with_metaclass(classes)):
             s += typedecl.tostr() + ' '
         a = self.attributes[:]
         if self.dimension is not None:
-            a.append('DIMENSION(%s)' % (', '.join([':'.join(spec) for spec in self.dimension])))
+            dimensions = [':'.join(spec) for spec in self.dimension]
+            a.append('DIMENSION(%s)' % (', '.join(dimensions)))
         if self.intent is not None:
             a.append('INTENT(%s)' % (', '.join(self.intent)))
         if self.bind:
@@ -399,35 +462,45 @@ class Variable(object, with_metaclass(classes)):
         return s
 
     def get_array_spec(self):
-        assert self.is_array(),'array_spec is available only for arrays'
+        assert self.is_array(), 'array_spec is available only for arrays'
         if self.bounds:
             if self.dimension:
-                self.parent.warning('both bounds=%r and dimension=%r are defined, ignoring dimension.' % (self.bounds, self.dimension))
+                message = 'both bounds=%r and dimension=%r are defined, ' \
+                          + 'ignoring dimension.'
+                self.parent.warning(message % (self.bounds, self.dimension))
             array_spec = self.bounds
         else:
             array_spec = self.dimension
         return array_spec
 
     def is_deferred_shape_array(self):
-        if not self.is_array(): return False
+        if not self.is_array():
+            return False
         return self.is_allocatable() or self.is_pointer()
 
     def is_assumed_size_array(self):
-        if not self.is_array(): return False
-        return self.get_array_spec()[-1][-1]=='*'
+        if not self.is_array():
+            return False
+        return self.get_array_spec()[-1][-1] == '*'
 
     def is_assumed_shape_array(self):
-        if not self.is_array(): return False
-        if self.is_deferred_shape_array(): return False
+        if not self.is_array():
+            return False
+        if self.is_deferred_shape_array():
+            return False
         for spec in self.get_array_spec():
-            if not spec[-1]: return True
+            if not spec[-1]:
+                return True
         return False
 
     def is_explicit_shape_array(self):
-        if not self.is_array(): return False
-        if self.is_deferred_shape_array(): return False
+        if not self.is_array():
+            return False
+        if self.is_deferred_shape_array():
+            return False
         for spec in self.get_array_spec():
-            if not spec[-1] or spec[-1] == '*': return False
+            if not spec[-1] or spec[-1] == '*':
+                return False
         return True
 
     def is_allocatable_array(self):
@@ -441,7 +514,7 @@ class Variable(object, with_metaclass(classes)):
         if self.is_array():
             array_spec = self.get_array_spec()
             self.rank = len(array_spec)
-            if self.is_deferred_shape_array(): # a(:,:)
+            if self.is_deferred_shape_array():  # a(:, :)
                 pass
             elif self.is_explicit_shape_array():
                 shape = []
@@ -450,8 +523,10 @@ class Variable(object, with_metaclass(classes)):
                         shape.append(spec[0].replace(' ', ''))
                     else:
                         try:
-                            lss = int(spec[0].replace(' ', '')) # lower subscript
-                            uss = int(spec[1].replace(' ', '')) # upper subscript
+                            # lower subscript
+                            lss = int(spec[0].replace(' ', ''))
+                            # upper subscript
+                            uss = int(spec[1].replace(' ', ''))
                             n = uss - (lss - 1)
                         except ValueError:
                             n = '(%s)-(%s)' % (spec[1], spec[0])
@@ -461,14 +536,17 @@ class Variable(object, with_metaclass(classes)):
 
     def error(self, message):
         return self.parent.error(message)
+
     def warning(self, message):
         return self.parent.warning(message)
+
     def info(self, message):
         return self.parent.info(message)
 
-class ProgramBlock(object, with_metaclass(classes)):
 
+class ProgramBlock(object, with_metaclass(classes)):
     pass
+
 
 class Statement(object, with_metaclass(classes)):
     """
@@ -478,7 +556,7 @@ class Statement(object, with_metaclass(classes)):
       isvalid - boolean, when False, the Statement instance will be ignored
     """
 
-    modes = ['free','fix','f77','pyf']
+    modes = ['free', 'fix', 'f77', 'pyf']
     _repr_attr_names = []
 
     def __init__(self, parent, item):
@@ -487,20 +565,20 @@ class Statement(object, with_metaclass(classes)):
             self.reader = item.reader
         else:
             self.reader = parent.reader
-        self.top = getattr(parent,'top',None) # the top of statement tree
+        self.top = getattr(parent, 'top', None)  # the top of statement tree
         self.item = item
 
         if isinstance(parent, ProgramBlock):
             self.programblock = parent
         elif isinstance(self, ProgramBlock):
             self.programblock = self
-        elif hasattr(parent,'programblock'):
+        elif hasattr(parent, 'programblock'):
             self.programblock = parent.programblock
         else:
-            #self.warning('%s.programblock attribute not set.' % (self.__class__.__name__))
             pass
 
-        # when a statement instance is constructed by error, set isvalid to False
+        # When a statement instance is constructed by error, set isvalid to
+        # False
         self.isvalid = True
         # when a statement should be ignored, set ignore to True
         self.ignore = False
@@ -508,10 +586,10 @@ class Statement(object, with_metaclass(classes)):
         # attribute a will hold analyze information.
         a_dict = {}
         for cls in get_base_classes(self.__class__):
-            if hasattr(cls,'a'):
+            if hasattr(cls, 'a'):
                 a_dict.update(copy.deepcopy(cls.a.todict()))
         self.a = AttributeHolder(**a_dict)
-        if hasattr(self.__class__,'a'):
+        if hasattr(self.__class__, 'a'):
             assert self.a is not self.__class__.a
 
         self.process_item()
@@ -521,30 +599,37 @@ class Statement(object, with_metaclass(classes)):
     def __repr__(self):
         return self.torepr()
 
-    def torepr(self, depth=-1,incrtab=''):
+    def torepr(self, depth=-1, incrtab=''):
         tab = incrtab + self.get_indent_tab()
         clsname = self.__class__.__name__
-        l = [tab + clsname]
-        if depth==0:
-            return '\n'.join(l)
+        lines = [tab + clsname]
+        if depth == 0:
+            return '\n'.join(lines)
         ttab = tab + '  '
         for n in self._repr_attr_names:
             attr = getattr(self, n, None)
-            if not attr: continue
+            if not attr:
+                continue
             if hasattr(attr, 'torepr'):
-                r = attr.torepr(depth-1,incrtab)
+                r = attr.torepr(depth-1, incrtab)
             else:
                 r = repr(attr)
-            l.append(ttab + '%s=%s' % (n, r))
-        if self.item is not None: l.append(ttab + 'item=%r' % (self.item))
-        if not self.isvalid: l.append(ttab + 'isvalid=%r' % (self.isvalid))
-        if self.ignore: l.append(ttab + 'ignore=%r' % (self.ignore))
+            lines.append(ttab + '%s=%s' % (n, r))
+        if self.item is not None:
+            lines.append(ttab + 'item=%r' % (self.item))
+        if not self.isvalid:
+            lines.append(ttab + 'isvalid=%r' % (self.isvalid))
+        if self.ignore:
+            lines.append(ttab + 'ignore=%r' % (self.ignore))
         if not self.a.isempty():
-            l.append(ttab + 'a=' + self.a.torepr(depth-1,incrtab+'  ').lstrip())
-        return '\n'.join(l)
+            lines.append(ttab
+                         + 'a='
+                         + self.a.torepr(depth-1, incrtab+'  ').lstrip())
+        return '\n'.join(lines)
 
-    def get_indent_tab(self,deindent=False,isfix=None):
-        if isfix is None: isfix = self.reader.format.is_fixed
+    def get_indent_tab(self, deindent=False, isfix=None):
+        if isfix is None:
+            isfix = self.reader.format.is_fixed
         if isfix:
             tab = ' '*6
         else:
@@ -562,7 +647,8 @@ class Statement(object, with_metaclass(classes)):
         if isfix:
             s = ' '+s
         tab = tab[len(s):]
-        if not tab: tab = ' '
+        if not tab:
+            tab = ' '
         tab = s + tab
         return tab
 
@@ -572,20 +658,22 @@ class Statement(object, with_metaclass(classes)):
     def asfix(self):
         lines = []
         for line in self.tofortran(isfix=True).split('\n'):
-            if len(line)>72 and line[0]==' ':
+            if len(line) > 72 and line[0] == ' ':
                 lines.append(line[:72]+'&\n     &')
                 line = line[72:]
-                while len(line)>66:
+                while len(line) > 66:
                     lines.append(line[:66]+'&\n     &')
                     line = line[66:]
                 lines.append(line+'\n')
-            else: lines.append(line+'\n')
-        return ''.join(lines).replace('\n     &\n','\n')
+            else:
+                lines.append(line+'\n')
+        return ''.join(lines).replace('\n     &\n', '\n')
 
     def format_message(self, kind, message):
         if self.item is not None:
             message = self.reader.format_message(kind, message,
-                                                 self.item.span[0], self.item.span[1])
+                                                 self.item.span[0],
+                                                 self.item.span[1])
         else:
             return message
         return message
@@ -617,24 +705,27 @@ class Statement(object, with_metaclass(classes)):
     def get_variable(self, name):
         """ Return Variable instance of variable name.
         """
-        mth = getattr(self,'get_variable_by_name', self.parent.get_variable)
+        mth = getattr(self, 'get_variable_by_name', self.parent.get_variable)
         return mth(name)
 
     def get_type(self, name):
         """ Return type declaration using implicit rules
         for name.
         """
-        mth = getattr(self,'get_type_by_name', self.parent.get_type)
+        mth = getattr(self, 'get_type_by_name', self.parent.get_type)
         return mth(name)
 
     def get_type_decl(self, kind):
-        mth = getattr(self,'get_type_decl_by_kind', self.parent.get_type_decl)
+        mth = getattr(self, 'get_type_decl_by_kind', self.parent.get_type_decl)
         return mth(kind)
 
     def get_provides(self):
-        """ Returns dictonary containing statements that block provides or None when N/A.
+        """
+        Returns dictonary containing statements that block provides or None
+        when N/A.
         """
         return
+
 
 class BeginStatement(Statement):
     """[ construct_name : ] <blocktype> [ <name> ]
@@ -657,55 +748,60 @@ class BeginStatement(Statement):
       stmt_cls, end_stmt_cls
 
     """
-    _repr_attr_names = ['blocktype','name','construct_name'] + Statement._repr_attr_names
+    _repr_attr_names = ['blocktype',
+                        'name',
+                        'construct_name'] + Statement._repr_attr_names
+
     def __init__(self, parent, item=None):
 
         self.content = []
-        self.get_item = parent.get_item # get line function
-        self.put_item = parent.put_item # put line function
+        self.get_item = parent.get_item  # get line function
+        self.put_item = parent.put_item  # put line function
         if not hasattr(self, 'blocktype'):
             self.blocktype = self.__class__.__name__.lower()
         if not hasattr(self, 'name'):
             # process_item may change this
             self.name = '__'+self.blocktype.upper()+'__'
-        self.construct_name = getattr(item,'name',None)
+        self.construct_name = getattr(item, 'name', None)
         Statement.__init__(self, parent, item)
         return
 
     def tostr(self):
-        return self.blocktype.upper() + ' '+ self.name
+        return self.blocktype.upper() + ' ' + self.name
 
     def tofortran(self, isfix=None):
         construct_name = self.construct_name
         construct_name = construct_name + ': ' if construct_name else ''
-        l=[self.get_indent_tab(isfix=isfix) + construct_name + self.tostr()]
+        lines = [self.get_indent_tab(isfix=isfix)
+                 + construct_name + self.tostr()]
         for c in self.content:
-            l.append(c.tofortran(isfix=isfix))
-        return '\n'.join(l)
+            lines.append(c.tofortran(isfix=isfix))
+        return '\n'.join(lines)
 
     def torepr(self, depth=-1, incrtab=''):
         tab = incrtab + self.get_indent_tab()
         ttab = tab + '  '
-        l=[Statement.torepr(self, depth=depth,incrtab=incrtab)]
-        if depth==0 or not self.content:
-            return '\n'.join(l)
-        l.append(ttab+'content:')
+        lines = [Statement.torepr(self, depth=depth, incrtab=incrtab)]
+        if depth == 0 or not self.content:
+            return '\n'.join(lines)
+        lines.append(ttab+'content:')
         for c in self.content:
-            if isinstance(c,EndStatement):
-                l.append(c.torepr(depth-1,incrtab))
+            if isinstance(c, EndStatement):
+                lines.append(c.torepr(depth-1, incrtab))
             else:
-                l.append(c.torepr(depth-1,incrtab + '  '))
-        return '\n'.join(l)
+                lines.append(c.torepr(depth-1, incrtab + '  '))
+        return '\n'.join(lines)
 
     def process_item(self):
         """ Process the line
         """
         item = self.item
-        if item is None: return
+        if item is None:
+            return
         self.fill()
         return
 
-    def fill(self, end_flag = False):
+    def fill(self, end_flag=False):
         """
         Fills blocks content until the end of block statement.
         """
@@ -769,11 +865,11 @@ class BeginStatement(Statement):
         if item.reader.format.is_f77:
             i = line.find('!')
             if i != -1:
-                message = item.reader.format_message(\
+                message = item.reader.format_message(
                         'WARNING',
-                        'no parse pattern found for "%s" in %r block,'\
-                        ' trying to remove inline comment (not in Fortran 77).'\
-                        % (item.get_line(),self.__class__.__name__),
+                        'no parse pattern found for "%s" in %r block, '
+                        'trying to remove inline comment (not in Fortran 77).'
+                        % (item.get_line(), self.__class__.__name__),
                         item.span[0], item.span[1])
                 # .. but at the expense of loosing the comment.
                 logging.getLogger(__name__).warning(message)
@@ -790,12 +886,12 @@ class BeginStatement(Statement):
                 if 'f77' in cls.modes and cls not in f77_classes:
                     classes.append(cls)
             if classes:
-                message = item.reader.format_message(\
+                message = item.reader.format_message(
                         'WARNING',
-                        'no parse pattern found for "%s" in %r block'\
-                        ' maybe due to strict f77 mode.'\
-                        ' Trying f90 fix mode patterns..'\
-                        % (item.get_line(),self.__class__.__name__),
+                        'no parse pattern found for "%s" in %r block'
+                        ' maybe due to strict f77 mode.'
+                        ' Trying f90 fix mode patterns..'
+                        % (item.get_line(), self.__class__.__name__),
                         item.span[0], item.span[1])
                 logging.getLogger(__name__).warning(message)
 
@@ -808,9 +904,9 @@ class BeginStatement(Statement):
                     self.classes = f77_classes
                     item.reader.set_mode(False, True)
                 else:
-                    message = item.reader.format_message(\
+                    message = item.reader.format_message(
                         'INFORMATION',
-                        'The f90 fix mode resolved the parse pattern issue.'\
+                        'The f90 fix mode resolved the parse pattern issue.'
                         ' Setting reader to f90 fix mode.',
                         item.span[0], item.span[1])
                     logging.getLogger(__name__).info(message)
@@ -843,6 +939,7 @@ class BeginStatement(Statement):
             stmt.analyze()
         return
 
+
 class EndStatement(Statement):
     """
     END [<blocktype> [<name>]]
@@ -851,7 +948,7 @@ class EndStatement(Statement):
       name
       blocktype
     """
-    _repr_attr_names = ['blocktype','name'] + Statement._repr_attr_names
+    _repr_attr_names = ['blocktype', 'name'] + Statement._repr_attr_names
 
     def __init__(self, parent, item):
         if not hasattr(self, 'blocktype'):
@@ -860,7 +957,7 @@ class EndStatement(Statement):
 
     def process_item(self):
         item = self.item
-        line = item.get_line().replace(' ','')[3:]
+        line = item.get_line().replace(' ', '')[3:]
         line = item.apply_map(line)
         blocktype = self.blocktype
 
@@ -881,19 +978,19 @@ class EndStatement(Statement):
             # insensitive anyway so we should assume labels may have a
             # different case and therefore cast both to the same case in our
             # equivalence test.
-            if line.lower()!=name.lower():
-                self.warning(\
-                    'expected the end of %r block but got the end of %r, skipping.'\
-                    % (name, line))
+            if line.lower() != name.lower():
+                message = 'expected the end of %r block ' \
+                          + 'but got the end of %r, skipping.'
+                self.warning(message % (name, line))
                 self.isvalid = False
         self.name = name
 
     def analyze(self):
         return
 
-    def get_indent_tab(self,deindent=False,isfix=None):
-        return Statement.get_indent_tab(self, deindent=True,isfix=isfix)
+    def get_indent_tab(self, deindent=False, isfix=None):
+        return Statement.get_indent_tab(self, deindent=True, isfix=isfix)
 
     def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + 'END %s %s'\
-               % (self.blocktype.upper(),self.name or '')
+               % (self.blocktype.upper(), self.name or '')

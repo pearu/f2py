@@ -68,6 +68,20 @@ Fortran block statements.
 
 """
 
+import logging
+import re
+import sys
+
+import fparser.statements as statements
+from fparser.statements import *
+import fparser.typedecl_statements as typedecl_statements
+from fparser.typedecl_statements import *
+
+from fparser.base_classes import BeginStatement, EndStatement, Statement, \
+                                 AttributeHolder, ProgramBlock, Variable
+from fparser.utils import split_comma, filter_stmts, parse_bind, \
+                          parse_result, AnalyzeError, is_name
+
 __all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
            'Interface', 'Subroutine', 'Function', 'SelectCase', 'SelectType',
            'WhereConstruct', 'ForallConstruct', 'IfThen', 'If', 'Do',
@@ -75,18 +89,10 @@ __all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
            'EndPythonModule', 'EndProgram', 'EndBlockData', 'EndInterface',
            'EndSubroutine', 'EndFunction', 'EndSelect', 'EndWhere',
            'EndForall', 'EndIfThen', 'EndDo', 'EndAssociate', 'EndType',
-           'EndEnum',
-           ]
+           'EndEnum']
+__all__.extend(statements.__all__)
+__all__.extend(typedecl_statements.__all__)
 
-import logging
-import re
-import sys
-
-from .base_classes import BeginStatement, EndStatement, Statement, \
-     AttributeHolder, ProgramBlock, Variable
-from .readfortran import Line
-from .utils import split_comma, filter_stmts, parse_bind, parse_result, \
-    AnalyzeError, is_name
 
 class HasImplicitStmt(object):
 
@@ -97,20 +103,21 @@ class HasImplicitStmt(object):
         if implicit_rules is None:
             raise AnalyzeError('Implicit rules mapping is null '
                                'while getting %r type' % (name))
-        l = name[0].lower()
-        if l in implicit_rules:
-            return implicit_rules[l]
+        line = name[0].lower()
+        if line in implicit_rules:
+            return implicit_rules[line]
         # default rules:
-        if l in 'ijklmn':
-            l = 'default_integer'
+        if line in 'ijklmn':
+            line = 'default_integer'
         else:
-            l = 'default_real'
+            line = 'default_real'
         t = implicit_rules.get(l, None)
         if t is None:
-            if l[8:]=='real':
+            if line[8:] == 'real':
                 implicit_rules[l] = t = Real(self, self.item.copy('real'))
             else:
-                implicit_rules[l] = t = Integer(self, self.item.copy('integer'))
+                implicit_rules[l] = t = Integer(self,
+                                                self.item.copy('integer'))
         return t
 
     def topyf(self, tab='  '):
@@ -136,15 +143,16 @@ class HasImplicitStmt(object):
         s += ' ' + ', '.join(ls)
         return tab + s + '\n'
 
+
 class HasUseStmt(object):
 
-    a = AttributeHolder(use = {},
-                        use_provides = {})
+    a = AttributeHolder(use={},
+                        use_provides={})
 
     def get_entity(self, name):
         for modname, modblock in list(self.top.a.module.items()):
             for stmt in modblock.content:
-                if getattr(stmt,'name','') == name:
+                if getattr(stmt, 'name', '') == name:
                     return stmt
         return
 
@@ -152,28 +160,34 @@ class HasUseStmt(object):
         sys.stderr.write('HasUseStmt.topyf not implemented\n')
         return ''
 
+
 class AccessSpecs(object):
 
-    a = AttributeHolder(private_id_list = [], public_id_list = [])
+    a = AttributeHolder(private_id_list=[], public_id_list=[])
 
     def topyf(self, tab='  '):
         private_list = self.a.private_id_list
         public_list = self.a.public_id_list
-        l = []
-        if '' in private_list: l.append(tab + 'PRIVATE\n')
-        if '' in public_list: l.append(tab + 'PUBLIC\n')
+        lines = []
+        if '' in private_list:
+            lines.append(tab + 'PRIVATE\n')
+        if '' in public_list:
+            lines.append(tab + 'PUBLIC\n')
         for a in private_list:
-            if not a: continue
-            l.append(tab + 'PRIVATE :: %s\n' % (a))
+            if not a:
+                continue
+            lines.append(tab + 'PRIVATE :: %s\n' % (a))
         for a in public_list:
-            if not a: continue
-            l.append(tab + 'PUBLIC :: %s\n' % (a))
-        return ''.join(l)
+            if not a:
+                continue
+            lines.append(tab + 'PUBLIC :: %s\n' % (a))
+        return ''.join(lines)
+
 
 class HasVariables(object):
 
-    a = AttributeHolder(variables = {},
-                        variable_names = [] # defines the order of declarations
+    a = AttributeHolder(variables={},
+                        variable_names=[]  # defines the order of declarations
                         )
 
     def get_variable_by_name(self, name):
@@ -185,7 +199,7 @@ class HasVariables(object):
             self.a.variable_names.append(name)
         return var
 
-    def topyf(self,tab='', only_variables = None):
+    def topyf(self, tab='', only_variables=None):
         s = ''
         if only_variables is None:
             only_variables = list(self.a.variables.keys())
@@ -194,9 +208,10 @@ class HasVariables(object):
             s += tab + str(var) + '\n'
         return s
 
+
 class HasTypeDecls(object):
 
-    a = AttributeHolder(type_decls = {})
+    a = AttributeHolder(type_decls={})
 
     def topyf(self, tab=''):
         s = ''
@@ -211,10 +226,11 @@ class HasTypeDecls(object):
             return self.get_entity(kind)
         return type_decl
 
+
 class HasAttributes(object):
 
     known_attributes = []
-    a = AttributeHolder(attributes = [])
+    a = AttributeHolder(attributes=[])
 
     def topyf(self, tab=''):
         s = ''
@@ -222,27 +238,29 @@ class HasAttributes(object):
             s += tab + attr + '\n'
         return s
 
-    def update_attributes(self,*attrs):
+    def update_attributes(self, *attrs):
         attributes = self.a.attributes
         known_attributes = self.known_attributes
-        if len(attrs)==1 and isinstance(attrs[0],(tuple,list)):
+        if len(attrs) == 1 and isinstance(attrs[0], (tuple, list)):
             attrs = attrs[0]
         for attr in attrs:
             uattr = attr.upper()
             if uattr not in attributes:
-                if isinstance(known_attributes,(list, tuple)):
+                if isinstance(known_attributes, (list, tuple)):
                     if uattr not in known_attributes:
                         self.warning('unknown attribute %r' % (attr))
                 elif not known_attributes(uattr):
                     self.warning('unknown attribute %r' % (attr))
                 attributes.append(uattr)
             else:
-                self.warning('multiple specification of attribute %r' % (attr))                
+                self.warning('multiple specification of attribute %r' % (attr))
         return
+
 
 class HasModuleProcedures(object):
 
-    a = AttributeHolder(module_procedures = [])
+    a = AttributeHolder(module_procedures=[])
+
 
 # File block
 
@@ -252,17 +270,19 @@ class EndSource(EndStatement):
     """
     match = staticmethod(lambda s: False)
 
+
 class BeginSource(BeginStatement):
     """
     Fortran source content.
     """
     match = staticmethod(lambda s: True)
     end_stmt_cls = EndSource
-    a = AttributeHolder(module = {},
-                        external_subprogram = {},
-                        blockdata = {},
+    a = AttributeHolder(module={},
+                        external_subprogram={},
+                        blockdata={},
                         )
-    def tofortran(self,isfix=None):
+
+    def tofortran(self, isfix=None):
         if isfix:
             tab = 'C'
         else:
@@ -270,12 +290,12 @@ class BeginSource(BeginStatement):
         return tab + BeginStatement.tofortran(self, isfix=isfix)
 
     def tostr(self):
-        return self.blocktype.upper() + ' '+ self.name
+        return self.blocktype.upper() + ' ' + self.name
 
     def process_item(self):
         self.name = self.reader.name
         self.top = self
-        self.fill(end_flag = True)
+        self.fill(end_flag=True)
         return
 
     def analyze(self):
@@ -305,21 +325,21 @@ class BeginSource(BeginStatement):
         # and here we fix that:
         if self.reader.format.is_f77:
             line = item.get_line()
-            if line=='end':
-                message = item.reader.format_message(\
-                        'WARNING',
-                        'assuming the end of undefined PROGRAM statement',
-                        item.span[0],item.span[1])
+            if line == 'end':
+                message = item.reader.format_message(
+                    'WARNING',
+                    'assuming the end of undefined PROGRAM statement',
+                    item.span[0], item.span[1])
                 logger.warning(message)
                 # print >> sys.stderr, message
                 p = Program(self)
                 p.content.extend(self.content)
-                p.content.append(EndProgram(p,item))
+                p.content.append(EndProgram(p, item))
                 self.content[:] = [p]
                 return
         return BeginStatement.process_subitem(self, item)
 
-    def topyf(self, tab=''): # XXXX
+    def topyf(self, tab=''):  # XXXX
         s = ''
         for name, stmt in list(self.a.module.items()):
             s += stmt.topyf(tab=tab)
@@ -328,10 +348,13 @@ class BeginSource(BeginStatement):
         for name, stmt in list(self.a.blockdata.items()):
             s += stmt.topyf(tab=tab)
         return s
+
+
 # Module
 
 class EndModule(EndStatement):
     match = re.compile(r'end(\s*module\s*\w*|)\Z', re.I).match
+
 
 class Module(BeginStatement, HasAttributes,
              HasImplicitStmt, HasUseStmt, HasVariables,
@@ -344,11 +367,11 @@ class Module(BeginStatement, HasAttributes,
     match = re.compile(r'module\s*\w+\Z', re.I).match
     end_stmt_cls = EndModule
 
-    a = AttributeHolder(module_subprogram = {},
-                        module_provides = {}, # all symbols that are public and so
-                                              # can be imported via USE statement
-                                              # by other blocks
-                        module_interface = {}
+    a = AttributeHolder(module_subprogram={},
+                        module_provides={},  # all symbols that are public and
+                                             # so can be imported via USE
+                                             # statement by other blocks
+                        module_interface={}
                         )
 
     known_attributes = ['PUBLIC', 'PRIVATE']
@@ -357,7 +380,8 @@ class Module(BeginStatement, HasAttributes,
         return access_spec + specification_part + module_subprogram_part
 
     def process_item(self):
-        name = self.item.get_line().replace(' ','')[len(self.blocktype):].strip()
+        name = self.item.get_line().replace(' ', '')
+        name = name[len(self.blocktype):].strip()
         self.name = name
         return BeginStatement.process_item(self)
 
@@ -392,38 +416,46 @@ class Module(BeginStatement, HasAttributes,
         for name, var in list(self.a.variables.items()):
             if var.is_public():
                 if name in module_provides:
-                    self.warning('module data object name conflict with %s, overriding.' % (name))
+                    message = 'module data object name conflict with %s, ' \
+                              + 'overriding.'
+                    self.warning(message % (name))
                 module_provides[name] = var
 
         return
 
     def topyf(self, tab=''):
         s = tab + 'MODULE '+self.name + '\n'
-        s +=  HasImplicitStmt.topyf(self, tab=tab+'  ')
-        s +=  AccessSpecs.topyf(self, tab=tab+'  ')
-        s +=  HasAttributes.topyf(self, tab=tab+'  ')
-        s +=  HasTypeDecls.topyf(self, tab=tab+'  ')
-        s +=  HasVariables.topyf(self, tab=tab+'  ')
+        s += HasImplicitStmt.topyf(self, tab=tab+'  ')
+        s += AccessSpecs.topyf(self, tab=tab+'  ')
+        s += HasAttributes.topyf(self, tab=tab+'  ')
+        s += HasTypeDecls.topyf(self, tab=tab+'  ')
+        s += HasVariables.topyf(self, tab=tab+'  ')
         for name, stmt in list(self.a.module_interface.items()):
             s += stmt.topyf(tab=tab+'    ')
-        s +=  tab + '  CONTAINS\n'
+        s += tab + '  CONTAINS\n'
         for name, stmt in list(self.a.module_subprogram.items()):
             s += stmt.topyf(tab=tab+'    ')
         s += tab + 'END MODULE ' + self.name + '\n'
         return s
 
     def check_private(self, name):
-        if name in self.a.public_id_list: return False
-        if name in self.a.private_id_list: return True
-        if '' in self.a.public_id_list: return False
-        if '' in self.a.private_id_list: return True
-        #todo: handle generic-spec-s in id-lists.
+        if name in self.a.public_id_list:
+            return False
+        if name in self.a.private_id_list:
+            return True
+        if '' in self.a.public_id_list:
+            return False
+        if '' in self.a.private_id_list:
+            return True
+        # todo: handle generic-spec-s in id-lists.
         return
+
 
 # Python Module
 
 class EndPythonModule(EndStatement):
     match = re.compile(r'end(\s*python\s*module\s*\w*|)\Z', re.I).match
+
 
 class PythonModule(BeginStatement, HasImplicitStmt, HasUseStmt,
                    HasVariables):
@@ -440,9 +472,10 @@ class PythonModule(BeginStatement, HasImplicitStmt, HasUseStmt,
         return [Interface, Function, Subroutine, Module]
 
     def process_item(self):
-        self.name = self.item.get_line().replace(' ','')\
-                    [len(self.blocktype):].strip()
+        self.name = self.item.get_line().replace(' ', '')
+        self.name = self.name[len(self.blocktype):].strip()
         return BeginStatement.process_item(self)
+
 
 # Program
 
@@ -452,8 +485,9 @@ class EndProgram(EndStatement):
     """
     match = re.compile(r'end(\s*program\s*\w*|)\Z', re.I).match
 
+
 class Program(BeginStatement, ProgramBlock,
-              #HasAttributes, # XXX: why Program needs .attributes?
+              # HasAttributes, # XXX: why Program needs .attributes?
               HasVariables,
               HasImplicitStmt, HasUseStmt, AccessSpecs):
     """ PROGRAM [name]
@@ -466,25 +500,27 @@ class Program(BeginStatement, ProgramBlock,
 
     def process_item(self):
         if self.item is not None:
-            name = self.item.get_line().replace(' ','')\
-                   [len(self.blocktype):].strip()
+            name = self.item.get_line().replace(' ', '')
+            name = name[len(self.blocktype):].strip()
             if name:
                 self.name = name
         return BeginStatement.process_item(self)
+
 
 # BlockData
 
 class EndBlockData(EndStatement):
     """
-    END [ BLOCK DATA [ <block-data-name> ] ]
+    END [BLOCK DATA [<block-data-name>]]
     """
     match = re.compile(r'end(\s*block\s*data\s*\w*|)\Z', re.I).match
     blocktype = 'blockdata'
 
+
 class BlockData(BeginStatement, HasImplicitStmt, HasUseStmt,
                 HasVariables, AccessSpecs):
     """
-    BLOCK DATA [ <block-data-name> ]
+    BLOCK DATA [<block-data-name>]
     """
     end_stmt_cls = EndBlockData
     match = re.compile(r'block\s*data\s*\w*\Z', re.I).match
@@ -496,11 +532,13 @@ class BlockData(BeginStatement, HasImplicitStmt, HasUseStmt,
     def get_classes(self):
         return specification_part
 
+
 # Interface
 
 class EndInterface(EndStatement):
-    match = re.compile(r'end\s*interface\s*(\w+\s*\(.*\)|\w*)\Z',re.I).match
+    match = re.compile(r'end\s*interface\s*(\w+\s*\(.*\)|\w*)\Z', re.I).match
     blocktype = 'interface'
+
 
 class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
                 HasModuleProcedures, AccessSpecs
@@ -520,17 +558,18 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
 
     """
     modes = ['free', 'fix', 'pyf']
-    match = re.compile(r'(interface\s*(\w+\s*\(.*\)|\w*)|abstract\s*interface)\Z',re.I).match
+    pattern = r'(interface\s*(\w+\s*\(.*\)|\w*)|abstract\s*interface)\Z'
+    match = re.compile(pattern, re.I).match
     end_stmt_cls = EndInterface
     blocktype = 'interface'
 
-    a = AttributeHolder(interface_provides = {})
+    a = AttributeHolder(interface_provides={})
 
     def get_classes(self):
-        l = intrinsic_type_spec + interface_specification
-        if self.reader.format.mode=='pyf':
-            return [Subroutine, Function] + l
-        return l
+        line = intrinsic_type_spec + interface_specification
+        if self.reader.format.mode == 'pyf':
+            return [Subroutine, Function] + line
+        return line
 
     def process_item(self):
         line = self.item.get_line()
@@ -540,16 +579,13 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             self.generic_spec = ''
         else:
             self.generic_spec = line[len(self.blocktype):].strip()
-        self.name = self.generic_spec # XXX
+        self.name = self.generic_spec  # XXX
         return BeginStatement.process_item(self)
 
     def tostr(self):
         if self.isabstract:
             return 'ABSTRACT INTERFACE'
-        return 'INTERFACE '+ str(self.generic_spec)
-
-    #def get_provides(self):
-    #    return self.a.interface_provides
+        return 'INTERFACE ' + str(self.generic_spec)
 
     def analyze(self):
         content = self.content[:]
@@ -559,7 +595,6 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             if isinstance(stmt, self.end_stmt_cls):
                 break
             stmt.analyze()
-            #assert isinstance(stmt, SubProgramStatement),`stmt.__class__.__name__`
         if content:
             logger.info('Not analyzed content: %s' % content)
             # self.show_message('Not analyzed content: %s' % content)
@@ -568,12 +603,12 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
             var = self.parent.a.variables.pop(self.name)
             self.update_attributes(var.attributes)
 
-        if isinstance(self.parent, Module):#XXX
+        if isinstance(self.parent, Module):  # XXX
             parent_interface = self.parent.get_interface()
             if self.name in parent_interface:
                 p = parent_interface[self.name]
                 last = p.content.pop()
-                assert isinstance(last,EndInterface), repr(last.__class__)
+                assert isinstance(last, EndInterface), repr(last.__class__)
                 p.content += self.content
                 p.update_attributes(self.a.attributes)
             else:
@@ -582,11 +617,12 @@ class Interface(BeginStatement, HasAttributes, HasImplicitStmt, HasUseStmt,
 
     def topyf(self, tab=''):
         s = tab + self.tostr() + '\n'
-        s +=  HasImplicitStmt.topyf(self, tab=tab+'  ')
-        s +=  HasAttributes.topyf(self, tab=tab+'  ')
-        s +=  HasUseStmt.topyf(self, tab=tab+'  ')
+        s += HasImplicitStmt.topyf(self, tab=tab+'  ')
+        s += HasAttributes.topyf(self, tab=tab+'  ')
+        s += HasUseStmt.topyf(self, tab=tab+'  ')
         s += tab + 'END' + self.tostr() + '\n'
         return s
+
 
 # Subroutine
 
@@ -596,10 +632,10 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                           HasVariables, HasTypeDecls, AccessSpecs
                           ):
     """
-    [ <prefix> ] <FUNCTION|SUBROUTINE> <name> [ ( <args> ) ] [ <suffix> ]
+    [<prefix>] <FUNCTION|SUBROUTINE> <name> [( <args> )] [<suffix>]
     """
 
-    a = AttributeHolder(internal_subprogram = {})
+    a = AttributeHolder(internal_subprogram={})
     known_attributes = ['RECURSIVE', 'PURE', 'ELEMENTAL']
 
     def process_item(self):
@@ -618,8 +654,9 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
             assert i != -1, repr(line)
             line2 = item.apply_map(line[:i+1])
             for a in line2[1:-1].split(','):
-                a=a.strip()
-                if not a: continue
+                a = a.strip()
+                if not a:
+                    continue
                 args.append(a)
             line = line[i+1:].lstrip()
         suffix = item.apply_map(line)
@@ -647,11 +684,11 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
             s += self.typedecl.tostr() + ' '
         s += clsname
         suf = ''
-        if self.result and self.result!=self.name:
+        if self.result and self.result != self.name:
             suf += ' RESULT ( %s )' % (self.result)
         if self.bind:
             suf += ' BIND ( %s )' % (', '.join(self.bind))
-        return '%s %s(%s)%s' % (s, self.name,', '.join(self.args),suf)
+        return '%s %s(%s)%s' % (s, self.name, ', '.join(self.args), suf)
 
     def get_classes(self):
         return f2py_stmt + specification_part + execution_part \
@@ -668,10 +705,11 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
             assert a not in variables
             if is_name(a):
                 variables[a] = Variable(self, a)
-            elif a=='*':
-                variables[a] = Variable(self, a) # XXX: fix me appropriately
+            elif a == '*':
+                variables[a] = Variable(self, a)  # XXX: fix me appropriately
             else:
-                raise AnalyzeError('argument must be a name or * but got %r' % (a)) 
+                message = 'argument must be a name or * but got %r'
+                raise AnalyzeError(message % (a))
 
         if isinstance(self, Function):
             var = variables[self.result] = Variable(self, self.result)
@@ -685,7 +723,7 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                     stmt.analyze()
                     self.a.internal_subprogram[stmt.name] = stmt
                 stmt = content.pop(0)
-                while isinstance (stmt, Comment):
+                while isinstance(stmt, Comment):
                     stmt = content.pop(0)
                 assert isinstance(stmt, self.end_stmt_cls), repr(stmt)
             elif isinstance(stmt, self.end_stmt_cls):
@@ -694,7 +732,8 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
                 if hasattr(stmt, "analyze"):
                     stmt.analyze()
                 else:
-                    raise AnalyzeError('Failed to parse: {0}'.format(str(stmt)))
+                    message = 'Failed to parse: {0}'
+                    raise AnalyzeError(message.format(str(stmt)))
 
         if content:
             logger.info('Not analyzed content: %s' % content)
@@ -703,12 +742,16 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         parent_provides = self.parent.get_provides()
         if parent_provides is not None:
             if self.name in parent_provides:
-                self.warning('module subprogram name conflict with %s, overriding.' % (self.name))
+                message = 'module subprogram name conflict with %s, ' \
+                          + 'overriding.'
+                self.warning(message % (self.name))
             if self.is_public():
                 parent_provides[self.name] = self
 
         if self.is_recursive() and self.is_elemental():
-            self.warning('C1241 violation: prefix cannot specify both ELEMENTAL and RECURSIVE')
+            message = 'C1241 violation: prefix cannot specify both ' \
+                      + 'ELEMENTAL and RECURSIVE'
+            self.warning(message)
         return
 
     def topyf(self, tab=''):
@@ -717,19 +760,25 @@ class SubProgramStatement(BeginStatement, ProgramBlock,
         if isinstance(self, Function) and self.result != self.name:
             s += ' RESULT (%s)' % (self.result)
         s += '\n'
-        s +=  HasImplicitStmt.topyf(self, tab=tab+'  ')
-        s +=  AccessSpecs.topyf(self, tab=tab+'  ')
-        s +=  HasTypeDecls.topyf(self, tab=tab+'  ')
-        s +=  HasVariables.topyf(self, tab=tab+'  ', only_variables = self.args)
-        s += tab + 'END ' + self.__class__.__name__.upper() + ' ' + self.name + '\n'
+        s += HasImplicitStmt.topyf(self, tab=tab+'  ')
+        s += AccessSpecs.topyf(self, tab=tab+'  ')
+        s += HasTypeDecls.topyf(self, tab=tab+'  ')
+        s += HasVariables.topyf(self, tab=tab + '  ',
+                                only_variables=self.args)
+        s += tab + 'END ' + self.__class__.__name__.upper() \
+            + ' ' + self.name + '\n'
         return s
 
     def is_public(self): return not self.is_private()
 
     def is_private(self): return self.parent.check_private(self.name)
+
     def is_recursive(self): return 'RECURSIVE' in self.a.attributes
+
     def is_pure(self): return 'PURE' in self.a.attributes
+
     def is_elemental(self): return 'ELEMENTAL' in self.a.attributes
+
 
 class EndSubroutine(EndStatement):
     """
@@ -740,11 +789,15 @@ class EndSubroutine(EndStatement):
 
 class Subroutine(SubProgramStatement):
     """
-    [ <prefix> ] SUBROUTINE <name> [ ( [ <dummy-arg-list> ] ) [ <proc-language-binding-spec> ]]
+    [<prefix>] SUBROUTINE <name> [( [<dummy-arg-list>] )
+    [<proc-language-binding-spec>]]
     """
     end_stmt_cls = EndSubroutine
-    match = re.compile(r'(recursive|pure|elemental|\s)*subroutine\s*\w+', re.I).match
-    _repr_attr_names = ['prefix','bind','suffix','args'] + Statement._repr_attr_names
+    pattern = r'(recursive|pure|elemental|\s)*subroutine\s*\w+'
+    match = re.compile(pattern, re.I).match
+    _repr_attr_names = ['prefix', 'bind', 'suffix', 'args'] \
+        + Statement._repr_attr_names
+
 
 # Function
 
@@ -754,18 +807,21 @@ class EndFunction(EndStatement):
     """
     match = re.compile(r'end(\s*function\s*\w*|)\Z', re.I).match
 
+
 class Function(SubProgramStatement):
     """
-    [ <prefix> ] FUNCTION <name> ( [<dummy-arg-list>] ) [<suffix>]
-    <prefix> = <prefix-spec> [ <prefix-spec> ]...
+    [<prefix>] FUNCTION <name> ( [<dummy-arg-list>] ) [<suffix>]
+    <prefix> = <prefix-spec> [<prefix-spec>]...
     <prefix-spec> = <declaration-type-spec>
                   | RECURSIVE | PURE | ELEMENTAL
-    <suffix> = <proc-language-binding-spec> [ RESULT ( <result-name> ) ]
-             | RESULT ( <result-name> ) [ <proc-language-binding-spec> ]
+    <suffix> = <proc-language-binding-spec> [RESULT ( <result-name> )]
+             | RESULT ( <result-name> ) [<proc-language-binding-spec>]
     """
     end_stmt_cls = EndFunction
-    match = re.compile(r'(recursive|pure|elemental|\s)*function\s*\w+', re.I).match
-    _repr_attr_names = ['prefix','bind','suffix','args','typedecl'] + Statement._repr_attr_names
+    pattern = r'(recursive|pure|elemental|\s)*function\s*\w+'
+    match = re.compile(pattern, re.I).match
+    _repr_attr_names = ['prefix', 'bind', 'suffix', 'args', 'typedecl'] \
+        + Statement._repr_attr_names
 
     def subroutine_wrapper_code(self):
         name = 'f2pywrap_' + self.name
@@ -775,7 +831,7 @@ class Function(SubProgramStatement):
         lines = []
         tab = ' '*6
         lines.append('%sSUBROUTINE %s(%s)' % (tab, name, ', '.join(args)))
-        if isinstance(self.parent,Module):
+        if isinstance(self.parent, Module):
             lines.append('%s  USE %s' % (tab, self.parent.name))
         else:
             if isinstance(typedecl, TypeStmt):
@@ -784,24 +840,29 @@ class Function(SubProgramStatement):
                     for line in str(type_decl).split('\n'):
                         lines.append('%s  %s' % (tab, line.lstrip()))
             lines.append('%s  EXTERNAL %s' % (tab, self.name))
-            lines.append('%s  %s %s' % (tab, str(typedecl).lstrip(), self.name))
+            lines.append('%s  %s %s' % (tab,
+                                        str(typedecl).lstrip(),
+                                        self.name))
         lines.append('%s  %s %s' % (tab, str(typedecl).lstrip(), args[0]))
         lines.append('!f2py intent(out) %s' % (args[0]))
         for a in self.args:
             v = self.a.variables[a]
             lines.append('%s  %s' % (tab, str(v).lstrip()))
-        lines.append('%s  %s = %s(%s)' % (tab, args[0], self.name, ', '.join(self.args)))
-        #lines.append('%s  print*,"%s=",%s' % (tab, args[0], args[0])) # debug line
+        lines.append('%s  %s = %s(%s)' % (tab,
+                                          args[0],
+                                          self.name,
+                                          ', '.join(self.args)))
         lines.append('%sEND SUBROUTINE %s' % (tab, name))
         return '\n'.join(lines)
 
     def subroutine_wrapper(self):
         code = self.subroutine_wrapper_code()
         from .api import parse
-        block = parse(code) # XXX: set include_dirs
-        while len(block.content)==1:
+        block = parse(code)  # XXX: set include_dirs
+        while len(block.content) == 1:
             block = block.content[0]
         return block
+
 
 # Handle subprogram prefixes
 
@@ -809,7 +870,8 @@ class SubprogramPrefix(Statement):
     """
     <prefix> <declaration-type-spec> <function|subroutine> ...
     """
-    match = re.compile(r'(pure|elemental|recursive|\s)+\b',re.I).match
+    match = re.compile(r'(pure|elemental|recursive|\s)+\b', re.I).match
+
     def process_item(self):
         line = self.item.get_line()
         m = self.match(line)
@@ -859,7 +921,7 @@ class Select(BeginStatement):
 
 class SelectCase(Select):
     """
-    [ <case-construct-name> : ] SELECT CASE ( <case-expr> )
+    [<case-construct-name> :] SELECT CASE ( <case-expr> )
 
     """
     match = re.compile(r'select\s*case\s*\(.*\)\Z', re.I).match
@@ -875,7 +937,7 @@ class SelectCase(Select):
 
 class SelectType(Select):
     """
-    [ <case-construct-name> : ] SELECT TYPE ( <case-expr> )
+    [<case-construct-name> :] SELECT TYPE ( <case-expr> )
 
     """
     match = re.compile(r'select\s*type\s*\(.*\)\Z', re.I).match
@@ -893,77 +955,87 @@ class SelectType(Select):
 
 class EndWhere(EndStatement):
     """
-    END WHERE [ <where-construct-name> ]
+    END WHERE [<where-construct-name>]
     """
-    match = re.compile(r'end\s*\where\s*\w*\Z',re.I).match
+    match = re.compile(r'end\s*\where\s*\w*\Z', re.I).match
 
 
 class Where(BeginStatement):
     """
-    [ <where-construct-name> : ] WHERE ( <mask-expr> )
+    [<where-construct-name> :] WHERE ( <mask-expr> )
     <mask-expr> = <logical-expr>
     """
-    match = re.compile(r'where\s*\([^)]*\)\Z',re.I).match
+    match = re.compile(r'where\s*\([^)]*\)\Z', re.I).match
     end_stmt_cls = EndWhere
     name = ''
+
     def tostr(self):
         return 'WHERE ( %s )' % (self.expr)
+
     def process_item(self):
         self.expr = self.item.get_line()[5:].lstrip()[1:-1].strip()
         self.construct_name = self.item.name
         return BeginStatement.process_item(self)
 
     def get_classes(self):
-        return [Assignment, WhereStmt,
-                WhereConstruct, ElseWhere
-                ]
+        return [Assignment, WhereStmt, WhereConstruct, ElseWhere]
+
 
 WhereConstruct = Where
+
 
 # Forall
 
 class EndForall(EndStatement):
     """
-    END FORALL [ <forall-construct-name> ]
+    END FORALL [<forall-construct-name>]
     """
-    match = re.compile(r'end\s*forall\s*\w*\Z',re.I).match
+    match = re.compile(r'end\s*forall\s*\w*\Z', re.I).match
+
 
 class Forall(BeginStatement):
     """
-    [ <forall-construct-name> : ] FORALL <forall-header>
-      [ <forall-body-construct> ]...
+    [<forall-construct-name> :] FORALL <forall-header>
+      [<forall-body-construct>]...
     <forall-body-construct> = <forall-assignment-stmt>
                             | <where-stmt>
                             | <where-construct>
                             | <forall-construct>
                             | <forall-stmt>
-    <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    <forall-triplet-spec> = <index-name> = <subscript> : <subscript> [ : <stride> ]
+    <forall-header> = ( <forall-triplet-spec-list> [, <scalar-mask-expr>] )
+    <forall-triplet-spec> = <index-name> = <subscript> : <subscript>
+                            [: <stride>]
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
     end_stmt_cls = EndForall
-    match = re.compile(r'forall\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'forall\s*\(.*\)\Z', re.I).match
     name = ''
+
     def process_item(self):
         self.specs = self.item.get_line()[6:].lstrip()[1:-1].strip()
         return BeginStatement.process_item(self)
+
     def tostr(self):
         return 'FORALL (%s)' % (self.specs)
+
     def get_classes(self):
         return [GeneralAssignment, WhereStmt, WhereConstruct,
                 ForallConstruct, ForallStmt]
 
+
 ForallConstruct = Forall
+
 
 # IfThen
 
 class EndIfThen(EndStatement):
     """
-    END IF [ <if-construct-name> ]
+    END IF [<if-construct-name>]
     """
     match = re.compile(r'end\s*if\s*\w*\Z', re.I).match
     blocktype = 'if'
+
 
 class IfThen(BeginStatement):
     """
@@ -973,7 +1045,7 @@ class IfThen(BeginStatement):
       expr
     """
 
-    match = re.compile(r'if\s*\(.*\)\s*then\Z',re.I).match
+    match = re.compile(r'if\s*\(.*\)\s*then\Z', re.I).match
     end_stmt_cls = EndIfThen
     name = ''
 
@@ -991,12 +1063,13 @@ class IfThen(BeginStatement):
     def get_classes(self):
         return [Else, ElseIf] + execution_part_construct
 
+
 class If(BeginStatement):
     """
     IF ( <scalar-logical-expr> ) action-stmt
     """
 
-    match = re.compile(r'if\s*\(',re.I).match
+    match = re.compile(r'if\s*\(', re.I).match
 
     def process_item(self):
         item = self.item
@@ -1008,7 +1081,7 @@ class If(BeginStatement):
         i = line.find(')')
         expr = line[1:i].strip()
         line = line[i+1:].strip()
-        if line.lower()=='then':
+        if line.lower() == 'then':
             self.isvalid = False
             return
         self.expr = item.apply_map(expr)
@@ -1033,39 +1106,42 @@ class If(BeginStatement):
         assert len(self.content) == 1, repr(self.content)
         return 'IF (%s) %s' % (self.expr, str(self.content[0]).lstrip())
 
-    def tofortran(self,isfix=None):
+    def tofortran(self, isfix=None):
         return self.get_indent_tab(isfix=isfix) + self.tostr()
 
     def get_classes(self):
         return action_stmt
 
+
 # Do
 
 class EndDo(EndStatement):
     """
-    END DO [ <do-construct-name> ]
+    END DO [<do-construct-name>]
     """
     match = re.compile(r'end\s*do\s*\w*\Z', re.I).match
     blocktype = 'do'
 
+
 class Do(BeginStatement):
     """
-    [ <do-construct-name> : ] DO label [loopcontrol]
-    [ <do-construct-name> : ] DO [loopcontrol]
+    [<do-construct-name> :] DO label [loopcontrol]
+    [<do-construct-name> :] DO [loopcontrol]
 
     """
 
-    match = re.compile(r'do\b\s*\d*',re.I).match
-    item_re = re.compile(r'do\b\s*(?P<label>\d*)\s*,?\s*(?P<loopcontrol>.*)\Z',re.I).match
+    match = re.compile(r'do\b\s*\d*', re.I).match
+    pattern = r'do\b\s*(?P<label>\d*)\s*,?\s*(?P<loopcontrol>.*)\Z'
+    item_re = re.compile(pattern, re.I).match
     end_stmt_cls = EndDo
     name = ''
 
     def tostr(self):
-        l = ['DO']
+        lst = ['DO']
         for part in [self.endlabel, self.loopcontrol]:
             if part:
-                l.append(str(part))
-        return ' '.join(l)
+                lst.append(str(part))
+        return ' '.join(lst)
 
     def process_item(self):
         item = self.item
@@ -1085,7 +1161,8 @@ class Do(BeginStatement):
             label = item.label
             if label == self.endlabel:
                 r = True
-                if isinstance(self.parent, Do) and label==self.parent.endlabel:
+                if isinstance(self.parent,
+                              Do) and label == self.parent.endlabel:
                     # the same item label may be used for different block ends
                     self.put_item(item)
         return BeginStatement.process_subitem(self, item) or r
@@ -1093,33 +1170,38 @@ class Do(BeginStatement):
     def get_classes(self):
         return execution_part_construct
 
+
 # Associate
 
 class EndAssociate(EndStatement):
     """
-    END ASSOCIATE [ <associate-construct-name> ]
+    END ASSOCIATE [<associate-construct-name>]
     """
-    match = re.compile(r'end\s*associate\s*\w*\Z',re.I).match
+    match = re.compile(r'end\s*associate\s*\w*\Z', re.I).match
+
 
 class Associate(BeginStatement):
     """
-    [ <associate-construct-name> : ] ASSOCIATE ( <association-list> )
+    [<associate-construct-name> :] ASSOCIATE ( <association-list> )
       <block>
 
     <association> = <associate-name> => <selector>
     <selector> = <expr> | <variable>
     """
-    match = re.compile(r'associate\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'associate\s*\(.*\)\Z', re.I).match
     end_stmt_cls = EndAssociate
 
     def process_item(self):
         line = self.item.get_line()[9:].lstrip()
         self.associations = line[1:-1].strip()
         return BeginStatement.process_item(self)
+
     def tostr(self):
         return 'ASSOCIATE (%s)' % (self.associations)
+
     def get_classes(self):
         return execution_part_construct
+
 
 # Type
 
@@ -1130,21 +1212,23 @@ class EndType(EndStatement):
     match = re.compile(r'end\s*type\s*\w*\Z', re.I).match
     blocktype = 'type'
 
+
 class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
     """
-    TYPE [ [ , <type-attr-spec-list>] :: ] <type-name> [ ( <type-param-name-list> ) ]
-    <type-attr-spec> = <access-spec> | EXTENDS ( <parent-type-name> )
-                       | ABSTRACT | BIND(C)
+    TYPE [[, <typ-attr-spec-list>] ::] <type-name> [( <type-param-name-list> )]
+    <typ-attr-spec> = <access-spec> | EXTENDS ( <parent-type-name> )
+                      | ABSTRACT | BIND(C)
     """
     match = re.compile(r'type\b\s*').match
     end_stmt_cls = EndType
 
-    a = AttributeHolder(extends = None,
-                        parameters = {},
-                        component_names = [], # specifies component order for sequence types
-                        components = {}
+    a = AttributeHolder(extends=None,
+                        parameters={},
+                        component_names=[],  # Order for sequence types
+                        components={}
                         )
-    known_attributes = re.compile(r'\A(PUBLIC|PRIVATE|SEQUENCE|ABSTRACT|BIND\s*\(.*\))\Z',re.I).match
+    pattern = r'\A(PUBLIC|PRIVATE|SEQUENCE|ABSTRACT|BIND\s*\(.*\))\Z'
+    known_attributes = re.compile(pattern, re.I).match
 
     def process_item(self):
         line = self.item.get_line()[4:].lstrip()
@@ -1153,14 +1237,15 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
             return
         specs = []
         i = line.find('::')
-        if i!=-1:
+        if i != -1:
             for s in line[:i].split(','):
                 s = s.strip()
-                if s: specs.append(s)
+                if s:
+                    specs.append(s)
             line = line[i+2:].lstrip()
         self.specs = specs
         i = line.find('(')
-        if i!=-1:
+        if i != -1:
             self.name = line[:i].rstrip()
             assert line[-1] == ')', repr(line)
             self.params = split_comma(line[i+1:-1].lstrip())
@@ -1188,19 +1273,19 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
     def analyze(self):
         for spec in self.specs:
             i = spec.find('(')
-            if i!=-1:
+            if i != -1:
                 assert spec.endswith(')'), repr(spec)
                 s = spec[:i].rstrip().upper()
                 n = spec[i+1:-1].strip()
-                if s=='EXTENDS':
+                if s == 'EXTENDS':
                     self.a.extends = n
                     continue
-                elif s=='BIND':
-                    args,rest = parse_bind(spec)
+                elif s == 'BIND':
+                    args, rest = parse_bind(spec)
                     assert not rest, repr(rest)
                     spec = 'BIND(%s)' % (', '.join(args))
                 else:
-                    spec = '%s(%s)' % (s,n)
+                    spec = '%s(%s)' % (s, n)
             else:
                 spec = spec.upper()
             self.update_attributes(spec)
@@ -1234,7 +1319,9 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
         if parent_provides is not None:
             if self.is_public():
                 if self.name in parent_provides:
-                    self.warning('type declaration name conflict with %s, overriding.' % (self.name))
+                    message = 'type declaration name conflict with {}, ' \
+                              + 'overriding.'
+                    self.warning(message.format(self.name))
                 parent_provides[self.name] = self
 
         return
@@ -1258,11 +1345,15 @@ class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
     def is_public(self): return not self.is_private()
 
     def is_private(self):
-        if 'PUBLIC' in self.a.attributes: return False
-        if 'PRIVATE' in self.a.attributes: return True
+        if 'PUBLIC' in self.a.attributes:
+            return False
+        if 'PRIVATE' in self.a.attributes:
+            return True
         return self.parent.check_private(self.name)
 
+
 TypeDecl = Type
+
 
 # Enum
 
@@ -1270,62 +1361,55 @@ class EndEnum(EndStatement):
     """
     END ENUM
     """
-    match = re.compile(r'end\s*enum\Z',re.I).match
+    match = re.compile(r'end\s*enum\Z', re.I).match
     blocktype = 'enum'
+
 
 class Enum(BeginStatement):
     """
     ENUM , BIND(C)
       <enumerator-def-stmt>
-      [ <enumerator-def-stmt> ]...
+      [<enumerator-def-stmt>]...
     """
     blocktype = 'enum'
     end_stmt_cls = EndEnum
-    match = re.compile(r'enum\s*,\s*bind\s*\(\s*c\s*\)\Z',re.I).match
+    match = re.compile(r'enum\s*,\s*bind\s*\(\s*c\s*\)\Z', re.I).match
+
     def process_item(self):
         return BeginStatement.process_item(self)
+
     def get_classes(self):
         return [Enumerator]
 
-###################################################
 
-from . import statements
-from . import typedecl_statements
-__all__.extend(statements.__all__)
-__all__.extend(typedecl_statements.__all__)
-
-from .statements import *
-from .typedecl_statements import *
+##############################################################################
 
 f2py_stmt = [Threadsafe, FortranName, Depend, Check, CallStatement,
              CallProtoArgument]
 
 access_spec = [Public, Private]
 
-interface_specification = [Function, Subroutine,
-                           ModuleProcedure
-                           ]
+interface_specification = [Function, Subroutine, ModuleProcedure]
 
-module_subprogram_part = [ Contains, Function, Subroutine ]
+module_subprogram_part = [Contains, Function, Subroutine]
 
-specification_stmt = access_spec + [ Allocatable, Asynchronous, Bind,
-    Common, Data, Dimension, Equivalence, External, Intent, Intrinsic,
-    Namelist, Optional, Pointer, Protected, Save, Target, Volatile,
-    Value ]
+specification_stmt = access_spec \
+    + [Allocatable, Asynchronous, Bind, Common, Data, Dimension, Equivalence,
+       External, Intent, Intrinsic, Namelist, Optional, Pointer, Protected,
+       Save, Target, Volatile, Value]
 
-intrinsic_type_spec = [ SubprogramPrefix, Integer , Real,
-    DoublePrecision, Complex, DoubleComplex, Character, Logical, Byte
-    ]
+intrinsic_type_spec = [SubprogramPrefix, Integer, Real,  DoublePrecision,
+                       Complex, DoubleComplex, Character, Logical, Byte]
 
-derived_type_spec = [  ]
+derived_type_spec = []
 type_spec = intrinsic_type_spec + derived_type_spec
-declaration_type_spec = intrinsic_type_spec + [ TypeStmt, Class ]
+declaration_type_spec = intrinsic_type_spec + [TypeStmt, Class]
 
 type_declaration_stmt = declaration_type_spec
 
-private_or_sequence = [ Private, Sequence ]
+private_or_sequence = [Private, Sequence]
 
-component_part = declaration_type_spec + [ ModuleProcedure ]
+component_part = declaration_type_spec + [ModuleProcedure]
 
 proc_binding_stmt = [SpecificBinding, GenericBinding, FinalBinding]
 
@@ -1350,12 +1434,14 @@ execution_part = execution_part_construct[:]
 
 # C201, R208
 for cls in [EndFunction, EndProgram, EndSubroutine]:
-    try: execution_part.remove(cls)
-    except ValueError: pass
+    try:
+        execution_part.remove(cls)
+    except ValueError:
+        pass
 
 internal_subprogram = [Function, Subroutine]
 
-internal_subprogram_part = [Contains, ] + internal_subprogram
+internal_subprogram_part = [Contains] + internal_subprogram
 
 # In Fortran2003 we can have a Procedure declaration. We therefore
 # include SpecificBinding as a valid declaration construct.
@@ -1364,9 +1450,9 @@ declaration_construct = [TypeDecl, Entry, Enum, Format, Interface,
     specification_stmt + type_declaration_stmt
 # stmt-function-stmt
 
-implicit_part = [ Implicit, Parameter, Format, Entry ]
+implicit_part = [Implicit, Parameter, Format, Entry]
 
-specification_part = [ Use, Import ] + implicit_part + \
+specification_part = [Use, Import] + implicit_part + \
                      declaration_construct
 
 
@@ -1376,4 +1462,4 @@ main_program = [Program] + specification_part + execution_part + \
                internal_subprogram_part
 
 program_unit = main_program + external_subprogram + [Module,
-                                                     BlockData ]
+                                                     BlockData]

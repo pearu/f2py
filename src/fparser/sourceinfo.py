@@ -108,14 +108,14 @@ class FortranFormat(object):
         Arguments:
             mode - (String) One of 'free', 'fix', 'f77' or 'pyf'
         '''
-        if mode=='free':
-            is_free, is_strict=True, False
-        elif mode=='fix':
-            is_free, is_strict=False, False
-        elif mode=='f77':
-            is_free, is_strict=False, True
-        elif mode=='pyf':
-            is_free, is_strict=True, True
+        if mode == 'free':
+            is_free, is_strict = True, False
+        elif mode == 'fix':
+            is_free, is_strict = False, False
+        elif mode == 'f77':
+            is_free, is_strict = False, True
+        elif mode == 'pyf':
+            is_free, is_strict = True, True
         else:
             raise NotImplementedError(repr(mode))
         return cls(is_free, is_strict)

@@ -152,7 +152,6 @@ def test_class_internal_error(monkeypatch, capsys):
 def test_select_case():
     '''Test that fparser correctly recognises select case'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag = 1
@@ -193,7 +192,6 @@ def test_select_case():
 def test_named_select_case():
     '''Test that fparser correctly recognises a named select case'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag = 1
@@ -227,7 +225,6 @@ def test_select_case_brackets():
     '''Test that fparser correctly parses a select case involving
     parentheses '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag(2) = 1
@@ -258,7 +255,6 @@ def test_select_case_brackets():
 def test_select_type():
     '''Test that fparser correctly recognises select type'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -308,7 +304,6 @@ def test_select_type():
 def test_type_is_process_item(monkeypatch, capsys):
     ''' Test error condition raised in TypeIs.process_item() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -346,7 +341,6 @@ def test_type_is_process_item(monkeypatch, capsys):
 def test_type_is_to_fortran():
     ''' Test error condition raised in TypeIs.to_fortran() method '''
     from fparser import api
-    import fparser
     from fparser.utils import ParseError
     source_str = '''
     subroutine foo(an_object)
@@ -382,7 +376,6 @@ def test_type_is_to_fortran():
 def test_class_is_process_item(monkeypatch, capsys):
     ''' Test error condition raised in ClassIs.process_item() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -420,7 +413,6 @@ def test_class_is_process_item(monkeypatch, capsys):
 def test_class_is_to_fortran():
     ''' Test ClassIs.to_fortran() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
