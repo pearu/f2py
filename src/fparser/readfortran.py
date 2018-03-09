@@ -1364,7 +1364,7 @@ class FortranFileReader(FortranReaderBase):
             self.file = open(file_candidate, 'r')
             self._close_on_destruction = True
         elif hasattr(file_candidate,
-                     'next') and hasattr(file_candidate,
+                     'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
             self.id = file_candidate.name
             self.file = file_candidate
