@@ -230,6 +230,10 @@ def test_allocate():
     assert parse(Allocate, 'allocate (real(8)::a)') == \
         'ALLOCATE (REAL(KIND=8) :: a)'
     # With a type specifier
+    assert parse(Allocate, 'allocate (real :: a(8))') == \
+        'ALLOCATE (REAL :: a(8))'
+    assert parse(Allocate, 'allocate (real(kind=wp) :: a(8))') == \
+        'ALLOCATE (REAL(KIND=wp) :: a(8))'
     assert parse(Allocate, 'allocate (a_type :: a)') == \
         'ALLOCATE (a_type :: a)'
 

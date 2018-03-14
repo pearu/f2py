@@ -648,6 +648,7 @@ class Allocate(Statement):
         if i != -1:
             spec = item2.apply_map(line2[:i].rstrip())
             from .block_statements import type_spec
+            from .utils import is_name
             stmt = None
             for cls in type_spec:
                 if cls.match(spec):
@@ -656,6 +657,9 @@ class Allocate(Statement):
                         break
             if stmt is not None and stmt.isvalid:
                 spec = stmt
+            elif is_name(spec):
+                # Type spec is the name of a derived type
+                pass
             else:
                 self.warning('TODO: unparsed type-spec' + repr(spec))
             line2 = line2[i+2:].lstrip()
@@ -666,11 +670,22 @@ class Allocate(Statement):
         return
 
     def tofortran(self, isfix=None):
-        t = ''
+        '''
+        Create the Fortran for this ALLOCATE statement
+
+        :param bool isfix: whether or not to generate fixed-format code
+        :return: Fortran code
+        :rtype: str
+        '''
+        type_spec = ''
         if self.spec:
-            t = self.spec.tostr() + ' :: '
+            if isinstance(self.spec, str):
+                type_spec = self.spec
+            else:
+                type_spec = self.spec.tostr()
+            type_spec += ' :: '
         return self.get_indent_tab(isfix=isfix) \
-            + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
+            + 'ALLOCATE (%s%s)' % (type_spec, ', '.join(self.items))
 
     def analyze(self):
         return
