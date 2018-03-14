@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -221,12 +222,16 @@ def test_contains():
 
 
 def test_allocate():
+    ''' Tests for various form of allocate '''
     assert parse(Allocate, 'allocate (a)') == 'ALLOCATE (a)'
     assert parse(Allocate, 'allocate (a, stat=b)') == \
         'ALLOCATE (a, STAT = b)'
     assert parse(Allocate, 'allocate (a,b(:1))') == 'ALLOCATE (a, b(:1))'
     assert parse(Allocate, 'allocate (real(8)::a)') == \
         'ALLOCATE (REAL(KIND=8) :: a)'
+    # With a type specifier
+    assert parse(Allocate, 'allocate (a_type :: a)') == \
+        'ALLOCATE (a_type :: a)'
 
 
 def test_deallocate():
