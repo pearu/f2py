@@ -88,7 +88,7 @@ from fparser.typedecl_statements import Byte, Character, Complex, \
      DoubleComplex, DoublePrecision, Integer, Logical, Real
 
 from fparser.readfortran import FortranStringReader
-from fparser.utils import AnalyzeError
+from fparser.utils import AnalyzeError, ParseError
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -236,6 +236,9 @@ def test_allocate():
         'ALLOCATE (REAL(KIND=wp) :: a(8))'
     assert parse(Allocate, 'allocate (a_type :: a)') == \
         'ALLOCATE (a_type :: a)'
+    with pytest.raises(ParseError) as err:
+        parse(Allocate, 'allocate(not valid :: a)')
+    assert "Unrecognised type-specification in ALLOCATE statement" in str(err)
 
 
 def test_deallocate():

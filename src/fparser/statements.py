@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -641,6 +642,13 @@ class Allocate(Statement):
     match = re.compile(r'allocate\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
+        '''
+        Process the allocate statement and store the various entities being
+        allocated in self.items. Any type-specification is stored in
+        self.spec.
+
+        :raises ParseError: if an invalid type-specification is used
+        '''
         line = self.item.get_line()[8:].lstrip()[1:-1].strip()
         item2 = self.item.copy(line, True)
         line2 = item2.get_line()
@@ -661,7 +669,9 @@ class Allocate(Statement):
                 # Type spec is the name of a derived type
                 pass
             else:
-                self.warning('TODO: unparsed type-spec' + repr(spec))
+                raise ParseError(
+                    "Unrecognised type-specification in ALLOCATE statement: "
+                    "{0}".format(self.item.line))
             line2 = line2[i+2:].lstrip()
         else:
             spec = None
