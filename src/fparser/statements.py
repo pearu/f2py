@@ -643,7 +643,7 @@ class Allocate(Statement):
 
     def process_item(self):
         '''
-        Process the allocate statement and store the various entities being
+        Process the ALLOCATE statement and store the various entities being
         allocated in self.items. Any type-specification is stored in
         self.spec.
 
@@ -656,7 +656,6 @@ class Allocate(Statement):
         if i != -1:
             spec = item2.apply_map(line2[:i].rstrip())
             from .block_statements import type_spec
-            from .utils import is_name
             stmt = None
             for cls in type_spec:
                 if cls.match(spec):
