@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -641,6 +642,13 @@ class Allocate(Statement):
     match = re.compile(r'allocate\s*\(.*\)\Z', re.I).match
 
     def process_item(self):
+        '''
+        Process the ALLOCATE statement and store the various entities being
+        allocated in self.items. Any type-specification is stored in
+        self.spec.
+
+        :raises ParseError: if an invalid type-specification is used
+        '''
         line = self.item.get_line()[8:].lstrip()[1:-1].strip()
         item2 = self.item.copy(line, True)
         line2 = item2.get_line()
@@ -656,8 +664,13 @@ class Allocate(Statement):
                         break
             if stmt is not None and stmt.isvalid:
                 spec = stmt
+            elif is_name(spec):
+                # Type spec is the name of a derived type
+                pass
             else:
-                self.warning('TODO: unparsed type-spec' + repr(spec))
+                raise ParseError(
+                    "Unrecognised type-specification in ALLOCATE statement: "
+                    "{0}".format(self.item.line))
             line2 = line2[i+2:].lstrip()
         else:
             spec = None
@@ -666,11 +679,22 @@ class Allocate(Statement):
         return
 
     def tofortran(self, isfix=None):
-        t = ''
+        '''
+        Create the Fortran code for this ALLOCATE statement
+
+        :param bool isfix: whether or not to generate fixed-format code
+        :return: Fortran code
+        :rtype: str
+        '''
+        type_spec = ''
         if self.spec:
-            t = self.spec.tostr() + ' :: '
+            if isinstance(self.spec, str):
+                type_spec = self.spec
+            else:
+                type_spec = self.spec.tostr()
+            type_spec += ' :: '
         return self.get_indent_tab(isfix=isfix) \
-            + 'ALLOCATE (%s%s)' % (t, ', '.join(self.items))
+            + 'ALLOCATE (%s%s)' % (type_spec, ', '.join(self.items))
 
     def analyze(self):
         return

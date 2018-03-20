@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -87,7 +88,7 @@ from fparser.typedecl_statements import Byte, Character, Complex, \
      DoubleComplex, DoublePrecision, Integer, Logical, Real
 
 from fparser.readfortran import FortranStringReader
-from fparser.utils import AnalyzeError
+from fparser.utils import AnalyzeError, ParseError
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -221,12 +222,23 @@ def test_contains():
 
 
 def test_allocate():
+    ''' Tests for various forms of ALLOCATE statement '''
     assert parse(Allocate, 'allocate (a)') == 'ALLOCATE (a)'
     assert parse(Allocate, 'allocate (a, stat=b)') == \
         'ALLOCATE (a, STAT = b)'
     assert parse(Allocate, 'allocate (a,b(:1))') == 'ALLOCATE (a, b(:1))'
     assert parse(Allocate, 'allocate (real(8)::a)') == \
         'ALLOCATE (REAL(KIND=8) :: a)'
+    # With a type specifier
+    assert parse(Allocate, 'allocate (real :: a(8))') == \
+        'ALLOCATE (REAL :: a(8))'
+    assert parse(Allocate, 'allocate (real(kind=wp) :: a(8))') == \
+        'ALLOCATE (REAL(KIND=wp) :: a(8))'
+    assert parse(Allocate, 'allocate (a_type :: a)') == \
+        'ALLOCATE (a_type :: a)'
+    with pytest.raises(ParseError) as err:
+        parse(Allocate, 'allocate(not valid :: a)')
+    assert "Unrecognised type-specification in ALLOCATE statement" in str(err)
 
 
 def test_deallocate():
