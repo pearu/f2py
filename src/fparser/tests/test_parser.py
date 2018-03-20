@@ -222,7 +222,7 @@ def test_contains():
 
 
 def test_allocate():
-    ''' Tests for various form of allocate '''
+    ''' Tests for various forms of ALLOCATE statement '''
     assert parse(Allocate, 'allocate (a)') == 'ALLOCATE (a)'
     assert parse(Allocate, 'allocate (a, stat=b)') == \
         'ALLOCATE (a, STAT = b)'

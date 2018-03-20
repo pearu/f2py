@@ -680,7 +680,7 @@ class Allocate(Statement):
 
     def tofortran(self, isfix=None):
         '''
-        Create the Fortran for this ALLOCATE statement
+        Create the Fortran code for this ALLOCATE statement
 
         :param bool isfix: whether or not to generate fixed-format code
         :return: Fortran code
