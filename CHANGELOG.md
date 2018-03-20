@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+20/03/2018 PR #77 and issue #76. Fix bug in ALLOCATE statement when
+	   using names of derived types as type specifiers.
+
 05/03/2018 PR #73. Improvements to SourceInfo so that it can take either
 	   a filename or a file handle.
 
