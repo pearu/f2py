@@ -396,6 +396,7 @@ class Comment(object):
     def isempty(self, ignore_comments=False):
         return ignore_comments
 
+
 class MultiLine(object):
     """ Holds PYF file multiline.
 
