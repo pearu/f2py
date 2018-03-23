@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+23/03/2018 PR #75. Allow FortranFileReader to accept either a filename
+           or a file handle. Many pylint/pep8 improvements.
+
 05/03/2018 PR #73. Improvements to SourceInfo so that it can take either
 	   a filename or a file handle.
 
