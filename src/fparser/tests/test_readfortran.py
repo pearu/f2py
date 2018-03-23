@@ -351,6 +351,9 @@ FULL_FREE_EXPECTED = ['program test',
 ##############################################################################
 
 def test_filename_reader():
+    '''
+    Tests that a Fortran source file can be read given its filename.
+    '''
     handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
     os.close(handle)
     try:
@@ -371,6 +374,9 @@ def test_filename_reader():
 ##############################################################################
 
 def test_file_reader():
+    '''
+    Tests that a Fortran source file can be read given a file object of it.
+    '''
     handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
     os.close(handle)
     try:
@@ -389,6 +395,16 @@ def test_file_reader():
         os.unlink(filename)
         raise
 
+
+##############################################################################
+
+def test_bad_file_reader():
+    '''
+    Tests that the file reader can spot when it is given something to read
+    which is neither file nor filename.
+    '''
+    with pytest.raises(Exception):
+        unit_under_test = FortranFileReader( 42 )
 
 ##############################################################################
 

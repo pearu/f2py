@@ -394,15 +394,7 @@ class Comment(object):
                % (self.comment, self.span)
 
     def isempty(self, ignore_comments=False):
-        '''
-        Returns true if there is no comment. This is always the case when
-        ignoring comments.
-        '''
-        if ignore_comments:
-            return True
-        else:
-            return self.comment.strip() == ''
-
+        return ignore_comments
 
 class MultiLine(object):
     """ Holds PYF file multiline.
@@ -477,7 +469,7 @@ class FortranReaderBase(object):
         ----------
         source :
           A file-like object with .next() method used to retrive a line.
-        format :
+        mode :
           A FortranFormat object as returned by sourceinfo.get_source_info()
 
         See also
@@ -546,7 +538,8 @@ class FortranReaderBase(object):
     @property
     def format(self):
         '''
-        Returns the currently applicable format.
+        :returns: the currently applicable format.
+        :rtype: :py:class:`fparser.sourceinfo.FortranFormat`
         '''
         return self._format
 
@@ -555,7 +548,8 @@ class FortranReaderBase(object):
     @property
     def name(self):
         '''
-        Returns a name for this reader.
+        :returns: the name of this reader.
+        :rtype: str
         '''
         return '{source} mode={mode}'.format(source=self.source,
                                              mode=self._format.mode)
@@ -1358,6 +1352,13 @@ class FortranFileReader(FortranReaderBase):
     Reads a file for Fortran source.
     '''
     def __init__(self, file_candidate, include_dirs=None, source_only=None):
+        '''
+        Constructs a FortranFileReader object from a file.
+        :param file_candidate: A filename or file-like object.
+        :param list include_dirs: Directories in which to look for inclusions.
+        :param list source_only: Fortran source files to search for modules
+                                 required by "use" statements.
+        '''
         mode = fparser.sourceinfo.get_source_info(file_candidate)
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate

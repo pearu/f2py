@@ -194,9 +194,9 @@ class FortranFormat(object):
             mode = 'fix'
         elif self.is_f77:
             mode = 'f77'
-        else:
-            message = 'FortranFormat stuck in bad mode: {} {}'
-            raise Exception(message.format(self.is_free, self.is_strict))
+        # While mode is determined by is_free and is_strict all permutations
+        # are covered. There is no need for a final "else" clause as the
+        # object cannot get wedged in an invalid mode.
         return mode
 
 

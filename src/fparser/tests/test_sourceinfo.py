@@ -165,6 +165,16 @@ def test_fortranformat_from_mode(mode):
 
 
 ##############################################################################
+
+def test_fortranformat_from_mode_bad():
+    '''
+    Tests that an exception is thrown for an unrecognised mode string.
+    '''
+    with pytest.raises(NotImplementedError):
+        unit_under_test = FortranFormat.from_mode('cheese')
+
+
+##############################################################################
 # Setting up a pytest fixture in this way is a mechanism for creating
 # parameterised tests.
 #

@@ -224,7 +224,7 @@ class Variable(object, with_metaclass(classes)):
             if not self.typedecl == typedecl:
                 self.parent.warning(
                     'variable %r already has type %s, '
-                    ' resetting to %s'
+                    'resetting to %s'
                     % (self.name, self.typedecl.tostr(), typedecl.tostr()))
         assert typedecl is not None
         self.typedecl = typedecl
@@ -235,7 +235,7 @@ class Variable(object, with_metaclass(classes)):
             if not self.init == expr:
                 self.parent.warning(
                     'variable %r already has initialization %r, '
-                    ' resetting to %r' % (self.name, self.expr, expr))
+                    'resetting to %r' % (self.name, self.expr, expr))
         self.init = expr
         return
 
@@ -246,7 +246,7 @@ class Variable(object, with_metaclass(classes)):
             if not self.dimension == dims:
                 self.parent.warning(
                     'variable %r already has dimension %r, '
-                    ' resetting to %r' % (self.name, self.dimension, dims))
+                    'resetting to %r' % (self.name, self.dimension, dims))
         self.dimension = dims
         return
 
@@ -255,7 +255,7 @@ class Variable(object, with_metaclass(classes)):
             if not self.bounds == bounds:
                 self.parent.warning(
                     'variable %r already has bounds %r, '
-                    ' resetting to %r' % (self.name, self.bounds, bounds))
+                    'resetting to %r' % (self.name, self.bounds, bounds))
         self.bounds = bounds
         return
 
@@ -264,7 +264,7 @@ class Variable(object, with_metaclass(classes)):
             if not self.length == length:
                 self.parent.warning(
                     'variable %r already has length %r, '
-                    ' resetting to %r' % (self.name, self.length, length))
+                    'resetting to %r' % (self.name, self.length, length))
         self.length = length
         return
 
@@ -289,6 +289,12 @@ class Variable(object, with_metaclass(classes)):
                         'VOLATILE', 'REQUIRED']
 
     def is_intent_in(self):
+        # TODO Something hinky is going on here. self.intent is a list which
+        #      doesn't make a lot of sense. How can a variable have more
+        #      than one intent?
+        # TODO Furthermore if no intent is specified the assumed intent is
+        #      "inout". Below an explicit "inout" returns False but a None
+        #      returns True.
         if not self.intent:
             return True
         if 'HIDE' in self.intent:

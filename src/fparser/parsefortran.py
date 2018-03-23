@@ -94,7 +94,7 @@ class FortranParser(object):
             parser = self.cache[reader.id]
             self.block = parser.block
             self.is_analyzed = parser.is_analyzed
-            logging.getLogger(__name__).info('using cached %s', (reader.id))
+            logging.getLogger(__name__).info('using cached %s' % (reader.id))
         else:
             self.cache[reader.id] = self
             self.block = None
