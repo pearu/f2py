@@ -92,22 +92,47 @@ class FortranFormat(object):
             is_free   - (Boolean) True for free format, False for fixed.
             is_strict - (Boolean) Some amount of strictness.
         '''
+        if is_free is None:
+            raise Exception('FortranFormat does not accept a None is_free')
+        if is_strict is None:
+            raise Exception('FortranFormat does not accept a None is_strict')
+
         self._is_free = is_free
         self._is_strict = is_strict
 
+    @classmethod
+    def from_mode(cls, mode):
+        '''
+        Constructs a FortranFormat object from a mode string.
+
+        Arguments:
+            mode - (String) One of 'free', 'fix', 'f77' or 'pyf'
+        '''
+        if mode == 'free':
+            is_free, is_strict = True, False
+        elif mode == 'fix':
+            is_free, is_strict = False, False
+        elif mode == 'f77':
+            is_free, is_strict = False, True
+        elif mode == 'pyf':
+            is_free, is_strict = True, True
+        else:
+            raise NotImplementedError(repr(mode))
+        return cls(is_free, is_strict)
+
     def __eq__(self, other):
         if isinstance(other, FortranFormat):
-            return self._is_free == other.is_free \
-                   and self._is_strict == other.is_strict
+            return self.is_free == other.is_free \
+                   and self.is_strict == other.is_strict
         raise NotImplementedError
 
     def __str__(self):
-        if self._is_strict:
+        if self.is_strict:
             string = 'Strict'
         else:
             string = 'Non-strict'
 
-        if self._is_free:
+        if self.is_free:
             string += ' free'
         else:
             string += ' fixed'
@@ -117,16 +142,62 @@ class FortranFormat(object):
     @property
     def is_free(self):
         '''
-        Returns true if the "free format" flag is set.
+        Returns true for free format.
         '''
         return self._is_free
 
     @property
+    def is_fixed(self):
+        '''
+        Returns true for fixed format.
+        '''
+        return not self._is_free
+
+    @property
     def is_strict(self):
         '''
-        Returns true if the "strict" flag is set.
+        Returns true for strict format.
         '''
         return self._is_strict
+
+    @property
+    def is_f77(self):
+        '''
+        Returns true for strict fixed format.
+        '''
+        return not self._is_free and self._is_strict
+
+    @property
+    def is_fix(self):
+        '''
+        Returns true for slack fixed format.
+        '''
+        return not self._is_free and not self._is_strict
+
+    @property
+    def is_pyf(self):
+        '''
+        Returns true for strict free format.
+        '''
+        return self._is_free and self._is_strict
+
+    @property
+    def mode(self):
+        '''
+        Returns a string representing this format.
+        '''
+        if self._is_free and self._is_strict:
+            mode = 'pyf'
+        elif self._is_free:
+            mode = 'free'
+        elif self.is_fix:
+            mode = 'fix'
+        elif self.is_f77:
+            mode = 'f77'
+        # While mode is determined by is_free and is_strict all permutations
+        # are covered. There is no need for a final "else" clause as the
+        # object cannot get wedged in an invalid mode.
+        return mode
 
 
 ##############################################################################
@@ -205,7 +276,7 @@ def get_source_info(file_candidate):
         # and Python3.
         filename = file_candidate
     else:
-        message = 'Argument must be a file or filename.'
+        message = 'Argument must be a filename or file-like object.'
         raise ValueError(message)
 
     if filename:

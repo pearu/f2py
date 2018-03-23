@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+23/03/2018 PR #75. Allow FortranFileReader to accept either a filename
+           or a file handle. Many pylint/pep8 improvements.
+
 20/03/2018 PR #77 and issue #76. Fix bug in ALLOCATE statement when
 	   using names of derived types as type specifiers.
 

@@ -44,6 +44,7 @@ import pytest
 import fparser.base_classes
 import fparser.parsefortran
 import fparser.readfortran
+import fparser.sourceinfo
 import fparser.utils
 
 
@@ -108,7 +109,7 @@ def test_log_comment_mix(log):
 
     code = '      x=1 ! Cheese'
     parent = fparser.readfortran.FortranStringReader(code)
-    parent.set_mode(False, True)
+    parent.set_format(fparser.sourceinfo.FortranFormat(False, True))
     item = fparser.readfortran.Line(code, (1, 1), None, None, parent)
     with pytest.raises(fparser.utils.AnalyzeError):
         __ = BeginHarness(parent, item)
@@ -148,7 +149,7 @@ def test_log_unexpected(log):
 
     code = ['      jumper', '      end thing']
     parent = fparser.readfortran.FortranStringReader('\n'.join(code))
-    parent.set_mode(False, True)
+    parent.set_format(fparser.sourceinfo.FortranFormat(False, True))
     item = fparser.readfortran.Line(code[0], (1, 1), None, None, parent)
     with pytest.raises(fparser.utils.AnalyzeError):
         __ = BeginThing(parent, item)

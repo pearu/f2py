@@ -334,7 +334,7 @@ content : tuple
                     end_name = obj.get_end_name()
                     if end_name != start_name:
                         reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
-                    
+
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
                         start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()

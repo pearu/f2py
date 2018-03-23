@@ -50,26 +50,48 @@ from fparser.sourceinfo import FortranFormat, \
 
 
 ##############################################################################
+
+def test_fortranformat_constructor_faults():
+    '''
+    Tests that the constructor correctly rejects attempts to create an object
+    with "None" arguments.
+    '''
+    with pytest.raises(Exception):
+        unit_under_test = FortranFormat(True, None)
+
+    with pytest.raises(Exception):
+        unit_under_test = FortranFormat(None, True)
+
+
+##############################################################################
 @pytest.fixture(scope="module",
-                params=[(False, False, 'Non-strict fixed format'),
-                        (False, True, 'Strict fixed format'),
-                        (True, False, 'Non-strict free format'),
-                        (True, True, 'Strict free format')])
+                params=[(False, False, 'fix', 'Non-strict fixed format'),
+                        (False, True, 'f77', 'Strict fixed format'),
+                        (True, False, 'free', 'Non-strict free format'),
+                        (True, True, 'pyf', 'Strict free format')])
 def pretty(request):
     '''
-    Returns parameters for format tests.
+    Returns all possible permutations of flags and their corresponding
+    mode and descriptive strings.
     '''
     return request.param
 
 
 ##############################################################################
 
-def test_fortranformat_string(pretty):
+def test_fortranformat_constructor(pretty):
     '''
-    Tests for the correct string representations.
+    Tests the constructor correctly sets up the object.
     '''
     unit_under_test = FortranFormat(pretty[0], pretty[1])
-    assert str(unit_under_test) == pretty[2]
+    assert str(unit_under_test) == pretty[3]
+    assert unit_under_test.is_free == pretty[0]
+    assert unit_under_test.is_fixed == (not pretty[0])
+    assert unit_under_test.is_strict == pretty[1]
+    assert unit_under_test.is_f77 == (not pretty[0] and pretty[1])
+    assert unit_under_test.is_fix == (not pretty[0] and not pretty[1])
+    assert unit_under_test.is_pyf == (pretty[0] and pretty[1])
+    assert unit_under_test.mode == pretty[2]
 
 
 ##############################################################################
@@ -109,6 +131,47 @@ def test_fortranformat_invalid():
     with pytest.raises(NotImplementedError):
         if unit_under_test == 'oranges':
             raise Exception("That shouldn't have happened")
+
+
+##############################################################################
+
+@pytest.fixture(scope="module",
+                params=[('free', True, False),
+                        ('f77', False, True),
+                        ('fix', False, False),
+                        ('pyf', True, True)])
+def mode(request):
+    '''
+    Returns all possible mode strings and their corresponding flags.
+    '''
+    return request.param
+
+
+##############################################################################
+
+def test_fortranformat_from_mode(mode):
+    '''
+    Tests that the object is correctly created by the from_mode function.
+    '''
+    unit_under_test = FortranFormat.from_mode(mode[0])
+    assert unit_under_test.mode == mode[0]
+    assert unit_under_test.is_free == mode[1]
+    assert unit_under_test.is_fixed == (not mode[1])
+    assert unit_under_test.is_strict == mode[2]
+    assert unit_under_test.is_f77 == (not mode[1] and mode[2])
+    assert unit_under_test.is_fix == (not mode[1] and not mode[2])
+    assert unit_under_test.is_pyf == (mode[1] and mode[2])
+    assert str(unit_under_test.mode) == mode[0]
+
+
+##############################################################################
+
+def test_fortranformat_from_mode_bad():
+    '''
+    Tests that an exception is thrown for an unrecognised mode string.
+    '''
+    with pytest.raises(NotImplementedError):
+        unit_under_test = FortranFormat.from_mode('cheese')
 
 
 ##############################################################################
