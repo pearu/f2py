@@ -403,8 +403,10 @@ def test_bad_file_reader():
     Tests that the file reader can spot when it is given something to read
     which is neither file nor filename.
     '''
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError) as ex:
         unit_under_test = FortranFileReader(42)
+    expected = 'FortranFileReader is used with a filename or file-like object.'
+    assert expected in str(ex)
 
 
 ##############################################################################

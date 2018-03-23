@@ -276,7 +276,7 @@ def get_source_info(file_candidate):
         # and Python3.
         filename = file_candidate
     else:
-        message = 'Argument must be a file or filename.'
+        message = 'Argument must be a filename or file-like object.'
         raise ValueError(message)
 
     if filename:

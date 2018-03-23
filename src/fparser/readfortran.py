@@ -1360,7 +1360,6 @@ class FortranFileReader(FortranReaderBase):
         :param list source_only: Fortran source files to search for modules
                                  required by "use" statements.
         '''
-        mode = fparser.sourceinfo.get_source_info(file_candidate)
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
             self.file = open(file_candidate, 'r')
@@ -1374,7 +1373,8 @@ class FortranFileReader(FortranReaderBase):
         else:  # Probably not something we can deal with
             message = 'FortranFileReader is used with a filename'
             message += ' or file-like object.'
-            raise Exception(message)
+            raise ValueError(message)
+        mode = fparser.sourceinfo.get_source_info(file_candidate)
 
         FortranReaderBase.__init__(self, self.file, mode)
 
