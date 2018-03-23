@@ -404,11 +404,15 @@ def test_bad_file_reader():
     which is neither file nor filename.
     '''
     with pytest.raises(Exception):
-        unit_under_test = FortranFileReader( 42 )
+        unit_under_test = FortranFileReader(42)
+
 
 ##############################################################################
 
 def test_string_reader():
+    '''
+    Tests that Fortran source can be read from a string.
+    '''
     unit_under_test = FortranStringReader(FULL_FREE_SOURCE)
     expected = fparser.sourceinfo.FortranFormat(True, False)
     assert unit_under_test.format == expected
