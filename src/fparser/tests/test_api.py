@@ -71,7 +71,7 @@ from os.path import join, dirname
 from fparser import api
 
 SOURCE_STR = '''\
-    ! before foo 
+    ! before foo
     subroutine foo
     integer i, r
     do i = 1,100
