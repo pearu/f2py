@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -66,24 +67,42 @@
 Test parsing of whole fortran files; 'blackbox' tests here.
 """
 
+from os.path import join, dirname
 from fparser import api
-import sys
-from os.path import abspath, join, dirname
 
-def test_use_module():
-    d = dirname(__file__)
-    sources = [join(d,'modfile.f95'), join(d,'funcfile.f95')]
-    file_to_parse = sources[1]
-    tree = api.parse(file_to_parse, isfree=True, isstrict=False, source_only = sources)
-
-def test_dimension_attr():
-    source_str = '''
+SOURCE_STR = '''\
+    ! before foo 
     subroutine foo
-    integer, dimension( -10 : 10, -   2147483648 : 2147483648) :: a( -2 : 2, 1000000 : 1000001 )
-    real, dimension(-20:20, 100:113, -  512  : 713) :: b
-    end
+    integer i, r
+    do i = 1,100
+      r = r + 1
+    end do
+    ! after end do
+    end subroutine foo
     '''
 
+
+def test_use_module():
+    '''
+    Test that we parse a function that uses a module when we supply the
+    latter via the `source_only` argument.
+    '''
+    cwd = dirname(__file__)
+    sources = [join(cwd, 'modfile.f95'), join(cwd, 'funcfile.f95')]
+    file_to_parse = sources[1]
+    _ = api.parse(file_to_parse, isfree=True, isstrict=False,
+                  source_only=sources)
+
+
+def test_dimension_attr():
+    '''
+    Tests for parsing the `dimension` attribute of variable declarations
+    '''
+    source_str = ("    subroutine foo\n"
+                  "    integer, dimension( -10 : 10, -   2147483648 : "
+                  "2147483648) :: a( -2 : 2, 1000000 : 1000001 )\n"
+                  "    real, dimension(-20:20, 100:113, -  512  : 713) :: b\n"
+                  "    end\n")
     tree = api.parse(source_str, isfree=True, isstrict=False)
     subr = tree.a.external_subprogram['foo']
     avar = subr.a.variables['a']
@@ -97,7 +116,12 @@ def test_dimension_attr():
     assert bvar.dimension == [('-20', '20'), ('100', '113'), ('-  512', '713')]
     assert bvar.shape == ['41', '14', '1226']
 
+
 def test_provides():
+    '''
+    Tests for non-Fortran (pyf?) module_provides and use_provides
+    key words.
+    '''
     source_str = '''
     module mod1
     implicit none
@@ -157,22 +181,38 @@ def test_provides():
     mod5 = tree.a.module['mod5']
     mod6 = tree.a.module['mod6']
     assert list(mod5.a.module_provides.keys()).sort() == ['fp', 'dummy'].sort()
-    assert list(mod5.a.use_provides.keys()).sort() == ['a', 'b', 'e', 'a2', 'b2', 'lgp'].sort()
-    assert list(mod6.a.module_provides.keys()) ==  []
-    assert list(mod6.a.use_provides.keys()).sort() ==  ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2'].sort()
+    assert list(mod5.a.use_provides.keys()).sort() == \
+        ['a', 'b', 'e', 'a2', 'b2', 'lgp'].sort()
+    assert list(mod6.a.module_provides.keys()) == []
+    assert list(mod6.a.use_provides.keys()).sort() == \
+        ['fp', 'dummy', 'b', 'e', 'qgp', 'a2', 'a', 'b2'].sort()
     assert mod6.a.use_provides['qgp'].name == 'gp'
 
+
 def test_walk():
-    source_str = '''\
-    ! before foo 
-    subroutine foo
-    integer i, r
-    do i = 1,100
-      r = r + 1
-    end do
-    ! after end do
-    end subroutine foo
     '''
-    tree = api.parse(source_str, isfree=True, isstrict=False, ignore_comments=False)
+    Test the walk() method of the api module
+    '''
+    tree = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+                     ignore_comments=False)
     for stmt, depth in api.walk(tree, 1):
         print(depth, stmt.item)
+
+
+def test_caching():
+    ''' Tests relating to enabling/disabling of parser cache '''
+    tree1 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+                      ignore_comments=False)
+    # If we keep the cache from the last call to parse then we
+    # should get the same object back
+    tree2 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+                      ignore_comments=False, clear_cache=False)
+    assert tree1 is tree2
+    # Now wipe the cache and check that we get a new object
+    tree2 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+                      ignore_comments=False, clear_cache=True)
+    assert tree1 is not tree2
+    # Check that wiping the cache is the default behaviour
+    tree2 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+                      ignore_comments=False)
+    assert tree1 is not tree2
