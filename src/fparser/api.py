@@ -153,32 +153,35 @@ def get_reader(input, isfree=None, isstrict=None, include_dirs=None,
 
 
 def parse(input, isfree=None, isstrict=None, include_dirs=None,
-          source_only=None, ignore_comments=True, analyze=True):
-    """ Parse input and return Statement tree. Raises an AnalyzeError if the
+          source_only=None, ignore_comments=True, analyze=True,
+          clear_cache=True):
+    """
+    Parse input and return Statement tree. Raises an AnalyzeError if the
     parser can not parse the Fortran code.
 
-    Parameters
-    ----------
-    input : str
-      Specify a string or filename containing Fortran code.
-    isfree, isstrict : {None, bool}
-      Specify input Fortran format. The values are determined from the
-      input. If that fails then isfree=True and isstrict=False is assumed.
-    include_dirs : {None, list}
-      Specify a list of include directories. The default list (when
-      include_dirs=None) contains the current working directory and
-      the directory of ``filename``.
-    source_only : {None, list}
-      Specify a list of Fortran file names that are searched when the
-      ``USE`` statement is encountered.
-    ignore_comments : bool
-      When True then discard all comment lines in the Fortran code.
-    analyze : bool
-      When True then apply run analyze method on the Fortran code tree.
+    :param str input: Specify a string or filename containing Fortran code.
+    :param bool isfree: Whether the Fortran source is free-format
+    :param bool isstrict: Whether we are to strictly enforce the `isfree`
+                          setting
+    :param list include_dirs: Specify a list of include directories. The
+                              default list (when include_dirs=None) contains
+                              the current working directory and the directory
+                              of ``filename``.
+    :param list source_only: A list of Fortran file names that are searched
+                             when the ``USE`` statement is encountered.
+    :param bool ignore_comments: When True then discard all comment lines in
+                                 the Fortran code.
+    :param bool analyze: When True then apply analyze() method on the Fortran
+                         code tree.
+    :param bool clear_cache: Whether or not to wipe the parser cache prior
+                             to parsing. Necessary when a new tree object
+                             is required, even if the Fortran to be parsed has
+                             been seen before.
 
-    Returns
-    -------
-    block : `fparser.api.BeginSource`
+    :returns: Abstract Syntax Tree of Fortran source
+    :rtype: `fparser.api.BeginSource`
+
+    :raises: AnalyzeError if the Fortran code cannot be parsed.
 
     Examples
     --------
@@ -226,6 +229,10 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
     get_reader
     """
     from .parsefortran import FortranParser
+
+    if clear_cache:
+        # Wipe the parser cache if requested
+        FortranParser.cache.clear()
 
     reader = get_reader(input, isfree, isstrict, include_dirs, source_only)
     parser = FortranParser(reader, ignore_comments=ignore_comments)
