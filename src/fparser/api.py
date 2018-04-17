@@ -161,9 +161,9 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
     parser can not parse the Fortran code.
 
     :param str input: Specify a string or filename containing Fortran code.
-    :param bool isfree: Whether the Fortran source is free-format
+    :param bool isfree: Whether the Fortran source is free-format.
     :param bool isstrict: Whether we are to strictly enforce the `isfree`
-                          setting
+                          setting.
     :param list include_dirs: Specify a list of include directories. The
                               default list (when include_dirs=None) contains
                               the current working directory and the directory
@@ -179,7 +179,7 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
                              is required, even if the Fortran to be parsed has
                              been seen before.
 
-    :returns: Abstract Syntax Tree of Fortran source
+    :returns: Abstract Syntax Tree of Fortran source.
     :rtype: :py:class:`fparser.api.BeginSource`
     """
     from .parsefortran import FortranParser

@@ -96,7 +96,7 @@ def test_use_module():
 
 def test_dimension_attr():
     '''
-    Tests for parsing the `dimension` attribute of variable declarations
+    Tests for parsing the `dimension` attribute of variable declarations.
     '''
     source_str = ("    subroutine foo\n"
                   "    integer, dimension( -10 : 10, -   2147483648 : "
@@ -191,7 +191,7 @@ def test_provides():
 
 def test_walk():
     '''
-    Test the walk() method of the api module
+    Test the walk() method of the api module.
     '''
     tree = api.parse(SOURCE_STR, isfree=True, isstrict=False,
                      ignore_comments=False)
@@ -200,7 +200,7 @@ def test_walk():
 
 
 def test_caching():
-    ''' Tests relating to enabling/disabling of parser cache '''
+    ''' Tests relating to enabling/disabling of parser cache. '''
     tree1 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
                       ignore_comments=False)
     # If we keep the cache from the last call to parse then we
