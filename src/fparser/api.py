@@ -180,54 +180,7 @@ def parse(input, isfree=None, isstrict=None, include_dirs=None,
                              been seen before.
 
     :returns: Abstract Syntax Tree of Fortran source
-    :rtype: `fparser.api.BeginSource`
-
-    :raises: AnalyzeError if the Fortran code cannot be parsed.
-
-    Examples
-    --------
-
-        >>> code = '''
-        ... c comment
-        ...       subroutine foo(a)
-        ...         integer a
-        ...         print*, "a=",a
-        ...       end
-        ... '''
-        >>> tree = parse(code,isfree=False)
-        >>> print tree
-              !BEGINSOURCE <cStringIO.StringI object at 0x1798030> mode=fix90
-                SUBROUTINE foo(a)
-                  INTEGER a
-                  PRINT *, "a=", a
-                END SUBROUTINE foo
-        >>> print `tree`
-              BeginSource
-                blocktype='beginsource'
-                name='<cStringIO.StringI object at 0x1798030> mode=fix90'
-                a=AttributeHolder:
-              external_subprogram=<dict with keys ['foo']>
-                content:
-                  Subroutine
-                    args=['a']
-                    item=Line('subroutine foo(a)',(3, 3),'')
-                    a=AttributeHolder:
-                variables=<dict with keys ['a']>
-                    content:
-                      Integer
-                        selector=('', '')
-                        entity_decls=['a']
-                        item=Line('integer a',(4, 4),'')
-                      Print
-                        item=Line('print*, "a=",a',(5, 5),'')
-                  EndSubroutine
-                    blocktype='subroutine'
-                    name='foo'
-            item=Line('end',(6, 6),'')
-
-    See also
-    --------
-    get_reader
+    :rtype: :py:class:`fparser.api.BeginSource`
     """
     from .parsefortran import FortranParser
 

@@ -137,7 +137,8 @@ that reader to create the tree, e.g.:
 
 ::
 
-  >>> reader = FortranStringReader(code, False, True)
+  >>> reader = FortranStringReader(code)
+  >>> reader.set_format(FortranFormat(isfree, isstrict))
   >>> parser = FortranParser(reader)
   >>> parser.parse()
   >>> print parser.block
@@ -145,6 +146,10 @@ that reader to create the tree, e.g.:
           SUBROUTINE foo(a)
             PRINT *, "a=", a
           END SUBROUTINE foo
+
+The full interface to the `parse()` function is:
+
+.. autofunction:: fparser.api.parse
 
 The `FortranParser` class holds the parser information while
 iterating over items returned by a `FortranReaderBase` iterator.
