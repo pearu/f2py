@@ -146,7 +146,7 @@ end python module foo
                 '  END PYTHONMODULE foo']
 
     reader = fparser.common.readfortran.FortranStringReader(string)
-    reader.set_mode_from_str('pyf')
+    reader.set_format(fparser.common.sourceinfo.FortranFormat.from_mode('pyf'))
     parser = fparser.one.parsefortran.FortranParser(reader)
     parser.parse()
     caught = parser.block.tofortran().splitlines()
@@ -204,7 +204,7 @@ end module foo
                 '  END MODULE foo']
 
     reader = fparser.common.readfortran.FortranStringReader(string)
-    reader.set_mode_from_str('free')
+    reader.set_format(fparser.common.sourceinfo.FortranFormat.from_mode('free'))
     parser = fparser.one.parsefortran.FortranParser(reader)
     parser.parse()
     caught = parser.block.tofortran().splitlines()

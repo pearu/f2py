@@ -75,7 +75,6 @@ __all__ = ['FortranParser']
 import traceback
 import logging
 
-from fparser.common.readfortran import FortranFileReader, FortranStringReader
 from fparser.one.block_statements import BeginSource
 from fparser.common.utils import AnalyzeError
 
@@ -95,7 +94,7 @@ class FortranParser(object):
             parser = self.cache[reader.id]
             self.block = parser.block
             self.is_analyzed = parser.is_analyzed
-            logging.getLogger(__name__).info('using cached %s' % (reader.id))
+            logging.getLogger(__name__).info('using cached %s', (reader.id))
         else:
             self.cache[reader.id] = self
             self.block = None
@@ -104,6 +103,9 @@ class FortranParser(object):
         return
 
     def get_item(self):
+        '''
+        Retrieves the next item from the reader.
+        '''
         try:
             item = self.reader.next(ignore_comments=self.ignore_comments)
             return item
@@ -112,6 +114,9 @@ class FortranParser(object):
         return
 
     def put_item(self, item):
+        '''
+        Pushes the given item to the reader.
+        '''
         self.reader.fifo_item.insert(0, item)
         return
 
@@ -139,6 +144,9 @@ class FortranParser(object):
         return
 
     def analyze(self):
+        '''
+        Attempts to analyse the parsed Fortran. It is not clear what for.
+        '''
         if self.is_analyzed:
             return
         if self.block is None:

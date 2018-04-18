@@ -334,7 +334,7 @@ content : tuple
                     end_name = obj.get_end_name()
                     if end_name != start_name:
                         reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
-                    
+
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
                         start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
@@ -2059,13 +2059,24 @@ class Proc_Component_Attr_Spec(STRINGBase): # R446
                                                string.upper())
     match = staticmethod(match)
 
-class Private_Components_Stmt(StmtBase): # R447
+
+class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
     """
+    R447
+
     <private-components-stmt> = PRIVATE
     """
     subclass_names = []
-    def match(string): return StringBase.match('PRIVATE', string.upper())
-    match = staticmethod(match)
+
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword  "PRIVATE" or nothing if no match is found
+        :rtype: string
+        '''
+        return StringBase.match('PRIVATE', string.upper())
+
 
 class Type_Bound_Procedure_Part(BlockBase): # R448
     """
@@ -4991,100 +5002,165 @@ class End_Select_Type_Stmt(EndStmtBase): # R824
     def match(string):
         return EndStmtBase.match('SELECT',Select_Construct_Name, string, require_stmt_type=True)
 
-class Do_Construct(Base): # R825
+
+class Do_Construct(Base):  # pylint: disable=invalid-name
     """
+    R825
+
     <do-construct> = <block-do-construct>
                      | <nonblock-do-construct>
     """
     subclass_names = ['Block_Do_Construct', 'Nonblock_Do_Construct']
 
-class Block_Do_Construct(Base): # R826
-    """
-    <block-do-construct> = <block-label-do-construct> | <block-nonlabel-do-construct>
-    """
-    subclass_names = ['Block_Label_Do_Construct', 'Block_Nonlabel_Do_Construct']
 
-class Block_Label_Do_Construct(BlockBase): # R826_1
+class Block_Do_Construct(Base):  # pylint: disable=invalid-name
     """
+    R826
+
+    <block-do-construct> = <block-label-do-construct>
+                           | <block-nonlabel-do-construct>
+    """
+    subclass_names = ['Block_Label_Do_Construct',
+                      'Block_Nonlabel_Do_Construct']
+
+
+class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
+    """
+    R826_1
+
     <block-label-do-construct> = <label-do-stmt>
                                    [ <execution-part-construct> ]...
                                    <end-do>
     """
     subclass_names = []
     use_names = ['Label_Do_Stmt', 'Execution_Part_Construct', 'End_Do']
+
     @staticmethod
     def match(reader):
+        '''
+        :param reader: instance of `FortranReaderBase` class
+        :type reader: :py:class:`FortranReaderBase`
+        :return: code block matching the labeled "DO" construct
+        :rtype: string
+        '''
         return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
                                End_Do, reader,
-                               match_labels=True, enable_do_label_construct_hook=True)
+                               match_labels=True,
+                               enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
-        l = []
+        '''
+        :param str tab: tab character or empty string
+        :param bool isfix: whether the reader is in fixed format
+        :return: parsed representation of the labeled "DO" construct
+        :rtype: string
+        '''
+        lblock = []
         start = self.content[0]
         end = self.content[-1]
         extra_tab = '  '
-        l.append(start.tofortran(tab=tab,isfix=isfix))
+        lblock.append(start.tofortran(tab=tab, isfix=isfix))
         for item in self.content[1:-1]:
-            l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
-        if len(self.content)>1:
-            l.append(end.tofortran(tab=tab,isfix=isfix))
-        return '\n'.join(l)
+            lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
+        if len(self.content) > 1:
+            lblock.append(end.tofortran(tab=tab, isfix=isfix))
+        return '\n'.join(lblock)
 
-    
-class Block_Nonlabel_Do_Construct(BlockBase): # R826_2
+
+class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
     """
+     R826_2
+
     <block-nonlabel-do-construct> = <nonlabel-do-stmt>
                                      [ <execution-part-construct> ]...
                                      <end-do-stmt>
     """
     subclass_names = []
     use_names = ['Nonlabel_Do_Stmt', 'Execution_Part_Construct', 'End_Do_Stmt']
+
     @staticmethod
     def match(reader):
+        '''
+        :param reader: instance of `FortranReaderBase` class
+        :type reader: :py:class:`FortranReaderBase`
+        :return: code block matching the nonlabeled "DO" construct
+        :rtype: string
+        '''
         return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
                                End_Do_Stmt, reader
                                )
 
-class Do_Stmt(Base): # R827
+
+class Do_Stmt(Base):  # pylint: disable=invalid-name
     """
+    R827
+
     <do-stmt> = <label-do-stmt>
                 | <nonlabel-do-stmt>
     """
     subclass_names = ['Label_Do_Stmt', 'Nonlabel_Do_Stmt']
 
-class Label_Do_Stmt(StmtBase): # R828
+
+class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
     """
+    R828
+
     <label-do-stmt> = [ <do-construct-name> : ] DO <label> [ <loop-control> ]
     """
     subclass_names = []
     use_names = ['Do_Construct_Name', 'Label', 'Loop_Control']
+
     @staticmethod
     def match(string):
+        '''
+        :param string: (source of) Fortran string to parse
+        :type string: str or :py:class:`FortranReaderBase`
+        :return: 3-tuple containing strings and instances of the classes
+                 determining labeled "DO" statement (optional statement name,
+                 label and loop control expression if present)
+        :rtype: 3-tuple of objects
+        '''
         # do-construct-name is determined by reader
-        if string[:2].upper()!='DO': return
+        if string[:2].upper() != 'DO':
+            return
         line = string[2:].lstrip()
-        m = pattern.label.match(line)
-        if m is None: return
-        label = m.group()
-        line = line[m.end():].lstrip()
+        mpat = pattern.label.match(line)
+        if mpat is None:
+            return
+        label = mpat.group()
+        line = line[mpat.end():].lstrip()
         if line:
             return None, Label(label), Loop_Control(line)
         return None, Label(label), None
 
     def tostr(self):
+        '''
+        :return: string containing Fortran code for the parsed
+                 labeled "DO" statement
+        :rtype: string
+        '''
+        # pylint: disable=unbalanced-tuple-unpacking
         name, label, loop_control = self.items
         if name is None:
-            s = 'DO %s' % (label)
+            dostmt = 'DO %s' % (label)
         else:
-            s = '%s: DO %s' % (label)
+            dostmt = '%s: DO %s' % (label)
         if loop_control is not None:
-            s += ' %s' % (loop_control)
-        return s
+            dostmt += ' %s' % (loop_control)
+        return dostmt
 
     def get_start_name(self):
+        '''
+        :return: optional labeled "DO" statement name
+        :rtype: string
+        '''
         return self.item.name
 
     def get_start_label(self):
+        '''
+        :return: label of "DO" statement
+        :rtype: string
+        '''
         return int(self.items[1])
 
     do_construct_name = property(lambda self: self.items[0])
@@ -5092,82 +5168,168 @@ class Label_Do_Stmt(StmtBase): # R828
     loop_control = property(lambda self: self.items[2])
 
 
-class Nonlabel_Do_Stmt(StmtBase, WORDClsBase): # R829
+class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
     """
+    R829
+
     <nonlabel-do-stmt> = [ <do-construct-name> : ] DO [ <loop-control> ]
     """
     subclass_names = []
     use_names = ['Do_Construct_Name', 'Loop_Control']
-    def match(string): return WORDClsBase.match('DO', Loop_Control, string)
-    match = staticmethod(match)
 
-class Loop_Control(Base): # R830
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: code line matching the nonlabeled "DO" statement
+        :rtype: string
+        '''
+        return WORDClsBase.match('DO', Loop_Control, string)
+
+
+class Loop_Control(Base):  # pylint: disable=invalid-name
     """
-    <loop-control> = [ , ] <do-variable> = <scalar-int-expr> , <scalar-int-expr> [ , <scalar-int-expr> ]
+    R830
+
+    <loop-control> = [ , ] <do-variable> = scalar-int-expr,
+                                           scalar-int-expr
+                                           [ , <scalar-int-expr> ]
                      | [ , ] WHILE ( <scalar-logical-expr> )
     """
     subclass_names = []
     use_names = ['Do_Variable', 'Scalar_Int_Expr', 'Scalar_Logical_Expr']
+
+    @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 3-tuple containing strings and instances of the classes
+                 determining loop control (optional comma delimiter,
+                 optional scalar logical expression describing "WHILE"
+                 condition or optional counter expression containing loop
+                 counter and scalar integer expression)
+        :rtype: 3-tuple of objects or nothing for an "infinite loop"
+        '''
+        # pylint: disable=unbalanced-tuple-unpacking
+        optional_delim = None
+        # Match optional delimiter
         if string.startswith(','):
             line, repmap = string_replace_map(string[1:].lstrip())
+            optional_delim = ", "
         else:
             line, repmap = string_replace_map(string)
-        if line[:5].upper()=='WHILE' and line[5:].lstrip().startswith('('):
-            l = line[5:].lstrip()
-            i = l.find(')')
-            if i!=-1 and i==len(l)-1:
-                return Scalar_Logical_Expr(repmap(l[1:i].strip())),
-        if line.count('=')!=1: return
-        var,rhs = line.split('=')
+        # Match "WHILE" scalar logical expression
+        if line[:5].upper() == 'WHILE' and line[5:].lstrip().startswith('('):
+            lbrak = line[5:].lstrip()
+            i = lbrak.find(')')
+            if i != -1 and i == len(lbrak)-1:
+                scalar_logical_expr = \
+                    Scalar_Logical_Expr(repmap(lbrak[1:i].strip()))
+                return scalar_logical_expr, None, optional_delim
+        # Match counter expression
+        # More than one '=' in counter expression
+        if line.count('=') != 1:
+            return
+        var, rhs = line.split('=')
         rhs = [s.strip() for s in rhs.lstrip().split(',')]
-        if not 2<=len(rhs)<=3: return
-        return Variable(repmap(var.rstrip())), \
-                list(map(Scalar_Int_Expr, list(map(repmap,rhs))))
-    match = staticmethod(match)
-    def tostr(self):
-        if len(self.items)==1: return ', WHILE (%s)' % (self.items[0])
-        return ', %s = %s' % (self.items[0], ', '.join(map(str,self.items[1])))
+        # Incorrect number of elements in counter expression
+        if not 2 <= len(rhs) <= 3:
+            return
+        counter_expr = (Variable(repmap(var.rstrip())),
+                        list(map(Scalar_Int_Expr, list(map(repmap, rhs)))))
+        return None, counter_expr, optional_delim
 
-class Do_Variable(Base): # R831
+    def tostr(self):
+        '''
+        :return: parsed representation of loop control construct
+        :rtype: string
+        '''
+        # pylint: disable=unbalanced-tuple-unpacking
+        scalar_logical_expr, counter_expr, optional_delim = self.items
+        # Return loop control construct containing "WHILE" condition and
+        # its <scalar-logical-expr>
+        if scalar_logical_expr is not None:
+            loopctrl = 'WHILE (%s)' % scalar_logical_expr
+        # Return loop control construct containing counter expression:
+        # <do-variable> as LHS and <scalar-int-expr> list as RHS
+        elif counter_expr[0] is not None and counter_expr[1] is not None:
+            loopctrl = '%s = %s' % \
+                (counter_expr[0], ', '.join(map(str, counter_expr[1])))
+        # Add optional delimiter to loop control construct if present
+        if optional_delim is not None:
+            loopctrl = optional_delim + loopctrl
+        return loopctrl
+
+
+class Do_Variable(Base):  # pylint: disable=invalid-name
     """
+    R831
+
     <do-variable> = <scalar-int-variable>
     """
     subclass_names = ['Scalar_Int_Variable']
 
-class Do_Block(BlockBase): # R832
+
+class Do_Block(BlockBase):  # pylint: disable=invalid-name
     """
+    R832
+
     <do-block> = [ <execution-part-construct> ]...
     """
     subclass_names = ['Block']
     subclass_names = []
     use_names = ['Execution_Part_Construct']
-    @staticmethod
-    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
 
-class End_Do(Base): # R833
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: code block matching the execution part construct within
+                 the "DO" block
+        :rtype: string
+        '''
+        return BlockBase.match(None, [Execution_Part_Construct], None, string)
+
+
+class End_Do(Base):  # pylint: disable=invalid-name
     """
+    R833
+
     <end-do> = <end-do-stmt>
                | <continue-stmt>
     """
     subclass_names = ['End_Do_Stmt', 'Continue_Stmt']
 
-class End_Do_Stmt(EndStmtBase): # R834
+
+class End_Do_Stmt(EndStmtBase):  # pylint: disable=invalid-name
     """
+    R834
+
     <end-do-stmt> = END DO [ <do-construct-name> ]
     """
     subclass_names = []
     use_names = ['Do_Construct_Name']
+
     @staticmethod
     def match(string):
-        return EndStmtBase.match('DO',Do_Construct_Name, string, require_stmt_type=True)
+        '''
+        :param str string: Fortran code to check for a match
+        :return: code line matching the "END DO" statement
+        :rtype: string
+        '''
+        return EndStmtBase.match('DO', Do_Construct_Name, string,
+                                 require_stmt_type=True)
 
-class Nonblock_Do_Construct(Base): # R835
+
+class Nonblock_Do_Construct(Base):  # pylint: disable=invalid-name
     """
+    R835
+
     <nonblock-do-stmt> = <action-term-do-construct>
                          | <outer-shared-do-construct>
     """
     subclass_names = ['Action_Term_Do_Construct', 'Outer_Shared_Do_Construct']
+
 
 class Action_Term_Do_Construct(BlockBase): # R836
     """
@@ -5188,21 +5350,22 @@ class Action_Term_Do_Construct(BlockBase): # R836
     def match(reader):
         return BlockBase.match(Label_Do_Stmt, [Execution_Part_Construct],
                                Do_Term_Action_Stmt, reader,
-                               match_labels=True, enable_do_label_construct_hook=True)
+                               match_labels=True,
+                               enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
-        l = []
+        line = []
         start = self.content[0]
         end = self.content[-1]
         extra_tab = '  '
-        l.append(start.tofortran(tab=tab,isfix=isfix))
+        line.append(start.tofortran(tab=tab, isfix=isfix))
         for item in self.content[1:-1]:
-            l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
+            line.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
             if isinstance(item, Label_Do_Stmt):
                 extra_tab += '  '
         if len(self.content)>1:
-            l.append(end.tofortran(tab=tab,isfix=isfix))
-        return '\n'.join(l)
+            line.append(end.tofortran(tab=tab, isfix=isfix))
+        return '\n'.join(line)
 
 class Do_Body(BlockBase): # R837
     """
@@ -6751,63 +6914,134 @@ class Module_Subprogram(Base): # R1108
     """
     subclass_names = ['Function_Subprogram', 'Subroutine_Subprogram']
 
-class Use_Stmt(StmtBase): # R1109
+
+class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     """
-    <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name> [ , <rename-list> ]
-                 | USE [ [ , <module-nature> ] :: ] <module-name> , ONLY: [ <only-list> ]
+    R1109
+
+    <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name>
+                                                  [ , <rename-list> ]
+                | USE [ [ , <module-nature> ] :: ] <module-name> ,
+                                                   ONLY: [ <only-list> ]
     """
     subclass_names = []
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
+    @staticmethod
     def match(string):
-        if string[:3].upper() != 'USE': return
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a module (optional module nature, optional
+                 double colon delimiter, mandatory module name, optional
+                 "ONLY" specification and optional "Rename" or "Only" list)
+        :rtype: 5-tuple of objects (module name and 4 optional)
+        '''
+        # Incorrect 'USE' statement
+        if string[:3].upper() != 'USE':
+            return
         line = string[3:]
-        if not line: return
-        if isalnum(line[0]): return
+        # Empty string after 'USE'
+        if not line:
+            return
+        # No separation between 'USE' statement and its specifiers
+        if line[0].isalnum():
+            return
         line = line.lstrip()
         i = line.find('::')
         nature = None
-        if i!=-1:
+        dcolon = None
+        if i != -1:
+            # The nature of the module ("intrinsic" or
+            # "non-intrinsic") is specified
+            dcolon = '::'
             if line.startswith(','):
-                l = line[1:i].strip()
-                if not l: return
-                nature = Module_Nature(l)
+                line_nat = line[1:i].strip()
+                # Missing Module_Nature between ',' and '::'
+                if not line_nat:
+                    return
+                nature = Module_Nature(line_nat)
             line = line[i+2:].lstrip()
-            if not line: return
+            # No Module_Name after 'USE, Module_Nature ::'
+            if not line:
+                return
+        else:
+            # Check for missing '::' after Module_Nature
+            items = re.findall(r"[\w']+", line)
+            for item in items:
+                try:
+                    nature = Module_Nature(item)
+                except NoMatchError:
+                    pass
+            # Missing '::' after Module_Nature
+            if nature is not None:
+                return
+
         i = line.find(',')
-        if i==-1: return nature, Module_Name(line), '', None
+        if i == -1:
+            return nature, dcolon, Module_Name(line), '', None
         name = line[:i].rstrip()
-        if not name: return
+        # Missing Module_Name before Only_List
+        if not name:
+            return
         name = Module_Name(name)
         line = line[i+1:].lstrip()
-        if not line: return
+        # Missing 'ONLY' specification after 'USE Module_Name,'
+        if not line:
+            return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
+            # Missing ':' after ', ONLY' specification
             if line[0] != ':':
                 return
             line = line[1:].lstrip()
+            # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
             if not line:
-                return nature, name, ', ONLY:', None
-            return nature, name, ', ONLY:', Only_List(line)
-        return nature, name, ',', Rename_List(line)
-    match = staticmethod(match)
-    def tostr(self):
-        s = 'USE'
-        if self.items[0] is not None:
-            s += ', %s' % (self.items[0])
-        s += ' :: %s%s' % (self.items[1], self.items[2])
-        if self.items[3] is not None:
-            s += ' %s' % (self.items[3])
-        return s
+                return
+            return nature, dcolon, name, ', ONLY:', Only_List(line)
+        return nature, dcolon, name, ',', Rename_List(line)
 
-class Module_Nature(STRINGBase): # R1110
+    def tostr(self):
+        '''
+        :return: parsed representation of "USE" statement
+        :rtype: string
+        '''
+        usestmt = 'USE'
+        # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
+        # followed by a double colon to "USE" statement
+        if self.items[0] is not None and self.items[1] is not None:
+            usestmt += ', %s %s' % (self.items[0], self.items[1])
+        # Add optional double colon after "USE" statement without
+        # Module_Nature (valid Fortran)
+        elif self.items[0] is None and self.items[1] is not None:
+            usestmt += ' %s' % (self.items[1])
+        # Add Module_Name and optional "ONLY" specifier if present
+        usestmt += ' %s%s' % (self.items[2], self.items[3])
+        # Add optional Only_List or Rename_List if present
+        if self.items[4] is not None:
+            usestmt += ' %s' % (self.items[4])
+        return usestmt
+
+
+class Module_Nature(STRINGBase):  # pylint: disable=invalid-name
     """
+    R1110
+
     <module-nature> = INTRINSIC
                       | NON_INTRINSIC
     """
     subclass_names = []
-    def match(string): return STRINGBase.match(['INTRINSIC','NON_INTRINSIC'], string)
-    match = staticmethod(match)
+
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword describing module nature ("INTRINSIC" or
+                 "NON_INTRINSIC") or nothing if no match is found
+        :rtype: string
+        '''
+        return STRINGBase.match(['INTRINSIC', 'NON_INTRINSIC'], string)
+
 
 class Rename(Base): # R1111
     """

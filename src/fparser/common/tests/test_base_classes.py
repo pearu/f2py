@@ -41,8 +41,10 @@ Test battery associated with fparser.common.base_classes package.
 '''
 import re
 import pytest
+
 import fparser.common.base_classes
 import fparser.common.readfortran
+import fparser.common.sourceinfo
 import fparser.common.utils
 
 
@@ -111,7 +113,7 @@ def test_log_comment_mix(log):
 
     code = '      x=1 ! Cheese'
     parent = fparser.common.readfortran.FortranStringReader(code)
-    parent.set_mode(False, True)
+    parent.set_format(fparser.common.sourceinfo.FortranFormat(False, True))
     item = fparser.common.readfortran.Line(code, (1, 1), None, None, parent)
     with pytest.raises(fparser.common.utils.AnalyzeError):
         __ = BeginHarness(parent, item)
@@ -151,7 +153,7 @@ def test_log_unexpected(log):
 
     code = ['      jumper', '      end thing']
     parent = fparser.common.readfortran.FortranStringReader('\n'.join(code))
-    parent.set_mode(False, True)
+    parent.set_format(fparser.common.sourceinfo.FortranFormat(False, True))
     item = fparser.common.readfortran.Line(code[0], (1, 1), None, None, parent)
     with pytest.raises(fparser.common.utils.AnalyzeError):
         __ = BeginThing(parent, item)
