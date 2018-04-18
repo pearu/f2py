@@ -80,6 +80,7 @@ from fparser.common.utils import split_comma,       \
                                  is_int_literal_constant
 from fparser.common.utils import classes, AnalyzeError
 
+
 class AttributeHolder(object):
     # copied from symbolic.base module
     """

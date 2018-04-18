@@ -182,7 +182,8 @@ def test_select_case():
         assert isinstance(statement, fparser.one.block_statements.SelectCase)
         assert isinstance(statement.content[0], fparser.one.statements.Case)
         assert isinstance(statement.content[2], fparser.one.statements.Case)
-        assert isinstance(statement.content[3], fparser.one.statements.Assignment)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
     gen = str(tree)
     print(gen)
     assert "SELECT CASE ( iflag )" in gen
@@ -215,7 +216,8 @@ def test_named_select_case():
         assert isinstance(statement, fparser.one.block_statements.SelectCase)
         assert isinstance(statement.content[0], fparser.one.statements.Case)
         assert isinstance(statement.content[2], fparser.one.statements.Case)
-        assert isinstance(statement.content[3], fparser.one.statements.Assignment)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
     gen = str(tree)
     print(gen)
     assert "incase: SELECT CASE ( iflag )" in gen
@@ -289,7 +291,8 @@ def test_select_type():
         assert isinstance(statement, fparser.one.block_statements.SelectType)
         assert isinstance(statement.content[0], fparser.one.statements.TypeIs)
         assert isinstance(statement.content[2], fparser.one.statements.ClassIs)
-        assert isinstance(statement.content[3], fparser.one.statements.Assignment)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
         assert isinstance(statement.content[4], fparser.one.statements.ClassIs)
     gen = str(tree)
     print(gen)

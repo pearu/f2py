@@ -77,8 +77,9 @@ from fparser.one.statements import *
 import fparser.one.typedecl_statements as typedecl_statements
 from fparser.one.typedecl_statements import *
 
-from fparser.common.base_classes import BeginStatement, EndStatement, Statement, \
-                                        AttributeHolder, ProgramBlock, Variable
+from fparser.common.base_classes import BeginStatement, EndStatement, \
+                                        Statement, AttributeHolder,   \
+                                        ProgramBlock, Variable
 from fparser.common.utils import split_comma, filter_stmts, parse_bind, \
                                  parse_result, AnalyzeError, is_name
 

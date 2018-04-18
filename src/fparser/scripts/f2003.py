@@ -63,8 +63,8 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-from fparser.script_options import set_f2003_options
-import fparser.sourceinfo
+from fparser.scripts.script_options import set_f2003_options
+import fparser.common.sourceinfo
 ### START UPDATE SYS.PATH ###
 ### END UPDATE SYS.PATH ###
 try:
@@ -74,13 +74,14 @@ except ImportError:
 
 
 def runner(parser, options, args):
-    from fparser import Fortran2003
-    from fparser.readfortran import FortranFileReader
+    from fparser.two import Fortran2003
+    from fparser.common.readfortran import FortranFileReader
     for filename in args:
         reader = FortranFileReader(filename)
         if options.mode != 'auto':
-            mode = fparser.sourceinfo.FortranFormat.from_mode(options.mode)
-            reader.set_mode(mode)
+            mode = fparser.common.sourceinfo\
+                   .FortranFormat.from_mode(options.mode)
+            reader.format.set_mode(mode)
         try:
             program = Fortran2003.Program(reader)
             print(program)

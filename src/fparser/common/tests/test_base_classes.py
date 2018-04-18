@@ -52,12 +52,15 @@ def test_statement_logging(log, monkeypatch):
     '''
     Tests the Statement class' logging methods.
     '''
-    class dummy_parser:
+    class DummyParser(object):
+        '''
+        Null parser harness.
+        '''
         def __init__(self, reader):
             self.reader = reader
 
     reader = fparser.common.readfortran.FortranStringReader("dummy = 1")
-    parser = dummy_parser(reader)
+    parser = DummyParser(reader)
 
     monkeypatch.setattr(fparser.common.base_classes.Statement,
                         'process_item', lambda x: None, raising=False)

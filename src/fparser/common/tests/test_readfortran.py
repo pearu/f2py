@@ -44,9 +44,7 @@ from __future__ import print_function
 import os.path
 import tempfile
 import pytest
-from fparser.common.readfortran import FortranReaderBase, \
-                                       FortranFileReader, \
-                                       FortranStringReader
+from fparser.common.readfortran import FortranFileReader, FortranStringReader
 import fparser.common.sourceinfo
 import fparser.common.tests.logging_utils
 

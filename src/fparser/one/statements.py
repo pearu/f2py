@@ -73,13 +73,14 @@ from __future__ import print_function
 import re
 import sys
 
-from fparser.common.base_classes import Statement, Variable
+from fparser.common.base_classes import Statement
 
 # Auxiliary tools
 
-from fparser.common.utils import split_comma, specs_split_comma, AnalyzeError, ParseError, \
-     get_module_file, parse_bind, parse_result, is_name, \
-     extract_bracketed_list_items
+from fparser.common.utils import split_comma, specs_split_comma, \
+                                 AnalyzeError, ParseError,       \
+                                 parse_bind, parse_result,       \
+                                 is_name, extract_bracketed_list_items
 from fparser.common.utils import classes
 
 __all__ = ['GeneralAssignment',
@@ -781,14 +782,14 @@ class Access(Statement):
 
     def analyze(self):
         clsname = self.__class__.__name__
-        l = getattr(self.parent.a, clsname.lower() + '_id_list')
+        bits = getattr(self.parent.a, clsname.lower() + '_id_list')
         if self.items:
             for name in self.items:
-                if name not in l:
-                    l.append(name)
+                if name not in bits:
+                    bits.append(name)
         else:
-            if '' not in l:
-                l.append('')
+            if '' not in bits:
+                bits.append('')
             if not isinstance(self.parent, classes.Module):
                 parentclsname = self.parent.__class__.__name__
                 message = 'C548 violation: %s statement only allowed in the'\
@@ -1066,10 +1067,10 @@ class Data(Statement):
 
     def tofortran(self, isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
-        l = []
+        bits = []
         for o, v in self.stmts:
-            l.append('%s / %s /' % (', '.join(o), ', '.join(v)))
-        return tab + 'DATA ' + ' '.join(l)
+            bits.append('%s / %s /' % (', '.join(o), ', '.join(v)))
+        return tab + 'DATA ' + ' '.join(bits)
 
     def analyze(self):
         return
@@ -1582,11 +1583,11 @@ class Namelist(Statement):
         return
 
     def tofortran(self, isfix=None):
-        l = []
+        bits = []
         for name, s in self.items:
-            l.append('%s %s' % (name, s))
+            bits.append('%s %s' % (name, s))
         tab = self.get_indent_tab(isfix=isfix)
-        return tab + 'NAMELIST ' + ', '.join(l)
+        return tab + 'NAMELIST ' + ', '.join(bits)
 
 
 class Common(Statement):
@@ -1625,15 +1626,15 @@ class Common(Statement):
         return
 
     def tofortran(self, isfix=None):
-        l = []
+        bits = []
         for name, s in self.items:
             s = ', '.join(s)
             if name:
-                l.append('/ %s / %s' % (name, s))
+                bits.append('/ %s / %s' % (name, s))
             else:
-                l.append(s)
+                bits.append(s)
         tab = self.get_indent_tab(isfix=isfix)
-        return tab + 'COMMON ' + ' '.join(l)
+        return tab + 'COMMON ' + ' '.join(bits)
 
     def analyze(self):
         for cname, items in self.items:
@@ -1791,8 +1792,8 @@ class Forall(Statement):
             assert j != -1, repr(l)
             index = l[:j].rstrip()
             it = self.item.copy(l[j+1:].lstrip())
-            l = it.get_line()
-            k = l.split(':')
+            line = it.get_line()
+            k = line.split(':')
             if len(k) == 3:
                 s1, s2, s3 = list(map(it.apply_map,
                                       [k[0].strip(), k[1].strip(),
@@ -1810,13 +1811,13 @@ class Forall(Statement):
 
     def tofortran(self, isfix=None):
         tab = self.get_indent_tab(isfix=isfix)
-        l = []
+        lines = []
         for index, s1, s2, s3 in self.specs:
             s = '%s = %s : %s' % (index, s1, s2)
             if s3 != '1':
                 s += ' : %s' % (s3)
-            l.append(s)
-        s = ', '.join(l)
+            lines.append(s)
+        s = ', '.join(lines)
         if self.mask:
             s += ', ' + self.mask
         return tab + 'FORALL (%s) %s' % \
@@ -1824,6 +1825,7 @@ class Forall(Statement):
 
     def analyze(self):
         return
+
 
 ForallStmt = Forall
 
@@ -2265,6 +2267,7 @@ class Where(Statement):
 
     def analyze(self):
         return
+
 
 WhereStmt = Where
 

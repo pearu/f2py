@@ -51,7 +51,8 @@ from fparser.common.sourceinfo import FortranFormat, \
 
 ##############################################################################
 
-def test_fortranformat_constructor_faults():
+# pylint: disable=unused-variable
+def test_format_constructor_faults():
     '''
     Tests that the constructor correctly rejects attempts to create an object
     with "None" arguments.
@@ -79,6 +80,7 @@ def pretty(request):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_fortranformat_constructor(pretty):
     '''
     Tests the constructor correctly sets up the object.
@@ -109,6 +111,7 @@ def permutations(request):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_fortranformat_equality(permutations, pretty):
     '''
     Tests that the equality operator works as expected.
@@ -149,6 +152,7 @@ def mode(request):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_fortranformat_from_mode(mode):
     '''
     Tests that the object is correctly created by the from_mode function.
@@ -166,7 +170,8 @@ def test_fortranformat_from_mode(mode):
 
 ##############################################################################
 
-def test_fortranformat_from_mode_bad():
+# pylint: disable=unused-variable
+def test_format_from_mode_bad():
     '''
     Tests that an exception is thrown for an unrecognised mode string.
     '''
@@ -258,6 +263,7 @@ def content(request):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_get_source_info_str(header, content):
     '''
     Tests that source format is correctly identified when read from a string.
@@ -293,6 +299,7 @@ def extension(request):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_get_source_info_filename(extension, header, content):
     '''
     Tests that source format is correctly identified when read from a file.
@@ -324,6 +331,7 @@ def test_get_source_info_filename(extension, header, content):
 
 ##############################################################################
 
+# pylint: disable=redefined-outer-name
 def test_get_source_info_file(extension, header, content):
     '''
     Tests that source format is correctly identified when read from a file.
@@ -348,6 +356,7 @@ def test_get_source_info_file(extension, header, content):
 
 ##############################################################################
 
+# pylint: disable=unused-variable
 def test_get_source_info_wrong():
     '''
     Tests that get_source_info throws an exception if passed the wrong type
