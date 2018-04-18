@@ -22,7 +22,7 @@ must be provided via an iterator which is an instance of either
 ::
    
     >>> from fparser.api import Fortran2003
-    >>> from fparser.readfortran import FortranFileReader
+    >>> from fparser.common.readfortran import FortranFileReader
     >>> reader = FortranFileReader("compute_unew_mod.f90")
     >>> program = Fortran2003.Program(reader)
     >>> print program

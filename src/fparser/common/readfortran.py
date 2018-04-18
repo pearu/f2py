@@ -79,7 +79,7 @@ Examples
 
 ::
 
-    >> from fparser.readfortran import FortranFileReader
+    >> from fparser.common.readfortran import FortranFileReader
     >>> import os
     >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
     >>> print reader.next()
@@ -115,8 +115,8 @@ methods and attributes::
 
 To read a Fortran code from a string, use `FortranStringReader` class::
 
-    >>> from fparser.sourceinfo import FortranFormat
-    >>> from fparser.readfortran import FortranStringReader
+    >>> from fparser.common.sourceinfo import FortranFormat
+    >>> from fparser.common.readfortran import FortranStringReader
     >>> code = '''
     ...       subroutine foo(a)
     ...         integer a

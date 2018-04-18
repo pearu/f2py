@@ -246,7 +246,7 @@ For example,
 
 ::
 
-  >>> from fparser.readfortran import *
+  >>> from fparser.common.readfortran import *
   >>> import os
   >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
   >>> reader.next()
