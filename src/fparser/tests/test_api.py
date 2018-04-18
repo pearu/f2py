@@ -33,15 +33,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#
 # --------------------------------------------------------------------
-
+#
 # The original software (in the f2py project) was distributed under
 # the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-
+#
 #   a. Redistributions of source code must retain the above copyright notice,
 #      this list of conditions and the following disclaimer.
 #   b. Redistributions in binary form must reproduce the above copyright
@@ -50,7 +50,7 @@
 #   c. Neither the name of the F2PY project nor the names of its
 #      contributors may be used to endorse or promote products derived from
 #      this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -119,8 +119,9 @@ def test_dimension_attr():
 
 def test_provides():
     '''
-    Tests for non-Fortran (pyf?) module_provides and use_provides
-    key words.
+    Tests for non-Fortran (f2py markup) module_provides and use_provides
+    key words. This is a legacy feature that is due to fparser's origins
+    in the f2py project (https://docs.scipy.org/doc/numpy/f2py/).
     '''
     source_str = '''
     module mod1
