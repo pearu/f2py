@@ -9,7 +9,7 @@ Fortran 2003 through the `Fortran2003` module. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. 
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/Fortran2003.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 
 Getting Going
 -------------
