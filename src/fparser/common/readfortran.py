@@ -79,7 +79,7 @@ Examples
 
 ::
 
-    >> from fparser.readfortran import FortranFileReader
+    >> from fparser.common.readfortran import FortranFileReader
     >>> import os
     >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
     >>> print reader.next()
@@ -115,8 +115,8 @@ methods and attributes::
 
 To read a Fortran code from a string, use `FortranStringReader` class::
 
-    >>> from fparser.sourceinfo import FortranFormat
-    >>> from fparser.readfortran import FortranStringReader
+    >>> from fparser.common.sourceinfo import FortranFormat
+    >>> from fparser.common.readfortran import FortranStringReader
     >>> code = '''
     ...       subroutine foo(a)
     ...         integer a
@@ -146,8 +146,8 @@ import traceback
 
 import six
 
-import fparser.sourceinfo
-from fparser.splitline import String, string_replace_map, splitquote
+import fparser.common.sourceinfo
+from fparser.common.splitline import String, string_replace_map, splitquote
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -1122,8 +1122,8 @@ class FortranReaderBase(object):
                             return self.comment_item(line,
                                                      startlineno,
                                                      startlineno)
-                        mode = fparser.sourceinfo.FortranFormat(True,
-                                                                False)
+                        mode = fparser.common.sourceinfo.FortranFormat(True,
+                                                                       False)
                         self.set_format(mode)
                     else:
                         message = self.format_warning_message(message,
@@ -1374,7 +1374,7 @@ class FortranFileReader(FortranReaderBase):
             message = 'FortranFileReader is used with a filename'
             message += ' or file-like object.'
             raise ValueError(message)
-        mode = fparser.sourceinfo.get_source_info(file_candidate)
+        mode = fparser.common.sourceinfo.get_source_info(file_candidate)
 
         FortranReaderBase.__init__(self, self.file, mode)
 
@@ -1403,7 +1403,7 @@ class FortranStringReader(FortranReaderBase):
     def __init__(self, string, include_dirs=None, source_only=None):
         self.id = 'string-'+str(id(string))
         source = six.StringIO(string)
-        mode = fparser.sourceinfo.get_source_info_str(string)
+        mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]

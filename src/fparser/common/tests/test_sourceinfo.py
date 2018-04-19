@@ -45,22 +45,22 @@ import os
 import tempfile
 import pytest
 
-from fparser.sourceinfo import FortranFormat, \
-                               get_source_info_str, get_source_info
+from fparser.common.sourceinfo import FortranFormat, \
+                                      get_source_info_str, get_source_info
 
 
 ##############################################################################
 
-def test_fortranformat_constructor_faults():
+def test_format_constructor_faults():
     '''
     Tests that the constructor correctly rejects attempts to create an object
     with "None" arguments.
     '''
     with pytest.raises(Exception):
-        unit_under_test = FortranFormat(True, None)
+        _unit_under_test = FortranFormat(True, None)
 
     with pytest.raises(Exception):
-        unit_under_test = FortranFormat(None, True)
+        _unit_under_test = FortranFormat(None, True)
 
 
 ##############################################################################
@@ -80,6 +80,7 @@ def pretty(request):
 ##############################################################################
 
 def test_fortranformat_constructor(pretty):
+    #pylint: disable=redefined-outer-name
     '''
     Tests the constructor correctly sets up the object.
     '''
@@ -110,6 +111,7 @@ def permutations(request):
 ##############################################################################
 
 def test_fortranformat_equality(permutations, pretty):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that the equality operator works as expected.
     '''
@@ -150,6 +152,7 @@ def mode(request):
 ##############################################################################
 
 def test_fortranformat_from_mode(mode):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that the object is correctly created by the from_mode function.
     '''
@@ -166,12 +169,12 @@ def test_fortranformat_from_mode(mode):
 
 ##############################################################################
 
-def test_fortranformat_from_mode_bad():
+def test_format_from_mode_bad():
     '''
     Tests that an exception is thrown for an unrecognised mode string.
     '''
     with pytest.raises(NotImplementedError):
-        unit_under_test = FortranFormat.from_mode('cheese')
+        _unit_under_test = FortranFormat.from_mode('cheese')
 
 
 ##############################################################################
@@ -259,6 +262,7 @@ def content(request):
 ##############################################################################
 
 def test_get_source_info_str(header, content):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that source format is correctly identified when read from a string.
     '''
@@ -294,6 +298,7 @@ def extension(request):
 ##############################################################################
 
 def test_get_source_info_filename(extension, header, content):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that source format is correctly identified when read from a file.
     '''
@@ -325,6 +330,7 @@ def test_get_source_info_filename(extension, header, content):
 ##############################################################################
 
 def test_get_source_info_file(extension, header, content):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that source format is correctly identified when read from a file.
     '''
@@ -354,9 +360,9 @@ def test_get_source_info_wrong():
     of argument.
     '''
     with pytest.raises(ValueError):
-        source_info = get_source_info(42)  # Obviously wrong
+        _source_info = get_source_info(42)  # Obviously wrong
 
     with pytest.raises(ValueError):
-        source_info = get_source_info(['one'])  # Less obviously wrong
+        _source_info = get_source_info(['one'])  # Less obviously wrong
 
 ##############################################################################

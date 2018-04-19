@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+19/03/2018 PR #70. Re-organise module structure in order to split
+	   versions 1 and 2 of the parser.
+
 23/03/2018 PR #75. Allow FortranFileReader to accept either a filename
            or a file handle. Many pylint/pep8 improvements.
 
