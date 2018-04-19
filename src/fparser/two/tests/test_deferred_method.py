@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -35,26 +34,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
+# Modified M. Hambley, UK Met Office
+##############################################################################
 '''
-Shared fixtures.
+Tests that the parser understands deferred methods.
 '''
-
-import logging
-import fparser.tests.logging_utils
-import pytest
+import fparser.two.Fortran2003
+import fparser.common.readfortran
 
 
-@pytest.fixture
-def log():
+def test_deferred_method():
     '''
-    Prepare a fixture to capture logged events for inspection.
+    Tests that the parser understands deferred methods.
     '''
-    logger = logging.getLogger('fparser')
-    handler = fparser.tests.logging_utils.CaptureLoggingHandler()
-    logger.addHandler(handler)
-    yield handler
-    # When the fixture function is a generator, i.e. it uses "yield" rather
-    # than "return", it will be called a second time after the test has
-    # completed. Thus anything appearing after the "yield" is teardown which
-    # happens after the test.
-    logger.removeHandler(handler)
+    source = '''! Abstract type
+module abstract_test
+
+  implicit none
+  private
+
+  type, abstract, public :: test_type
+  contains
+    procedure(method_interface), deferred :: method
+  end type test_type
+
+end module abstract_test
+'''
+    expected = '''
+MODULE abstract_test
+  IMPLICIT NONE
+  PRIVATE
+  TYPE, ABSTRACT, PUBLIC :: test_type
+    CONTAINS
+    PROCEDURE(method_interface), DEFERRED :: method
+  END TYPE test_type
+END MODULE abstract_test
+'''.strip().split('\n')
+
+    reader = fparser.common.readfortran.FortranStringReader(source)
+    program_unit = fparser.two.Fortran2003.Program(reader)
+    result = str(program_unit).strip().split('\n')
+
+    assert result == expected

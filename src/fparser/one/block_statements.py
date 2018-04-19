@@ -72,15 +72,16 @@ import logging
 import re
 import sys
 
-import fparser.statements as statements
-from fparser.statements import *
-import fparser.typedecl_statements as typedecl_statements
-from fparser.typedecl_statements import *
+import fparser.one.statements as statements
+from fparser.one.statements import *
+import fparser.one.typedecl_statements as typedecl_statements
+from fparser.one.typedecl_statements import *
 
-from fparser.base_classes import BeginStatement, EndStatement, Statement, \
-                                 AttributeHolder, ProgramBlock, Variable
-from fparser.utils import split_comma, filter_stmts, parse_bind, \
-                          parse_result, AnalyzeError, is_name
+from fparser.common.base_classes import BeginStatement, EndStatement, \
+                                        Statement, AttributeHolder,   \
+                                        ProgramBlock, Variable
+from fparser.common.utils import split_comma, filter_stmts, parse_bind, \
+                                 parse_result, AnalyzeError, is_name
 
 __all__ = ['BeginSource', 'Module', 'PythonModule', 'Program', 'BlockData',
            'Interface', 'Subroutine', 'Function', 'SelectCase', 'SelectType',

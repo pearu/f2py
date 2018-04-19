@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# Modified work Copyright (c) 2017-2018 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2017 Science and Technology Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -64,98 +62,79 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Provides FortranParser.
+# Original author: Pearu Peterson <pearu@cens.ioc.ee>
+# First version created: May 2006
+# Modified by J. Henrichs, Bureau of Meteorology <joerg.henrichs@bom.gov.au>
+
 """
-# Author: Pearu Peterson <pearu@cens.ioc.ee>
-# Created: May 2006
+Test parsing single Fortran lines.
 
-__autodoc__ = ['FortranParser']
-__all__ = ['FortranParser']
+"""
 
-import traceback
-import logging
-
-from .block_statements import BeginSource
-from .utils import AnalyzeError
+from fparser.common.splitline import splitparen, splitquote, string_replace_map
 
 
-class FortranParser(object):
-    '''
-    Parser of FortranReader structure.
+def test_splitparen():
+    ''' Unit tests for splitparen function.'''
+    assert splitparen('abc') == ['abc']
+    assert splitparen('abc(1)') == ['abc', '(1)']
+    assert splitparen('abc(1) xyz') == ['abc', '(1)', ' xyz']
+    assert splitparen('a(b) = b(x,y(1)) b((a))') == \
+        ['a', '(b)', ' = b', '(x,y(1))', ' b', '((a))']
+    # pylint: disable=anomalous-backslash-in-string
+    assert splitparen('a(b) = b(x,y(1)) b\((a)\)') == \
+        ['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)']
+    # pylint: enable=anomalous-backslash-in-string
+    assert splitparen('abc[1]') == ['abc', '[1]']
+    assert splitparen('abc[1,2,3]') == ['abc', '[1,2,3]']
+    assert splitparen('a[b] = b[x,y(1)] b((a))') == \
+        ['a', '[b]', ' = b', '[x,y(1)]', ' b', '((a))']
+    # pylint: disable=anomalous-backslash-in-string
+    assert splitparen('a[b] = b[x,y(1)] b\((a)\)') == \
+        ['a', '[b]', ' = b', '[x,y(1)]', ' b\\(', '(a)', '\\)']
+    # pylint: enable=anomalous-backslash-in-string
+    assert splitparen('integer a(3) = (/"a", "b", "c"/)') == \
+        ['integer a', '(3)', ' = ', '(/"a", "b", "c"/)']
+    assert splitparen(
+        'character(len=40) :: a(3) = (/"a[),", ",b,[(", "c,][)("/)') == \
+        ['character', '(len=40)', ' :: a', '(3)', ' = ',
+         '(/"a[),", ",b,[(", "c,][)("/)']
+    assert splitparen('integer a(3) = ["a", "b", "c"]') == \
+        ['integer a', '(3)', ' = ', '["a", "b", "c"]']
+    assert splitparen(
+        'character(len=40) :: a(3) = ["a[),", ",b,[(", "c,][)("]') == \
+        ['character', '(len=40)', ' :: a', '(3)', ' = ',
+         '["a[),", ",b,[(", "c,][)("]']
+    # pylint: disable=anomalous-backslash-in-string
+    result = splitparen('a(1),b\\((2,3),c\\\\((1)),c"("')
+    expected = ['a', '(1)', ',b\\(', '(2,3)', ',c\\\\', '((1))', ',c"("']
+    # pylint: enable=anomalous-backslash-in-string
+    assert result == expected
+    # Useful for debugging:
+    # for i in range(len(EXPECTED)):
+    #     print i,l[i],EXPECTED[i],l[i]==EXPECTED[i]
 
-    Use .parse() method for parsing, parsing result is saved in .block
-    attribute.
-    '''
-    cache = {}
 
-    def __init__(self, reader, ignore_comments=True):
-        self.reader = reader
-        if reader.id in self.cache:
-            parser = self.cache[reader.id]
-            self.block = parser.block
-            self.is_analyzed = parser.is_analyzed
-            logging.getLogger(__name__).info('using cached %s', (reader.id))
-        else:
-            self.cache[reader.id] = self
-            self.block = None
-            self.is_analyzed = False
-        self.ignore_comments = ignore_comments
-        return
+def test_splitquote():
+    '''Tests splitquote function.'''
+    split_list, stopchar = splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
+    assert split_list == ['abc\\\' def', '"12\\"3"', '"56"', 'dfad', '\'a d\'']
+    assert stopchar is None
+    result, stopchar = splitquote('abc\\\' def"12\\"3""56"dfad\'a d\'')
+    assert result == ['abc\\\' def', '"12\\"3"', '"56"', 'dfad', '\'a d\'']
+    assert stopchar is None
 
-    def get_item(self):
-        '''
-        Retrieves the next item from the reader.
-        '''
-        try:
-            item = self.reader.next(ignore_comments=self.ignore_comments)
-            return item
-        except StopIteration:
-            pass
-        return
+    split_list, stopchar = splitquote('a\'')
+    assert split_list == ['a', '\'']
+    assert stopchar == '\''
 
-    def put_item(self, item):
-        '''
-        Pushes the given item to the reader.
-        '''
-        self.reader.fifo_item.insert(0, item)
-        return
+    split_list, stopchar = splitquote('a\'b')
+    assert split_list == ['a', '\'b']
+    assert stopchar == '\''
 
-    def parse(self):
-        '''Parses the program specified in the reader object.'''
-        if self.block is not None:
-            return
-        try:
-            self.block = BeginSource(self)
-        except KeyboardInterrupt:
-            raise
-        except Exception as error:
-            reader = self.reader
-            while reader is not None:
-                message = \
-                    reader.format_message('FATAL ERROR',
-                                          'while processing line',
-                                          reader.linecount, reader.linecount)
-                logging.getLogger(__name__).critical(message)
-                reader = reader.reader
-            backtrace = ''.join(traceback.format_stack())
-            logging.getLogger(__name__).debug('Traceback\n' + backtrace)
-            logging.getLogger(__name__).critical('STOPPED PARSING')
-            raise error
-        return
 
-    def analyze(self):
-        '''
-        Attempts to analyse the parsed Fortran. It is not clear what for.
-        '''
-        if self.is_analyzed:
-            return
-        if self.block is None:
-            logging.getLogger(__name__).info('Nothing to analyze.')
-            return
-
-        try:
-            self.block.analyze()
-        except AnalyzeError:
-            pass
-        self.is_analyzed = True
-        return
+def test_string_replace_map():
+    '''Tests string_replace_map function.'''
+    result, string_map = string_replace_map('a()')
+    assert result == 'a()'
+    assert string_map == {}
