@@ -71,7 +71,7 @@ Test parsing single Fortran lines.
 
 """
 
-from fparser.splitline import splitparen, splitquote, string_replace_map
+from fparser.common.splitline import splitparen, splitquote, string_replace_map
 
 
 def test_splitparen():

@@ -38,7 +38,7 @@ Test the various utility functions
 """
 
 import pytest
-from fparser.utils import split_comma, ParseError
+from fparser.common.utils import split_comma, ParseError
 
 
 def test_split_comma():
@@ -97,7 +97,7 @@ def test_split_bracketed_list():
 def test_extract_bracketed_list():
     ''' Test the extraction and parsing of a list within parentheses within
     a larger string '''
-    from fparser.utils import extract_bracketed_list_items
+    from fparser.common.utils import extract_bracketed_list_items
     items = extract_bracketed_list_items("hello (this, is, a) test")
     assert items[0] == "this"
     assert items[1] == "is"
@@ -107,7 +107,7 @@ def test_extract_bracketed_list():
 def test_extract_bracketed_list_err():
     ''' Test that we get the expected errors if the string passed into
     extract_bracketed_list_items() does not have the correct format '''
-    from fparser.utils import extract_bracketed_list_items
+    from fparser.common.utils import extract_bracketed_list_items
     with pytest.raises(ParseError) as excinfo:
         _ = extract_bracketed_list_items("hello (this, is, wrong(")
     assert "more than one opening/closing parenthesis found" in str(excinfo)

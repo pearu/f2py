@@ -38,7 +38,7 @@
 def test_keywordvaluebase_errors():
     ''' Unit tests for the KeywordValueBase class to check that it rejects
     invalid input '''
-    from fparser.Fortran2003 import KeywordValueBase, Io_Unit, Format, \
+    from fparser.two.Fortran2003 import KeywordValueBase, Io_Unit, Format, \
         Char_Literal_Constant
     lhs_cls = 'UNIT'
     rhs_cls = Io_Unit
@@ -71,7 +71,7 @@ def test_keywordvaluebase_errors():
 def test_read_stmt_errors():
     ''' Unit tests for the Read class to ensure it rejects invalid
     inputs '''
-    from fparser.Fortran2003 import Read_Stmt
+    from fparser.two.Fortran2003 import Read_Stmt
     # Missing closing parenthesis
     obj = Read_Stmt.match("READ(unit=23")
     assert obj is None
@@ -96,7 +96,7 @@ def test_read_stmt_errors():
 def test_io_ctrl_spec_list_errors():
     ''' Unit tests for the Io_Control_Spec_List class to ensure it
     rejects invalid input '''
-    from fparser.Fortran2003 import Io_Control_Spec_List
+    from fparser.two.Fortran2003 import Io_Control_Spec_List
     # Positional arg following named arg
     obj = Io_Control_Spec_List.match("unit=23, namvar")
     assert obj is None
@@ -105,7 +105,7 @@ def test_io_ctrl_spec_list_errors():
 def test_io_ctrl_spec_errors():
     ''' Unit tests for the Io_Control_Spec class to ensure it
     rejects invalid input '''
-    from fparser.Fortran2003 import Io_Control_Spec
+    from fparser.two.Fortran2003 import Io_Control_Spec
     # An argument with a name that is not valid within an IO control
     # description
     obj = Io_Control_Spec.match("not_unit=23")

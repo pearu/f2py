@@ -68,6 +68,7 @@ Test fparser support for parsing select-case and select-type blocks
 """
 
 import pytest
+import fparser.common.sourceinfo
 
 
 # We need to monkeypatch the logger used by fparser because it grabs
@@ -85,8 +86,8 @@ def print_wrapper(arg):
 
 def test_case():
     ''' Basic tests for parsing of individual case statements '''
-    from fparser.tests.test_parser import parse
-    from fparser.block_statements import Case
+    from fparser.one.tests.test_parser import parse
+    from fparser.one.block_statements import Case
     assert parse(Case, 'case (1)') == 'CASE ( 1 )'
     assert parse(Case, 'case (1:)') == 'CASE ( 1 : )'
     assert parse(Case, 'case (:1)') == 'CASE ( : 1 )'
@@ -102,10 +103,10 @@ def test_case():
 def test_case_internal_error(monkeypatch, capsys):
     ''' Check that expected errors are raised when invalid case
     statements are encountered '''
-    from fparser.block_statements import Case
-    from fparser.readfortran import FortranStringReader
+    from fparser.one.block_statements import Case
+    from fparser.common.readfortran import FortranStringReader
     reader = FortranStringReader('CASE (yes)')
-    reader.set_mode(True, False)
+    reader.set_format(fparser.common.sourceinfo.FortranFormat(True, False))
     item = next(reader)
     stmt = Case(item, item)
     # Monkeypatch our valid Case object so that get_line() now
@@ -127,10 +128,10 @@ def test_case_internal_error(monkeypatch, capsys):
 def test_class_internal_error(monkeypatch, capsys):
     ''' Check that expected errors are raised when invalid CLASS
     statements are encountered '''
-    from fparser.block_statements import ClassIs
-    from fparser.readfortran import FortranStringReader
+    from fparser.one.block_statements import ClassIs
+    from fparser.common.readfortran import FortranStringReader
     reader = FortranStringReader('CLASS IS (yes)')
-    reader.set_mode(True, False)
+    reader.set_format(fparser.common.sourceinfo.FortranFormat(True, False))
     item = next(reader)
     stmt = ClassIs(item, item)
     # Monkeypatch our valid Case object so that get_line() now
@@ -151,7 +152,6 @@ def test_class_internal_error(monkeypatch, capsys):
 def test_select_case():
     '''Test that fparser correctly recognises select case'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag = 1
@@ -175,14 +175,15 @@ def test_select_case():
     assert tree
     select_list = []
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectCase):
+        if isinstance(statement, fparser.one.block_statements.SelectCase):
             select_list.append(statement)
     assert len(select_list) == 2
     for statement in select_list:
-        assert isinstance(statement, fparser.block_statements.SelectCase)
-        assert isinstance(statement.content[0], fparser.statements.Case)
-        assert isinstance(statement.content[2], fparser.statements.Case)
-        assert isinstance(statement.content[3], fparser.statements.Assignment)
+        assert isinstance(statement, fparser.one.block_statements.SelectCase)
+        assert isinstance(statement.content[0], fparser.one.statements.Case)
+        assert isinstance(statement.content[2], fparser.one.statements.Case)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
     gen = str(tree)
     print(gen)
     assert "SELECT CASE ( iflag )" in gen
@@ -192,7 +193,6 @@ def test_select_case():
 def test_named_select_case():
     '''Test that fparser correctly recognises a named select case'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag = 1
@@ -209,14 +209,15 @@ def test_named_select_case():
     assert tree
     select_list = []
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectCase):
+        if isinstance(statement, fparser.one.block_statements.SelectCase):
             select_list.append(statement)
     assert len(select_list) == 2
     for statement in select_list:
-        assert isinstance(statement, fparser.block_statements.SelectCase)
-        assert isinstance(statement.content[0], fparser.statements.Case)
-        assert isinstance(statement.content[2], fparser.statements.Case)
-        assert isinstance(statement.content[3], fparser.statements.Assignment)
+        assert isinstance(statement, fparser.one.block_statements.SelectCase)
+        assert isinstance(statement.content[0], fparser.one.statements.Case)
+        assert isinstance(statement.content[2], fparser.one.statements.Case)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
     gen = str(tree)
     print(gen)
     assert "incase: SELECT CASE ( iflag )" in gen
@@ -226,7 +227,6 @@ def test_select_case_brackets():
     '''Test that fparser correctly parses a select case involving
     parentheses '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo
     integer :: iflag(2) = 1
@@ -243,12 +243,12 @@ def test_select_case_brackets():
     assert tree
     statement = None  # Keep pylint happy
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectCase):
+        if isinstance(statement, fparser.one.block_statements.SelectCase):
             break
-    assert isinstance(statement, fparser.block_statements.SelectCase)
-    assert isinstance(statement.content[0], fparser.statements.Case)
-    assert isinstance(statement.content[2], fparser.statements.Case)
-    assert isinstance(statement.content[3], fparser.statements.Assignment)
+    assert isinstance(statement, fparser.one.block_statements.SelectCase)
+    assert isinstance(statement.content[0], fparser.one.statements.Case)
+    assert isinstance(statement.content[2], fparser.one.statements.Case)
+    assert isinstance(statement.content[3], fparser.one.statements.Assignment)
     gen = str(tree)
     print(gen)
     assert "SELECT CASE ( iflag(1) )" in gen
@@ -257,7 +257,6 @@ def test_select_case_brackets():
 def test_select_type():
     '''Test that fparser correctly recognises select type'''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -285,15 +284,16 @@ def test_select_type():
     assert tree
     select_list = []
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectType):
+        if isinstance(statement, fparser.one.block_statements.SelectType):
             select_list.append(statement)
     assert len(select_list) == 2
     for statement in select_list:
-        assert isinstance(statement, fparser.block_statements.SelectType)
-        assert isinstance(statement.content[0], fparser.statements.TypeIs)
-        assert isinstance(statement.content[2], fparser.statements.ClassIs)
-        assert isinstance(statement.content[3], fparser.statements.Assignment)
-        assert isinstance(statement.content[4], fparser.statements.ClassIs)
+        assert isinstance(statement, fparser.one.block_statements.SelectType)
+        assert isinstance(statement.content[0], fparser.one.statements.TypeIs)
+        assert isinstance(statement.content[2], fparser.one.statements.ClassIs)
+        assert isinstance(statement.content[3],
+                          fparser.one.statements.Assignment)
+        assert isinstance(statement.content[4], fparser.one.statements.ClassIs)
     gen = str(tree)
     print(gen)
     assert "SELECT TYPE ( an_object )" in gen
@@ -307,7 +307,6 @@ def test_select_type():
 def test_type_is_process_item(monkeypatch, capsys):
     ''' Test error condition raised in TypeIs.process_item() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -324,10 +323,10 @@ def test_type_is_process_item(monkeypatch, capsys):
     assert tree
     statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectType):
+        if isinstance(statement, fparser.one.block_statements.SelectType):
             break
-    assert isinstance(statement, fparser.block_statements.SelectType)
-    assert isinstance(statement.content[0], fparser.statements.TypeIs)
+    assert isinstance(statement, fparser.one.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.one.statements.TypeIs)
     typeis = statement.content[0]
     typeis.parent.name = "not_a_name"
     monkeypatch.setattr(typeis.item, "get_line",
@@ -345,8 +344,7 @@ def test_type_is_process_item(monkeypatch, capsys):
 def test_type_is_to_fortran():
     ''' Test error condition raised in TypeIs.to_fortran() method '''
     from fparser import api
-    import fparser
-    from fparser.utils import ParseError
+    from fparser.common.utils import ParseError
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -363,10 +361,10 @@ def test_type_is_to_fortran():
     assert tree
     statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectType):
+        if isinstance(statement, fparser.one.block_statements.SelectType):
             break
-    assert isinstance(statement, fparser.block_statements.SelectType)
-    assert isinstance(statement.content[0], fparser.statements.TypeIs)
+    assert isinstance(statement, fparser.one.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.one.statements.TypeIs)
     typeis = statement.content[0]
     typeis.name = "some_name"
     fort = typeis.tofortran()
@@ -381,7 +379,6 @@ def test_type_is_to_fortran():
 def test_class_is_process_item(monkeypatch, capsys):
     ''' Test error condition raised in ClassIs.process_item() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -398,10 +395,10 @@ def test_class_is_process_item(monkeypatch, capsys):
     assert tree
     statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectType):
+        if isinstance(statement, fparser.one.block_statements.SelectType):
             break
-    assert isinstance(statement, fparser.block_statements.SelectType)
-    assert isinstance(statement.content[0], fparser.statements.ClassIs)
+    assert isinstance(statement, fparser.one.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.one.statements.ClassIs)
     clsis = statement.content[0]
     clsis.parent.name = "not_a_name"
     monkeypatch.setattr(clsis.item, "get_line",
@@ -419,7 +416,6 @@ def test_class_is_process_item(monkeypatch, capsys):
 def test_class_is_to_fortran():
     ''' Test ClassIs.to_fortran() method '''
     from fparser import api
-    import fparser
     source_str = '''
     subroutine foo(an_object)
     class(*) :: an_object
@@ -434,10 +430,10 @@ def test_class_is_to_fortran():
     assert tree
     statement = None  # Keeps pylint happy
     for statement in tree.content[0].content:
-        if isinstance(statement, fparser.block_statements.SelectType):
+        if isinstance(statement, fparser.one.block_statements.SelectType):
             break
-    assert isinstance(statement, fparser.block_statements.SelectType)
-    assert isinstance(statement.content[0], fparser.statements.ClassIs)
+    assert isinstance(statement, fparser.one.block_statements.SelectType)
+    assert isinstance(statement.content[0], fparser.one.statements.ClassIs)
     clsis = statement.content[0]
     clsis.name = "some_name"
     fort = clsis.tofortran()

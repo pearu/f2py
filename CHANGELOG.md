@@ -11,7 +11,22 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-15/01/2017 PR #67. Move old testing code from source files into test
+19/03/2018 PR #70. Re-organise module structure in order to split
+	   versions 1 and 2 of the parser.
+
+23/03/2018 PR #75. Allow FortranFileReader to accept either a filename
+           or a file handle. Many pylint/pep8 improvements.
+
+20/03/2018 PR #77 and issue #76. Fix bug in ALLOCATE statement when
+	   using names of derived types as type specifiers.
+
+05/03/2018 PR #73. Improvements to SourceInfo so that it can take either
+	   a filename or a file handle.
+
+26/02/2018 PR #72 and issue #69. Fixes for bugs found when using fparser2
+	   to parse and then re-generate LFRic code.
+
+15/01/2018 PR #67. Move old testing code from source files into test
 	   framework.
 
 12/01/2018 PR #66 and issue #64. Fix bug where = in a string was being

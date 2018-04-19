@@ -63,23 +63,25 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-import os
-import sys
+from fparser.scripts.script_options import set_f2003_options
+import fparser.common.sourceinfo
 ### START UPDATE SYS.PATH ###
 ### END UPDATE SYS.PATH ###
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
     from optparse import OptionParser
-from fparser.script_options import set_f2003_options
 
-def runner (parser, options, args):
-    from fparser.api import Fortran2003
-    from fparser.readfortran import  FortranFileReader
+
+def runner(parser, options, args):
+    from fparser.two import Fortran2003
+    from fparser.common.readfortran import FortranFileReader
     for filename in args:
         reader = FortranFileReader(filename)
         if options.mode != 'auto':
-            reader.set_mode_from_str(options.mode)
+            mode = fparser.common.sourceinfo\
+                   .FortranFormat.from_mode(options.mode)
+            reader.format.set_mode(mode)
         try:
             program = Fortran2003.Program(reader)
             print(program)
@@ -89,7 +91,8 @@ def runner (parser, options, args):
             print('quiting')
             return
 
-def main ():
+
+def main():
     parser = OptionParser()
     set_f2003_options(parser)
     if hasattr(parser, 'runner'):
@@ -98,5 +101,6 @@ def main ():
     runner(parser, options, args)
     return
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

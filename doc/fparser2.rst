@@ -9,7 +9,7 @@ Fortran 2003 through the `Fortran2003` module. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. 
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/Fortran2003.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 
 Getting Going
 -------------
@@ -22,7 +22,7 @@ must be provided via an iterator which is an instance of either
 ::
    
     >>> from fparser.api import Fortran2003
-    >>> from fparser.readfortran import FortranFileReader
+    >>> from fparser.common.readfortran import FortranFileReader
     >>> reader = FortranFileReader("compute_unew_mod.f90")
     >>> program = Fortran2003.Program(reader)
     >>> print program
