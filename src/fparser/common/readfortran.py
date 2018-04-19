@@ -483,14 +483,13 @@ class FortranReaderBase(object):
 
         :param source: A file-like object with .next() method used to
                        retrive a line.
-        :type source: 
+        :type source: either :py:class:`six.StringIO` or a file handle
         :param mode: A FortranFormat object as returned by
                      sourceinfo.get_source_info()
         :type mode: :py:class:`fparser.common.sourceinfo.Format`
         :param bool isstrict: Whether we are strictly enforcing fixed format
         :param bool ignore_comments: Whether or not to discard comments
         """
-        import pdb; pdb.set_trace()
         self.source = source
         self._format = mode
 
