@@ -214,6 +214,6 @@ def test_caching():
                       ignore_comments=False, clear_cache=True)
     assert tree1 is not tree2
     # Check that wiping the cache is the default behaviour
-    tree2 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
+    tree3 = api.parse(SOURCE_STR, isfree=True, isstrict=False,
                       ignore_comments=False)
-    assert tree1 is not tree2
+    assert tree3 is not tree2
