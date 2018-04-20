@@ -38,10 +38,36 @@ from fparser.two.Fortran2003 import Program, Comment, walk_ast
 from fparser.api import get_reader
 
 
+def test_ignore_comments():
+    ''' Check that the parser does throw away comments when requested '''
+    tree = Program(get_reader('''\
+PROGRAM a_prog
+! A full line comment
+PRINT *, "Hello" ! This block gets executed
+END PROGRAM a_prog
+    ''', ignore_comments=True))
+    gen = str(tree)
+    assert ("PROGRAM a_prog\n"
+            "  PRINT *, \"Hello\"\n"
+            "END PROGRAM a_prog" in gen)
+    assert "full line comment" not in gen
+    assert "block gets executed" not in gen
+
+    # Check that the default behaviour is to ignore comments
+    tree = Program(get_reader('''\
+PROGRAM a_prog
+! A full line comment
+PRINT *, "Hello" ! This block gets executed
+END PROGRAM a_prog
+    '''))
+    gen = str(tree)
+    assert "full line comment" not in gen
+    assert "block gets executed" not in gen
+
+
 def test_simple_prog():
     ''' Tests simplest case of comments in a program unit '''
-    cls = Program
-    tree = cls(get_reader('''\
+    tree = Program(get_reader('''\
 PROGRAM a_prog
 ! A full line comment
 PRINT *, "Hello" ! This block gets executed
