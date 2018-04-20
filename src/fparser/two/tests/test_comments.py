@@ -34,7 +34,7 @@
 ''' Module containing tests for aspects of fparser2 related to comments '''
 
 import pytest
-from fparser.Fortran2003 import *
+from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
 
 

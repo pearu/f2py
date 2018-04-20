@@ -989,7 +989,7 @@ class FortranReaderBase(object):
             # first try a quick method:
             newline = line[:idx]
             if '"' not in newline and '\'' not in newline:
-                if self.isf77 or not line[idx:].startswith('!f2py'):
+                if self.is_f77 or not line[idx:].startswith('!f2py'):
                     put_item(self.comment_item(line[idx:], lineno, lineno))
                     return newline, quotechar, True
 
@@ -1396,7 +1396,7 @@ class FortranFileReader(FortranReaderBase):
             raise ValueError(message)
         mode = fparser.common.sourceinfo.get_source_info(file_candidate)
 
-        FortranReaderBase.__init__(self, self.file, mode)
+        FortranReaderBase.__init__(self, self.file, mode, ignore_comments)
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1432,3 +1432,8 @@ class FortranStringReader(FortranReaderBase):
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,
                                    ignore_comments)
+        if include_dirs is not None:
+            self.include_dirs = include_dirs[:]
+        if source_only is not None:
+            self.source_only = source_only[:]
+        return
