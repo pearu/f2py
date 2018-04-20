@@ -215,7 +215,6 @@ def test_prog_comments():
     assert "! An in-line comment" in str(obj)
     # Check that we still have the ending comment
     assert type(obj.content[-1]) == Comment
-    print str(obj)
     assert str(obj).endswith("! A really problematic comment")
 
 
