@@ -11,7 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-19/03/2018 PR #70. Re-organise module structure in order to split
+20/04/2018 PR #78 and issue #74. Allow the use of the fparser cache to
+	   be controlled and disable its use by default.
+
+19/04/2018 PR #70. Re-organise module structure in order to split
 	   versions 1 and 2 of the parser.
 
 23/03/2018 PR #75. Allow FortranFileReader to accept either a filename

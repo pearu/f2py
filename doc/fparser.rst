@@ -1,8 +1,9 @@
 .. -*- rest -*-
 
 ..
-    Modified work Copyright (c) 2017 Science and Technology Facilities Council
-    Original work Copyright (c) 1999-2008 Pearu Peterson
+    Modified work Copyright (c) 2017-2018 Science and Technology
+    Facilities Council.
+    Original work Copyright (c) 1999-2008 Pearu Peterson.
 
     All rights reserved.
 
@@ -139,7 +140,7 @@ that reader to create the tree, e.g.:
 
   >>> from fparser.common.readfortran import FortranStringReader
   >>> from fparser.one.parsefortran import FortranParser
-  >>> reader = FortranStringReader(code, False, True)
+  >>> reader = FortranStringReader(code, FortranFormat(isfree, isstrict))
   >>> parser = FortranParser(reader)
   >>> parser.parse()
   >>> print parser.block
@@ -147,6 +148,10 @@ that reader to create the tree, e.g.:
           SUBROUTINE foo(a)
             PRINT *, "a=", a
           END SUBROUTINE foo
+
+The full interface to the `parse()` function is:
+
+.. autofunction:: fparser.api.parse
 
 The `FortranParser` class holds the parser information while
 iterating over items returned by a `FortranReaderBase` iterator.
