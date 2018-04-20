@@ -633,6 +633,9 @@ class FortranReaderBase(object):
         self.source_lines.append(line)
 
         if ignore_comments and (self.format.is_fixed or self.format.is_f77):
+            # Check for a fixed-format comment. If the current line *is*
+            # a comment and we are ignoring them, then recursively call this
+            # routine again to get the next source line.
             if _is_fix_comment(line, isstrict=self.format.is_strict):
                 return self.get_single_line(ignore_empty, ignore_comments)
 
@@ -742,6 +745,8 @@ class FortranReaderBase(object):
             return item
         except StopIteration:
             raise
+        # TODO can we specify one or more specific exception types
+        # rather than catching *every* exception.
         except Exception as err:
             message = self.format_message('FATAL ERROR',
                                           'while processing line',
@@ -965,7 +970,7 @@ class FortranReaderBase(object):
 
     def handle_inline_comment(self, line, lineno, quotechar=None):
         """
-        Any in-line comment is extracted from line. If
+        Any in-line comment is extracted from the line. If
         keep_inline_comments==True then the extracted comments are put back
         into the fifo sequence where they will subsequently be processed as
         a comment line.
@@ -1022,7 +1027,13 @@ class FortranReaderBase(object):
 
     def handle_multilines(self, line, startlineno, mlstr):
         '''
-        Examines line for Python triple quote strings.
+        Examines line for Python triple quote strings (f2py feature).
+
+        :param str line: line of Fortran source text
+        :param int startlineno: the number of the line on which this
+                                 multi-line string began.
+        :param list mlstr: list of delimiters for a multi-line string
+                           (e.g. '"""')
         '''
         i = line.find(mlstr)
         if i != -1:
@@ -1034,7 +1045,7 @@ class FortranReaderBase(object):
             if k % 2:
                 return
         if i != -1 and '!' not in prefix:
-            # Note character constans like 'abc"""123',
+            # Note character constants like 'abc"""123',
             # so multiline prefix should better not contain `'' or `"' not `!'.
             for quote in '"\'':
                 if prefix.count(quote) % 2:
@@ -1192,7 +1203,11 @@ class FortranReaderBase(object):
             # Fortran 77 is easy..
             lines = [line[6:72]]
             # get_next_line does not actually consume lines - they are put
-            # into the FILO buffer as well as being returned
+            # into the FILO buffer as well as being returned. This means
+            # that we can ignore comments for the purposes of dealing
+            # with the continued line and then handle them as though they
+            # follow on after the single line constructed from the multiple
+            # continued lines.
             while _is_fix_cont(self.get_next_line(ignore_empty=True,
                                                   ignore_comments=True)):
                 # handle fix format line continuations for F77 code
