@@ -80,38 +80,30 @@ __autodoc__ = ['get_reader', 'parse', 'walk']
 
 
 def get_reader(source, isfree=None, isstrict=None, include_dirs=None,
-               source_only=None):
-    """ Returns Fortran reader instance.
+               source_only=None, ignore_comments=True):
+    '''
+    Returns Fortran reader instance.
 
-    Parameters
-    ----------
-    source : str
-      Specify a string or filename containing Fortran code.
-    isfree, isstrict : {None, bool}
-      Specify input Fortran format. The values are determined from the
-      input. If that fails then isfree=True and isstrict=False is assumed.
-    include_dirs : {None, list}
-      Specify a list of include directories. The default list (when
-      include_dirs=None) contains the current working directory and
-      the directory of ``filename``.
-    source_only : {None, list}
-      Specify a list of Fortran file names that are searched when the
-      ``USE`` statement is encountered.
-
-    Returns
-    -------
-    reader : `FortranReader`
-
-    Notes
-    -----
     If ``source`` is a C filename then the functions searches for comment
     lines starting with ``/*f2py`` and reads following lines as PYF file
     content until a line ``*/`` is found.
 
-    See also
-    --------
-    parse
-    """
+    :param str source: Specify a string or filename containing Fortran code.
+    :param bool isfree: True if Fortran is free format
+    :param bool isstrict: True if we are to strictly enforce free/fixed format
+    :param list include_dirs: Specify a list of include directories. The
+                              default list (when include_dirs=None) contains
+                              the current working directory and the directory
+                              of ``source``.
+    :param list source_only: Specify a list of Fortran file names that are
+                             searched when the ``USE`` statement is
+                             encountered.
+    :param bool ignore_comments: Whether or not to ignore (and discard)
+                                 comments when parsing the source.
+
+    :returns: a reader instance
+    :rtype: :py:class:`fparser.common.readfortran.FortranReader`
+    '''
     import os
     import re
     from fparser.common.readfortran import FortranFileReader, \
