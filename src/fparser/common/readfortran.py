@@ -631,8 +631,8 @@ class FortranReaderBase(object):
         line = line.expandtabs().replace('\xa0', ' ').rstrip()
         self.source_lines.append(line)
 
-        if ignore_comments and (self.format.isfix or self.format.isf77):
-            if _is_fix_comment(line, isstrict=self.format.isstrict):
+        if ignore_comments and (self.format.is_fixed or self.format.is_f77):
+            if _is_fix_comment(line, isstrict=self.format.is_strict):
                 return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
