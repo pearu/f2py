@@ -228,6 +228,74 @@ def test_module_comments():
     # Test when the reader is explicitly set to free-form mode
     reader = get_reader(source, isfree=True, ignore_comments=False)
     prog_unit = Program(reader)
-    walk_ast(prog_unit.content, debug=True)
     assert type(prog_unit.content[0]) == Comment
     assert str(prog_unit.content[0]) == "! This is a module"
+
+
+def test_function_comments():
+    ''' Tests for comments in functions '''
+    source = '''\
+function my_mod()
+  ! This is a function
+  implicit none
+  integer my_mod
+  ! Comment1
+  my_mod = 1 ! Comment2
+  ! That was a function
+end function my_mod
+'''
+    from fparser.two.Fortran2003 import Function_Subprogram
+    reader = get_reader(source, isfree=True, ignore_comments=False)
+    fn_unit = Function_Subprogram(reader)
+    # <class 'fparser.two.Fortran2003.Function_Stmt'>
+    #    <type 'NoneType'>
+    #    <class 'fparser.two.Fortran2003.Name'>
+    #    <type 'NoneType'>
+    #    <type 'NoneType'>
+    # <class 'fparser.two.Fortran2003.Specification_Part'>
+    #   <class 'fparser.two.Fortran2003.Implicit_Part'>
+    #     <class 'fparser.two.Fortran2003.Comment'>
+    #       <type 'str'>, "'! This is a function'"
+    comment = fn_unit.content[1].content[0].content[0]
+    assert isinstance(comment, Comment)
+    assert "! This is a function" in str(comment)
+    comment = fn_unit.content[1].content[2].content[0]
+    assert isinstance(comment, Comment)
+    assert "! Comment1" in str(comment)
+    exec_part = fn_unit.content[2]
+    comment = exec_part.content[1]
+    assert isinstance(comment, Comment)
+    assert "! Comment2" in str(comment)
+    comment = exec_part.content[2]
+    assert isinstance(comment, Comment)
+    assert "! That was a function" in str(comment)
+
+
+def test_subroutine_comments():
+    ''' Tests for comments in subroutines '''
+    source = '''\
+subroutine my_mod()
+  ! First comment
+  implicit none
+  integer my_mod
+  ! Body comment
+  my_mod = 1 ! Inline comment
+  ! Ending comment
+end subroutine my_mod
+'''
+    from fparser.two.Fortran2003 import Subroutine_Subprogram
+    reader = get_reader(source, isfree=True, ignore_comments=False)
+    fn_unit = Subroutine_Subprogram(reader)
+    assert isinstance(fn_unit, Subroutine_Subprogram)
+    walk_ast(fn_unit.content, [Comment], debug=True)
+    spec_part = fn_unit.content[1]
+    comment = spec_part.content[0].content[0]
+    assert isinstance(comment, Comment)
+    assert "! First comment" in str(comment)
+    comment = spec_part.content[2].content[0]
+    assert isinstance(comment, Comment)
+    assert "! Body comment" in str(comment)
+    exec_part = fn_unit.content[2]
+    comment = exec_part.content[1]
+    assert isinstance(comment, Comment)
+    assert "! Inline comment" in str(comment)
