@@ -34,7 +34,8 @@
 ''' Module containing tests for aspects of fparser2 related to comments '''
 
 import pytest
-from fparser.two.Fortran2003 import Program, Comment, walk_ast
+from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram, \
+    walk_ast
 from fparser.api import get_reader
 
 
@@ -108,6 +109,7 @@ PROGRAM a_prog
 IF(.TRUE.)THEN
 PRINT *, "Hello" ! An in-line comment here
 END IF
+! A comment after a block
 END PROGRAM a_prog
     ''', ignore_comments=False))
     assert isinstance(tree, Program)
@@ -116,6 +118,7 @@ END PROGRAM a_prog
             "    PRINT *, \"Hello\"\n"
             "    ! An in-line comment here\n"
             "  END IF\n"
+            "  ! A comment after a block\n"
             "END PROGRAM a_prog\n")
 
 @pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
@@ -145,6 +148,24 @@ c this is a subroutine
     assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
             "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
             "Name('foo')))")
+
+
+@pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
+def test_fixed_continuation():
+    ''' Check that we handle comments that occur within fixed-format
+    continued lines '''
+    reader = get_reader('''\
+      subroutine foo
+c this is a subroutine
+      i = 1 +
+c this comment is a problem
+     &2 + 3
+      end subroutine foo''', isfree=False, ignore_comments=False)
+    cls = Subroutine_Subprogram
+    obj = cls(reader)
+    assert isinstance(obj, cls)
+    print str(obj)
+    assert "i = 1 + 2 + 3\n     c this comment is a problem" in str(obj)
 
 
 def test_prog_comments():
