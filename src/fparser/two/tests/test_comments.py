@@ -176,7 +176,9 @@ def test_prog_comments():
    program foo
      ! A full comment line
      write(*,*) my_int ! An in-line comment
-    end program foo''', isfree=True, ignore_comments=False)
+    end program foo
+! A really problematic comment
+''', isfree=True, ignore_comments=False)
 
     obj = cls(reader)
     assert type(obj) == Program
@@ -191,7 +193,9 @@ def test_prog_comments():
     #        |--> Execution_Part
     #        |    |--> Write_Stmt
     #        |    \--> Comment
-    #        .
+    #   .    .
+    #   .
+    #   |--> Comment
     from fparser.two.Fortran2003 import Main_Program, Write_Stmt, \
         End_Program_Stmt
     walk_ast(obj.content, [Comment], debug=True)
@@ -209,6 +213,10 @@ def test_prog_comments():
     assert type(exec_part.content[1]) == Comment
     assert type(main_prog.content[3]) == End_Program_Stmt
     assert "! An in-line comment" in str(obj)
+    # Check that we still have the ending comment
+    assert type(obj.content[-1]) == Comment
+    print str(obj)
+    assert str(obj).endswith("! A really problematic comment")
 
 
 def test_module_comments():
