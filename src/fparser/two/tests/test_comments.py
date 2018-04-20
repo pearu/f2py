@@ -299,3 +299,45 @@ end subroutine my_mod
     comment = exec_part.content[1]
     assert isinstance(comment, Comment)
     assert "! Inline comment" in str(comment)
+
+
+def test_derived_type():
+    ''' Test for comments within declaration of derived type '''
+    source = '''\
+type my_type ! Inline comment1
+  ! First comment
+  integer :: start ! Inline comment2
+  integer :: stop
+  ! Ending comment
+end type my_type
+'''
+    from fparser.two.Fortran2003 import Derived_Type_Def
+    reader = get_reader(source, isfree=True, ignore_comments=False)
+    dtype = Derived_Type_Def(reader)
+    assert isinstance(dtype, Derived_Type_Def)
+    comments = [(1, "! Inline comment1"),
+                (2, "! First comment"),
+                (4, "! Inline comment2"),
+                (6, "! Ending comment")]
+    for comment in comments:
+        idx = comment[0]
+        assert isinstance(dtype.content[idx], Comment)
+        assert comment[1] in str(dtype.content[idx])
+
+
+@pytest.mark.xfail(reason="comments within action statements are lost!")
+def test_action_stmts():
+    ''' Tests for comments within action statements such as allocate
+    and print '''
+    source = '''\
+allocate(my_array(size), &
+         ! that's a big array
+         my_array2(size))
+'''
+    from fparser.two.Fortran2003 import Allocate_Stmt
+    reader = get_reader(source, isfree=True, ignore_comments=False)
+    astmt = Allocate_Stmt(reader)
+    assert isinstance(astmt, Allocate_Stmt)
+    walk_ast(astmt.items, [Comment], debug=True)
+    print(str(astmt))
+    assert "a big array" in str(astmt)
