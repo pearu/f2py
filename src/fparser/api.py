@@ -1,26 +1,27 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
-
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +33,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#
 # --------------------------------------------------------------------
 
 # The original software (in the f2py project) was distributed under
@@ -153,79 +154,39 @@ def get_reader(source, isfree=None, isstrict=None, include_dirs=None,
 
 
 def parse(source, isfree=None, isstrict=None, include_dirs=None,
-          source_only=None, ignore_comments=True, analyze=True):
-    """ Parse input and return Statement tree. Raises an AnalyzeError if the
+          source_only=None, ignore_comments=True, analyze=True,
+          clear_cache=True):
+    """
+    Parse input and return Statement tree. Raises an AnalyzeError if the
     parser can not parse the Fortran code.
 
-    Parameters
-    ----------
-    source : str
-      Specify a string or filename containing Fortran code.
-    isfree, isstrict : {None, bool}
-      Specify input Fortran format. The values are determined from the
-      input. If that fails then isfree=True and isstrict=False is assumed.
-    include_dirs : {None, list}
-      Specify a list of include directories. The default list (when
-      include_dirs=None) contains the current working directory and
-      the directory of ``filename``.
-    source_only : {None, list}
-      Specify a list of Fortran file names that are searched when the
-      ``USE`` statement is encountered.
-    ignore_comments : bool
-      When True then discard all comment lines in the Fortran code.
-    analyze : bool
-      When True then apply run analyze method on the Fortran code tree.
+    :param str source: Specify a string or filename containing Fortran code.
+    :param bool isfree: Whether the Fortran source is free-format.
+    :param bool isstrict: Whether we are to strictly enforce the `isfree`
+                          setting.
+    :param list include_dirs: Specify a list of include directories. The
+                              default list (when include_dirs=None) contains
+                              the current working directory and the directory
+                              of ``filename``.
+    :param list source_only: A list of Fortran file names that are searched
+                             when the ``USE`` statement is encountered.
+    :param bool ignore_comments: When True then discard all comment lines in
+                                 the Fortran code.
+    :param bool analyze: When True then apply analyze() method on the Fortran
+                         code tree.
+    :param bool clear_cache: Whether or not to wipe the parser cache prior
+                             to parsing. Necessary when a new tree object
+                             is required, even if the Fortran to be parsed has
+                             been seen before.
 
-    Returns
-    -------
-    block : `fparser.api.BeginSource`
-
-    Examples
-    --------
-
-        >>> code = '''
-        ... c comment
-        ...       subroutine foo(a)
-        ...         integer a
-        ...         print*, "a=",a
-        ...       end
-        ... '''
-        >>> tree = parse(code,isfree=False)
-        >>> print tree
-              !BEGINSOURCE <cStringIO.StringI object at 0x1798030> mode=fix90
-                SUBROUTINE foo(a)
-                  INTEGER a
-                  PRINT *, "a=", a
-                END SUBROUTINE foo
-        >>> print `tree`
-              BeginSource
-                blocktype='beginsource'
-                name='<cStringIO.StringI object at 0x1798030> mode=fix90'
-                a=AttributeHolder:
-              external_subprogram=<dict with keys ['foo']>
-                content:
-                  Subroutine
-                    args=['a']
-                    item=Line('subroutine foo(a)',(3, 3),'')
-                    a=AttributeHolder:
-                variables=<dict with keys ['a']>
-                    content:
-                      Integer
-                        selector=('', '')
-                        entity_decls=['a']
-                        item=Line('integer a',(4, 4),'')
-                      Print
-                        item=Line('print*, "a=",a',(5, 5),'')
-                  EndSubroutine
-                    blocktype='subroutine'
-                    name='foo'
-            item=Line('end',(6, 6),'')
-
-    See also
-    --------
-    get_reader
+    :returns: Abstract Syntax Tree of Fortran source.
+    :rtype: :py:class:`fparser.api.BeginSource`
     """
     from fparser.one.parsefortran import FortranParser
+
+    if clear_cache:
+        # Wipe the parser cache if requested
+        FortranParser.cache.clear()
 
     reader = get_reader(source, isfree, isstrict, include_dirs, source_only)
     parser = FortranParser(reader, ignore_comments=ignore_comments)
