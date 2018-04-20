@@ -49,6 +49,15 @@ import fparser.common.sourceinfo
 import fparser.common.tests.logging_utils
 
 
+def test_empty_line_err():
+    ''' Check that we raise the expected error if we try and create
+    an empty Line '''
+    from fparser.common.readfortran import Line, FortranReaderError
+    with pytest.raises(FortranReaderError) as err:
+        _ = Line("   ", 1, "", "a_name", None)
+    assert "Got empty line: \'   \'" in str(err)
+
+
 def test_111fortranreaderbase(log, monkeypatch):
     '''
     Tests the FortranReaderBase class.

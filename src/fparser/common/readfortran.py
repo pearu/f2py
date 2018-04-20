@@ -239,8 +239,9 @@ class Line(object):
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
         if not self.line:
-            raise Exception("Got empty line: '{0}'. linenospan={1}, "
-                            "label='{2}'".format(line, linenospan, label))
+            raise FortranReaderError("Got empty line: '{0}'. linenospan={1}, "
+                                     "label='{2}'".format(line,
+                                                          linenospan, label))
         self.span = linenospan
         assert label is None or isinstance(label, int), repr(label)
         assert name is None or isinstance(name, str) and name != '', repr(name)
