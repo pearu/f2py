@@ -1,24 +1,24 @@
 # Copyright (c) 2017-2018 Science and Technology Facilities Council
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -34,7 +34,7 @@
 ''' Module containing tests for aspects of fparser2 related to comments '''
 
 import pytest
-from fparser.two.Fortran2003 import *
+from fparser.two.Fortran2003 import Program, Comment, walk_ast
 from fparser.api import get_reader
 
 
@@ -145,14 +145,16 @@ def test_prog_comments():
     #        |    |--> Write_Stmt
     #        |    \--> Comment
     #        .
-    from fparser.Fortran2003 import walk_ast
+    from fparser.two.Fortran2003 import Main_Program, Write_Stmt, \
+        End_Program_Stmt
     walk_ast(obj.content, [Comment], debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
     main_prog = obj.content[1]
     assert type(main_prog.content[1].content[0].content[0]) == Comment
-    assert str(main_prog.content[1].content[0].content[0]) == "! A full comment line"
+    assert (str(main_prog.content[1].content[0].content[0]) ==
+            "! A full comment line")
     exec_part = main_prog.content[2]
     assert type(exec_part.content[0]) == Write_Stmt
     # Check that we have the in-line comment as a second statement

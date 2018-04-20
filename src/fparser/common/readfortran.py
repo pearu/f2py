@@ -989,7 +989,7 @@ class FortranReaderBase(object):
             # first try a quick method:
             newline = line[:idx]
             if '"' not in newline and '\'' not in newline:
-                if self.is_f77 or not line[idx:].startswith('!f2py'):
+                if self.format.is_f77 or not line[idx:].startswith('!f2py'):
                     put_item(self.comment_item(line[idx:], lineno, lineno))
                     return newline, quotechar, True
 

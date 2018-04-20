@@ -175,7 +175,7 @@ class Base(ComparableMixin):
         :param parent_cls: the parent class of this object
         :type parent_cls: :py:type:`type`
         """
-        from . import readfortran
+        from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:
@@ -1103,7 +1103,7 @@ class Comment(Base):
         :param parent_cls: the parent class of this object
         :type parent_cls: :py:type:`type`
         """
-        from . import readfortran
+        from fparser.common import readfortran
 
         if isinstance(string, readfortran.Comment):
             # We were after a comment and we got a comment. Construct
