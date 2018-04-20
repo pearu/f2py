@@ -164,7 +164,6 @@ c this comment is a problem
     cls = Subroutine_Subprogram
     obj = cls(reader)
     assert isinstance(obj, cls)
-    print str(obj)
     assert "i = 1 + 2 + 3\n     c this comment is a problem" in str(obj)
 
 
