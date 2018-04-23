@@ -473,10 +473,6 @@ class FortranReaderBase(object):
 
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
-
-    See also
-    --------
-    __init__
     """
 
     def __init__(self, source, mode, ignore_comments):
