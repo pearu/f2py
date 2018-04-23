@@ -11,6 +11,8 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+## Release 0.0.7 (23/04/2018) ##
+
 20/04/2018 PR #78 and issue #74. Allow the use of the fparser cache to
 	   be controlled and disable its use by default.
 

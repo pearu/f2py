@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
-# Original work Copyright (c) 1999-2008 Pearu Peterson
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council.
+# Original work Copyright (c) 1999-2008 Pearu Peterson.
 
 # All rights reserved.
 
@@ -102,7 +103,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 6
+MICRO = 7
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
