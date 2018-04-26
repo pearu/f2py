@@ -78,3 +78,5 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 
 .. autoclass:: fparser.common.readfortran.FortranReaderBase
 
+Note that the setting for `ignore_comments` provided here can be overridden
+on a per-call basis by methods such as `get_single_line`.

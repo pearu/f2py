@@ -466,27 +466,26 @@ class FortranReaderBase(object):
     """
     Base class for reading Fortran sources.
 
-    A Fortran source must be file-like object (have a ``.next()``
+    A Fortran source must be a file-like object (have a ``.next()``
     method) and it may hold Fortran 77 code, fixed format Fortran
     code, free format Fortran code, or PYF signatures (with extended
     free format Fortran syntax).
 
+    :param source: A file-like object with .next() method used to
+                   retrive a line.
+    :type source: either :py:class:`six.StringIO` or a file handle
+    :param mode: A FortranFormat object as returned by
+                 `sourceinfo.get_source_info()`
+    :type mode: :py:class:`fparser.common.sourceinfo.Format`
+    :param bool isstrict: Whether we are strictly enforcing fixed format
+    :param bool ignore_comments: Whether or not to discard comments
+
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
+
     """
 
     def __init__(self, source, mode, ignore_comments):
-        """ Construct FortranReader instance.
-
-        :param source: A file-like object with .next() method used to
-                       retrive a line.
-        :type source: either :py:class:`six.StringIO` or a file handle
-        :param mode: A FortranFormat object as returned by
-                     sourceinfo.get_source_info()
-        :type mode: :py:class:`fparser.common.sourceinfo.Format`
-        :param bool isstrict: Whether we are strictly enforcing fixed format
-        :param bool ignore_comments: Whether or not to discard comments
-        """
         self.source = source
         self._format = mode
 
