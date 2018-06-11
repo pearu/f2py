@@ -7684,9 +7684,11 @@ class Prefix(SequenceBase):  # R1227
 class Prefix_Spec(STRINGBase):  # R1226
     """
     <prefix-spec> = <declaration-type-spec>
-                    | RECURSIVE
-                    | PURE
                     | ELEMENTAL
+                    | IMPURE
+                    | MODULE
+                    | PURE
+                    | RECURSIVE
     """
     subclass_names = ['Declaration_Type_Spec']
 
