@@ -3894,25 +3894,32 @@ def test_Prefix(): # R1227
         assert isinstance(a, cls),repr(a)
         assert_equal(str(a),'INTEGER*2 PURE')
 
-def test_Prefix_Spec(): # R1228
 
-        cls = Prefix_Spec
-        a = cls('pure')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'PURE')
-        assert_equal(repr(a),"Prefix_Spec('PURE')")
+@pytest.mark.parametrize(
+    'procedure_prefix_input,expected_class,expected_string',
+    [('integer', Intrinsic_Type_Spec, 'INTEGER'),
+     ('integer * 2', Intrinsic_Type_Spec, 'INTEGER*2'),
+     ('real', Intrinsic_Type_Spec, 'REAL'),
+     ('double complex', Intrinsic_Type_Spec, 'DOUBLE COMPLEX'),
+     ('complex', Intrinsic_Type_Spec, 'COMPLEX'),
+     ('character', Intrinsic_Type_Spec, 'CHARACTER'),
+     ('logical', Intrinsic_Type_Spec, 'LOGICAL'),
+     ('type(foo)', Declaration_Type_Spec, 'TYPE(foo)'),
+     ('class(bar)', Declaration_Type_Spec, 'CLASS(bar)'),
+     ('class(*)', Declaration_Type_Spec, 'CLASS(*)'),
+     ('elemental', Prefix_Spec, 'ELEMENTAL'),
+     ('impure', Prefix_Spec, 'IMPURE'),
+     ('module', Prefix_Spec, 'MODULE'),
+     ('pure', Prefix_Spec, 'PURE'),
+     ('recursive', Prefix_Spec, 'RECURSIVE')])
+def test_Prefix_Spec(procedure_prefix_input,
+                     expected_class,
+                     expected_string): # R1226
+        unit_under_test = Prefix_Spec
+        result = unit_under_test(procedure_prefix_input)
+        assert isinstance(result, expected_class),repr(result)
+        assert str(result) == expected_string
 
-        a = cls('elemental')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'ELEMENTAL')
-
-        a = cls('recursive')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'RECURSIVE')
-
-        a = cls('integer * 2')
-        assert isinstance(a, Intrinsic_Type_Spec),repr(a)
-        assert_equal(str(a),'INTEGER*2')
 
 def test_Suffix(): # R1229
 

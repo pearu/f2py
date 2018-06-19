@@ -7694,17 +7694,27 @@ class Prefix(SequenceBase):  # R1227
     match = staticmethod(match)
 
 
-class Prefix_Spec(STRINGBase):  # R1228
+class Prefix_Spec(STRINGBase):  # R1226
     """
     <prefix-spec> = <declaration-type-spec>
-                    | RECURSIVE
-                    | PURE
                     | ELEMENTAL
+                    | IMPURE
+                    | MODULE
+                    | PURE
+                    | RECURSIVE
     """
     subclass_names = ['Declaration_Type_Spec']
 
     def match(string):
-        return STRINGBase.match(['RECURSIVE', 'PURE', 'ELEMENTAL'], string)
+        '''
+        Matches procedure prefixes.
+
+        :param str string: Candidate string.
+        :return: Discovered prefix.
+        :rtype: str
+        '''
+        return STRINGBase.match(['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE',
+                                 'RECURSIVE'], string)
     match = staticmethod(match)
 
 
