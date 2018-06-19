@@ -3716,7 +3716,11 @@ def test_Procedure_Declaration_Stmt(): # R1211
      ('save', Proc_Attr_Spec, 'SAVE')])
 def test_Proc_Attr_Spec(procedure_attribute_input,
                         expected_class,
-                        expected_string): # R1213
+                        expected_string):
+    '''
+    Tests the procedure attribute specification as outlined in #R1213 of
+    ISO/IEC 1539-1:2010.
+    '''
     unit_under_test = Proc_Attr_Spec
 
     result = unit_under_test(procedure_attribute_input)

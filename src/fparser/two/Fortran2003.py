@@ -7435,7 +7435,7 @@ items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
 
         :param str string: Candidate string.
         :return: Discovered arguments.
-        :rtype: str
+        :rtype: tuple, str or None
         '''
         if string[:6].upper()=='INTENT':
             line = string[6:].lstrip()
