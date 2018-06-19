@@ -7433,9 +7433,9 @@ items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
         '''
         Matches procedure arguments.
 
-        :param str string: Comma separated list of arguments.
+        :param str string: Candidate string.
         :return: Discovered arguments.
-        :rtype: tuple or None
+        :rtype: str
         '''
         if string[:6].upper()=='INTENT':
             line = string[6:].lstrip()
