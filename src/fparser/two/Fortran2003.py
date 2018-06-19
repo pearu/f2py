@@ -7430,6 +7430,15 @@ items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
 
     @staticmethod
     def match(string):
+        '''
+        Matches procedure arguments.
+
+        :param str string: Comma separated list of arguments.
+        :return: Discovered arguments.
+        :rtype: tuple or None
+        '''
+        # TODO: Could this use STRINGBase.match(['INTENT',...], string)?
+        #       Do they do the same thing?
         if string[:6].upper()=='INTENT':
             line = string[6:].lstrip()
             if not line: return
