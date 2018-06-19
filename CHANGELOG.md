@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+19/06/2018 PR #86 and issue #83. Adds support for the full list of possible
+           procedure specifications (MODULE and IMPURE were missing).
+
 ## Release 0.0.7 (23/04/2018) ##
 
 20/04/2018 PR #78 and issue #74. Allow the use of the fparser cache to
