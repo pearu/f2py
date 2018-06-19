@@ -3701,27 +3701,28 @@ def test_Procedure_Declaration_Stmt(): # R1211
     assert_equal(str(a), 'PROCEDURE(REAL*8), INTENT(IN), BIND(C) :: a, b')
 
 
-def test_Proc_Attr_Spec(): # R1213
-    cls = Proc_Attr_Spec
-    a = cls('intent(in)')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'INTENT(IN)')
+@pytest.mark.parametrize(
+    'procedure_attribute_input,expected_class,expected_string',
+    [('private', Access_Spec, 'PRIVATE'),
+     ('public', Access_Spec, 'PUBLIC'),
+     ('bind(c)', Language_Binding_Spec, 'BIND(C)'),
+     ('bind(c, name="foo")', Language_Binding_Spec, 'BIND(C, NAME = "foo")'),
+     ('intent(in)', Proc_Attr_Spec, 'INTENT(IN)'),
+     ('intent(out)', Proc_Attr_Spec, 'INTENT(OUT)'),
+     ('intent(inout)', Proc_Attr_Spec, 'INTENT(INOUT)'),
+     ('optional', Proc_Attr_Spec, 'OPTIONAL'),
+     ('pointer', Proc_Attr_Spec, 'POINTER'),
+     ('protected', Proc_Attr_Spec, 'PROTECTED'),
+     ('save', Proc_Attr_Spec, 'SAVE')])
+def test_Proc_Attr_Spec(procedure_attribute_input,
+                        expected_class,
+                        expected_string): # R1213
+    unit_under_test = Proc_Attr_Spec
 
-    a = cls('optional')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'OPTIONAL')
+    result = unit_under_test(procedure_attribute_input)
+    assert isinstance(result, expected_class)
+    assert str(result) == expected_string
 
-    a = cls('save')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'SAVE')
-
-    a = cls('private')
-    assert isinstance(a, Access_Spec),repr(type(a))
-    assert_equal(str(a),'PRIVATE')
-
-    a = cls('bind(c)')
-    assert isinstance(a, Language_Binding_Spec),repr(a)
-    assert_equal(str(a),'BIND(C)')
 
 def test_Proc_Decl(): # R1214
 
@@ -3916,7 +3917,7 @@ def test_Prefix_Spec(): # R1228
 def test_Suffix(): # R1229
 
     cls = Suffix
-    
+
     a = cls('bind(c)')
     assert isinstance(a, Language_Binding_Spec),repr(a)
     assert_equal(str(a),'BIND(C)')
@@ -4010,7 +4011,7 @@ def test_Dummy_Arg(): # R1233
     a = cls('*')
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'*')
-    
+
 def test_End_Subroutine_Stmt(): # R1234
 
         cls = End_Subroutine_Stmt
