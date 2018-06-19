@@ -7693,6 +7693,13 @@ class Prefix_Spec(STRINGBase):  # R1226
     subclass_names = ['Declaration_Type_Spec']
 
     def match(string):
+        '''
+        Matches procedure prefixes.
+
+        :param str string: Candidate string.
+        :return: Discovered prefix.
+        :rtype: str
+        '''
         return STRINGBase.match(['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE',
                                  'RECURSIVE'], string)
     match = staticmethod(match)
