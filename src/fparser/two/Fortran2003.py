@@ -7437,8 +7437,6 @@ items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
         :return: Discovered arguments.
         :rtype: tuple or None
         '''
-        # TODO: Could this use STRINGBase.match(['INTENT',...], string)?
-        #       Do they do the same thing?
         if string[:6].upper()=='INTENT':
             line = string[6:].lstrip()
             if not line: return
