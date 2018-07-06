@@ -3723,27 +3723,32 @@ def test_Procedure_Declaration_Stmt(): # R1211
     assert_equal(str(a), 'PROCEDURE(REAL*8), INTENT(IN), BIND(C) :: a, b')
 
 
-def test_Proc_Attr_Spec(): # R1213
-    cls = Proc_Attr_Spec
-    a = cls('intent(in)')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'INTENT(IN)')
+@pytest.mark.parametrize(
+    'procedure_attribute_input,expected_class,expected_string',
+    [('private', Access_Spec, 'PRIVATE'),
+     ('public', Access_Spec, 'PUBLIC'),
+     ('bind(c)', Language_Binding_Spec, 'BIND(C)'),
+     ('bind(c, name="foo")', Language_Binding_Spec, 'BIND(C, NAME = "foo")'),
+     ('intent(in)', Proc_Attr_Spec, 'INTENT(IN)'),
+     ('intent(out)', Proc_Attr_Spec, 'INTENT(OUT)'),
+     ('intent(inout)', Proc_Attr_Spec, 'INTENT(INOUT)'),
+     ('optional', Proc_Attr_Spec, 'OPTIONAL'),
+     ('pointer', Proc_Attr_Spec, 'POINTER'),
+     ('protected', Proc_Attr_Spec, 'PROTECTED'),
+     ('save', Proc_Attr_Spec, 'SAVE')])
+def test_Proc_Attr_Spec(procedure_attribute_input,
+                        expected_class,
+                        expected_string):
+    '''
+    Tests the procedure attribute specification as outlined in #R1213 of
+    ISO/IEC 1539-1:2010.
+    '''
+    unit_under_test = Proc_Attr_Spec
 
-    a = cls('optional')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'OPTIONAL')
+    result = unit_under_test(procedure_attribute_input)
+    assert isinstance(result, expected_class)
+    assert str(result) == expected_string
 
-    a = cls('save')
-    assert isinstance(a, cls)
-    assert_equal(str(a),'SAVE')
-
-    a = cls('private')
-    assert isinstance(a, Access_Spec),repr(type(a))
-    assert_equal(str(a),'PRIVATE')
-
-    a = cls('bind(c)')
-    assert isinstance(a, Language_Binding_Spec),repr(a)
-    assert_equal(str(a),'BIND(C)')
 
 def test_Proc_Decl(): # R1214
 
@@ -3915,30 +3920,37 @@ def test_Prefix(): # R1227
         assert isinstance(a, cls),repr(a)
         assert_equal(str(a),'INTEGER*2 PURE')
 
-def test_Prefix_Spec(): # R1228
 
-        cls = Prefix_Spec
-        a = cls('pure')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'PURE')
-        assert_equal(repr(a),"Prefix_Spec('PURE')")
+@pytest.mark.parametrize(
+    'procedure_prefix_input,expected_class,expected_string',
+    [('integer', Intrinsic_Type_Spec, 'INTEGER'),
+     ('integer * 2', Intrinsic_Type_Spec, 'INTEGER*2'),
+     ('real', Intrinsic_Type_Spec, 'REAL'),
+     ('double complex', Intrinsic_Type_Spec, 'DOUBLE COMPLEX'),
+     ('complex', Intrinsic_Type_Spec, 'COMPLEX'),
+     ('character', Intrinsic_Type_Spec, 'CHARACTER'),
+     ('logical', Intrinsic_Type_Spec, 'LOGICAL'),
+     ('type(foo)', Declaration_Type_Spec, 'TYPE(foo)'),
+     ('class(bar)', Declaration_Type_Spec, 'CLASS(bar)'),
+     ('class(*)', Declaration_Type_Spec, 'CLASS(*)'),
+     ('elemental', Prefix_Spec, 'ELEMENTAL'),
+     ('impure', Prefix_Spec, 'IMPURE'),
+     ('module', Prefix_Spec, 'MODULE'),
+     ('pure', Prefix_Spec, 'PURE'),
+     ('recursive', Prefix_Spec, 'RECURSIVE')])
+def test_Prefix_Spec(procedure_prefix_input,
+                     expected_class,
+                     expected_string): # R1226
+        unit_under_test = Prefix_Spec
+        result = unit_under_test(procedure_prefix_input)
+        assert isinstance(result, expected_class),repr(result)
+        assert str(result) == expected_string
 
-        a = cls('elemental')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'ELEMENTAL')
-
-        a = cls('recursive')
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'RECURSIVE')
-
-        a = cls('integer * 2')
-        assert isinstance(a, Intrinsic_Type_Spec),repr(a)
-        assert_equal(str(a),'INTEGER*2')
 
 def test_Suffix(): # R1229
 
     cls = Suffix
-    
+
     a = cls('bind(c)')
     assert isinstance(a, Language_Binding_Spec),repr(a)
     assert_equal(str(a),'BIND(C)')
@@ -4036,7 +4048,7 @@ def test_Dummy_Arg(): # R1233
     a = cls('*')
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'*')
-    
+
 def test_End_Subroutine_Stmt(): # R1234
 
         cls = End_Subroutine_Stmt

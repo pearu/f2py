@@ -7569,17 +7569,26 @@ class Proc_Attr_Spec(Base):  # R1213
                        | <proc-language-binding-spec>
                        | INTENT ( <intent-spec> )
                        | OPTIONAL
+                       | POINTER
+                       | PROTECTED
                        | SAVE
 
 Attributes
 ----------
-items : ({'INTENT', 'OPTIONAL', 'SAVE'}, Intent_Spec)
+items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
     """
     subclass_names = ['Access_Spec', 'Proc_Language_Binding_Spec']
     use_names = ['Intent_Spec']
 
     @staticmethod
     def match(string):
+        '''
+        Matches procedure arguments.
+
+        :param str string: Candidate string.
+        :return: Discovered arguments.
+        :rtype: tuple, str or None
+        '''
         if string[:6].upper()=='INTENT':
             line = string[6:].lstrip()
             if not line: return
@@ -7587,6 +7596,10 @@ items : ({'INTENT', 'OPTIONAL', 'SAVE'}, Intent_Spec)
             return 'INTENT', Intent_Spec(line[1:-1].strip())
         if len(string)==8 and string.upper()=='OPTIONAL':
             return 'OPTIONAL', None
+        if len(string) == 7 and string.upper() == 'POINTER':
+            return 'POINTER', None
+        if len(string) == 9 and string.upper() == 'PROTECTED':
+            return 'PROTECTED', None
         if len(string)==4 and string.upper()=='SAVE':
             return 'SAVE', None
 
@@ -7833,17 +7846,27 @@ class Prefix(SequenceBase):  # R1227
     match = staticmethod(match)
 
 
-class Prefix_Spec(STRINGBase):  # R1228
+class Prefix_Spec(STRINGBase):  # R1226
     """
     <prefix-spec> = <declaration-type-spec>
-                    | RECURSIVE
-                    | PURE
                     | ELEMENTAL
+                    | IMPURE
+                    | MODULE
+                    | PURE
+                    | RECURSIVE
     """
     subclass_names = ['Declaration_Type_Spec']
 
     def match(string):
-        return STRINGBase.match(['RECURSIVE', 'PURE', 'ELEMENTAL'], string)
+        '''
+        Matches procedure prefixes.
+
+        :param str string: Candidate string.
+        :return: Discovered prefix.
+        :rtype: str
+        '''
+        return STRINGBase.match(['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE',
+                                 'RECURSIVE'], string)
     match = staticmethod(match)
 
 

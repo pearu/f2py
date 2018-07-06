@@ -1,5 +1,7 @@
 # News #
 
+  * 23/04/2018 Version 0.0.7 released. See the [CHANGELOG](CHANGELOG.md)
+    for details.
   * 22/03/2017 Version 0.0.2 released. Documentation made available
     on [ReadTheDocs](http://fparser.readthedocs.io).
   * 16/01/2017 Parser code extracted from F2PY project to form the
