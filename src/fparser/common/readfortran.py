@@ -171,7 +171,7 @@ def _is_fix_cont(line):
 
 
 def _is_fix_comment(line, isstrict):
-    """ 
+    """
     Check whether line is a comment line in fixed format Fortran source.
 
     :param str line: Line of code to check
@@ -733,9 +733,10 @@ class FortranReaderBase(object):
                     item = self.next(ignore_comments)
                     return item
                 reader.info('including file %r' % (path), item)
-                self.reader = FortranFileReader(path,
-                                                include_dirs=include_dirs,
-                                                ignore_comments=ignore_comments)
+                self.reader = FortranFileReader(
+                    path,
+                    include_dirs=include_dirs,
+                    ignore_comments=ignore_comments)
                 return self.reader.next(ignore_comments=ignore_comments)
             return item
         except StopIteration:
