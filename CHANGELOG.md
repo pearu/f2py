@@ -11,11 +11,14 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-19/06/2018 PR #86 and issue #83. Adds support for the full list of possible
-           procedure specifications (MODULE and IMPURE were missing).
+07/07/2018 PR #71 for issue #68. Adds support for keeping input comments
+           in the Fortran output for parser 2.
 
 27/06/2018 PR #85 for issue #82. Adds support for the full list of possible
            procedure attributes (POINTER and PROTECTED were missing).
+
+19/06/2018 PR #86 and issue #83. Adds support for the full list of possible
+           procedure specifications (MODULE and IMPURE were missing).
 
 ## Release 0.0.7 (23/04/2018) ##
 

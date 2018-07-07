@@ -115,7 +115,8 @@ def test_log_comment_mix(log):
             return []
 
     code = '      x=1 ! Cheese'
-    parent = fparser.common.readfortran.FortranStringReader(code)
+    parent = fparser.common.readfortran.FortranStringReader(
+        code, ignore_comments=False)
     parent.set_format(fparser.common.sourceinfo.FortranFormat(False, True))
     item = fparser.common.readfortran.Line(code, (1, 1), None, None, parent)
     with pytest.raises(fparser.common.utils.AnalyzeError):

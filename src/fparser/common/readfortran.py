@@ -171,7 +171,11 @@ def _is_fix_cont(line):
 
 
 def _is_fix_comment(line, isstrict):
-    """ Check if line is a comment line in fixed format Fortran source.
+    """
+    Check whether line is a comment line in fixed format Fortran source.
+
+    :param str line: Line of code to check
+    :param bool isstrict: Whether we are strictly enforcing fixed/free fmt
 
     References
     ----------
@@ -234,7 +238,10 @@ class Line(object):
 
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
-        assert self.line, repr((line, linenospan, label))
+        if not self.line:
+            raise FortranReaderError("Got empty line: '{0}'. linenospan={1}, "
+                                     "label='{2}'".format(line,
+                                                          linenospan, label))
         self.span = linenospan
         assert label is None or isinstance(label, int), repr(label)
         assert name is None or isinstance(name, str) and name != '', repr(name)
@@ -394,6 +401,14 @@ class Comment(object):
                % (self.comment, self.span)
 
     def isempty(self, ignore_comments=False):
+        '''
+        Whether or not this comment is in fact empty (or we are ignoring
+        it). Provided for compatibility with Line.isempty()
+
+        :param bool ignore_comments: whether we ignore comments
+        :return: True if we are ignoring comments, False otherwise
+        :rtype: bool
+        '''
         return ignore_comments
 
 
@@ -451,38 +466,34 @@ class FortranReaderBase(object):
     """
     Base class for reading Fortran sources.
 
-    A Fortran source must be file-like object (have a ``.next()``
+    A Fortran source must be a file-like object (have a ``.next()``
     method) and it may hold Fortran 77 code, fixed format Fortran
     code, free format Fortran code, or PYF signatures (with extended
     free format Fortran syntax).
 
+    :param source: A file-like object with .next() method used to
+                   retrive a line.
+    :type source: either :py:class:`six.StringIO` or a file handle
+    :param mode: A FortranFormat object as returned by
+                 `sourceinfo.get_source_info()`
+    :type mode: :py:class:`fparser.common.sourceinfo.Format`
+    :param bool isstrict: Whether we are strictly enforcing fixed format
+    :param bool ignore_comments: Whether or not to discard comments
+
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
 
-    See also
-    --------
-    __init__
     """
-    def __init__(self, source, mode):
-        """ Construct FortranReader instance.
 
-        Parameters
-        ----------
-        source :
-          A file-like object with .next() method used to retrive a line.
-        mode :
-          A FortranFormat object as returned by sourceinfo.get_source_info()
-
-        See also
-        --------
-        FortranReaderBase
-        """
-
+    def __init__(self, source, mode, ignore_comments):
         self.source = source
         self._format = mode
 
         self.linecount = 0   # the current number of consumed lines
         self.isclosed = False
+        # This value for ignore_comments can be overridden by using the
+        # ignore_comments optional argument to e.g. get_single_line()
+        self._ignore_comments = ignore_comments
 
         self.filo_line = []  # used for un-consuming lines.
         self.fifo_item = []
@@ -497,6 +508,7 @@ class FortranReaderBase(object):
 
         self.exit_on_error = True
         self.restore_cache = []
+
         return
 
     ##########################################################################
@@ -523,18 +535,14 @@ class FortranReaderBase(object):
                 if fn is not None:
                     return fn
 
-    ##########################################################################
-
     def set_format(self, mode):
-        """ Set Fortran code mode.
+        '''
+        Set Fortran code mode (fixed/free format etc).
 
-        Parameters
-        ----------
-        format : sourceinfo.FortranFormat object.
-        """
+        :param mode: Object describing the desired mode for the reader
+        :type mode: :py:class:`fparser.common.sourceinfo.FortranFormat`
+        '''
         self._format = mode
-
-    ##########################################################################
 
     @property
     def format(self):
@@ -544,8 +552,6 @@ class FortranReaderBase(object):
         '''
         return self._format
 
-    ##########################################################################
-
     @property
     def name(self):
         '''
@@ -554,8 +560,6 @@ class FortranReaderBase(object):
         '''
         return '{source} mode={mode}'.format(source=self.source,
                                              mode=self._format.mode)
-
-    ##########################################################################
 
     def close_source(self):
         """ Called when self.source.next() raises StopIteration.
@@ -579,7 +583,7 @@ class FortranReaderBase(object):
         self.linecount -= 1
         return
 
-    def get_single_line(self, ignore_empty=False, ignore_comments=False):
+    def get_single_line(self, ignore_empty=False, ignore_comments=None):
         """ Return line from FILO line buffer or from source.
 
         First try getting the line from FILO line buffer.
@@ -593,15 +597,17 @@ class FortranReaderBase(object):
         In both situations ``linecount`` will be incremented, that is,
         the line will be consumed.
 
-        Parameters
-        ----------
-        ignore_empty : bool
-          If True the ignore empty lines.
+        :param bool ignore_empty: If True then ignore empty lines.
+        :param bool ignore_comments: If True then ignore comments (overrides
+                                     self._ignore_comments)
 
         See also
         --------
         put_single_line, get_next_line
         """
+        if ignore_comments is None:
+            ignore_comments = self._ignore_comments
+
         try:
             line = self.filo_line.pop()
             self.linecount += 1
@@ -621,16 +627,19 @@ class FortranReaderBase(object):
         line = line.expandtabs().replace('\xa0', ' ').rstrip()
         self.source_lines.append(line)
 
-        if ignore_comments and _is_fix_comment(line,
-                                               isstrict=self.format.is_strict):
-            return self.get_single_line(ignore_empty, ignore_comments)
+        if ignore_comments and (self.format.is_fixed or self.format.is_f77):
+            # Check for a fixed-format comment. If the current line *is*
+            # a comment and we are ignoring them, then recursively call this
+            # routine again to get the next source line.
+            if _is_fix_comment(line, isstrict=self.format.is_strict):
+                return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
             return self.get_single_line(ignore_empty, ignore_comments)
 
         return line
 
-    def get_next_line(self, ignore_empty=False, ignore_comments=False):
+    def get_next_line(self, ignore_empty=False, ignore_comments=None):
         """ Return next non-empty line from FILO line buffer or from source.
 
         The line will be put to FILO line buffer. So, this method can
@@ -640,6 +649,9 @@ class FortranReaderBase(object):
         --------
         get_single_line, put_single_line
         """
+        if ignore_comments is None:
+            ignore_comments = self._ignore_comments
+
         line = self.get_single_line(ignore_empty, ignore_comments)
         if line is None:
             return
@@ -647,11 +659,14 @@ class FortranReaderBase(object):
         return line
 
     # Parser methods:
-    def get_item(self):
+    def get_item(self, ignore_comments=None):
         """ Return next item.
         """
+        if ignore_comments is None:
+            ignore_comments = self._ignore_comments
+
         try:
-            item = self.next(ignore_comments=True)
+            item = self.next(ignore_comments=ignore_comments)
         except StopIteration:
             return
         return item
@@ -672,7 +687,7 @@ class FortranReaderBase(object):
     def __next__(self):
         return self.next()
 
-    def next(self, ignore_comments=False):
+    def next(self, ignore_comments=None):
         """ Return the next Fortran code item.
 
         Include statements are realized.
@@ -687,6 +702,8 @@ class FortranReaderBase(object):
         --------
         _next, get_source_item
         """
+        if ignore_comments is None:
+            ignore_comments = self._ignore_comments
         try:
             if self.reader is not None:
                 # inside INCLUDE statement
@@ -716,36 +733,43 @@ class FortranReaderBase(object):
                     item = self.next(ignore_comments)
                     return item
                 reader.info('including file %r' % (path), item)
-                self.reader = FortranFileReader(path,
-                                                include_dirs=include_dirs)
+                self.reader = FortranFileReader(
+                    path,
+                    include_dirs=include_dirs,
+                    ignore_comments=ignore_comments)
                 return self.reader.next(ignore_comments=ignore_comments)
             return item
         except StopIteration:
             raise
-        except Exception:
+        # TODO can we specify one or more specific exception types
+        # rather than catching *every* exception.
+        except Exception as err:
             message = self.format_message('FATAL ERROR',
                                           'while processing line',
                                           self.linecount, self.linecount)
             logging.getLogger(__name__).critical(message)
             message = 'Traceback\n' + ''.join(traceback.format_stack())
             logging.getLogger(__name__).debug(message)
+            logging.getLogger(__name__).debug(str(err))
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
-    def _next(self, ignore_comments=False):
-        """ Return the next item from FIFO item buffer or construct
+    def _next(self, ignore_comments=None):
+        """
+        Return the next item from FIFO item buffer or construct
         one from source line.
 
         Resolves ``;`` statement terminations.
 
-        Parameters
-        ----------
-        ignore_comments : bool
+        :param bool ignore_comments: Whether or not to ignore comments
+                                     (overrides self._ignore_comments)
 
         See also
         --------
         next, get_source_item
         """
+        if ignore_comments is None:
+            ignore_comments = self._ignore_comments
         fifo_item_pop = self.fifo_item.pop
         while 1:
             try:
@@ -756,9 +780,10 @@ class FortranReaderBase(object):
                 item = self.get_source_item()
                 if item is None:
                     raise StopIteration
-            if not (item.isempty(ignore_comments) and ignore_comments):
+            if not (item.isempty(ignore_comments)):
                 break
-            # else ignore empty lines and comments
+            # else ignore empty lines and comments by getting next line
+
         if not isinstance(item, Comment):
             # resolve `;` statement terminations
             if not self._format.is_pyf and isinstance(item, Line) \
@@ -774,7 +799,6 @@ class FortranReaderBase(object):
                 for newitem in items:
                     self.fifo_item.insert(0, newitem)
                 return fifo_item_pop(0)
-            return item
         return item
 
     # Interface to returned items:
@@ -942,38 +966,37 @@ class FortranReaderBase(object):
 
     def handle_inline_comment(self, line, lineno, quotechar=None):
         """
-        Parameters
-        ----------
-        line : str
-        lineno : int
-        quotechar : {None, str}
+        Any in-line comment is extracted from the line. If
+        keep_inline_comments==True then the extracted comments are put back
+        into the fifo sequence where they will subsequently be processed as
+        a comment line.
 
-        Returns
-        -------
-        line_with_no_comments : str
-        quotechar : {None, str}
-        had_comment : bool
+        :param str line: line of code from which to remove in-line comment
+        :param int lineno: line-no. in orig. file
+        :param quotechar: String to use as character-string delimiter
+        :type quotechar: {None, str}
 
-        Notes
-        -----
-        In-line comments are separated from line and put back to fifo
-        sequence where it will be processed as comment line.
+        :return: line_with_no_comments, quotechar, had_comment
+        :rtype: 3-tuple of str, str, bool
         """
         had_comment = False
         if quotechar is None and '!' not in line and \
            '"' not in line and "'" not in line:
+            # There's no comment on this line
             return line, quotechar, had_comment
-        i = line.find('!')
-        put_item = self.fifo_item.append
-        if quotechar is None and i != -1:
-            # first try a quick method:
-            newline = line[:i]
-            if '"' not in newline and '\'' not in newline:
-                if self.format.is_f77 or not line[i:].startswith('!f2py'):
-                    put_item(self.comment_item(line[i:], lineno, lineno))
-                    return newline, quotechar, True
-        items, newquotechar = splitquote(line, quotechar)
 
+        idx = line.find('!')
+        put_item = self.fifo_item.append
+        if quotechar is None and idx != -1:
+            # first try a quick method:
+            newline = line[:idx]
+            if '"' not in newline and '\'' not in newline:
+                if self.format.is_f77 or not line[idx:].startswith('!f2py'):
+                    put_item(self.comment_item(line[idx:], lineno, lineno))
+                    return newline, quotechar, True
+
+        # We must allow for quotes...
+        items, newquotechar = splitquote(line, quotechar)
         noncomment_items = []
         noncomment_items_append = noncomment_items.append
         n = len(items)
@@ -1000,7 +1023,13 @@ class FortranReaderBase(object):
 
     def handle_multilines(self, line, startlineno, mlstr):
         '''
-        Examines line for Python triple quote strings.
+        Examines line for Python triple quote strings (f2py feature).
+
+        :param str line: line of Fortran source text
+        :param int startlineno: the number of the line on which this
+                                 multi-line string began.
+        :param list mlstr: list of delimiters for a multi-line string
+                           (e.g. '"""')
         '''
         i = line.find(mlstr)
         if i != -1:
@@ -1012,7 +1041,7 @@ class FortranReaderBase(object):
             if k % 2:
                 return
         if i != -1 and '!' not in prefix:
-            # Note character constans like 'abc"""123',
+            # Note character constants like 'abc"""123',
             # so multiline prefix should better not contain `'' or `"' not `!'.
             for quote in '"\'':
                 if prefix.count(quote) % 2:
@@ -1169,16 +1198,19 @@ class FortranReaderBase(object):
         if self._format.is_f77 and not is_f2py_directive:
             # Fortran 77 is easy..
             lines = [line[6:72]]
+            # get_next_line does not actually consume lines - they are put
+            # into the FILO buffer as well as being returned. This means
+            # that we can ignore comments for the purposes of dealing
+            # with the continued line and then handle them as though they
+            # follow on after the single line constructed from the multiple
+            # continued lines.
             while _is_fix_cont(self.get_next_line(ignore_empty=True,
                                                   ignore_comments=True)):
                 # handle fix format line continuations for F77 code
                 line = get_single_line()
                 lines.append(line[6:72])
-            return self.line_item(''.join(lines),
-                                  startlineno,
-                                  self.linecount,
-                                  label,
-                                  name)
+            return self.line_item(''.join(lines), startlineno,
+                                  self.linecount, label, name)
 
         handle_inline_comment = self.handle_inline_comment
 
@@ -1248,7 +1280,6 @@ class FortranReaderBase(object):
         start_index = 0
         if self._format.is_fix:
             start_index = 6
-
         lines = []
         lines_append = lines.append
         put_item = self.fifo_item.append
@@ -1346,19 +1377,20 @@ class FortranReaderBase(object):
         return self.comment_item('', startlineno, endlineno)
 
 
-##############################################################################
-
 class FortranFileReader(FortranReaderBase):
     '''
     Reads a file for Fortran source.
     '''
-    def __init__(self, file_candidate, include_dirs=None, source_only=None):
+    def __init__(self, file_candidate, include_dirs=None, source_only=None,
+                 ignore_comments=True):
         '''
         Constructs a FortranFileReader object from a file.
+
         :param file_candidate: A filename or file-like object.
         :param list include_dirs: Directories in which to look for inclusions.
         :param list source_only: Fortran source files to search for modules
                                  required by "use" statements.
+        :param bool ignore_comments: Whether or not to ignore comments
         '''
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
@@ -1376,7 +1408,7 @@ class FortranFileReader(FortranReaderBase):
             raise ValueError(message)
         mode = fparser.common.sourceinfo.get_source_info(file_candidate)
 
-        FortranReaderBase.__init__(self, self.file, mode)
+        FortranReaderBase.__init__(self, self.file, mode, ignore_comments)
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1394,17 +1426,24 @@ class FortranFileReader(FortranReaderBase):
         self.file.close()
 
 
-##############################################################################
-
 class FortranStringReader(FortranReaderBase):
     '''
     Reads a string for Fortran source.
     '''
-    def __init__(self, string, include_dirs=None, source_only=None):
-        self.id = 'string-'+str(id(string))
+    def __init__(self, string, include_dirs=None, source_only=None,
+                 ignore_comments=True):
+        '''
+        :param str string: string to read
+        :param list include_dirs: List of dirs to search for include files
+        :param list source_only: Fortran source files to search for modules
+                                 required by "use" statements.
+        :param bool ignore_comments: Whether or not to ignore comments
+        '''
+        self.id = 'string-' + str(id(string))
         source = six.StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
-        FortranReaderBase.__init__(self, source, mode)
+        FortranReaderBase.__init__(self, source, mode,
+                                   ignore_comments)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:

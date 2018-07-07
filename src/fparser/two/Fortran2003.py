@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -158,6 +159,9 @@ class Base(ComparableMixin):
                 is either str or FortranReaderBase.
       .item   - Line instance (holds label) or None.
     """
+    # This dict of subclasses is populated dynamically by code at the end
+    # of this module. That code uses the entries in the
+    # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
     @show_result
@@ -165,13 +169,13 @@ class Base(ComparableMixin):
         """
         Create a new instance of this object.
 
-        :param cls: the class of object to create
-        :type cls: :py:type:`type`
+        :param type cls: the class of object to create
         :param string: (source of) Fortran string to parse
         :type string: str or :py:class:`FortranReaderBase`
         :param parent_cls: the parent class of this object
         :type parent_cls: :py:type:`type`
         """
+        from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:
@@ -180,46 +184,54 @@ class Base(ComparableMixin):
         # Get the class' match method if it has one
         match = cls.__dict__.get('match')
 
-        result = None
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
             reader = string
             item = reader.get_item()
-            if item is None: return
-            try:
-                obj = item.parse_line(cls, parent_cls)
-                #obj = cls(item.line, parent_cls = parent_cls)
-            except NoMatchError:
+            if item is None:
+                return
+            if isinstance(item, readfortran.Comment):
+                # We got a comment but we weren't after a comment (we handle
+                # those in Comment.__new__)
                 obj = None
+            else:
+                try:
+                    obj = item.parse_line(cls, parent_cls)
+                except NoMatchError:
+                    obj = None
             if obj is None:
+                # No match so give the item back to the reader
                 reader.put_item(item)
                 return
             obj.item = item
             return obj
 
+        result = None
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
             try:
                 result = cls.match(string)
             except NoMatchError as msg:
-                if str(msg)=='%s: %r' % (cls.__name__, string):  # avoid recursion 1.
+                if str(msg)=='%s: %r' % (cls.__name__, string):
+                    # avoid recursion 1.
                     raise
 
-        #print '__new__:result:',cls.__name__,`string,result`
         if isinstance(result, tuple):
             obj = object.__new__(cls)
             obj.string = string
             obj.item = None
-            if hasattr(cls, 'init'): obj.init(*result)
+            if hasattr(cls, 'init'):
+                obj.init(*result)
             return obj
         elif isinstance(result, Base):
             return result
         elif result is None:
-            for subcls in Base.subclasses.get(cls.__name__,[]):
+            # Loop over the possible sub-classes of this class and
+            # check for matches
+            for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls:  # avoid recursion 2.
                     continue
-                #print '%s:%s: %r' % (cls.__name__,subcls.__name__,string)
                 try:
                     obj = subcls(string, parent_cls = parent_cls)
                 except NoMatchError as msg:
@@ -228,23 +240,22 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
-        errmsg = '%s: %r' % (cls.__name__, string)
+        errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
-
-##     def restore_reader(self):
-##         self._item.reader.put_item(self._item)
-##         return
 
     def init(self, *items):
         self.items = items
         return
+
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
                                                                   self.items)))
 
-    def __str__(self): return self.tostr()
+    def __str__(self):
+        return self.tostr()
 
-    def __repr__(self): return self.torepr()
+    def __repr__(self):
+        return self.torepr()
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -252,7 +263,13 @@ class Base(ComparableMixin):
         return self.items
 
     def tofortran(self, tab='', isfix=None):
-        return tab + str(self)
+        this_str = str(self)
+        if this_str.strip():
+            return tab + this_str
+        else:
+            # If this_str is empty (i.e this Comment is a blank line) then
+            # don't prepend any spaces to it
+            return this_str
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
@@ -271,38 +288,87 @@ Attributes
 ----------
 content : tuple
     """
+    @staticmethod
     def match(startcls, subclasses, endcls, reader,
-              match_labels = False,
-              match_names = False, set_unspecified_end_name = False,
-              match_name_classes = (),
-              enable_do_label_construct_hook = False,
-              enable_if_construct_hook = False,
-              enable_where_construct_hook = False,
-              enable_select_type_construct_hook = False,
-              enable_case_construct_hook = False
-              ):
+              match_labels=False,
+              match_names=False,
+              set_unspecified_end_name=False,
+              match_name_classes=(),
+              enable_do_label_construct_hook=False,
+              enable_if_construct_hook=False,
+              enable_where_construct_hook=False,
+              enable_select_type_construct_hook=False,
+              enable_case_construct_hook=False):
+        '''
+        Checks whether the content in reader matches the given
+        type of block statement (e.g. DO..END DO, IF...END IF etc.)
+
+        :param type startcls: The class marking the beginning of the block
+        :param list subclasses: List of classes that can be children of
+                                the block
+        :param type endcls: The class marking the end of the block
+        :param reader: Content to check for match
+        :type reader: str or instance of :py:class:`FortranReaderBase`
+        :param bool match_labels: TBD
+        :param bool match_names: TBD
+        :param bool set_unspecified_end_name: TBD
+        :param tuple match_name_classes: TBD
+        :param bool enable_do_label_construct_hook: TBD
+        :param bool enable_if_construct_hook: TBD
+        :param bool enable_where_construct_hook: TBD
+        :param bool enable_select_type_construct_hook: TBD
+        :param bool enable_case_construct_hook: TBD
+
+        :return: instance of startcls or None if no match is found
+        :rtype: startcls
+        '''
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
+
         if startcls is not None:
+            # Deal with any preceding comments
+            try:
+                while True:
+                    obj = Comment(reader)
+                    if obj:
+                        content.append(obj)
+                    else:
+                        break
+            except NoMatchError:
+                pass
+            # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
             except NoMatchError:
                 obj = None
             if obj is None:
+                # Ultimately we failed to find a match for the
+                # start of the block so put back any comments that
+                # we processed along the way
+                for obj in reversed(content):
+                    obj.restore_reader(reader)
                 return
+            # Store the index of the start of this block proper (i.e.
+            # excluding any comments)
+            start_idx = len(content)
             content.append(obj)
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
             if match_names:
                 start_name = obj.get_start_name()
+
+        # A comment is always a valid sub-class
+        classes = subclasses + [Comment]
         if endcls is not None:
-            classes = subclasses + [endcls]
-        else:
-            classes = subclasses[:]
-        if endcls is not None:
+            classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
+
+        # Start trying to match the various subclasses, starting from
+        # the beginning of the list (where else?)
         i = 0
-        while classes:
+        had_match = False
+        found_end = False
+        while i < len(classes):
             if enable_do_label_construct_hook:
                 try:
                     obj = startcls(reader)
@@ -314,95 +380,87 @@ content : tuple
                         continue
                     else:
                         obj.restore_reader(reader)
+            # Attempt to match the i'th subclass
             cls = classes[i]
             try:
                 obj = cls(reader)
             except NoMatchError:
                 obj = None
             if obj is None:
-                j = i
-                for cls in classes[i+1:]:
-                    j += 1
-                    try:
-                        obj = cls(reader)
-                    except NoMatchError:
-                        obj = None
-                    if obj is not None:
-                        break
-                if obj is not None:
-                    i = j
-            if obj is not None:
-                content.append(obj)
-                if match_names and isinstance(obj,match_name_classes):
-                    end_name = obj.get_end_name()
-                    if end_name != start_name:
-                        reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
-
-                if endcls is not None and isinstance(obj, endcls_all):
-                    if match_labels:
-                        start_label, end_label = content[0].get_start_label(), content[-1].get_end_label()
-                        if start_label != end_label:
-                            continue
-                    if match_names:
-                        start_name, end_name = content[0].get_start_name(), content[-1].get_end_name()
-                        if set_unspecified_end_name and end_name is None and start_name is not None:
-                            content[-1].set_name(start_name)
-                        elif start_name != end_name:
-                            reader.warning('expected construct name "%s" but got "%s"' % (start_name, end_name))
-                            continue
-                    break
-                if enable_if_construct_hook:
-                    if isinstance(obj, Else_If_Stmt):
-                        i = 0
-                    if isinstance(obj, (Else_Stmt, End_If_Stmt)):
-                        enable_if_construct_hook = False
-                if enable_where_construct_hook:
-                    if isinstance(obj, Masked_Elsewhere_Stmt):
-                        i = 0
-                    if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
-                        enable_where_construct_hook = False
-                if enable_select_type_construct_hook:
-                    if isinstance(obj, Type_Guard_Stmt):
-                        i = 1
-                    if isinstance(obj, End_Select_Type_Stmt):
-                        enable_select_type_construct_hook = False
-                if enable_case_construct_hook:
-                    if isinstance(obj, Case_Stmt):
-                        i = 1
-                    if isinstance(obj, End_Select_Stmt):
-                        enable_case_construct_hook = False
+                # No match for this class, continue checking the list
+                # starting from the i+1'th...
+                i += 1
                 continue
+
+            # We got a match for this class
+            had_match = True
+            content.append(obj)
+
+            if match_names and isinstance(obj, match_name_classes):
+                end_name = obj.get_end_name()
+                if end_name != start_name:
+                    reader.warning('expected construct name "%s" but '
+                                   'got "%s"' % (start_name, end_name))
+
+            if endcls is not None and isinstance(obj, endcls_all):
+                if match_labels:
+                    start_label, end_label = content[start_idx].get_start_label(),\
+                                             content[-1].get_end_label()
+                    if start_label != end_label:
+                        continue
+                if match_names:
+                    start_name, end_name = content[start_idx].get_start_name(), \
+                                           content[-1].get_end_name()
+                    if set_unspecified_end_name and end_name is None and \
+                       start_name is not None:
+                        content[-1].set_name(start_name)
+                    elif start_name != end_name:
+                        reader.warning('expected construct name "%s" but '
+                                       'got "%s"' % (start_name, end_name))
+                        continue
+                # We've found the enclosing end statement so break out
+                found_end = True
+                break
+            # Return to start of classes list now that we've matched
+            i = 0
+            if enable_if_construct_hook:
+                if isinstance(obj, Else_If_Stmt):
+                    # Got an else-if so go back to start of possible
+                    # classes to match
+                    i = 0
+                if isinstance(obj, (Else_Stmt, End_If_Stmt)):
+                    # Found end-if
+                    enable_if_construct_hook = False
+            if enable_where_construct_hook:
+                if isinstance(obj, Masked_Elsewhere_Stmt):
+                    i = 0
+                if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
+                    enable_where_construct_hook = False
+            if enable_select_type_construct_hook:
+                if isinstance(obj, Type_Guard_Stmt):
+                    i = 1
+                if isinstance(obj, End_Select_Type_Stmt):
+                    enable_select_type_construct_hook = False
+            if enable_case_construct_hook:
+                if isinstance(obj, Case_Stmt):
+                    i = 1
+                if isinstance(obj, End_Select_Stmt):
+                    enable_case_construct_hook = False
+            continue
+
+        if not had_match or endcls and not found_end:
+            # We did not get a match from any of the subclasses or
+            # failed to find the endcls
             if endcls is not None:
-                if 1:
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                item = reader.get_item()
-                if item is not None:
-                    if 0:
-                        pass
-                    elif content:
-                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item), item=content[0].item)
-                    else:
-                        reader.info('closing <%s> not found while reaching %s' % (endcls.__name__.lower(), item))
-                    # no match found, restoring consumed reader items
-                    reader.put_item(item)
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                if content:# and hasattr(content[0],'name'):
-                    reader.info('closing <%s> not found while reaching eof' % (endcls.__name__.lower()), item=content[0].item)
-                    for obj in reversed(content):
-                        obj.restore_reader(reader)
-                    return
-                else:
-                    reader.error('unexpected eof file while looking line for <%s>.'\
-                                 % (classes[-1].__name__.lower().replace('_','-')))
-            break
-        if not content: return
+                for obj in reversed(content):
+                    obj.restore_reader(reader)
+                return
+
+        if not content:
+            return
         if startcls is not None and endcls is not None:
             # check names of start and end statements:
-            start_stmt = content[0]
+            start_stmt = content[start_idx]
             end_stmt = content[-1]
             if isinstance(end_stmt, endcls_all) and \
                hasattr(end_stmt, 'get_name') and \
@@ -415,7 +473,6 @@ content : tuple
                 else:
                     end_stmt.set_name(start_stmt.get_name())
         return content,
-    match = staticmethod(match)
 
     def init(self, content):
         self.content = content
@@ -430,9 +487,18 @@ content : tuple
         return self.tofortran()
 
     def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr, self.content)))
+        return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr,
+                                                                 self.content)))
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Create a string containing the Fortran representation of this class
+
+        :param str tab: Indent to prefix to code
+        :param bool isfix: Whether or not to generate fixed-format code
+        :return: Fortran representation of this class
+        :rtype: str
+        '''
         l = []
         start = self.content[0]
         end = self.content[-1]
@@ -443,16 +509,9 @@ content : tuple
             l.append(start.tofortran(tab=tab,isfix=isfix))
         for item in self.content[1:-1]:
             l.append(item.tofortran(tab=tab+extra_tab,isfix=isfix))
-        if len(self.content)>1:
+        if len(self.content) > 1:
             l.append(end.tofortran(tab=tab,isfix=isfix))
         return '\n'.join(l)
-
-##     def restore_reader(self):
-##         content = self.content[:]
-##         content.reverse()
-##         for obj in content:
-##             obj.restore_reader()
-##         return
 
     def restore_reader(self, reader):
         for obj in reversed(self.content):
@@ -708,6 +767,7 @@ class BracketBase(Base):
             return '%s%s' % (self.items[0], self.items[2])
         return '%s%s%s' % tuple(self.items)
 
+
 class NumberBase(Base):
     """
 ::
@@ -853,6 +913,7 @@ item : readfortran.Line
             else:
                 tab = tab[len(t):] or ' '
         else:
+            # BUG allow for fixed format here
             t = ''
         if name:
             return t + tab + name+':' + str(self)
@@ -1024,6 +1085,77 @@ class Type_Declaration_StmtBase(StmtBase):
 ############################### SECTION  2 ####################################
 ###############################################################################
 
+
+class Comment(Base):
+    '''
+    Represents a Fortran Comment
+    '''
+    subclass_names = []
+
+    @show_result
+    def __new__(cls, string, parent_cls=None):
+        """
+        Create a new Comment instance.
+
+        :param type cls: the class of object to create
+        :param string: (source of) Fortran string to parse
+        :type string: str or :py:class:`FortranReaderBase`
+        :param parent_cls: the parent class of this object
+        :type parent_cls: :py:type:`type`
+        """
+        from fparser.common import readfortran
+
+        if isinstance(string, readfortran.Comment):
+            # We were after a comment and we got a comment. Construct
+            # one manually to avoid recursively calling this __new__
+            # method again...
+            obj = object.__new__(cls)
+            obj.init(string)
+            return obj
+        elif isinstance(string, FortranReaderBase):
+            reader = string
+            item = reader.get_item()
+            if item is None:
+                return
+            if isinstance(item, readfortran.Comment):
+                # This effectively recursively calls this routine
+                return Comment(item)
+            else:
+                # We didn't get a comment so put the item back in the FIFO
+                reader.put_item(item)
+                return
+        else:
+            # We didn't get a comment
+            return
+
+    def init(self, comment):
+        '''
+        Initialise this Comment
+
+        :param  comment: The comment object produced by the reader
+        :type comment: :py:class:`readfortran.Comment`
+        '''
+        self.items = [comment.comment]
+        self.item = comment
+
+    def tostr(self):
+        '''
+        :return: this comment as a string
+        :rtype: str
+        '''
+        return str(self.items[0])
+
+    def restore_reader(self, reader):
+        '''
+        Undo the read of this comment by putting its content back
+        into the reader (which has a FIFO buffer)
+
+        :param reader: the reader instance to return the comment to
+        :type reader: :py:class:`fparser.readfortran.FortranReaderBase`
+        '''
+        reader.put_item(self.item)
+
+
 class Program(BlockBase):  # R201
     """
 :F03R:`201`::
@@ -1035,14 +1167,15 @@ class Program(BlockBase):  # R201
     
     @staticmethod
     def match(reader):
-        #return Program_Unit(reader)
         try:
-            result = BlockBase.match(Program_Unit, [Program_Unit], None, reader)
+            result = BlockBase.match(Program_Unit, [Program_Unit],
+                                     None, reader)
         except NoMatchError:
             result = None
         if result is not None:
             return result
         return BlockBase.match(Main_Program0, [], None, reader)
+
 
 class Program_Unit(Base):  # R202
     """
@@ -1052,7 +1185,9 @@ class Program_Unit(Base):  # R202
                      | <module>
                      | <block-data>
     """
-    subclass_names = ['Main_Program', 'External_Subprogram', 'Module', 'Block_Data']
+    subclass_names = ['Comment', 'Main_Program', 'External_Subprogram',
+                      'Module', 'Block_Data']
+
 
 class External_Subprogram(Base):  # R203
     """
@@ -1060,7 +1195,7 @@ class External_Subprogram(Base):  # R203
     <external-subprogram> = <function-subprogram>
                             | <subroutine-subprogram>
     """
-    subclass_names = ['Function_Subprogram', 'Subroutine_Subprogram']
+    subclass_names = ['Comment', 'Function_Subprogram', 'Subroutine_Subprogram']
 
 
 class Specification_Part(BlockBase):  # R204
@@ -1072,10 +1207,14 @@ class Specification_Part(BlockBase):  # R204
                              [ <declaration-construct> ]...
     """
     subclass_names = []
-    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part', 'Declaration_Construct']
+    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part',
+                 'Declaration_Construct']
     @staticmethod
     def match(reader):
-        return BlockBase.match(None, [Use_Stmt, Import_Stmt, Implicit_Part, Declaration_Construct], None, reader)
+        return BlockBase.match(None, [Use_Stmt, Import_Stmt,
+                                      Implicit_Part, Declaration_Construct],
+                               None, reader)
+
 
 class Implicit_Part(BlockBase):  # R205
     """
@@ -1097,7 +1236,8 @@ class Implicit_Part_Stmt(Base):  # R206
                            | <format-stmt>
                            | <entry-stmt>
     """
-    subclass_names = ['Implicit_Stmt', 'Parameter_Stmt', 'Format_Stmt', 'Entry_Stmt']
+    subclass_names = ['Comment', 'Implicit_Stmt', 'Parameter_Stmt',
+                      'Format_Stmt', 'Entry_Stmt']
 
 class Declaration_Construct(Base):  # R207
     """
@@ -1113,9 +1253,10 @@ class Declaration_Construct(Base):  # R207
                               | <type-declaration-stmt>
                               | <stmt-function-stmt>
     """
-    subclass_names = ['Derived_Type_Def', 'Entry_Stmt', 'Enum_Def', 'Format_Stmt',
-                      'Interface_Block', 'Parameter_Stmt', 'Procedure_Declaration_Stmt',
-                      'Specification_Stmt', 'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
+    subclass_names = ['Comment', 'Derived_Type_Def', 'Entry_Stmt', 'Enum_Def',
+                      'Format_Stmt', 'Interface_Block', 'Parameter_Stmt',
+                      'Procedure_Declaration_Stmt', 'Specification_Stmt',
+                      'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
 
 class Execution_Part(BlockBase):  # R208
     """
@@ -1137,10 +1278,12 @@ class Execution_Part_Construct(Base):  # R209
                                  | <entry-stmt>
                                  | <data-stmt>
     """
-    subclass_names = ['Executable_Construct', 'Format_Stmt', 'Entry_Stmt', 'Data_Stmt']
+    subclass_names = ['Comment', 'Executable_Construct', 'Format_Stmt',
+                      'Entry_Stmt', 'Data_Stmt']
 
 class Execution_Part_Construct_C201(Base):
-    subclass_names = ['Executable_Construct_C201', 'Format_Stmt', 'Entry_Stmt', 'Data_Stmt']
+    subclass_names = ['Comment', 'Executable_Construct_C201', 'Format_Stmt',
+                      'Entry_Stmt', 'Data_Stmt']
 
 class Internal_Subprogram_Part(BlockBase):  # R210
     """
@@ -1184,7 +1327,7 @@ class Specification_Stmt(Base):# R212
                            | <value-stmt>
     """
     subclass_names = ['Access_Stmt', 'Allocatable_Stmt', 'Asynchronous_Stmt','Bind_Stmt',
-                      'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt', 'Equivalence_Stmt',
+                      'Comment', 'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt', 'Equivalence_Stmt',
                       'External_Stmt', 'Intent_Stmt', 'Intrinsic_Stmt', 'Namelist_Stmt',
                       'Optional_Stmt','Pointer_Stmt','Protected_Stmt','Save_Stmt',
                       'Target_Stmt','Volatile_Stmt', 'Value_Stmt']
@@ -1200,7 +1343,7 @@ class Executable_Construct(Base):# R213
                              | <select-type-construct>
                              | <where-construct>
     """
-    subclass_names = ['Action_Stmt', 'Associate_Stmt', 'Case_Construct', 'Do_Construct',
+    subclass_names = ['Action_Stmt', 'Associate_Stmt', 'Case_Construct', 'Comment', 'Do_Construct',
                       'Forall_Construct', 'If_Construct', 'Select_Type_Construct', 'Where_Construct']
 
 class Executable_Construct_C201(Base):
@@ -1242,13 +1385,16 @@ class Action_Stmt(Base):# R214
                     | <arithmetic-if-stmt>
                     | <computed-goto-stmt>
     """
-    subclass_names = ['Allocate_Stmt', 'Assignment_Stmt', 'Backspace_Stmt', 'Call_Stmt',
-                      'Close_Stmt', 'Continue_Stmt', 'Cycle_Stmt', 'Deallocate_Stmt',
-                      'Endfile_Stmt', 'End_Function_Stmt', 'End_Subroutine_Stmt', 'Exit_Stmt',
-                      'Flush_Stmt', 'Forall_Stmt', 'Goto_Stmt', 'If_Stmt', 'Inquire_Stmt',
-                      'Nullify_Stmt', 'Open_Stmt', 'Pointer_Assignment_Stmt', 'Print_Stmt',
-                      'Read_Stmt', 'Return_Stmt', 'Rewind_Stmt', 'Stop_Stmt', 'Wait_Stmt',
-                      'Where_Stmt', 'Write_Stmt', 'Arithmetic_If_Stmt', 'Computed_Goto_Stmt']
+    subclass_names = ['Allocate_Stmt', 'Assignment_Stmt', 'Backspace_Stmt',
+                      'Call_Stmt', 'Close_Stmt', 'Comment', 'Continue_Stmt',
+                      'Cycle_Stmt', 'Deallocate_Stmt', 'Endfile_Stmt',
+                      'End_Function_Stmt', 'End_Subroutine_Stmt', 'Exit_Stmt',
+                      'Flush_Stmt', 'Forall_Stmt', 'Goto_Stmt', 'If_Stmt',
+                      'Inquire_Stmt', 'Nullify_Stmt', 'Open_Stmt',
+                      'Pointer_Assignment_Stmt', 'Print_Stmt', 'Read_Stmt',
+                      'Return_Stmt', 'Rewind_Stmt', 'Stop_Stmt', 'Wait_Stmt',
+                      'Where_Stmt', 'Write_Stmt', 'Arithmetic_If_Stmt',
+                      'Computed_Goto_Stmt']
 
 class Action_Stmt_C201(Base):
     """
@@ -4544,7 +4690,8 @@ class Block(BlockBase):  # R801
     subclass_names = []
     use_names = ['Execution_Part_Construct']
     @staticmethod
-    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
+    def match(string):
+        return BlockBase.match(None, [Execution_Part_Construct], None, string)
 
 class If_Construct(BlockBase):  # R802
     """
@@ -5378,7 +5525,8 @@ class Do_Body(BlockBase):  # R837
     """
     subclass_names = []
     use_names = ['Execution_Part_Construct']
-    def match(string): return BlockBase.match(None, [Execution_Part_Construct], None, string)
+    def match(string): return BlockBase.match(None,
+                                              [Execution_Part_Construct], None, string)
     match = staticmethod(match)
 
 class Do_Term_Action_Stmt(StmtBase):  # R838
@@ -6839,11 +6987,15 @@ class Main_Program0(BlockBase):
                          <end-program-stmt>
     """
     subclass_names = []
-    use_names = ['Program_Stmt', 'Specification_Part', 'Execution_Part', 'Internal_Subprogram_Part',
+    use_names = ['Program_Stmt', 'Specification_Part',
+                 'Execution_Part', 'Internal_Subprogram_Part',
                  'End_Program_Stmt']
     @staticmethod
     def match(reader):
-        return BlockBase.match(None, [Specification_Part, Execution_Part, Internal_Subprogram_Part], End_Program_Stmt, reader)
+        return BlockBase.match(None,
+                               [Specification_Part, Execution_Part,
+                                Internal_Subprogram_Part],
+                               End_Program_Stmt, reader)
 
 class Program_Stmt(StmtBase, WORDClsBase):  # R1102
     """
@@ -7990,6 +8142,31 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
         return '%s (%s) = %s' % self.items
 
 
+def walk_ast(children, my_types=None, indent=0, debug=False):
+    '''' Walk down the tree produced by fparser2 where children
+    are listed under 'content'.  Returns a list of all nodes with the
+    specified type(s). '''
+    local_list = []
+    for child in children:
+        if debug:
+            if isinstance(child, str):
+                print(indent*"  " + "child type = ", type(child), repr(child))
+            else:
+                print(indent*"  " + "child type = ", type(child))
+        if my_types is None or type(child) in my_types:
+            local_list.append(child)
+
+        # Depending on their level in the tree produced by fparser2003,
+        # some nodes have children listed in .content and some have them
+        # listed under .items. If a node has neither then it has no
+        # children.
+        if hasattr(child, "content"):
+            local_list += walk_ast(child.content, my_types, indent+1, debug)
+        elif hasattr(child, "items"):
+            local_list += walk_ast(child.items, my_types, indent+1, debug)
+
+    return local_list
+
 ###############################################################################
 ################ GENERATE Scalar_, _List, _Name CLASSES #######################
 ###############################################################################
@@ -8001,6 +8178,7 @@ for clsname in _names:
     if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
             not cls.__name__.endswith('Base')):
         continue
+
     names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
     for n in names:
         if n in _names:
@@ -8026,7 +8204,6 @@ class %s_Name(Base):
         elif n.startswith('Scalar_'):
             _names.append(n)
             n = n[7:]
-            #print 'Generating Scalar_%s' % (n)
             exec('''\
 class Scalar_%s(Base):
     subclass_names = [\'%s\']

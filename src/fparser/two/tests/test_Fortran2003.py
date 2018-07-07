@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -81,45 +82,49 @@ def assertRaises(exc, cls, s):
 ###############################################################################
 
 def test_Program(): # R201
-
-        cls = Program
-        reader = get_reader('''\
+    ''' Tests for parsing top-level program unit '''
+    cls = Program
+    reader = get_reader('''\
       subroutine foo
       end subroutine Foo
       subroutine bar
       end
       ''')
-        a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
-            "END SUBROUTINE bar" == str(a)
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    print(str(obj))
+    assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
+        "END SUBROUTINE bar" in str(obj)
 
-        reader = get_reader('''\
+    reader = get_reader('''\
       subroutine foo (*)
       end subroutine foo
       ''')
-        a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a), 'SUBROUTINE foo(*)\nEND SUBROUTINE foo')
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(obj)
+
 
 def test_Specification_Part(): # R204
-
+    ''' Tests for parsing specification-part '''
     reader = get_reader('''\
     integer a''')
     cls = Specification_Part
-    a = cls(reader)
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'INTEGER :: a')
-    assert_equal(repr(a), "Specification_Part(Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), None, Entity_Decl(Name('a'), None, None, None)))")
+    obj = cls(reader)
+    assert isinstance(obj, cls), repr(obj)
+    assert str(obj) == 'INTEGER :: a'
+    assert (repr(obj) == "Specification_Part(Type_Declaration_Stmt("
+            "Intrinsic_Type_Spec('INTEGER', None), None, "
+            "Entity_Decl(Name('a'), None, None, None)))")
 
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
 type a
 end type a
 type b
 end type b
-    '''))
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b')
+'''))
+    assert isinstance(obj, cls), repr(obj)
+    assert 'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b' in str(obj)
 
 ###############################################################################
 ############################### SECTION  3 ####################################
@@ -731,13 +736,14 @@ def test_Private_Components_Stmt():  # pylint: disable=invalid-name
 
 
 def test_Type_Bound_Procedure_Part(): # R448
+    ''' Tests for type-bound procedure, R448 '''
     cls = Type_Bound_Procedure_Part
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
 contains
-procedure, pass :: length => point_length
-    '''))
-    assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'CONTAINS\nPROCEDURE, PASS :: length => point_length')
+procedure, pass :: length => point_length'''))
+    assert isinstance(obj, cls), repr(obj)
+    assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
+
 
 def test_Proc_Binding_Stmt(): # R450
     cls = Proc_Binding_Stmt
@@ -890,9 +896,10 @@ def test_Component_Spec_List(): # R458-list
         assert isinstance(a,cls),repr(a)
         assert_equal(str(a),'k = a, c')
 
+
 def test_Enum_Def(): # R460
     cls = Enum_Def
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 enum, bind(c)
 enumerator :: red = 4, blue = 9
 enumerator yellow
@@ -900,6 +907,7 @@ end enum
     '''))
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'ENUM, BIND(C)\n  ENUMERATOR :: red = 4, blue = 9\n  ENUMERATOR :: yellow\nEND ENUM')
+
 
 def test_Enum_Def_Stmt(): # R461
     cls = Enum_Def_Stmt
@@ -2087,9 +2095,10 @@ def test_Where_Stmt(): # R743
         assert_equal(str(a),'WHERE (a) c = 2')
         assert_equal(repr(a),"Where_Stmt(Name('a'), Assignment_Stmt(Name('c'), '=', Int_Literal_Constant('2', None)))")
 
+
 def test_Where_Construct(): # R745
     cls = Where_Construct
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
     where (pressure <= 1.0)
     pressure = pressure + inc_pressure
     temp = temp - 5.0
@@ -2097,50 +2106,50 @@ def test_Where_Construct(): # R745
     raining = .true.
     end where
 '''))
-    assert isinstance(a,cls),repr(a)
-    assert (str(a) == "WHERE (pressure <= 1.0)\n  "
+    assert isinstance(obj, cls), repr(obj)
+    assert (str(obj) == "WHERE (pressure <= 1.0)\n  "
             "pressure = pressure + inc_pressure\n  "
             "temp = temp - 5.0\n"
             "ELSEWHERE\n  raining = .TRUE.\nEND WHERE")
 
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
     where (cond1)
     else    where (cond2)
     end where
 '''))
-    assert isinstance(a,cls),repr(a)
-    assert str(a) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
+    assert isinstance(obj, cls), repr(obj)
+    assert str(obj) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
 
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
     n:where (cond1)
     elsewhere (cond2) n
     else   where n
     end where n
 '''))
-    assert isinstance(a,cls),repr(a)
-    assert (str(a) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
+    assert isinstance(obj, cls), repr(obj)
+    assert (str(obj) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
             "ELSEWHERE n\nEND WHERE n")
 
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
     n:where (cond1)
     else where (cond2) n
     else where n
     end where n
 '''))
-    assert isinstance(a,cls),repr(a)
-    print(str(a))
-    assert (str(a) ==
+    assert isinstance(obj, cls), repr(obj)
+    print(str(obj))
+    assert (str(obj) ==
                  'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\n'
                  'END WHERE n')
 
-    a = cls(get_reader('''
+    obj = cls(get_reader('''\
     n:where (me(:)=="hello")
     else where (me(:)=="goodbye") n
     else where n
     end where n
 '''))
-    print(str(a))
-    assert (str(a) ==
+    print(str(obj))
+    assert (str(obj) ==
             'n:WHERE (me(:) == "hello")\nELSEWHERE(me(:) == "goodbye") n\n'
             'ELSEWHERE n\n'
             'END WHERE n')
@@ -2154,9 +2163,10 @@ def test_Where_Construct_Stmt(): # R745
     assert_equal(str(a),'WHERE (a)')
     assert_equal(repr(a),"Where_Construct_Stmt(Name('a'))")
 
+
 def test_Forall_Construct(): # R752
     cls = Forall_Construct
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
     forall (i = 1:10, j = 1:10, b(i, j) /= 0.0)
       a(i, j) = real (i + j - 2)
       b(i, j) = a(i, j) + b(i, j) * real (i * j)
@@ -2165,14 +2175,15 @@ def test_Forall_Construct(): # R752
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + b(i, j) * real(i * j)\nEND FORALL')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
     n: forall (x = 1:5:2, j = 1:4)
       a(x, j) = j
     end forall n
     '''))
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
-    
+
+
 def test_Forall_Header(): # R754
     cls = Forall_Header
     a = cls('(n=1:2, a+1)')
@@ -2198,9 +2209,10 @@ def test_Forall_Triplet_Spec(): # R755
 ############################### SECTION  8 ####################################
 ###############################################################################
 
+
 def test_If_Construct(): # R802
     cls = If_Construct
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
 end if
@@ -2208,7 +2220,7 @@ end if
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 name: if (expr) then
   a = 1
 end if name
@@ -2216,7 +2228,7 @@ end if name
 
     assert_equal(str(a),'name:IF (expr) THEN\n  a = 1\nEND IF name')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
   if (expr2) then
@@ -2228,7 +2240,7 @@ end if
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\n  IF (expr2) THEN\n    a = 2\n  END IF\n  a = 3\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
@@ -2238,7 +2250,7 @@ end if
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
 else
@@ -2247,7 +2259,7 @@ end if
     '''))
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE\n  a = 2\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
@@ -2258,7 +2270,7 @@ end if
     '''))
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nELSE\n  a = 3\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 named: if (expr) then
   a = 1
 else named
@@ -2267,7 +2279,7 @@ end if named
     '''))
     assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\nELSE named\n  a = 2\nEND IF named')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 named: if (expr) then
   a = 1
   named2: if (expr2) then
@@ -2277,7 +2289,7 @@ end if named
 '''))
     assert_equal(str(a),'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n    a = 2\n  END IF named2\nEND IF named')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
@@ -2289,7 +2301,7 @@ end if
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nELSE IF (expr3) THEN\n  a = 3\nEND IF')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
         if (dxmx .gt. 0d0) then
           diff = 0
           do  80  k = 1, n
@@ -2304,16 +2316,15 @@ end if
             do  82  k = 1, n
    82       xnew(k) = xin(k) + betx*(xnew(k)-xin(k))
           endif
-        endif
-
-    '''))
+        endif'''))
+    assert isinstance(a, cls)
 
 
 def test_if_nonblock_do():
     ''' Tests that conditional nonblock DO construct is parsed correctly '''
     ifcls = If_Construct
 
-    inst = ifcls(get_reader('''
+    inst = ifcls(get_reader('''\
 if (expr) then
    do  20  i = 1, 3
      a = 1
@@ -2332,7 +2343,7 @@ endif
         'DO 20 i = 1, 3\n  a = 1\n  DO 20 j = 1, 3\n    a = 2\n    '
         'DO 20 k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
 
-    inst = ifcls(get_reader('''
+    inst = ifcls(get_reader('''\
 if (expr) then
     do  50  i = n, m, -1
   50 call foo(a)
@@ -2343,9 +2354,9 @@ endif'''))
     assert isinstance(inst, Action_Term_Do_Construct), repr(inst)
 
 
-def test_Case_Construct(): # R808
+def test_Case_Construct():  # R808
     cls = Case_Construct
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 select case (n)
 case (:-1)
   signum = -1
@@ -2374,7 +2385,7 @@ def test_Case_Selector(): # R813
 
 def test_Associate_Construct(): # R816
     cls = Associate_Construct
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 ASSOCIATE ( Z => EXP(-(X**2+Y**2)) * COS(THETA) )
 PRINT *, A+Z, A-Z
 END ASSOCIATE
@@ -2382,7 +2393,7 @@ END ASSOCIATE
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 name:ASSOCIATE ( XC => AX%B(I,J)%C )
 XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
 END ASSOCIATE name
@@ -2390,25 +2401,33 @@ END ASSOCIATE name
     assert isinstance(a,cls),repr(a)
     assert_equal(str(a),'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
 W = ZX*X + ZY*Y
 END ASSOCIATE
     '''))
     assert_equal(str(a),'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
 
+
 def test_Select_Type_Construct(): # R821
     cls = Select_Type_Construct
-    a = cls(get_reader('''
+    tree = cls(get_reader('''\
 n:SELECT TYPE ( A => P_OR_C )
 CLASS IS ( POINT )
 PRINT *, A%X, A%Y ! This block gets executed
 TYPE IS ( POINT_3D )
 PRINT *, A%X, A%Y, A%Z
 END SELECT n
-    '''))
-    assert isinstance(a,cls),repr(a)
-    assert_equal(str(a),'n:SELECT TYPE(A=>P_OR_C)\n  CLASS IS (POINT)\n  PRINT *, A % X, A % Y\n  TYPE IS (POINT_3D)\n  PRINT *, A % X, A % Y, A % Z\nEND SELECT n')
+    ''', ignore_comments=False))
+    print(str(tree))
+    assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
+            "  CLASS IS (POINT)\n"
+            "  PRINT *, A % X, A % Y\n"
+            "  ! This block gets executed\n"
+            "  TYPE IS (POINT_3D)\n"
+            "  PRINT *, A % X, A % Y, A % Z\n"
+            "END SELECT n")
+
 
 def test_Select_Type_Stmt(): # R822
     cls = Select_Type_Stmt
@@ -2439,7 +2458,7 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     ''' Tests that block labeled DO construct is parsed correctly (R826_1) '''
     docls = Block_Label_Do_Construct
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do 12
         a = 1
  12   continue
@@ -2447,7 +2466,7 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'DO 12\n  a = 1\n12 CONTINUE'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       foo: do 21, i=1,10
         a = 1
  21   end do foo
@@ -2472,7 +2491,7 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'DO 52\n  a = a + 1\n  IF (a > 10) EXIT\n52 CONTINUE'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do 12
         do 13
           a = 1
@@ -2502,7 +2521,7 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     correctly (R826_2) '''
     docls = Block_Nonlabel_Do_Construct
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do i=1,10
         a = 1
       end do
@@ -2510,7 +2529,8 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'DO i = 1, 10\n  a = 1\nEND DO'
 
-    inst = docls(get_reader('''
+
+    inst = docls(get_reader('''\
       do while (a < 10)
         a = a + 1
       end do
@@ -2529,7 +2549,7 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert len(inst.content) == 4, repr(len(inst.content))
     assert str(inst.content[2]) == 'IF (a < 10) EXIT'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       foo:do i=1,10
         a = 1
       end do foo
@@ -2537,7 +2557,7 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'foo:DO i = 1, 10\n  a = 1\nEND DO foo'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       foo:do while (a < 10)
         a = a + 1
       end do foo
@@ -2545,7 +2565,7 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
     assert isinstance(inst, docls), repr(inst)
     assert str(inst) == 'foo:DO WHILE (a < 10)\n  a = a + 1\nEND DO foo'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do j=1,2
       foo:do i=1,10
         a = 1
@@ -2618,14 +2638,14 @@ def test_Loop_Control():  # pylint: disable=invalid-name
 def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
     ''' Tests that nonblock DO construct is parsed correctly (R835) '''
     docls = Nonblock_Do_Construct
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(inst, Action_Term_Do_Construct), repr(inst)
     assert str(inst) == 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do  20,  i = 1, 3
       k = 3
       do  20,  j = 1, 3
@@ -2637,14 +2657,14 @@ def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
         'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n'
         '20 rotm(i, j) = r2(j, i)')
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
       do  20  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(inst, Action_Term_Do_Construct), repr(inst)
     assert str(inst) == 'DO 20 i = 1, 3\n20 rotm(i, j) = r2(j, i)'
 
-    inst = docls(get_reader('''
+    inst = docls(get_reader('''\
     do  50,  i = n, m, -1
   50 call foo(a)
     '''))
@@ -3042,7 +3062,7 @@ def test_Connect_Spec():
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("afile='a_file.dat'")
-    assert 'NoMatchError: Connect_Spec: "afile=' in str(excinfo)
+    assert 'NoMatchError: Connect_Spec: \'afile=' in str(excinfo)
 
 
 def test_Connect_Spec_List():  # pylint: disable=invalid-name
@@ -3127,7 +3147,7 @@ def test_Connect_Spec_List():  # pylint: disable=invalid-name
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
-    assert 'NoMatchError: Connect_Spec_List: "unit=22, afile=' in str(excinfo)
+    assert 'NoMatchError: Connect_Spec_List: \'unit=22, afile=' in str(excinfo)
 
 
 ###############################################################################
@@ -3270,7 +3290,7 @@ def test_Edit_Desc():
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = cls("DT'a_name'()")
-    assert '''Data_Edit_Desc: "DT'a_name'()"''' in str(excinfo)
+    assert '''Data_Edit_Desc: \'DT\'a_name\'()\'''' in str(excinfo)
 
 
 def test_Format_Item_List():
@@ -3300,14 +3320,14 @@ def test_Format_Item_List():
 
 def test_Main_Program(): # R1101
     cls = Main_Program
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 program a
 end
     '''))
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'PROGRAM a\nEND PROGRAM a')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 program a
   real b
   b = 1
@@ -3319,13 +3339,13 @@ end
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a')
     
-    a = Main_Program0(get_reader('''
+    a = Main_Program0(get_reader('''\
 end
     '''))
     assert isinstance(a, Main_Program0),repr(a)
     assert_equal(str(a),'END PROGRAM')
 
-    a = Main_Program0(get_reader('''
+    a = Main_Program0(get_reader('''\
 contains
   function foo()
   end
@@ -3336,14 +3356,14 @@ end
 
 def test_Module(): # R1104
     cls = Module
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 module m
 end
     '''))
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'MODULE m\nEND MODULE m')
 
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 module m
 type a
 end type
@@ -3354,17 +3374,19 @@ end
     assert isinstance(a, cls),repr(a)
     assert_equal(str(a),'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b\nEND MODULE m')
 
+
 def test_Module_Subprogram_Part(): # R1107
     cls = Module_Subprogram_Part
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 contains
   subroutine foo(a)
   real a
   a = 1.0
   end
-    '''))
+    ''', isfree=True))
     assert isinstance(a, cls),repr(a)
-    assert_equal(str(a),'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a\n  a = 1.0\nEND SUBROUTINE foo')
+    assert (str(a) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
+            '\n  a = 1.0\nEND SUBROUTINE foo')
 
 
 def test_Use_Stmt():  # pylint: disable=invalid-name
@@ -3527,7 +3549,7 @@ def test_Rename(): # R1111
 
 def test_Block_Data(): # R1116
     cls = Block_Data
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
 block data a
 real b
 end block data
@@ -3558,7 +3580,7 @@ end interface
 
 def test_Interface_Specification(): # R1202
     cls = Interface_Specification
-    a = cls(get_reader('''
+    a = cls(get_reader('''\
     function foo()
     end
     '''))
@@ -3958,6 +3980,7 @@ def test_End_Function_Stmt(): # R1230
     a = cls('endfunction foo')
     assert_equal(str(a), 'END FUNCTION foo')
 
+
 def test_Subroutine_Subprogram(): # R1231
 
         reader = get_reader('''\
@@ -3965,9 +3988,11 @@ def test_Subroutine_Subprogram(): # R1231
       end subroutine foo''')
         cls = Subroutine_Subprogram
         a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'SUBROUTINE foo\nEND SUBROUTINE foo')
-        assert_equal(repr(a),"Subroutine_Subprogram(Subroutine_Stmt(None, Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', Name('foo')))")
+        assert isinstance(a, cls), repr(a)
+        assert str(a) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
+        assert (repr(a) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
+                "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
+                "Name('foo')))")
 
         reader = get_reader('''\
       subroutine foo
@@ -3975,8 +4000,9 @@ def test_Subroutine_Subprogram(): # R1231
       end subroutine foo''')
         cls = Subroutine_Subprogram
         a = cls(reader)
-        assert isinstance(a, cls),repr(a)
-        assert_equal(str(a),'SUBROUTINE foo\n  INTEGER :: a\nEND SUBROUTINE foo')
+        assert isinstance(a, cls), repr(a)
+        assert (str(a) == 'SUBROUTINE foo\n  INTEGER :: a\nEND SUBROUTINE foo')
+
 
 def test_Subroutine_Stmt(): # R1232
 
@@ -4071,6 +4097,28 @@ def test_Contains(): # R1237
         assert isinstance(a, cls),repr(a)
         assert_equal(str(a),'CONTAINS')
         assert_equal(repr(a),"Contains_Stmt('CONTAINS')")
+
+
+def test_multi_unit():
+    ''' Check what happens when we have more than one program/routine
+    in a file '''
+    cls = Program
+    reader = get_reader('''\
+      program foo
+        integer :: my_int
+        my_int = my_func()
+        write(*,*) my_int
+      end program
+      function my_func()
+        integer :: my_func
+        my_func = 2
+      end function''')
+    obj = cls(reader)
+    assert type(obj) == Program
+    output = str(obj)
+    assert "PROGRAM foo" in output
+    assert "FUNCTION my_func()" in output
+    assert output.endswith("END FUNCTION")
 
 
 if 0:

@@ -49,6 +49,15 @@ import fparser.common.sourceinfo
 import fparser.common.tests.logging_utils
 
 
+def test_empty_line_err():
+    ''' Check that we raise the expected error if we try and create
+    an empty Line '''
+    from fparser.common.readfortran import Line, FortranReaderError
+    with pytest.raises(FortranReaderError) as err:
+        _ = Line("   ", 1, "", "a_name", None)
+    assert "Got empty line: \'   \'" in str(err)
+
+
 def test_111fortranreaderbase(log, monkeypatch):
     '''
     Tests the FortranReaderBase class.
@@ -78,7 +87,8 @@ def test_111fortranreaderbase(log, monkeypatch):
                         lambda x: 'foo', raising=False)
     mode = fparser.common.sourceinfo.FortranFormat(True, False)
     unit_under_test = fparser.common.readfortran.FortranReaderBase(FailFile(),
-                                                                   mode)
+                                                                   mode,
+                                                                   True)
     assert str(unit_under_test.next()) == "line #1'x=1'"
     with pytest.raises(StopIteration):
         unit_under_test.next()
@@ -121,7 +131,8 @@ def test_base_next_good_include(log):
     code = "include 'modfile.f95'\nx=2"
     include_directories = [os.path.dirname(__file__)]
     unit_under_test = fparser.common.readfortran \
-        .FortranStringReader(code, include_directories)
+        .FortranStringReader(code, include_dirs=include_directories,
+                             ignore_comments=False)
     line = unit_under_test.next()
     assert str(line)[:19] == "Comment('! Modified"  # First line of inclusion
     assert log.messages['debug'] == []
@@ -448,7 +459,8 @@ cf2py call me ! hey
                 "line #10'end'"]
 
     # Reading from buffer
-    reader = fparser.common.readfortran.FortranStringReader(string_f77)
+    reader = fparser.common.readfortran.FortranStringReader(
+        string_f77, ignore_comments=False)
     assert reader.format.mode == 'f77', repr(reader.format.mode)
     stack = expected[:]
     for item in reader:
@@ -460,7 +472,8 @@ cf2py call me ! hey
     with open(filename, 'w') as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = fparser.common.readfortran.FortranFileReader(filename)
+    reader = fparser.common.readfortran.FortranFileReader(
+        filename, ignore_comments=False)
     stack = expected[:]
     for item in reader:
         assert str(item) == stack.pop(0)
@@ -530,7 +543,8 @@ end python module foo
                 "line #25'end python module foo'",
                 "Comment('! end of file',(26, 26))"]
 
-    reader = fparser.common.readfortran.FortranStringReader(string_pyf)
+    reader = fparser.common.readfortran.FortranStringReader(
+        string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
@@ -578,7 +592,8 @@ cComment
                 "line #15'subroutine foo'",
                 "Comment('',(16, 16))",
                 "line #18'end'"]
-    reader = fparser.common.readfortran.FortranStringReader(string_fix90)
+    reader = fparser.common.readfortran.FortranStringReader(
+        string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)

@@ -1,10 +1,6 @@
-..  fparser documentation master file, created by
-    sphinx-quickstart on Mon Feb  6 10:31:52 2017.
-    You can adapt this file completely to your liking, but it should at least
-    contain the root `toctree` directive.
-
-    Modified work Copyright (c) 2017 Science and Technology Facilities Council
-    Original work Copyright (c) 1999-2008 Pearu Peterson
+..  Modified work Copyright (c) 2017-2018 Science and Technology
+    Facilities Council.
+    Original work Copyright (c) 1999-2008 Pearu Peterson.
 
     All rights reserved.
 
@@ -67,14 +63,20 @@
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGE.
 
-Welcome to fparser's documentation!
-===================================
+.. _developers:
 
-.. toctree::
-   :maxdepth: 2
+Developers' Guide
+=================
 
-   license
-   introduction
-   fparser
-   fparser2
-   developers_guide
+Reading Fortran
+---------------
+
+A key part of the fparser package is support for reading Fortran code.
+`fparser.common.readfortran.FortranFileReader` provides this functionality
+for source files while `FortranStringReader` supports Fortran source
+provided as a string. Both of these classes sub-class `FortranReaderBase`:
+
+.. autoclass:: fparser.common.readfortran.FortranReaderBase
+
+Note that the setting for `ignore_comments` provided here can be overridden
+on a per-call basis by methods such as `get_single_line`.
