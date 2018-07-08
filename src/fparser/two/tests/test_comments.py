@@ -121,6 +121,7 @@ END PROGRAM a_prog
             "  ! A comment after a block\n"
             "END PROGRAM a_prog\n")
 
+
 @pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
 def test_fixed_fmt():
     ''' Test that we handle comments in fixed-format mode '''
