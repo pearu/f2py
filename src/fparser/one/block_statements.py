@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
-# Original work Copyright (c) 1999-2008 Pearu Peterson
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council.
+# Original work Copyright (c) 1999-2008 Pearu Peterson.
 
 # All rights reserved.
 
@@ -96,10 +97,25 @@ __all__.extend(typedecl_statements.__all__)
 
 
 class HasImplicitStmt(object):
-
+    '''
+    Class encapsulating information about any Implicit statements
+    contained within a scoping block.
+    '''
     a = AttributeHolder(implicit_rules={})
 
     def get_type_by_name(self, name):
+        '''
+        Returns an object of the correct type (Integer or Real) using
+        Fortran's implicit typing rules for the supplied variable name.
+
+        :param str name: The variable name.
+        :returns: Object describing the variable.
+        :rtype: Either :py:class:`fparser.one.typedecl_statements.Real` \
+                or :py:class:`fparser.one.typedecl_statements.Integer`.
+
+        '''
+        # The implicit_rules dict is populated by the analyze() method
+        # of one.typedecl_statements.Implicit
         implicit_rules = self.a.implicit_rules
         if implicit_rules is None:
             raise AnalyzeError('Implicit rules mapping is null '
@@ -112,37 +128,46 @@ class HasImplicitStmt(object):
             line = 'default_integer'
         else:
             line = 'default_real'
-        t = implicit_rules.get(l, None)
-        if t is None:
+        var = implicit_rules.get(line, None)
+        if var is None:
             if line[8:] == 'real':
-                implicit_rules[l] = t = Real(self, self.item.copy('real'))
+                implicit_rules[line] = var = Real(self, self.item.copy('real'))
             else:
-                implicit_rules[l] = t = Integer(self,
-                                                self.item.copy('integer'))
-        return t
+                implicit_rules[line] = var = Integer(self,
+                                                     self.item.copy('integer'))
+        return var
 
     def topyf(self, tab='  '):
+        '''
+        Constructs a pyf representation of this class.
+
+        :param str tab: White space to prepend to output.
+        :returns: pyf code for this implicit statement.
+        :rtype: str
+        '''
         implicit_rules = self.a.implicit_rules
         if implicit_rules is None:
             return tab + 'IMPLICIT NONE\n'
+        # Construct a dict where the keys are types and the items are
+        # the list of initial letters mapped to that type
         items = {}
-        for c, t in list(implicit_rules.items()):
-            if c.startswith('default'):
+        for char, itype in list(implicit_rules.items()):
+            if char.startswith('default'):
                 continue
-            st = t.tostr()
-            if st in items:
-                items[st].append(c)
+            type_str = itype.tostr()
+            if type_str in items:
+                items[type_str].append(char)
             else:
-                items[st] = [c]
+                items[type_str] = [char]
         if not items:
             return tab + '! default IMPLICIT rules apply\n'
-        s = 'IMPLICIT'
-        ls = []
-        for st, l in list(items.items()):
-            l.sort()
-            ls.append(st + ' (%s)' % (', '.join(l)))
-        s += ' ' + ', '.join(ls)
-        return tab + s + '\n'
+        stmt = 'IMPLICIT'
+        impl_list = []
+        for itype, letter_list in list(items.items()):
+            letter_list.sort()
+            impl_list.append(itype + ' (%s)' % (', '.join(letter_list)))
+        stmt += ' ' + ', '.join(impl_list)
+        return tab + stmt + '\n'
 
 
 class HasUseStmt(object):
