@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+09/07/2018 PR #88 for issue #81. Bug fix for undefined variable in fparser
+           class 'HasImplicitStmt'.
+
 07/07/2018 PR #71 for issue #68. Adds support for keeping input comments
            in the Fortran output for parser 2.
 
