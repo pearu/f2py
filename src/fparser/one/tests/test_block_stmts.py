@@ -104,3 +104,35 @@ end module some_block
     assert isinstance(rtype, Real)
     itype = mod.get_type_by_name("f_int")
     assert isinstance(itype, Integer)
+
+
+def test_implicit_topyf(monkeypatch):
+    ''' Tests for the topyf() method of HasImplicitStmt. '''
+    from fparser.common.readfortran import FortranStringReader
+    from fparser.common.sourceinfo import FortranFormat
+    from fparser.one.parsefortran import FortranParser
+    # We can't just create a HasImplicitStmt object so we get the parser
+    # to create a module object as that sub-classes HasImplicitStmt (amongst
+    # other things).
+    string = '''\
+module some_block
+  implicit real (a-e)
+  implicit integer (f-z)
+end module some_block
+'''
+    reader = FortranStringReader(string)
+    reader.set_format(FortranFormat(True, False))
+    parser = FortranParser(reader)
+    parser.parse()
+    # Get the module object
+    mod = parser.block.content[0]
+    code = mod.topyf()
+    assert "! default IMPLICIT rules apply" in code
+    mod.content[0].analyze()
+    mod.content[1].analyze()
+    code = mod.topyf()
+    assert "REAL (a, b, c, d, e)" in code
+    assert "INTEGER (f, g, h" in code
+    monkeypatch.setattr(mod.a, "implicit_rules", None)
+    code = mod.topyf()
+    assert "IMPLICIT NONE" in code
