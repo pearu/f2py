@@ -602,6 +602,11 @@ class Implicit(Statement):
         return tab + 'IMPLICIT ' + ', '.join(l)
 
     def analyze(self):
+        '''
+        Analyze the Implicit statments constructed by the parser and
+        set-up the associated implicit_rules belonging to the parent
+        of this object in the AST.
+        '''
         implicit_rules = self.parent.a.implicit_rules
         if not self.items:
             if implicit_rules:
@@ -612,11 +617,12 @@ class Implicit(Statement):
         if implicit_rules is None:
             self.warning('overriding previously set IMPLICIT NONE')
             self.parent.a.implicit_rules = implicit_rules = {}
-        for stmt,specs in self.items:
-            for s,e in specs:
-                for l in string.lowercase[string.lowercase.index(s.lower()):\
-                                          string.lowercase.index(e.lower())+1]:
-                    implicit_rules[l] = stmt
+        for stmt, specs in self.items:
+            for start, end in specs:
+                start_idx = string.ascii_lowercase.index(start.lower())
+                end_idx = string.ascii_lowercase.index(end.lower())
+                for lchar in string.ascii_lowercase[start_idx:end_idx+1]:
+                    implicit_rules[lchar] = stmt
         return
 
 intrinsic_type_spec = [ \
