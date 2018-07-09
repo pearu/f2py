@@ -105,12 +105,14 @@ class HasImplicitStmt(object):
         Returns an object of the correct type (Integer or Real) using
         Fortran's implicit typing rules for the supplied variable name.
 
-        :param str name: the variable name
-        :returns: Object describing the variable
+        :param str name: The variable name.
+        :returns: Object describing the variable.
         :rtype: Either :py:class:`fparser.one.typedecl_statements.Real` \
-                or :py:class:`fparser.one.typedecl_statements.Integer`
+                or :py:class:`fparser.one.typedecl_statements.Integer`.
 
         '''
+        # The implicit_rules dict is populated by the analyze() method
+        # of one.typedecl_statements.Implicit
         implicit_rules = self.a.implicit_rules
         if implicit_rules is None:
             raise AnalyzeError('Implicit rules mapping is null '

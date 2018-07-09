@@ -37,10 +37,12 @@
 File containing tests for the one.block_statements module.
 '''
 from __future__ import absolute_import
+import pytest
 
 
-def test_get_type_by_name():
+def test_get_type_by_name(monkeypatch):
     ''' Tests for HasImplicitStmt.get_type_by_name(). '''
+    from fparser.common.utils import AnalyzeError
     from fparser.common.readfortran import FortranStringReader
     from fparser.common.sourceinfo import FortranFormat
     from fparser.one.typedecl_statements import Real, Integer
@@ -61,4 +63,44 @@ end module some_block
     rtype = mod.get_type_by_name("a_real")
     assert isinstance(rtype, Real)
     itype = mod.get_type_by_name("i_int")
+    assert isinstance(itype, Integer)
+    # Check that we raise the correct error if we don't have any implicit
+    # rules set
+    monkeypatch.setattr(mod.a, "implicit_rules", None)
+    with pytest.raises(AnalyzeError) as err:
+        _ = mod.get_type_by_name("i_int")
+    assert "Implicit rules mapping is null" in str(err)
+
+
+def test_get_type_by_name_implicit():
+    ''' Tests for HasImplicitStmt.get_type_by_name() when the source code
+    contains IMPLICIT statements. '''
+    from fparser.common.readfortran import FortranStringReader
+    from fparser.common.sourceinfo import FortranFormat
+    from fparser.one.typedecl_statements import Real, Integer
+    from fparser.one.parsefortran import FortranParser
+    # We can't just create a HasImplicitStmt object so we get the parser
+    # to create a module object as that sub-classes HasImplicitStmt (amongst
+    # other things).
+    string = '''\
+module some_block
+  implicit real (a-e)
+  implicit integer (f-z)
+end module some_block
+'''
+    reader = FortranStringReader(string)
+    reader.set_format(FortranFormat(True, False))
+    parser = FortranParser(reader)
+    parser.parse()
+    # Get the module object
+    mod = parser.block.content[0]
+    # We have to run the analyze method on the Implicit objects
+    # produced by the parser in order to populate the implicit_rules
+    # of the module.
+    mod.content[0].analyze()
+    mod.content[1].analyze()
+    # Now we can call get_type_by_name()...
+    rtype = mod.get_type_by_name("a_real")
+    assert isinstance(rtype, Real)
+    itype = mod.get_type_by_name("f_int")
     assert isinstance(itype, Integer)
