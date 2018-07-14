@@ -1,24 +1,61 @@
+import inspect, sys
+
 class ParserFactory(object):
     ''' '''
     def create(self, std=None):
         ''' '''
         if not std:
+            # default to f2003
             std = "f2003"
         if std == "f2003":
             from fparser.two import Fortran2003
-            classes = dir(Fortran2003)
-            self.setup(classes)
+            all_cls_members = inspect.getmembers(sys.modules[Fortran2003.__name__], inspect.isclass)
+            local_cls_members = []
+            for cls_member in all_cls_members:
+                if cls_member[1].__module__ == "fparser.two.Fortran2003":
+                    local_cls_members.append(cls_member)
+            print len(local_cls_members)
+            #from fparser.two import Fortran2003
+            #classes = dir(Fortran2003)
+            #for idx, class_name in enumerate(classes):
+            #    classes[idx] = "fparser.two.Fortran2003." +class_name
+            #print len(classes)
+            #exit(1)
+            self.setup(local_cls_members)
             return Fortran2003.Program
         elif std == "f2008":
             from fparser.two import Fortran2008
-            classes = dir(Fortran2008)
+            total_cls_members = []
+            name = Fortran2008.__name__
+            all_cls_members = inspect.getmembers(sys.modules[name], inspect.isclass)
+            local_cls_members = []
+            for cls_member in all_cls_members:
+                if cls_member[1].__module__ == "fparser.two.Fortran2008":
+                    local_cls_members.append(cls_member)
+            total_cls_members.extend(local_cls_members)
+            
             from fparser.two import Fortran2003
-            classes.extend(dir(Fortran2003))
-            self.setup(classes)
+            name = Fortran2003.__name__
+            all_cls_members = inspect.getmembers(sys.modules[name], inspect.isclass)
+            local_cls_members = []
+            for cls_member in all_cls_members:
+                if cls_member[1].__module__ == "fparser.two.Fortran2003":
+                    local_cls_members.append(cls_member)
+            names = [i[0] for i in total_cls_members]
+            skip_count = 0
+            for local_cls in local_cls_members:
+                if local_cls[0] not in names:
+                    total_cls_members.append(local_cls)
+                else:
+                    print "Skipping class {0} as we already have one defined".format(local_cls)
+                    skip_count += 1
+            print "I skipped {0} classes".format(skip_count)
+            self.setup(total_cls_members)
             return Fortran2003.Program
         else:
             print "unsupported standard {0}".format(api)
             exit(1)
+
     def setup(self, CLASSES):
         ''' '''
         __autodoc__ = []
@@ -29,8 +66,9 @@ class ParserFactory(object):
         #CLASSES = dir(fparser.two.Fortran2003)
         ClassType = type(fparser.two.Fortran2003.Base)
 
-        for clsname in CLASSES:
-            cls = eval("fparser.two.Fortran2003."+clsname)
+        for clsinfo in CLASSES:
+            clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
+            cls = eval(clsname)
             # ?? classtype is set to Base so why have issubclass?
             if isinstance(cls, ClassType) and issubclass(cls, fparser.two.Fortran2003.Base) \
                and not cls.__name__.endswith('Base'):
