@@ -43,6 +43,11 @@ import fparser.two.Fortran2003
 import fparser.common.readfortran
 
 
+from fparser.two.parser import ParserFactory
+# this is required to setup the fortran2003 classes
+_ = ParserFactory().create(std="f2003")
+
+
 def test_deferred_method():
     '''
     Tests that the parser understands deferred methods.
