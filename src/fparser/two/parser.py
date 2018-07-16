@@ -14,7 +14,6 @@ class ParserFactory(object):
             for cls_member in all_cls_members:
                 if cls_member[1].__module__ == "fparser.two.Fortran2003":
                     local_cls_members.append(cls_member)
-            print len(local_cls_members)
             #from fparser.two import Fortran2003
             #classes = dir(Fortran2003)
             #for idx, class_name in enumerate(classes):
@@ -47,9 +46,7 @@ class ParserFactory(object):
                 if local_cls[0] not in names:
                     total_cls_members.append(local_cls)
                 else:
-                    print "Skipping class {0} as we already have one defined".format(local_cls)
                     skip_count += 1
-            print "I skipped {0} classes".format(skip_count)
             self.setup(total_cls_members)
             return Fortran2003.Program
         else:
