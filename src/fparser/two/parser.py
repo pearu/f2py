@@ -50,7 +50,7 @@ class ParserFactory(object):
             self.setup(total_cls_members)
             return Fortran2003.Program
         else:
-            print "unsupported standard {0}".format(api)
+            print ("unsupported standard {0}".format(api))
             exit(1)
 
     def setup(self, CLASSES):
