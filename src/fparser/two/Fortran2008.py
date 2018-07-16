@@ -2,17 +2,17 @@
     https://j3-fortran.org/doc/year/10/10-007r1.pdf
 
 '''
-from fparser.two.Fortran2003 import Program_Unit as Program_Unit_2003
-from fparser.two.Fortran2003 import EndStmtBase
-from fparser.two.Fortran2003 import BlockBase
-from fparser.two.Fortran2003 import Base
-from fparser.common.splitline import splitparen
-from fparser.two.Fortran2003 import Specification_Part, Module_Subprogram_Part
 # pylint: disable=invalid-name
 # pylint: disable=arguments-differ
 # pylint: disable=undefined-variable
 # pylint: disable=eval-used
 # pylint: disable=exec-used
+# pylint: disable=unused-import
+from fparser.two.Fortran2003 import Program_Unit as Program_Unit_2003
+from fparser.two.Fortran2003 import EndStmtBase, BlockBase, SequenceBase, \
+    Base, Specification_Part, Module_Subprogram_Part, Implicit_Part, \
+    Implicit_Part_Stmt, Declaration_Construct, Use_Stmt, Import_Stmt
+from fparser.common.splitline import splitparen
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -32,18 +32,127 @@ class Program_Unit(Program_Unit_2003):  # R202
     subclass_names.append("Sub_Module")
 
 
-class Sub_Module(BlockBase):  # R1116
+class Specification_Part_C1112(Specification_Part):  # C1112
+    '''Fortran 2008 constraint C1112
+    C1112 A submodule specification-part shall not contain a
+    format-stmt, entry-stmt, or stmt-function-stmt.
+
+    These statements are found in the following rule hierarchy
+
+    format-stmt Specification_Part/implicit_part/implicit_part_stmt/format_stmt
+                Specification_Part/declaration_construct/format_stmt
+    entry-stmt Specification_Part/implicit_part/implicit_part_stmt/entry_stmt
+               Specification_Part/declaration_construct/entry_stmt
+    stmt-function-stmt Specification_Part/declaration_construct/
+                       stmt-function-stmt
+
+    Therefore we need to specialise implicit_part, implicit_part_stmt
+    and declaration_construct
+
     '''
-    Fortran 2008 rule R1116
+    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part_C1112',
+                 'Declaration_Construct_C1112']
+
+    @staticmethod
+    def match(reader):
+        '''Check whether the input matches the rule
+
+        param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                      or
+                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :return: `tuple` containing a single `list` which contains
+                 instance of the classes that have matched if there is
+                 a match or `None` if there is no match
+
+        '''
+        return BlockBase.match(None, [Use_Stmt, Import_Stmt,
+                                      Implicit_Part_C1112,
+                                      Declaration_Construct_C1112],
+                               None, reader)
+
+
+class Implicit_Part_C1112(Implicit_Part):  # C1112
+    '''Fortran 2008 constraint C1112
+    C1112 A submodule specification-part shall not contain a
+    format-stmt, entry-stmt, or stmt-function-stmt.
+
+    This class specialises 'Implicit_Part' so that the specialised
+    'Implicit_Part_Stmt_C1112' is called rather than the original
+    'Implicit_Part_Stmt'
+
+    '''
+    use_names = ['Implicit_Part_Stmt_C1112', 'Implicit_Stmt']
+
+    @staticmethod
+    def match(reader):
+        '''Check whether the input matches the rule
+
+        param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                      or
+                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :return: `tuple` containing a single `list` which contains
+                 instance of the classes that have matched if there is
+                 a match or `None` if there is no match
+
+        '''
+        return BlockBase.match(None, [Implicit_Part_Stmt_C1112], None, reader)
+
+
+class Implicit_Part_Stmt_C1112(Implicit_Part_Stmt):  # C1112
+    '''Fortran 2008 constraint C1112
+    C1112 A submodule specification-part shall not contain a
+    format-stmt, entry-stmt, or stmt-function-stmt.
+
+    This class specialises 'Implicit_Part_Stmt' to remove
+    'Format_Stmt' and 'Entry_Stmt'
+
+    '''
+    subclass_names = Implicit_Part_Stmt.subclass_names[:]
+    subclass_names.remove('Format_Stmt')
+    subclass_names.remove('Entry_Stmt')
+
+
+class Declaration_Construct_C1112(Declaration_Construct):  # C1112
+    '''Fortran 2008 constraint C1112
+    C1112 A submodule specification-part shall not contain a
+    format-stmt, entry-stmt, or stmt-function-stmt.
+
+    This class specialises 'Declaration_Construct' to remove
+    'Format_Stmt', 'Entry_Stmt' and 'Stmt_Function_Stmt'
+
+    '''
+    subclass_names = Declaration_Construct.subclass_names[:]
+    subclass_names.remove('Format_Stmt')
+    subclass_names.remove('Entry_Stmt')
+    subclass_names.remove('Stmt_Function_Stmt')
+
+
+class Sub_Module(BlockBase):  # R1116 [C1112,C1114]
+    '''Fortran 2008 rule R1116
     submodule is submodule-stmt
                  [ specification-part ]
                  [ module-subprogram-part ]
                  end-submodule-stmt
 
+    C1112 A submodule specification-part shall not contain a
+    format-stmt, entry-stmt, or stmt-function-stmt.
+    This constraint is handled by specialising the Specification_Part
+    class
+
+    C1114 If a submodule-name appears in the end-submodule-stmt, it
+    shall be identical to the one in the submodule-stmt.
+    This constraint is handled by the Base class with the names being
+    provided by the 'Sub_Module_Stmt and 'End_Sub_Module_Stmt' classes
+    via a `get_name` method
+
     '''
 
     subclass_names = []
-    use_names = ['Sub_Module_Stmt', 'Specification_Part',
+    use_names = ['Sub_Module_Stmt', 'Specification_Part_C1112',
                  'Module_Subprogram_Part', 'End_Sub_Module_Stmt']
 
     @staticmethod
@@ -61,9 +170,10 @@ class Sub_Module(BlockBase):  # R1116
 
         '''
 
-        result = BlockBase.match(Sub_Module_Stmt,
-                                 [Specification_Part, Module_Subprogram_Part],
-                                 End_Sub_Module_Stmt, reader)
+        result = BlockBase.match(
+            Sub_Module_Stmt,
+            [Specification_Part_C1112, Module_Subprogram_Part],
+            End_Sub_Module_Stmt, reader)
         return result
 
 
@@ -172,10 +282,16 @@ class End_Sub_Module_Stmt(EndStmtBase):  # R1119
         return self.items[1]
 
 
-class Parent_Identifier(Base):  # R1118
-    '''
-    Fortran 2008 rule R1118
+class Parent_Identifier(Base):  # R1118 (C1113)
+    '''Fortran 2008 rule R1118
     parent-identifier is ancestor-module-name [ : parent-submodule-name ]
+
+    C1113 The ancestor-module-name shall be the name of a nonintrinsic
+    module; the parent-submodule19 name shall be the name of a
+    descendant of that module.
+    This constraint can not be tested by fparser in general as the
+    module or submodule may be in a different file. We therefore do
+    not check this constraint in fparser.
 
     '''
 
