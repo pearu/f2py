@@ -40,7 +40,7 @@ Shared fixtures.
 '''
 
 import logging
-import fparser.tests.logging_utils
+import fparser.common.tests.logging_utils
 import pytest
 
 
@@ -50,7 +50,7 @@ def log():
     Prepare a fixture to capture logged events for inspection.
     '''
     logger = logging.getLogger('fparser')
-    handler = fparser.tests.logging_utils.CaptureLoggingHandler()
+    handler = fparser.common.tests.logging_utils.CaptureLoggingHandler()
     logger.addHandler(handler)
     yield handler
     # When the fixture function is a generator, i.e. it uses "yield" rather

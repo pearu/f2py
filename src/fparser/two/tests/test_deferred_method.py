@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017-2018 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -39,8 +39,8 @@
 '''
 Tests that the parser understands deferred methods.
 '''
-import fparser.Fortran2003
-import fparser.readfortran
+import fparser.two.Fortran2003
+import fparser.common.readfortran
 
 
 def test_deferred_method():
@@ -57,22 +57,28 @@ module abstract_test
   contains
     procedure(method_interface), deferred :: method
   end type test_type
+  ! A comment at the end
 
 end module abstract_test
 '''
-    expected = '''
+
+    expected = '''! Abstract type
 MODULE abstract_test
+
   IMPLICIT NONE
   PRIVATE
+
   TYPE, ABSTRACT, PUBLIC :: test_type
     CONTAINS
     PROCEDURE(method_interface), DEFERRED :: method
   END TYPE test_type
+  ! A comment at the end
+
 END MODULE abstract_test
 '''.strip().split('\n')
 
-    reader = fparser.readfortran.FortranStringReader(source)
-    program_unit = fparser.Fortran2003.Program(reader)
+    reader = fparser.common.readfortran.FortranStringReader(
+        source, ignore_comments=False)
+    program_unit = fparser.two.Fortran2003.Program(reader)
     result = str(program_unit).strip().split('\n')
-
     assert result == expected

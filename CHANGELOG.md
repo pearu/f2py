@@ -11,7 +11,41 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-15/01/2017 PR #67. Move old testing code from source files into test
+09/07/2018 PR #90 for issue #89. Make fparser2 pycodestyle conformant.
+
+09/07/2018 PR #88 for issue #81. Bug fix for undefined variable in fparser
+           class 'HasImplicitStmt'.
+
+07/07/2018 PR #71 for issue #68. Adds support for keeping input comments
+           in the Fortran output for parser 2.
+
+27/06/2018 PR #85 for issue #82. Adds support for the full list of possible
+           procedure attributes (POINTER and PROTECTED were missing).
+
+19/06/2018 PR #86 and issue #83. Adds support for the full list of possible
+           procedure specifications (MODULE and IMPURE were missing).
+
+## Release 0.0.7 (23/04/2018) ##
+
+20/04/2018 PR #78 and issue #74. Allow the use of the fparser cache to
+	   be controlled and disable its use by default.
+
+19/04/2018 PR #70. Re-organise module structure in order to split
+	   versions 1 and 2 of the parser.
+
+23/03/2018 PR #75. Allow FortranFileReader to accept either a filename
+           or a file handle. Many pylint/pep8 improvements.
+
+20/03/2018 PR #77 and issue #76. Fix bug in ALLOCATE statement when
+	   using names of derived types as type specifiers.
+
+05/03/2018 PR #73. Improvements to SourceInfo so that it can take either
+	   a filename or a file handle.
+
+26/02/2018 PR #72 and issue #69. Fixes for bugs found when using fparser2
+	   to parse and then re-generate LFRic code.
+
+15/01/2018 PR #67. Move old testing code from source files into test
 	   framework.
 
 12/01/2018 PR #66 and issue #64. Fix bug where = in a string was being

@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -71,7 +72,7 @@ Test parsing single Fortran lines.
 """
 
 import pytest
-from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
+from fparser.one.block_statements import Allocatable, Allocate, ArithmeticIf, \
      AssignedGoto, Assign, Assignment, Asynchronous, Backspace, Bind, Call, \
      CallProtoArgument, CallStatement, Check, Close, Common, \
      ComputedGoto, Contains, Continue, Cycle, Data, Deallocate, Depend, \
@@ -82,12 +83,12 @@ from fparser.block_statements import Allocatable, Allocate, ArithmeticIf, \
      Pointer, PointerAssignment, Pause, Print, Private, Protected, Public, \
      Read, Return, Rewind, Save, Sequence, SpecificBinding, Stop, Target, \
      Threadsafe, Use, Value, Volatile, Wait, WhereStmt, Write
-
-from fparser.typedecl_statements import Byte, Character, Complex, \
+import fparser.common.sourceinfo
+from fparser.one.typedecl_statements import Byte, Character, Complex, \
      DoubleComplex, DoublePrecision, Integer, Logical, Real
 
-from fparser.readfortran import FortranStringReader
-from fparser.utils import AnalyzeError
+from fparser.common.readfortran import FortranStringReader
+from fparser.common.utils import AnalyzeError, ParseError
 
 
 def parse(cls, line, label='', isfree=True, isstrict=False):
@@ -103,7 +104,8 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
     if label:
         line = label + ' : ' + line
     reader = FortranStringReader(line)
-    reader.set_mode(isfree, isstrict)
+    reader.set_format(fparser.common.sourceinfo.FortranFormat(isfree,
+                                                              isstrict))
     item = next(reader)
     if not cls.match(item.get_line()):
         raise ValueError('%r does not match %s pattern' % (line, cls.__name__))
@@ -221,12 +223,23 @@ def test_contains():
 
 
 def test_allocate():
+    ''' Tests for various forms of ALLOCATE statement '''
     assert parse(Allocate, 'allocate (a)') == 'ALLOCATE (a)'
     assert parse(Allocate, 'allocate (a, stat=b)') == \
         'ALLOCATE (a, STAT = b)'
     assert parse(Allocate, 'allocate (a,b(:1))') == 'ALLOCATE (a, b(:1))'
     assert parse(Allocate, 'allocate (real(8)::a)') == \
         'ALLOCATE (REAL(KIND=8) :: a)'
+    # With a type specifier
+    assert parse(Allocate, 'allocate (real :: a(8))') == \
+        'ALLOCATE (REAL :: a(8))'
+    assert parse(Allocate, 'allocate (real(kind=wp) :: a(8))') == \
+        'ALLOCATE (REAL(KIND=wp) :: a(8))'
+    assert parse(Allocate, 'allocate (a_type :: a)') == \
+        'ALLOCATE (a_type :: a)'
+    with pytest.raises(ParseError) as err:
+        parse(Allocate, 'allocate(not valid :: a)')
+    assert "Unrecognised type-specification in ALLOCATE statement" in str(err)
 
 
 def test_deallocate():
@@ -276,7 +289,7 @@ def test_close():
 
 def test_class():
     ''' Check that we correctly parse and generate a class declaration '''
-    from fparser.typedecl_statements import Class
+    from fparser.one.typedecl_statements import Class
     assert parse(Class, 'class(runtime_constants_type) :: a') == \
         "CLASS(runtime_constants_type) a"
 
@@ -911,7 +924,7 @@ def test_analyze_errors():
     source_str = """subroutine test()
       end
     """
-    from fparser.parsefortran import FortranParser
+    from fparser.one.parsefortran import FortranParser
     reader = api.get_reader(source_str)
     parser = FortranParser(reader)
 

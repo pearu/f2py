@@ -1,8 +1,9 @@
 .. -*- rest -*-
 
 ..
-    Modified work Copyright (c) 2017 Science and Technology Facilities Council
-    Original work Copyright (c) 1999-2008 Pearu Peterson
+    Modified work Copyright (c) 2017-2018 Science and Technology
+    Facilities Council.
+    Original work Copyright (c) 1999-2008 Pearu Peterson.
 
     All rights reserved.
 
@@ -137,7 +138,9 @@ that reader to create the tree, e.g.:
 
 ::
 
-  >>> reader = FortranStringReader(code, False, True)
+  >>> from fparser.common.readfortran import FortranStringReader
+  >>> from fparser.one.parsefortran import FortranParser
+  >>> reader = FortranStringReader(code, FortranFormat(isfree, isstrict))
   >>> parser = FortranParser(reader)
   >>> parser.parse()
   >>> print parser.block
@@ -145,6 +148,10 @@ that reader to create the tree, e.g.:
           SUBROUTINE foo(a)
             PRINT *, "a=", a
           END SUBROUTINE foo
+
+The full interface to the `parse()` function is:
+
+.. autofunction:: fparser.api.parse
 
 The `FortranParser` class holds the parser information while
 iterating over items returned by a `FortranReaderBase` iterator.
@@ -234,7 +241,7 @@ readfortran.py
 `This file`__ contains tools for reading Fortran codes from file and
 from string objects.
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/readfortran.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/common/readfortran.py
 
 To read Fortran code from a file, use the `FortranFileReader` class.
 The `FortranFileReader` class is an iterator over Fortran code lines
@@ -246,7 +253,7 @@ For example,
 
 ::
 
-  >>> from fparser.readfortran import *
+  >>> from fparser.common.readfortran import *
   >>> import os
   >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
   >>> reader.next()
@@ -348,7 +355,7 @@ of the given `<string>` content. When `<isfree>` and `<isstrict>` are both
 
 ::
 
-  >>> code = """                       
+  >>> code = """
   ... c      comment
   ...       subroutine foo(a)
   ...       print*, "a=",a
@@ -394,10 +401,10 @@ statements and block statements. Block statements consists of start
 and end statements, and content statements in between that can be of
 both types again.
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/block_statements.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/base_classes.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/typedecl_statements.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/block_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/common/base_classes.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/typedecl_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/statements.py
 
 A `Statement` instance has the following attributes:
 

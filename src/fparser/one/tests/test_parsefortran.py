@@ -37,12 +37,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
 '''
-Tests the fparser.parsefortran module.
+Tests the fparser.one.parsefortran module.
 '''
 
 import pytest
-import fparser.parsefortran
-import fparser.readfortran
+import fparser.one.parsefortran
+import fparser.common.readfortran
 
 
 def test_log_empty(log):
@@ -55,7 +55,7 @@ def test_log_empty(log):
         '''
         id = 'thingumy'
 
-    unit_under_test = fparser.parsefortran.FortranParser(EmptyReader())
+    unit_under_test = fparser.one.parsefortran.FortranParser(EmptyReader())
     unit_under_test.analyze()
     assert log.messages == {'debug':    [],
                             'info':     ['Nothing to analyze.'],
@@ -84,7 +84,7 @@ def test_log_cache(log):
 
     # Expect everything to go okay, no log messages.
     log.reset()
-    _ = fparser.parsefortran.FortranParser(Readerlike())
+    _ = fparser.one.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
                             'info':     [],
                             'warning':  [],
@@ -92,7 +92,7 @@ def test_log_cache(log):
                             'critical': []}
 
     # This time we should use a cached log.
-    _ = fparser.parsefortran.FortranParser(Readerlike())
+    _ = fparser.one.parsefortran.FortranParser(Readerlike())
     assert log.messages == {'debug':    [],
                             'info':     ['using cached thisun'],
                             'warning':  [],
@@ -110,10 +110,10 @@ def test_log_failure(log, monkeypatch):
         '''
         raise Exception('That''s all folks!')
 
-    monkeypatch.setattr('fparser.readfortran.FortranStringReader.next',
+    monkeypatch.setattr('fparser.common.readfortran.FortranStringReader.next',
                         faulty_next)
-    reader = fparser.readfortran.FortranStringReader('')
-    unit_under_test = fparser.parsefortran.FortranParser(reader)
+    reader = fparser.common.readfortran.FortranStringReader('')
+    unit_under_test = fparser.one.parsefortran.FortranParser(reader)
     with pytest.raises(Exception):
         unit_under_test.parse()
     assert log.messages['debug'][0].startswith('Traceback\n')
@@ -145,9 +145,9 @@ end python module foo
                 '    END INTERFACE tere',
                 '  END PYTHONMODULE foo']
 
-    reader = fparser.readfortran.FortranStringReader(string)
-    reader.set_mode_from_str('pyf')
-    parser = fparser.parsefortran.FortranParser(reader)
+    reader = fparser.common.readfortran.FortranStringReader(string)
+    reader.set_format(fparser.common.sourceinfo.FortranFormat.from_mode('pyf'))
+    parser = fparser.one.parsefortran.FortranParser(reader)
     parser.parse()
     caught = parser.block.tofortran().splitlines()
     assert caught[0][:13] == '!BEGINSOURCE '
@@ -203,9 +203,10 @@ end module foo
                 '    END INTERFACE ',
                 '  END MODULE foo']
 
-    reader = fparser.readfortran.FortranStringReader(string)
-    reader.set_mode_from_str('free')
-    parser = fparser.parsefortran.FortranParser(reader)
+    reader = fparser.common.readfortran.FortranStringReader(string)
+    mode = fparser.common.sourceinfo.FortranFormat.from_mode('free')
+    reader.set_format(mode)
+    parser = fparser.one.parsefortran.FortranParser(reader)
     parser.parse()
     caught = parser.block.tofortran().splitlines()
     assert caught[0][:13] == '!BEGINSOURCE '
@@ -237,10 +238,10 @@ def test_f77():
                 '        pure recursive REAL*4 FUNCTION bar()',
                 '        END FUNCTION bar']
 
-    reader = fparser.readfortran.FortranStringReader(string)
-    parser = fparser.parsefortran.FortranParser(reader)
+    reader = fparser.common.readfortran.FortranStringReader(string)
+    parser = fparser.one.parsefortran.FortranParser(reader)
     parser.parse()
-    assert isinstance(parser.block, fparser.block_statements.BeginSource)
+    assert isinstance(parser.block, fparser.one.block_statements.BeginSource)
     caught = parser.block.tofortran().splitlines()
     assert caught[0][:25] == '      !      BEGINSOURCE '
     assert caught[1:] == expected

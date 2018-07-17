@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -78,7 +79,8 @@ end module foo
     '''
     tree = parse(source_str, isfree=True, isstrict=False,
                  ignore_comments=False)
-    assert str(tree).strip().split('\n')[1:]=='''
+
+    assert str(tree).strip().split('\n')[1:] == '''
 !BEGINSOURCE <cStringIO.StringI object at 0x1518de0> mode=free90
   !comment line 1
 
