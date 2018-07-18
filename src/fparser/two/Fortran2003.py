@@ -155,13 +155,14 @@ class ComparableMixin(object):
 
 
 class Base(ComparableMixin):
-    """ Base class for Fortran 2003 syntax rules.
+    ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      .string - original argument to construct a class instance, it's type
+      \.string - original argument to construct a class instance, it\'s type \
                 is either str or FortranReaderBase.
-      .item   - Line instance (holds label) or None.
-    """
+      \.item   - Line instance (holds label) or None.
+
+    '''
     # This dict of subclasses is populated dynamically by code at the end
     # of this module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
@@ -292,8 +293,6 @@ class BlockBase(Base):
                      [ <subcls> ]...
                      [ <endcls> ]
 
-Attributes
-----------
 content : tuple
     """
     @staticmethod

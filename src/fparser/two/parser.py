@@ -1,41 +1,64 @@
-import inspect, sys
+''' This file provides utilities to create a fortran parser '''
+
+import inspect
+import sys
+
 
 class ParserFactory(object):
-    ''' '''
+    '''Creates a parser suitable for the specified fortran standard'''
+
     def create(self, std=None):
-        ''' '''
+        '''Creates a class hierarchy suitable for the specified fortran
+        standard
+
+        :param std string: the fortran standard. Choices are 'f2003' or
+                           'f2008'. 'f2003' is the default.
+        :return: a Program class (not object) for use with the fortran reader
+        :rtype: :py:class:`fparser.two.Fortran2003.Program`
+
+        For example:
+
+        >>> from fparser.two.parser import ParserFactory
+        >>> f2003_parser = ParserFactory().create()
+        >>> f2003_parser = ParserFactory().create(std='f2003')
+        >>> f2008_parser = ParserFactory().create(std='f2008')
+
+        '''
         if not std:
             # default to f2003
             std = "f2003"
         if std == "f2003":
             from fparser.two import Fortran2003
-            all_cls_members = inspect.getmembers(sys.modules[Fortran2003.__name__], inspect.isclass)
+            all_cls_members = inspect.getmembers(
+                sys.modules[Fortran2003.__name__], inspect.isclass)
             local_cls_members = []
             for cls_member in all_cls_members:
                 if cls_member[1].__module__ == "fparser.two.Fortran2003":
                     local_cls_members.append(cls_member)
-            #from fparser.two import Fortran2003
-            #classes = dir(Fortran2003)
-            #for idx, class_name in enumerate(classes):
-            #    classes[idx] = "fparser.two.Fortran2003." +class_name
-            #print len(classes)
-            #exit(1)
-            self.setup(local_cls_members)
+            # from fparser.two import Fortran2003
+            # classes = dir(Fortran2003)
+            # for idx, class_name in enumerate(classes):
+            #     classes[idx] = "fparser.two.Fortran2003." +class_name
+            # print len(classes)
+            # exit(1)
+            self._setup(local_cls_members)
             return Fortran2003.Program
         elif std == "f2008":
             from fparser.two import Fortran2008
             total_cls_members = []
             name = Fortran2008.__name__
-            all_cls_members = inspect.getmembers(sys.modules[name], inspect.isclass)
+            all_cls_members = inspect.getmembers(sys.modules[name],
+                                                 inspect.isclass)
             local_cls_members = []
             for cls_member in all_cls_members:
                 if cls_member[1].__module__ == "fparser.two.Fortran2008":
                     local_cls_members.append(cls_member)
             total_cls_members.extend(local_cls_members)
-            
+
             from fparser.two import Fortran2003
             name = Fortran2003.__name__
-            all_cls_members = inspect.getmembers(sys.modules[name], inspect.isclass)
+            all_cls_members = inspect.getmembers(sys.modules[name],
+                                                 inspect.isclass)
             local_cls_members = []
             for cls_member in all_cls_members:
                 if cls_member[1].__module__ == "fparser.two.Fortran2003":
@@ -47,27 +70,31 @@ class ParserFactory(object):
                     total_cls_members.append(local_cls)
                 else:
                     skip_count += 1
-            self.setup(total_cls_members)
+            self._setup(total_cls_members)
             return Fortran2003.Program
         else:
             print ("unsupported standard {0}".format(api))
             exit(1)
 
-    def setup(self, CLASSES):
-        ''' '''
+    def _setup(self, CLASSES):
+        '''Perform some Python magic to create the connections between classes and
+        populate the baseclass with this information
+
+        '''
         __autodoc__ = []
         Base_classes = {}
 
         import logging
         import fparser.two.Fortran2003
-        #CLASSES = dir(fparser.two.Fortran2003)
+        # CLASSES = dir(fparser.two.Fortran2003)
         ClassType = type(fparser.two.Fortran2003.Base)
 
         for clsinfo in CLASSES:
             clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
             cls = eval(clsname)
             # ?? classtype is set to Base so why have issubclass?
-            if isinstance(cls, ClassType) and issubclass(cls, fparser.two.Fortran2003.Base) \
+            if isinstance(cls, ClassType) and \
+               issubclass(cls, fparser.two.Fortran2003.Base) \
                and not cls.__name__.endswith('Base'):
                 Base_classes[cls.__name__] = cls
                 if len(__autodoc__) < 10:
@@ -81,8 +108,10 @@ class ParserFactory(object):
 
             def _rpl_list(clsname):
                 if clsname not in Base_classes:
-                    logging.getLogger(__name__).debug('Not implemented: %s' % clsname)
-                    return []  # remove this code when all classes are implemented
+                    logging.getLogger(__name__).debug(
+                        'Not implemented: %s' % clsname)
+                    return []
+                # remove this code when all classes are implemented
                 cls = Base_classes[clsname]
                 if 'match' in cls.__dict__:
                     return [clsname]
@@ -105,7 +134,6 @@ class ParserFactory(object):
                 if not opt_subclass_names == cls.subclass_names:
                     cls.subclass_names[:] = opt_subclass_names
 
-
         # Initialize Base.subclasses dictionary:
         for clsname, cls in list(Base_classes.items()):
             subclass_names = getattr(cls, 'subclass_names', None)
@@ -126,23 +154,26 @@ class ParserFactory(object):
 
         if 1:
             for cls in list(Base_classes.values()):
-                subclasses = fparser.two.Fortran2003.Base.subclasses.get(cls.__name__, [])
+                subclasses = fparser.two.Fortran2003.Base.subclasses.get(
+                    cls.__name__, [])
                 subclasses_names = [c.__name__ for c in subclasses]
                 subclass_names = getattr(cls, 'subclass_names', [])
                 use_names = getattr(cls, 'use_names', [])
                 for n in subclasses_names:
                     break
                     if n not in subclass_names:
-                        message = '%s needs to be added to %s subclasses_name list' \
-                                  % (n, cls.__name__)
+                        message = ('%s needs to be added to %s '
+                                   'subclasses_name list'
+                                   % (n, cls.__name__))
                         logging.getLogger(__name__).debug(message)
                 for n in subclass_names:
                     break
                     if n not in subclasses_names:
-                        message = '%s needs to be added to %s subclass_name list' \
-                                  % (n, cls.__name__)
+                        message = '%s needs to be added to %s '
+                        'subclass_name list' % (n, cls.__name__)
                         logging.getLogger(__name__).debug(message)
                 for n in use_names + subclass_names:
                     if n not in Base_classes:
-                        message = '%s not defined used by %s' % (n, cls.__name__)
+                        message = ('%s not defined used '
+                                   'by %s' % (n, cls.__name__))
                         logging.getLogger(__name__).debug(message)
