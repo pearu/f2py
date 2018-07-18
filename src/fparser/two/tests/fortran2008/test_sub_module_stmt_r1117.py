@@ -66,4 +66,3 @@ def test_simple_error7():
     with pytest.raises(NoMatchError) as excinfo:
         _ = Sub_Module_Stmt("submodule (id) name :")
     assert "Sub_Module_Stmt: 'submodule (id) name name2'" in str(excinfo.value)
-

@@ -37,7 +37,8 @@ def test_simple_error1():
     '''
     with pytest.raises(NoMatchError) as excinfo:
         result = Parent_Identifier("modulename ; submodulename")
-    assert "Parent_Identifier: 'modulename ; submodulename'" in str(excinfo.value)
+    assert ("Parent_Identifier: 'modulename ; submodulename'"
+            in str(excinfo.value))
 
 
 def test_simple_error2():
@@ -71,7 +72,6 @@ def test_simple_error4():
         _ = Parent_Identifier("modulename : submodulename : anothername")
     assert ("Parent_Identifier: 'modulename : submodulename : anothername'"
             in str(excinfo.value))
-
 
 
 @pytest.mark.xfail(reason="Does not raise an error if there is extra "
