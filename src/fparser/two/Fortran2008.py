@@ -287,7 +287,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
     parent-identifier is ancestor-module-name [ : parent-submodule-name ]
 
     C1113 The ancestor-module-name shall be the name of a nonintrinsic
-    module; the parent-submodule19 name shall be the name of a
+    module; the parent-submodule name shall be the name of a
     descendant of that module.
     This constraint can not be tested by fparser in general as the
     module or submodule may be in a different file. We therefore do
