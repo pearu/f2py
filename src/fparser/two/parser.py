@@ -84,7 +84,7 @@ class ParserFactory(object):
             # we return the Fortran2003 one.
             return Fortran2003.Program
         else:
-            print "unsupported standard {0}".format(std)
+            print ("unsupported standard {0}".format(std))
             exit(1)
 
     def _setup(self, input_classes):
