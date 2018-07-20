@@ -29,7 +29,7 @@ class Program_Unit(Program_Unit_2003):  # R202
     # Fortran2008 adds the concept of submodules to a program-unit. We
     # therefore extend the Fortran2003 specification
     subclass_names = Program_Unit_2003.subclass_names[:]
-    subclass_names.append("Sub_Module")
+    subclass_names.append("Submodule")
 
 
 class Specification_Part_C1112(Specification_Part):  # C1112
@@ -131,7 +131,7 @@ class Declaration_Construct_C1112(Declaration_Construct):  # C1112
     subclass_names.remove('Stmt_Function_Stmt')
 
 
-class Sub_Module(BlockBase):  # R1116 [C1112,C1114]
+class Submodule(BlockBase):  # R1116 [C1112,C1114]
     '''Fortran 2008 rule R1116
     submodule is submodule-stmt
                  [ specification-part ]
@@ -146,14 +146,14 @@ class Sub_Module(BlockBase):  # R1116 [C1112,C1114]
     C1114 If a submodule-name appears in the end-submodule-stmt, it
     shall be identical to the one in the submodule-stmt.
     This constraint is handled by the Base class with the names being
-    provided by the 'Sub_Module_Stmt and 'End_Sub_Module_Stmt' classes
+    provided by the 'Submodule_Stmt and 'End_Submodule_Stmt' classes
     via a `get_name` method
 
     '''
 
     subclass_names = []
-    use_names = ['Sub_Module_Stmt', 'Specification_Part_C1112',
-                 'Module_Subprogram_Part', 'End_Sub_Module_Stmt']
+    use_names = ['Submodule_Stmt', 'Specification_Part_C1112',
+                 'Module_Subprogram_Part', 'End_Submodule_Stmt']
 
     @staticmethod
     def match(reader):
@@ -171,20 +171,20 @@ class Sub_Module(BlockBase):  # R1116 [C1112,C1114]
         '''
 
         result = BlockBase.match(
-            Sub_Module_Stmt,
+            Submodule_Stmt,
             [Specification_Part_C1112, Module_Subprogram_Part],
-            End_Sub_Module_Stmt, reader)
+            End_Submodule_Stmt, reader)
         return result
 
 
-class Sub_Module_Stmt(Base):  # R1117
+class Submodule_Stmt(Base):  # R1117
     '''
     Fortran 2008 rule R1117
     submodule-stmt is SUBMODULE ( parent-identifier ) submodule-name
 
     '''
     subclass_names = []
-    use_names = ['Sub_Module_Name', 'Parent_Identifier']
+    use_names = ['Submodule_Name', 'Parent_Identifier']
 
     @staticmethod
     def match(fstring):
@@ -228,7 +228,7 @@ class Sub_Module_Stmt(Base):  # R1117
         parent_id = parent_id_brackets[1:-1].lstrip().rstrip()
         # Format is OK from this Class' perspective. Pass on
         # parent_identifier and submodule name to appropriate classes
-        return Parent_Identifier(parent_id), Sub_Module_Name(submodule_name)
+        return Parent_Identifier(parent_id), Submodule_Name(submodule_name)
 
     def tostr(self):
         '''return the fortran representation of this object'''
@@ -247,14 +247,14 @@ class Sub_Module_Stmt(Base):  # R1117
         return self.items[1]
 
 
-class End_Sub_Module_Stmt(EndStmtBase):  # R1119
+class End_Submodule_Stmt(EndStmtBase):  # R1119
     '''
     Fortran 2008 rule R1119
     end-submodule-stmt is END [ SUBMODULE [ submodule-name ] ]
 
     '''
     subclass_names = []
-    use_names = ['Sub_Module_Name']
+    use_names = ['Submodule_Name']
 
     @staticmethod
     def match(fstring):
@@ -267,7 +267,7 @@ class End_Sub_Module_Stmt(EndStmtBase):  # R1119
         is a match or `None` if there is no match
 
         '''
-        return EndStmtBase.match('SUBMODULE', Sub_Module_Name, fstring)
+        return EndStmtBase.match('SUBMODULE', Submodule_Name, fstring)
 
     def get_name(self):  # C1114
         '''Fortran 2008 constraint C1114 return the submodule name as

@@ -37,7 +37,7 @@
 fparser2
 ========
 
-fparser2 provides support for parsing Fortran up to and including
+Fparser2 provides support for parsing Fortran up to and including
 Fortran 2003 through the `Fortran2003` module. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. Support for Fortran 2008
@@ -81,17 +81,17 @@ must be provided via an iterator which is an instance of either
     >>> program
     Program(Module(Module_Stmt('MODULE', Name('compute_unew_mod')), Specification_Part(Use_Stmt(None, Name('kind_params_mod'), '', None), Use_Stmt(None, Name('kernel_mod'), '', None), Use_Stmt(None, Name('argument_mod'), '', None), Use_Stmt(None, Name('grid_mod'), '', None), Use_Stmt(None, Name('field_mod'), '', None), Implicit_Part(Implicit_Stmt('NONE')), Access_Stmt('PRIVATE', None), Access_Stmt('PUBLIC', Name('invoke_compute_unew')), Access_Stmt('PUBLIC', Access_Id_List(',', (Name('compute_unew'), Name('compute_unew_code')))), Derived_Type_Def(Derived_Type_Stmt(Type_Attr_Spec('EXTENDS', Name('kernel_type')), Type_Name('compute_unew'), None), ...
 
-The ParserFactory either returns a Fortran2003 compliant parser or a
-Fortran2008 compliant parser depending on the `std` argument provided
+The `ParserFactory` either returns a Fortran2003-compliant parser or a
+Fortran2008-compliant parser depending on the `std` argument provided
 to its create method.
 
-Note that the two readers will ignore (and dispose of)
-comments by default. If you wish comments to be retained then you must
-set `ignore_comments=True` when creating the reader. The Abstract Syntax
-Tree created by fparser2 will then have `Comment` nodes representing any
-comments found in the code. Nodes representing in-line comments will be
-added immediately following the node representing the code in which they
-were encountered.
+Note that the two readers will ignore (and dispose of) comments by
+default. If you wish comments to be retained then you must set
+`ignore_comments=True` when creating the reader. The Abstract Syntax
+Tree created by fparser2 will then have `Comment` nodes representing
+any comments found in the code. Nodes representing in-line comments
+will be added immediately following the node representing the code in
+which they were encountered.
 
 Classes
 -------
