@@ -1,25 +1,24 @@
 # Copyright (c) 2018 Science and Technology Facilities Council
-
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,70 +31,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R1119
+''' Module containing tests for the parser file '''
 
-    end-submodule-stmt is END [ SUBMODULE [ submodule-name ] ]
-
-'''
 import pytest
-from fparser.two.Fortran2003 import NoMatchError
-from fparser.two.Fortran2008 import End_Submodule_Stmt
 from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2008 classes
-_ = ParserFactory().create(std="f2008")
+from fparser.common.readfortran import FortranStringReader
+from fparser.two.Fortran2003 import NoMatchError
 
 
-def test_simple_1():
-    '''Test the parsing of a minimal end-submodule statement'''
-    result = End_Submodule_Stmt("end")
-    assert str(result) == "END SUBMODULE"
-
-
-def test_simple_2():
-    '''Test the parsing of an end-submodule statement which includes the
-    submodule keyword
+@pytest.mark.xfail(reason="This works in isolation but fails with other "
+                   "tests. No idea why :-(")
+def test_parserfactory_std():
+    '''Test ParserFactory std argument options [non, f2003, f2008,
+    invalid]
 
     '''
-    result = End_Submodule_Stmt("end submodule")
-    assert str(result) == "END SUBMODULE"
-
-
-def test_simple_3():
-    '''Test the parsing of an end-submodule statement which includes the
-    submodule name
-
-    '''
-    result = End_Submodule_Stmt("end submodule name")
-    assert str(result) == "END SUBMODULE name"
-
-
-def test_simple_error1():
-    '''Test an end-submodule statement with a syntax error raises an
-    exception
-
-    '''
+    fstring = (
+        "submodule (x) y\n"
+        "end\n")
+    parser = ParserFactory().create()
+    reader = FortranStringReader(fstring)
     with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("edn")
-    assert "End_Submodule_Stmt: 'edn'" in str(excinfo.value)
+        _ = parser(reader)
+    assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
-
-def test_simple_error2():
-    '''Test an end-submodule statement with a syntax error raises an
-    exception
-
-    '''
+    parser = ParserFactory().create(std="f2003")
+    reader = FortranStringReader(fstring)
     with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("end submod")
-    assert "End_Submodule_Stmt: 'end submod'" in str(excinfo.value)
+        _ = parser(reader)
+    assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
+    parser = ParserFactory().create(std="f2008")
+    reader = FortranStringReader(fstring)
+    ast = parser(reader)
+    code = str(ast)
+    assert "SUBMODULE (x) y\nEND SUBMODULE y" in code
 
-@pytest.mark.xfail(reason="Does not raise an error if there is extra "
-                   "content after the match")
-def test_simple_error3():
-    '''Test an end-submodule statement with additional content after the
-    match raises an exception
-
-    '''
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("end submodule name :")
-    assert "End_Submodule_Stmt: 'submodule () name'" in str(excinfo.value)
+    with pytest.raises(SystemExit):
+        parser = ParserFactory().create(std="invalid")

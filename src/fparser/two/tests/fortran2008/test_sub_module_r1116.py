@@ -50,7 +50,7 @@
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import NoMatchError
-from fparser.two.Fortran2008 import Sub_Module
+from fparser.two.Fortran2008 import Submodule
 from fparser.two.parser import ParserFactory
 # this is required to setup the fortran2008 classes
 _ = ParserFactory().create(std="f2008")
@@ -62,7 +62,7 @@ def test_submodule():
       submodule (foobar) bar
       end
       ''')
-    ast = Sub_Module(reader)
+    ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "END SUBMODULE bar" in str(ast)
 
@@ -77,7 +77,7 @@ def test_submodule_sp():
         use empty
       end
       ''')
-    ast = Sub_Module(reader)
+    ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "  USE empty\n" \
         "END SUBMODULE bar" in str(ast)
@@ -95,7 +95,7 @@ def test_submodule_msp():
         end subroutine info
       end
       ''')
-    ast = Sub_Module(reader)
+    ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "  CONTAINS\n" \
         "  SUBROUTINE info\n" \
@@ -116,7 +116,7 @@ def test_submodule_both():
         end subroutine info
       end
       ''')
-    ast = Sub_Module(reader)
+    ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "  USE empty\n" \
         "  CONTAINS\n" \
@@ -139,7 +139,7 @@ def test_submodule_format_error1():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
     assert ("at line 2\n"
             ">>>      1 format(a)\n"
             in str(excinfo.value))
@@ -158,7 +158,7 @@ def test_submodule_format_error2():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      1 format(a)\n"
             in str(excinfo.value))
@@ -178,7 +178,7 @@ def test_submodule_entry_error1():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
     assert ("at line 2\n"
             ">>>      entry here\n"
             in str(excinfo.value))
@@ -197,7 +197,7 @@ def test_submodule_entry_error2():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      entry here\n"
             in str(excinfo.value))
@@ -218,7 +218,7 @@ def test_submodule_stmt_func_error():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      statefunc(x) = x*2\n"
             in str(excinfo.value))
@@ -232,7 +232,7 @@ def test_submodule_samename():
       submodule (foobar) bar
       end submodule bar
       ''')
-    ast = Sub_Module(reader)
+    ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "END SUBMODULE bar" in str(ast)
 
@@ -245,4 +245,4 @@ def test_submodule_differentname():
       end submodule error
       ''')
     with pytest.raises(SystemExit):
-        _ = Sub_Module(reader)
+        _ = Submodule(reader)
