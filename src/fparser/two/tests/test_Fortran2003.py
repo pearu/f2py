@@ -4436,8 +4436,8 @@ if 0:
             continue
         if not issubclass(OBJ, Base):
             continue
-        tclsNAME = OBJ.__name__
-        if tclsNAME.endswith('Base'):
+        CLSNAME = OBJ.__name__
+        if CLSNAME.endswith('Base'):
             continue
         TOTAL_CLASSES += 1
         SUBCLASS_NAMES = OBJ.__dict__.get('subclass_names', None)
@@ -4446,22 +4446,22 @@ if 0:
             continue
         MATCH = OBJ.__dict__.get('match', None)
         try:
-            TEST_tcls = ast.literal_eval('test_{0}'.format(tclsNAME))
+            TEST_CLS = ast.literal_eval('test_{0}'.format(CLSNAME))
         except NameError:
-            TEST_tcls = None
+            TEST_CLS = None
         TOTAL_NEEDS += 1
         if MATCH is None:
-            if TEST_tcls is None:
-                print('Needs tests:', tclsNAME)
-                print('Needs match implementation:', tclsNAME)
+            if TEST_CLS is None:
+                print('Needs tests:', CLSNAME)
+                print('Needs match implementation:', CLSNAME)
                 NOF_NEEDED_TESTS += 1
                 NOF_NEEDED_MATCH += 1
             else:
-                print('Needs match implementation:', tclsNAME)
+                print('Needs match implementation:', CLSNAME)
                 NOF_NEEDED_MATCH += 1
         else:
-            if TEST_tcls is None:
-                print('Needs tests:', tclsNAME)
+            if TEST_CLS is None:
+                print('Needs tests:', CLSNAME)
                 NOF_NEEDED_TESTS += 1
         continue
     print('-----')
