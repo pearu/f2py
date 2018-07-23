@@ -69,10 +69,10 @@ from fparser.api import get_reader
 import pytest
 
 
-def assertRaises(exc, cls, s):
+def assertRaises(exc, cls, string):
     try:
-        cls(s)
-        raise AssertionError('Expected %s but got nothing' % exc)
+        cls(string)
+        raise AssertionError('Expected %string but got nothing' % exc)
     except exc:
         pass
 
@@ -82,17 +82,17 @@ def assertRaises(exc, cls, s):
 #
 
 
-def test_Program():  # R201
-    ''' Tests for parsing top-level program unit '''
-    cls = Program
+def test_program():
+    ''' Tests for parsing top-level program unit (R201) '''
+    tcls = Program
     reader = get_reader('''\
       subroutine foo
       end subroutine Foo
       subroutine bar
       end
       ''')
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     print(str(obj))
     assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
         "END SUBROUTINE bar" in str(obj)
@@ -101,30 +101,30 @@ def test_Program():  # R201
       subroutine foo (*)
       end subroutine foo
       ''')
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(obj)
 
 
-def test_Specification_Part():  # R204
-    ''' Tests for parsing specification-part '''
+def test_specification_part():
+    ''' Tests for parsing specification-part (R204) '''
     reader = get_reader('''\
     integer a''')
-    cls = Specification_Part
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Specification_Part
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
     assert (repr(obj) == "Specification_Part(Type_Declaration_Stmt("
             "Intrinsic_Type_Spec('INTEGER', None), None, "
             "Entity_Decl(Name('a'), None, None, None)))")
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 type a
 end type a
 type b
 end type b
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert 'TYPE :: a\nEND TYPE a\nTYPE :: b\nEND TYPE b' in str(obj)
 
 #
@@ -132,911 +132,902 @@ end type b
 #
 
 
-def test_Name():  # R304
+def test_name():  # R304
 
     obj = Name('a')
     assert isinstance(obj, Name), repr(obj)
     obj = Name('a2')
     assert isinstance(obj, Name), repr(obj)
-    obj = Designator('a')
-    assert isinstance(obj, Name), repr(obj)
-    obj = Constant('a')
-    assert isinstance(obj, Name), repr(obj)
-    obj = Expr('a')
-    assert isinstance(obj, Name), repr(obj)
+    objd = Designator('a')
+    assert isinstance(objd, Name), repr(objd)
+    objc = Constant('a')
+    assert isinstance(objc, Name), repr(objc)
+    obje = Expr('a')
+    assert isinstance(obje, Name), repr(obje)
 
 
-def test_Literal_Constant():  # R305
+def test_literal_constant():  # R305
 
-    cls = Constant
-    obj = cls('.false.')
+    tcls = Constant
+    obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.FALSE.'
 
-
-def test_Literal_Constant():  # R306
-
-    cls = Literal_Constant
-    obj = cls('.false.')
-    assert isinstance(obj, Logical_Literal_Constant), repr(obj)
-    assert str(obj) == '.FALSE.'
 
 #
 # SECTION 4
 #
 
 
-def test_Type_Param_Value():  # 402
+def test_type_param_value():  # R402
 
-    cls = Type_Param_Value
-    obj = cls('*')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Value
+    obj = tcls('*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*'
     assert repr(obj) == "Type_Param_Value('*')"
 
-    obj = cls(':')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(':')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ':'
 
-    obj = cls('1+2')
+    obj = tcls('1+2')
     assert isinstance(obj, Level_2_Expr), repr(obj)
     assert str(obj) == '1 + 2'
 
 
-def test_Intrinsic_Type_Spec():  # R403
+def test_intrinsic_type_spec():  # R403
 
-    cls = Intrinsic_Type_Spec
-    obj = cls('INTEGER')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Intrinsic_Type_Spec
+    obj = tcls('INTEGER')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER'
     assert repr(obj), "Intrinsic_Type_Spec('INTEGER', None)"
 
-    obj = cls('Integer*2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('Integer*2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER*2'
 
-    obj = cls('real*2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real*2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL*2'
 
-    obj = cls('logical*2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('logical*2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'LOGICAL*2'
 
-    obj = cls('complex*2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('complex*2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMPLEX*2'
 
-    obj = cls('character*2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('character*2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER*2'
 
-    obj = cls('double complex')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('double complex')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE COMPLEX'
 
-    obj = cls('double  precision')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('double  precision')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE PRECISION'
 
 
-def test_Kind_Selector():  # R404
+def test_kind_selector():  # R404
 
-    cls = Kind_Selector
-    obj = cls('(1)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Kind_Selector
+    obj = tcls('(1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(KIND = 1)'
     assert (repr(obj) ==
             "Kind_Selector('(', Int_Literal_Constant('1', None), ')')")
 
-    obj = cls('(kind=1+2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(kind=1+2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(KIND = 1 + 2)'
 
-    obj = cls('* 1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('* 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*1'
 
 
-def test_Signed_Int_Literal_Constant():  # R405
+def test_signed_int_literal_constant():  # R405
+    # pylint: disable=invalid-name
 
-    cls = Signed_Int_Literal_Constant
-    obj = cls('1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Signed_Int_Literal_Constant
+    obj = tcls('1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1'
-    assert repr(obj) == "%s('1', None)" % (cls.__name__)
+    assert repr(obj) == "%s('1', None)" % (tcls.__name__)
 
-    obj = cls('+ 21_2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+ 21_2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+21_2'
-    assert repr(obj) == "%s('+21', '2')" % (cls.__name__)
+    assert repr(obj) == "%s('+21', '2')" % (tcls.__name__)
 
-    obj = cls('-21_SHORT')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('-21_SHORT')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '-21_SHORT'
 
-    obj = cls('21_short')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('21_short')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '21_short'
 
-    obj = cls('+1976354279568241_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+1976354279568241_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+1976354279568241_8'
 
 
-def test_Int_Literal_Constant():  # R406
+def test_int_literal_constant():  # R406
 
-    cls = Int_Literal_Constant
-    obj = cls('1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Int_Literal_Constant
+    obj = tcls('1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1'
-    assert repr(obj) == "%s('1', None)" % (cls.__name__)
+    assert repr(obj) == "%s('1', None)" % (tcls.__name__)
 
-    obj = cls('21_2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('21_2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '21_2'
-    assert repr(obj) == "%s('21', '2')" % (cls.__name__)
+    assert repr(obj) == "%s('21', '2')" % (tcls.__name__)
 
-    obj = cls('21_SHORT')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('21_SHORT')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '21_SHORT'
 
-    obj = cls('21_short')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('21_short')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '21_short'
 
-    obj = cls('1976354279568241_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1976354279568241_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1976354279568241_8'
 
 
-def test_Binary_Constant():  # R412
+def test_binary_constant():  # R412
 
-    cls = Boz_Literal_Constant
-    bcls = Binary_Constant
-    obj = cls('B"01"')
-    assert isinstance(obj, bcls), repr(obj)
+    tcls = Boz_Literal_Constant
+    btcls = Binary_Constant
+    obj = tcls('B"01"')
+    assert isinstance(obj, btcls), repr(obj)
     assert str(obj) == 'B"01"'
-    assert repr(obj) == "%s('B\"01\"')" % (bcls.__name__)
+    assert repr(obj) == "%s('B\"01\"')" % (btcls.__name__)
 
 
-def test_Octal_Constant():  # R413
+def test_octal_constant():  # R413
 
-    cls = Boz_Literal_Constant
-    ocls = Octal_Constant
-    obj = cls('O"017"')
-    assert isinstance(obj, ocls), repr(obj)
+    tcls = Boz_Literal_Constant
+    otcls = Octal_Constant
+    obj = tcls('O"017"')
+    assert isinstance(obj, otcls), repr(obj)
     assert str(obj) == 'O"017"'
-    assert repr(obj) == "%s('O\"017\"')" % (ocls.__name__)
+    assert repr(obj) == "%s('O\"017\"')" % (otcls.__name__)
 
 
-def test_Hex_Constant():  # R414
+def test_hex_constant():  # R414
 
-    cls = Boz_Literal_Constant
-    zcls = Hex_Constant
-    obj = cls('Z"01A"')
-    assert isinstance(obj, zcls), repr(obj)
+    tcls = Boz_Literal_Constant
+    ztcls = Hex_Constant
+    obj = tcls('Z"01A"')
+    assert isinstance(obj, ztcls), repr(obj)
     assert str(obj) == 'Z"01A"'
-    assert repr(obj) == "%s('Z\"01A\"')" % (zcls.__name__)
+    assert repr(obj) == "%s('Z\"01A\"')" % (ztcls.__name__)
 
 
-def test_Signed_Real_Literal_Constant():  # R416
+def test_signed_real_literal_constant():  # R416
+    # pylint: disable=invalid-name
 
-    cls = Signed_Real_Literal_Constant
-    obj = cls('12.78')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Signed_Real_Literal_Constant
+    obj = tcls('12.78')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '12.78'
-    assert repr(obj) == "%s('12.78', None)" % (cls.__name__)
+    assert repr(obj) == "%s('12.78', None)" % (tcls.__name__)
 
-    obj = cls('+12.78_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+12.78_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+12.78_8'
-    assert repr(obj) == "%s('+12.78', '8')" % (cls.__name__)
+    assert repr(obj) == "%s('+12.78', '8')" % (tcls.__name__)
 
-    obj = cls('- 12.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('- 12.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '-12.'
 
-    obj = cls('1.6E3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E3'
 
-    obj = cls('+1.6E3_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+1.6E3_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+1.6E3_8'
 
-    obj = cls('1.6D3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6D3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6D3'
 
-    obj = cls('-1.6E-3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('-1.6E-3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '-1.6E-3'
-    obj = cls('1.6E+3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E+3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E+3'
 
-    obj = cls('3E4')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('3E4')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '3E4'
 
-    obj = cls('.123')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.123'
 
-    obj = cls('+1.6E-3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+1.6E-3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+1.6E-3'
 
-    obj = cls('10.9E7_QUAD')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('10.9E7_QUAD')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '10.9E7_QUAD'
 
-    obj = cls('-10.9e-17_quad')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('-10.9e-17_quad')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '-10.9E-17_quad'
 
 
-def test_Real_Literal_Constant():  # R417
+def test_real_literal_constant():  # R417
 
-    cls = Real_Literal_Constant
-    obj = cls('12.78')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Real_Literal_Constant
+    obj = tcls('12.78')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '12.78'
-    assert repr(obj) == "%s('12.78', None)" % (cls.__name__)
+    assert repr(obj) == "%s('12.78', None)" % (tcls.__name__)
 
-    obj = cls('12.78_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('12.78_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '12.78_8'
-    assert repr(obj) == "%s('12.78', '8')" % (cls.__name__)
+    assert repr(obj) == "%s('12.78', '8')" % (tcls.__name__)
 
-    obj = cls('12.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('12.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '12.'
 
-    obj = cls('1.6E3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E3'
 
-    obj = cls('1.6E3_8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E3_8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E3_8'
 
-    obj = cls('1.6D3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6D3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6D3'
 
-    obj = cls('1.6E-3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E-3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E-3'
-    obj = cls('1.6E+3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E+3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E+3'
 
-    obj = cls('3E4')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('3E4')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '3E4'
 
-    obj = cls('.123')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.123'
 
-    obj = cls('1.6E-3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1.6E-3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1.6E-3'
 
-    obj = cls('10.9E7_QUAD')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('10.9E7_QUAD')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '10.9E7_QUAD'
 
-    obj = cls('10.9e-17_quad')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('10.9e-17_quad')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '10.9E-17_quad'
 
-    obj = cls('0.0D+0')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('0.0D+0')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '0.0D+0'
 
 
-def test_Char_Selector():  # R424
+def test_char_selector():  # R424
 
-    cls = Char_Selector
-    obj = cls('(len=2, kind=8)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Char_Selector
+    obj = tcls('(len=2, kind=8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(LEN = 2, KIND = 8)'
     assert (repr(obj) ==
             "Char_Selector(Int_Literal_Constant('2', None), "
             "Int_Literal_Constant('8', None))")
 
-    obj = cls('(2, kind=8)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(2, kind=8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(LEN = 2, KIND = 8)'
 
-    obj = cls('(2, 8)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(2, 8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(LEN = 2, KIND = 8)'
 
-    obj = cls('(kind=8)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(kind=8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(KIND = 8)'
 
-    obj = cls('(kind=8,len=2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(kind=8,len=2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(LEN = 2, KIND = 8)'
 
 
-def test_Complex_Literal_Constant():  # R421
+def test_complex_literal_constant():  # R421
 
-    cls = Complex_Literal_Constant
-    obj = cls('(1.0, -1.0)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Complex_Literal_Constant
+    obj = tcls('(1.0, -1.0)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(1.0, -1.0)'
     assert (repr(obj) ==
             "Complex_Literal_Constant(Signed_Real_Literal_Constant("
             "'1.0', None), Signed_Real_Literal_Constant('-1.0', None))")
 
-    obj = cls('(3,3.1E6)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(3,3.1E6)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(3, 3.1E6)'
 
-    obj = cls('(4.0_4, 3.6E7_8)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(4.0_4, 3.6E7_8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(4.0_4, 3.6E7_8)'
 
-    obj = cls('( 0., PI)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('( 0., PI)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(0., PI)'
 
 
-def test_Type_Name():  # C424
+def test_type_name():  # R424
 
-    cls = Type_Name
-    obj = cls('a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Name
+    obj = tcls('a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a'
     assert repr(obj) == "Type_Name('a')"
 
-    assertRaises(NoMatchError, cls, 'integer')
-    assertRaises(NoMatchError, cls, 'doubleprecision')
+    assertRaises(NoMatchError, tcls, 'integer')
+    assertRaises(NoMatchError, tcls, 'doubleprecision')
 
 
-def test_Length_Selector():  # R425
+def test_length_selector():  # R425
 
-    cls = Length_Selector
-    obj = cls('( len = *)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Length_Selector
+    obj = tcls('( len = *)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(LEN = *)'
     assert (repr(obj) ==
             "Length_Selector('(', Type_Param_Value('*'), ')')")
 
-    obj = cls('*2,')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('*2,')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*2'
 
 
-def test_Char_Length():  # R426
+def test_char_length():  # R426
 
-    cls = Char_Length
-    obj = cls('(1)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Char_Length
+    obj = tcls('(1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(1)'
     assert (repr(obj) ==
             "Char_Length('(', Int_Literal_Constant('1', None), ')')")
 
-    obj = cls('1')
+    obj = tcls('1')
     assert isinstance(obj, Int_Literal_Constant), repr(obj)
     assert str(obj) == '1'
 
-    obj = cls('(*)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(*)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(*)'
 
-    obj = cls('(:)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(:)'
 
 
-def test_Char_Literal_Constant():  # R427
+def test_char_literal_constant():  # R427
 
-    cls = Char_Literal_Constant
-    obj = cls('NIH_"DO"')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Char_Literal_Constant
+    obj = tcls('NIH_"DO"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NIH_"DO"'
     assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
 
-    obj = cls("'DO'")
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls("'DO'")
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "'DO'"
     assert repr(obj) == 'Char_Literal_Constant("\'DO\'", None)'
 
-    obj = cls("'DON''T'")
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls("'DON''T'")
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "'DON''T'"
 
-    obj = cls('"DON\'T"')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('"DON\'T"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '"DON\'T"'
 
-    obj = cls('""')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('""')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '""'
 
-    obj = cls("''")
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls("''")
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "''"
 
-    obj = cls('"hey ha(ada)\t"')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('"hey ha(ada)\t"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '"hey ha(ada)\t"'
 
 
-def test_Logical_Literal_Constant():  # R428
+def test_logical_literal_constant():  # R428
 
-    cls = Logical_Literal_Constant
-    obj = cls('.TRUE.')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Logical_Literal_Constant
+    obj = tcls('.TRUE.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.TRUE.'
-    assert repr(obj) == "%s('.TRUE.', None)" % (cls.__name__)
+    assert repr(obj) == "%s('.TRUE.', None)" % (tcls.__name__)
 
-    obj = cls('.True.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.True.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.TRUE.'
 
-    obj = cls('.FALSE.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.FALSE.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.FALSE.'
 
-    obj = cls('.false.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.false.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.FALSE.'
 
-    obj = cls('.TRUE._HA')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('.TRUE._HA')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.TRUE._HA'
 
 
-def test_Derived_Type_Stmt():  # R430
+def test_derived_type_stmt():  # R430
 
-    cls = Derived_Type_Stmt
-    obj = cls('type a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Derived_Type_Stmt
+    obj = tcls('type a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TYPE :: a'
     assert repr(obj) == "Derived_Type_Stmt(None, Type_Name('a'), None)"
 
-    obj = cls('type ::a(b,c)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('type ::a(b,c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TYPE :: a(b, c)'
 
-    obj = cls('type, private, abstract::a(b,c)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('type, private, abstract::a(b,c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TYPE, PRIVATE, ABSTRACT :: a(b, c)'
 
 
-def test_Type_Name():  # C423
+def test_type_attr_spec():  # R431
 
-    cls = Type_Name
-    obj = cls('a')
-    assert isinstance(obj, cls), repr(obj)
-    assert str(obj) == 'a'
-    assert repr(obj) == "Type_Name('a')"
-
-
-def test_Type_Attr_Spec():  # R431
-
-    cls = Type_Attr_Spec
-    obj = cls('abstract')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Attr_Spec
+    obj = tcls('abstract')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ABSTRACT'
     assert repr(obj) == "Type_Attr_Spec('ABSTRACT', None)"
 
-    obj = cls('bind (c )')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('bind (c )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BIND(C)'
 
-    obj = cls('extends(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('extends(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EXTENDS(a)'
 
-    obj = cls('private')
+    obj = tcls('private')
     assert isinstance(obj, Access_Spec), repr(obj)
     assert str(obj) == 'PRIVATE'
 
 
-def test_End_Type_Stmt():  # R433
+def test_end_type_stmt():  # R433
 
-    cls = End_Type_Stmt
-    obj = cls('end type')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = End_Type_Stmt
+    obj = tcls('end type')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END TYPE'
     assert repr(obj) == "End_Type_Stmt('TYPE', None)"
 
-    obj = cls('end type  a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('end type  a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END TYPE a'
 
 
-def test_Sequence_Stmt():  # R434
+def test_sequence_stmt():  # R434
 
-    cls = Sequence_Stmt
-    obj = cls('sequence')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Sequence_Stmt
+    obj = tcls('sequence')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SEQUENCE'
     assert repr(obj) == "Sequence_Stmt('SEQUENCE')"
 
 
-def test_Type_Param_Def_Stmt():  # R435
+def test_type_param_def_stmt():  # R435
 
-    cls = Type_Param_Def_Stmt
-    obj = cls('integer ,kind :: a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Def_Stmt
+    obj = tcls('integer ,kind :: a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER, KIND :: a'
     assert (repr(obj) ==
             "Type_Param_Def_Stmt(None, Type_Param_Attr_Spec('KIND'), "
             "Name('a'))")
 
-    obj = cls('integer*2 ,len :: a=3, b=2+c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('integer*2 ,len :: a=3, b=2+c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER*2, LEN :: a = 3, b = 2 + c'
 
 
-def test_Type_Param_Decl():  # R436
+def test_type_param_decl():  # R436
 
-    cls = Type_Param_Decl
-    obj = cls('a=2')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Decl
+    obj = tcls('a=2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = 2'
     assert (repr(obj) ==
             "Type_Param_Decl(Name('a'), '=', Int_Literal_Constant('2', None))")
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Type_Param_Attr_Spec():  # R437
+def test_type_param_attr_spec():  # R437
 
-    cls = Type_Param_Attr_Spec
-    obj = cls('kind')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Attr_Spec
+    obj = tcls('kind')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'KIND'
     assert repr(obj) == "Type_Param_Attr_Spec('KIND')"
 
-    obj = cls('len')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('len')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'LEN'
 
 
-def test_Component_Attr_Spec():  # R441
+def test_component_attr_spec():  # R441
 
-    cls = Component_Attr_Spec
-    obj = cls('pointer')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Component_Attr_Spec
+    obj = tcls('pointer')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'POINTER'
     assert repr(obj) == "Component_Attr_Spec('POINTER')"
 
-    obj = cls('allocatable')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('allocatable')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ALLOCATABLE'
 
-    obj = cls('dimension(a)')
+    obj = tcls('dimension(a)')
     assert isinstance(obj, Dimension_Component_Attr_Spec), repr(obj)
     assert str(obj) == 'DIMENSION(a)'
 
-    obj = cls('private')
+    obj = tcls('private')
     assert isinstance(obj, Access_Spec), repr(obj)
     assert str(obj) == 'PRIVATE'
 
 
-def test_Component_Decl():  # R442
+def test_component_decl():  # R442
 
-    cls = Component_Decl
-    obj = cls('a(1)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Component_Decl
+    obj = tcls('a(1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
             "Component_Decl(Name('a'), Explicit_Shape_Spec(None, "
             "Int_Literal_Constant('1', None)), None, None)")
 
-    obj = cls('a(1)*(3)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1)*(3)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)*(3)'
 
-    obj = cls('a(1)*(3) = 2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1)*(3) = 2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)*(3) = 2'
 
-    obj = cls('a(1) => NULL')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1) => NULL')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1) => NULL'
 
 
-def test_Proc_Component_Def_Stmt():  # R445
-    cls = Proc_Component_Def_Stmt
-    obj = cls('procedure(), pointer :: a')
-    assert isinstance(obj, cls), repr(obj)
+def test_proc_component_def_stmt():  # R445
+
+    tcls = Proc_Component_Def_Stmt
+    obj = tcls('procedure(), pointer :: a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE(), POINTER :: a'
 
-    obj = cls('procedure(real*8), pointer, pass(n) :: a, b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('procedure(real*8), pointer, pass(n) :: a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b'
 
 
-def test_Private_Components_Stmt():  # pylint: disable=invalid-name
+def test_private_components_stmt():
     ''' Tests that declaration of PRIVATE components in a type definition
     is parsed correctly (R447) '''
-    cls = Private_Components_Stmt
-    obj = cls('private')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Private_Components_Stmt
+    obj = tcls('private')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRIVATE'
     assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
 
     # Statement not 'private'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('public')
+        _ = tcls('public')
     assert "Private_Components_Stmt: 'public'" in str(excinfo)
 
 
-def test_Type_Bound_Procedure_Part():
-    ''' Tests for type-bound procedure, R448 '''
-    cls = Type_Bound_Procedure_Part
-    obj = cls(get_reader('''\
+def test_type_bound_procedure_part():
+    ''' Tests for type-bound procedure (R448) '''
+    tcls = Type_Bound_Procedure_Part
+    obj = tcls(get_reader('''\
 contains
 procedure, pass :: length => point_length'''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
 
 
-def test_Proc_Binding_Stmt():  # R450
-    cls = Proc_Binding_Stmt
-    obj = cls('procedure, pass :: length => point_length')
+def test_proc_binding_stmt():  # R450
+
+    tcls = Proc_Binding_Stmt
+    obj = tcls('procedure, pass :: length => point_length')
     assert isinstance(obj, Specific_Binding), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 
-def test_Specific_Binding():  # R451
-    cls = Specific_Binding
-    obj = cls('procedure, pass :: length => point_length')
-    assert isinstance(obj, cls), repr(obj)
+def test_specific_binding():  # R451
+
+    tcls = Specific_Binding
+    obj = tcls('procedure, pass :: length => point_length')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 
-def test_Generic_Binding():  # R452
-    cls = Generic_Binding
-    obj = cls('generic :: a => b')
-    assert isinstance(obj, cls), repr(obj)
+def test_generic_binding():  # R452
+
+    tcls = Generic_Binding
+    obj = tcls('generic :: a => b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'GENERIC :: a => b'
 
-    obj = cls('generic, private :: read(formatted) => b,c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('generic, private :: read(formatted) => b,c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'GENERIC, PRIVATE :: READ(FORMATTED) => b, c'
 
 
-def test_Final_Binding():  # R454
+def test_final_binding():  # R454
 
-    cls = Final_Binding
-    obj = cls('final a, b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Final_Binding
+    obj = tcls('final a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FINAL :: a, b'
     assert (repr(obj) ==
             "Final_Binding('FINAL', Final_Subroutine_Name_List(',', "
             "(Name('a'), Name('b'))))")
 
-    obj = cls('final::a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('final::a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FINAL :: a'
 
 
-def test_Derived_Type_Spec():  # R455
+def test_derived_type_spec():  # R455
 
-    cls = Derived_Type_Spec
-    obj = cls('a(b)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Derived_Type_Spec
+    obj = tcls('a(b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(b)'
     assert repr(obj) == "Derived_Type_Spec(Type_Name('a'), Name('b'))"
 
-    obj = cls('a(b,c,g=1)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(b,c,g=1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(b, c, g = 1)'
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    obj = cls('a()')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a()')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a()'
 
 
-def test_Type_Param_Spec():  # R456
+def test_type_param_spec():  # R456
 
-    cls = Type_Param_Spec
-    obj = cls('a=1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Spec
+    obj = tcls('a=1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = 1'
     assert (repr(obj) ==
             "Type_Param_Spec(Name('a'), Int_Literal_Constant('1', None))")
 
-    obj = cls('k=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('k=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a'
 
-    obj = cls('k=:')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('k=:')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = :'
 
 
-def test_Type_Param_Spec_List():  # R456-list
+def test_type_param_spec_list():  # R456-list
 
-    cls = Type_Param_Spec_List
-
-    obj = cls('a,b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Spec_List
+    obj = tcls('a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a, b'
     assert (repr(obj) ==
             "Type_Param_Spec_List(',', (Name('a'), Name('b')))")
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
 
-    obj = cls('k=a,c,g=1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('k=a,c,g=1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a, c, g = 1'
 
 
-def test_Structure_Constructor_2():  # R457.b
+def test_structure_constructor_2():  # R457.b
 
-    cls = Structure_Constructor_2
-    obj = cls('k=a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Structure_Constructor_2
+    obj = tcls('k=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a'
     assert repr(obj) == "Structure_Constructor_2(Name('k'), Name('a'))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Structure_Constructor():  # R457
+def test_structure_constructor():  # R457
 
-    cls = Structure_Constructor
-    obj = cls('t()')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Structure_Constructor
+    obj = tcls('t()')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 't()'
     assert repr(obj) == "Structure_Constructor(Type_Name('t'), None)"
 
-    obj = cls('t(s=1, a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('t(s=1, a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 't(s = 1, a)'
 
-    obj = cls('a=k')
+    obj = tcls('a=k')
     assert isinstance(obj, Structure_Constructor_2), repr(obj)
     assert str(obj) == 'a = k'
     assert repr(obj) == "Structure_Constructor_2(Name('a'), Name('k'))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Component_Spec():  # R458
+def test_component_spec():  # R458
 
-    cls = Component_Spec
-    obj = cls('k=a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Component_Spec
+    obj = tcls('k=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a'
     assert repr(obj) == "Component_Spec(Name('k'), Name('a'))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    obj = cls('a % b')
+    obj = tcls('a % b')
     assert isinstance(obj, Proc_Component_Ref), repr(obj)
     assert str(obj) == 'a % b'
 
-    obj = cls('s =a % b')
+    obj = tcls('s =a % b')
     assert isinstance(obj, Component_Spec), repr(obj)
     assert str(obj) == 's = a % b'
 
 
-def test_Component_Spec_List():  # R458-list
+def test_component_spec_list():  # R458-list
 
-    cls = Component_Spec_List
-    obj = cls('k=a, b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Component_Spec_List
+    obj = tcls('k=a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a, b'
     assert (repr(obj) ==
             "Component_Spec_List(',', (Component_Spec(Name('k'), "
             "Name('a')), Name('b')))")
 
-    obj = cls('k=a, c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('k=a, c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a, c'
 
 
-def test_Enum_Def():  # R460
-    cls = Enum_Def
-    obj = cls(get_reader('''\
+def test_enum_def():  # R460
+
+    tcls = Enum_Def
+    obj = tcls(get_reader('''\
 enum, bind(c)
 enumerator :: red = 4, blue = 9
 enumerator yellow
 end enum
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             "ENUM, BIND(C)\n  ENUMERATOR :: red = 4, blue = 9\n"
             "  ENUMERATOR :: yellow\nEND ENUM")
 
 
-def test_Enum_Def_Stmt():  # R461
-    cls = Enum_Def_Stmt
-    obj = cls('enum, bind(c)')
-    assert isinstance(obj, cls), repr(obj)
+def test_enum_def_stmt():  # R461
+
+    tcls = Enum_Def_Stmt
+    obj = tcls('enum, bind(c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ENUM, BIND(C)'
 
 
-def test_Array_Constructor():  # R465
+def test_array_constructor():  # R465
 
-    cls = Array_Constructor
-    obj = cls('(/a/)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Array_Constructor
+    obj = tcls('(/a/)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(/a/)'
     assert repr(obj) == "Array_Constructor('(/', Name('a'), '/)')"
 
-    obj = cls('[a]')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('[a]')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '[a]'
     assert repr(obj) == "Array_Constructor('[', Name('a'), ']')"
 
-    obj = cls('[integer::a]')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('[integer::a]')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '[INTEGER :: a]'
 
-    obj = cls('[integer::a,b]')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('[integer::a,b]')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '[INTEGER :: a, b]'
 
 
-def test_Ac_Spec():  # R466
+def test_ac_spec():  # R466
 
-    cls = Ac_Spec
-    obj = cls('integer ::')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Ac_Spec
+    obj = tcls('integer ::')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER ::'
     assert (repr(obj) ==
             "Ac_Spec(Intrinsic_Type_Spec('INTEGER', None), None)")
 
-    obj = cls('integer :: a,b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('integer :: a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a, b'
 
-    obj = cls('a,b')
+    obj = tcls('a,b')
     assert isinstance(obj, Ac_Value_List), repr(obj)
     assert str(obj) == 'a, b'
 
-    obj = cls('integer :: a, (a, b, n = 1, 5)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('integer :: a, (a, b, n = 1, 5)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a, (a, b, n = 1, 5)'
 
 
-def test_Ac_Value_List():  # R469-list
+def test_ac_value_list():  # R469-list
 
-    cls = Ac_Value_List
-    obj = cls('a, b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Ac_Value_List
+    obj = tcls('a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a, b'
     assert repr(obj) == "Ac_Value_List(',', (Name('a'), Name('b')))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Ac_Implied_Do():  # R470
+def test_ac_implied_do():  # R470
 
-    cls = Ac_Implied_Do
-    obj = cls('( a, b, n = 1, 5 )')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Ac_Implied_Do
+    obj = tcls('( a, b, n = 1, 5 )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a, b, n = 1, 5)'
     assert (repr(obj) ==
             "Ac_Implied_Do(Ac_Value_List(',', (Name('a'), Name('b'))), "
@@ -1044,18 +1035,18 @@ def test_Ac_Implied_Do():  # R470
             "None), Int_Literal_Constant('5', None)]))")
 
 
-def test_Ac_Implied_Do_Control():  # R471
+def test_ac_implied_do_control():  # R471
 
-    cls = Ac_Implied_Do_Control
-    obj = cls('n = 3, 5')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Ac_Implied_Do_Control
+    obj = tcls('n = 3, 5')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'n = 3, 5'
     assert (repr(obj) ==
             "Ac_Implied_Do_Control(Name('n'), [Int_Literal_Constant('3', "
             "None), Int_Literal_Constant('5', None)])")
 
-    obj = cls('n = 3+1, 5, 1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('n = 3+1, 5, 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'n = 3 + 1, 5, 1'
 
 #
@@ -1063,565 +1054,576 @@ def test_Ac_Implied_Do_Control():  # R471
 #
 
 
-def test_Type_Declaration_Stmt():  # R501
+def test_type_declaration_stmt():  # R501
 
-    cls = Type_Declaration_Stmt
-    obj = cls('integer a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Declaration_Stmt
+    obj = tcls('integer a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
     assert (repr(obj) ==
             "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), "
             "None, Entity_Decl(Name('a'), None, None, None))")
 
-    obj = cls('integer ,dimension(2):: a*3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('integer ,dimension(2):: a*3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER, DIMENSION(2) :: a*3'
 
-    obj = cls('real a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL :: a'
     assert (repr(obj) ==
             "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), "
             "None, Entity_Decl(Name('a'), None, None, None))")
 
-    obj = cls('REAL A( LDA, * ), B( LDB, * )')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('REAL A( LDA, * ), B( LDB, * )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL :: A(LDA, *), B(LDB, *)'
 
-    obj = cls('DOUBLE PRECISION   ALPHA, BETA')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('DOUBLE PRECISION   ALPHA, BETA')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE PRECISION :: ALPHA, BETA'
 
-    obj = cls('logical,parameter:: T=.true.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('logical,parameter:: T=.true.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'LOGICAL, PARAMETER :: T = .TRUE.'
 
-    obj = cls('character(n),private:: x(n)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('character(n),private:: x(n)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER(LEN = n), PRIVATE :: x(n)'
 
-    obj = cls('character(lenmax),private:: x(n)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('character(lenmax),private:: x(n)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER(LEN = lenmax), PRIVATE :: x(n)'
 
 
-def test_Declaration_Type_Spec():  # R502
+def test_declaration_type_spec():  # R502
 
-    cls = Declaration_Type_Spec
-    obj = cls('Integer*2')
+    tcls = Declaration_Type_Spec
+    obj = tcls('Integer*2')
     assert isinstance(obj, Intrinsic_Type_Spec), repr(obj)
     assert str(obj) == 'INTEGER*2'
 
-    obj = cls('type(foo)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('type(foo)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TYPE(foo)'
     assert repr(obj) == "Declaration_Type_Spec('TYPE', Type_Name('foo'))"
 
 
-def test_Attr_Spec():  # R503
+def test_attr_spec():  # R503
 
-    cls = Attr_Spec
-    obj = cls('allocatable')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Attr_Spec
+    obj = tcls('allocatable')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ALLOCATABLE'
 
-    obj = cls('dimension(a)')
+    obj = tcls('dimension(a)')
     assert isinstance(obj, Dimension_Attr_Spec), repr(obj)
     assert str(obj) == 'DIMENSION(a)'
 
 
-def test_Dimension_Attr_Spec():  # R503.d
+def test_dimension_attr_spec():  # R503.d
 
-    cls = Dimension_Attr_Spec
-    obj = cls('dimension(a)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Dimension_Attr_Spec
+    obj = tcls('dimension(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DIMENSION(a)'
     assert (repr(obj) ==
             "Dimension_Attr_Spec('DIMENSION', Explicit_Shape_Spec(None, "
             "Name('a')))")
 
 
-def test_Intent_Attr_Spec():  # R503.f
+def test_intent_attr_spec():  # R503.f
 
-    cls = Intent_Attr_Spec
-    obj = cls('intent(in)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Intent_Attr_Spec
+    obj = tcls('intent(in)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTENT(IN)'
     assert repr(obj) == "Intent_Attr_Spec('INTENT', Intent_Spec('IN'))"
 
 
-def test_Entity_Decl():  # 504
+def test_entity_decl():  # 504
 
-    cls = Entity_Decl
-    obj = cls('a(1)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Entity_Decl
+    obj = tcls('a(1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
             "Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
             "Int_Literal_Constant('1', None)), None, None)")
 
-    obj = cls('a(1)*(3)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1)*(3)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)*(3)'
 
-    obj = cls('a(1)*(3) = 2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1)*(3) = 2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)*(3) = 2'
 
-    obj = cls('a = 2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a = 2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = 2'
 
-    obj = cls('a=2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a=2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = 2'
 
-    obj = cls('a = "abc "')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a = "abc "')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = "abc "'
 
-    obj = cls('a = .true.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a = .true.')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = .TRUE.'
 
 
-def test_Target_Entity_Decl():
-    cls = Target_Entity_Decl
-    obj = cls('a(1)')
-    assert isinstance(obj, cls), repr(obj)
+def test_target_entity_decl():
+
+    tcls = Target_Entity_Decl
+    obj = tcls('a(1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
             "Target_Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
             "Int_Literal_Constant('1', None)), None, None)")
 
 
-def test_Access_Spec():  # R508
+def test_access_spec():  # R508
 
-    cls = Access_Spec
-    obj = cls('private')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Access_Spec
+    obj = tcls('private')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRIVATE'
     assert repr(obj) == "Access_Spec('PRIVATE')"
 
-    obj = cls('public')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('public')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PUBLIC'
 
 
-def test_Language_Binding_Spec():  # R509
+def test_language_binding_spec():  # R509
 
-    cls = Language_Binding_Spec
-    obj = cls('bind(c)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Language_Binding_Spec
+    obj = tcls('bind(c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BIND(C)'
     assert repr(obj) == 'Language_Binding_Spec(None)'
 
-    obj = cls('bind(c, name="hey")')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('bind(c, name="hey")')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BIND(C, NAME = "hey")'
 
 
-def test_Explicit_Shape_Spec():  # R511
+def test_explicit_shape_spec():  # R511
 
-    cls = Explicit_Shape_Spec
-    obj = cls('a:b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Explicit_Shape_Spec
+    obj = tcls('a:b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a : b'
     assert repr(obj) == "Explicit_Shape_Spec(Name('a'), Name('b'))"
 
-    obj = cls('a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Upper_Bound():  # R513
+def test_upper_bound():  # R513
 
-    cls = Upper_Bound
-    obj = cls('a')
+    tcls = Upper_Bound
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    assertRaises(NoMatchError, cls, '*')
+    assertRaises(NoMatchError, tcls, '*')
 
 
-def test_Assumed_Shape_Spec():  # R514
+def test_assumed_shape_spec():  # R514
 
-    cls = Assumed_Shape_Spec
-    obj = cls(':')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Assumed_Shape_Spec
+    obj = tcls(':')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ':'
     assert repr(obj) == 'Assumed_Shape_Spec(None, None)'
 
-    obj = cls('a :')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a :')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a :'
 
 
-def test_Deferred_Shape_Spec():  # R515
+def test_deferred_shape_spec():  # R515
 
-    cls = Deferred_Shape_Spec
-    obj = cls(':')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Deferred_Shape_Spec
+    obj = tcls(':')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ':'
     assert repr(obj) == 'Deferred_Shape_Spec(None, None)'
 
 
-def test_Assumed_Size_Spec():  # R516
+def test_assumed_size_spec():  # R516
 
-    cls = Assumed_Size_Spec
-    obj = cls('*')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Assumed_Size_Spec
+    obj = tcls('*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*'
     assert repr(obj) == 'Assumed_Size_Spec(None, None)'
 
-    obj = cls('1:*')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('1:*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '1 : *'
 
-    obj = cls('a,1:*')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a,1:*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a, 1 : *'
 
-    obj = cls('a:b,1:*')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a:b,1:*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a : b, 1 : *'
 
 
-def test_Access_Stmt():  # R518
+def test_access_stmt():  # R518
 
-    cls = Access_Stmt
-    obj = cls('private')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Access_Stmt
+    obj = tcls('private')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRIVATE'
     assert repr(obj) == "Access_Stmt('PRIVATE', None)"
 
-    obj = cls('public a,b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('public a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PUBLIC :: a, b'
 
-    obj = cls('public ::a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('public ::a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PUBLIC :: a'
 
 
-def test_Data_Stmt():  # R524
-    cls = Data_Stmt
-    obj = cls('DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
-    assert isinstance(obj, cls), repr(obj)
+def test_data_stmt():  # R524
+
+    tcls = Data_Stmt
+    obj = tcls('DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
 
-    obj = cls('DATA NAME / "JOHN DOE" / MILES / 10 * 0 /')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('DATA NAME / "JOHN DOE" / MILES / 10 * 0 /')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DATA NAME / "JOHN DOE" /, MILES / 10 * 0 /'
 
-    obj = cls('DATA MYNAME / PERSON (21, \'JOHN SMITH\') /')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('DATA MYNAME / PERSON (21, \'JOHN SMITH\') /')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DATA MYNAME / PERSON(21, \'JOHN SMITH\') /'
 
 
-def test_Data_Stmt_Set():  # R525
-    cls = Data_Stmt_Set
-    obj = cls('MILES / 10 * "2/3" /')
-    assert isinstance(obj, cls), repr(obj)
+def test_data_stmt_set():  # R525
+
+    tcls = Data_Stmt_Set
+    obj = tcls('MILES / 10 * "2/3" /')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'MILES / 10 * "2/3" /'
 
 
-def test_Data_Implied_Do():  # R527
-    cls = Data_Implied_Do
-    obj = cls('((SKEW (K, J), J = 1, K), K = 1, 100)')
-    assert isinstance(obj, cls), repr(obj)
+def test_data_implied_do():  # R527
+
+    tcls = Data_Implied_Do
+    obj = tcls('((SKEW (K, J), J = 1, K), K = 1, 100)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '((SKEW(K, J), J = 1, K), K = 1, 100)'
 
 # R531-R534 are trivial
 
 
-def test_Dimension_Stmt():  # R535
+def test_dimension_stmt():  # R535
 
-    cls = Dimension_Stmt
-    obj = cls('dimension :: a(5)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Dimension_Stmt
+    obj = tcls('dimension :: a(5)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DIMENSION :: a(5)'
     assert (repr(obj) ==
             "Dimension_Stmt([(Name('a'), Explicit_Shape_Spec(None, "
             "Int_Literal_Constant('5', None)))])")
 
-    obj = cls('dimension a(n,m), b(:), c(2:n), d(*), e(n, 2:*)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('dimension a(n,m), b(:), c(2:n), d(*), e(n, 2:*)')
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'DIMENSION :: a(n, m), b(:), c(2 : n), d(*), e(n, 2 : *)')
 
 
-def test_Intent_Stmt():  # R536
+def test_intent_stmt():  # R536
 
-    cls = Intent_Stmt
-    obj = cls('intent(in) :: a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Intent_Stmt
+    obj = tcls('intent(in) :: a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTENT(IN) :: a'
     assert repr(obj) == "Intent_Stmt(Intent_Spec('IN'), Name('a'))"
 
-    obj = cls('intent(out) a, b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('intent(out) a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTENT(OUT) :: a, b'
     assert (repr(obj) ==
             "Intent_Stmt(Intent_Spec('OUT'), Dummy_Arg_Name_List(',', "
             "(Name('a'), Name('b'))))")
 
 
-def test_Optional_Stmt():  # R537
+def test_optional_stmt():  # R537
 
-    cls = Optional_Stmt
-    obj = cls('optional :: a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Optional_Stmt
+    obj = tcls('optional :: a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPTIONAL :: a'
     assert repr(obj) == "Optional_Stmt('OPTIONAL', Name('a'))"
 
-    obj = cls('optional :: a, b, c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('optional :: a, b, c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPTIONAL :: a, b, c'
     assert (repr(obj) ==
             "Optional_Stmt('OPTIONAL', Dummy_Arg_Name_List(',', (Name('a'), "
             "Name('b'), Name('c'))))")
 
 
-def test_Parameter_Stmt():  # R538
+def test_parameter_stmt():  # R538
 
-    cls = Parameter_Stmt
-    obj = cls('parameter(a=1)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Parameter_Stmt
+    obj = tcls('parameter(a=1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PARAMETER(a = 1)'
     assert (repr(obj) ==
             "Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), "
             "Int_Literal_Constant('1', None)))")
 
-    obj = cls('parameter(a=1, b=a+2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('parameter(a=1, b=a+2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PARAMETER(a = 1, b = a + 2)'
 
-    obj = cls('PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PARAMETER(ONE = 1.0D+0, ZERO = 0.0D+0)'
 
 
-def test_Named_Constant_Def():  # R539
+def test_named_constant_def():  # R539
 
-    cls = Named_Constant_Def
-    obj = cls('a=1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Named_Constant_Def
+    obj = tcls('a=1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = 1'
     assert (repr(obj) ==
             "Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
 
 
-def test_Pointer_Stmt():  # R540
+def test_pointer_stmt():  # R540
 
-    cls = Pointer_Stmt
-    obj = cls('pointer a(:), b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Pointer_Stmt
+    obj = tcls('pointer a(:), b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'POINTER :: a(:), b'
     assert (repr(obj) ==
             "Pointer_Stmt('POINTER', Pointer_Decl_List(',', (Pointer_Decl("
             "Name('a'), Deferred_Shape_Spec(None, None)), Name('b'))))")
 
 
-def test_Pointer_Decl():  # R541
+def test_pointer_decl():  # R541
 
-    cls = Pointer_Decl
-    obj = cls('a(:)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Pointer_Decl
+    obj = tcls('a(:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert (repr(obj) ==
             "Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
 
-    obj = cls('a(:,:)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(:,:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:, :)'
 
 
-def test_Protected_Stmt():  # R542
-    cls = Protected_Stmt
-    obj = cls('protected a,b')
-    assert isinstance(obj, cls), repr(obj)
+def test_protected_stmt():  # R542
+
+    tcls = Protected_Stmt
+    obj = tcls('protected a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROTECTED :: a, b'
     assert (repr(obj) ==
             "Protected_Stmt('PROTECTED', Entity_Name_List(',', (Name('a'), "
             "Name('b'))))")
 
-    obj = cls('protected ::a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('protected ::a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROTECTED :: a'
     assert repr(obj) == "Protected_Stmt('PROTECTED', Name('a'))"
 
 
-def test_Save_Stmt():  # R543
-    cls = Save_Stmt
-    obj = cls('save')
-    assert isinstance(obj, cls), repr(obj)
+def test_save_stmt():  # R543
+
+    tcls = Save_Stmt
+    obj = tcls('save')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SAVE'
     assert repr(obj) == "Save_Stmt('SAVE', None)"
 
-    obj = cls('save a, b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('save a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SAVE :: a, b'
     assert (repr(obj) == "Save_Stmt('SAVE', "
             "Saved_Entity_List(',', (Name('a'), Name('b'))))")
 
-    obj = cls('save :: /a/ , b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('save :: /a/ , b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SAVE :: /a/, b'
     assert (repr(obj) ==
             "Save_Stmt('SAVE', Saved_Entity_List(',', (Saved_Entity('/', "
             "Name('a'), '/'), Name('b'))))")
 
 
-def test_Saved_Entity():  # R544
-    cls = Saved_Entity
-    obj = cls('a')
+def test_saved_entity():  # R544
+
+    tcls = Saved_Entity
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
     assert repr(obj) == "Name('a')"
 
-    obj = cls('/a/')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('/a/')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '/a/'
     assert repr(obj) == "Saved_Entity('/', Name('a'), '/')"
 
 # R545 is trivial
 
 
-def test_Target_Stmt():  # R546
-    cls = Target_Stmt
-    obj = cls('target a, b(1000, 1000)')
-    assert isinstance(obj, cls), repr(obj)
+def test_target_stmt():  # R546
+
+    tcls = Target_Stmt
+    obj = tcls('target a, b(1000, 1000)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TARGET :: a, b(1000, 1000)'
 
-    obj = cls('target :: a, c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('target :: a, c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TARGET :: a, c'
 
 
-def test_Value_Stmt():  # R547
-    cls = Value_Stmt
-    obj = cls('value a')
-    assert isinstance(obj, cls), repr(obj)
+def test_value_stmt():  # R547
+
+    tcls = Value_Stmt
+    obj = tcls('value a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'VALUE :: a'
 
-    obj = cls('value:: a, c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('value:: a, c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'VALUE :: a, c'
 
 
-def test_Volatile_Stmt():  # R548
-    cls = Volatile_Stmt
-    obj = cls('volatile a')
-    assert isinstance(obj, cls), repr(obj)
+def test_volatile_stmt():  # R548
+
+    tcls = Volatile_Stmt
+    obj = tcls('volatile a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'VOLATILE :: a'
 
-    obj = cls('volatile :: a, c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('volatile :: a, c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'VOLATILE :: a, c'
 
 
-def test_Implicit_Stmt():  # R549
+def test_implicit_stmt():  # R549
 
-    cls = Implicit_Stmt
-    obj = cls('implicitnone')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Implicit_Stmt
+    obj = tcls('implicitnone')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'IMPLICIT NONE'
     assert repr(obj) == "Implicit_Stmt('NONE')"
 
-    obj = cls('implicit real(a-d), double precision(r-t,x), type(a) (y-z)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('implicit real(a-d), double precision(r-t,x), type(a) (y-z)')
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'IMPLICIT REAL(A - D), DOUBLE PRECISION(R - T, X), '
             'TYPE(a)(Y - Z)')
 
 
-def test_Implicit_Spec():  # R550
+def test_implicit_spec():  # R550
 
-    cls = Implicit_Spec
-    obj = cls('integer (a-z)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Implicit_Spec
+    obj = tcls('integer (a-z)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER(A - Z)'
     assert (repr(obj) ==
             "Implicit_Spec(Intrinsic_Type_Spec('INTEGER', None), "
             "Letter_Spec('A', 'Z'))")
 
-    obj = cls('double  complex (r,d-g)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('double  complex (r,d-g)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE COMPLEX(R, D - G)'
 
 
-def test_Letter_Spec():  # R551
+def test_letter_spec():  # R551
 
-    cls = Letter_Spec
-    obj = cls('a-z')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Letter_Spec
+    obj = tcls('a-z')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'A - Z'
     assert repr(obj) == "Letter_Spec('A', 'Z')"
 
-    obj = cls('d')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('d')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'D'
 
 
-def test_Namelist_Stmt():  # R552
-    cls = Namelist_Stmt
-    obj = cls('namelist / nlist / a')
-    assert isinstance(obj, cls), repr(obj)
+def test_namelist_stmt():  # R552
+
+    tcls = Namelist_Stmt
+    obj = tcls('namelist / nlist / a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NAMELIST /nlist/ a'
 
-    obj = cls('namelist / nlist / a, /mlist/ b,c /klist/ d,e')
+    obj = tcls('namelist / nlist / a, /mlist/ b,c /klist/ d,e')
     assert str(obj) == 'NAMELIST /nlist/ a, /mlist/ b, c, /klist/ d, e'
 
 
-def test_Equivalence_Stmt():  # R554
+def test_equivalence_stmt():  # R554
 
-    cls = Equivalence_Stmt
-    obj = cls('equivalence (a, b ,z)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Equivalence_Stmt
+    obj = tcls('equivalence (a, b ,z)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EQUIVALENCE(a, b, z)'
     assert (repr(obj) ==
             "Equivalence_Stmt('EQUIVALENCE', Equivalence_Set(Name('a'), "
             "Equivalence_Object_List(',', (Name('b'), Name('z')))))")
 
-    obj = cls('equivalence (a, b ,z),(b,l)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('equivalence (a, b ,z),(b,l)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EQUIVALENCE(a, b, z), (b, l)'
 
 
-def test_Common_Stmt():  # R557
+def test_common_stmt():  # R557
 
-    cls = Common_Stmt
-    obj = cls('common a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Common_Stmt
+    obj = tcls('common a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMMON // a'
     assert repr(obj) == "Common_Stmt([(None, Name('a'))])"
 
-    obj = cls('common // a,b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('common // a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMMON // a, b'
 
-    obj = cls('common /name/ a,b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('common /name/ a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMMON /name/ a, b'
 
-    obj = cls('common /name/ a,b(4,5) // c, /ljuks/ g(2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('common /name/ a,b(4,5) // c, /ljuks/ g(2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMMON /name/ a, b(4, 5) // c /ljuks/ g(2)'
 
 
-def test_Common_Block_Object():  # R558
+def test_common_block_object():  # R558
 
-    cls = Common_Block_Object
-    obj = cls('a(2)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Common_Block_Object
+    obj = tcls('a(2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(2)'
     assert (repr(obj) ==
             "Common_Block_Object(Name('a'), Explicit_Shape_Spec(None, "
             "Int_Literal_Constant('2', None)))")
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
@@ -1630,203 +1632,205 @@ def test_Common_Block_Object():  # R558
 #
 
 
-def test_Substring():  # R609
+def test_substring():  # R609
 
-    cls = Substring
-    obj = cls('a(:)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Substring
+    obj = tcls('a(:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert repr(obj) == "Substring(Name('a'), Substring_Range(None, None))"
 
-    obj = cls('a(1:2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(1:2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1 : 2)'
     assert (repr(obj) ==
             "Substring(Name('a'), Substring_Range(Int_Literal_Constant('1',"
             " None), Int_Literal_Constant('2', None)))")
 
 
-def test_Substring_Range():  # R611
+def test_substring_range():  # R611
 
-    cls = Substring_Range
-    obj = cls(':')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Substring_Range
+    obj = tcls(':')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ':'
     assert repr(obj) == "Substring_Range(None, None)"
 
-    obj = cls('a+1:')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a+1:')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a + 1 :'
 
-    obj = cls('a+1: c/foo(g)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a+1: c/foo(g)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a + 1 : c / foo(g)'
 
-    obj = cls('a:b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a:b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a : b'
     assert repr(obj) == "Substring_Range(Name('a'), Name('b'))"
 
-    obj = cls('a:')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a:')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a :'
 
-    obj = cls(':b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(':b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ': b'
 
 
-def test_Data_Ref():  # R612
+def test_data_ref():  # R612
 
-    cls = Data_Ref
-    obj = cls('a%b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Data_Ref
+    obj = tcls('a%b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
     assert repr(obj) == "Data_Ref('%', (Name('a'), Name('b')))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Part_Ref():  # R613
+def test_part_ref():  # R613
 
-    cls = Part_Ref
-    obj = cls('a')
+    tcls = Part_Ref
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Type_Param_Inquiry():  # R615
+def test_type_param_inquiry():  # R615
 
-    cls = Type_Param_Inquiry
-    obj = cls('a % b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Type_Param_Inquiry
+    obj = tcls('a % b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
     assert repr(obj) == "Type_Param_Inquiry(Name('a'), '%', Name('b'))"
 
 
-def test_Array_Section():  # R617
+def test_array_section():  # R617
 
-    cls = Array_Section
-    obj = cls('a(:)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Array_Section
+    obj = tcls('a(:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert (repr(obj) ==
             "Array_Section(Name('a'), Substring_Range(None, None))")
 
-    obj = cls('a(2:)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(2:)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(2 :)'
 
 
-def test_Section_Subscript():  # R619
+def test_section_subscript():  # R619
 
-    cls = Section_Subscript
+    tcls = Section_Subscript
 
-    obj = cls('1:2')
+    obj = tcls('1:2')
     assert isinstance(obj, Subscript_Triplet), repr(obj)
     assert str(obj) == '1 : 2'
 
-    obj = cls('zzz')
+    obj = tcls('zzz')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'zzz'
 
 
-def test_Section_Subscript_List():  # R619-list
+def test_section_subscript_list():  # R619-list
 
-    cls = Section_Subscript_List
-    obj = cls('a,2')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Section_Subscript_List
+    obj = tcls('a,2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a, 2'
     assert (repr(obj) ==
             "Section_Subscript_List(',', (Name('a'), Int_Literal_Constant("
             "'2', None)))")
 
-    obj = cls('::1')
+    obj = tcls('::1')
     assert isinstance(obj, Subscript_Triplet), repr(obj)
     assert str(obj) == ': : 1'
 
-    obj = cls('::1, 3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('::1, 3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ': : 1, 3'
 
 
-def test_Subscript_Triplet():  # R620
+def test_subscript_triplet():  # R620
 
-    cls = Subscript_Triplet
-    obj = cls('a:b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Subscript_Triplet
+    obj = tcls('a:b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a : b'
     assert repr(obj) == "Subscript_Triplet(Name('a'), Name('b'), None)"
 
-    obj = cls('a:b:1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a:b:1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a : b : 1'
 
-    obj = cls(':')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(':')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ':'
 
-    obj = cls('::5')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('::5')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ': : 5'
 
-    obj = cls(':5')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls(':5')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ': 5'
 
-    obj = cls('a+1 :')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a+1 :')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a + 1 :'
 
 
-def test_Allocate_Stmt():  # R623
-    cls = Allocate_Stmt
-    obj = cls('allocate(a,b)')
-    assert isinstance(obj, cls), repr(obj)
+def test_allocate_stmt():  # R623
+
+    tcls = Allocate_Stmt
+    obj = tcls('allocate(a,b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ALLOCATE(a, b)'
 
-    obj = cls('allocate(real::a)')
+    obj = tcls('allocate(real::a)')
     assert str(obj) == 'ALLOCATE(REAL::a)'
 
-    obj = cls('allocate(real(kind=8)::a, stat=b, source=c//d)')
+    obj = tcls('allocate(real(kind=8)::a, stat=b, source=c//d)')
     assert (str(obj) ==
             'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
 
 
-def test_Alloc_Opt():  # R624
+def test_alloc_opt():  # R624
 
-    cls = Alloc_Opt
-    obj = cls('stat=a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Alloc_Opt
+    obj = tcls('stat=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'STAT = a'
     assert repr(obj) == "Alloc_Opt('STAT', Name('a'))"
 
 
-def test_Nullify_Stmt():  # R633
+def test_nullify_stmt():  # R633
 
-    cls = Nullify_Stmt
-    obj = cls('nullify (a)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Nullify_Stmt
+    obj = tcls('nullify (a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NULLIFY(a)'
     assert repr(obj) == "Nullify_Stmt('NULLIFY', Name('a'))"
 
-    obj = cls('nullify (a,c)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('nullify (a,c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NULLIFY(a, c)'
 
 
-def test_Deallocate_Stmt():  # R635
-    cls = Deallocate_Stmt
-    obj = cls('deallocate (a)')
-    assert isinstance(obj, cls), repr(obj)
+def test_deallocate_stmt():  # R635
+
+    tcls = Deallocate_Stmt
+    obj = tcls('deallocate (a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DEALLOCATE(a)'
 
-    obj = cls('deallocate (a,stat=b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('deallocate (a,stat=b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DEALLOCATE(a, STAT = b)'
-    obj = cls('deallocate (a,c,stat=b,errmsg=d)')
+    obj = tcls('deallocate (a,c,stat=b,errmsg=d)')
     assert str(obj) == 'DEALLOCATE(a, c, STAT = b, ERRMSG = d)'
 
 #
@@ -1834,408 +1838,411 @@ def test_Deallocate_Stmt():  # R635
 #
 
 
-def test_Primary():  # R701
+def test_primary():  # R701
 
-    cls = Primary
-    obj = cls('a')
+    tcls = Primary
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    obj = cls('(a)')
+    obj = tcls('(a)')
     assert isinstance(obj, Parenthesis), repr(obj)
     assert str(obj) == '(a)'
 
-    obj = cls('1')
+    obj = tcls('1')
     assert isinstance(obj, Int_Literal_Constant), repr(obj)
     assert str(obj) == '1'
 
-    obj = cls('1.')
+    obj = tcls('1.')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '1.'
 
-    obj = cls('(1, n)')
+    obj = tcls('(1, n)')
     assert isinstance(obj, Complex_Literal_Constant), repr(obj)
     assert str(obj) == '(1, n)'
 
-    obj = cls('.true.')
+    obj = tcls('.true.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.TRUE.'
 
-    obj = cls('"hey a()c"')
+    obj = tcls('"hey a()c"')
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == '"hey a()c"'
 
-    obj = cls('b"0101"')
+    obj = tcls('b"0101"')
     assert isinstance(obj, Binary_Constant), repr(obj)
     assert str(obj) == 'B"0101"'
 
-    obj = cls('o"0107"')
+    obj = tcls('o"0107"')
     assert isinstance(obj, Octal_Constant), repr(obj)
     assert str(obj) == 'O"0107"'
 
-    obj = cls('z"a107"')
+    obj = tcls('z"a107"')
     assert isinstance(obj, Hex_Constant), repr(obj)
     assert str(obj) == 'Z"A107"'
 
-    obj = cls('a % b')
+    obj = tcls('a % b')
     assert isinstance(obj, Data_Ref), repr(obj)
     assert str(obj) == 'a % b'
 
-    obj = cls('a(:)')
+    obj = tcls('a(:)')
     assert isinstance(obj, Array_Section), repr(obj)
     assert str(obj) == 'a(:)'
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
 
-def test_Parenthesis():  # R701.h
+def test_parenthesis():  # R701.h
 
-    cls = Parenthesis
-    obj = cls('(a)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Parenthesis
+    obj = tcls('(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a)'
     assert repr(obj) == "Parenthesis('(', Name('a'), ')')"
 
-    obj = cls('(a+1)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(a+1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a + 1)'
 
-    obj = cls('((a))')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('((a))')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '((a))'
 
-    obj = cls('(a+(a+c))')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(a+(a+c))')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a + (a + c))'
 
-    obj = cls('("a"+"c")')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('("a"+"c")')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '("a" + "c")'
 
-    obj = cls('("a"+")")')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('("a"+")")')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '("a" + ")")'
 
-    obj = cls('''(')'+")")''')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('''(')'+")")''')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '''(')' + ")")'''
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('(a+b)*(c+d)')
+        _ = tcls('(a+b)*(c+d)')
     assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo)
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('''()''')
+        _ = tcls('''()''')
     assert "Parenthesis: '()'" in str(excinfo)
 
 
-def test_Level_1_Expr():  # R702
+def test_level_1_expr():  # R702
 
-    cls = Level_1_Expr
-    obj = cls('.hey. a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_1_Expr
+    obj = tcls('.hey. a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.HEY. a'
     assert repr(obj) == "Level_1_Expr('.HEY.', Name('a'))"
 
-    # assertRaises(NoMatchError,cls,'.not. a')
+    # assertRaises(NoMatchError, tcls, '.not. a')
 
-    obj = cls('.false.')
+    obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
 
 
-def test_Mult_Operand():  # R704
+def test_mult_operand():  # R704
 
-    cls = Mult_Operand
-    obj = cls('a**b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Mult_Operand
+    obj = tcls('a**b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a ** b'
     assert repr(obj) == "Mult_Operand(Name('a'), '**', Name('b'))"
 
-    obj = cls('a**2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a**2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a ** 2'
 
-    obj = cls('(a+b)**2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(a+b)**2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a + b) ** 2'
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
 
-def test_Add_Operand():  # R705
+def test_add_operand():  # R705
 
-    cls = Add_Operand
-    obj = cls('a*b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Add_Operand
+    obj = tcls('a*b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a * b'
     assert repr(obj) == "Add_Operand(Name('a'), '*', Name('b'))"
 
-    obj = cls('a/b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a/b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a / b'
 
-    obj = cls('a**b')
+    obj = tcls('a**b')
     assert isinstance(obj, Mult_Operand), repr(obj)
     assert str(obj) == 'a ** b'
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
 
-def test_Level_2_Expr():  # R706
+def test_level_2_expr():  # R706
 
-    cls = Level_2_Expr
-    obj = cls('a+b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_2_Expr
+    obj = tcls('a+b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a + b'
     assert repr(obj) == "Level_2_Expr(Name('a'), '+', Name('b'))"
 
-    obj = cls('a-b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a-b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a - b'
 
-    obj = cls('a+b+c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a+b+c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a + b + c'
 
-    obj = cls('+a')
+    obj = tcls('+a')
     assert isinstance(obj, Level_2_Unary_Expr), repr(obj)
     assert str(obj) == '+ a'
 
-    obj = cls('+1')
+    obj = tcls('+1')
     assert isinstance(obj, Level_2_Unary_Expr), repr(obj)
     assert str(obj) == '+ 1'
 
-    obj = cls('+a+b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+a+b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+ a + b'
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
 
-def test_Level_2_Unary_Expr():
+def test_level_2_unary_expr():  # R706.c
 
-    cls = Level_2_Unary_Expr
-    obj = cls('+a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_2_Unary_Expr
+    obj = tcls('+a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+ a'
     assert repr(obj) == "Level_2_Unary_Expr('+', Name('a'))"
 
-    obj = cls('-a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('-a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '- a'
 
-    obj = cls('+1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('+1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '+ 1'
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
 
-def test_Level_3_Expr():  # R710
+def test_level_3_expr():  # R710
 
-    cls = Level_3_Expr
-    obj = cls('a//b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_3_Expr
+    obj = tcls('a//b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a // b'
     assert repr(obj) == "Level_3_Expr(Name('a'), '//', Name('b'))"
 
-    obj = cls('"a"//"b"')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('"a"//"b"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '"a" // "b"'
 
 
-def test_Level_4_Expr():  # R712
+def test_level_4_expr():  # R712
 
-    cls = Level_4_Expr
-    obj = cls('a.eq.b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_4_Expr
+    obj = tcls('a.eq.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .EQ. b'
     assert repr(obj) == "Level_4_Expr(Name('a'), '.EQ.', Name('b'))"
 
-    obj = cls('a.ne.b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a.ne.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .NE. b'
 
-    obj = cls('a.lt.b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a.lt.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .LT. b'
 
-    obj = cls('a.gt.b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a.gt.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .GT. b'
 
-    obj = cls('a.ge.b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a.ge.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .GE. b'
 
-    obj = cls('a==b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a==b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a == b'
 
-    obj = cls('a/=b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a/=b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a /= b'
 
-    obj = cls('a<b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a<b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a < b'
 
-    obj = cls('a<=b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a<=b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a <= b'
 
-    obj = cls('a>=b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a>=b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a >= b'
 
-    obj = cls('a>b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a>b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a > b'
 
 
-def test_And_Operand():  # R714
+def test_and_operand():  # R714
 
-    cls = And_Operand
-    obj = cls('.not.a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = And_Operand
+    obj = tcls('.not.a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.NOT. a'
     assert repr(obj) == "And_Operand('.NOT.', Name('a'))"
 
 
-def test_Or_Operand():  # R715
+def test_or_operand():  # R715
 
-    cls = Or_Operand
-    obj = cls('a.and.b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Or_Operand
+    obj = tcls('a.and.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .AND. b'
     assert repr(obj) == "Or_Operand(Name('a'), '.AND.', Name('b'))"
 
 
-def test_Equiv_Operand():  # R716
+def test_equiv_operand():  # R716
 
-    cls = Equiv_Operand
-    obj = cls('a.or.b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Equiv_Operand
+    obj = tcls('a.or.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .OR. b'
     assert repr(obj) == "Equiv_Operand(Name('a'), '.OR.', Name('b'))"
 
 
-def test_Level_5_Expr():  # R717
+def test_level_5_expr():  # R717
 
-    cls = Level_5_Expr
-    obj = cls('a.eqv.b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Level_5_Expr
+    obj = tcls('a.eqv.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .EQV. b'
     assert repr(obj) == "Level_5_Expr(Name('a'), '.EQV.', Name('b'))"
 
-    obj = cls('a.neqv.b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a.neqv.b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .NEQV. b'
 
-    obj = cls('a.eq.b')
+    obj = tcls('a.eq.b')
     assert isinstance(obj, Level_4_Expr), repr(obj)
     assert str(obj) == 'a .EQ. b'
 
 
-def test_Expr():  # R722
+def test_expr():  # R722
 
-    cls = Expr
-    obj = cls('a .op. b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Expr
+    obj = tcls('a .op. b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a .OP. b'
     assert repr(obj) == "Expr(Name('a'), '.OP.', Name('b'))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    obj = cls('3.e2')
+    obj = tcls('3.e2')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
 
-    obj = cls('0.0E-1')
+    obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
     assert str(obj) == '0.0E-1'
 
-    obj = cls('123')
+    obj = tcls('123')
     assert isinstance(obj, Int_Literal_Constant), repr(obj)
     assert str(obj) == '123'
 
-    obj = cls('.false.')
+    obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.FALSE.'
 
     assertRaises(NoMatchError, Scalar_Int_Expr, 'a,b')
 
 
-def test_Logical_Expr():  # R724
-    cls = Logical_Expr
-    obj = cls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
+def test_logical_expr():  # R724
+
+    tcls = Logical_Expr
+    obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
     assert isinstance(obj, Equiv_Operand), repr(obj)
     assert (str(obj) ==
             '(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
 
 
-def test_Logical_Initialization_Expr():  # R733
+def test_logical_initialization_expr():  # R733
+    # pylint: disable=invalid-name
 
-    cls = Logical_Initialization_Expr
-    obj = cls('.false.')
+    tcls = Logical_Initialization_Expr
+    obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.FALSE.'
 
 
-def test_Assignment_Stmt():  # R734
+def test_assignment_stmt():  # R734
 
-    cls = Assignment_Stmt
-    obj = cls('a = b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Assignment_Stmt
+    obj = tcls('a = b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = b'
     assert repr(obj) == "Assignment_Stmt(Name('a'), '=', Name('b'))"
 
-    obj = cls('a(3:4) = b+c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(3:4) = b+c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(3 : 4) = b + c'
 
-    obj = cls('a%c = b+c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a%c = b+c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % c = b + c'
 
-    obj = cls('a = .FALSE.')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a = .FALSE.')
+    assert isinstance(obj, tcls), repr(obj)
     assert (repr(obj) ==
             "Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant("
             "'.FALSE.', None))")
 
-    obj = cls('a(n)(k:m) = 5')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('a(n)(k:m) = 5')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(n)(k : m) = 5'
 
-    obj = cls('b = a + 1  d - 8')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('b = a + 1  d - 8')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8'
 
-    obj = cls('b = a + 1  d - 8 + 1.1e+3')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('b = a + 1  d - 8 + 1.1e+3')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8 + 1.1E+3'
 
 
-def test_Pointer_Assignment_Stmt():  # R735
-    cls = Pointer_Assignment_Stmt
-    obj = cls('new_node % left => current_node')
-    assert isinstance(obj, cls), repr(obj)
+def test_pointer_assignment_stmt():  # R735
+
+    tcls = Pointer_Assignment_Stmt
+    obj = tcls('new_node % left => current_node')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'new_node % left => current_node'
 
-    obj = cls('simple_name => target_structure % substruct % component')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('simple_name => target_structure % substruct % component')
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'simple_name => target_structure % substruct % component')
 
@@ -2248,34 +2255,35 @@ EVERY_OTHER => VECTOR(1 : N : 2)
 WINDOW2(0 :, 0 :) => MAT2D(ML : MU, NL : NU)
 P => BESSEL
 STRUCT % COMPONENT => BESSEL'''.split('\n'):
-        obj = cls(stmt)
-        assert isinstance(obj, cls), repr(obj)
+        obj = tcls(stmt)
+        assert isinstance(obj, tcls), repr(obj)
         assert str(obj) == stmt
 
 
-def test_Proc_Component_Ref():  # R741
+def test_proc_component_ref():  # R741
 
-    cls = Proc_Component_Ref
-    obj = cls('a % b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Proc_Component_Ref
+    obj = tcls('a % b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
     assert repr(obj) == "Proc_Component_Ref(Name('a'), '%', Name('b'))"
 
 
-def test_Where_Stmt():  # R743
+def test_where_stmt():  # R743
 
-    cls = Where_Stmt
-    obj = cls('where (a) c=2')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Where_Stmt
+    obj = tcls('where (a) c=2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WHERE (a) c = 2'
     assert (repr(obj) ==
             "Where_Stmt(Name('a'), Assignment_Stmt(Name('c'), '=', "
             "Int_Literal_Constant('2', None)))")
 
 
-def test_Where_Construct():  # R745
-    cls = Where_Construct
-    obj = cls(get_reader('''\
+def test_where_construct():  # R745
+
+    tcls = Where_Construct
+    obj = tcls(get_reader('''\
     where (pressure <= 1.0)
     pressure = pressure + inc_pressure
     temp = temp - 5.0
@@ -2283,43 +2291,43 @@ def test_Where_Construct():  # R745
     raining = .true.
     end where
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == "WHERE (pressure <= 1.0)\n  "
             "pressure = pressure + inc_pressure\n  "
             "temp = temp - 5.0\n"
             "ELSEWHERE\n  raining = .TRUE.\nEND WHERE")
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     where (cond1)
     else    where (cond2)
     end where
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     n:where (cond1)
     elsewhere (cond2) n
     else   where n
     end where n
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
             "ELSEWHERE n\nEND WHERE n")
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     n:where (cond1)
     else where (cond2) n
     else where n
     end where n
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     print(str(obj))
     assert (str(obj) ==
             'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\n'
             'END WHERE n')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     n:where (me(:)=="hello")
     else where (me(:)=="goodbye") n
     else where n
@@ -2332,59 +2340,61 @@ def test_Where_Construct():  # R745
             'END WHERE n')
 
 
-def test_Where_Construct_Stmt():  # R745
+def test_where_construct_stmt():  # R745
 
-    cls = Where_Construct_Stmt
-    obj = cls('where (a)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Where_Construct_Stmt
+    obj = tcls('where (a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WHERE (a)'
     assert repr(obj) == "Where_Construct_Stmt(Name('a'))"
 
 
-def test_Forall_Construct():  # R752
-    cls = Forall_Construct
-    obj = cls(get_reader('''\
+def test_forall_construct():  # R752
+
+    tcls = Forall_Construct
+    obj = tcls(get_reader('''\
     forall (i = 1:10, j = 1:10, b(i, j) /= 0.0)
       a(i, j) = real (i + j - 2)
       b(i, j) = a(i, j) + b(i, j) * real (i * j)
     end forall
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n'
             '  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + '
             'b(i, j) * real(i * j)\nEND FORALL')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     n: forall (x = 1:5:2, j = 1:4)
       a(x, j) = j
     end forall n
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
 
 
-def test_Forall_Header():  # R754
-    cls = Forall_Header
-    obj = cls('(n=1:2, a+1)')
-    assert isinstance(obj, cls), repr(obj)
+def test_forall_header():  # R754
+
+    tcls = Forall_Header
+    obj = tcls('(n=1:2, a+1)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(n = 1 : 2, a + 1)'
 
-    obj = cls('(n=1:2, m=1:x-1:z(a))')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(n=1:2, m=1:x-1:z(a))')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(n = 1 : 2, m = 1 : x - 1 : z(a))'
 
 
-def test_Forall_Triplet_Spec():  # R755
+def test_forall_triplet_spec():  # R755
 
-    cls = Forall_Triplet_Spec
-    obj = cls('n = 1: 2')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Forall_Triplet_Spec
+    obj = tcls('n = 1: 2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'n = 1 : 2'
 
-    obj = cls('n = f(x): 2-b:a+1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('n = f(x): 2-b:a+1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'n = f(x) : 2 - b : a + 1'
 
 #
@@ -2392,17 +2402,18 @@ def test_Forall_Triplet_Spec():  # R755
 #
 
 
-def test_If_Construct():  # R802
-    cls = If_Construct
-    obj = cls(get_reader('''\
+def test_if_construct():  # R802
+
+    tcls = If_Construct
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
 end if
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'IF (expr) THEN\n  a = 1\nEND IF'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 name: if (expr) then
   a = 1
 end if name
@@ -2410,7 +2421,7 @@ end if name
 
     assert str(obj) == 'name:IF (expr) THEN\n  a = 1\nEND IF name'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
   if (expr2) then
@@ -2419,23 +2430,23 @@ if (expr) then
   a = 3
 end if
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'IF (expr) THEN\n  a = 1\n  IF (expr2) THEN\n    a = 2\n'
             '  END IF\n  a = 3\nEND IF')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
   a = 2
 end if
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nEND IF')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
 else
@@ -2444,7 +2455,7 @@ end if
     '''))
     assert str(obj) == 'IF (expr) THEN\n  a = 1\nELSE\n  a = 2\nEND IF'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
@@ -2457,7 +2468,7 @@ end if
             'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
             'ELSE\n  a = 3\nEND IF')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 named: if (expr) then
   a = 1
 else named
@@ -2467,7 +2478,7 @@ end if named
     assert (str(obj) ==
             'named:IF (expr) THEN\n  a = 1\nELSE named\n  a = 2\nEND IF named')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 named: if (expr) then
   a = 1
   named2: if (expr2) then
@@ -2479,7 +2490,7 @@ end if named
             'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n'
             '    a = 2\n  END IF named2\nEND IF named')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
   a = 1
 else if (expr2) then
@@ -2488,12 +2499,12 @@ else if (expr3) then
   a = 3
 end if
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
             'ELSE IF (expr3) THEN\n  a = 3\nEND IF')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
         if (dxmx .gt. 0d0) then
           diff = 0
           do  80  k = 1, n
@@ -2509,14 +2520,14 @@ end if
    82       xnew(k) = xin(k) + betx*(xnew(k)-xin(k))
           endif
         endif'''))
-    assert isinstance(obj, cls)
+    assert isinstance(obj, tcls)
 
 
 def test_if_nonblock_do():
     ''' Tests that conditional nonblock DO construct is parsed correctly '''
-    cls = If_Construct
+    tcls = If_Construct
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
    do  20  i = 1, 3
      a = 1
@@ -2527,7 +2538,7 @@ if (expr) then
 20 rotm(i,j) = r2(j,i)
 endif
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert len(obj.content) == 3, repr(obj)
     obj = obj.content[1]
     assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
@@ -2535,20 +2546,21 @@ endif
         'DO 20 i = 1, 3\n  a = 1\n  DO 20 j = 1, 3\n    a = 2\n    '
         'DO 20 k = 1, 3\n      a = 3\n20 rotm(i, j) = r2(j, i)')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 if (expr) then
     do  50  i = n, m, -1
   50 call foo(a)
 endif'''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert len(obj.content) == 3, repr(obj)
     obj = obj.content[1]
     assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
 
 
-def test_Case_Construct():  # R808
-    cls = Case_Construct
-    obj = cls(get_reader('''\
+def test_case_construct():  # R808
+
+    tcls = Case_Construct
+    obj = tcls(get_reader('''\
 select case (n)
 case (:-1)
   signum = -1
@@ -2558,50 +2570,52 @@ case (1:)
   signum = 1
 end select
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n'
             '  signum = 0\nCASE (1 :)\n  signum = 1\nEND SELECT')
 
 
-def test_Case_Selector():  # R813
-    cls = Case_Selector
-    obj = cls('default')
-    assert isinstance(obj, cls), repr(obj)
+def test_case_selector():  # R813
+
+    tcls = Case_Selector
+    obj = tcls('default')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DEFAULT'
 
-    obj = cls('(2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(2)'
 
-    obj = cls('(2:3, c+2:, :-a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('(2:3, c+2:, :-a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(2 : 3, c + 2 :, : - a)'
 
 
-def test_Associate_Construct():  # R816
-    cls = Associate_Construct
-    obj = cls(get_reader('''\
+def test_associate_construct():  # R816
+
+    tcls = Associate_Construct
+    obj = tcls(get_reader('''\
 ASSOCIATE ( Z => EXP(-(X**2+Y**2)) * COS(THETA) )
 PRINT *, A+Z, A-Z
 END ASSOCIATE
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n'
             '  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 name:ASSOCIATE ( XC => AX%B(I,J)%C )
 XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
 END ASSOCIATE name
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + '
             'PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
 W = ZX*X + ZY*Y
 END ASSOCIATE
@@ -2611,9 +2625,10 @@ END ASSOCIATE
             'AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
 
 
-def test_Select_Type_Construct():  # R821
-    cls = Select_Type_Construct
-    tree = cls(get_reader('''\
+def test_select_type_construct():  # R821
+
+    tcls = Select_Type_Construct
+    tree = tcls(get_reader('''\
 n:SELECT TYPE ( A => P_OR_C )
 CLASS IS ( POINT )
 PRINT *, A%X, A%Y ! This block gets executed
@@ -2631,70 +2646,72 @@ END SELECT n
             "END SELECT n")
 
 
-def test_Select_Type_Stmt():  # R822
-    cls = Select_Type_Stmt
-    obj = cls('select type(a=>b)')
-    assert isinstance(obj, cls), repr(obj)
+def test_select_type_stmt():  # R822
+
+    tcls = Select_Type_Stmt
+    obj = tcls('select type(a=>b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SELECT TYPE(a=>b)'
 
-    obj = cls('select type(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('select type(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SELECT TYPE(a)'
 
 
-def test_Type_Guard_Stmt():  # R823
-    cls = Type_Guard_Stmt
-    obj = cls('type is (real*8)')
-    assert isinstance(obj, cls), repr(obj)
+def test_type_guard_stmt():  # R823
+
+    tcls = Type_Guard_Stmt
+    obj = tcls('type is (real*8)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'TYPE IS (REAL*8)'
 
-    obj = cls('class is (mytype) name')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('class is (mytype) name')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CLASS IS (mytype) name'
 
-    obj = cls('classdefault')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('classdefault')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CLASS DEFAULT'
 
 
-def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
+def test_block_label_do_construct():
     ''' Tests that block labeled DO construct is parsed correctly (R826_1) '''
-    cls = Block_Label_Do_Construct
+    tcls = Block_Label_Do_Construct
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do 12
         a = 1
  12   continue
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO 12\n  a = 1\n12 CONTINUE'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       foo: do 21, i=1,10
         a = 1
  21   end do foo
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'foo:DO 21 , i = 1, 10\n  a = 1\n21 END DO foo'
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do 51 while (a < 10)
         a = a + 1
  51   continue
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO 51 WHILE (a < 10)\n  a = a + 1\n51 CONTINUE'
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do 52
         a = a + 1
         if (a > 10) exit
  52   continue
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO 52\n  a = a + 1\n  IF (a > 10) EXIT\n52 CONTINUE'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do 12
         do 13
           a = 1
@@ -2705,7 +2722,7 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
     assert len(obj.content) == 3, repr(len(obj.content))
     assert str(obj.content[1]) == 'DO 13\n  a = 1\n13 CONTINUE'
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do 52, i = 1,10
         do 53, while (j /= n)
         j = j + i
@@ -2719,66 +2736,67 @@ def test_Block_Label_Do_Construct():  # pylint: disable=invalid-name
         'DO 53 , WHILE (j /= n)\n  j = j + i\n53 CONTINUE')
 
 
-def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
+def test_block_nonlabel_do_construct():
+    # pylint: disable=invalid-name
     ''' Tests that block nonlabeled DO construct is parsed
     correctly (R826_2) '''
-    cls = Block_Nonlabel_Do_Construct
+    tcls = Block_Nonlabel_Do_Construct
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do i=1,10
         a = 1
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO i = 1, 10\n  a = 1\nEND DO'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do while (a < 10)
         a = a + 1
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO WHILE (a < 10)\n  a = a + 1\nEND DO'
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do
         a = a - 1
         if (a < 10) exit
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO\n  a = a - 1\n  IF (a < 10) EXIT\nEND DO'
     assert len(obj.content) == 4, repr(len(obj.content))
     assert str(obj.content[2]) == 'IF (a < 10) EXIT'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       foo:do i=1,10
         a = 1
       end do foo
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'foo:DO i = 1, 10\n  a = 1\nEND DO foo'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       foo:do while (a < 10)
         a = a + 1
       end do foo
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'foo:DO WHILE (a < 10)\n  a = a + 1\nEND DO foo'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do j=1,2
       foo:do i=1,10
         a = 1
       end do foo
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ('DO j = 1, 2\n'
                         '  foo:DO i = 1, 10\n    a = 1\n  END DO foo\nEND DO')
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do while (j >= n)
       bar:do i=1,10
         a = i + j
@@ -2786,19 +2804,19 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
       j = j - 1
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ('DO WHILE (j >= n)\n'
                         '  bar:DO i = 1, 10\n    a = i + j\n  END DO bar\n'
                         '  j = j - 1\nEND DO')
 
-    obj = cls(get_reader('''
+    obj = tcls(get_reader('''
       do, i = 1,10
       bar: do, while (j /= n)
         a = i - j
       end do bar
       end do
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == (
         'DO , i = 1, 10\n'
         '  bar:DO , WHILE (j /= n)\n    a = i - j\n  END DO bar\n'
@@ -2808,46 +2826,46 @@ def test_Block_Nonlabel_Do_Construct():  # pylint: disable=invalid-name
         'bar:DO , WHILE (j /= n)\n  a = i - j\nEND DO bar')
 
 
-def test_Label_Do_Stmt():  # pylint: disable=invalid-name
+def test_label_do_stmt():
     ''' Tests that labeled DO statement is parsed correctly (R828) '''
-    cls = Label_Do_Stmt
-    obj = cls('do 12')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Label_Do_Stmt
+    obj = tcls('do 12')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DO 12'
     assert repr(obj) == "Label_Do_Stmt(None, Label('12'), None)"
 
 
-def test_Loop_Control():  # pylint: disable=invalid-name
+def test_loop_control():
     ''' Tests incorrect loop control constructs (R829). Correct loop
     control constructs are tested in test_Block_Label_Do_Construct()
     and test_Nonblock_Label_Do_Construct() '''
-    cls = Loop_Control
+    tcls = Loop_Control
 
     # More than one '=' in counter expression
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('j = 1 = 10')
+        _ = tcls('j = 1 = 10')
     assert "Loop_Control: 'j = 1 = 10'" in str(excinfo)
 
     # Incorrect number of elements in counter expression
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('k = 10, -10, -2, -1')
+        _ = tcls('k = 10, -10, -2, -1')
     assert "Loop_Control: 'k = 10, -10, -2, -1'" in str(excinfo)
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('l = 5')
+        _ = tcls('l = 5')
     assert "Loop_Control: 'l = 5'" in str(excinfo)
 
 
-def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
+def test_nonblock_do_construct():
     ''' Tests that nonblock DO construct is parsed correctly (R835) '''
-    cls = Nonblock_Do_Construct
-    obj = cls(get_reader('''\
+    tcls = Nonblock_Do_Construct
+    obj = tcls(get_reader('''\
       do  20,  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
     assert str(obj) == 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do  20,  i = 1, 3
       k = 3
       do  20,  j = 1, 3
@@ -2859,14 +2877,14 @@ def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
         'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n'
         '20 rotm(i, j) = r2(j, i)')
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
       do  20  i = 1, 3
  20     rotm(i,j) = r2(j,i)
     '''))
     assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
     assert str(obj) == 'DO 20 i = 1, 3\n20 rotm(i, j) = r2(j, i)'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
     do  50,  i = n, m, -1
   50 call foo(a)
     '''))
@@ -2874,27 +2892,28 @@ def test_Nonblock_Do_Construct():  # pylint: disable=invalid-name
     assert str(obj) == 'DO 50 , i = n, m, - 1\n50 CALL foo(a)'
 
 
-def test_Continue_Stmt():  # R848
+def test_continue_stmt():  # R848
 
-    cls = Continue_Stmt
-    obj = cls('continue')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Continue_Stmt
+    obj = tcls('continue')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CONTINUE'
     assert repr(obj) == "Continue_Stmt('CONTINUE')"
 
 
-def test_Stop_Stmt():  # R849
-    cls = Stop_Stmt
-    obj = cls('stop')
-    assert isinstance(obj, cls), repr(obj)
+def test_stop_stmt():  # R849
+
+    tcls = Stop_Stmt
+    obj = tcls('stop')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'STOP'
 
-    obj = cls('stop 123')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('stop 123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'STOP 123'
 
-    obj = cls('stop   \'hey you\'')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('stop   \'hey you\'')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "STOP 'hey you'"
 
 #
@@ -2902,38 +2921,39 @@ def test_Stop_Stmt():  # R849
 #
 
 
-def test_Io_Unit():  # R901
+def test_io_unit():  # R901
 
-    cls = Io_Unit
-    obj = cls('*')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Io_Unit
+    obj = tcls('*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*'
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_read_stmt():  # R910
-    ''' Check that we successfully parse various forms of READ statement '''
-    cls = Read_Stmt
-    obj = cls('read(123)')
-    assert isinstance(obj, cls), repr(obj)
+def test_read_stmt():
+    ''' Check that we successfully parse various forms of
+    READ statement (R910) '''
+    tcls = Read_Stmt
+    obj = tcls('read(123)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'READ(123)'
 
-    obj = cls('read(123) a')
+    obj = tcls('read(123) a')
     assert str(obj) == 'READ(123) a'
-    obj = cls('read(123) a(  2)')
+    obj = tcls('read(123) a(  2)')
     assert str(obj) == 'READ(123) a(2)'
 
-    obj = cls('read*, a(  2), b')
+    obj = tcls('read*, a(  2), b')
     assert str(obj) == 'READ *, a(2), b'
     assert repr(obj) == (
         "Read_Stmt(None, Format('*'), Output_Item_List(',', (Part_Ref("
         "Name('a'), Int_Literal_Constant('2', None)), Name('b'))))")
 
     # With format specified by label number
-    obj = cls("READ 13, a(2)")
+    obj = tcls("READ 13, a(2)")
     assert str(obj) == 'READ 13, a(2)'
     print(repr(obj))
     assert repr(obj) == ("Read_Stmt(None, Label('13'), Part_Ref(Name('a'), "
@@ -2942,7 +2962,7 @@ def test_read_stmt():  # R910
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
     # without determining the actual type of the argument.
-    obj = cls('read(123, a_namelist_or_format)')
+    obj = tcls('read(123, a_namelist_or_format)')
     assert str(obj) == "READ(123, a_namelist_or_format)"
     assert repr(obj) == ("Read_Stmt(Io_Control_Spec_List(',', "
                          "(Io_Control_Spec(None, Int_Literal_Constant('123', "
@@ -2950,27 +2970,27 @@ def test_read_stmt():  # R910
                          "Name('a_namelist_or_format')))), None, None)")
 
 
-def test_write_stmt():  # R911
-    ''' Tests for various forms of Write statement '''
-    cls = Write_Stmt
-    obj = cls('write (123)"hey"')
-    assert isinstance(obj, cls), repr(obj)
+def test_write_stmt():
+    ''' Tests for various forms of Write statement (R911) '''
+    tcls = Write_Stmt
+    obj = tcls('write (123)"hey"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
         "Char_Literal_Constant('\"hey\"', None))")
 
-    obj = cls('WRITE (*,"(I3)") my_int')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('WRITE (*,"(I3)") my_int')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\"(I3)\"', None)))), Name('my_int'))")
 
-    obj = cls('WRITE (*,namtest)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('WRITE (*,namtest)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, namtest)'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
@@ -2980,16 +3000,16 @@ def test_write_stmt():  # R911
     # Test when format specifier contains an '=' character
     iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
     assert isinstance(iolist, Io_Control_Spec_List)
-    obj = cls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, cls)
+    obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, tcls)
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(\',\', "
         "(Io_Control_Spec(None, Io_Unit(\'*\')), "
         "Io_Control_Spec(None, "
         "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
         "None)))), Real_Literal_Constant(\'1.D0\', None))")
-    obj = cls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, cls)
+    obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, tcls)
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(\',\', "
         "(Io_Control_Spec(None, Io_Unit(\'*\')), "
@@ -2998,371 +3018,372 @@ def test_write_stmt():  # R911
         "None)))), Real_Literal_Constant(\'1.D0\', None))")
 
 
-def test_Print_Stmt():  # R912
+def test_print_stmt():  # R912
 
-    cls = Print_Stmt
-    obj = cls('print 123')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Print_Stmt
+    obj = tcls('print 123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRINT 123'
     assert repr(obj) == "Print_Stmt(Label('123'), None)"
 
-    obj = cls('print *,"a=",a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('print *,"a=",a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRINT *, "a=", a'
 
 
-def test_Io_Control_Spec():  # R913
+def test_io_control_spec():  # R913
 
-    cls = Io_Control_Spec
-    obj = cls('end=123')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Io_Control_Spec
+    obj = tcls('end=123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END = 123'
     assert repr(obj) == "Io_Control_Spec('END', Label('123'))"
 
 
-def test_Io_Control_Spec_List():  # R913-list
+def test_io_control_spec_list():
     ''' Test that we correctly parse and then generate various
-    forms of IO-control specification lists '''
-    cls = Io_Control_Spec_List
-    obj = cls('end=123')
-    assert isinstance(obj, cls), repr(obj)
+    forms of IO-control specification lists (R913-list) '''
+    tcls = Io_Control_Spec_List
+    obj = tcls('end=123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END = 123'
     assert repr(obj) == \
         "Io_Control_Spec_List(',', (Io_Control_Spec('END', Label('123')),))"
 
-    obj = cls('123')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123'
 
-    obj = cls('123,*')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123,*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = *'
     assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('FMT', Format('*'))))")
 
-    obj = cls('123,fmt=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123,fmt=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = a'
     assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('FMT', Name('a'))))")
 
-    obj = cls('123,nml=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123,nml=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, NML = a'
     assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('NML', Name('a'))))")
 
-    obj = cls('123, "(I3)"')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123, "(I3)"')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = "(I3)"'
 
-    obj = cls('123,a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('123,a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, a'
 
 
-def test_Format():  # R914
+def test_format():  # R914
 
-    cls = Format
-    obj = cls('*')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Format
+    obj = tcls('*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*'
     assert repr(obj) == "Format('*')"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    obj = cls('123')
+    obj = tcls('123')
     assert isinstance(obj, Label), repr(obj)
     assert str(obj) == '123'
 
 
-def test_Io_Implied_Do():  # R917
-    cls = Io_Implied_Do
-    obj = cls('(a, i=1,2)')
-    assert isinstance(obj, cls), repr(obj)
+def test_io_implied_do():  # R917
+
+    tcls = Io_Implied_Do
+    obj = tcls('(a, i=1,2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a, i = 1, 2)'
 
-    obj = cls('((i+j,j=3,4,1), i=1,2)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('((i+j,j=3,4,1), i=1,2)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '((i + j, j = 3, 4, 1), i = 1, 2)'
 
 
-def test_Io_Implied_Do_Control():  # R919
+def test_io_implied_do_control():  # R919
 
-    cls = Io_Implied_Do_Control
-    obj = cls('i=1,2')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Io_Implied_Do_Control
+    obj = tcls('i=1,2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'i = 1, 2'
 
-    obj = cls('i=f(2),2-1,a+2')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('i=f(2),2-1,a+2')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'i = f(2), 2 - 1, a + 2'
 
 
-def test_Wait_Stmt():  # R921
+def test_wait_stmt():  # R921
 
-    cls = Wait_Stmt
-    obj = cls('wait (123)')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Wait_Stmt
+    obj = tcls('wait (123)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WAIT(UNIT = 123)'
 
 
-def test_Wait_Spec():  # R922
+def test_wait_spec():  # R922
 
-    cls = Wait_Spec
-    obj = cls('123')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Wait_Spec
+    obj = tcls('123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'UNIT = 123'
     assert (repr(obj) ==
             "Wait_Spec('UNIT', Int_Literal_Constant('123', None))")
 
-    obj = cls('err=1')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('err=1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ERR = 1'
 
 
-def test_Backspace_Stmt():  # R923
+def test_backspace_stmt():  # R923
 
-    cls = Backspace_Stmt
-    obj = cls('backspace 1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Backspace_Stmt
+    obj = tcls('backspace 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BACKSPACE 1'
 
-    obj = cls('backspace  (unit=1,err=2)')
+    obj = tcls('backspace  (unit=1,err=2)')
     assert str(obj) == 'BACKSPACE(UNIT = 1, ERR = 2)'
 
 
-def test_Endfile_Stmt():  # R924
+def test_endfile_stmt():  # R924
 
-    cls = Endfile_Stmt
-    obj = cls('endfile 1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Endfile_Stmt
+    obj = tcls('endfile 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ENDFILE 1'
 
-    obj = cls('endfile  (unit=1,err=2)')
+    obj = tcls('endfile  (unit=1,err=2)')
     assert str(obj) == 'ENDFILE(UNIT = 1, ERR = 2)'
 
 
-def test_Rewind_Stmt():  # R925
+def test_rewind_stmt():  # R925
 
-    cls = Rewind_Stmt
-    obj = cls('rewind 1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Rewind_Stmt
+    obj = tcls('rewind 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REWIND 1'
 
-    obj = cls('rewind  (unit=1,err=2)')
+    obj = tcls('rewind  (unit=1,err=2)')
     assert str(obj) == 'REWIND(UNIT = 1, ERR = 2)'
 
 
-def test_Position_Spec():  # R926
+def test_position_spec():  # R926
 
-    cls = Position_Spec
-    obj = cls('1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Position_Spec
+    obj = tcls('1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'UNIT = 1'
-    obj = cls('unit=1')
+    obj = tcls('unit=1')
     assert str(obj) == 'UNIT = 1'
-    obj = cls('err=2')
+    obj = tcls('err=2')
     assert str(obj) == 'ERR = 2'
-    obj = cls('iomsg=a')
+    obj = tcls('iomsg=a')
     assert str(obj) == 'IOMSG = a'
-    obj = cls('iostat=a')
+    obj = tcls('iostat=a')
     assert str(obj) == 'IOSTAT = a'
 
 
-def test_Flush_Stmt():  # R927
+def test_flush_stmt():  # R927
 
-    cls = Flush_Stmt
-    obj = cls('flush 1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Flush_Stmt
+    obj = tcls('flush 1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FLUSH 1'
 
-    obj = cls('flush  (unit=1,err=2)')
+    obj = tcls('flush  (unit=1,err=2)')
     assert str(obj) == 'FLUSH(UNIT = 1, ERR = 2)'
 
 
-def test_Flush_Spec():  # R928
+def test_flush_spec():  # R928
 
-    cls = Flush_Spec
-    obj = cls('1')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Flush_Spec
+    obj = tcls('1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'UNIT = 1'
-    obj = cls('unit=1')
+    obj = tcls('unit=1')
     assert str(obj) == 'UNIT = 1'
-    obj = cls('err=2')
+    obj = tcls('err=2')
     assert str(obj) == 'ERR = 2'
-    obj = cls('iomsg=a')
+    obj = tcls('iomsg=a')
     assert str(obj) == 'IOMSG = a'
-    obj = cls('iostat=a')
+    obj = tcls('iostat=a')
     assert str(obj) == 'IOSTAT = a'
 
 
-def test_Inquire_Stmt():  # R929
-    ''' Tests for the Inquire statement '''
-    cls = Inquire_Stmt
-    obj = cls('inquire(1,file=a)')
-    assert isinstance(obj, cls), repr(obj)
+def test_inquire_stmt():
+    ''' Tests for the Inquire statement (R929) '''
+    tcls = Inquire_Stmt
+    obj = tcls('inquire(1,file=a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INQUIRE(UNIT = 1, FILE = a)'
-    obj = cls('inquire(iolength=n) a, b')
+    obj = tcls('inquire(iolength=n) a, b')
     assert str(obj) == 'INQUIRE(IOLENGTH=n) a, b'
-    obj = cls('inquire(unit=get_unit, opened=llopn)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('inquire(unit=get_unit, opened=llopn)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INQUIRE(UNIT = get_unit, OPENED = llopn)'
 
 
-def test_Inquire_Spec():  # R930
+def test_inquire_spec():
     ''' Test that we recognise the various possible forms of
-    entries in an inquire list '''
-    cls = Inquire_Spec
-    obj = cls('1')
-    assert isinstance(obj, cls), repr(obj)
+    entries in an inquire list (R930) '''
+    tcls = Inquire_Spec
+    obj = tcls('1')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'UNIT = 1'
-    obj = cls('file=fn')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('file=fn')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FILE = fn'
 
-    obj = cls('access=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('access=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ACCESS = a'
 
-    obj = cls('opened=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('opened=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPENED = a'
 
-    obj = cls('sequential=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('sequential=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SEQUENTIAL = a'
 
-    obj = cls('direct=a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('direct=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DIRECT = a'
 
 
-def test_Inquire_Spec_List():  # pylint: disable=invalid-name
+def test_inquire_spec_list():
     ''' Test that we recognise the various possible forms of
-    inquire list - R930
+    inquire list (R930)
     '''
     # Inquire_Spec_List is generated at runtime in Fortran2003.py
-    cls = Inquire_Spec_List
+    tcls = Inquire_Spec_List
 
-    obj = cls('unit=23, file="a_file.dat"')
-    assert isinstance(obj, cls)
+    obj = tcls('unit=23, file="a_file.dat"')
+    assert isinstance(obj, tcls)
     assert str(obj) == 'UNIT = 23, FILE = "a_file.dat"'
 
     # Invalid list (afile= instead of file=)
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('unit=23, afile="a_file.dat"')
+        _ = tcls('unit=23, afile="a_file.dat"')
     assert "NoMatchError: Inquire_Spec_List: 'unit=23, afile=" in str(excinfo)
 
 
-def test_Open_Stmt():
-    ''' Check that we correctly parse and re-generate the various forms
+def test_open_stmt():
+    ''' Test that we correctly parse and re-generate the various forms
     of OPEN statement (R904)'''
-    cls = Open_Stmt
-    obj = cls("open(23, file='some_file.txt')")
-    assert isinstance(obj, cls)
+    tcls = Open_Stmt
+    obj = tcls("open(23, file='some_file.txt')")
+    assert isinstance(obj, tcls)
     assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
-    obj = cls("open(unit=23, file='some_file.txt')")
-    assert isinstance(obj, cls)
+    obj = tcls("open(unit=23, file='some_file.txt')")
+    assert isinstance(obj, tcls)
     assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
 
 
-def test_Connect_Spec():
+def test_connect_spec():
     ''' Tests for individual elements of Connect_Spec (R905) '''
-    cls = Connect_Spec
+    tcls = Connect_Spec
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls("afile='a_file.dat'")
+        _ = tcls("afile='a_file.dat'")
     assert 'NoMatchError: Connect_Spec: \'afile=' in str(excinfo)
 
 
-def test_Connect_Spec_List():  # pylint: disable=invalid-name
+def test_connect_spec_list():
     '''
-    Check that we correctly parse the various valid forms of
+    Test that we correctly parse the various valid forms of
     connect specification (R905)
     '''
-    cls = Connect_Spec_List
-    obj = cls("22, access='direct'")
-    assert isinstance(obj, cls)
+    tcls = Connect_Spec_List
+    obj = tcls("22, access='direct'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, ACCESS = 'direct'"
 
-    obj = cls("22, action='read'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, action='read'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, ACTION = 'read'"
 
-    obj = cls("22, asynchronous='YES'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, asynchronous='YES'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, ASYNCHRONOUS = 'YES'"
 
-    obj = cls("22, blank='NULL'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, blank='NULL'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, BLANK = 'NULL'"
 
-    obj = cls("22, decimal='COMMA'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, decimal='COMMA'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, DECIMAL = 'COMMA'"
 
-    obj = cls("22, delim='APOSTROPHE'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, delim='APOSTROPHE'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, DELIM = 'APOSTROPHE'"
 
-    obj = cls("22, err=109")
-    assert isinstance(obj, cls)
+    obj = tcls("22, err=109")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, ERR = 109"
 
-    obj = cls("22, encoding='DEFAULT'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, encoding='DEFAULT'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, ENCODING = 'DEFAULT'"
 
-    obj = cls("22, file='a_file.dat'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat'"
 
-    obj = cls("22, file='a_file.dat', form='FORMATTED'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', form='FORMATTED'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', FORM = 'FORMATTED'"
 
-    obj = cls("22, file='a_file.dat', iomsg=my_string")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', iomsg=my_string")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', IOMSG = my_string"
 
-    obj = cls("22, file='a_file.dat', iostat=ierr")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', iostat=ierr")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', IOSTAT = ierr"
 
-    obj = cls("22, file='a_file.dat', pad='YES'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', pad='YES'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', PAD = 'YES'"
 
-    obj = cls("22, file='a_file.dat', position='APPEND'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', position='APPEND'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', POSITION = 'APPEND'"
 
-    obj = cls("22, file='a_file.dat', recl=100")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', recl=100")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', RECL = 100"
 
-    obj = cls("22, file='a_file.dat', round='UP'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', round='UP'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', ROUND = 'UP'"
 
-    obj = cls("22, file='a_file.dat', sign='PLUS'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', sign='PLUS'")
+    assert isinstance(obj, tcls)
     assert str(obj) == "UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS'"
 
-    obj = cls("22, file='a_file.dat', sign='PLUS', status='OLD'")
-    assert isinstance(obj, cls)
+    obj = tcls("22, file='a_file.dat', sign='PLUS', status='OLD'")
+    assert isinstance(obj, tcls)
     assert str(obj) == ("UNIT = 22, FILE = 'a_file.dat', SIGN = 'PLUS', "
                         "STATUS = 'OLD'")
 
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
+        _ = tcls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
     assert 'NoMatchError: Connect_Spec_List: \'unit=22, afile=' in str(excinfo)
 
 #
@@ -3370,164 +3391,168 @@ def test_Connect_Spec_List():  # pylint: disable=invalid-name
 #
 
 
-def test_Format_Stmt():  # R1001
-    cls = Format_Stmt
-    obj = cls('format (3f9.4)')
-    assert isinstance(obj, cls), repr(type(a))
+def test_format_stmt():  # R1001
+
+    tcls = Format_Stmt
+    obj = tcls('format (3f9.4)')
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == 'FORMAT(3F9.4)'
-    obj = cls("format (' ',3f9.4)")
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls("format (' ',3f9.4)")
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == "FORMAT(' ', 3F9.4)"
 
-    obj = cls('format(i6,f12.6,2x,f12.6)')
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls('format(i6,f12.6,2x,f12.6)')
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == 'FORMAT(I6, F12.6, 2X, F12.6)'
 
-    obj = cls("format(' Enter smth',$)")
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls("format(' Enter smth',$)")
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == "FORMAT(' Enter smth', $)"
 
-    obj = cls("format(/'a' /'b')")
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls("format(/'a' /'b')")
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == "FORMAT(/, 'a', /, 'b')"
 
-    obj = cls("format('a:':' b')")
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls("format('a:':' b')")
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == "FORMAT('a:', :, ' b')"
 
-    return
-    obj = cls("format('text=','  '")
+    return  # TODO
+    obj = tcls("format('text=','  '")
     assert str(obj) == ''
 
 
-def test_Format_Specification():  # R1002
-    cls = Format_Specification
-    obj = cls('(3f9.4, 2f8.1)')
-    assert isinstance(obj, cls), repr(type(a))
+def test_format_specification():  # R1002
+
+    tcls = Format_Specification
+    obj = tcls('(3f9.4, 2f8.1)')
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == '(3F9.4, 2F8.1)'
 
-    obj = cls("(' ', 2f8.1)")
-    assert isinstance(obj, cls), repr(type(a))
+    obj = tcls("(' ', 2f8.1)")
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == "(' ', 2F8.1)"
 
 
-def test_Format_Item():  # R1003
-    cls = Format_Item
-    obj = cls('3f9.4')
-    assert isinstance(obj, cls), repr(type(a))
+def test_format_item():  # R1003
+
+    tcls = Format_Item
+    obj = tcls('3f9.4')
+    assert isinstance(obj, tcls), repr(type(obj))
     assert str(obj) == '3F9.4'
 
-    obj = cls("' '")
-    assert isinstance(obj, Char_Literal_Constant), repr(type(a))
+    obj = tcls("' '")
+    assert isinstance(obj, Char_Literal_Constant), repr(type(obj))
     assert str(obj) == "' '"
 
-    obj = cls('i4/')
-    assert isinstance(obj, Format_Item_C1002), repr(type(a))
+    obj = tcls('i4/')
+    assert isinstance(obj, Format_Item_C1002), repr(type(obj))
     assert str(obj) == 'I4, /'
 
-    obj = cls('3f12.6/')
+    obj = tcls('3f12.6/')
     assert str(obj) == '3F12.6, /'
 
-    obj = cls('3d12.6/')
+    obj = tcls('3d12.6/')
     assert str(obj) == '3D12.6, /'
 
     # D specifier must be Dw.d so must have a decimal point
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('3d12/')
+    with pytest.raises(NoMatchError):
+        _ = tcls('3d12/')
 
-    obj = cls('3e12.6/')
+    obj = tcls('3e12.6/')
     assert str(obj) == '3E12.6, /'
 
-    obj = cls('3e12.6e2/')
+    obj = tcls('3e12.6e2/')
     assert str(obj) == '3E12.6E2, /'
 
     # Scientific format
-    obj = cls('3es12.6/')
+    obj = tcls('3es12.6/')
     assert str(obj) == '3ES12.6, /'
 
     # Engineering format
-    obj = cls('3en12.6/')
+    obj = tcls('3en12.6/')
     assert str(obj) == '3EN12.6, /'
 
     # Must have a decimal point
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('3en12/')
+    with pytest.raises(NoMatchError):
+        _ = tcls('3en12/')
 
     # Engineering format specifying number of digits in exponent
-    obj = cls('3en12.6e3/')
+    obj = tcls('3en12.6e3/')
     assert str(obj) == '3EN12.6E3, /'
 
-    obj = cls("/' '")
+    obj = tcls("/' '")
     assert str(obj) == "/, ' '"
 
-    obj = cls("' '/")
+    obj = tcls("' '/")
     assert str(obj) == "' ', /"
 
-    obj = cls("' '/' '")
+    obj = tcls("' '/' '")
     assert str(obj) == "' ', /, ' '"
 
-    obj = cls("'(5X,\"q_mesh =\",4F12.8)'")
+    obj = tcls("'(5X,\"q_mesh =\",4F12.8)'")
     assert isinstance(obj, Char_Literal_Constant)
 
 
-def test_Edit_Desc():
-    ''' Tests for matching Edit Descriptors '''
-    cls = Data_Edit_Desc
-    obj = cls('I3')
+def test_data_edit_desc():
+    ''' Tests for matching Edit Descriptors (R1005) '''
+    tcls = Data_Edit_Desc
+    obj = tcls('I3')
     assert str(obj) == 'I3'
 
-    obj = cls('I3.2')
+    obj = tcls('I3.2')
     assert str(obj) == 'I3.2'
 
-    obj = cls('O3.2')
+    obj = tcls('O3.2')
     assert str(obj) == 'O3.2'
 
-    obj = cls('Z3.2')
+    obj = tcls('Z3.2')
     assert str(obj) == 'Z3.2'
 
-    obj = cls('L3')
+    obj = tcls('L3')
     assert str(obj) == 'L3'
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('L3.2')
+        _ = tcls('L3.2')
     assert "NoMatchError: Data_Edit_Desc: 'L3.2'" in str(excinfo)
 
-    obj = cls('A3')
+    obj = tcls('A3')
     assert str(obj) == 'A3'
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('A3.2')
+        _ = tcls('A3.2')
     assert "NoMatchError: Data_Edit_Desc: 'A3.2'" in str(excinfo)
 
-    obj = cls("DT'a_name'")
+    obj = tcls("DT'a_name'")
     assert str(obj) == "DT'a_name'"
 
-    obj = cls("DT'a_name'(3,-2)")
+    obj = tcls("DT'a_name'(3,-2)")
     assert str(obj) == "DT'a_name'(3, -2)"
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls("DT'a_name'()")
+        _ = tcls("DT'a_name'()")
     assert '''Data_Edit_Desc: \'DT\'a_name\'()\'''' in str(excinfo)
 
 
-def test_Format_Item_List():
-    cls = Format_Item_List
-    obj = cls('3f9.4')
+def test_format_item_list():  # R1002, R1003
+
+    tcls = Format_Item_List
+    obj = tcls('3f9.4')
     assert isinstance(obj, Format_Item), repr(type(obj))
     assert str(obj) == '3F9.4'
 
-    obj = cls('3f9.4, 2f8.1')
+    obj = tcls('3f9.4, 2f8.1')
     assert isinstance(obj, Format_Item_List), repr(type(obj))
     assert str(obj) == '3F9.4, 2F8.1'
 
-    obj = cls("' ', 2f8.1")
+    obj = tcls("' ', 2f8.1")
     assert isinstance(obj, Format_Item_List), repr(type(obj))
     assert str(obj) == "' ', 2F8.1"
 
-    obj = cls("' ', ' '")
+    obj = tcls("' ', ' '")
     assert str(obj) == "' ', ' '"
 
-    obj = cls("3(3f8.2, :), (A)")
+    obj = tcls("3(3f8.2, :), (A)")
     assert str(obj) == "3(3F8.2, :), (A)"
 
 #
@@ -3535,16 +3560,17 @@ def test_Format_Item_List():
 #
 
 
-def test_Main_Program():  # R1101
-    cls = Main_Program
-    obj = cls(get_reader('''\
+def test_main_program():  # R1101
+
+    tcls = Main_Program
+    obj = tcls(get_reader('''\
 program a
 end
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 program a
   real b
   b = 1
@@ -3553,37 +3579,38 @@ program a
   end
 end
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n'
             '  END SUBROUTINE foo\nEND PROGRAM a')
 
-    obj = Main_Program0(get_reader('''\
+    obj0 = Main_Program0(get_reader('''\
 end
     '''))
-    assert isinstance(obj, Main_Program0), repr(obj)
-    assert str(obj) == 'END PROGRAM'
+    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert str(obj0) == 'END PROGRAM'
 
-    obj = Main_Program0(get_reader('''\
+    obj0 = Main_Program0(get_reader('''\
 contains
   function foo()
   end
 end
     '''))
-    assert isinstance(obj, Main_Program0), repr(obj)
-    assert str(obj) == 'CONTAINS\nFUNCTION foo()\nEND FUNCTION\nEND PROGRAM'
+    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND FUNCTION\nEND PROGRAM'
 
 
-def test_Module():  # R1104
-    cls = Module
-    obj = cls(get_reader('''\
+def test_module():  # R1104
+
+    tcls = Module
+    obj = tcls(get_reader('''\
 module m
 end
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'MODULE m\nEND MODULE m'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 module m
 type a
 end type
@@ -3591,87 +3618,88 @@ type b
 end type b
 end
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b'
             '\nEND MODULE m')
 
 
-def test_Module_Subprogram_Part():  # R1107
-    cls = Module_Subprogram_Part
-    obj = cls(get_reader('''\
+def test_module_subprogram_part():  # R1107
+
+    tcls = Module_Subprogram_Part
+    obj = tcls(get_reader('''\
 contains
   subroutine foo(a)
   real a
   a = 1.0
   end
     ''', isfree=True))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
             '\n  a = 1.0\nEND SUBROUTINE foo')
 
 
-def test_Use_Stmt():  # pylint: disable=invalid-name
+def test_use_stmt():
     ''' Tests that USE statement is parsed correctly (R1109) '''
-    cls = Use_Stmt
-    obj = cls('use a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Use_Stmt
+    obj = tcls('use a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE a'
     assert repr(obj) == "Use_Stmt(None, None, Name('a'), '', None)"
 
-    obj = cls('use :: a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use :: a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE :: a'
     assert repr(obj) == "Use_Stmt(None, '::', Name('a'), '', None)"
 
-    obj = cls('use a, only: b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use a, only: b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE a, ONLY: b'
     assert repr(obj) == (
         "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
 
-    obj = cls('use :: a, only: b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use :: a, only: b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE :: a, ONLY: b'
     assert repr(obj) == (
         "Use_Stmt(None, '::', Name('a'), ', ONLY:', Name('b'))")
 
-    obj = cls('use a, ONLY : b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use a, ONLY : b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE a, ONLY: b'
     assert repr(obj) == (
         "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
 
-    obj = cls('use, intrinsic :: a, ONLY: b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use, intrinsic :: a, ONLY: b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE, INTRINSIC :: a, ONLY: b'
     assert repr(obj) == (
         "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('a'), "
         "', ONLY:', Name('b'))")
 
-    obj = cls('use, non_intrinsic :: a, ONLY: b, c, d')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use, non_intrinsic :: a, ONLY: b, c, d')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE, NON_INTRINSIC :: a, ONLY: b, c, d'
     assert repr(obj) == (
         "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
         "', ONLY:', Only_List(',', (Name('b'), Name('c'), Name('d'))))")
 
-    obj = cls('use a, c=>d')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use a, c=>d')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE a, c => d'
     assert repr(obj) == (
         "Use_Stmt(None, None, Name('a'), "
         "',', Rename(None, Name('c'), Name('d')))")
 
-    obj = cls('use :: a, operator(.hey.)=>operator(.hoo.)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use :: a, operator(.hey.)=>operator(.hoo.)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)'
     assert repr(obj) == (
         "Use_Stmt(None, '::', Name('a'), ',', "
         "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')))")
 
-    obj = cls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == (
         'USE, INTRINSIC :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
     assert repr(obj) == (
@@ -3680,8 +3708,8 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
         "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')), "
         "Rename(None, Name('c'), Name('g')))))")
 
-    obj = cls('use, non_intrinsic :: a, ONLY: b => c')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('use, non_intrinsic :: a, ONLY: b => c')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'USE, NON_INTRINSIC :: a, ONLY: b => c'
     assert repr(obj) == (
         "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
@@ -3690,94 +3718,96 @@ def test_Use_Stmt():  # pylint: disable=invalid-name
     # Checks that no match is found for incorrect 'USE' statement contructs
     # Incorrect 'USE' statement
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('8se')
+        _ = tcls('8se')
     assert "Use_Stmt: '8se'" in str(excinfo)
 
     # Empty string after 'USE'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use')
+        _ = tcls('use')
     assert "Use_Stmt: 'use'" in str(excinfo)
 
     # No separation between 'USE' statement and its specifiers
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('usemodulename')
+        _ = tcls('usemodulename')
     assert "Use_Stmt: 'usemodulename'" in str(excinfo)
 
     # Missing Module_Nature between ',' and '::'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use, ::')
+        _ = tcls('use, ::')
     assert "Use_Stmt: 'use, ::'" in str(excinfo)
 
     # No Module_Name after 'USE, Module_Nature ::'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use, intrinsic ::')
+        _ = tcls('use, intrinsic ::')
     assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
 
     # Missing '::' after Module_Nature
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use, intrinsic a')
+        _ = tcls('use, intrinsic a')
     assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
 
     # Missing Module_Name before Only_List
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use , only: b')
+        _ = tcls('use , only: b')
     assert "Use_Stmt: 'use , only: b'" in str(excinfo)
 
     # Missing 'ONLY' specification after 'USE Module_Name,'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use a,')
+        _ = tcls('use a,')
     assert "Use_Stmt: 'use a,'" in str(excinfo)
 
     # Missing ':' after ', ONLY' specification
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use a, only b')
+        _ = tcls('use a, only b')
     assert "Use_Stmt: 'use a, only b" in str(excinfo)
 
     # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('use a, only:')
+        _ = tcls('use a, only:')
     assert "Use_Stmt: 'use a, only:" in str(excinfo)
 
 
-def test_Module_Nature():  # pylint: disable=invalid-name
+def test_module_nature():
     ''' Tests that a module nature statement is parsed correctly
     (INTRINSIC or NON_INTRINSIC allowed, R1110) '''
-    cls = Module_Nature
-    obj = cls('intrinsic')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Module_Nature
+    obj = tcls('intrinsic')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTRINSIC'
     assert repr(obj) == "Module_Nature('INTRINSIC')"
 
-    obj = cls('non_intrinsic')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('non_intrinsic')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NON_INTRINSIC'
     assert repr(obj) == "Module_Nature('NON_INTRINSIC')"
 
     # Incorrect module nature
     with pytest.raises(NoMatchError) as excinfo:
-        _ = cls('other_nature')
+        _ = tcls('other_nature')
     assert "Module_Nature: 'other_nature'" in str(excinfo)
 
 
-def test_Rename():  # R1111
-    cls = Rename
-    obj = cls('a=>b')
-    assert isinstance(obj, cls), repr(obj)
+def test_rename():  # R1111
+
+    tcls = Rename
+    obj = tcls('a=>b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a => b'
 
-    obj = cls('operator(.foo.)=>operator(.bar.)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('operator(.foo.)=>operator(.bar.)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPERATOR(.FOO.) => OPERATOR(.BAR.)'
 
 
-def test_Block_Data():  # R1116
-    cls = Block_Data
-    obj = cls(get_reader('''\
+def test_block_data():  # R1116
+
+    tcls = Block_Data
+    obj = tcls(get_reader('''\
 block data a
 real b
 end block data
     '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA a'
 
 #
@@ -3785,29 +3815,31 @@ end block data
 #
 
 
-def test_Interface_Block():  # R1201
-    cls = Interface_Block
-    obj = cls(get_reader('''\
+def test_interface_block():  # R1201
+
+    tcls = Interface_Block
+    obj = tcls(get_reader('''\
 interface
 end interface'''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTERFACE\nEND INTERFACE'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 abstract interface
 procedure a
 module procedure b,c
 end interface
 '''))
-    assert isinstance(obj, cls), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'ABSTRACT INTERFACE\n  MODULE PROCEDURE a\n  MODULE PROCEDURE b, '
             'c\nEND INTERFACE')
 
 
-def test_Interface_Specification():  # R1202
-    cls = Interface_Specification
-    obj = cls(get_reader('''\
+def test_interface_specification():  # R1202
+
+    tcls = Interface_Specification
+    obj = tcls(get_reader('''\
     function foo()
     end
     '''))
@@ -3815,46 +3847,49 @@ def test_Interface_Specification():  # R1202
     assert str(obj) == 'FUNCTION foo()\nEND FUNCTION'
 
 
-def test_Interface_Stmt():  # R1203
-    cls = Interface_Stmt
-    obj = cls('interface')
-    assert isinstance(obj, cls), repr(obj)
+def test_interface_stmt():  # R1203
+
+    tcls = Interface_Stmt
+    obj = tcls('interface')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTERFACE'
 
-    obj = cls('interface assignment(=)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('interface assignment(=)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTERFACE ASSIGNMENT(=)'
 
-    obj = cls('abstract interface')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('abstract interface')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ABSTRACT INTERFACE'
 
 
-def test_End_Interface_Stmt():  # R1204
-    cls = End_Interface_Stmt
-    obj = cls('end interface')
-    assert isinstance(obj, cls), repr(obj)
+def test_end_interface_stmt():  # R1204
+
+    tcls = End_Interface_Stmt
+    obj = tcls('end interface')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END INTERFACE'
 
-    obj = cls('end interface read(formatted)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('end interface read(formatted)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END INTERFACE READ(FORMATTED)'
 
-    obj = cls('end interface assignment(=)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('end interface assignment(=)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END INTERFACE ASSIGNMENT(=)'
 
 
-def test_Interface_Body():  # R1205
-    cls = Interface_Body
-    obj = cls(get_reader('''\
+def test_interface_body():  # R1205
+
+    tcls = Interface_Body
+    obj = tcls(get_reader('''\
 subroutine foo
 end subroutine foo
 '''))
     assert isinstance(obj, Subroutine_Body), repr(obj)
     assert str(obj) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
 
-    obj = cls(get_reader('''\
+    obj = tcls(get_reader('''\
 function foo(a) result(c)
   real a, c
 end
@@ -3864,99 +3899,105 @@ end
             'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
 
 
-def test_Subroutine_Body():
+def test_subroutine_body():
     pass
 
 
-def test_Function_Body():
+def test_function_body():
     pass
 
 
-def test_Procedure_Stmt():  # R1206
-    cls = Procedure_Stmt
-    obj = cls('module procedure a')
-    assert isinstance(obj, cls), repr(obj)
+def test_procedure_stmt():  # R1206
+
+    tcls = Procedure_Stmt
+    obj = tcls('module procedure a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'MODULE PROCEDURE a'
 
-    obj = cls('procedure a, b')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('procedure a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'MODULE PROCEDURE a, b'
 
 
-def test_Generic_Spec():  # R1207
-    cls = Generic_Spec
-    obj = cls('a')
+def test_generic_spec():  # R1207
+
+    tcls = Generic_Spec
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
-    obj = cls('read(formatted)')
+    obj = tcls('read(formatted)')
     assert isinstance(obj, Dtio_Generic_Spec), repr(obj)
     assert str(obj) == 'READ(FORMATTED)'
 
-    obj = cls('assignment ( = )')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('assignment ( = )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ASSIGNMENT(=)'
 
     return  # TODO
-    obj = cls('operator(.foo.)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('operator(.foo.)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPERATOR(.foo.)'
 
 
-def test_Dtio_Generic_Spec():  # R1208
-    cls = Dtio_Generic_Spec
-    obj = cls('read   ( formatted )')
-    assert isinstance(obj, cls), repr(obj)
+def test_dtio_generic_spec():  # R1208
+
+    tcls = Dtio_Generic_Spec
+    obj = tcls('read   ( formatted )')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'READ(FORMATTED)'
 
-    obj = cls('write ( formatted )')
+    obj = tcls('write ( formatted )')
     assert str(obj) == 'WRITE(FORMATTED)'
-    obj = cls('read   ( unformatted )')
+    obj = tcls('read   ( unformatted )')
     assert str(obj) == 'READ(UNFORMATTED)'
-    obj = cls('write ( unformatted )')
+    obj = tcls('write ( unformatted )')
     assert str(obj) == 'WRITE(UNFORMATTED)'
 
 
-def test_Import_Stmt():  # R1209
-    cls = Import_Stmt
-    obj = cls('import :: a, b')
-    assert isinstance(obj, cls), repr(obj)
+def test_import_stmt():  # R1209
+
+    tcls = Import_Stmt
+    obj = tcls('import :: a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'IMPORT :: a, b'
 
-    obj = cls('import a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('import a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'IMPORT :: a'
 
 
-def test_External_Stmt():  # R1210
-    cls = External_Stmt
-    obj = cls('external :: a, b')
-    assert isinstance(obj, cls), repr(obj)
+def test_external_stmt():  # R1210
+
+    tcls = External_Stmt
+    obj = tcls('external :: a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EXTERNAL :: a, b'
 
-    obj = cls('external a')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('external a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EXTERNAL :: a'
 
 
-def test_Procedure_Declaration_Stmt():  # R1211
-    cls = Procedure_Declaration_Stmt
-    obj = cls('procedure () a')
-    assert isinstance(obj, cls), repr(obj)
+def test_procedure_declaration_stmt():  # R1211
+
+    tcls = Procedure_Declaration_Stmt
+    obj = tcls('procedure () a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE() a'
 
-    obj = cls('procedure (n) a')
+    obj = tcls('procedure (n) a')
     assert str(obj) == 'PROCEDURE(n) a'
 
-    obj = cls('procedure (real*8) a')
+    obj = tcls('procedure (real*8) a')
     assert str(obj) == 'PROCEDURE(REAL*8) a'
 
-    obj = cls('procedure (real(kind=8)) a')
+    obj = tcls('procedure (real(kind=8)) a')
     assert str(obj) == 'PROCEDURE(REAL(KIND = 8)) a'
 
-    obj = cls('procedure (real*8) :: a')
+    obj = tcls('procedure (real*8) :: a')
     assert str(obj) == 'PROCEDURE(REAL*8) a'
 
-    obj = cls('procedure (real*8), intent(in), bind(c) :: a, b')
+    obj = tcls('procedure (real*8), intent(in), bind(c) :: a, b')
     assert str(obj) == 'PROCEDURE(REAL*8), INTENT(IN), BIND(C) :: a, b'
 
 
@@ -3973,7 +4014,7 @@ def test_Procedure_Declaration_Stmt():  # R1211
      ('pointer', Proc_Attr_Spec, 'POINTER'),
      ('protected', Proc_Attr_Spec, 'PROTECTED'),
      ('save', Proc_Attr_Spec, 'SAVE')])
-def test_Proc_Attr_Spec(procedure_attribute_input, expected_class,
+def test_proc_attr_spec(procedure_attribute_input, expected_class,
                         expected_string):
     '''
     Tests the procedure attribute specification as outlined in #R1213 of
@@ -3986,118 +4027,118 @@ def test_Proc_Attr_Spec(procedure_attribute_input, expected_class,
     assert str(result) == expected_string
 
 
-def test_Proc_Decl():  # R1214
+def test_proc_decl():  # R1214
 
-    cls = Proc_Decl
-    obj = cls('a => NULL')
-    assert isinstance(obj, cls)
+    tcls = Proc_Decl
+    obj = tcls('a => NULL')
+    assert isinstance(obj, tcls)
     assert str(obj) == 'a => NULL'
 
-    obj = cls('a')
-    assert isinstance(obj, Name), repr(type(a))
+    obj = tcls('a')
+    assert isinstance(obj, Name), repr(type(obj))
     assert str(obj) == 'a'
 
 
-def test_Intrinsic_Stmt():  # R1216
+def test_intrinsic_stmt():  # R1216
 
-    cls = Intrinsic_Stmt
-    obj = cls('intrinsic :: a, b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Intrinsic_Stmt
+    obj = tcls('intrinsic :: a, b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTRINSIC :: a, b'
-    obj = cls('intrinsic a, b')
+    obj = tcls('intrinsic a, b')
     assert str(obj) == 'INTRINSIC :: a, b'
 
-    obj = cls('intrinsic a')
+    obj = tcls('intrinsic a')
     assert str(obj) == 'INTRINSIC :: a'
 
 
-def test_Function_Reference():  # R1217
+def test_function_reference():  # R1217
 
-    cls = Function_Reference
-    obj = cls('f()')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Function_Reference
+    obj = tcls('f()')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'f()'
     assert repr(obj) == "Function_Reference(Name('f'), None)"
 
-    obj = cls('f(2,k=1,a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('f(2,k=1,a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'f(2, k = 1, a)'
 
 
-def test_Call_Stmt():  # R1218
+def test_call_stmt():  # R1218
 
-    cls = Call_Stmt
-    obj = cls('call a')
-    assert isinstance(obj, cls)
+    tcls = Call_Stmt
+    obj = tcls('call a')
+    assert isinstance(obj, tcls)
     assert str(obj) == 'CALL a'
 
-    obj = cls('call a()')
+    obj = tcls('call a()')
     assert str(obj) == 'CALL a'
 
-    obj = cls('call a(b,c)')
+    obj = tcls('call a(b,c)')
     assert str(obj) == 'CALL a(b, c)'
 
 
-def test_Procedure_Designator():  # R1219
+def test_procedure_designator():  # R1219
 
-    cls = Procedure_Designator
-    obj = cls('a%b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Procedure_Designator
+    obj = tcls('a%b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
     assert repr(obj) == "Procedure_Designator(Name('a'), '%', Name('b'))"
 
 
-def test_Actual_Arg_Spec():  # R1220
+def test_actual_arg_spec():  # R1220
 
-    cls = Actual_Arg_Spec
-    obj = cls('k=a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Actual_Arg_Spec
+    obj = tcls('k=a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'k = a'
     assert repr(obj) == "Actual_Arg_Spec(Name('k'), Name('a'))"
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Actual_Arg_Spec_List():
+def test_actual_arg_spec_list():
 
-    cls = Actual_Arg_Spec_List
-    obj = cls('a,b')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Actual_Arg_Spec_List
+    obj = tcls('a,b')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a, b'
     assert repr(obj) == "Actual_Arg_Spec_List(',', (Name('a'), Name('b')))"
 
-    obj = cls('a = k')
+    obj = tcls('a = k')
     assert isinstance(obj, Actual_Arg_Spec), repr(obj)
     assert str(obj) == 'a = k'
 
-    obj = cls('a = k,b')
+    obj = tcls('a = k,b')
     assert isinstance(obj, Actual_Arg_Spec_List), repr(obj)
     assert str(obj) == 'a = k, b'
 
-    obj = cls('a')
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Alt_Return_Spec():  # R1222
+def test_alt_return_spec():  # R1222
 
-    cls = Alt_Return_Spec
-    obj = cls('* 123')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Alt_Return_Spec
+    obj = tcls('* 123')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*123'
     assert repr(obj) == "Alt_Return_Spec(Label('123'))"
 
 
-def test_Function_Subprogram():  # R1223
+def test_function_subprogram():  # R1223
 
     reader = get_reader('''\
     function foo()
     end function foo''')
-    cls = Function_Subprogram
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Function_Subprogram
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FUNCTION foo()\nEND FUNCTION foo'
     assert (repr(obj) ==
             "Function_Subprogram(Function_Stmt(None, Name('foo'), None, None),"
@@ -4107,71 +4148,73 @@ def test_Function_Subprogram():  # R1223
     pure real function foo(a) result(b) bind(c)
     integer a
     end function foo''')
-    cls = Function_Subprogram
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Function_Subprogram
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'PURE REAL FUNCTION foo(a) RESULT(b) BIND(C)\n  INTEGER :: '
             'a\nEND FUNCTION foo')
 
 
-def test_Function_Stmt():  # R1224
-    cls = Function_Stmt
-    obj = cls('function foo()')
-    assert isinstance(obj, cls), repr(obj)
+def test_function_stmt():  # R1224
+
+    tcls = Function_Stmt
+    obj = tcls('function foo()')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FUNCTION foo()'
     assert repr(obj) == "Function_Stmt(None, Name('foo'), None, None)"
 
-    obj = cls('function foo(a,b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('function foo(a,b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FUNCTION foo(a, b)'
     assert (repr(obj) ==
             "Function_Stmt(None, Name('foo'), Dummy_Arg_List(',', "
             "(Name('a'), Name('b'))), None)")
 
-    obj = cls('function foo(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('function foo(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'FUNCTION foo(a)'
 
-    obj = cls('real function foo(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real function foo(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL FUNCTION foo(a)'
 
-    obj = cls('real recursive function foo(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real recursive function foo(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL RECURSIVE FUNCTION foo(a)'
 
-    obj = cls('real function foo(a) bind(c)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real function foo(a) bind(c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL FUNCTION foo(a) BIND(C)'
 
-    obj = cls('real function foo(a) result (b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real function foo(a) result (b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL FUNCTION foo(a) RESULT(b)'
 
-    obj = cls('real function foo(a) bind(c) result(b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('real function foo(a) bind(c) result(b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL FUNCTION foo(a) RESULT(b) BIND(C)'
 
 
-def test_Dummy_Arg_Name():  # R1226
-    cls = Dummy_Arg_Name
-    obj = cls('a')
+def test_dummy_arg_name():  # R1226
+
+    tcls = Dummy_Arg_Name
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
-def test_Prefix():  # R1227
+def test_prefix():  # R1227
 
-    cls = Prefix
-    obj = cls('pure  recursive')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Prefix
+    obj = tcls('pure  recursive')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PURE RECURSIVE'
     assert (repr(obj) ==
             "Prefix(' ', (Prefix_Spec('PURE'), Prefix_Spec('RECURSIVE')))")
 
-    obj = cls('integer * 2 pure')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('integer * 2 pure')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER*2 PURE'
 
 
@@ -4192,7 +4235,7 @@ def test_Prefix():  # R1227
      ('module', Prefix_Spec, 'MODULE'),
      ('pure', Prefix_Spec, 'PURE'),
      ('recursive', Prefix_Spec, 'RECURSIVE')])
-def test_Prefix_Spec(procedure_prefix_input, expected_class,
+def test_prefix_spec(procedure_prefix_input, expected_class,
                      expected_string):  # R1226
     unit_under_test = Prefix_Spec
     result = unit_under_test(procedure_prefix_input)
@@ -4200,49 +4243,50 @@ def test_Prefix_Spec(procedure_prefix_input, expected_class,
     assert str(result) == expected_string
 
 
-def test_Suffix():  # R1229
+def test_suffix():  # R1229
 
-    cls = Suffix
+    tcls = Suffix
 
-    obj = cls('bind(c)')
+    obj = tcls('bind(c)')
     assert isinstance(obj, Language_Binding_Spec), repr(obj)
     assert str(obj) == 'BIND(C)'
     assert repr(obj) == "Language_Binding_Spec(None)"
 
-    obj = cls('result(a)')
+    obj = tcls('result(a)')
     assert isinstance(obj, Suffix), repr(obj)
     assert str(obj) == 'RESULT(a)'
 
-    obj = cls('bind(c) result(a)')
+    obj = tcls('bind(c) result(a)')
     assert isinstance(obj, Suffix), repr(obj)
     assert str(obj) == 'RESULT(a) BIND(C)'
 
-    obj = cls('result(a) bind(c)')
+    obj = tcls('result(a) bind(c)')
     assert isinstance(obj, Suffix), repr(obj)
     assert str(obj) == 'RESULT(a) BIND(C)'
 
 
-def test_End_Function_Stmt():  # R1230
-    cls = End_Function_Stmt
-    obj = cls('end')
-    assert isinstance(obj, cls), repr(obj)
+def test_end_function_stmt():  # R1230
+
+    tcls = End_Function_Stmt
+    obj = tcls('end')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END FUNCTION'
 
-    obj = cls('endfunction')
+    obj = tcls('endfunction')
     assert str(obj) == 'END FUNCTION'
 
-    obj = cls('endfunction foo')
+    obj = tcls('endfunction foo')
     assert str(obj) == 'END FUNCTION foo'
 
 
-def test_Subroutine_Subprogram():  # R1231
+def test_subroutine_subprogram():  # R1231
 
     reader = get_reader('''\
     subroutine foo
     end subroutine foo''')
-    cls = Subroutine_Subprogram
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Subroutine_Subprogram
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo\nEND SUBROUTINE foo'
     assert (repr(obj) == "Subroutine_Subprogram(Subroutine_Stmt(None, "
             "Name('foo'), None, None), End_Subroutine_Stmt('SUBROUTINE', "
@@ -4252,107 +4296,108 @@ def test_Subroutine_Subprogram():  # R1231
     subroutine foo
     integer a
     end subroutine foo''')
-    cls = Subroutine_Subprogram
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Subroutine_Subprogram
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo\n  INTEGER :: a\nEND SUBROUTINE foo'
 
 
-def test_Subroutine_Stmt():  # R1232
+def test_subroutine_stmt():  # R1232
 
-    cls = Subroutine_Stmt
-    obj = cls('subroutine foo')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Subroutine_Stmt
+    obj = tcls('subroutine foo')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo'
     assert repr(obj) == "Subroutine_Stmt(None, Name('foo'), None, None)"
 
-    obj = cls('pure subroutine foo')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('pure subroutine foo')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PURE SUBROUTINE foo'
 
-    obj = cls('pure subroutine foo(a,b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('pure subroutine foo(a,b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PURE SUBROUTINE foo(a, b)'
 
-    obj = cls('subroutine foo() bind(c)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('subroutine foo() bind(c)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo BIND(C)'
 
-    obj = cls('subroutine foo(a)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('subroutine foo(a)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo(a)'
 
-    obj = cls('subroutine foo(a, b)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('subroutine foo(a, b)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo(a, b)'
 
-    obj = cls('subroutine foo(a,*)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('subroutine foo(a,*)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo(a, *)'
 
-    obj = cls('subroutine foo(*)')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('subroutine foo(*)')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo(*)'
 
 
-def test_Dummy_Arg():  # R1233
-    cls = Dummy_Arg
-    obj = cls('a')
+def test_dummy_arg():  # R1233
+
+    tcls = Dummy_Arg
+    obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
-    obj = cls('*')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('*')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '*'
 
 
-def test_End_Subroutine_Stmt():  # R1234
+def test_end_subroutine_stmt():  # R1234
 
-    cls = End_Subroutine_Stmt
-    obj = cls('end subroutine foo')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = End_Subroutine_Stmt
+    obj = tcls('end subroutine foo')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END SUBROUTINE foo'
     assert repr(obj) == "End_Subroutine_Stmt('SUBROUTINE', Name('foo'))"
 
-    obj = cls('end')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('end')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END SUBROUTINE'
 
-    obj = cls('endsubroutine')
-    assert isinstance(obj, cls), repr(obj)
+    obj = tcls('endsubroutine')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END SUBROUTINE'
 
 
-def test_Entry_Stmt():  # R1235
+def test_entry_stmt():  # R1235
 
-    cls = Entry_Stmt
-    obj = cls('entry a')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Entry_Stmt
+    obj = tcls('entry a')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'ENTRY a()'
 
-    obj = cls('entry a()')
+    obj = tcls('entry a()')
     assert str(obj) == 'ENTRY a()'
 
-    obj = cls('entry a(b, c)')
+    obj = tcls('entry a(b, c)')
     assert str(obj) == 'ENTRY a(b, c)'
 
-    obj = cls('entry a(b, c) bind(c)')
+    obj = tcls('entry a(b, c) bind(c)')
     assert str(obj) == 'ENTRY a(b, c) BIND(C)'
 
 
-def test_Return_Stmt():  # R1236
+def test_return_stmt():  # R1236
 
-    cls = Return_Stmt
-    obj = cls('return')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Return_Stmt
+    obj = tcls('return')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'RETURN'
     assert repr(obj) == 'Return_Stmt(None)'
 
 
-def test_Contains():  # R1237
+def test_contains():  # R1237
 
-    cls = Contains_Stmt
-    obj = cls('Contains')
-    assert isinstance(obj, cls), repr(obj)
+    tcls = Contains_Stmt
+    obj = tcls('Contains')
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CONTAINS'
     assert repr(obj) == "Contains_Stmt('CONTAINS')"
 
@@ -4360,7 +4405,7 @@ def test_Contains():  # R1237
 def test_multi_unit():
     ''' Check what happens when we have more than one program/routine
     in a file '''
-    cls = Program
+    tcls = Program
     reader = get_reader('''\
       program foo
         integer :: my_int
@@ -4371,8 +4416,8 @@ def test_multi_unit():
         integer :: my_func
         my_func = 2
       end function''')
-    obj = cls(reader)
-    assert type(obj) == Program
+    obj = tcls(reader)
+    assert isinstance(obj, tcls), repr(obj)
     output = str(obj)
     assert "PROGRAM foo" in output
     assert "FUNCTION my_func()" in output
@@ -4385,13 +4430,14 @@ if 0:
     TOTAL_NEEDS = 0
     TOTAL_CLASSES = 0
     for NAME in dir():
-        OBJ = eval(NAME)
+        # pylint: disable=undefined-variable
+        OBJ = ast.literal_eval(NAME)
         if not isinstance(OBJ, ClassType):
             continue
         if not issubclass(OBJ, Base):
             continue
-        CLSNAME = OBJ.__name__
-        if CLSNAME.endswith('Base'):
+        tclsNAME = OBJ.__name__
+        if tclsNAME.endswith('Base'):
             continue
         TOTAL_CLASSES += 1
         SUBCLASS_NAMES = OBJ.__dict__.get('subclass_names', None)
@@ -4400,22 +4446,22 @@ if 0:
             continue
         MATCH = OBJ.__dict__.get('match', None)
         try:
-            TEST_CLS = eval('test_{0}'.format(CLSNAME))
+            TEST_tcls = ast.literal_eval('test_{0}'.format(tclsNAME))
         except NameError:
-            TEST_CLS = None
+            TEST_tcls = None
         TOTAL_NEEDS += 1
         if MATCH is None:
-            if TEST_CLS is None:
-                print('Needs tests:', CLSNAME)
-                print('Needs match implementation:', CLSNAME)
+            if TEST_tcls is None:
+                print('Needs tests:', tclsNAME)
+                print('Needs match implementation:', tclsNAME)
                 NOF_NEEDED_TESTS += 1
                 NOF_NEEDED_MATCH += 1
             else:
-                print('Needs match implementation:', CLSNAME)
+                print('Needs match implementation:', tclsNAME)
                 NOF_NEEDED_MATCH += 1
         else:
-            if TEST_CLS is None:
-                print('Needs tests:', CLSNAME)
+            if TEST_tcls is None:
+                print('Needs tests:', tclsNAME)
                 NOF_NEEDED_TESTS += 1
         continue
     print('-----')
