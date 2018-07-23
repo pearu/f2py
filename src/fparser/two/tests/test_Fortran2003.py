@@ -66,7 +66,6 @@
 from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
 
-from nose.tools import assert_equal
 import pytest
 
 
@@ -227,9 +226,8 @@ def test_Kind_Selector():  # R404
     obj = cls('(1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(KIND = 1)'
-    assert_equal(
-        repr(obj),
-        "Kind_Selector('(', Int_Literal_Constant('1', None), ')')")
+    assert (repr(obj) ==
+            "Kind_Selector('(', Int_Literal_Constant('1', None), ')')")
 
     obj = cls('(kind=1+2)')
     assert isinstance(obj, cls), repr(obj)
@@ -446,10 +444,9 @@ def test_Char_Selector():  # R424
     obj = cls('(len=2, kind=8)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(LEN = 2, KIND = 8)'
-    assert_equal(
-        repr(obj),
-        "Char_Selector(Int_Literal_Constant('2', None), "
-        "Int_Literal_Constant('8', None))")
+    assert (repr(obj) ==
+            "Char_Selector(Int_Literal_Constant('2', None), "
+            "Int_Literal_Constant('8', None))")
 
     obj = cls('(2, kind=8)')
     assert isinstance(obj, cls), repr(obj)
@@ -474,10 +471,9 @@ def test_Complex_Literal_Constant():  # R421
     obj = cls('(1.0, -1.0)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(1.0, -1.0)'
-    assert_equal(
-        repr(obj),
-        "Complex_Literal_Constant(Signed_Real_Literal_Constant("
-        "'1.0', None), Signed_Real_Literal_Constant('-1.0', None))")
+    assert (repr(obj) ==
+            "Complex_Literal_Constant(Signed_Real_Literal_Constant("
+            "'1.0', None), Signed_Real_Literal_Constant('-1.0', None))")
 
     obj = cls('(3,3.1E6)')
     assert isinstance(obj, cls), repr(obj)
@@ -510,8 +506,8 @@ def test_Length_Selector():  # R425
     obj = cls('( len = *)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(LEN = *)'
-    assert_equal(
-        repr(obj), "Length_Selector('(', Type_Param_Value('*'), ')')")
+    assert (repr(obj) ==
+            "Length_Selector('(', Type_Param_Value('*'), ')')")
 
     obj = cls('*2,')
     assert isinstance(obj, cls), repr(obj)
@@ -524,9 +520,8 @@ def test_Char_Length():  # R426
     obj = cls('(1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(1)'
-    assert_equal(
-        repr(obj),
-        "Char_Length('(', Int_Literal_Constant('1', None), ')')")
+    assert (repr(obj) ==
+            "Char_Length('(', Int_Literal_Constant('1', None), ')')")
 
     obj = cls('1')
     assert isinstance(obj, Int_Literal_Constant), repr(obj)
@@ -675,10 +670,9 @@ def test_Type_Param_Def_Stmt():  # R435
     obj = cls('integer ,kind :: a')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'INTEGER, KIND :: a'
-    assert_equal(
-        repr(obj),
-        "Type_Param_Def_Stmt(None, Type_Param_Attr_Spec('KIND'), "
-        "Name('a'))")
+    assert (repr(obj) ==
+            "Type_Param_Def_Stmt(None, Type_Param_Attr_Spec('KIND'), "
+            "Name('a'))")
 
     obj = cls('integer*2 ,len :: a=3, b=2+c')
     assert isinstance(obj, cls), repr(obj)
@@ -691,9 +685,8 @@ def test_Type_Param_Decl():  # R436
     obj = cls('a=2')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a = 2'
-    assert_equal(
-        repr(obj),
-        "Type_Param_Decl(Name('a'), '=', Int_Literal_Constant('2', None))")
+    assert (repr(obj) ==
+            "Type_Param_Decl(Name('a'), '=', Int_Literal_Constant('2', None))")
 
     obj = cls('a')
     assert isinstance(obj, Name), repr(obj)
@@ -740,10 +733,9 @@ def test_Component_Decl():  # R442
     obj = cls('a(1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(1)'
-    assert_equal(
-        repr(obj),
-        "Component_Decl(Name('a'), Explicit_Shape_Spec(None, "
-        "Int_Literal_Constant('1', None)), None, None)")
+    assert (repr(obj) ==
+            "Component_Decl(Name('a'), Explicit_Shape_Spec(None, "
+            "Int_Literal_Constant('1', None)), None, None)")
 
     obj = cls('a(1)*(3)')
     assert isinstance(obj, cls), repr(obj)
@@ -825,10 +817,9 @@ def test_Final_Binding():  # R454
     obj = cls('final a, b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'FINAL :: a, b'
-    assert_equal(
-        repr(obj),
-        "Final_Binding('FINAL', Final_Subroutine_Name_List(',', "
-        "(Name('a'), Name('b'))))")
+    assert (repr(obj) ==
+            "Final_Binding('FINAL', Final_Subroutine_Name_List(',', "
+            "(Name('a'), Name('b'))))")
 
     obj = cls('final::a')
     assert isinstance(obj, cls), repr(obj)
@@ -862,9 +853,8 @@ def test_Type_Param_Spec():  # R456
     obj = cls('a=1')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a = 1'
-    assert_equal(
-        repr(obj),
-        "Type_Param_Spec(Name('a'), Int_Literal_Constant('1', None))")
+    assert (repr(obj) ==
+            "Type_Param_Spec(Name('a'), Int_Literal_Constant('1', None))")
 
     obj = cls('k=a')
     assert isinstance(obj, cls), repr(obj)
@@ -882,9 +872,8 @@ def test_Type_Param_Spec_List():  # R456-list
     obj = cls('a,b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a, b'
-    assert_equal(
-        repr(obj),
-        "Type_Param_Spec_List(',', (Name('a'), Name('b')))")
+    assert (repr(obj) ==
+            "Type_Param_Spec_List(',', (Name('a'), Name('b')))")
 
     obj = cls('a')
     assert isinstance(obj, Name), repr(obj)
@@ -956,10 +945,9 @@ def test_Component_Spec_List():  # R458-list
     obj = cls('k=a, b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'k = a, b'
-    assert_equal(
-        repr(obj),
-        "Component_Spec_List(',', (Component_Spec(Name('k'), "
-        "Name('a')), Name('b')))")
+    assert (repr(obj) ==
+            "Component_Spec_List(',', (Component_Spec(Name('k'), "
+            "Name('a')), Name('b')))")
 
     obj = cls('k=a, c')
     assert isinstance(obj, cls), repr(obj)
@@ -975,10 +963,9 @@ enumerator yellow
 end enum
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        "ENUM, BIND(C)\n  ENUMERATOR :: red = 4, blue = 9\n"
-        "  ENUMERATOR :: yellow\nEND ENUM")
+    assert (str(obj) ==
+            "ENUM, BIND(C)\n  ENUMERATOR :: red = 4, blue = 9\n"
+            "  ENUMERATOR :: yellow\nEND ENUM")
 
 
 def test_Enum_Def_Stmt():  # R461
@@ -1016,9 +1003,8 @@ def test_Ac_Spec():  # R466
     obj = cls('integer ::')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'INTEGER ::'
-    assert_equal(
-        repr(obj),
-        "Ac_Spec(Intrinsic_Type_Spec('INTEGER', None), None)")
+    assert (repr(obj) ==
+            "Ac_Spec(Intrinsic_Type_Spec('INTEGER', None), None)")
 
     obj = cls('integer :: a,b')
     assert isinstance(obj, cls), repr(obj)
@@ -1052,11 +1038,10 @@ def test_Ac_Implied_Do():  # R470
     obj = cls('( a, b, n = 1, 5 )')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == '(a, b, n = 1, 5)'
-    assert_equal(
-        repr(obj),
-        "Ac_Implied_Do(Ac_Value_List(',', (Name('a'), Name('b'))), "
-        "Ac_Implied_Do_Control(Name('n'), [Int_Literal_Constant('1', "
-        "None), Int_Literal_Constant('5', None)]))")
+    assert (repr(obj) ==
+            "Ac_Implied_Do(Ac_Value_List(',', (Name('a'), Name('b'))), "
+            "Ac_Implied_Do_Control(Name('n'), [Int_Literal_Constant('1', "
+            "None), Int_Literal_Constant('5', None)]))")
 
 
 def test_Ac_Implied_Do_Control():  # R471
@@ -1065,10 +1050,9 @@ def test_Ac_Implied_Do_Control():  # R471
     obj = cls('n = 3, 5')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'n = 3, 5'
-    assert_equal(
-        repr(obj),
-        "Ac_Implied_Do_Control(Name('n'), [Int_Literal_Constant('3', "
-        "None), Int_Literal_Constant('5', None)])")
+    assert (repr(obj) ==
+            "Ac_Implied_Do_Control(Name('n'), [Int_Literal_Constant('3', "
+            "None), Int_Literal_Constant('5', None)])")
 
     obj = cls('n = 3+1, 5, 1')
     assert isinstance(obj, cls), repr(obj)
@@ -1085,10 +1069,9 @@ def test_Type_Declaration_Stmt():  # R501
     obj = cls('integer a')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
-    assert_equal(
-        repr(obj),
-        "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), "
-        "None, Entity_Decl(Name('a'), None, None, None))")
+    assert (repr(obj) ==
+            "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), "
+            "None, Entity_Decl(Name('a'), None, None, None))")
 
     obj = cls('integer ,dimension(2):: a*3')
     assert isinstance(obj, cls), repr(obj)
@@ -1097,10 +1080,9 @@ def test_Type_Declaration_Stmt():  # R501
     obj = cls('real a')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'REAL :: a'
-    assert_equal(
-        repr(obj),
-        "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), "
-        "None, Entity_Decl(Name('a'), None, None, None))")
+    assert (repr(obj) ==
+            "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), "
+            "None, Entity_Decl(Name('a'), None, None, None))")
 
     obj = cls('REAL A( LDA, * ), B( LDB, * )')
     assert isinstance(obj, cls), repr(obj)
@@ -1133,8 +1115,7 @@ def test_Declaration_Type_Spec():  # R502
     obj = cls('type(foo)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'TYPE(foo)'
-    assert_equal(
-        repr(obj), "Declaration_Type_Spec('TYPE', Type_Name('foo'))")
+    assert repr(obj) == "Declaration_Type_Spec('TYPE', Type_Name('foo'))"
 
 
 def test_Attr_Spec():  # R503
@@ -1155,10 +1136,9 @@ def test_Dimension_Attr_Spec():  # R503.d
     obj = cls('dimension(a)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'DIMENSION(a)'
-    assert_equal(
-        repr(obj),
-        "Dimension_Attr_Spec('DIMENSION', Explicit_Shape_Spec(None, "
-        "Name('a')))")
+    assert (repr(obj) ==
+            "Dimension_Attr_Spec('DIMENSION', Explicit_Shape_Spec(None, "
+            "Name('a')))")
 
 
 def test_Intent_Attr_Spec():  # R503.f
@@ -1176,10 +1156,9 @@ def test_Entity_Decl():  # 504
     obj = cls('a(1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(1)'
-    assert_equal(
-        repr(obj),
-        "Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
-        "Int_Literal_Constant('1', None)), None, None)")
+    assert (repr(obj) ==
+            "Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
+            "Int_Literal_Constant('1', None)), None, None)")
 
     obj = cls('a(1)*(3)')
     assert isinstance(obj, cls), repr(obj)
@@ -1211,10 +1190,9 @@ def test_Target_Entity_Decl():
     obj = cls('a(1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(1)'
-    assert_equal(
-        repr(obj),
-        "Target_Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
-        "Int_Literal_Constant('1', None)), None, None)")
+    assert (repr(obj) ==
+            "Target_Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
+            "Int_Literal_Constant('1', None)), None, None)")
 
 
 def test_Access_Spec():  # R508
@@ -1330,9 +1308,8 @@ def test_Data_Stmt():  # R524
     cls = Data_Stmt
     obj = cls('DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
+    assert (str(obj) ==
+            'DATA YOURNAME % AGE, YOURNAME % NAME / 35, "FRED BROWN" /')
 
     obj = cls('DATA NAME / "JOHN DOE" / MILES / 10 * 0 /')
     assert isinstance(obj, cls), repr(obj)
@@ -1365,16 +1342,14 @@ def test_Dimension_Stmt():  # R535
     obj = cls('dimension :: a(5)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'DIMENSION :: a(5)'
-    assert_equal(
-        repr(obj),
-        "Dimension_Stmt([(Name('a'), Explicit_Shape_Spec(None, "
-        "Int_Literal_Constant('5', None)))])")
+    assert (repr(obj) ==
+            "Dimension_Stmt([(Name('a'), Explicit_Shape_Spec(None, "
+            "Int_Literal_Constant('5', None)))])")
 
     obj = cls('dimension a(n,m), b(:), c(2:n), d(*), e(n, 2:*)')
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'DIMENSION :: a(n, m), b(:), c(2 : n), d(*), e(n, 2 : *)')
+    assert (str(obj) ==
+            'DIMENSION :: a(n, m), b(:), c(2 : n), d(*), e(n, 2 : *)')
 
 
 def test_Intent_Stmt():  # R536
@@ -1388,10 +1363,9 @@ def test_Intent_Stmt():  # R536
     obj = cls('intent(out) a, b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'INTENT(OUT) :: a, b'
-    assert_equal(
-        repr(obj),
-        "Intent_Stmt(Intent_Spec('OUT'), Dummy_Arg_Name_List(',', "
-        "(Name('a'), Name('b'))))")
+    assert (repr(obj) ==
+            "Intent_Stmt(Intent_Spec('OUT'), Dummy_Arg_Name_List(',', "
+            "(Name('a'), Name('b'))))")
 
 
 def test_Optional_Stmt():  # R537
@@ -1405,10 +1379,9 @@ def test_Optional_Stmt():  # R537
     obj = cls('optional :: a, b, c')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'OPTIONAL :: a, b, c'
-    assert_equal(
-        repr(obj),
-        "Optional_Stmt('OPTIONAL', Dummy_Arg_Name_List(',', (Name('a'), "
-        "Name('b'), Name('c'))))")
+    assert (repr(obj) ==
+            "Optional_Stmt('OPTIONAL', Dummy_Arg_Name_List(',', (Name('a'), "
+            "Name('b'), Name('c'))))")
 
 
 def test_Parameter_Stmt():  # R538
@@ -1417,10 +1390,9 @@ def test_Parameter_Stmt():  # R538
     obj = cls('parameter(a=1)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'PARAMETER(a = 1)'
-    assert_equal(
-        repr(obj),
-        "Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), "
-        "Int_Literal_Constant('1', None)))")
+    assert (repr(obj) ==
+            "Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), "
+            "Int_Literal_Constant('1', None)))")
 
     obj = cls('parameter(a=1, b=a+2)')
     assert isinstance(obj, cls), repr(obj)
@@ -1437,9 +1409,8 @@ def test_Named_Constant_Def():  # R539
     obj = cls('a=1')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a = 1'
-    assert_equal(
-        repr(obj),
-        "Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
+    assert (repr(obj) ==
+            "Named_Constant_Def(Name('a'), Int_Literal_Constant('1', None))")
 
 
 def test_Pointer_Stmt():  # R540
@@ -1448,10 +1419,9 @@ def test_Pointer_Stmt():  # R540
     obj = cls('pointer a(:), b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'POINTER :: a(:), b'
-    assert_equal(
-        repr(obj),
-        "Pointer_Stmt('POINTER', Pointer_Decl_List(',', (Pointer_Decl("
-        "Name('a'), Deferred_Shape_Spec(None, None)), Name('b'))))")
+    assert (repr(obj) ==
+            "Pointer_Stmt('POINTER', Pointer_Decl_List(',', (Pointer_Decl("
+            "Name('a'), Deferred_Shape_Spec(None, None)), Name('b'))))")
 
 
 def test_Pointer_Decl():  # R541
@@ -1460,9 +1430,8 @@ def test_Pointer_Decl():  # R541
     obj = cls('a(:)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(:)'
-    assert_equal(
-        repr(obj),
-        "Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
+    assert (repr(obj) ==
+            "Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
 
     obj = cls('a(:,:)')
     assert isinstance(obj, cls), repr(obj)
@@ -1474,10 +1443,9 @@ def test_Protected_Stmt():  # R542
     obj = cls('protected a,b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'PROTECTED :: a, b'
-    assert_equal(
-        repr(obj),
-        "Protected_Stmt('PROTECTED', Entity_Name_List(',', (Name('a'), "
-        "Name('b'))))")
+    assert (repr(obj) ==
+            "Protected_Stmt('PROTECTED', Entity_Name_List(',', (Name('a'), "
+            "Name('b'))))")
 
     obj = cls('protected ::a')
     assert isinstance(obj, cls), repr(obj)
@@ -1495,17 +1463,15 @@ def test_Save_Stmt():  # R543
     obj = cls('save a, b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'SAVE :: a, b'
-    assert_equal(
-        repr(obj),
-        "Save_Stmt('SAVE', Saved_Entity_List(',', (Name('a'), Name('b'))))")
+    assert (repr(obj) == "Save_Stmt('SAVE', "
+            "Saved_Entity_List(',', (Name('a'), Name('b'))))")
 
     obj = cls('save :: /a/ , b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'SAVE :: /a/, b'
-    assert_equal(
-        repr(obj),
-        "Save_Stmt('SAVE', Saved_Entity_List(',', (Saved_Entity('/', "
-        "Name('a'), '/'), Name('b'))))")
+    assert (repr(obj) ==
+            "Save_Stmt('SAVE', Saved_Entity_List(',', (Saved_Entity('/', "
+            "Name('a'), '/'), Name('b'))))")
 
 
 def test_Saved_Entity():  # R544
@@ -1566,10 +1532,9 @@ def test_Implicit_Stmt():  # R549
 
     obj = cls('implicit real(a-d), double precision(r-t,x), type(a) (y-z)')
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'IMPLICIT REAL(A - D), DOUBLE PRECISION(R - T, X), '
-        'TYPE(a)(Y - Z)')
+    assert (str(obj) ==
+            'IMPLICIT REAL(A - D), DOUBLE PRECISION(R - T, X), '
+            'TYPE(a)(Y - Z)')
 
 
 def test_Implicit_Spec():  # R550
@@ -1578,10 +1543,9 @@ def test_Implicit_Spec():  # R550
     obj = cls('integer (a-z)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'INTEGER(A - Z)'
-    assert_equal(
-        repr(obj),
-        "Implicit_Spec(Intrinsic_Type_Spec('INTEGER', None), "
-        "Letter_Spec('A', 'Z'))")
+    assert (repr(obj) ==
+            "Implicit_Spec(Intrinsic_Type_Spec('INTEGER', None), "
+            "Letter_Spec('A', 'Z'))")
 
     obj = cls('double  complex (r,d-g)')
     assert isinstance(obj, cls), repr(obj)
@@ -1617,10 +1581,9 @@ def test_Equivalence_Stmt():  # R554
     obj = cls('equivalence (a, b ,z)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'EQUIVALENCE(a, b, z)'
-    assert_equal(
-        repr(obj),
-        "Equivalence_Stmt('EQUIVALENCE', Equivalence_Set(Name('a'), "
-        "Equivalence_Object_List(',', (Name('b'), Name('z')))))")
+    assert (repr(obj) ==
+            "Equivalence_Stmt('EQUIVALENCE', Equivalence_Set(Name('a'), "
+            "Equivalence_Object_List(',', (Name('b'), Name('z')))))")
 
     obj = cls('equivalence (a, b ,z),(b,l)')
     assert isinstance(obj, cls), repr(obj)
@@ -1654,10 +1617,9 @@ def test_Common_Block_Object():  # R558
     obj = cls('a(2)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(2)'
-    assert_equal(
-        repr(obj),
-        "Common_Block_Object(Name('a'), Explicit_Shape_Spec(None, "
-        "Int_Literal_Constant('2', None)))")
+    assert (repr(obj) ==
+            "Common_Block_Object(Name('a'), Explicit_Shape_Spec(None, "
+            "Int_Literal_Constant('2', None)))")
 
     obj = cls('a')
     assert isinstance(obj, Name), repr(obj)
@@ -1674,16 +1636,14 @@ def test_Substring():  # R609
     obj = cls('a(:)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(:)'
-    assert_equal(
-        repr(obj), "Substring(Name('a'), Substring_Range(None, None))")
+    assert repr(obj) == "Substring(Name('a'), Substring_Range(None, None))"
 
     obj = cls('a(1:2)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(1 : 2)'
-    assert_equal(
-        repr(obj),
-        "Substring(Name('a'), Substring_Range(Int_Literal_Constant('1',"
-        " None), Int_Literal_Constant('2', None)))")
+    assert (repr(obj) ==
+            "Substring(Name('a'), Substring_Range(Int_Literal_Constant('1',"
+            " None), Int_Literal_Constant('2', None)))")
 
 
 def test_Substring_Range():  # R611
@@ -1752,9 +1712,8 @@ def test_Array_Section():  # R617
     obj = cls('a(:)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a(:)'
-    assert_equal(
-        repr(obj),
-        "Array_Section(Name('a'), Substring_Range(None, None))")
+    assert (repr(obj) ==
+            "Array_Section(Name('a'), Substring_Range(None, None))")
 
     obj = cls('a(2:)')
     assert isinstance(obj, cls), repr(obj)
@@ -1780,10 +1739,9 @@ def test_Section_Subscript_List():  # R619-list
     obj = cls('a,2')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a, 2'
-    assert_equal(
-        repr(obj),
-        "Section_Subscript_List(',', (Name('a'), Int_Literal_Constant("
-        "'2', None)))")
+    assert (repr(obj) ==
+            "Section_Subscript_List(',', (Name('a'), Int_Literal_Constant("
+            "'2', None)))")
 
     obj = cls('::1')
     assert isinstance(obj, Subscript_Triplet), repr(obj)
@@ -1833,9 +1791,8 @@ def test_Allocate_Stmt():  # R623
     assert str(obj) == 'ALLOCATE(REAL::a)'
 
     obj = cls('allocate(real(kind=8)::a, stat=b, source=c//d)')
-    assert_equal(
-        str(obj),
-        'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
+    assert (str(obj) ==
+            'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
 
 
 def test_Alloc_Opt():  # R624
@@ -2224,9 +2181,8 @@ def test_Logical_Expr():  # R724
     cls = Logical_Expr
     obj = cls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
     assert isinstance(obj, Equiv_Operand), repr(obj)
-    assert_equal(
-        str(obj),
-        '(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
+    assert (str(obj) ==
+            '(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
 
 
 def test_Logical_Initialization_Expr():  # R733
@@ -2255,10 +2211,9 @@ def test_Assignment_Stmt():  # R734
 
     obj = cls('a = .FALSE.')
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        repr(obj),
-        "Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant("
-        "'.FALSE.', None))")
+    assert (repr(obj) ==
+            "Assignment_Stmt(Name('a'), '=', Logical_Literal_Constant("
+            "'.FALSE.', None))")
 
     obj = cls('a(n)(k:m) = 5')
     assert isinstance(obj, cls), repr(obj)
@@ -2281,9 +2236,8 @@ def test_Pointer_Assignment_Stmt():  # R735
 
     obj = cls('simple_name => target_structure % substruct % component')
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'simple_name => target_structure % substruct % component')
+    assert (str(obj) ==
+            'simple_name => target_structure % substruct % component')
 
     for stmt in '''\
 PTR => NULL()
@@ -2314,10 +2268,9 @@ def test_Where_Stmt():  # R743
     obj = cls('where (a) c=2')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'WHERE (a) c = 2'
-    assert_equal(
-        repr(obj),
-        "Where_Stmt(Name('a'), Assignment_Stmt(Name('c'), '=', "
-        "Int_Literal_Constant('2', None)))")
+    assert (repr(obj) ==
+            "Where_Stmt(Name('a'), Assignment_Stmt(Name('c'), '=', "
+            "Int_Literal_Constant('2', None)))")
 
 
 def test_Where_Construct():  # R745
@@ -2397,11 +2350,10 @@ def test_Forall_Construct():  # R752
     end forall
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n'
-        '  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + '
-        'b(i, j) * real(i * j)\nEND FORALL')
+    assert (str(obj) ==
+            'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n'
+            '  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + '
+            'b(i, j) * real(i * j)\nEND FORALL')
 
     obj = cls(get_reader('''\
     n: forall (x = 1:5:2, j = 1:4)
@@ -2409,9 +2361,8 @@ def test_Forall_Construct():  # R752
     end forall n
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
+    assert (str(obj) ==
+            'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
 
 
 def test_Forall_Header():  # R754
@@ -2469,10 +2420,9 @@ if (expr) then
 end if
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'IF (expr) THEN\n  a = 1\n  IF (expr2) THEN\n    a = 2\n'
-        '  END IF\n  a = 3\nEND IF')
+    assert (str(obj) ==
+            'IF (expr) THEN\n  a = 1\n  IF (expr2) THEN\n    a = 2\n'
+            '  END IF\n  a = 3\nEND IF')
 
     obj = cls(get_reader('''\
 if (expr) then
@@ -2482,9 +2432,8 @@ else if (expr2) then
 end if
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nEND IF')
+    assert (str(obj) ==
+            'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\nEND IF')
 
     obj = cls(get_reader('''\
 if (expr) then
@@ -2504,10 +2453,9 @@ else
   a = 3
 end if
     '''))
-    assert_equal(
-        str(obj),
-        'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
-        'ELSE\n  a = 3\nEND IF')
+    assert (str(obj) ==
+            'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
+            'ELSE\n  a = 3\nEND IF')
 
     obj = cls(get_reader('''\
 named: if (expr) then
@@ -2516,9 +2464,8 @@ else named
   a = 2
 end if named
     '''))
-    assert_equal(
-        str(obj),
-        'named:IF (expr) THEN\n  a = 1\nELSE named\n  a = 2\nEND IF named')
+    assert (str(obj) ==
+            'named:IF (expr) THEN\n  a = 1\nELSE named\n  a = 2\nEND IF named')
 
     obj = cls(get_reader('''\
 named: if (expr) then
@@ -2528,10 +2475,9 @@ named: if (expr) then
   end if named2
 end if named
 '''))
-    assert_equal(
-        str(obj),
-        'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n'
-        '    a = 2\n  END IF named2\nEND IF named')
+    assert (str(obj) ==
+            'named:IF (expr) THEN\n  a = 1\n  named2:IF (expr2) THEN\n'
+            '    a = 2\n  END IF named2\nEND IF named')
 
     obj = cls(get_reader('''\
 if (expr) then
@@ -2543,10 +2489,9 @@ else if (expr3) then
 end if
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
-        'ELSE IF (expr3) THEN\n  a = 3\nEND IF')
+    assert (str(obj) ==
+            'IF (expr) THEN\n  a = 1\nELSE IF (expr2) THEN\n  a = 2\n'
+            'ELSE IF (expr3) THEN\n  a = 3\nEND IF')
 
     obj = cls(get_reader('''\
         if (dxmx .gt. 0d0) then
@@ -2614,10 +2559,9 @@ case (1:)
 end select
 '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n'
-        '  signum = 0\nCASE (1 :)\n  signum = 1\nEND SELECT')
+    assert (str(obj) ==
+            'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n'
+            '  signum = 0\nCASE (1 :)\n  signum = 1\nEND SELECT')
 
 
 def test_Case_Selector():  # R813
@@ -2643,10 +2587,9 @@ PRINT *, A+Z, A-Z
 END ASSOCIATE
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n'
-        '  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
+    assert (str(obj) ==
+            'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n'
+            '  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
 
     obj = cls(get_reader('''\
 name:ASSOCIATE ( XC => AX%B(I,J)%C )
@@ -2654,20 +2597,18 @@ XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
 END ASSOCIATE name
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + '
-        'PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
+    assert (str(obj) ==
+            'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + '
+            'PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
 
     obj = cls(get_reader('''\
 ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
 W = ZX*X + ZY*Y
 END ASSOCIATE
     '''))
-    assert_equal(
-        str(obj),
-        'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => '
-        'AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
+    assert (str(obj) ==
+            'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => '
+            'AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
 
 
 def test_Select_Type_Construct():  # R821
@@ -3177,8 +3118,8 @@ def test_Wait_Spec():  # R922
     obj = cls('123')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'UNIT = 123'
-    assert_equal(
-        repr(obj), "Wait_Spec('UNIT', Int_Literal_Constant('123', None))")
+    assert (repr(obj) ==
+            "Wait_Spec('UNIT', Int_Literal_Constant('123', None))")
 
     obj = cls('err=1')
     assert isinstance(obj, cls), repr(obj)
@@ -3613,10 +3554,9 @@ program a
 end
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n'
-        '  END SUBROUTINE foo\nEND PROGRAM a')
+    assert (str(obj) ==
+            'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n'
+            '  END SUBROUTINE foo\nEND PROGRAM a')
 
     obj = Main_Program0(get_reader('''\
 end
@@ -3652,10 +3592,9 @@ end type b
 end
     '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b'
-        '\nEND MODULE m')
+    assert (str(obj) ==
+            'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b'
+            '\nEND MODULE m')
 
 
 def test_Module_Subprogram_Part():  # R1107
@@ -3861,10 +3800,9 @@ module procedure b,c
 end interface
 '''))
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'ABSTRACT INTERFACE\n  MODULE PROCEDURE a\n  MODULE PROCEDURE b, '
-        'c\nEND INTERFACE')
+    assert (str(obj) ==
+            'ABSTRACT INTERFACE\n  MODULE PROCEDURE a\n  MODULE PROCEDURE b, '
+            'c\nEND INTERFACE')
 
 
 def test_Interface_Specification():  # R1202
@@ -3922,9 +3860,8 @@ function foo(a) result(c)
 end
 '''))
     assert isinstance(obj, Function_Body), repr(obj)
-    assert_equal(
-        str(obj),
-        'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
+    assert (str(obj) ==
+            'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
 
 
 def test_Subroutine_Body():
@@ -4107,9 +4044,7 @@ def test_Procedure_Designator():  # R1219
     obj = cls('a%b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a % b'
-    assert_equal(
-        repr(obj),
-        "Procedure_Designator(Name('a'), '%', Name('b'))")
+    assert repr(obj) == "Procedure_Designator(Name('a'), '%', Name('b'))"
 
 
 def test_Actual_Arg_Spec():  # R1220
@@ -4131,9 +4066,7 @@ def test_Actual_Arg_Spec_List():
     obj = cls('a,b')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'a, b'
-    assert_equal(
-        repr(obj),
-        "Actual_Arg_Spec_List(',', (Name('a'), Name('b')))")
+    assert repr(obj) == "Actual_Arg_Spec_List(',', (Name('a'), Name('b')))"
 
     obj = cls('a = k')
     assert isinstance(obj, Actual_Arg_Spec), repr(obj)
@@ -4166,10 +4099,9 @@ def test_Function_Subprogram():  # R1223
     obj = cls(reader)
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'FUNCTION foo()\nEND FUNCTION foo'
-    assert_equal(
-        repr(obj),
-        "Function_Subprogram(Function_Stmt(None, Name('foo'), None, None), "
-        "End_Function_Stmt('FUNCTION', Name('foo')))")
+    assert (repr(obj) ==
+            "Function_Subprogram(Function_Stmt(None, Name('foo'), None, None),"
+            " End_Function_Stmt('FUNCTION', Name('foo')))")
 
     reader = get_reader('''\
     pure real function foo(a) result(b) bind(c)
@@ -4178,10 +4110,9 @@ def test_Function_Subprogram():  # R1223
     cls = Function_Subprogram
     obj = cls(reader)
     assert isinstance(obj, cls), repr(obj)
-    assert_equal(
-        str(obj),
-        'PURE REAL FUNCTION foo(a) RESULT(b) BIND(C)\n  INTEGER :: '
-        'a\nEND FUNCTION foo')
+    assert (str(obj) ==
+            'PURE REAL FUNCTION foo(a) RESULT(b) BIND(C)\n  INTEGER :: '
+            'a\nEND FUNCTION foo')
 
 
 def test_Function_Stmt():  # R1224
@@ -4194,10 +4125,9 @@ def test_Function_Stmt():  # R1224
     obj = cls('function foo(a,b)')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'FUNCTION foo(a, b)'
-    assert_equal(
-        repr(obj),
-        "Function_Stmt(None, Name('foo'), Dummy_Arg_List(',', "
-        "(Name('a'), Name('b'))), None)")
+    assert (repr(obj) ==
+            "Function_Stmt(None, Name('foo'), Dummy_Arg_List(',', "
+            "(Name('a'), Name('b'))), None)")
 
     obj = cls('function foo(a)')
     assert isinstance(obj, cls), repr(obj)
@@ -4237,9 +4167,8 @@ def test_Prefix():  # R1227
     obj = cls('pure  recursive')
     assert isinstance(obj, cls), repr(obj)
     assert str(obj) == 'PURE RECURSIVE'
-    assert_equal(
-        repr(obj),
-        "Prefix(' ', (Prefix_Spec('PURE'), Prefix_Spec('RECURSIVE')))")
+    assert (repr(obj) ==
+            "Prefix(' ', (Prefix_Spec('PURE'), Prefix_Spec('RECURSIVE')))")
 
     obj = cls('integer * 2 pure')
     assert isinstance(obj, cls), repr(obj)
