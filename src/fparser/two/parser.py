@@ -171,6 +171,11 @@ class ParserFactory(object):
         import fparser.two.Fortran2003
         class_type = type(fparser.two.Fortran2003.Base)
 
+        # Reset subclasses dictionary in case this function has been
+        # called before. If this is not done then multiple calls to
+        # the ParserFactory create method may not work correctly.
+        fparser.two.Fortran2003.Base.subclasses = {}
+
         for clsinfo in input_classes:
             clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
             cls = eval(clsname)

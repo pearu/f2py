@@ -39,11 +39,10 @@ from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import NoMatchError
 
 
-@pytest.mark.xfail(reason="This works in isolation but fails with other "
-                   "tests. No idea why :-(")
 def test_parserfactory_std():
-    '''Test ParserFactory std argument options [non, f2003, f2008,
-    invalid]
+    '''Test ParserFactory std argument options [none, f2003, f2008 and
+    invalid]. Also test that previous calls to the create method in
+    the ParserFactory class do not affect current calls.
 
     '''
     fstring = (
@@ -66,6 +65,14 @@ def test_parserfactory_std():
     ast = parser(reader)
     code = str(ast)
     assert "SUBMODULE (x) y\nEND SUBMODULE y" in code
+
+    # Repeat f2003 example to make sure that a previously valid (f2008)
+    # match does not affect the current (f2003) invalid match.
+    parser = ParserFactory().create(std="f2003")
+    reader = FortranStringReader(fstring)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = parser(reader)
+    assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
     with pytest.raises(SystemExit):
         parser = ParserFactory().create(std="invalid")

@@ -48,18 +48,18 @@ import pytest
 from fparser.two.Fortran2003 import NoMatchError
 from fparser.two.Fortran2008 import Parent_Identifier
 from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2008 classes
-_ = ParserFactory().create(std="f2008")
 
 
 def test_simple_1():
     '''Test the parsing of a minimal parent-identifier statement'''
+    _ = ParserFactory().create(std="f2008")
     result = Parent_Identifier("modulename")
     assert str(result) == "modulename"
 
 
 def test_simple_2():
     '''Test the parsing of a minimal parent-identifier statement'''
+    _ = ParserFactory().create(std="f2008")
     result = Parent_Identifier("modulename : submodulename")
     assert str(result) == "modulename:submodulename"
 
@@ -69,6 +69,7 @@ def test_simple_error1():
     exception
 
     '''
+    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         result = Parent_Identifier("modulename ; submodulename")
     assert ("Parent_Identifier: 'modulename ; submodulename'"
@@ -80,6 +81,7 @@ def test_simple_error2():
     exception
 
     '''
+    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Parent_Identifier("modulename :")
     assert "Parent_Identifier: 'modulename :'" in str(excinfo.value)
@@ -90,6 +92,7 @@ def test_simple_error3():
     exception
 
     '''
+    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Parent_Identifier(": submodulename")
     assert "Parent_Identifier: ': submodulename'" in str(excinfo.value)
@@ -102,6 +105,7 @@ def test_simple_error4():
     exception
 
     '''
+    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Parent_Identifier("modulename : submodulename : anothername")
     assert ("Parent_Identifier: 'modulename : submodulename : anothername'"
@@ -115,6 +119,7 @@ def test_simple_error5():
     the match raises an exception
 
     '''
+    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Parent_Identifier("modulename : submodulename :")
     assert ("Parent_Identifier: 'modulename : submodulename extra'"

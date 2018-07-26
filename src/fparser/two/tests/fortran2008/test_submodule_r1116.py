@@ -52,12 +52,11 @@ from fparser.api import get_reader
 from fparser.two.Fortran2003 import NoMatchError
 from fparser.two.Fortran2008 import Submodule
 from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2008 classes
-_ = ParserFactory().create(std="f2008")
 
 
 def test_submodule():
     '''Test the parsing of a minimal submodule'''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end
@@ -72,6 +71,7 @@ def test_submodule_sp():
     part
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
         use empty
@@ -88,6 +88,7 @@ def test_submodule_msp():
     part
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -108,6 +109,7 @@ def test_submodule_both():
     and a module subprogram part
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       use empty
@@ -133,6 +135,7 @@ def test_submodule_format_error1():
     implicit part of the specification
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       1 format(a)
@@ -151,6 +154,7 @@ def test_submodule_format_error2():
     declaration part of the specification
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -172,6 +176,7 @@ def test_submodule_entry_error1():
     implicit part of the specification
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       entry here
@@ -190,6 +195,7 @@ def test_submodule_entry_error2():
     declaration part of the specification
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -211,6 +217,7 @@ def test_submodule_stmt_func_error():
     validly occur is in the declaration part of the specification
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -228,6 +235,7 @@ def test_submodule_stmt_func_error():
 
 def test_submodule_samename():
     '''Test the parsing of a submodule with the same name : C1114'''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end submodule bar
@@ -240,6 +248,7 @@ def test_submodule_samename():
 def test_submodule_differentname():
     '''Test and exception is raised if a submodule has a different name :
     C1114'''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end submodule error

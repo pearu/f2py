@@ -42,8 +42,6 @@ from fparser.two.Fortran2003 import NoMatchError
 from fparser.api import get_reader
 from fparser.two.Fortran2008 import Program_Unit
 from fparser.two.parser import ParserFactory
-# this is required to setup the Fortran2008 classes
-_ = ParserFactory().create(std="f2008")
 
 
 def test_other():
@@ -52,6 +50,7 @@ def test_other():
     program-unit options
 
     '''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       subroutine test()
       end subroutine
@@ -63,6 +62,7 @@ def test_other():
 
 def test_submodule():
     '''Test that submodule as a top-level program unit can be parsed'''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end
@@ -74,6 +74,7 @@ def test_submodule():
 
 def test_submodule_nomatch():
     '''Test an exception is raised if there is a syntax error'''
+    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submod (foobar) bar
       end
