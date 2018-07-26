@@ -113,7 +113,6 @@ def test_simple_error8():
     assert "Submodule_Stmt: 'submodule (id name'" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="monkeypatch does not seem to work in this case")
 def test_splitparen_error(monkeypatch):
     '''Test that if the first argument of the splitparen is not empty then
     an error is returned.

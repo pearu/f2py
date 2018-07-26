@@ -77,7 +77,6 @@ from fparser.two.Fortran2003 import Program_Unit as Program_Unit_2003
 from fparser.two.Fortran2003 import EndStmtBase, BlockBase, SequenceBase, \
     Base, Specification_Part, Module_Subprogram_Part, Implicit_Part, \
     Implicit_Part_Stmt, Declaration_Construct, Use_Stmt, Import_Stmt
-from fparser.common.splitline import splitparen
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -270,6 +269,7 @@ class Submodule_Stmt(Base):  # R1117
             return None
         # "SUBMODULE is found so strip it out and split the remaining
         # line by parenthesis
+        from fparser.common.splitline import splitparen
         splitline = splitparen(fstring[len(name):].lstrip())
         # We expect 2 entries, the first being parent_identifier with
         # brackets and the second submodule_name. However for some
