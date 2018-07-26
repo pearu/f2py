@@ -287,31 +287,31 @@ def test_int_literal_constant():  # R406
 def test_binary_constant():  # R412
 
     tcls = Boz_Literal_Constant
-    btcls = Binary_Constant
+    bcls = Binary_Constant
     obj = tcls('B"01"')
-    assert isinstance(obj, btcls), repr(obj)
+    assert isinstance(obj, bcls), repr(obj)
     assert str(obj) == 'B"01"'
-    assert repr(obj) == "%s('B\"01\"')" % (btcls.__name__)
+    assert repr(obj) == "%s('B\"01\"')" % (bcls.__name__)
 
 
 def test_octal_constant():  # R413
 
     tcls = Boz_Literal_Constant
-    otcls = Octal_Constant
+    ocls = Octal_Constant
     obj = tcls('O"017"')
-    assert isinstance(obj, otcls), repr(obj)
+    assert isinstance(obj, ocls), repr(obj)
     assert str(obj) == 'O"017"'
-    assert repr(obj) == "%s('O\"017\"')" % (otcls.__name__)
+    assert repr(obj) == "%s('O\"017\"')" % (ocls.__name__)
 
 
 def test_hex_constant():  # R414
 
     tcls = Boz_Literal_Constant
-    ztcls = Hex_Constant
+    zcls = Hex_Constant
     obj = tcls('Z"01A"')
-    assert isinstance(obj, ztcls), repr(obj)
+    assert isinstance(obj, zcls), repr(obj)
     assert str(obj) == 'Z"01A"'
-    assert repr(obj) == "%s('Z\"01A\"')" % (ztcls.__name__)
+    assert repr(obj) == "%s('Z\"01A\"')" % (zcls.__name__)
 
 
 def test_signed_real_literal_constant():  # R416
