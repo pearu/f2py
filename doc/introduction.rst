@@ -50,15 +50,16 @@ the content of the Fortran expressions themselves. The second,
 however, less mature than fparser. Note the fparser2 support for
 Fortran 2008 is currently being developed.
 
-The Fortran language syntax rules for Fortran2003 are defined in
-`Fortran2003.py`_, with the rules being taken from the following ISO/IEC 1539
-document:
+The Fortran language syntax rules for Fortran2003 are implemented in
+`Fortran2003.py`_, with the rules being taken from the following
+ISO/IEC 1539 document:
 https://wg5-fortran.org/N1601-N1650/N1601.pdf
 
 .. _Fortran2003.py:  https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 
-The additional Fortran language syntax rules for Fortran2008 are defined in
-`Fortran2008.py`_, with the rules being taken from the following document:
+The additional Fortran language syntax rules for Fortran2008 are
+implemented in `Fortran2008.py`_, with the rules being taken from the
+following document:
 https://j3-fortran.org/doc/year/10/10-007r1.pdf
 
 .. _Fortran2008.py:  https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py

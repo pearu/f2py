@@ -63,8 +63,8 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-'''This file provides utilities to create a fortran parser suitable
-for a particular standard'''
+'''This file provides utilities to create a Fortran parser suitable
+for a particular standard.'''
 # pylint: disable=eval-used
 
 import inspect
@@ -72,10 +72,11 @@ import sys
 
 
 def get_module_classes(input_module):
-    ''' Return all classes local to a module
+    '''Return all classes local to a module.
 
-    :param module input_module: the module containing the classes
-    :return: a `list` of classes contained in the module
+    :param module input_module: the module containing the classes.
+    :return: a `list` of tuples each containing a class name and a \
+    class.
 
     '''
     module_cls_members = []
@@ -84,7 +85,7 @@ def get_module_classes(input_module):
     # classes.
     all_cls_members = inspect.getmembers(sys.modules[module_name],
                                          inspect.isclass)
-    # next only keep classes that are specified in the module
+    # next only keep classes that are specified in the module.
     for cls_member in all_cls_members:
         if cls_member[1].__module__ == module_name:
             module_cls_members.append(cls_member)
@@ -92,15 +93,15 @@ def get_module_classes(input_module):
 
 
 class ParserFactory(object):
-    '''Creates a parser suitable for the specified fortran standard'''
+    '''Creates a parser suitable for the specified Fortran standard.'''
 
     def create(self, std=None):
-        '''Creates a class hierarchy suitable for the specified fortran
-        standard
+        '''Creates a class hierarchy suitable for the specified Fortran
+        standard.
 
-        :param std string: the fortran standard. Choices are 'f2003' or
+        :param std string: the Fortran standard. Choices are 'f2003' or \
                            'f2008'. 'f2003' is the default.
-        :return: a Program class (not object) for use with the fortran reader
+        :return: a Program class (not object) for use with the Fortran reader
         :rtype: :py:class:`fparser.two.Fortran2003.Program`
 
         For example:
@@ -109,21 +110,24 @@ class ParserFactory(object):
         >>> f2003_parser = ParserFactory().create()
         >>> f2003_parser = ParserFactory().create(std='f2003')
         >>> f2008_parser = ParserFactory().create(std='f2008')
+        >>> # Assuming that a reader has already been created ...
+        >>> ast = f2008_parser(reader)
+        >>> print ast
 
         '''
         # find all relevant classes in our Fortran2003 file as we
-        # always need these
+        # always need these.
         from fparser.two import Fortran2003
         f2003_cls_members = get_module_classes(Fortran2003)
         if not std:
-            # default to f2003
+            # default to f2003.
             std = "f2003"
         if std == "f2003":
             # we already have our required list of classes so call _setup
-            # to setup our class hierarchy
+            # to setup our class hierarchy.
             self._setup(f2003_cls_members)
             # the class hierarchy has been set up so return the top
-            # level class that we start from when parsing fortran code
+            # level class that we start from when parsing Fortran code.
             return Fortran2003.Program
         elif std == "f2008":
             # we need to find all relevent classes in our Fortran2003
@@ -131,20 +135,20 @@ class ParserFactory(object):
             # have the same name we return the Fortran2008 class
             # i.e. where Fortran2008 extends Fortran2003 we return
             # Fortran2008.
-            # First find all Fortran2008 classes
+            # First find all Fortran2008 classes.
             from fparser.two import Fortran2008
             f2008_cls_members = get_module_classes(Fortran2008)
             # next add in Fortran2003 classes if they do not already
-            # exist as a Fortran2008 class
+            # exist as a Fortran2008 class.
             f2008_class_names = [i[0] for i in f2008_cls_members]
             for local_cls in f2003_cls_members:
                 if local_cls[0] not in f2008_class_names:
                     f2008_cls_members.append(local_cls)
             # we now have our required list of classes so call _setup
-            # to setup our class hierarchy
+            # to setup our class hierarchy.
             self._setup(f2008_cls_members)
             # the class hierarchy has been set up so return the top
-            # level class that we start from when parsing fortran
+            # level class that we start from when parsing Fortran
             # code. Fortran2008 does not extend the top level class so
             # we return the Fortran2003 one.
             return Fortran2003.Program
@@ -159,8 +163,8 @@ class ParserFactory(object):
         has been made to tidy up the code, other than making it
         conformant to the coding rules.
 
-        :param list input_classes: a list of tuples each containing a
-        class name and a class
+        :param list input_classes: a list of tuples each containing a \
+        class name and a class.
 
         '''
 
@@ -188,7 +192,7 @@ class ParserFactory(object):
                     __autodoc__.append(cls.__name__)
 
         #
-        # OPTIMIZE subclass_names tree
+        # OPTIMIZE subclass_names tree.
         #
 
         if 1:  # Optimize subclass tree:
@@ -198,7 +202,7 @@ class ParserFactory(object):
                     error_string = 'Not implemented: {0}'.format(clsname)
                     logging.getLogger(__name__).debug(error_string)
                     return []
-                # remove this code when all classes are implemented
+                # remove this code when all classes are implemented.
                 cls = base_classes[clsname]
                 if 'match' in cls.__dict__:
                     return [clsname]
