@@ -32,7 +32,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R1118 (C1113)
+'''Test Fortran 2008 rule R1118 (C1113).
 
    parent-identifier is ancestor-module-name [ : parent-submodule-name ]
 
@@ -41,7 +41,7 @@
    descendant of that module.
 
    It is not possible to test C1113 with fparser as the names may be
-   in different files
+   in different files.
 
 '''
 import pytest
@@ -51,14 +51,14 @@ from fparser.two.parser import ParserFactory
 
 
 def test_simple_1():
-    '''Test the parsing of a minimal parent-identifier statement'''
+    '''Test the parsing of a minimal parent-identifier statement.'''
     _ = ParserFactory().create(std="f2008")
     result = Parent_Identifier("modulename")
     assert str(result) == "modulename"
 
 
 def test_simple_2():
-    '''Test the parsing of a minimal parent-identifier statement'''
+    '''Test the parsing of a minimal parent-identifier statement.'''
     _ = ParserFactory().create(std="f2008")
     result = Parent_Identifier("modulename : submodulename")
     assert str(result) == "modulename:submodulename"
@@ -66,7 +66,7 @@ def test_simple_2():
 
 def test_simple_error1():
     '''Test a parent_identifier statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -78,7 +78,7 @@ def test_simple_error1():
 
 def test_simple_error2():
     '''Test a parent_identifier statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -89,7 +89,7 @@ def test_simple_error2():
 
 def test_simple_error3():
     '''Test a parent_identifier statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -98,11 +98,9 @@ def test_simple_error3():
     assert "Parent_Identifier: ': submodulename'" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Does not raise an error when there are too "
-                   "many colons")
 def test_simple_error4():
     '''Test a parent_identifier statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -112,15 +110,13 @@ def test_simple_error4():
             in str(excinfo.value))
 
 
-@pytest.mark.xfail(reason="Does not raise an error if there is extra "
-                   "content after the match")
 def test_simple_error5():
     '''Test a parent-identifier statement with additional content after
-    the match raises an exception
+    the match raises an exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Parent_Identifier("modulename : submodulename :")
-    assert ("Parent_Identifier: 'modulename : submodulename extra'"
+    assert ("Parent_Identifier: 'modulename : submodulename :'"
             in str(excinfo.value))

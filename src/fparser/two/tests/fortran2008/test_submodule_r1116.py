@@ -32,7 +32,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R1116 and its constraints C1112 and C1114
+'''Test Fortran 2008 rule R1116 and its constraints C1112 and C1114.
 
     submodule is submodule-stmt
                  [ specification-part ]
@@ -55,7 +55,7 @@ from fparser.two.parser import ParserFactory
 
 
 def test_submodule():
-    '''Test the parsing of a minimal submodule'''
+    '''Test the parsing of a minimal submodule.'''
     _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
@@ -68,7 +68,7 @@ def test_submodule():
 
 def test_submodule_sp():
     '''Test the parsing of a minimal submodule with a specification
-    part
+    part.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -85,7 +85,7 @@ def test_submodule_sp():
 
 def test_submodule_msp():
     '''Test the parsing of a minimal submodule with a module subprogram
-    part
+    part.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -106,7 +106,7 @@ def test_submodule_msp():
 
 def test_submodule_both():
     '''Test the parsing of a minimal submodule with a specification part
-    and a module subprogram part
+    and a module subprogram part.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -132,7 +132,7 @@ def test_submodule_both():
 def test_submodule_format_error1():
     '''C1112: Test an exception is raised if a format statement is
     specified in a submodule. The first place it can occur is in the
-    implicit part of the specification
+    implicit part of the specification.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -151,7 +151,7 @@ def test_submodule_format_error1():
 def test_submodule_format_error2():
     '''C1112: Test an exception is raised if a format statement is
     specified in a submodule. The second place it can occur is in the
-    declaration part of the specification
+    declaration part of the specification.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -173,7 +173,7 @@ def test_submodule_format_error2():
 def test_submodule_entry_error1():
     '''C1112: Test an exception is raised if an entry statement is
     specified in a submodule. The first place it can occur is in the
-    implicit part of the specification
+    implicit part of the specification.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -192,7 +192,7 @@ def test_submodule_entry_error1():
 def test_submodule_entry_error2():
     '''C1112: Test an exception is raised if an entry statement is
     specified in a submodule. The second place it can occur is in the
-    declaration part of the specification
+    declaration part of the specification.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -214,7 +214,7 @@ def test_submodule_entry_error2():
 def test_submodule_stmt_func_error():
     '''C1112: Test an exception is raised if a statement-function
     statement is specified in a submodule. The only place it could
-    validly occur is in the declaration part of the specification
+    validly occur is in the declaration part of the specification.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -234,7 +234,10 @@ def test_submodule_stmt_func_error():
 
 
 def test_submodule_samename():
-    '''Test the parsing of a submodule with the same name : C1114'''
+    '''Test the parsing of a submodule with the same name in the start and
+    end statements: C1114.
+
+    '''
     _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
@@ -246,8 +249,10 @@ def test_submodule_samename():
 
 
 def test_submodule_differentname():
-    '''Test and exception is raised if a submodule has a different name :
-    C1114'''
+    '''Test and exception is raised if the end submodule statement has a
+    different name to that of the submodule statement : C1114.
+
+    '''
     _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar

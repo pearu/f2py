@@ -383,7 +383,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
             return Ancestor_Module_Name(lhs_name), \
                 Parent_SubModule_Name(rhs_name)
         # we expect at most one ':' in our input so the match fails
-        return None, None
+        return None
 
     def tostr(self):
         '''return the fortran representation of this object'''

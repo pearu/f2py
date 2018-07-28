@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''Test Fortran 2008 rule R202 : This file tests the addition of
-submodules in Fortran2008 for the Program-unit rule
+submodules in Fortran2008 for the Program-unit rule.
 
 '''
 
@@ -47,7 +47,7 @@ from fparser.two.parser import ParserFactory
 def test_other():
     '''Test that something other than submodule can still be parsed
     i.e. by adding submodule we've not broken the existing
-    program-unit options
+    program-unit options.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -61,7 +61,7 @@ def test_other():
 
 
 def test_submodule():
-    '''Test that submodule as a top-level program unit can be parsed'''
+    '''Test that submodule as a top-level program unit can be parsed.'''
     _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
@@ -73,7 +73,7 @@ def test_submodule():
 
 
 def test_submodule_nomatch():
-    '''Test an exception is raised if there is a syntax error'''
+    '''Test an exception is raised if there is a syntax error.'''
     _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submod (foobar) bar
