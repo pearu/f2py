@@ -77,7 +77,7 @@ def test_simple_error1():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("edn")
+        dummy_ = End_Submodule_Stmt("edn")
     assert "End_Submodule_Stmt: 'edn'" in str(excinfo.value)
 
 
@@ -88,7 +88,7 @@ def test_simple_error2():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("end submod")
+        dummy_ = End_Submodule_Stmt("end submod")
     assert "End_Submodule_Stmt: 'end submod'" in str(excinfo.value)
 
 
@@ -99,5 +99,5 @@ def test_simple_error3():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = End_Submodule_Stmt("end submodule name :")
+        dummy_ = End_Submodule_Stmt("end submodule name :")
     assert "End_Submodule_Stmt: 'end submodule name :'" in str(excinfo.value)

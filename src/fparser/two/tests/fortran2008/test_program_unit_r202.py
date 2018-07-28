@@ -80,6 +80,6 @@ def test_submodule_nomatch():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Program_Unit(reader)
+        dummy_ = Program_Unit(reader)
     assert ("at line 1\n>>>      submod (foobar) bar\n"
             in str(excinfo.value))

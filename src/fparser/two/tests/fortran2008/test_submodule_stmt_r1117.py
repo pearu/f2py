@@ -54,7 +54,7 @@ def test_simple_error1():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submod (id) name")
+        dummy_ = Submodule_Stmt("submod (id) name")
     assert "Submodule_Stmt: 'submod (id) name" in str(excinfo.value)
 
 
@@ -62,7 +62,7 @@ def test_simple_error2():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule name")
+        dummy_ = Submodule_Stmt("submodule name")
     assert "Submodule_Stmt: 'submodule name'" in str(excinfo.value)
 
 
@@ -70,7 +70,7 @@ def test_simple_error3():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule () name")
+        dummy_ = Submodule_Stmt("submodule () name")
     assert "Submodule_Stmt: 'submodule () name'" in str(excinfo.value)
 
 
@@ -78,7 +78,7 @@ def test_simple_error4():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule (id)")
+        dummy_ = Submodule_Stmt("submodule (id)")
     assert "Submodule_Stmt: 'submodule (id)'" in str(excinfo.value)
 
 
@@ -86,7 +86,7 @@ def test_simple_error5():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule name (id)")
+        dummy_ = Submodule_Stmt("submodule name (id)")
     assert "Submodule_Stmt: 'submodule name (id)'" in str(excinfo.value)
 
 
@@ -94,7 +94,7 @@ def test_simple_error6():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule (id) (name)")
+        dummy_ = Submodule_Stmt("submodule (id) (name)")
     assert "Submodule_Stmt: 'submodule (id) (name)'" in str(excinfo.value)
 
 
@@ -102,14 +102,15 @@ def test_simple_error7():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule id) name")
+        dummy_ = Submodule_Stmt("submodule id) name")
     assert "Submodule_Stmt: 'submodule id) name'" in str(excinfo.value)
+
 
 def test_simple_error8():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule (id name")
+        dummy_ = Submodule_Stmt("submodule (id name")
     assert "Submodule_Stmt: 'submodule (id name'" in str(excinfo.value)
 
 
@@ -119,11 +120,13 @@ def test_splitparen_error(monkeypatch):
 
     '''
     _ = ParserFactory().create(std="f2008")
+
     def mockreturn(my_string):
-        return ["XXX", "", ""]
+        ''' Mock function for the splitparen function.'''
+        return ["XXX", my_string, my_string]
     monkeypatch.setattr("fparser.common.splitline.splitparen", mockreturn)
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule (id) name")
+        dummy_ = Submodule_Stmt("submodule (id) name")
     assert "Submodule_Stmt: 'submodule (id) name'" in str(excinfo.value)
 
 
@@ -131,5 +134,5 @@ def test_simple_error9():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule_Stmt("submodule (id) name :")
+        dummy_ = Submodule_Stmt("submodule (id) name :")
     assert "Submodule_Stmt: 'submodule (id) name :'" in str(excinfo.value)

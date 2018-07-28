@@ -142,7 +142,7 @@ def test_submodule_format_error1():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)
     assert ("at line 2\n"
             ">>>      1 format(a)\n"
             in str(excinfo.value))
@@ -162,7 +162,7 @@ def test_submodule_format_error2():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      1 format(a)\n"
             in str(excinfo.value))
@@ -183,7 +183,7 @@ def test_submodule_entry_error1():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)
     assert ("at line 2\n"
             ">>>      entry here\n"
             in str(excinfo.value))
@@ -203,7 +203,7 @@ def test_submodule_entry_error2():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      entry here\n"
             in str(excinfo.value))
@@ -225,7 +225,7 @@ def test_submodule_stmt_func_error():
       end
       ''')
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)
     assert ("at line 3\n"
             ">>>      statefunc(x) = x*2\n"
             in str(excinfo.value))
@@ -259,4 +259,4 @@ def test_submodule_differentname():
       end submodule error
       ''')
     with pytest.raises(SystemExit):
-        _ = Submodule(reader)
+        dummy_ = Submodule(reader)

@@ -71,7 +71,7 @@ def test_simple_error1():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        result = Parent_Identifier("modulename ; submodulename")
+        dummy_ = Parent_Identifier("modulename ; submodulename")
     assert ("Parent_Identifier: 'modulename ; submodulename'"
             in str(excinfo.value))
 
@@ -83,7 +83,7 @@ def test_simple_error2():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Parent_Identifier("modulename :")
+        dummy_ = Parent_Identifier("modulename :")
     assert "Parent_Identifier: 'modulename :'" in str(excinfo.value)
 
 
@@ -94,7 +94,7 @@ def test_simple_error3():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Parent_Identifier(": submodulename")
+        dummy_ = Parent_Identifier(": submodulename")
     assert "Parent_Identifier: ': submodulename'" in str(excinfo.value)
 
 
@@ -105,7 +105,7 @@ def test_simple_error4():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Parent_Identifier("modulename : submodulename : anothername")
+        dummy_ = Parent_Identifier("modulename : submodulename : anothername")
     assert ("Parent_Identifier: 'modulename : submodulename : anothername'"
             in str(excinfo.value))
 
@@ -117,6 +117,6 @@ def test_simple_error5():
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = Parent_Identifier("modulename : submodulename :")
+        dummy_ = Parent_Identifier("modulename : submodulename :")
     assert ("Parent_Identifier: 'modulename : submodulename :'"
             in str(excinfo.value))
