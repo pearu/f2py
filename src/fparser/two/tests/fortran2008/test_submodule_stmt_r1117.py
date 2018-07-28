@@ -127,11 +127,9 @@ def test_splitparen_error(monkeypatch):
     assert "Submodule_Stmt: 'submodule (id) name'" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Does not raise an error if there is extra "
-                   "content after the match")
 def test_simple_error9():
     ''' Test the parsing of a submodule statement'''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = Submodule_Stmt("submodule (id) name :")
-    assert "Submodule_Stmt: 'submodule (id) name name2'" in str(excinfo.value)
+    assert "Submodule_Stmt: 'submodule (id) name :'" in str(excinfo.value)
