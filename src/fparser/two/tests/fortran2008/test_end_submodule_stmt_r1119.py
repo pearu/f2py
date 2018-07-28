@@ -32,7 +32,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R1119
+'''Test Fortran 2008 rule R1119.
 
     end-submodule-stmt is END [ SUBMODULE [ submodule-name ] ]
 
@@ -44,7 +44,7 @@ from fparser.two.parser import ParserFactory
 
 
 def test_simple_1():
-    '''Test the parsing of a minimal end-submodule statement'''
+    '''Test the parsing of a minimal end-submodule statement.'''
     _ = ParserFactory().create(std="f2008")
     result = End_Submodule_Stmt("end")
     assert str(result) == "END SUBMODULE"
@@ -52,7 +52,7 @@ def test_simple_1():
 
 def test_simple_2():
     '''Test the parsing of an end-submodule statement which includes the
-    submodule keyword
+    submodule keyword.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -72,7 +72,7 @@ def test_simple_3():
 
 def test_simple_error1():
     '''Test an end-submodule statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -83,7 +83,7 @@ def test_simple_error1():
 
 def test_simple_error2():
     '''Test an end-submodule statement with a syntax error raises an
-    exception
+    exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
@@ -92,14 +92,12 @@ def test_simple_error2():
     assert "End_Submodule_Stmt: 'end submod'" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Does not raise an error if there is extra "
-                   "content after the match")
 def test_simple_error3():
     '''Test an end-submodule statement with additional content after the
-    match raises an exception
+    match raises an exception.
 
     '''
     _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         _ = End_Submodule_Stmt("end submodule name :")
-    assert "End_Submodule_Stmt: 'submodule () name'" in str(excinfo.value)
+    assert "End_Submodule_Stmt: 'end submodule name :'" in str(excinfo.value)
