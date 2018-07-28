@@ -63,7 +63,7 @@ Rules
 
 Each version of the Fortran language is defined as a set of rules in a
 specification document. The Fortran2003 rules are specified here
-https://j3-fortran.org/doc/year/10/10-007r1.pdf and the Fortran2008
+https://wg5-fortran.org/N1601-N1650/N1601.pdf and the Fortran2008
 rules are specified here
 https://j3-fortran.org/doc/year/10/10-007r1.pdf.
 
@@ -105,11 +105,11 @@ Classes
 In fparser2 each rule is implemented in a class with the class names
 closely following the rule names. For example, `program` is
 implemented by the `Program` class and `program-unit` is implemented
-by the `Program_Unit` class. In general if '-' is replaced with '_'
-and each word is capitalised then that is the name of the equivalent
-class.
+by the `Program_Unit` class. In general, the name of the class
+corresponding to a given rule can be obtained by replacing '-' with
+'_' and capitalising each word.
 
-The Fortran2003, classes exist in the Fortran2003.py file and the
+The Fortran2003 classes exist in the Fortran2003.py file and the
 Fortran2008 classes exist in the Fortran2008.py file (see
 :ref:`Fortran2008` section for Fortran2008-specific implementation
 details).
@@ -158,8 +158,9 @@ other rules to use).
 
 As the above method is a simple choice between different classes, the
 appropriate static match method is already implemented in one of the
-base classes (`Base`) and therefore is not required. Therefore to
-implement the above rule the following needs to be specified
+base classes (`Base`) and therefore does not need to be
+written. Therefore to implement the above rule the following needs to
+be specified
 ::
    
    class Program_Unit(Base):  # R202
@@ -172,16 +173,16 @@ Class Generation
 ++++++++++++++++
 
 Some classes that are specified as strings in the `subclass_names` or
-`use_names` variables are not required to be implemented as
-Classes. There are 3 categories of these:
+`use_names` variables do not require implementations. There are 3
+categories of these:
 
 1) classes of the form '\*\_Name'
 2) classes of the form '\*\_List'
 3) classes of the form 'Scalar\_\*'
 
-The reason for this is that such classes can be written in a generic
+The reason for this is that such classes can be written in a generic,
 boiler-plate way so it is simpler if these are generated rather than
-them javing to be hand written.
+them having to be hand written.
 
 At the end of the Fortran2003.py and Fortran2008.py files there is
 code that is executed when the file is imported. This code generates

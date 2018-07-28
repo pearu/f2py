@@ -158,7 +158,7 @@ class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      \.string - original argument to construct a class instance, it\'s type \
+      \.string - original argument to construct a class instance, its type \
                 is either str or FortranReaderBase.
       \.item   - Line instance (holds label) or None.
 
@@ -244,6 +244,7 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
+        # If we get to here then we've failed to match the current line
         if isinstance(string, FortranReaderBase):
             errmsg = "at line {0}\n>>>{1}\n".format(
                 string.linecount,
