@@ -153,6 +153,7 @@ class ParserFactory(object):
             # we return the Fortran2003 one.
             return Fortran2003.Program
         else:
+            # TODO: raise exception here, see issue #52
             print ("unsupported standard {0}".format(std))
             exit(1)
 

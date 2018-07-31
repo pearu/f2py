@@ -74,5 +74,6 @@ def test_parserfactory_std():
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
+    # TODO: raise exception here, see issue #52
     with pytest.raises(SystemExit):
         parser = ParserFactory().create(std="invalid")
