@@ -40,75 +40,79 @@
 import pytest
 from fparser.two.Fortran2003 import NoMatchError
 from fparser.two.Fortran2008 import Submodule_Stmt
-from fparser.two.parser import ParserFactory
 
 
-def test_simple():
+def test_simple(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     result = Submodule_Stmt("submodule (id) name")
     assert str(result) == "SUBMODULE (id) name"
 
 
-def test_simple_error1():
+def test_simple_error1(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submod (id) name")
     assert "Submodule_Stmt: 'submod (id) name" in str(excinfo.value)
 
 
-def test_simple_error2():
+def test_simple_error2(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule name")
     assert "Submodule_Stmt: 'submodule name'" in str(excinfo.value)
 
 
-def test_simple_error3():
+def test_simple_error3(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule () name")
     assert "Submodule_Stmt: 'submodule () name'" in str(excinfo.value)
 
 
-def test_simple_error4():
+def test_simple_error4(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id)")
     assert "Submodule_Stmt: 'submodule (id)'" in str(excinfo.value)
 
 
-def test_simple_error5():
+def test_simple_error5(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule name (id)")
     assert "Submodule_Stmt: 'submodule name (id)'" in str(excinfo.value)
 
 
-def test_simple_error6():
+def test_simple_error6(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) (name)")
     assert "Submodule_Stmt: 'submodule (id) (name)'" in str(excinfo.value)
 
 
-def test_simple_error7():
-    ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
+def test_simple_error7(f2008_create, monkeypatch):
+    '''Test the parsing of a submodule statement when there is a single
+    right hand bracket. The error generated here is unreachable if
+    splitparen works correctly so we need to monkeypatch.
+
+    '''
+
+    monkeypatch.setattr("fparser.common.splitline.splitparen",
+                        lambda x: ["", "id)", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule id) name")
     assert "Submodule_Stmt: 'submodule id) name'" in str(excinfo.value)
 
 
-def test_simple_error8():
-    ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
+def test_simple_error8(f2008_create, monkeypatch):
+    '''Test the parsing of a submodule statement when there is a single
+    left hand bracket. The error generated here is unreachable if
+    splitparen works correctly so we need to monkeypatch.
+
+    '''
+
+    monkeypatch.setattr("fparser.common.splitline.splitparen",
+                        lambda x: ["", "(id", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id name")
     assert "Submodule_Stmt: 'submodule (id name'" in str(excinfo.value)
@@ -119,20 +123,16 @@ def test_splitparen_error(monkeypatch):
     an error is returned.
 
     '''
-    _ = ParserFactory().create(std="f2008")
 
-    def mockreturn(my_string):
-        ''' Mock function for the splitparen function.'''
-        return ["XXX", my_string, my_string]
-    monkeypatch.setattr("fparser.common.splitline.splitparen", mockreturn)
+    monkeypatch.setattr("fparser.common.splitline.splitparen",
+                        lambda x: ["XXX", "", ""])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) name")
     assert "Submodule_Stmt: 'submodule (id) name'" in str(excinfo.value)
 
 
-def test_simple_error9():
+def test_simple_error9(f2008_create):
     ''' Test the parsing of a submodule statement'''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) name :")
     assert "Submodule_Stmt: 'submodule (id) name :'" in str(excinfo.value)

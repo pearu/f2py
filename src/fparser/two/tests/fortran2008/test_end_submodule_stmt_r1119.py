@@ -40,64 +40,57 @@
 import pytest
 from fparser.two.Fortran2003 import NoMatchError
 from fparser.two.Fortran2008 import End_Submodule_Stmt
-from fparser.two.parser import ParserFactory
 
 
-def test_simple_1():
+def test_simple_1(f2008_create):
     '''Test the parsing of a minimal end-submodule statement.'''
-    _ = ParserFactory().create(std="f2008")
     result = End_Submodule_Stmt("end")
     assert str(result) == "END SUBMODULE"
 
 
-def test_simple_2():
+def test_simple_2(f2008_create):
     '''Test the parsing of an end-submodule statement which includes the
     submodule keyword.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     result = End_Submodule_Stmt("end submodule")
     assert str(result) == "END SUBMODULE"
 
 
-def test_simple_3():
+def test_simple_3(f2008_create):
     '''Test the parsing of an end-submodule statement which includes the
     submodule name
 
     '''
-    _ = ParserFactory().create(std="f2008")
     result = End_Submodule_Stmt("end submodule name")
     assert str(result) == "END SUBMODULE name"
 
 
-def test_simple_error1():
+def test_simple_error1(f2008_create):
     '''Test an end-submodule statement with a syntax error raises an
     exception.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = End_Submodule_Stmt("edn")
     assert "End_Submodule_Stmt: 'edn'" in str(excinfo.value)
 
 
-def test_simple_error2():
+def test_simple_error2(f2008_create):
     '''Test an end-submodule statement with a syntax error raises an
     exception.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = End_Submodule_Stmt("end submod")
     assert "End_Submodule_Stmt: 'end submod'" in str(excinfo.value)
 
 
-def test_simple_error3():
+def test_simple_error3(f2008_create):
     '''Test an end-submodule statement with additional content after the
     match raises an exception.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = End_Submodule_Stmt("end submodule name :")
     assert "End_Submodule_Stmt: 'end submodule name :'" in str(excinfo.value)

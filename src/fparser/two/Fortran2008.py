@@ -390,8 +390,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         # return self.string  # this returns the original code
         if self.items[1]:
             return "{0}:{1}".format(self.items[0], self.items[1])
-        else:
-            return str(self.items[0])
+        return str(self.items[0])
 
 #
 # GENERATE Scalar_, _List, _Name CLASSES
@@ -428,10 +427,11 @@ class %s_List(SequenceBase):
 class %s_Name(Base):
     subclass_names = [\'Name\']
 ''' % (n))
-        elif n.startswith('Scalar_'):
-            _names.append(n)
-            n = n[7:]
-            exec('''\
-class Scalar_%s(Base):
-    subclass_names = [\'%s\']
-''' % (n, n))
+# Currently there are no examples using scalar_* as a class name.
+#         elif n.startswith('Scalar_'):
+#             _names.append(n)
+#             n = n[7:]
+#             exec('''\
+# class Scalar_%s(Base):
+#     subclass_names = [\'%s\']
+# ''' % (n, n))

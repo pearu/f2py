@@ -51,12 +51,10 @@ import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import NoMatchError
 from fparser.two.Fortran2008 import Submodule
-from fparser.two.parser import ParserFactory
 
 
-def test_submodule():
+def test_submodule(f2008_create):
     '''Test the parsing of a minimal submodule.'''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end
@@ -66,12 +64,11 @@ def test_submodule():
         "END SUBMODULE bar" in str(ast)
 
 
-def test_submodule_sp():
+def test_submodule_sp(f2008_create):
     '''Test the parsing of a minimal submodule with a specification
     part.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
         use empty
@@ -83,12 +80,11 @@ def test_submodule_sp():
         "END SUBMODULE bar" in str(ast)
 
 
-def test_submodule_msp():
+def test_submodule_msp(f2008_create):
     '''Test the parsing of a minimal submodule with a module subprogram
     part.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -104,12 +100,11 @@ def test_submodule_msp():
         "END SUBMODULE bar" in str(ast)
 
 
-def test_submodule_both():
+def test_submodule_both(f2008_create):
     '''Test the parsing of a minimal submodule with a specification part
     and a module subprogram part.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       use empty
@@ -129,13 +124,12 @@ def test_submodule_both():
 # constraint C1112 format statement
 
 
-def test_submodule_format_error1():
+def test_submodule_format_error1(f2008_create):
     '''C1112: Test an exception is raised if a format statement is
     specified in a submodule. The first place it can occur is in the
     implicit part of the specification.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       1 format(a)
@@ -148,13 +142,12 @@ def test_submodule_format_error1():
             in str(excinfo.value))
 
 
-def test_submodule_format_error2():
+def test_submodule_format_error2(f2008_create):
     '''C1112: Test an exception is raised if a format statement is
     specified in a submodule. The second place it can occur is in the
     declaration part of the specification.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -170,13 +163,12 @@ def test_submodule_format_error2():
 # constraint C1112 entry statement
 
 
-def test_submodule_entry_error1():
+def test_submodule_entry_error1(f2008_create):
     '''C1112: Test an exception is raised if an entry statement is
     specified in a submodule. The first place it can occur is in the
     implicit part of the specification.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       entry here
@@ -189,13 +181,12 @@ def test_submodule_entry_error1():
             in str(excinfo.value))
 
 
-def test_submodule_entry_error2():
+def test_submodule_entry_error2(f2008_create):
     '''C1112: Test an exception is raised if an entry statement is
     specified in a submodule. The second place it can occur is in the
     declaration part of the specification.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -211,13 +202,12 @@ def test_submodule_entry_error2():
 # constraint C1112 statement-function statement
 
 
-def test_submodule_stmt_func_error():
+def test_submodule_stmt_func_error(f2008_create):
     '''C1112: Test an exception is raised if a statement-function
     statement is specified in a submodule. The only place it could
     validly occur is in the declaration part of the specification.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       contains
@@ -233,12 +223,11 @@ def test_submodule_stmt_func_error():
 # constraint C1114
 
 
-def test_submodule_samename():
+def test_submodule_samename(f2008_create):
     '''Test the parsing of a submodule with the same name in the start and
     end statements: C1114.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end submodule bar
@@ -248,12 +237,11 @@ def test_submodule_samename():
         "END SUBMODULE bar" in str(ast)
 
 
-def test_submodule_differentname():
-    '''Test and exception is raised if the end submodule statement has a
+def test_submodule_differentname(f2008_create):
+    '''Test an exception is raised if the end submodule statement has a
     different name to that of the submodule statement : C1114.
 
     '''
-    _ = ParserFactory().create(std="f2008")
     reader = get_reader('''\
       submodule (foobar) bar
       end submodule error
