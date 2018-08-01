@@ -1379,19 +1379,23 @@ class FortranReaderBase(object):
 
 class FortranFileReader(FortranReaderBase):
     '''
-    Reads a file for Fortran source.
+    Constructs a FortranFileReader object from a file.
+
+    :param file_candidate: A filename or file-like object.
+    :param list include_dirs: Directories in which to look for inclusions.
+    :param list source_only: Fortran source files to search for modules
+                             required by "use" statements.
+    :param bool ignore_comments: Whether or not to ignore comments
+
+    For example:
+
+    >>> from fparser.common.readfortran import FortranFileReader
+    >>> import os
+    >>> reader = FortranFileReader(\'myfile.f90\')
+
     '''
     def __init__(self, file_candidate, include_dirs=None, source_only=None,
                  ignore_comments=True):
-        '''
-        Constructs a FortranFileReader object from a file.
-
-        :param file_candidate: A filename or file-like object.
-        :param list include_dirs: Directories in which to look for inclusions.
-        :param list source_only: Fortran source files to search for modules
-                                 required by "use" statements.
-        :param bool ignore_comments: Whether or not to ignore comments
-        '''
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
             self.file = open(file_candidate, 'r')
@@ -1428,17 +1432,28 @@ class FortranFileReader(FortranReaderBase):
 
 class FortranStringReader(FortranReaderBase):
     '''
-    Reads a string for Fortran source.
+    Reads Fortran source code as a string.
+
+    :param str string: string to read
+    :param list include_dirs: List of dirs to search for include files
+    :param list source_only: Fortran source files to search for modules
+                             required by "use" statements.
+    :param bool ignore_comments: Whether or not to ignore comments
+
+    For example:
+
+    >>> from fparser.common.readfortran import FortranStringReader
+    >>> code = \'\'\'
+             subroutine foo(a)
+                integer a
+                print*,\"a=\",a
+              end
+        \'\'\'
+    >>> reader = FortranStringReader(code) 
+
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
                  ignore_comments=True):
-        '''
-        :param str string: string to read
-        :param list include_dirs: List of dirs to search for include files
-        :param list source_only: Fortran source files to search for modules
-                                 required by "use" statements.
-        :param bool ignore_comments: Whether or not to ignore comments
-        '''
         self.id = 'string-' + str(id(string))
         source = six.StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)

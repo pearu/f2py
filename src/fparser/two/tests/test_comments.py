@@ -38,6 +38,10 @@ from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram, \
     walk_ast
 from fparser.api import get_reader
 
+from fparser.two.parser import ParserFactory
+# this is required to setup the fortran2003 classes
+_ = ParserFactory().create(std="f2003")
+
 
 def test_ignore_comments():
     ''' Check that the parser does throw away comments when requested '''

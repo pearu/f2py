@@ -155,13 +155,14 @@ class ComparableMixin(object):
 
 
 class Base(ComparableMixin):
-    """ Base class for Fortran 2003 syntax rules.
+    ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      .string - original argument to construct a class instance, it's type
+      \.string - original argument to construct a class instance, its type \
                 is either str or FortranReaderBase.
-      .item   - Line instance (holds label) or None.
-    """
+      \.item   - Line instance (holds label) or None.
+
+    '''
     # This dict of subclasses is populated dynamically by code at the end
     # of this module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
@@ -243,7 +244,13 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
-        errmsg = "{0}: '{1}'".format(cls.__name__, string)
+        # If we get to here then we've failed to match the current line
+        if isinstance(string, FortranReaderBase):
+            errmsg = "at line {0}\n>>>{1}\n".format(
+                string.linecount,
+                string.source_lines[string.linecount-1])
+        else:
+            errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
     def init(self, *items):
@@ -287,8 +294,6 @@ class BlockBase(Base):
                      [ <subcls> ]...
                      [ <endcls> ]
 
-Attributes
-----------
 content : tuple
     """
     @staticmethod
@@ -9430,91 +9435,5 @@ class %s_Name(Base):
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
-
-
-__autodoc__ = []
-Base_classes = {}
-for clsname in dir():
-    cls = eval(clsname)
-    if isinstance(cls, ClassType) and issubclass(cls, Base) \
-       and not cls.__name__.endswith('Base'):
-        Base_classes[cls.__name__] = cls
-        if len(__autodoc__) < 10:
-            __autodoc__.append(cls.__name__)
-
-#
-# OPTIMIZE subclass_names tree
-#
-
-if 1:  # Optimize subclass tree:
-
-    def _rpl_list(clsname):
-        if clsname not in Base_classes:
-            logging.getLogger(__name__).debug('Not implemented: %s' % clsname)
-            return []  # remove this code when all classes are implemented
-        cls = Base_classes[clsname]
-        if 'match' in cls.__dict__:
-            return [clsname]
-        bits = []
-        for n in getattr(cls, 'subclass_names', []):
-            l1 = _rpl_list(n)
-            for n1 in l1:
-                if n1 not in bits:
-                    bits.append(n1)
-        return bits
-
-    for cls in list(Base_classes.values()):
-        if not hasattr(cls, 'subclass_names'):
-            continue
-        opt_subclass_names = []
-        for n in cls.subclass_names:
-            for n1 in _rpl_list(n):
-                if n1 not in opt_subclass_names:
-                    opt_subclass_names.append(n1)
-        if not opt_subclass_names == cls.subclass_names:
-            cls.subclass_names[:] = opt_subclass_names
-
-
-# Initialize Base.subclasses dictionary:
-for clsname, cls in list(Base_classes.items()):
-    subclass_names = getattr(cls, 'subclass_names', None)
-    if subclass_names is None:
-        message = '%s class is missing subclass_names list' % (clsname)
-        logging.getLogger(__name__).debug(message)
-        continue
-    try:
-        bits = Base.subclasses[clsname]
-    except KeyError:
-        Base.subclasses[clsname] = bits = []
-    for n in subclass_names:
-        if n in Base_classes:
-            bits.append(Base_classes[n])
-        else:
-            message = '%s not implemented needed by %s' % (n, clsname)
-            logging.getLogger(__name__).debug(message)
-
-if 1:
-    for cls in list(Base_classes.values()):
-        subclasses = Base.subclasses.get(cls.__name__, [])
-        subclasses_names = [c.__name__ for c in subclasses]
-        subclass_names = getattr(cls, 'subclass_names', [])
-        use_names = getattr(cls, 'use_names', [])
-        for n in subclasses_names:
-            break
-            if n not in subclass_names:
-                message = '%s needs to be added to %s subclasses_name list' \
-                          % (n, cls.__name__)
-                logging.getLogger(__name__).debug(message)
-        for n in subclass_names:
-            break
-            if n not in subclasses_names:
-                message = '%s needs to be added to %s subclass_name list' \
-                          % (n, cls.__name__)
-                logging.getLogger(__name__).debug(message)
-        for n in use_names + subclass_names:
-            if n not in Base_classes:
-                message = '%s not defined used by %s' % (n, cls.__name__)
-                logging.getLogger(__name__).debug(message)
-
 
 # EOF
