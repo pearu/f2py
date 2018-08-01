@@ -11,6 +11,11 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+01/08/2018 PR #94 for issue #92. Re-structures fparser2 and introduces
+           a parser factory. This creates a parser for a specified
+           Fortran dialect (currently 2003 or 2008). Intoduces support
+           for Fortran2008 submodules.
+
 09/07/2018 PR #90 for issue #89. Make fparser2 pycodestyle conformant.
 
 09/07/2018 PR #88 for issue #81. Bug fix for undefined variable in fparser
