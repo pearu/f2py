@@ -8,6 +8,7 @@ License
 | Authors: **Andrew Porter** and **Rupert Ford**, STFC Daresbury Laboratory
 | Original work Copyright (c) 1999-2008 **Pearu Peterson**
 | All rights reserved.
+
 Modifications made as part of the fparser project are distributed
 under the following (3-part BSD) license:
 

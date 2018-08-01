@@ -68,6 +68,10 @@ from fparser.api import get_reader
 
 import pytest
 
+from fparser.two.parser import ParserFactory
+# this is required to setup the fortran2003 classes
+_ = ParserFactory().create(std="f2003")
+
 
 def assertRaises(exc, cls, string):
     try:
