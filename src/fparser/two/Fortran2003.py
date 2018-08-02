@@ -458,6 +458,7 @@ content : tuple
                     enable_case_construct_hook = False
             continue
 
+
         if not had_match or endcls and not found_end:
             # We did not get a match from any of the subclasses or
             # failed to find the endcls
@@ -1264,24 +1265,43 @@ class Comment(Base):
 
 
 class Program(BlockBase):  # R201
-    """
-:F03R:`201`::
-    <program> = <program-unit>
-                  [ <program-unit> ] ...
-    """
+    '''
+    Fortran 2003 rule R201
+    program is program-unit
+               [ program-unit ] ...
+
+    '''
     subclass_names = []
     use_names = ['Program_Unit']
 
     @staticmethod
     def match(reader):
+        '''Implements the matching for a Program. Whilst the rule looks like
+        it could make use of BlockBase, the parser must not match if an
+        optional program_unit has a syntax error, which the BlockBase
+        match implementation does not do.
+
+        '''
+        content = []
         try:
-            result = BlockBase.match(Program_Unit, [Program_Unit],
-                                     None, reader)
+            while True:
+                obj = Program_Unit(reader)
+                content.append(obj)
+                next_line = reader.next() # cause a StopIteration
+                                          # exception if there are no
+                                          # more lines
+                reader.put_item(next_line)# put the line back in the
+                                          # case where there are more
+                                          # lines
         except NoMatchError:
-            result = None
-        if result is not None:
-            return result
-        return BlockBase.match(Main_Program0, [], None, reader)
+            # Found a syntax error for this rule. Now look to match
+            # (via Main_Program0) with a program containing no program
+            # statement as this is optional in Fortran.
+            return BlockBase.match(Main_Program0, [], None, reader)
+        except StopIteration:
+            # Reader has no more lines.
+            pass
+        return content,
 
 
 class Program_Unit(Base):  # R202
