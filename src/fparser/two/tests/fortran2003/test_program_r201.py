@@ -212,6 +212,19 @@ def test_one_main1(f2003_create):
 # Check comments are supported at this level
 
 
+def test_comment0(f2003_create):
+    '''Test that a single program_unit without comments can be parsed
+    successfully with comment processing switched on.
+
+    '''
+    reader = get_reader((
+        "subroutine test()\n"
+        "end subroutine\n"), ignore_comments=False)
+    ast = Program(reader)
+    assert ("SUBROUTINE test\n"
+            "END SUBROUTINE test") in str(ast)
+
+
 def test_comment1(f2003_create):
     '''Test that a single program_unit can be parsed successfully with
     comments being ignored.'''
@@ -224,21 +237,22 @@ def test_comment1(f2003_create):
     ast = Program(reader)
     assert "SUBROUTINE test\n" \
         "END SUBROUTINE" in str(ast)
+    assert "! comment" not in str(ast)
 
 
-@pytest.mark.xfail(reason="Comments currently not coded for in match method")
 def test_comment2(f2003_create):
     '''Test that a single program_unit can be parsed successfully with
     comments being included.'''
-    reader = get_reader('''\
-      ! comment1
-      subroutine test()
-      end subroutine
-      ! comment2
-      ''', ignore_comments=False)
+    reader = get_reader((
+        "! comment1\n"
+        "subroutine test()\n"
+        "end subroutine\n"
+        "! comment2\n"), ignore_comments=False)
     ast = Program(reader)
-    assert "SUBROUTINE test\n" \
-        "END SUBROUTINE" in str(ast)
+    assert ("! comment1\n"
+            "SUBROUTINE test\n"
+            "END SUBROUTINE test\n"
+            "! comment2") in str(ast)
 
 
 def test_comment3(f2003_create):
@@ -258,20 +272,26 @@ def test_comment3(f2003_create):
            "END SUBROUTINE test\n"
            "MODULE example\n"
            "END MODULE example") in str(ast)
+    assert "! comment" not in str(ast)
 
 
-@pytest.mark.xfail(reason="Comments currently not coded for in match method")
 def test_comment4(f2003_create):
     '''Test that multiple program_units can be parsed successfully with
     comments being included.'''
-    reader = get_reader('''\
-      ! comment1
-      subroutine test()
-      end subroutine
-      ! comment2
-      module example
-      end module
-      ! comment3
-      ''', ignore_comments=False)
+    reader = get_reader((
+      "! comment1\n"
+      "subroutine test()\n"
+      "end subroutine\n"
+      "! comment2\n"
+      "module example\n"
+      "end module\n"
+      "! comment3\n"
+      ), ignore_comments=False)
     ast = Program(reader)
-    assert "XXX" in str(ast)
+    assert ("! comment1\n"
+            "SUBROUTINE test\n"
+            "END SUBROUTINE test\n"
+            "! comment2\n"
+            "MODULE example\n"
+            "END MODULE example\n"
+            "! comment3") in str(ast)

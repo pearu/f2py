@@ -1264,6 +1264,22 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
+def add_comments(content, reader):
+    '''Creates comment objects and adds them to the content list. Comment
+    objects are added until a line that is not a comment is found.
+
+    '''
+    try:
+        while True:
+            obj = Comment(reader)
+            if obj:
+                content.append(obj)
+            else:
+                break
+    except NoMatchError:
+        pass
+
+
 class Program(BlockBase):  # R201
     '''
     Fortran 2003 rule R201
@@ -1283,20 +1299,23 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
+        add_comments(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                next_line = reader.next() # cause a StopIteration
-                                          # exception if there are no
-                                          # more lines
-                reader.put_item(next_line)# put the line back in the
-                                          # case where there are more
-                                          # lines
+                add_comments(content, reader)
+                next_line = reader.next()  # cause a StopIteration
+                                           # exception if there are no
+                                           # more lines
+                reader.put_item(next_line) # put the line back in the
+                                           # case where there are more
+                                           # lines
         except NoMatchError:
             # Found a syntax error for this rule. Now look to match
             # (via Main_Program0) with a program containing no program
             # statement as this is optional in Fortran.
+            #
             return BlockBase.match(Main_Program0, [], None, reader)
         except StopIteration:
             # Reader has no more lines.
