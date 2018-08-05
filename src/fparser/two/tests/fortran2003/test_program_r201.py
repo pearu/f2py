@@ -56,9 +56,45 @@ def test_single(f2003_create):
         "END SUBROUTINE" in str(ast)
 
 
+@pytest.mark.xfail(reason="5 spaces causes the error exception to occur at "
+                   "the end of the file")
+def test_single2(f2003_create):
+    '''Test that a single program_unit with 5 or more spaces at the start
+    of the line reports an error on the correct (first) line
+
+    '''
+    reader = get_reader('''\
+     subroutin test()
+     end subroutine
+
+      ''')
+    with pytest.raises(NoMatchError) as excinfo:
+        dummy_ = Program(reader)
+    assert ("at line 1\n>>>      subroutin test()\n"
+            in str(excinfo.value))
+
+
+@pytest.mark.xfail(reason="5 spaces causes the error exception to occur at "
+                   "the end of the file")
+def test_single3(f2003_create):
+    '''Test that a single program_unit with 5 or more spaces at the start
+    of the line reports an error on the correct (second) line
+
+    '''
+    reader = get_reader('''\
+     subroutine test()
+     end subroutin
+
+      ''')
+    with pytest.raises(NoMatchError) as excinfo:
+        dummy_ = Program(reader)
+    assert ("at line 2\n>>>      end subroutin\n"
+            in str(excinfo.value))
+
+
 def test_single_error1(f2003_create):
-    '''Test that a single program_unit with an error raises an appropriate
-    exception
+    '''Test that a single program_unit with an error in the initial
+    statement raises an appropriate exception
 
     '''
     reader = get_reader('''\
@@ -67,24 +103,21 @@ def test_single_error1(f2003_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program(reader)
-    assert  ("at line 1\n>>>      subroutin test()\n"
+    assert ("at line 1\n>>>      subroutin test()\n"
             in str(excinfo.value))
 
 
-@pytest.mark.xfail(reason="A syntax error on the last line of code returns "
-                   "the line after")
 def test_single_error2(f2003_create):
-    '''Test that a single program_unit with an error raises an appropriate
-    exception
+    '''Test that a single program_unit with an error in the final
+    statement raises an appropriate exception
 
     '''
-    reader = get_reader('''\
-      subroutine test()
-      en subroutine
-      ''')
+    reader = get_reader(
+        "subroutine test()\n\n"
+        "end subroutin\n\n\n")
     with pytest.raises(NoMatchError) as excinfo:
-        dummy_ = Program(reader)
-    assert  ("at line 2\n>>>      en subroutine\n"
+        dummy = Program(reader)
+    assert ("at line 3\n>>>end subroutin\n"
             in str(excinfo.value))
 
 # Test multiple program units
@@ -118,7 +151,7 @@ def test_multiple_error1(f2003_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program(reader)
-    assert  ("XXX"
+    assert ("XXX"
             in str(excinfo.value))
 
 
@@ -135,12 +168,10 @@ def test_multiple_error2(f2003_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program(reader)
-    assert  ("at line 1\n>>>      subroutine 1test()\n"
+    assert ("at line 1\n>>>      subroutine 1test()\n"
             in str(excinfo.value))
 
 
-@pytest.mark.xfail(reason="A syntax error on the last line of code returns "
-                   "the line after")
 def test_multiple_error3(f2003_create):
     '''Test that multiple program_units with an error raises an
     appropriate exception
@@ -150,11 +181,10 @@ def test_multiple_error3(f2003_create):
       subroutine test()
       end subroutine
       subroutine test()
-      end subroutin
-      ''')
+      end subroutin''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program(reader)
-    assert  ("at line 4\n>>>      end subroutin\n"
+    assert ("at line 4\n>>>      end subroutin\n"
             in str(excinfo.value))
 
 # Test a program unit with a missing program statement
@@ -204,8 +234,7 @@ def test_one_main1(f2003_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program(reader)
-    ast = Program(reader)
-    assert  ("XXX"
+    assert ("XXX"
             in str(excinfo.value))
 
 
@@ -269,9 +298,9 @@ def test_comment3(f2003_create):
       ''', ignore_comments=True)
     ast = Program(reader)
     assert ("SUBROUTINE test\n"
-           "END SUBROUTINE test\n"
-           "MODULE example\n"
-           "END MODULE example") in str(ast)
+            "END SUBROUTINE test\n"
+            "MODULE example\n"
+            "END MODULE example") in str(ast)
     assert "! comment" not in str(ast)
 
 

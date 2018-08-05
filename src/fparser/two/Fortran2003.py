@@ -335,15 +335,7 @@ content : tuple
 
         if startcls is not None:
             # Deal with any preceding comments
-            try:
-                while True:
-                    obj = Comment(reader)
-                    if obj:
-                        content.append(obj)
-                    else:
-                        break
-            except NoMatchError:
-                pass
+            add_comments(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -457,7 +449,6 @@ content : tuple
                 if isinstance(obj, End_Select_Stmt):
                     enable_case_construct_hook = False
             continue
-
 
         if not had_match or endcls and not found_end:
             # We did not get a match from any of the subclasses or

@@ -3871,16 +3871,6 @@ end interface
         'c\nEND INTERFACE')
 
 
-def test_Interface_Specification():  # R1202
-    cls = Interface_Specification
-    a = cls(get_reader('''\
-    function foo()
-    end
-    '''))
-    assert isinstance(a, Function_Body), repr(a)
-    assert_equal(str(a), 'FUNCTION foo()\nEND FUNCTION')
-
-
 def test_Interface_Stmt():  # R1203
     cls = Interface_Stmt
     a = cls('interface')
