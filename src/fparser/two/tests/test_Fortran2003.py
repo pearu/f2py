@@ -163,8 +163,11 @@ def test_name():  # R304
     assert isinstance(obje, Name), repr(obje)
 
 
-def test_literal_constant():  # R305
-
+def test_constant():
+    ''' Tests that various types of constant expressions are parsed
+    correctly (R305). The example here is for Literal_Constant
+    subclass. Other literal constant types are tested separately.
+    '''
     tcls = Constant
     obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
@@ -199,7 +202,7 @@ def test_intrinsic_type_spec():  # R403
     obj = tcls('INTEGER')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER'
-    assert repr(obj), "Intrinsic_Type_Spec('INTEGER', None)"
+    assert repr(obj) == "Intrinsic_Type_Spec('INTEGER', None)"
 
     obj = tcls('Integer*2')
     assert isinstance(obj, tcls), repr(obj)
@@ -500,7 +503,7 @@ def test_complex_literal_constant():  # R421
     assert str(obj) == '(0., PI)'
 
 
-def test_type_name():  # R424
+def test_type_name():  # C424
 
     tcls = Type_Name
     obj = tcls('a')
@@ -2852,8 +2855,8 @@ def test_label_do_stmt():
 
 def test_loop_control():
     ''' Tests incorrect loop control constructs (R829). Correct loop
-    control constructs are tested in test_Block_Label_Do_Construct()
-    and test_Nonblock_Label_Do_Construct() '''
+    control constructs are tested in test_block_label_do_construct()
+    and test_nonblock_label_do_construct() '''
     tcls = Loop_Control
 
     # More than one '=' in counter expression
@@ -2970,7 +2973,6 @@ def test_read_stmt():
     # With format specified by label number
     obj = tcls("READ 13, a(2)")
     assert str(obj) == 'READ 13, a(2)'
-    print(repr(obj))
     assert repr(obj) == ("Read_Stmt(None, Label('13'), Part_Ref(Name('a'), "
                          "Int_Literal_Constant('2', None)))")
 
