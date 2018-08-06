@@ -63,20 +63,33 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-from fparser.two.Fortran2003 import *
-from fparser.api import get_reader
+'''
+Module containing py.test tests for Fortran 2003 language constructs
+'''
 
 import pytest
-
+from fparser.two.Fortran2003 import *
+from fparser.api import get_reader
 from fparser.two.parser import ParserFactory
 # this is required to setup the fortran2003 classes
 _ = ParserFactory().create(std="f2003")
 
 
-def assertRaises(exc, cls, string):
+def assert_raises(exc, fcls, string):
+    '''
+    Assert that the appropriate error is raised when a Fortran
+    string is not parsed correctly
+
+    :param exc: the error to be raised
+    :type exc: :py:class:'fparser.two.Fortran2003.NoMatchError'
+    :param fcls: the class of Fortran object to create
+    :type fcls: names of classes deriving from `:py:class:Base` or str
+    :param string: (source of) Fortran string to parse
+    :type string: str or :py:class:`FortranReaderBase`
+    '''
     try:
-        cls(string)
-        raise AssertionError('Expected %string but got nothing' % exc)
+        fcls(string)
+        raise AssertionError("Expected {0} but got nothing".format(exc))
     except exc:
         pass
 
@@ -495,8 +508,8 @@ def test_type_name():  # R424
     assert str(obj) == 'a'
     assert repr(obj) == "Type_Name('a')"
 
-    assertRaises(NoMatchError, tcls, 'integer')
-    assertRaises(NoMatchError, tcls, 'doubleprecision')
+    assert_raises(NoMatchError, tcls, 'integer')
+    assert_raises(NoMatchError, tcls, 'doubleprecision')
 
 
 def test_length_selector():  # R425
@@ -1237,7 +1250,7 @@ def test_upper_bound():  # R513
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
-    assertRaises(NoMatchError, tcls, '*')
+    assert_raises(NoMatchError, tcls, '*')
 
 
 def test_assumed_shape_spec():  # R514
@@ -1947,8 +1960,6 @@ def test_level_1_expr():  # R702
     assert str(obj) == '.HEY. a'
     assert repr(obj) == "Level_1_Expr('.HEY.', Name('a'))"
 
-    # assertRaises(NoMatchError, tcls, '.not. a')
-
     obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
 
@@ -2182,7 +2193,7 @@ def test_expr():  # R722
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.FALSE.'
 
-    assertRaises(NoMatchError, Scalar_Int_Expr, 'a,b')
+    assert_raises(NoMatchError, Scalar_Int_Expr, 'a,b')
 
 
 def test_logical_expr():  # R724
