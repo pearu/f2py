@@ -87,30 +87,6 @@ def assertRaises(exc, cls, s):
 #
 
 
-def test_Program():  # R201
-    ''' Tests for parsing top-level program unit '''
-    cls = Program
-    reader = get_reader('''\
-      subroutine foo
-      end subroutine Foo
-      subroutine bar
-      end
-      ''')
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
-    print(str(obj))
-    assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
-        "END SUBROUTINE bar" in str(obj)
-
-    reader = get_reader('''\
-      subroutine foo (*)
-      end subroutine foo
-      ''')
-    obj = cls(reader)
-    assert isinstance(obj, cls), repr(obj)
-    assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(obj)
-
-
 def test_Specification_Part():  # R204
     ''' Tests for parsing specification-part '''
     reader = get_reader('''\
@@ -3869,6 +3845,16 @@ end interface
         str(a),
         'ABSTRACT INTERFACE\n  MODULE PROCEDURE a\n  MODULE PROCEDURE b, '
         'c\nEND INTERFACE')
+
+
+def test_Interface_Specification():  # R1202
+    cls = Interface_Specification
+    a = cls(get_reader('''\
+    function foo()
+    end
+    '''))
+    assert isinstance(a, Function_Body), repr(a)
+    assert_equal(str(a), 'FUNCTION foo()\nEND FUNCTION')
 
 
 def test_Interface_Stmt():  # R1203
