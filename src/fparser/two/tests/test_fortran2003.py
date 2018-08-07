@@ -77,8 +77,8 @@ _ = ParserFactory().create(std="f2003")
 
 def assert_raises(exc, fcls, string):
     '''
-    Assert that the appropriate error is raised when a Fortran
-    string is not parsed correctly
+    Asserts that the appropriate error is raised when a Fortran
+    string is not parsed correctly.
 
     :param exc: the error to be raised
     :type exc: :py:class:'fparser.two.Fortran2003.NoMatchError'
@@ -100,7 +100,7 @@ def assert_raises(exc, fcls, string):
 
 
 def test_program():
-    ''' Tests for parsing top-level program unit (R201) '''
+    ''' Tests for parsing top-level program unit (R201). '''
     tcls = Program
     reader = get_reader('''\
       subroutine foo
@@ -124,7 +124,7 @@ def test_program():
 
 
 def test_specification_part():
-    ''' Tests for parsing specification-part (R204) '''
+    ''' Tests for parsing specification-part (R204). '''
     reader = get_reader('''\
     integer a''')
     tcls = Specification_Part
@@ -172,6 +172,36 @@ def test_constant():
     obj = tcls('.false.')
     assert isinstance(obj, Logical_Literal_Constant), repr(obj)
     assert str(obj) == '.FALSE.'
+
+
+def test_literal_constant():
+    ''' Tests that various types of literal constant expressions are
+    parsed correctly (R306).
+    '''
+    tcls = Literal_Constant
+    obj = tcls('35')
+    assert isinstance(obj, Int_Literal_Constant), repr(obj)
+    assert str(obj) == '35'
+
+    obj = tcls('2.85e-13')
+    assert isinstance(obj, Real_Literal_Constant), repr(obj)
+    assert str(obj) == '2.85E-13'
+
+    obj = tcls('(PI,-2.0E-3)')
+    assert isinstance(obj, Complex_Literal_Constant), repr(obj)
+    assert str(obj) == '(PI, -2.0E-3)'
+
+    obj = tcls('.true.')
+    assert isinstance(obj, Logical_Literal_Constant), repr(obj)
+    assert str(obj) == '.TRUE.'
+
+    obj = tcls("'(3(A5,1X))'")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == "'(3(A5,1X))'"
+
+    obj = tcls('B"01011101"')
+    assert isinstance(obj, Binary_Constant), repr(obj)
+    assert str(obj) == 'B"01011101"'
 
 
 #
@@ -336,7 +366,7 @@ def test_hex_constant():  # R414
 
 def test_signed_real_literal_constant():
     ''' Tests that various formats of a signed ("+", "-") real
-    literal constant are parsed correctly (R416) '''
+    literal constant are parsed correctly (R416). '''
     # pylint: disable=invalid-name
 
     tcls = Signed_Real_Literal_Constant
@@ -384,7 +414,7 @@ def test_signed_real_literal_constant():
 
 def test_real_literal_constant():
     ''' Tests that various formats of a real literal constant
-    are parsed correctly (R417) '''
+    are parsed correctly (R417). '''
 
     tcls = Real_Literal_Constant
     obj = tcls('12.78')
@@ -746,7 +776,7 @@ def test_proc_component_def_stmt():  # R445
 
 def test_private_components_stmt():
     ''' Tests that declaration of PRIVATE components in a type definition
-    is parsed correctly (R447) '''
+    is parsed correctly (R447). '''
     tcls = Private_Components_Stmt
     obj = tcls('private')
     assert isinstance(obj, tcls), repr(obj)
@@ -760,7 +790,7 @@ def test_private_components_stmt():
 
 
 def test_type_bound_procedure_part():
-    ''' Tests for type-bound procedure (R448) '''
+    ''' Tests for type-bound procedure (R448). '''
     tcls = Type_Bound_Procedure_Part
     obj = tcls(get_reader('''\
 contains
@@ -2518,7 +2548,7 @@ end if
 
 
 def test_if_nonblock_do():
-    ''' Tests that conditional nonblock DO construct is parsed correctly '''
+    ''' Tests that conditional nonblock DO construct is parsed correctly. '''
     tcls = If_Construct
 
     obj = tcls(get_reader('''\
@@ -2669,7 +2699,8 @@ def test_type_guard_stmt():  # R823
 
 
 def test_block_label_do_construct():
-    ''' Tests that block labeled DO construct is parsed correctly (R826_1) '''
+    ''' Tests that block labeled DO construct
+    is parsed correctly (R826_1). '''
     tcls = Block_Label_Do_Construct
 
     obj = tcls(get_reader('''\
@@ -2821,7 +2852,7 @@ def test_block_nonlabel_do_construct():
 
 
 def test_label_do_stmt():
-    ''' Tests that labeled DO statement is parsed correctly (R828) '''
+    ''' Tests that labeled DO statement is parsed correctly (R828). '''
     tcls = Label_Do_Stmt
     obj = tcls('do 12')
     assert isinstance(obj, tcls), repr(obj)
@@ -2832,7 +2863,7 @@ def test_label_do_stmt():
 def test_loop_control():
     ''' Tests incorrect loop control constructs (R829). Correct loop
     control constructs are tested in test_block_label_do_construct()
-    and test_nonblock_label_do_construct() '''
+    and test_nonblock_label_do_construct(). '''
     tcls = Loop_Control
 
     # More than one '=' in counter expression
@@ -2850,7 +2881,7 @@ def test_loop_control():
 
 
 def test_nonblock_do_construct():
-    ''' Tests that nonblock DO construct is parsed correctly (R835) '''
+    ''' Tests that nonblock DO construct is parsed correctly (R835). '''
     tcls = Nonblock_Do_Construct
     obj = tcls(get_reader('''\
       do  20,  i = 1, 3
@@ -2928,8 +2959,8 @@ def test_io_unit():  # R901
 
 
 def test_read_stmt():
-    ''' Check that we successfully parse various forms of
-    READ statement (R910) '''
+    ''' Tests that we successfully parse various forms of
+    READ statement (R910). '''
     tcls = Read_Stmt
     obj = tcls('read(123)')
     assert isinstance(obj, tcls), repr(obj)
@@ -2964,7 +2995,7 @@ def test_read_stmt():
 
 
 def test_write_stmt():
-    ''' Tests for various forms of Write statement (R911) '''
+    ''' Tests for various forms of WRITE statement (R911). '''
     tcls = Write_Stmt
     obj = tcls('write (123)"hey"')
     assert isinstance(obj, tcls), repr(obj)
@@ -3035,7 +3066,7 @@ def test_io_control_spec():  # R913
 
 def test_io_control_spec_list():
     ''' Test that we correctly parse and then generate various
-    forms of IO-control specification lists (R913-list) '''
+    forms of IO-control specification lists (R913-list). '''
     tcls = Io_Control_Spec_List
     obj = tcls('end=123')
     assert isinstance(obj, tcls), repr(obj)
@@ -3217,7 +3248,7 @@ def test_flush_spec():  # R928
 
 
 def test_inquire_stmt():
-    ''' Tests for the Inquire statement (R929) '''
+    ''' Tests for the INQUIRE statement (R929). '''
     tcls = Inquire_Stmt
     obj = tcls('inquire(1,file=a)')
     assert isinstance(obj, tcls), repr(obj)
@@ -3230,8 +3261,8 @@ def test_inquire_stmt():
 
 
 def test_inquire_spec():
-    ''' Test that we recognise the various possible forms of
-    entries in an inquire list (R930) '''
+    ''' Tests that we recognise the various possible forms of
+    entries in an inquire list (R930). '''
     tcls = Inquire_Spec
     obj = tcls('1')
     assert isinstance(obj, tcls), repr(obj)
@@ -3258,9 +3289,8 @@ def test_inquire_spec():
 
 
 def test_inquire_spec_list():
-    ''' Test that we recognise the various possible forms of
-    inquire list (R930)
-    '''
+    ''' Tests that we recognise the various possible forms of
+    inquire list (R930). '''
     # Inquire_Spec_List is generated at runtime in Fortran2003.py
     tcls = Inquire_Spec_List
 
@@ -3275,8 +3305,8 @@ def test_inquire_spec_list():
 
 
 def test_open_stmt():
-    ''' Test that we correctly parse and re-generate the various forms
-    of OPEN statement (R904)'''
+    ''' Tests that we correctly parse and re-generate the various forms
+    of OPEN statement (R904). '''
     tcls = Open_Stmt
     obj = tcls("open(23, file='some_file.txt')")
     assert isinstance(obj, tcls)
@@ -3287,7 +3317,7 @@ def test_open_stmt():
 
 
 def test_connect_spec():
-    ''' Tests for individual elements of Connect_Spec (R905) '''
+    ''' Tests for individual elements of Connect_Spec (R905). '''
     tcls = Connect_Spec
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
@@ -3297,8 +3327,8 @@ def test_connect_spec():
 
 def test_connect_spec_list():
     '''
-    Test that we correctly parse the various valid forms of
-    connect specification (R905)
+    Tests that we correctly parse the various valid forms of
+    connect specification (R905).
     '''
     tcls = Connect_Spec_List
     obj = tcls("22, access='direct'")
@@ -3488,7 +3518,7 @@ def test_format_item():  # R1003
 
 
 def test_data_edit_desc():
-    ''' Tests for matching Edit Descriptors (R1005) '''
+    ''' Tests for matching Edit Descriptors (R1005). '''
     tcls = Data_Edit_Desc
     obj = tcls('I3')
     assert str(obj) == 'I3'
@@ -3633,7 +3663,7 @@ contains
 
 
 def test_use_stmt():
-    ''' Tests that USE statement is parsed correctly (R1109) '''
+    ''' Tests that USE statement is parsed correctly (R1109). '''
     tcls = Use_Stmt
     obj = tcls('use a')
     assert isinstance(obj, tcls), repr(obj)
@@ -3762,7 +3792,7 @@ def test_use_stmt():
 
 def test_module_nature():
     ''' Tests that a module nature statement is parsed correctly
-    (INTRINSIC or NON_INTRINSIC allowed, R1110) '''
+    (INTRINSIC or NON_INTRINSIC allowed, R1110). '''
     tcls = Module_Nature
     obj = tcls('intrinsic')
     assert isinstance(obj, tcls), repr(obj)
@@ -4396,8 +4426,8 @@ def test_contains():  # R1237
 
 
 def test_multi_unit():
-    ''' Check what happens when we have more than one program/routine
-    in a file '''
+    ''' Checks what happens when we have more than one program/routine
+    in a file. '''
     tcls = Program
     reader = get_reader('''\
       program foo
