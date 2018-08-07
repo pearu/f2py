@@ -1259,14 +1259,20 @@ def add_comments(content, reader):
     '''Creates comment objects and adds them to the content list. Comment
     objects are added until a line that is not a comment is found.
 
+    :param content: a `list` of matched objects. Any matched comments
+                    in this routine are added to this list.
+    :param reader: the fortran file reader containing the line(s)
+                   of code that we are trying to match
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                  or
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+
     '''
     try:
-        while True:
+        obj = Comment(reader)
+        while obj:
+            content.append(obj)
             obj = Comment(reader)
-            if obj:
-                content.append(obj)
-            else:
-                break
     except NoMatchError:
         pass
 
@@ -1287,6 +1293,15 @@ class Program(BlockBase):  # R201
         it could make use of BlockBase, the parser must not match if an
         optional program_unit has a syntax error, which the BlockBase
         match implementation does not do.
+
+        param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                      or
+                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :return: `tuple` containing a single `list` which contains
+                 instance of the classes that have matched if there is
+                 a match or `None` if there is no match
 
         '''
         content = []
