@@ -334,7 +334,9 @@ def test_hex_constant():  # R414
     assert repr(obj) == "%s('Z\"01A\"')" % (zcls.__name__)
 
 
-def test_signed_real_literal_constant():  # R416
+def test_signed_real_literal_constant():
+    ''' Tests that various formats of a signed ("+", "-") real
+    literal constant are parsed correctly (R416) '''
     # pylint: disable=invalid-name
 
     tcls = Signed_Real_Literal_Constant
@@ -352,36 +354,24 @@ def test_signed_real_literal_constant():  # R416
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '-12.'
 
-    obj = tcls('1.6E3')
+    obj = tcls('.123')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E3'
-
-    obj = tcls('+1.6E3_8')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '+1.6E3_8'
-
-    obj = tcls('1.6D3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6D3'
-
-    obj = tcls('-1.6E-3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '-1.6E-3'
-    obj = tcls('1.6E+3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E+3'
+    assert str(obj) == '.123'
 
     obj = tcls('3E4')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '3E4'
 
-    obj = tcls('.123')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '.123'
-
-    obj = tcls('+1.6E-3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '+1.6E-3'
+    # Tests for double precision format identifier ("D"),
+    # exponential format identifier ("E")
+    # and numerically defined precision ("8")
+    real_str = ['1.6D3', '-1.6d-3',
+                '1.6E3', '1.6e+3', '+1.6e-3', '-1.6E-3',
+                '+1.6E3_8', '-1.6e-3_8']
+    for rstr in real_str:
+        obj = tcls(rstr)
+        assert isinstance(obj, tcls), repr(obj)
+        assert str(obj) == rstr.upper()
 
     obj = tcls('10.9E7_QUAD')
     assert isinstance(obj, tcls), repr(obj)
@@ -392,7 +382,9 @@ def test_signed_real_literal_constant():  # R416
     assert str(obj) == '-10.9E-17_quad'
 
 
-def test_real_literal_constant():  # R417
+def test_real_literal_constant():
+    ''' Tests that various formats of a real literal constant
+    are parsed correctly (R417) '''
 
     tcls = Real_Literal_Constant
     obj = tcls('12.78')
@@ -409,36 +401,24 @@ def test_real_literal_constant():  # R417
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '12.'
 
-    obj = tcls('1.6E3')
+    obj = tcls('.123')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E3'
-
-    obj = tcls('1.6E3_8')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E3_8'
-
-    obj = tcls('1.6D3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6D3'
-
-    obj = tcls('1.6E-3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E-3'
-    obj = tcls('1.6E+3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E+3'
+    assert str(obj) == '.123'
 
     obj = tcls('3E4')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '3E4'
 
-    obj = tcls('.123')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '.123'
-
-    obj = tcls('1.6E-3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '1.6E-3'
+    # Tests for double precision format identifier ("D"),
+    # exponential format identifier ("E")
+    # and numerically defined precision ("8")
+    real_str = ['0.0D+0', '1.6d3', '1.6D-3',
+                '1.6E3', '1.6E+3', '1.6E-3',
+                '1.6e3_8', '1.6E-3_8']
+    for rstr in real_str:
+        obj = tcls(rstr)
+        assert isinstance(obj, tcls), repr(obj)
+        assert str(obj) == rstr.upper()
 
     obj = tcls('10.9E7_QUAD')
     assert isinstance(obj, tcls), repr(obj)
@@ -447,10 +427,6 @@ def test_real_literal_constant():  # R417
     obj = tcls('10.9e-17_quad')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '10.9E-17_quad'
-
-    obj = tcls('0.0D+0')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '0.0D+0'
 
 
 def test_char_selector():  # R424
