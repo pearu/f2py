@@ -67,6 +67,7 @@
 Module containing py.test tests for Fortran 2003 language constructs
 '''
 
+from __future__ import print_function
 import pytest
 from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
