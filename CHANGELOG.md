@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+08/08/2018 PR #96, for issue #95. Removes dependency on nose and
+           tidy test_fortran2003.py for pylint.
+
 01/08/2018 PR #94 for issue #92. Re-structures fparser2 and introduces
            a parser factory. This creates a parser for a specified
            Fortran dialect (currently 2003 or 2008). Intoduces support

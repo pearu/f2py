@@ -80,11 +80,11 @@ DESCRIPTION = 'The fparser Project'
 LONG_DESCRIPTION = '''\
 The fparser project is created to develop a parser for
 Fortran 77..2003 code. It is based on the work of Pearu Peterson in
-the F2PY project (http://www.f2py.com). 
+the F2PY project (http://www.f2py.com).
 
 See https://github.com/stfc/fparser for more information.
 '''
-LICENSE='OSI Approved :: BSD 3-Clause License'
+LICENSE = 'OSI Approved :: BSD 3-Clause License'
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -120,8 +120,7 @@ if __name__ == '__main__':
         classifiers=CLASSIFIERS,
         packages=PACKAGES,
         package_dir={"": "src"},
-        install_requires=['nose', 'six'],
+        install_requires=['six'],
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
         include_package_data=True)
-
