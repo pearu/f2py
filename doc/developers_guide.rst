@@ -58,6 +58,8 @@ Fortran2008. It is a little less mature than fparser but is being
 actively developed and is planned to replace fparser in the near
 future.
 
+.. _rules:
+
 Rules
 +++++
 
@@ -99,6 +101,11 @@ write e.g. `MODULE`. Here `module-name` is a type of `name` which has
 a rule specifying what is valid syntax (see the specification document
 for more details).
 
+Therefore Fortran is specified as rules which reference other rules,
+or specify a particular syntax. The top level rule of this hierarchy
+is rule `R201`, which defines a program, see above.
+
+
 Classes
 +++++++
 
@@ -117,63 +124,97 @@ details).
 The Fortran2003 and Fortran2008 classes can inherit from a set of
 pre-existing base classes which implement certain rule patterns in a
 generic way. At the moment the base classes are contained in the
-Fortran2003.py file. The base classes and rule patterns are discussed
-more in the :ref:`base-classes` section.
+Fortran2003.py file.
+
+.. note::
+
+   it would be good to separate the base classes into their own module
+   as they are independent of the Fortran standard being used. The
+   difficulty with this separation is that the `Base` class currently
+   references some of its subclasses which leads to recursive imports.
+
+The base classes and rule patterns are discussed more in the
+:ref:`base-classes` section.
 
 The primary components of classes i.e. the parts that developers
 typically need to be concerned with are:
 
-1) the subclass_names list
-2) the use_names list
-3) the static match method
-4) the tostr method
+1) the `subclass_names` list
+2) the `use_names` list
+3) the static `match` method
+4) the `tostr` method
 
-Example
-+++++++
-
-How and whether the above 4 parts of a particular class are used depends
-on the type of rule being implemented.
-
-Going back to Fortran2003 rule r202 mentioned in the previous
-section
-::
-
-    R202 program-unit is main-program
-                         or external-subprogram
-                         or module
-                         or block-data
-
-it can be seen that this rule is a simple choice between different
-classes. In this situation the rules on the right hand side must be
-provided as **strings** in the `subclass_names` list. The `use_names`
-list should be empty and the `tostr` method is not required (as there
-is no text to output because this rule is simply used to decide what
-other rules to use).
+A `subclass_names` list of classes should be provided when the rule is
+a simple choice between classes. In this case the `Base` class ensures that each
+child class is tested for a match and the one that matches is
+returned. An example of a simple choice rule is `R202`. See the
+:ref:`program-unit-class` section for a description of its
+implementation.
 
 .. note::
 
-    it is currently unclear when to use `subclass_names` and when to use
-    `use_names`. At the moment the pragmatic suggestion is to follow the
-    way it is currently done.
+   A `use_names` description, explanation and example needs to be added.
 
-As the above method is a simple choice between different classes, the
-appropriate static match method is already implemented in one of the
-base classes (`Base`) and therefore does not need to be
-written. Therefore to implement the above rule the following needs to
-be specified
-::
-   
-   class Program_Unit(Base):  # R202
-       ''' <description> '''
-       subclass_names = ['Comment', 'Main_Program', 'External_Subprogram',
-                         'Module', 'Block_Data']
+When the rule is not a simple choice the developer needs to supply a
+static `match` method. An example of this is rule `R201`. See the
+:ref:`program-class` section for a description of its implementation.
 
+.. note::
+
+   A `tostr` description, explanation and example needs to be added.
+
+Class Relationships
++++++++++++++++++++
+
+When a rule is a simple choice, the class implementing this rule
+provides a list of classes to be matched in the `subclass_names` list
+(or potentially `use_names` list). These class names are provided as
+strings, not references to the classes themselves.
+
+In fparser2 these strings are used to create class references to allow
+matching to be performed. The creation of class references is
+implemented by the `create` method of the `ParserFactory` object.
+
+The `create` method of the `ParserFactory` class also links to
+appropriate classes to create parsers compliant to the specified
+standard.
+
+.. note::
+
+   The ParserFactory implementation needs to be explained.
+
+A parser conforming to a particular Fortran standard is created by a
+ParserFactory object. For example::
+
+    >>> from fparser.two.parser import ParserFactory
+    >>> parser_f2003 = ParserFactory().create(std="f2003")
+
+The `create` method returns a `Program` *class* (called `parser_f2003`
+in the above example) which contains a `subclasses` dictionary
+(declared in its base class - called `Base`) configured with *all* the
+Fortran2003 class relationships specified by the `subclass_names` and
+`use_names` lists in each class.
+
+As all classes inherit from the `Base` class, the `subclasses`
+dictionary is available to all classes. If, for example, we query the
+dictionary for the `Program` class relationships we get an empty list
+as it has no `subclass_names` or `use_names` entries specified (see
+:ref:`program-class`). If however, we query the dictionary for the
+`Program_unit` relationships we get the list of classes specified in
+that classes `subclass_names` list (see :ref:`program-unit-class`)::
+
+    >>> parser_f2003.__name__
+    'Program'
+    >>> parser_f2003.subclasses['Program']
+    []
+    >>> parser_f2003.subclasses['Program_Unit']
+    [<class 'fparser.two.Fortran2003.Main_Program'>, <class 'fparser.two.Fortran2003.Function_Subprogram'>, <class 'fparser.two.Fortran2003.Subroutine_Subprogram'>, <class 'fparser.two.Fortran2003.Module'>, <class 'fparser.two.Fortran2003.Block_Data'>]
 
 Class Generation
 ++++++++++++++++
 
 Some classes that are specified as strings in the `subclass_names` or
-`use_names` variables do not require implementations. There are 3
+`use_names` variables do not require class implementations. There are 3
 categories of these:
 
 1) classes of the form '\*\_Name'
@@ -188,7 +229,11 @@ At the end of the Fortran2003.py and Fortran2008.py files there is
 code that is executed when the file is imported. This code generates
 the required classes described above in the local file.
 
-As a practical example, consider rule R1106
+.. note::
+
+   The way this is implementation needs to be described.
+
+As a practical example, consider rule `R1106`
 ::
 
    R1106 end-module-stmt is END [ MODULE [ module-name ] ]
@@ -209,20 +254,25 @@ It can be seen that the `Module_Name` class is specified as a string
 in the `use_names` variable. The `Module_Name` class has no
 implementation in the Fortran2003.py file, the class is
 generated. This code generation is performed when the file is
-imported. At the moment the same code-generation code is replicated in
-both the Fortran2003.py and Fortran2008.py files.
+imported.
+
+.. note::
+
+   At the moment the same code-generation code is replicated in both
+   the Fortran2003.py and Fortran2008.py files. It would be better to
+   import this code from a separate file if it is possible to do so.
 
 .. _base-classes:
 
 Base classes
 ++++++++++++
 
-As mentioned earlier there are a number of base classes implemented to
-support matching certain types of pattern in a rule. The two most
-commonly used are given below. As mentioned earlier, the class `Base`
-supports a choice between classes. The class `BlockBase` supports an
-initial and final match with optional subclasses inbetween (useful for
-matching rules such as programs, subroutines, if statements etc.).
+There are a number of base classes implemented to support matching
+certain types of pattern in a rule. The two most commonly used are
+given below. As mentioned earlier, the class `Base` supports a choice
+between classes. The class `BlockBase` supports an initial and final
+match with optional subclasses inbetween (useful for matching rules
+such as programs, subroutines, if statements etc.).
 
 .. autoclass:: fparser.two.Fortran2003.Base
 	       :members:
@@ -230,13 +280,20 @@ matching rules such as programs, subroutines, if statements etc.).
 .. autoclass:: fparser.two.Fortran2003.BlockBase
 	       :members:
 
+.. note::
+
+   The `BlockBase` `match` method is complicated. One way to simplify this
+   would be to create a `NamedBlockBase` which subclasses `BlockBase`. This
+   would include the code associated with a block having a name.
+
 .. _Fortran2008:
 
 Fortran2008 implementation
 ++++++++++++++++++++++++++
 
-As Fortran2008 is a superset of Fortran2003, the Fortran2008 classes are implemented as extensions to the Fortran2003 classes where possible. For example, the Fortran2003 rule for a program-unit is
-::
+As Fortran2008 is a superset of Fortran2003, the Fortran2008 classes
+are implemented as extensions to the Fortran2003 classes where
+possible. For example, the Fortran2003 rule for a program-unit is::
    
     R202 program-unit is main-program
                          or external-subprogram
@@ -265,6 +322,168 @@ course the `Submodule` class also needs to be implemented!)
     >>>       subclass_names = Program_Unit_2003.subclass_names[:]
     >>>       subclass_names.append("Submodule")
 
+
+.. _program-class:
+
+Program Class (rule R201)
++++++++++++++++++++++++++
+
+As discussed earlier, Fortran rule `R201` is the 'top level' Fortran
+rule. There are no other rules that reference rule `R201`. The rule
+looks like this::
+
+    R201 program is program-unit
+                    [ program-unit ] ...
+
+which specifies that a Fortran program can consist of one or more program
+units. Note, the above rule does not capture the fact that it is valid
+to have an arbitrary number of comments before the first program-unit,
+inbetween program-units and after the final program-unit.
+
+As the above rule is not a simple choice between different rules a
+static `match` method is required for the associated fparser2
+`Program` class.
+
+As discussed earlier there are a number of base classes implemented to
+support matching certain types of pattern in a rule. The obvious one
+to use here would be `BlockBase` as it supports a compulsory first
+class, an arbitrary number of optional intermediate classes (provided
+as a list) and a final class. Therefore `Program_Unit, [Program_Unit],
+None` would seem to perform the required functionality (and this was
+how it was implemented in earlier versions of fparser2).
+
+However, there is a problem using `BlockBase`. In the case where there
+is no final class (which is the situation here) it is valid for the
+first class to match and for an optional class to **fail** to
+match. This is not the required behaviour for the `Program` class as, if an
+optional `Program_Unit` exists then it must be a valid `Program_Unit`
+or the code is invalid. For example, the following code is invalid as
+there is a misspelling of `subroutine`::
+
+    program test
+    end
+    subroutin broken
+    end
+
+To implement the required functionality for the `Program` class, the
+static `match` method is written manually. A `while` loop is used to
+ensure that there is no match if any `Program_Unit` is invalid.
+
+There are also two contraints that must be adhered to by the Program
+class:
+
+1) Only one program unit may be a main program
+2) Any name used by a program-unit (e.g. program fred) must be
+   distinct from names used in other program-units.
+
+At the moment neither of these two contraints are enforced in
+fparser2. Therefore two xfailing tests `test_one_main1` and
+`test_multiple_error1` have been added to the
+`tests/fortran2003/test_program_r201.py` file to demonstrate these
+limitations.
+
+Further, in Fortran the `program` declaration is actually
+optional. For example, the following is a valid (minimal) fortran
+program::
+
+    end
+
+fparser2 does not support the above syntax in its `Program_Unit`
+class. Therefore as a workaround, a separate `Program_Unit0` class has
+been implemented and added as a final test to the `Program` match
+method. This does make use of `BlockBase` to match and therefore
+requires the `Program` class to subclass `BlockBase`.
+
+.. note::
+   
+   It would be much better if `Program_Unit` was coded to support
+   optional program declarations and this option should be
+   investigated.
+
+The current implementation also has a limitation in that
+multiple program-units with one of them not having a program
+declaration are not supported. The xfailing test
+`test_missing_prog_multi` has been added to the
+`tests/fortran2003/test_program_r201.py` file to demonstrate this
+limitation.
+
+A final issue is that the line numbers and line information output is
+incorrect in certain cases where there is a syntax error in the code
+and there are 5 spaces before a statement. The xfailing tests
+`test_single2` and `test_single3` have been added to the
+`tests/fortran2003/test_program_r201.py` file to demonstrate this
+error.
+
+.. _program-unit-class:
+
+Program_Unit Class (rule R202)
+++++++++++++++++++++++++++++++
+
+Fortran2003 rule `r202` is specified as
+::
+
+    R202 program-unit is main-program
+                         or external-subprogram
+                         or module
+                         or block-data
+
+As the above rule is a simple choice between different rules, the
+appropriate matching code is already implemented in one of the base
+classes (`Base`) and therefore does not need to be written.  Instead,
+the rules on the right hand side can be provided as **strings** in the
+`subclass_names` list. The `use_names` list should be empty and the
+`tostr` method is not required (as there is no text to output because
+this rule is simply used to decide what other rules to use).
+
+.. note::
+
+    it is currently unclear when to use `subclass_names` and when to use
+    `use_names`. At the moment the pragmatic suggestion is to follow the
+    way it is currently done.
+
+Therefore to implement rule `R202` the following needs to
+be specified
+::
+   
+    class Program_Unit(Base):  # R202
+        ''' <description> '''
+        subclass_names = ['Comment', 'Main_Program', 'External_Subprogram',
+                          'Module', 'Block_Data']
+
+In this way fparser2 captures the `R202` rule hierarchy in its
+`Program_Unit` class.
+
+Object Hierarchy
+++++++++++++++++
+
+Fortran code is parsed by creating the `Program` object with a
+`FortranReader` object as its argument. If the code is parsed
+successfully then a hierarchy of objects is returned associated with
+the structure of the original code. For example::
+
+    >>> from fparser.common.readfortran import FortranStringReader
+    >>> code = "program test\nend"
+    >>> reader = FortranStringReader(code)
+    >>> ast = parser_f2003(reader)
+    >>> ast
+    Program(Main_Program(Program_Stmt('PROGRAM', Name('test')), End_Program_Stmt('PROGRAM', None)))
+
+Therefore the above example creates a `Program` object, which contains
+a `Main_Program` object. The `Main_Program` object contains a
+`Program_Stmt` object followed by an `End_Program_Stmt` object. The
+`Program_Stmt` object contains the `PROGRAM` text and a `Name`
+object. The `Name` object contains the name of the program
+i.e. `test`. The `End_Program_Stmt` object contains the `PROGRAM` text
+and a `None` for the name as it is not supplied in the original code.
+
+As one might expect, the object hierarchy adheres to the Fortran rule
+hierarchy presented in the associated Fortran specification document
+(as each class implements a rule). If one were to manually follow the
+rules in the specification document to confirm the code was compliant
+then there would be a one-to-one correspondance with the type of the
+objects returned and their hierarchy.
+
+    
 .. skip
    # Constraints
    # +++++++++++
