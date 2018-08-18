@@ -74,7 +74,8 @@ except ImportError:
 
 
 def runner(parser, options, args):
-    from fparser.two import Fortran2003
+    from fparser.two.parser import ParserFactory
+    from fparser.two.Fortran2003 import SyntaxError
     from fparser.common.readfortran import FortranFileReader
     for filename in args:
         reader = FortranFileReader(filename)
@@ -83,12 +84,13 @@ def runner(parser, options, args):
                    .FortranFormat.from_mode(options.mode)
             reader.format.set_mode(mode)
         try:
-            program = Fortran2003.Program(reader)
+	    f2003_parser = ParserFactory().create()
+            program = f2003_parser(reader)
             print(program)
-        except Fortran2003.NoMatchError as msg:
+        except SyntaxError as msg:
+            print ("Syntax error: {0}".format(str(msg)))
             print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
             print('started at %s' % (reader.fifo_item[0]))
-            print('quiting')
             return
 
 

@@ -85,7 +85,7 @@ class NoMatchError(Exception):
     pass
 
 
-class ParseError(Exception):
+class SyntaxError(Exception):
     pass
 
 
@@ -1287,6 +1287,18 @@ class Program(BlockBase):  # R201
     subclass_names = []
     use_names = ['Program_Unit']
 
+    @show_result
+    def __new__(cls, string):
+        '''Wrapper around base class __new__ to catch an internal NoMatchError
+        exception and raise it as an external SyntaxError exception.
+
+        '''
+        try:
+            result = Base.__new__(cls, string)
+            return result
+        except NoMatchError as error:
+            raise SyntaxError(error)
+
     @staticmethod
     def match(reader):
         '''Implements the matching for a Program. Whilst the rule looks like
@@ -1311,12 +1323,10 @@ class Program(BlockBase):  # R201
                 obj = Program_Unit(reader)
                 content.append(obj)
                 add_comments(content, reader)
-                next_line = reader.next()  # cause a StopIteration
-                                           # exception if there are no
-                                           # more lines
-                reader.put_item(next_line) # put the line back in the
-                                           # case where there are more
-                                           # lines
+                # cause a StopIteration exception if there are no more lines
+                next_line = reader.next()
+                # put the line back in the case where there are more lines
+                reader.put_item(next_line)
         except NoMatchError:
             # Found a syntax error for this rule. Now look to match
             # (via Main_Program0) with a program containing no program
