@@ -49,7 +49,7 @@
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import NoMatchError
+from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2008 import Submodule
 
 

@@ -34,8 +34,8 @@
 ''' Module containing tests for aspects of fparser2 related to comments '''
 
 import pytest
-from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram, \
-    walk_ast
+from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram
+from fparser.two.utils import walk_ast
 from fparser.api import get_reader
 
 from fparser.two.parser import ParserFactory
