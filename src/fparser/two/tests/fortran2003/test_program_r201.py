@@ -38,7 +38,7 @@ or more program-units.
 '''
 
 import pytest
-from fparser.two.Fortran2003 import SyntaxError
+from fparser.two.Fortran2003 import FortranSyntaxError
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Program
 
@@ -68,7 +68,7 @@ def test_single2(f2003_create):
      end subroutine
 
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("at line 1\n>>>      subroutin test()\n"
             in str(excinfo.value))
@@ -86,7 +86,7 @@ def test_single3(f2003_create):
      end subroutin
 
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("at line 2\n>>>      end subroutin\n"
             in str(excinfo.value))
@@ -101,7 +101,7 @@ def test_single_error1(f2003_create):
       subroutin test()
       end subroutine
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("at line 1\n>>>      subroutin test()\n"
             in str(excinfo.value))
@@ -115,7 +115,7 @@ def test_single_error2(f2003_create):
     reader = get_reader(
         "subroutine test()\n\n"
         "end subroutin\n\n\n")
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy = Program(reader)
     assert ("at line 3\n>>>end subroutin\n"
             in str(excinfo.value))
@@ -149,7 +149,7 @@ def test_multiple_error1(f2003_create):
       subroutine test()
       end subroutine
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("XXX"
             in str(excinfo.value))
@@ -166,7 +166,7 @@ def test_multiple_error2(f2003_create):
       subroutine test()
       end subroutine
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("at line 1\n>>>      subroutine 1test()\n"
             in str(excinfo.value))
@@ -182,7 +182,7 @@ def test_multiple_error3(f2003_create):
       end subroutine
       subroutine test()
       end subroutin''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("at line 4\n>>>      end subroutin\n"
             in str(excinfo.value))
@@ -232,7 +232,7 @@ def test_one_main1(f2003_create):
       program second
       end
       ''')
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         dummy_ = Program(reader)
     assert ("XXX"
             in str(excinfo.value))

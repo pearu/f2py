@@ -457,7 +457,7 @@ Exceptions
 ++++++++++
 
 There are 5 types of exception raised in fparser2: `NoMatchError`,
-`SyntaxError`, `ValueError`, `AssertionError` and
+`FortranSyntaxError`, `ValueError`, `AssertionError` and
 `NotImplementedError`. These are discussed in turn.
 
 
@@ -490,12 +490,13 @@ error) will contain line number information.
    Need to add an explanation about when `NoMatchError` exceptions are
    used and when a null return is used.
 
-A `SyntaxError` exception is raised if the parser does not recognise the
-syntax. The line number and text of the line in question is
-returned. This is implemented by catching the final `NoMatchError`
-exception and re-raising it as a `SyntaxError`. This final `NoMatchError`
-is caught and re-raised by wrapping the `Base` class `__new__` method in
-the top level `Program` class with its own `__new__` method.
+A `FortranSyntaxError` exception is raised if the parser does not
+recognise the syntax. The line number and text of the line in question
+is returned. This is implemented by catching the final `NoMatchError`
+exception and re-raising it as a `FortranSyntaxError`. This final
+`NoMatchError` is caught and re-raised by wrapping the `Base` class
+`__new__` method in the top level `Program` class with its own
+`__new__` method.
 
 .. note::
 

@@ -36,7 +36,7 @@
 import pytest
 from fparser.two.parser import ParserFactory
 from fparser.common.readfortran import FortranStringReader
-from fparser.two.Fortran2003 import SyntaxError
+from fparser.two.Fortran2003 import FortranSyntaxError
 
 
 def test_parserfactory_std():
@@ -50,13 +50,13 @@ def test_parserfactory_std():
         "end\n")
     parser = ParserFactory().create()
     reader = FortranStringReader(fstring)
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
     parser = ParserFactory().create(std="f2003")
     reader = FortranStringReader(fstring)
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 
@@ -70,7 +70,7 @@ def test_parserfactory_std():
     # match does not affect the current (f2003) invalid match.
     parser = ParserFactory().create(std="f2003")
     reader = FortranStringReader(fstring)
-    with pytest.raises(SyntaxError) as excinfo:
+    with pytest.raises(FortranSyntaxError) as excinfo:
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
 

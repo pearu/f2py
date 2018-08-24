@@ -109,8 +109,8 @@ found in the code. Nodes representing in-line comments will be added
 immediately following the node representing the code in which they
 were encountered.
 
-If the code is invalid fortran then a SyntaxError exception will be
-raised which indicates the offending line of code and its line
+If the code is invalid fortran then a `FortranSyntaxError` exception
+will be raised which indicates the offending line of code and its line
 number. For example:
 
 ::
@@ -124,8 +124,8 @@ number. For example:
    Traceback (most recent call last):
      File "<stdin>", line 1, in <module>
      File "fparser/two/Fortran2003.py", line 1300, in __new__
-       raise SyntaxError(error)
-   fparser.two.Fortran2003.SyntaxError: at line 2
+       raise FortranSyntaxError(error)
+   fparser.two.Fortran2003.FortranSyntaxError: at line 2
    >>>en
 
 

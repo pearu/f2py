@@ -85,7 +85,7 @@ class NoMatchError(Exception):
     pass
 
 
-class SyntaxError(Exception):
+class FortranSyntaxError(Exception):
     pass
 
 
@@ -1290,14 +1290,14 @@ class Program(BlockBase):  # R201
     @show_result
     def __new__(cls, string):
         '''Wrapper around base class __new__ to catch an internal NoMatchError
-        exception and raise it as an external SyntaxError exception.
+        exception and raise it as an external FortranSyntaxError exception.
 
         '''
         try:
             result = Base.__new__(cls, string)
             return result
         except NoMatchError as error:
-            raise SyntaxError(error)
+            raise FortranSyntaxError(error)
 
     @staticmethod
     def match(reader):
