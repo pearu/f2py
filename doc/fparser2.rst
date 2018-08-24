@@ -38,7 +38,7 @@ fparser2
 ========
 
 Fparser2 provides support for parsing Fortran up to and including
-Fortran 2003 through the `Fortran2003` module. This is implemented in
+Fortran 2003. This is implemented in
 the Fortran2003.py `file`__ and contains an entirely separate parser
 that includes rules for Fortran 2003 syntax. Support for Fortran 2008
 is being added in the Fortran2008.py `file`__ which extends the
@@ -53,9 +53,20 @@ Getting Going
 -------------
 
 As with the other parser (:ref:`fparser`), the source code to parse
-must be provided via an iterator which is an instance of either
+must be provided via a Fortran reader which is an instance of either
 `FortranFileReader` or `FortranStringReader` (see
-:ref:`readfortran`). For example:
+:ref:`readfortran`).
+
+The required parser is then created using an instance of the
+`ParserFactory` class. `ParserFactory` either returns a
+Fortran2003-compliant parser or a Fortran2008-compliant parser
+depending on the `std` argument provided to its create method.
+
+Finally the parser is provided with the Fortran reader and returns an
+abstract representation (an abstract syntax tree - AST) of the code,
+if the code is valid Fortran. This AST can be output as Fortran by
+printing it. The AST hierarchy can also be output in textual form by
+executing the AST. For example:
 
 ::
    
@@ -64,8 +75,8 @@ must be provided via an iterator which is an instance of either
     >>> reader = FortranFileReader("compute_unew_mod.f90",
                                    ignore_comments=False)
     >>> f2008_parser = ParserFactory().create(std="f2008")
-    >>> program = f2008_parser(reader)
-    >>> print program
+    >>> ast = f2008_parser(reader)
+    >>> print ast
     MODULE compute_unew_mod
       USE :: kind_params_mod
       USE :: kernel_mod
@@ -78,20 +89,45 @@ must be provided via an iterator which is an instance of either
       PUBLIC :: compute_unew, compute_unew_code
       TYPE, EXTENDS(kernel_type) :: compute_unew
       ...
-    >>> program
-    Program(Module(Module_Stmt('MODULE', Name('compute_unew_mod')), Specification_Part(Use_Stmt(None, Name('kind_params_mod'), '', None), Use_Stmt(None, Name('kernel_mod'), '', None), Use_Stmt(None, Name('argument_mod'), '', None), Use_Stmt(None, Name('grid_mod'), '', None), Use_Stmt(None, Name('field_mod'), '', None), Implicit_Part(Implicit_Stmt('NONE')), Access_Stmt('PRIVATE', None), Access_Stmt('PUBLIC', Name('invoke_compute_unew')), Access_Stmt('PUBLIC', Access_Id_List(',', (Name('compute_unew'), Name('compute_unew_code')))), Derived_Type_Def(Derived_Type_Stmt(Type_Attr_Spec('EXTENDS', Name('kernel_type')), Type_Name('compute_unew'), None), ...
-
-The `ParserFactory` either returns a Fortran2003-compliant parser or a
-Fortran2008-compliant parser depending on the `std` argument provided
-to its create method.
+    >>> ast
+    Program(Module(Module_Stmt('MODULE', Name('compute_unew_mod')),Spec
+    ification_Part(Use_Stmt(None, Name('kind_params_mod'), '', None),Us
+    e_Stmt(None, Name('kernel_mod'), '', None),Use_Stmt(None, Name('arg
+    ument_mod'), '', None),Use_Stmt(None, Name('grid_mod'), '', None),U
+    se_Stmt(None, Name('field_mod'), '', None),Implicit_Part(Implicit_S
+    tmt('NONE')), Access_Stmt('PRIVATE', None),Access_Stmt('PUBLIC', Na
+    me('invoke_compute_unew')),Access_Stmt('PUBLIC', Access_Id_List(','
+    , (Name('compute_unew'),Name('compute_unew_code')))),Derived_Type_D
+    ef(Derived_Type_Stmt(Type_Attr_Spec('EXTENDS',Name('kernel_type')),
+    Type_Name('compute_unew'), None), ...
 
 Note that the two readers will ignore (and dispose of) comments by
 default. If you wish comments to be retained then you must set
-`ignore_comments=True` when creating the reader. The Abstract Syntax
-Tree created by fparser2 will then have `Comment` nodes representing
-any comments found in the code. Nodes representing in-line comments
-will be added immediately following the node representing the code in
-which they were encountered.
+`ignore_comments=True` when creating the reader. The AST created by
+fparser2 will then have `Comment` nodes representing any comments
+found in the code. Nodes representing in-line comments will be added
+immediately following the node representing the code in which they
+were encountered.
+
+If the code is invalid fortran then a SyntaxError exception will be
+raised which indicates the offending line of code and its line
+number. For example:
+
+::
+   
+   >>> from fparser.common.readfortran import FortranStringReader
+   >>> code = "program test\nen"
+   >>> reader = FortranStringReader(code)
+   >>> from fparser.two.parser import ParserFactory
+   >>> f2008_parser = ParserFactory().create(std="f2008")
+   >>> ast = f2008_parser(reader)
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+     File "fparser/two/Fortran2003.py", line 1300, in __new__
+       raise SyntaxError(error)
+   fparser.two.Fortran2003.SyntaxError: at line 2
+   >>>en
+
 
 Classes
 -------

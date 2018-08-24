@@ -453,6 +453,69 @@ be specified
 In this way fparser2 captures the `R202` rule hierarchy in its
 `Program_Unit` class.
 
+Exceptions
+++++++++++
+
+There are 5 types of exception raised in fparser2: `NoMatchError`,
+`SyntaxError`, `ValueError`, `AssertionError` and
+`NotImplementedError`. These are discussed in turn.
+
+
+`NoMatchError` can be raised by a class when the text it is given does
+not match the pattern for the class. A class can also return an empty
+return value to indicate no match. It is currently unclear when it is
+appropriate to do one or the other.
+
+`NoMatchError` (or an empty return value) does not necessarily mean that
+the text is invalid, just that the text does not match this class. For
+example, it may be that some text should match one of a set of
+rules. In this case all rules would fail to match except one. It is
+only invalid text if no rules match.
+
+Usually `NoMatchError` is raised by a class with no textual information
+(a string provided as an argument to the exception), as textual
+information is not required. When textual information is provided this
+is ignored apart from one situation, which is where the `NoMatchError`
+actually indicates that there is a syntax error.
+
+To provide appropriate information when there is a syntax error, the
+last thing that the `Base` class does in its `__new__` method is raise
+a `NoMatchError` with line number and the line itself extracted from
+the `FortranReader` object and provided as argument text. This
+guarantees that the last `NoMatchError` (the one indicating a syntax
+error) will contain line number information.
+
+.. note::
+
+   Need to add an explanation about when `NoMatchError` exceptions are
+   used and when a null return is used.
+
+A `SyntaxError` exception is raised if the parser does not recognise the
+syntax. The line number and text of the line in question is
+returned. This is implemented by catching the final `NoMatchError`
+exception and re-raising it as a `SyntaxError`. This final `NoMatchError`
+is caught and re-raised by wrapping the `Base` class `__new__` method in
+the top level `Program` class with its own `__new__` method.
+
+.. note::
+
+   more information about the error could be determined by inspecting
+   the FortranReader object. In particular, a match can be over a
+   number of lines and the first line could be returned as well as the
+   last. At the moment the last line and the line number are returned.
+
+A `ValueError` exception is raised if an invalid standard is passed to
+the `create` method of the `ParserFactory` class.
+
+.. note::
+
+   Information needs to be added about the use of
+   `NotImplementedError` and `AssertionError`. There has also been
+   discussion about including an InternalError exception for
+   unexpected errors. There has also been discussion about using a
+   logger for messages, however, there are currently no known
+   situations where it makes sense to output messages.
+
 Object Hierarchy
 ++++++++++++++++
 
