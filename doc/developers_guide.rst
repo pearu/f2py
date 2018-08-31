@@ -231,7 +231,7 @@ the required classes described above in the local file.
 
 .. note::
 
-   The way this is implementation needs to be described.
+   The way this is implemented needs to be described.
 
 As a practical example, consider rule `R1106`
 ::
@@ -348,9 +348,11 @@ As discussed earlier there are a number of base classes implemented to
 support matching certain types of pattern in a rule. The obvious one
 to use here would be `BlockBase` as it supports a compulsory first
 class, an arbitrary number of optional intermediate classes (provided
-as a list) and a final class. Therefore `Program_Unit, [Program_Unit],
-None` would seem to perform the required functionality (and this was
-how it was implemented in earlier versions of fparser2).
+as a list) and a final class. Therefore, subclassing `BlockBase` and
+setting the first class to `Program_Unit`, the intermediate classes to
+`[Program_Unit]`, and the final class to `None` would seem to perform
+the required functionality (and this was how it was implemented in
+earlier versions of fparser2).
 
 However, there is a problem using `BlockBase`. In the case where there
 is no final class (which is the situation here) it is valid for the
@@ -369,7 +371,7 @@ To implement the required functionality for the `Program` class, the
 static `match` method is written manually. A `while` loop is used to
 ensure that there is no match if any `Program_Unit` is invalid.
 
-There are also two contraints that must be adhered to by the Program
+There are also two contraints that must be adhered to by the `Program`
 class:
 
 1) Only one program unit may be a main program
@@ -383,7 +385,7 @@ fparser2. Therefore two xfailing tests `test_one_main1` and
 limitations.
 
 Further, in Fortran the `program` declaration is actually
-optional. For example, the following is a valid (minimal) fortran
+optional. For example, the following is a valid (minimal) Fortran
 program::
 
     end
@@ -511,11 +513,14 @@ the `create` method of the `ParserFactory` class.
 .. note::
 
    Information needs to be added about the use of
-   `NotImplementedError` and `AssertionError`. There has also been
-   discussion about including an InternalError exception for
-   unexpected errors. There has also been discussion about using a
-   logger for messages, however, there are currently no known
-   situations where it makes sense to output messages.
+   `NotImplementedError` and `AssertionError` and/or the code needs to
+   be modified. These exceptions come from pre-existing code and it is
+   likely that we would want to remove the `AssertionError` from
+   fparser.There has also been discussion about including an
+   InternalError exception for unexpected errors. There has also been
+   discussion about using a logger for messages, however, there are
+   currently no known situations where it makes sense to output
+   messages.
 
 Object Hierarchy
 ++++++++++++++++
@@ -543,9 +548,12 @@ and a `None` for the name as it is not supplied in the original code.
 As one might expect, the object hierarchy adheres to the Fortran rule
 hierarchy presented in the associated Fortran specification document
 (as each class implements a rule). If one were to manually follow the
-rules in the specification document to confirm the code was compliant
-then there would be a one-to-one correspondance with the type of the
-objects returned and their hierarchy.
+rules in the specification document to confirm a code was compliant
+and write down the rules visited on a piece of paper in a hierarchical
+manner (i.e. also write down which rules triggered subsequent rules)
+then there would be a one-to-one correspondance between the rules and
+rule hierarchy written on paper and the objects and object hierarchy
+returned by fparser2.
 
     
 .. skip

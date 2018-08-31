@@ -109,7 +109,7 @@ found in the code. Nodes representing in-line comments will be added
 immediately following the node representing the code in which they
 were encountered.
 
-If the code is invalid fortran then a `FortranSyntaxError` exception
+If the code is invalid Fortran then a `FortranSyntaxError` exception
 will be raised which indicates the offending line of code and its line
 number. For example:
 
