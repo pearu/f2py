@@ -86,6 +86,10 @@ class NoMatchError(Exception):
 
 
 class FortranSyntaxError(Exception):
+    '''An exception indicating that the fparser believes the provided code
+    to be invalid Fortran
+
+    '''
     pass
 
 
@@ -1259,22 +1263,19 @@ def add_comments(content, reader):
     '''Creates comment objects and adds them to the content list. Comment
     objects are added until a line that is not a comment is found.
 
-    :param content: a `list` of matched objects. Any matched comments
+    :param content: a `list` of matched objects. Any matched comments \
                     in this routine are added to this list.
-    :param reader: the fortran file reader containing the line(s)
+    :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
-    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
-                  or
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
                   :py:class:`fparser.common.readfortran.FortranStringReader`
 
     '''
-    try:
+    obj = Comment(reader)
+    while obj:
+        content.append(obj)
         obj = Comment(reader)
-        while obj:
-            content.append(obj)
-            obj = Comment(reader)
-    except NoMatchError:
-        pass
 
 
 class Program(BlockBase):  # R201
@@ -1292,10 +1293,14 @@ class Program(BlockBase):  # R201
         '''Wrapper around base class __new__ to catch an internal NoMatchError
         exception and raise it as an external FortranSyntaxError exception.
 
+        :param type cls: the class of object to create
+        :param string: (source of) Fortran string to parse
+        :type string: :py:class:`FortranReaderBase`
+        :raises FortranSyntaxError: if the code is not valid Fortran
+
         '''
         try:
-            result = Base.__new__(cls, string)
-            return result
+            return Base.__new__(cls, string)
         except NoMatchError as error:
             raise FortranSyntaxError(error)
 
@@ -1306,8 +1311,8 @@ class Program(BlockBase):  # R201
         optional program_unit has a syntax error, which the BlockBase
         match implementation does not do.
 
-        param reader: the fortran file reader containing the line(s)
-                      of code that we are trying to match
+        :param reader: the fortran file reader containing the line(s)
+                       of code that we are trying to match
         :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
                       or
                       :py:class:`fparser.common.readfortran.FortranStringReader`
@@ -9456,12 +9461,13 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
 ClassType = type(Base)
 _names = dir()
 for clsname in _names:
-    cls = eval(clsname)
-    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
-            not cls.__name__.endswith('Base')):
+    my_cls = eval(clsname)
+    if not (isinstance(my_cls, ClassType) and issubclass(my_cls, Base) and
+            not my_cls.__name__.endswith('Base')):
         continue
 
-    names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
+    names = getattr(my_cls, 'subclass_names', []) + \
+        getattr(my_cls, 'use_names', [])
     for n in names:
         if n in _names:
             continue

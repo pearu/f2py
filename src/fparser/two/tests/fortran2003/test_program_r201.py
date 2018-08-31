@@ -308,14 +308,14 @@ def test_comment4(f2003_create):
     '''Test that multiple program_units can be parsed successfully with
     comments being included.'''
     reader = get_reader((
-      "! comment1\n"
-      "subroutine test()\n"
-      "end subroutine\n"
-      "! comment2\n"
-      "module example\n"
-      "end module\n"
-      "! comment3\n"
-      ), ignore_comments=False)
+        "! comment1\n"
+        "subroutine test()\n"
+        "end subroutine\n"
+        "! comment2\n"
+        "module example\n"
+        "end module\n"
+        "! comment3\n"
+    ), ignore_comments=False)
     ast = Program(reader)
     assert ("! comment1\n"
             "SUBROUTINE test\n"
