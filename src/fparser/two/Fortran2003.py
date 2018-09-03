@@ -80,7 +80,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
-from fparser.two.utils import NoMatchError, show_result
+from fparser.two.utils import NoMatchError, FortranSyntaxError, show_result
 
 #
 # SECTION  1
@@ -205,7 +205,6 @@ class Program(BlockBase):  # R201
         :raises FortranSyntaxError: if the code is not valid Fortran
 
         '''
-        from fparser.two.utils import FortranSyntaxError
         try:
             return Base.__new__(cls, string)
         except NoMatchError as error:
