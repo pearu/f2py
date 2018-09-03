@@ -82,7 +82,11 @@ class NoMatchError(Exception):
     pass
 
 
-class ParseError(Exception):
+class FortranSyntaxError(Exception):
+    '''An exception indicating that the fparser believes the provided code
+    to be invalid Fortran
+
+    '''
     pass
 
 
@@ -332,21 +336,13 @@ content : tuple
         :return: instance of startcls or None if no match is found
         :rtype: startcls
         '''
-        from fparser.two.Fortran2003 import Comment
+        from fparser.two.Fortran2003 import Comment, add_comments
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
             # Deal with any preceding comments
-            try:
-                while True:
-                    obj = Comment(reader)
-                    if obj:
-                        content.append(obj)
-                    else:
-                        break
-            except NoMatchError:
-                pass
+            add_comments(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -368,7 +364,7 @@ content : tuple
             if match_names:
                 start_name = obj.get_start_name()
 
-        # A comment is always a valid sub-class 
+        # A comment is always a valid sub-class
         classes = subclasses + [Comment]
         if endcls is not None:
             classes += [endcls]

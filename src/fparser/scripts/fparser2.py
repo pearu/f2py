@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2018 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -63,38 +64,50 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-from fparser.scripts.script_options import set_f2003_options
+''' Example script to parse a Fortran program using fparser '''
+from __future__ import print_function
+from fparser.scripts.script_options import set_fparser_options
 import fparser.common.sourceinfo
-### START UPDATE SYS.PATH ###
-### END UPDATE SYS.PATH ###
+# START UPDATE SYS.PATH
+# END UPDATE SYS.PATH
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
     from optparse import OptionParser
 
 
-def runner(parser, options, args):
-    from fparser.two import Fortran2003
+def runner(_, options, args):
+    ''' Function to read, parse and output fortran source code '''
+    from fparser.two.parser import ParserFactory
+    from fparser.two.Fortran2003 import FortranSyntaxError
     from fparser.common.readfortran import FortranFileReader
+    if not args:
+        print ("Error: No fortran files specified")
     for filename in args:
-        reader = FortranFileReader(filename)
+        try:
+            reader = FortranFileReader(filename)
+        except IOError as error:
+            print (error)
+            return
         if options.mode != 'auto':
             mode = fparser.common.sourceinfo\
                    .FortranFormat.from_mode(options.mode)
             reader.format.set_mode(mode)
         try:
-            program = Fortran2003.Program(reader)
-            print(program)
-        except Fortran2003.NoMatchError as msg:
+            f2003_parser = ParserFactory().create()
+            program = f2003_parser(reader)
+            print (program)
+        except FortranSyntaxError as msg:
+            print ("Syntax error: {0}".format(str(msg)))
             print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
             print('started at %s' % (reader.fifo_item[0]))
-            print('quiting')
             return
 
 
 def main():
+    ''' Check arguments before parsing code '''
     parser = OptionParser()
-    set_f2003_options(parser)
+    set_fparser_options(parser)
     if hasattr(parser, 'runner'):
         parser.runner = runner
     options, args = parser.parse_args()

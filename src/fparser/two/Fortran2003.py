@@ -165,25 +165,90 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
+def add_comments(content, reader):
+    '''Creates comment objects and adds them to the content list. Comment
+    objects are added until a line that is not a comment is found.
+
+    :param content: a `list` of matched objects. Any matched comments \
+                    in this routine are added to this list.
+    :param reader: the fortran file reader containing the line(s) \
+                   of code that we are trying to match
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+
+    '''
+    obj = Comment(reader)
+    while obj:
+        content.append(obj)
+        obj = Comment(reader)
+
+
 class Program(BlockBase):  # R201
-    """
-:F03R:`201`::
-    <program> = <program-unit>
-                  [ <program-unit> ] ...
-    """
+    '''
+    Fortran 2003 rule R201
+    program is program-unit
+               [ program-unit ] ...
+
+    '''
     subclass_names = []
     use_names = ['Program_Unit']
 
+    @show_result
+    def __new__(cls, string):
+        '''Wrapper around base class __new__ to catch an internal NoMatchError
+        exception and raise it as an external FortranSyntaxError exception.
+
+        :param type cls: the class of object to create
+        :param string: (source of) Fortran string to parse
+        :type string: :py:class:`FortranReaderBase`
+        :raises FortranSyntaxError: if the code is not valid Fortran
+
+        '''
+        from fparser.two.utils import FortranSyntaxError
+        try:
+            return Base.__new__(cls, string)
+        except NoMatchError as error:
+            raise FortranSyntaxError(error)
+
     @staticmethod
     def match(reader):
+        '''Implements the matching for a Program. Whilst the rule looks like
+        it could make use of BlockBase, the parser must not match if an
+        optional program_unit has a syntax error, which the BlockBase
+        match implementation does not do.
+
+        :param reader: the fortran file reader containing the line(s)
+                       of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                      or
+                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :return: `tuple` containing a single `list` which contains
+                 instance of the classes that have matched if there is
+                 a match or `None` if there is no match
+
+        '''
+        content = []
+        add_comments(content, reader)
         try:
-            result = BlockBase.match(Program_Unit, [Program_Unit],
-                                     None, reader)
+            while True:
+                obj = Program_Unit(reader)
+                content.append(obj)
+                add_comments(content, reader)
+                # cause a StopIteration exception if there are no more lines
+                next_line = reader.next()
+                # put the line back in the case where there are more lines
+                reader.put_item(next_line)
         except NoMatchError:
-            result = None
-        if result is not None:
-            return result
-        return BlockBase.match(Main_Program0, [], None, reader)
+            # Found a syntax error for this rule. Now look to match
+            # (via Main_Program0) with a program containing no program
+            # statement as this is optional in Fortran.
+            #
+            return BlockBase.match(Main_Program0, [], None, reader)
+        except StopIteration:
+            # Reader has no more lines.
+            pass
+        return content,
 
 
 class Program_Unit(Base):  # R202
@@ -8277,12 +8342,13 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
 ClassType = type(Base)
 _names = dir()
 for clsname in _names:
-    cls = eval(clsname)
-    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
-            not cls.__name__.endswith('Base')):
+    my_cls = eval(clsname)
+    if not (isinstance(my_cls, ClassType) and issubclass(my_cls, Base) and
+            not my_cls.__name__.endswith('Base')):
         continue
 
-    names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
+    names = getattr(my_cls, 'subclass_names', []) + \
+        getattr(my_cls, 'use_names', [])
     for n in names:
         if n in _names:
             continue

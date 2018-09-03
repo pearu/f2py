@@ -100,30 +100,6 @@ def assert_raises(exc, fcls, string):
 #
 
 
-def test_program():
-    ''' Tests for parsing top-level program unit (R201). '''
-    tcls = Program
-    reader = get_reader('''\
-      subroutine foo
-      end subroutine Foo
-      subroutine bar
-      end
-      ''')
-    obj = tcls(reader)
-    assert isinstance(obj, tcls), repr(obj)
-    print(str(obj))
-    assert "SUBROUTINE foo\nEND SUBROUTINE Foo\nSUBROUTINE bar\n" \
-        "END SUBROUTINE bar" in str(obj)
-
-    reader = get_reader('''\
-      subroutine foo (*)
-      end subroutine foo
-      ''')
-    obj = tcls(reader)
-    assert isinstance(obj, tcls), repr(obj)
-    assert 'SUBROUTINE foo(*)\nEND SUBROUTINE foo' in str(obj)
-
-
 def test_specification_part():
     ''' Tests for parsing specification-part (R204). '''
     reader = get_reader('''\
@@ -4424,28 +4400,6 @@ def test_contains():  # R1237
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CONTAINS'
     assert repr(obj) == "Contains_Stmt('CONTAINS')"
-
-
-def test_multi_unit():
-    ''' Checks what happens when we have more than one program/routine
-    in a file. '''
-    tcls = Program
-    reader = get_reader('''\
-      program foo
-        integer :: my_int
-        my_int = my_func()
-        write(*,*) my_int
-      end program
-      function my_func()
-        integer :: my_func
-        my_func = 2
-      end function''')
-    obj = tcls(reader)
-    assert isinstance(obj, tcls), repr(obj)
-    output = str(obj)
-    assert "PROGRAM foo" in output
-    assert "FUNCTION my_func()" in output
-    assert output.endswith("END FUNCTION")
 
 
 if 0:
