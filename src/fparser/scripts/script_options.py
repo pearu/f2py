@@ -92,16 +92,21 @@ Description:
                       )
     parser.add_option_group(get_fortran_code_group(parser))
 
-def set_f2003_options(parser):
+def set_fparser_options(parser):
     parser.set_usage('''\
 %prog [options] <Fortran files>
 
 Description:
-  %prog parses Fortran codes using Fortran 2003 syntax rules.''')
+  %prog parses Fortran code.''')
     parser.add_option('--task',
                       default = 'show',
                       choices = ['show', 'none'],
                       help = 'Specify parsing result task. Default: %default.'
+                      )
+    parser.add_option('--std',
+                      default = 'f2003',
+                      choices = ['f2003', 'f2008'],
+                      help = 'Specify the Fortran standard to use. Default: %default.'
                       )
     parser.add_option_group(get_fortran_code_group(parser))
     

@@ -11,6 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+03/09/2018 PR #100 for issue #99. Adds new SyntaxError to fparser2 and
+           fixes bug so that errors are reported correctly for multiple
+           program units in a single source file.
+
 08/08/2018 PR #96, for issue #95. Removes dependency on nose and
            tidy test_fortran2003.py for pylint.
 

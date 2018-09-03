@@ -99,10 +99,12 @@ class ParserFactory(object):
         '''Creates a class hierarchy suitable for the specified Fortran
         standard.
 
-        :param std string: the Fortran standard. Choices are 'f2003' or \
-                           'f2008'. 'f2003' is the default.
+        :param str std: the Fortran standard. Choices are 'f2003' or \
+                        'f2008'. 'f2003' is the default.
         :return: a Program class (not object) for use with the Fortran reader
         :rtype: :py:class:`fparser.two.Fortran2003.Program`
+        :raises ValueError: if the supplied value for the std parameter \
+                            is invalid
 
         For example:
 
@@ -153,9 +155,7 @@ class ParserFactory(object):
             # we return the Fortran2003 one.
             return Fortran2003.Program
         else:
-            # TODO: raise exception here, see issue #52
-            print ("unsupported standard {0}".format(std))
-            exit(1)
+            raise ValueError("'{0}' is an invalid standard".format(std))
 
     def _setup(self, input_classes):
         '''Perform some Python magic to create the connections between classes
