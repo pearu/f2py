@@ -123,15 +123,7 @@ details).
 
 The Fortran2003 and Fortran2008 classes can inherit from a set of
 pre-existing base classes which implement certain rule patterns in a
-generic way. At the moment the base classes are contained in the
-Fortran2003.py file.
-
-.. note::
-
-   it would be good to separate the base classes into their own module
-   as they are independent of the Fortran standard being used. The
-   difficulty with this separation is that the `Base` class currently
-   references some of its subclasses which leads to recursive imports.
+generic way. The base classes are contained in the `utils.py` file.
 
 The base classes and rule patterns are discussed more in the
 :ref:`base-classes` section.
@@ -274,10 +266,10 @@ between classes. The class `BlockBase` supports an initial and final
 match with optional subclasses inbetween (useful for matching rules
 such as programs, subroutines, if statements etc.).
 
-.. autoclass:: fparser.two.Fortran2003.Base
+.. autoclass:: fparser.two.utils.Base
 	       :members:
 
-.. autoclass:: fparser.two.Fortran2003.BlockBase
+.. autoclass:: fparser.two.utils.BlockBase
 	       :members:
 
 .. note::
@@ -455,6 +447,8 @@ be specified
 In this way fparser2 captures the `R202` rule hierarchy in its
 `Program_Unit` class.
 
+.. _exceptions:
+
 Exceptions
 ++++++++++
 
@@ -555,7 +549,22 @@ then there would be a one-to-one correspondance between the rules and
 rule hierarchy written on paper and the objects and object hierarchy
 returned by fparser2.
 
-    
+Utils
++++++
+
+fparser2 includes a `utils.py` file. This file contains the base
+classes discussed in the :ref:`base-classes` section, the
+fparser2-specific exceptions discussion in the :ref:`exceptions`
+section and a tree-walk utility that can be used to traverse the AST
+produced by fparser2 for a valid Fortran program.
+
+.. note::
+
+   the tree-walk utility currently fails if the parent node of the
+   tree is provided. The solution is to provide the parent's
+   children. This should be fixed at some point.
+
+
 .. skip
    # Constraints
    # +++++++++++

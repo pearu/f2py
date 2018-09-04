@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Modified work Copyright (c) 2017-2018 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
@@ -65,7 +63,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-'''Base classes and exception handling for fortran parser
+'''Base classes and exception handling for Fortran parser
 
 '''
 # Original author: Pearu Peterson <pearu@cens.ioc.ee>
@@ -87,7 +85,6 @@ class FortranSyntaxError(Exception):
     to be invalid Fortran
 
     '''
-    pass
 
 
 def show_result(func):
