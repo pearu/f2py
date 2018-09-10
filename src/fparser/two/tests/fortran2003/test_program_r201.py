@@ -38,7 +38,7 @@ or more program-units.
 '''
 
 import pytest
-from fparser.two.Fortran2003 import FortranSyntaxError
+from fparser.two.utils import FortranSyntaxError
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Program
 

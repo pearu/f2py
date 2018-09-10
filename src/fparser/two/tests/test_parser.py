@@ -36,7 +36,7 @@
 import pytest
 from fparser.two.parser import ParserFactory
 from fparser.common.readfortran import FortranStringReader
-from fparser.two.Fortran2003 import FortranSyntaxError
+from fparser.two.utils import FortranSyntaxError
 
 
 def test_parserfactory_std():

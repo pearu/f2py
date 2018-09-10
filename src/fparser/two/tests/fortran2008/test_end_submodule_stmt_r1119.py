@@ -38,7 +38,7 @@
 
 '''
 import pytest
-from fparser.two.Fortran2003 import NoMatchError
+from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2008 import End_Submodule_Stmt
 
 

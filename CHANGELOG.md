@@ -11,6 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+10/09/2018 PR #103. Re-structure fparser2 so that base classes and
+           exceptions are now in fparser.two.utils. Fortran2003.py
+           now just contains implementation of the rules.
+
 03/09/2018 PR #100 for issue #99. Adds new SyntaxError to fparser2 and
            fixes bug so that errors are reported correctly for multiple
            program units in a single source file.
