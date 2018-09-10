@@ -1538,8 +1538,10 @@ class Proc_Binding_Stmt(Base):  # R450
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
-class Specific_Binding(StmtBase):  # R451
+class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
     """
+    R451
+
     <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
         [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
     """
@@ -1549,19 +1551,29 @@ class Specific_Binding(StmtBase):  # R451
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a module (optional interface name, optional
+                 binding attribute list, optional double colon delimiter,
+                 mandatory binding name and optional procedure name)
+        :rtype: 5-tuple of objects (binding name and 4 optional)
+        '''
+        # Incorrect 'PROCEDURE' statement
         if string[:9].upper() != 'PROCEDURE':
             return
         line = string[9:].lstrip()
-        iname = None
         if line.startswith('('):
             i = line.find(')')
             if i == -1:
-                return
+                iname = None
             iname = Interface_Name(line[1:i].strip())
             line = line[i+1:].lstrip()
+        dcolon = None
         mylist = None
         i = line.find('::')
         if i != -1:
+            dcolon = '::'
             if line.startswith(','):
                 mylist = Binding_Attr_List(line[1:i].strip())
             line = line[i+2:].lstrip()
@@ -1570,17 +1582,21 @@ class Specific_Binding(StmtBase):  # R451
         if i != -1:
             pname = Procedure_Name(line[i+2:].lstrip())
             line = line[:i].rstrip()
-        return iname, mylist, Binding_Name(line), pname
+        return iname, mylist, dcolon, Binding_Name(line), pname
 
     def tostr(self):
+        '''
+        :return: parsed representation of "PROCEDURE" statement
+        :rtype: string
+        '''
         r = 'PROCEDURE'
         if self.items[0] is not None:
             r += '(%s)' % (self.items[0])
         if self.items[1] is not None:
             r += ', %s ::' % (self.items[1])
-        r += ' %s' % (self.items[2])
-        if self.items[3] is not None:
-            r += ' => %s' % (self.items[3])
+        r += ' %s' % (self.items[3])
+        if self.items[4] is not None:
+            r += ' => %s' % (self.items[4])
         return r
 
 
