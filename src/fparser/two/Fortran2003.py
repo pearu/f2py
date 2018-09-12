@@ -1563,12 +1563,14 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
         if string[:9].upper() != 'PROCEDURE':
             return
         line = string[9:].lstrip()
+        # Find optional interface name if it exists
+        iname = None
         if line.startswith('('):
             i = line.find(')')
-            if i == -1:
-                iname = None
-            iname = Interface_Name(line[1:i].strip())
-            line = line[i+1:].lstrip()
+            if i != -1:
+                iname = Interface_Name(line[1:i].strip())
+                line = line[i+1:].lstrip()
+        # Find optional double colon and binding attribute list
         dcolon = None
         mylist = None
         i = line.find('::')
@@ -1577,11 +1579,16 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
             if line.startswith(','):
                 mylist = Binding_Attr_List(line[1:i].strip())
             line = line[i+2:].lstrip()
+        # Find optional procedure name and raise an error if
+        # the interface name is not preceded by '::'
         i = line.find('=>')
         pname = None
         if i != -1:
             pname = Procedure_Name(line[i+2:].lstrip())
             line = line[:i].rstrip()
+            if dcolon is None:
+                raise NoMatchError()
+        # Return class arguments
         return iname, mylist, dcolon, Binding_Name(line), pname
 
     def tostr(self):
@@ -1589,15 +1596,22 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
         :return: parsed representation of "PROCEDURE" statement
         :rtype: string
         '''
-        r = 'PROCEDURE'
+        stmt = 'PROCEDURE'
+        # Add optional interface name
         if self.items[0] is not None:
-            r += '(%s)' % (self.items[0])
-        if self.items[1] is not None:
-            r += ', %s ::' % (self.items[1])
-        r += ' %s' % (self.items[3])
+            stmt += '(%s)' % (self.items[0])
+        # Add optional double colon and binding attribute list
+        # (if the list is present)
+        if self.items[1] is not None and self.items[2] is not None:
+            stmt += ', %s %s' % (self.items[1], self.items[2])
+        elif self.items[1] is None and self.items[2] is not None:
+            stmt += ' %s' % (self.items[2])
+        # Add mandatory Binding_Name
+        stmt += ' %s' % (self.items[3])
+        # Add optional procedure name
         if self.items[4] is not None:
-            r += ' => %s' % (self.items[4])
-        return r
+            stmt += ' => %s' % (self.items[4])
+        return stmt
 
 
 class Generic_Binding(StmtBase):  # R452

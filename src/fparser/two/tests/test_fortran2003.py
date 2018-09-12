@@ -784,12 +784,24 @@ def test_proc_binding_stmt():  # R450
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 
-def test_specific_binding():  # R451
-
+def test_specific_binding():
+    ''' Tests that specific procedure binding is parsed correctly (R451). '''
     tcls = Specific_Binding
     obj = tcls('procedure, pass :: length => point_length')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
+
+    obj = tcls('procedure :: point_length')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'PROCEDURE :: point_length'
+
+    obj = tcls('procedure point_length')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'PROCEDURE point_length'
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = tcls('procedure populate_entity => populate_cube')
+    assert "Specific_Binding: 'procedure populate_entity" in str(excinfo)
 
 
 def test_generic_binding():  # R452
