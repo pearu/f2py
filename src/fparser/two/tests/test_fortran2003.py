@@ -3030,6 +3030,13 @@ def test_write_stmt():
         "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
         "None)))), Real_Literal_Constant(\'1.D0\', None))")
 
+    # Test invalid Output_Item_List
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = tcls("write( scratch_file, '(A,2I3)' ) "
+                 "'loop indices (o, i): ', , outer, inner")
+    assert ("NoMatchError: Write_Stmt: "
+            "'write( scratch_file, '(A,2I3)' )") in str(excinfo)
+
 
 def test_print_stmt():  # R912
 
