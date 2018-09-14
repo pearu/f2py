@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2018 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -31,10 +31,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-##############################################################################
-# Modified I. Kavcic, UK Met Office
-##############################################################################
 
 '''
 Test Fortran 2003 rule R911 : This file tests the support for various
@@ -116,7 +112,7 @@ def test_write_output_item_list(f2003_create):
             "''loop indices (o, i): ', , outer, inner'") in str(excinfo)
 
 
-def test_raise_write_error(f2003_create):
+def test_fserror_write_stmt(f2003_create):
     ''' Test that an error in Write_Stmt within a program unit
     is raised as a FortranSyntaxError. '''
     source = '''\

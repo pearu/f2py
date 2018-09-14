@@ -751,21 +751,6 @@ def test_proc_component_def_stmt():  # R445
     assert str(obj) == 'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b'
 
 
-def test_private_components_stmt():
-    ''' Tests that declaration of PRIVATE components in a type definition
-    is parsed correctly (R447). '''
-    tcls = Private_Components_Stmt
-    obj = tcls('private')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PRIVATE'
-    assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
-
-    # Statement not 'private'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('public')
-    assert "Private_Components_Stmt: 'public'" in str(excinfo)
-
-
 def test_type_bound_procedure_part():
     ''' Tests for type-bound procedure (R448). '''
     tcls = Type_Bound_Procedure_Part
@@ -782,26 +767,6 @@ def test_proc_binding_stmt():  # R450
     obj = tcls('procedure, pass :: length => point_length')
     assert isinstance(obj, Specific_Binding), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
-
-
-def test_specific_binding():
-    ''' Tests that specific procedure binding is parsed correctly (R451). '''
-    tcls = Specific_Binding
-    obj = tcls('procedure, pass :: length => point_length')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
-
-    obj = tcls('procedure :: point_length')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PROCEDURE :: point_length'
-
-    obj = tcls('procedure point_length')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PROCEDURE point_length'
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('procedure populate_entity => populate_cube')
-    assert "Specific_Binding: 'procedure populate_entity" in str(excinfo)
 
 
 def test_generic_binding():  # R452

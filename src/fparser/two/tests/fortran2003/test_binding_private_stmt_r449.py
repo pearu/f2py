@@ -1,27 +1,25 @@
-# -*- coding: utf-8 -*-
-##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
-#
+# Copyright (c) 2018 Science and Technology Facilities Council
+
 # All rights reserved.
-#
+
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-#
+
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-#
+
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-#
+
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-#
+
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-#
+
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,57 +31,54 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-##############################################################################
-# Modified M. Hambley, UK Met Office
-##############################################################################
+
 '''
-Tests that the parser understands deferred methods.
+Test Fortran 2003 rule R449 : This file tests the support for binding private
+statement within the type-bound procedure part of a derived type.
 '''
-import fparser.two.Fortran2003
-import fparser.common.readfortran
 
+import pytest
+from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Binding_Private_Stmt
 
-from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2003 classes
-_ = ParserFactory().create(std="f2003")
-
-
-def test_deferred_method():
-    '''
-    Tests that the parser understands deferred methods.
-    '''
-    source = '''! Abstract type
-module abstract_test
+SOURCE = '''\
+module test_mod
 
   implicit none
   private
 
-  type, abstract, public :: test_type
+  ! Define test type
+  type, public, extends(abstract_type) :: implementation_type
+    private
+
   contains
-    procedure(method_interface), deferred :: method
-  end type test_type
-  ! A comment at the end
 
-end module abstract_test
-'''
+    procedure :: internal_method_1
+    procedure, public :: submethod_1
 
-    expected = '''! Abstract type
-MODULE abstract_test
+  end type implementation_type
 
-  IMPLICIT NONE
-  PRIVATE
+end module test_mod'''
 
-  TYPE, ABSTRACT, PUBLIC :: test_type
-    CONTAINS
-    PROCEDURE(method_interface), DEFERRED :: method
-  END TYPE test_type
-  ! A comment at the end
 
-END MODULE abstract_test
-'''.strip().split('\n')
+def test_binding_private_stmt(f2003_create):
+    ''' Test that a Binding_Private_Stmt is parsed correctly. '''
 
-    reader = fparser.common.readfortran.FortranStringReader(
-        source, ignore_comments=False)
-    program_unit = fparser.two.Fortran2003.Program(reader)
-    result = str(program_unit).strip().split('\n')
-    assert result == expected
+    lines = SOURCE.split('\n')
+
+    obj = Binding_Private_Stmt(lines[7].strip())
+    assert isinstance(obj, Binding_Private_Stmt), repr(obj)
+    assert str(obj) == "PRIVATE"
+    assert repr(obj) == "Binding_Private_Stmt('PRIVATE')"
+
+
+def test_error_binding_private_stmt(f2003_create):
+    ''' Test that parsing invalid Fortran syntax for
+    Binding_Private_Stmt statement raises an appropriate error. '''
+
+    line = SOURCE.split('\n')[7].strip()
+    line = line.replace("private", "privatte")
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Binding_Private_Stmt(line)
+    assert ("Binding_Private_Stmt: 'privatte'"
+            in str(excinfo))

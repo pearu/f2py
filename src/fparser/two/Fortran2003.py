@@ -1501,50 +1501,78 @@ class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Type_Bound_Procedure_Part(BlockBase):  # R448
-    """
+class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R448
+    that specifies the type-bound procedure part of a derived type.
+
     <type-bound-procedure-part> = <contains-stmt>
                                       [ <binding-private-stmt> ]
                                       <proc-binding-stmt>
                                       [ <proc-binding-stmt> ]...
-    """
+    '''
     subclass_names = []
     use_names = ['Contains_Stmt', 'Binding_Private_Stmt', 'Proc_Binding_Stmt']
 
     @staticmethod
     def match(reader):
+        '''
+        :param reader: the Fortran file reader containing the line(s) \
+                       of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
+                      or
+                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :return: code block containing instances of the classes that match
+                 the syntax of the type-bound procedure part of a derived type.
+        '''
         return BlockBase.match(Contains_Stmt,
                                [Binding_Private_Stmt, Proc_Binding_Stmt],
                                None, reader)
 
 
-class Binding_Private_Stmt(StmtBase, STRINGBase):  # R449
-    """
+class Binding_Private_Stmt(StmtBase, STRINGBase):
+    # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R449
+    for binding private statement within the type-bound procedure
+    part of a derived type.
+
     <binding-private-stmt> = PRIVATE
-    """
+    '''
     subclass_names = []
 
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword  "PRIVATE" or nothing if no match is found
+        :rtype: string
+        '''
         return StringBase.match('PRIVATE', string.upper())
     match = staticmethod(match)
 
 
-class Proc_Binding_Stmt(Base):  # R450
-    """
+class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R450
+    that specifies procedure binding for the type-bound procedures
+    within a derived type.
+
     <proc-binding-stmt> = <specific-binding>
                           | <generic-binding>
                           | <final-binding>
-    """
+    '''
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
 class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
-    """
-    R451
+    '''
+    Fortran 2003 rule R451
+    that specifies syntax of specific binding for a type-bound
+    procedure within a derived type.
 
     <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
         [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
-    """
+    '''
     subclass_names = []
     use_names = ['Interface_Name', 'Binding_Attr_List',
                  'Binding_Name', 'Procedure_Name']
@@ -1553,11 +1581,12 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
     def match(string):
         '''
         :param str string: Fortran code to check for a match
-        :return: 5-tuple containing strings and instances of the classes
-                 describing a module (optional interface name, optional
-                 binding attribute list, optional double colon delimiter,
-                 mandatory binding name and optional procedure name)
-        :rtype: 5-tuple of objects (binding name and 4 optional)
+        :return: 5-tuple containing strings and instances of the
+                 classes describing a specific type-bound procedure
+                 (optional interface name, optional binding attribute
+                 list, optional double colon delimiter, mandatory
+                 binding name and optional procedure name)
+        :rtype: 5-tuple of objects (1 mandatory and 4 optional)
         '''
         # Incorrect 'PROCEDURE' statement
         if string[:9].upper() != 'PROCEDURE':
@@ -1593,7 +1622,7 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
 
     def tostr(self):
         '''
-        :return: parsed representation of "PROCEDURE" statement
+        :return: parsed representation of a specific type-bound procedure
         :rtype: string
         '''
         stmt = 'PROCEDURE'
@@ -1614,78 +1643,127 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
         return stmt
 
 
-class Generic_Binding(StmtBase):  # R452
-    """
+class Binding_PASS_Arg_Name(CALLBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 helper rule (for R451)
+    that specifies syntax of passed-object dummy argument for a
+    specific type-bound procedure.
+
+    <binding-PASS-arg-name> = PASS ( <arg-name> )
+    '''
+    subclass_names = []
+    use_names = ['Arg_Name']
+
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword  "PASS" with the name of a passed-object
+                 dummy argument or nothing if no match is found
+        :rtype: string
+        '''
+        return CALLBase.match('PASS', Arg_Name, string)
+    match = staticmethod(match)
+
+
+class Generic_Binding(StmtBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R452
+    that specifies syntax of generic binding for a type-bound
+    procedure within a derived type.
+
     <generic-binding> = GENERIC [ , <access-spec> ] ::
         <generic-spec> => <binding-name-list>
-    """
+    '''
     subclass_names = []
     use_names = ['Access_Spec', 'Generic_Spec', 'Binding_Name_List']
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 3-tuple containing strings and instances of the
+                 classes describing a generic type-bound procedure
+                 (optional access specifier, mandatory generic
+                 identifier and mandatory binding name list)
+        :rtype: 3-tuple of objects (2 mandatory and 1 optional)
+        '''
+        # Incorrect 'GENERIC' statement
         if string[:7].upper() != 'GENERIC':
             return
         line = string[7:].lstrip()
         i = line.find('::')
+        # No mandatory double colon
         if i == -1:
             return
         aspec = None
+        # Return optional access specifier (PRIVATE or PUBLIC)
         if line.startswith(','):
             aspec = Access_Spec(line[1:i].strip())
         line = line[i+2:].lstrip()
         i = line.find('=>')
         if i == -1:
             return
+        # Return mandatory Generic_Spec and Binding_Name_List
         return aspec, Generic_Spec(line[:i].rstrip()), \
             Binding_Name_List(line[i+3:].lstrip())
 
     def tostr(self):
+        '''
+        :return: parsed representation of a "GENERIC" type-bound procedure
+        :rtype: string
+        '''
         if self.items[0] is None:
             return 'GENERIC :: %s => %s' % (self.items[1:])
         return 'GENERIC, %s :: %s => %s' % (self.items)
 
 
-class Binding_PASS_Arg_Name(CALLBase):
-    """
-    <binding-PASS-arg-name> = PASS ( <arg-name> )
-    """
-    subclass_names = []
-    use_names = ['Arg_Name']
+class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R453
+    that specifies syntax of allowed binding attributes for a
+    specific type-bound procedure binding.
 
-    def match(string):
-        return CALLBase.match('PASS', Arg_Name, string)
-    match = staticmethod(match)
-
-
-class Binding_Attr(STRINGBase):  # R453
-    """
     <binding-attr> = PASS [ ( <arg-name> ) ]
                      | NOPASS
                      | NON_OVERRIDABLE
                      | DEFERRED
                      | <access-spec>
-    """
+    '''
     subclass_names = ['Access_Spec', 'Binding_PASS_Arg_Name']
 
     def match(string):
+        '''
+        :return: keywords for allowed binding attributes or
+                 nothing if no match is found
+        :rtype: string
+        '''
         return STRINGBase.match(['PASS', 'NOPASS',
                                  'NON_OVERRIDABLE', 'DEFERRED'], string)
     match = staticmethod(match)
 
 
-class Final_Binding(StmtBase, WORDClsBase):  # R454
-    """
+class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R454
+    that specifies syntax of final binding for a type-bound
+    procedure within a derived type.
+
     <final-binding> = FINAL [ :: ] <final-subroutine-name-list>
-    """
+    '''
     subclass_names = []
     use_names = ['Final_Subroutine_Name_List']
 
     def match(string):
+        '''
+        :return: keyword  "FINAL" with the list of "FINAL" type-bound
+                 procedures or nothing if no match is found
+        :rtype: string
+        '''
         return WORDClsBase.match(
             'FINAL', Final_Subroutine_Name_List, string, check_colons=True,
             require_cls=True)
     match = staticmethod(match)
+    # String representation with optional double colons included
     tostr = WORDClsBase.tostr_a
 
 
