@@ -186,10 +186,10 @@ end module foo
     expected = ['  MODULE foo',
                 '    SUBROUTINE bar()',
                 '      REAL r',
-                '      IF (pc_get_lun() .ne. 6)'
-                + ' WRITE (pc_get_lun(), \'(  /, A, /, " P = ", i4,'
-                + ' " stopping c_flag=", a,  /, " print unit=", i8)\')'
-                + ' trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()',
+                '      IF (pc_get_lun() .ne. 6)' +
+                ' WRITE (pc_get_lun(), \'(  /, A, /, " P = ", i4,' +
+                ' " stopping c_flag=", a,  /, " print unit=", i8)\')' +
+                ' trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()',
                 '      IF (.true.) THEN',
                 '        CALL smth',
                 '      END IF ',
