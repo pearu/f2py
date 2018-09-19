@@ -1239,7 +1239,8 @@ class EndType(EndStatement):
     blocktype = 'type'
 
 
-class Type(BeginStatement, HasVariables, HasAttributes, AccessSpecs):
+class Type(BeginStatement, HasVariables, HasAttributes, HasModuleProcedures,
+           AccessSpecs):
     """
     TYPE [[, <typ-attr-spec-list>] ::] <type-name> [( <type-param-name-list> )]
     <typ-attr-spec> = <access-spec> | EXTENDS ( <parent-type-name> )
