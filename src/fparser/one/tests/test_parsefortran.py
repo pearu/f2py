@@ -213,6 +213,30 @@ end module foo
     assert caught[1:] == expected
 
 
+def test_module_procedure():
+    '''
+    Tests a type that contains a procedure, and makes sure
+    it has a module_procedures attribute
+    '''
+    string = """
+module foo
+    type, public :: grid_type
+   contains
+        procedure :: get_tmask
+   end type grid_type
+end module foo
+"""
+
+    reader = fparser.common.readfortran.FortranStringReader(string)
+    mode = fparser.common.sourceinfo.FortranFormat.from_mode('free')
+    reader.set_format(mode)
+    parser = fparser.one.parsefortran.FortranParser(reader)
+    parser.parse()
+
+    # Fails if the class Type does not have a "module_procedures" attribute
+    parser.analyze()
+
+
 def test_f77():
     '''
     Tests inherited from implementation code.
