@@ -1194,8 +1194,6 @@ class Type_Param_Def_Stmt(StmtBase):  # R435
                  'Type_Param_Decl_List']
 
     def match(string):
-        print "*******************************************************************"
-        exit(1)
         if string[:7].upper() != 'INTEGER':
             return
         line, repmap = string_replace_map(string[7:].lstrip())
