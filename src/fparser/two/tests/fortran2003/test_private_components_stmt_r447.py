@@ -33,8 +33,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R449 : This file tests the support for binding private
-statement within the type-bound procedure part of a derived type.
+Test Fortran 2003 rule R447: This file tests the support for private
+components statement within a derived type.
 '''
 
 import pytest
@@ -73,7 +73,8 @@ def test_private_components_stmt():
     assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
 
 
-def test_error_binding_private_stmt(f2003_create):
+def test_error_private_components_stmt(f2003_create):
+    # pylint: disable=invalid-name
     ''' Test that parsing invalid Fortran syntax for
     Private_Components_Stmt statement raises an appropriate error. '''
 

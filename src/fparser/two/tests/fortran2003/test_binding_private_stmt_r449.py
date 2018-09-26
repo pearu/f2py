@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R449 : This file tests the support for binding private
+Test Fortran 2003 rule R449: This file tests the support for binding private
 statement within the type-bound procedure part of a derived type.
 '''
 

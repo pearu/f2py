@@ -32,12 +32,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-##############################################################################
-# Modified I. Kavcic, UK Met Office
-##############################################################################
-
 '''
-Test Fortran 2003 rule R451 : This file tests the support for specific
+Test Fortran 2003 rule R451: This file tests the support for specific
 binding and passed-object dummy argument within the type-bound procedure
 part of a derived type.
 '''

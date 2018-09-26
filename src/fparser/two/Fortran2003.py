@@ -1483,9 +1483,12 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
     match = staticmethod(match)
 
 
-class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
+class Private_Components_Stmt(STRINGBase):
+    # pylint: disable=invalid-name
     """
-    R447
+    Fortran 2003 rule R447
+    that specifies support for private components statement
+    within a derived type.
 
     <private-components-stmt> = PRIVATE
     """
@@ -1501,7 +1504,8 @@ class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
+class Type_Bound_Procedure_Part(BlockBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R448
     that specifies the type-bound procedure part of a derived type.
@@ -1551,7 +1555,8 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):
     match = staticmethod(match)
 
 
-class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
+class Proc_Binding_Stmt(Base):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R450
     that specifies procedure binding for the type-bound procedures
@@ -1564,7 +1569,8 @@ class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
-class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
+class Specific_Binding(StmtBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R451
     that specifies syntax of specific binding for a type-bound
@@ -1643,7 +1649,8 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
         return stmt
 
 
-class Binding_PASS_Arg_Name(CALLBase):  # pylint: disable=invalid-name
+class Binding_PASS_Arg_Name(CALLBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 helper rule (for R451)
     that specifies syntax of passed-object dummy argument for a
@@ -1665,7 +1672,8 @@ class Binding_PASS_Arg_Name(CALLBase):  # pylint: disable=invalid-name
     match = staticmethod(match)
 
 
-class Generic_Binding(StmtBase):  # pylint: disable=invalid-name
+class Generic_Binding(StmtBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R452
     that specifies syntax of generic binding for a type-bound
@@ -1717,7 +1725,8 @@ class Generic_Binding(StmtBase):  # pylint: disable=invalid-name
         return 'GENERIC, %s :: %s => %s' % (self.items)
 
 
-class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
+class Binding_Attr(STRINGBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R453
     that specifies syntax of allowed binding attributes for a
@@ -1742,7 +1751,8 @@ class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
     match = staticmethod(match)
 
 
-class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+class Final_Binding(StmtBase, WORDClsBase):
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R454
     that specifies syntax of final binding for a type-bound

@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R911 : This file tests the support for various
+Test Fortran 2003 rule R911: This file tests the support for various
 forms of WRITE statements.
 '''
 
