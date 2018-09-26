@@ -702,12 +702,16 @@ class Kind_Selector(Base):  # R404
             if not string.startswith('*'):
                 return
             return '*', Char_Length(string[1:].lstrip())
+        # remove left and right brackets and subsequently any leading
+        # or trailing spaces
         line = string[1:-1].strip()
-        if line[:4].upper() == 'KIND':
-            line = line[4:].lstrip()
-            if not line.startswith('='):
-                return
-            line = line[1:].lstrip()
+
+        # check for optional 'kind='
+        if len(line) > 5:
+            # line is long enough to potentially contain 'kind=...'
+            if line[:4].upper() == 'KIND' and line[4:].lstrip()[0] == "=":
+                # found 'kind=' so strip it out, including any leading spaces
+                line = line[4:].lstrip()[1:].lstrip()
         return '(', Scalar_Int_Initialization_Expr(line), ')'
     match = staticmethod(match)
 
@@ -1190,6 +1194,8 @@ class Type_Param_Def_Stmt(StmtBase):  # R435
                  'Type_Param_Decl_List']
 
     def match(string):
+        print "*******************************************************************"
+        exit(1)
         if string[:7].upper() != 'INTEGER':
             return
         line, repmap = string_replace_map(string[7:].lstrip())
