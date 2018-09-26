@@ -41,58 +41,45 @@ import pytest
 from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Private_Components_Stmt
 
-#SOURCE = '''\
-#module test_mod
+SOURCE = '''\
+module test_mod
 
-  #implicit none
-  #private
+  implicit none
+  private
 
-  #! Define test type
-  #type, public, extends(abstract_type) :: implementation_type
-    #private
+  ! Define test type
+  type, public, extends(abstract_type) :: implementation_type
+    private
 
-  #contains
+  contains
 
-    #procedure :: internal_method_1
-    #procedure, public :: submethod_1
+    procedure :: internal_method_1
+    procedure, public :: submethod_1
 
-  #end type implementation_type
+  end type implementation_type
 
-#end module test_mod'''
-
-
-#def test_binding_private_stmt(f2003_create):
-    #''' Test that a Binding_Private_Stmt is parsed correctly. '''
-
-    #lines = SOURCE.split('\n')
-
-    #obj = Binding_Private_Stmt(lines[7].strip())
-    #assert isinstance(obj, Binding_Private_Stmt), repr(obj)
-    #assert str(obj) == "PRIVATE"
-    #assert repr(obj) == "Binding_Private_Stmt('PRIVATE')"
+end module test_mod'''
 
 
 def test_private_components_stmt():
     ''' Tests that declaration of PRIVATE components in a type definition
     is parsed correctly (R447). '''
     tcls = Private_Components_Stmt
-    obj = tcls('private')
+
+    lines = SOURCE.split('\n')
+    obj = tcls(lines[7].strip())
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRIVATE'
     assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
-    # Statement not 'private'
+
+
+def test_error_binding_private_stmt(f2003_create):
+    ''' Test that parsing invalid Fortran syntax for
+    Private_Components_Stmt statement raises an appropriate error. '''
+
+    line = SOURCE.split('\n')[7].strip()
+    line = line.replace("private", "public")
     with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('public')
-    assert "Private_Components_Stmt: 'public'" in str(excinfo)
-
-
-#def test_error_binding_private_stmt(f2003_create):
-    #''' Test that parsing invalid Fortran syntax for
-    #Binding_Private_Stmt statement raises an appropriate error. '''
-
-    #line = SOURCE.split('\n')[7].strip()
-    #line = line.replace("private", "privatte")
-    #with pytest.raises(NoMatchError) as excinfo:
-        #_ = Binding_Private_Stmt(line)
-    #assert ("Binding_Private_Stmt: 'privatte'"
-            #in str(excinfo))
+        _ = Private_Components_Stmt(line)
+    assert ("Private_Components_Stmt: 'public'"
+            in str(excinfo))

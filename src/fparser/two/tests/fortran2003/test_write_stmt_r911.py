@@ -47,6 +47,7 @@ from fparser.two.Fortran2003 import Write_Stmt, Io_Control_Spec_List, \
 def test_write_stmt(f2003_create):
     ''' Tests for various forms of WRITE statement. '''
     tcls = Write_Stmt
+
     obj = tcls('write (123)"hey"')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
