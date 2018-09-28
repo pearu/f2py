@@ -240,24 +240,6 @@ def test_intrinsic_type_spec():  # R403
     assert str(obj) == 'DOUBLE PRECISION'
 
 
-def test_kind_selector():  # R404
-
-    tcls = Kind_Selector
-    obj = tcls('(1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(KIND = 1)'
-    assert (repr(obj) ==
-            "Kind_Selector('(', Int_Literal_Constant('1', None), ')')")
-
-    obj = tcls('(kind=1+2)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(KIND = 1 + 2)'
-
-    obj = tcls('* 1')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '*1'
-
-
 def test_signed_int_literal_constant():  # R405
     # pylint: disable=invalid-name
 

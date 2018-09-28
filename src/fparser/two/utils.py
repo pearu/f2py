@@ -87,6 +87,17 @@ class FortranSyntaxError(Exception):
     '''
 
 
+class InternalError(Exception):
+    '''An exception indicating that an unexpected error has occured in the
+    parser.
+
+    '''
+    def __init__(self, info):
+        new_info = ("'{0}'. Please report this to the "
+                    "authors.".format(info))
+        Exception.__init__(self, new_info)
+
+
 def show_result(func):
     return func
 
