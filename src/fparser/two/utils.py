@@ -76,18 +76,30 @@ from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
 
-class NoMatchError(Exception):
-    pass
-
-
-class FortranSyntaxError(Exception):
-    '''An exception indicating that the fparser believes the provided code
-    to be invalid Fortran
+class FparserException(Exception):
+    '''Base class exception for fparser. This allows an external tool to
+    capture all exceptions if required.
 
     '''
 
 
-class InternalError(Exception):
+class NoMatchError(FparserException):
+    '''An exception indicating that a particular rule implemented by a
+    class does not match the provided string. It does not necessary
+    mean there is an error as another rule may match. This exception
+    is used internally so should never be visible externally.
+
+    '''
+
+
+class FortranSyntaxError(FparserException):
+    '''An exception indicating that fparser believes the provided code
+    to be invalid Fortran.
+
+    '''
+
+
+class InternalError(FparserException):
     '''An exception indicating that an unexpected error has occured in the
     parser.
 
