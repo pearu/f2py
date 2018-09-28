@@ -452,10 +452,16 @@ In this way fparser2 captures the `R202` rule hierarchy in its
 Exceptions
 ++++++++++
 
-There are 5 types of exception raised in fparser2: `NoMatchError`,
-`FortranSyntaxError`, `ValueError`, `AssertionError` and
-`NotImplementedError`. These are discussed in turn.
+There are 6 types of exception raised in fparser2: `NoMatchError`,
+`FortranSyntaxError`, `ValueError`, `InternalError`, `AssertionError` and
+`NotImplementedError`.
 
+A baseclass `FparserException` is included which `NoMatchError`,
+`FortranSyntaxError` and `InternalError` subclass. The reason for this
+is to allow external tools to more simply manage fparser if it is used
+as a library.
+
+Eacho of the exceptions are now discussed in turn.
 
 `NoMatchError` can be raised by a class when the text it is given does
 not match the pattern for the class. A class can also return an empty
@@ -504,17 +510,31 @@ exception and re-raising it as a `FortranSyntaxError`. This final
 A `ValueError` exception is raised if an invalid standard is passed to
 the `create` method of the `ParserFactory` class.
 
+An `InternalError` exception is raised when an unexpected condition is
+found. Such errors currently specify where there error was, why it
+happened and request that the authors are contacted.
+
+.. note::
+   
+   An additional future idea would be to also wrap the whole code with
+   a general exception handler which subsequently raised an
+   InternalError. This would catch any additional unforseen errors
+   e.g. errors due to the wrong type of data being passed. One
+   implementation would be to have this as the the only place an
+   InternalError is raised, however, it is considered better to check
+   for exceptions where they might happen e.g. a dangling else clause,
+   as appropriate contextual information can be given in the
+   associated error message.
+
 .. note::
 
    Information needs to be added about the use of
    `NotImplementedError` and `AssertionError` and/or the code needs to
    be modified. These exceptions come from pre-existing code and it is
    likely that we would want to remove the `AssertionError` from
-   fparser.There has also been discussion about including an
-   InternalError exception for unexpected errors. There has also been
-   discussion about using a logger for messages, however, there are
-   currently no known situations where it makes sense to output
-   messages.
+   fparser. There has also been discussion about using a logger for
+   messages, however, there are currently no known situations where it
+   makes sense to output messages.
 
 Object Hierarchy
 ++++++++++++++++
