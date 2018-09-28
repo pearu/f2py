@@ -748,7 +748,7 @@ class Kind_Selector(Base):  # R404
         if string[0]+string[-1] != '()':
             # must be the '*n' extension
             if not string.startswith('*'):
-                return
+                return None
             return '*', Char_Length(string[1:].lstrip())
         # remove left and right brackets and subsequently any leading
         # or trailing spaces

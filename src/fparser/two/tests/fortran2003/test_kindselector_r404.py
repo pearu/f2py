@@ -190,7 +190,7 @@ def test_error_star_only(f2003_create):
 
     '''
     with pytest.raises(InternalError) as excinfo:
-        ast = Kind_Selector("*")
+        _ = Kind_Selector("*")
     assert "too short to be valid" in str(excinfo.value)
 
 
@@ -199,14 +199,14 @@ def test_error_empty(f2003_create):
 
     '''
     with pytest.raises(InternalError) as excinfo:
-        ast = Kind_Selector("")
+        _ = Kind_Selector("")
     assert "too short to be valid" in str(excinfo.value)
 
 
 def test_error_none(f2003_create):
     '''Test that an InternalError is raised if the input is None.'''
     with pytest.raises(InternalError) as excinfo:
-        ast = Kind_Selector(None)
+        _ = Kind_Selector(None)
     assert "method match() is None" in str(excinfo.value)
 
 
@@ -214,7 +214,7 @@ def test_error_white_space_start(f2003_create):
     '''Test that an InternalError is raised if there is white space at the
     start of the input string'''
     with pytest.raises(InternalError) as excinfo:
-        ast = Kind_Selector("  (some_kind)")
+        _ = Kind_Selector("  (some_kind)")
     assert "white space at the start or end" in str(excinfo.value)
 
 
@@ -222,7 +222,7 @@ def test_error_white_space_end(f2003_create):
     '''Test that an InternalError is raised if there is white space at the
     end of the input string'''
     with pytest.raises(InternalError) as excinfo:
-        ast = Kind_Selector("(some_kind)  ")
+        _ = Kind_Selector("(some_kind)  ")
     assert "white space at the start or end" in str(excinfo.value)
 
 # tostr() Errors
@@ -236,6 +236,6 @@ def test_tostr_error_nitems(f2003_create, monkeypatch):
     ast = Kind_Selector("*8")
     monkeypatch.setattr(ast, "items", ["*"])
     with pytest.raises(InternalError) as excinfo:
-        result = str(ast)
+        _ = str(ast)
     assert ("tostr() has '1' items, but expecting 2 or 3"
             in str(excinfo.value))
