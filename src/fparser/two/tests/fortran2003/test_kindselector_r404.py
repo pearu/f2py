@@ -40,7 +40,7 @@ kind selector.
 import pytest
 from fparser.two.utils import InternalError
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Kind_Selector
+from fparser.two.Fortran2003 import Kind_Selector, Program
 
 # match() 'kind=' is present
 
@@ -239,3 +239,24 @@ def test_tostr_error_nitems(f2003_create, monkeypatch):
         _ = str(ast)
     assert ("tostr() has '1' items, but expecting 2 or 3"
             in str(excinfo.value))
+
+# misc
+
+
+@pytest.mark.xfail(reason="The x gets lost when there is a space in "
+                   "front of it.")
+def test_to_be_moved(f2003_create):
+    '''Show that an example with a space before a kind specification
+    fails. This is not the fault of this class but I'm including it
+    here for the moment until the reason for the error is fixed.
+
+    '''
+    reader = get_reader('''\
+      subroutine test()
+        integer( x) y
+      end subroutine
+      ''')
+    ast = Program(reader)
+    assert ("SUBROUTINE test\n"
+            "  integer( x) y\n"
+            "END SUBROUTINE") in str(ast)

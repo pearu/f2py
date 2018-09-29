@@ -79,7 +79,7 @@ except ImportError:
 def runner(_, options, args):
     ''' Function to read, parse and output fortran source code '''
     from fparser.two.parser import ParserFactory
-    from fparser.two.Fortran2003 import FortranSyntaxError
+    from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
     if not args:
         print ("Error: No fortran files specified")
@@ -101,6 +101,9 @@ def runner(_, options, args):
             print ("Syntax error: {0}".format(str(msg)))
             print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
             print('started at %s' % (reader.fifo_item[0]))
+            return
+        except InternalError as msg:
+            print ("Internal error in fparser: {0}".format(str(msg)))
             return
 
 
