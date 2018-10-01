@@ -295,7 +295,6 @@ def test_accspec_binding_attr(f2003_create):
 
     # Test PUBLIC attribute
     line = "procedure, public, pass(self) :: print_info => print_per_info"
-
     bind_attr = Specific_Binding(line).items[1]
     access_attr = bind_attr.items[0]
     assert isinstance(bind_attr, attrcls), repr(bind_attr)
@@ -310,7 +309,6 @@ def test_accspec_binding_attr(f2003_create):
 
     # Test PRIVATE attribute
     line = "procedure, private :: test_private"
-
     access_attr = Specific_Binding(line).items[1]
     assert isinstance(access_attr, testcls), repr(access_attr)
     assert str(access_attr) == 'PRIVATE'

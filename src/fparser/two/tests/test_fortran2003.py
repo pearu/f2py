@@ -769,18 +769,6 @@ def test_proc_binding_stmt():  # R450
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 
-def test_generic_binding():  # R452
-
-    tcls = Generic_Binding
-    obj = tcls('generic :: a => b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'GENERIC :: a => b'
-
-    obj = tcls('generic, private :: read(formatted) => b,c')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'GENERIC, PRIVATE :: READ(FORMATTED) => b, c'
-
-
 def test_derived_type_spec():  # R455
 
     tcls = Derived_Type_Spec
