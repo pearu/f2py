@@ -761,14 +761,6 @@ procedure, pass :: length => point_length'''))
     assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
 
 
-def test_proc_binding_stmt():  # R450
-
-    tcls = Proc_Binding_Stmt
-    obj = tcls('procedure, pass :: length => point_length')
-    assert isinstance(obj, Specific_Binding), repr(obj)
-    assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
-
-
 def test_derived_type_spec():  # R455
 
     tcls = Derived_Type_Spec
