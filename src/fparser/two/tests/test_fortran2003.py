@@ -751,16 +751,6 @@ def test_proc_component_def_stmt():  # R445
     assert str(obj) == 'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b'
 
 
-def test_type_bound_procedure_part():
-    ''' Tests for type-bound procedure (R448). '''
-    tcls = Type_Bound_Procedure_Part
-    obj = tcls(get_reader('''\
-contains
-procedure, pass :: length => point_length'''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
-
-
 def test_derived_type_spec():  # R455
 
     tcls = Derived_Type_Spec
