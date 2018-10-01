@@ -45,8 +45,8 @@ attributes for a specific type-bound procedure binding within a derived type.
 import pytest
 from fparser.api import get_reader
 from fparser.two.utils import FortranSyntaxError, NoMatchError
-from fparser.two.Fortran2003 import Binding_Attr, Specific_Binding, \
-    Program, Derived_Type_Def
+from fparser.two.Fortran2003 import Binding_Attr, Binding_Attr_List, \
+    Access_Spec, Specific_Binding, Program, Derived_Type_Def
 
 
 def test_pass_binding_attr(f2003_create):
@@ -289,45 +289,34 @@ def test_accspec_binding_attr(f2003_create):
     (PUBLIC and PRIVATE).
     '''
 
-    # Define source code to test
-    source = '''\
-type, public :: contact_type
-  private
-  character(len=50), public :: name, email_adress
-  character(len=4) :: extension_number
-contains
-  procedure, public :: print_info => print_per_info
-end type contact_type
-'''
+    # Define test classes
+    testcls = Access_Spec
+    attrcls = Binding_Attr_List
 
-    # Define test classes for individual statements and code block
-    testcls = Binding_Attr
-    testunitcls = Derived_Type_Def
+    # Test PUBLIC attribute
+    line = "procedure, public, pass(self) :: print_info => print_per_info"
 
-    ## Test individual Access_Spec attribute
-    #line = source.split('\n')[4].strip()
-    #obj = Specific_Binding(line).items[1]
-    #assert isinstance(obj, testcls), repr(obj)
-    #assert str(obj) == 'NOPASS'
-    #assert repr(obj) == "Binding_Attr('NOPASS')"
+    bind_attr = Specific_Binding(line).items[1]
+    access_attr = bind_attr.items[0]
+    assert isinstance(bind_attr, attrcls), repr(bind_attr)
+    assert isinstance(access_attr, testcls), repr(access_attr)
+    assert str(access_attr) == 'PUBLIC'
+    assert repr(access_attr) == "Access_Spec('PUBLIC')"
 
-    #line = line.replace('nopass', 'nopepas')
-    #with pytest.raises(NoMatchError) as excinfo:
-        #_ = testcls(line)
-    #assert "Binding_Attr: 'procedure, nopepas :: " in str(excinfo)
+    line = line.replace('public', 'publi')
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls(line)
+    assert "Access_Spec: 'procedure, publi, pass(self)" in str(excinfo)
 
-    ## Test the entire source
-    #expected = '''\
-#TYPE, PUBLIC, EXTENDS(kernel_type) :: buoyancy_kernel_type
-  #PRIVATE
-  #INTEGER :: iterates_over = CELLS
-  #CONTAINS
-  #PROCEDURE, NOPASS :: initial_buoyancy_code
-#END TYPE buoyancy_kernel_type
-#'''.strip().split('\n')
+    # Test PRIVATE attribute
+    line = "procedure, private :: test_private"
 
-    #reader = get_reader(source, ignore_comments=False)
-    #test_unit = testunitcls(reader)
+    access_attr = Specific_Binding(line).items[1]
+    assert isinstance(access_attr, testcls), repr(access_attr)
+    assert str(access_attr) == 'PRIVATE'
+    assert repr(access_attr) == "Access_Spec('PRIVATE')"
 
-    #result = str(test_unit).strip().split('\n')
-    #assert result == expected
+    line = line.replace('private', 'priate')
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls(line)
+    assert "Access_Spec: 'procedure, priate ::" in str(excinfo)
