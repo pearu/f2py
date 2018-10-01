@@ -781,21 +781,6 @@ def test_generic_binding():  # R452
     assert str(obj) == 'GENERIC, PRIVATE :: READ(FORMATTED) => b, c'
 
 
-def test_final_binding():  # R454
-
-    tcls = Final_Binding
-    obj = tcls('final a, b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'FINAL :: a, b'
-    assert (repr(obj) ==
-            "Final_Binding('FINAL', Final_Subroutine_Name_List(',', "
-            "(Name('a'), Name('b'))))")
-
-    obj = tcls('final::a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'FINAL :: a'
-
-
 def test_derived_type_spec():  # R455
 
     tcls = Derived_Type_Spec

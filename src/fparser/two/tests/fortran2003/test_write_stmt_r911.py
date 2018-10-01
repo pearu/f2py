@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R911: This file tests the support for various
+Test Fortran 2003 rule R911 : This file tests the support for various
 forms of WRITE statements.
 '''
 
@@ -46,26 +46,26 @@ from fparser.two.Fortran2003 import Write_Stmt, Io_Control_Spec_List, \
 
 def test_write_stmt(f2003_create):
     ''' Tests for various forms of WRITE statement. '''
-    tcls = Write_Stmt
+    testcls = Write_Stmt
 
-    obj = tcls('write (123)"hey"')
-    assert isinstance(obj, tcls), repr(obj)
+    obj = testcls('write (123)"hey"')
+    assert isinstance(obj, testcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
         "Char_Literal_Constant('\"hey\"', None))")
 
-    obj = tcls('WRITE (*,"(I3)") my_int')
-    assert isinstance(obj, tcls), repr(obj)
+    obj = testcls('WRITE (*,"(I3)") my_int')
+    assert isinstance(obj, testcls), repr(obj)
     assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\"(I3)\"', None)))), Name('my_int'))")
 
-    obj = tcls('WRITE (*,namtest)')
-    assert isinstance(obj, tcls), repr(obj)
+    obj = testcls('WRITE (*,namtest)')
+    assert isinstance(obj, testcls), repr(obj)
     assert str(obj) == 'WRITE(*, namtest)'
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', "
@@ -76,8 +76,8 @@ def test_write_stmt(f2003_create):
     iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
 
     assert isinstance(iolist, Io_Control_Spec_List)
-    obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
+    obj = testcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, testcls)
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(\',\', "
         "(Io_Control_Spec(None, Io_Unit(\'*\')), "
@@ -85,8 +85,8 @@ def test_write_stmt(f2003_create):
         "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
         "None)))), Real_Literal_Constant(\'1.D0\', None))")
 
-    obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
+    obj = testcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, testcls)
     assert repr(obj) == (
         "Write_Stmt(Io_Control_Spec_List(\',\', "
         "(Io_Control_Spec(None, Io_Unit(\'*\')), "
@@ -98,22 +98,22 @@ def test_write_stmt(f2003_create):
 def test_write_output_item_list(f2003_create):
     ''' Test that the Output_Item_List part of Write_Stmt can be
     parsed correctly. '''
-    tcls = Output_Item_List
+    testcls = Output_Item_List
 
-    obj = tcls("\" = \", length, width")
-    assert isinstance(obj, tcls)
+    obj = testcls("\" = \", length, width")
+    assert isinstance(obj, testcls)
     assert str(obj) == '" = ", length, width'
     assert repr(obj) == (
         "Output_Item_List(\',\', (Char_Literal_Constant(\'\" = \"\', None), "
         "Name(\'length\'), Name(\'width\')))")
 
     with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls("'loop indices (o, i): ', , outer, inner")
+        _ = testcls("'loop indices (o, i): ', , outer, inner")
     assert ("NoMatchError: Output_Item_List: "
             "''loop indices (o, i): ', , outer, inner'") in str(excinfo)
 
 
-def test_fserror_write_stmt(f2003_create):
+def test_write_stmt_fserror(f2003_create):
     ''' Test that an error in Write_Stmt within a program unit
     is raised as a FortranSyntaxError. '''
     source = '''\

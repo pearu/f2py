@@ -33,8 +33,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R449: This file tests the support for binding private
-statement within the type-bound procedure part of a derived type.
+Test Fortran 2003 rule R449 : This file tests the support for binding
+private statement within the type-bound procedure part of a derived type.
 '''
 
 import pytest
@@ -72,7 +72,7 @@ def test_binding_private_stmt(f2003_create):
     assert repr(obj) == "Binding_Private_Stmt('PRIVATE')"
 
 
-def test_error_binding_private_stmt(f2003_create):
+def test_binding_private_stmt_error(f2003_create):
     ''' Test that parsing invalid Fortran syntax for
     Binding_Private_Stmt statement raises an appropriate error. '''
 

@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Test Fortran 2003 rule R447: This file tests the support for private
+Test Fortran 2003 rule R447 : This file tests the support for private
 components statement within a derived type.
 '''
 
@@ -64,16 +64,16 @@ end module test_mod'''
 def test_private_components_stmt():
     ''' Tests that declaration of PRIVATE components in a type definition
     is parsed correctly (R447). '''
-    tcls = Private_Components_Stmt
+    testcls = Private_Components_Stmt
 
     lines = SOURCE.split('\n')
-    obj = tcls(lines[7].strip())
-    assert isinstance(obj, tcls), repr(obj)
+    obj = testcls(lines[7].strip())
+    assert isinstance(obj, testcls), repr(obj)
     assert str(obj) == 'PRIVATE'
     assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
 
 
-def test_error_private_components_stmt(f2003_create):
+def test_private_components_stmt_error(f2003_create):
     # pylint: disable=invalid-name
     ''' Test that parsing invalid Fortran syntax for
     Private_Components_Stmt statement raises an appropriate error. '''

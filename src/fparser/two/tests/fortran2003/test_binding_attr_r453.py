@@ -38,21 +38,190 @@
 # Modified I. Kavcic, UK Met Office
 ##############################################################################
 '''
-Tests that the parser understands deferred methods.
+Test Fortran 2003 rule R453 : This file tests the support for allowed binding
+attributes for a specific type-bound procedure binding within a derived type.
 '''
 
 import pytest
 from fparser.api import get_reader
 from fparser.two.utils import FortranSyntaxError, NoMatchError
 from fparser.two.Fortran2003 import Binding_Attr, Specific_Binding, \
-    Program
+    Program, Derived_Type_Def
 
-#TODO: Needs to be updated with other binding attributes!
 
-def test_deferred_method(f2003_create):
+def test_pass_binding_attr(f2003_create):
     '''
-    Tests that the parser understands deferred methods.
+    Test that the parser understands PASS binding atribute.
     '''
+
+    # Define source code to test
+    source = '''\
+type :: velocity_vector
+  real :: u, v, w
+  contains
+    procedure, pass :: speed => calculate_speed
+end type velocity_vector
+'''
+
+    # Define test classes for individual statements and code block
+    testcls = Binding_Attr
+    testunitcls = Derived_Type_Def
+
+    # Test individual PASS attribute
+    line = source.split('\n')[3].strip()
+    obj = Specific_Binding(line).items[1]
+    assert isinstance(obj, testcls), repr(obj)
+    assert str(obj) == 'PASS'
+    assert repr(obj) == "Binding_Attr('PASS')"
+
+    line = line.replace('pass', 'past')
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls(line)
+    assert "Binding_Attr: 'procedure, past" in str(excinfo)
+
+    # Test the entire source
+    expected = '''\
+TYPE :: velocity_vector
+  REAL :: u, v, w
+  CONTAINS
+  PROCEDURE, PASS :: speed => calculate_speed
+END TYPE velocity_vector
+'''.strip().split('\n')
+
+    reader = get_reader(source, ignore_comments=False)
+    test_unit = testunitcls(reader)
+
+    result = str(test_unit).strip().split('\n')
+    assert result == expected
+
+
+def test_nopass_binding_attr(f2003_create):
+    '''
+    Test that the parser understands NOPASS binding atribute.
+    '''
+
+    # Define source code to test
+    source = '''\
+type, public, extends(kernel_type) :: buoyancy_kernel_type
+  private
+  integer :: iterates_over = CELLS
+  contains
+    procedure, nopass :: initial_buoyancy_code
+end type
+'''
+
+    # Define test classes for individual statements and code block
+    testcls = Binding_Attr
+    testunitcls = Derived_Type_Def
+
+    # Test individual NOPASS attribute
+    line = source.split('\n')[4].strip()
+    obj = Specific_Binding(line).items[1]
+    assert isinstance(obj, testcls), repr(obj)
+    assert str(obj) == 'NOPASS'
+    assert repr(obj) == "Binding_Attr('NOPASS')"
+
+    line = line.replace('nopass', 'nopepas')
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls(line)
+    assert "Binding_Attr: 'procedure, nopepas :: " in str(excinfo)
+
+    # Test the entire source
+    expected = '''\
+TYPE, PUBLIC, EXTENDS(kernel_type) :: buoyancy_kernel_type
+  PRIVATE
+  INTEGER :: iterates_over = CELLS
+  CONTAINS
+  PROCEDURE, NOPASS :: initial_buoyancy_code
+END TYPE buoyancy_kernel_type
+'''.strip().split('\n')
+
+    reader = get_reader(source, ignore_comments=False)
+    test_unit = testunitcls(reader)
+
+    result = str(test_unit).strip().split('\n')
+    assert result == expected
+
+
+def test_nonoverridable_binding_attr(f2003_create):
+    # pylint: disable=invalid-name
+    '''
+    Test that the parser understands NON_OVERRIDABLE binding atribute.
+    '''
+
+    # Define source code to test
+    source = '''! Employee definition
+module employee_mod
+
+  implicit none
+  private
+
+  type, public :: employee_type
+    private
+    character(len=50), public :: name
+    integer :: age
+  contains
+    procedure, non_overridable :: print_info => print_per_info
+  end type employee_type
+
+end module employee_mod
+'''
+
+    # Define test classes for individual statements and code block
+    testcls = Binding_Attr
+    testunitcls = Program
+
+    # Test individual NON_OVERRIDABLE attribute
+    line = source.split('\n')[11].strip()
+    obj = Specific_Binding(line).items[1]
+    assert isinstance(obj, testcls), repr(obj)
+    assert str(obj) == 'NON_OVERRIDABLE'
+    assert repr(obj) == "Binding_Attr('NON_OVERRIDABLE')"
+
+    line = line.replace('non_overridable', 'nonoverridable')
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls(line)
+    assert "Binding_Attr: 'procedure, nonoverridable ::" in str(excinfo)
+
+    # Test the entire source
+    expected = '''! Employee definition
+MODULE employee_mod
+
+  IMPLICIT NONE
+  PRIVATE
+
+  TYPE, PUBLIC :: employee_type
+    PRIVATE
+    CHARACTER(LEN = 50), PUBLIC :: name
+    INTEGER :: age
+    CONTAINS
+    PROCEDURE, NON_OVERRIDABLE :: print_info => print_per_info
+  END TYPE employee_type
+
+END MODULE employee_mod
+'''.strip().split('\n')
+
+    reader = get_reader(source, ignore_comments=False)
+    test_unit = testunitcls(reader)
+
+    result = str(test_unit).strip().split('\n')
+    assert result == expected
+
+    code = source.replace("procedure, non_overridable ::",
+                          "procedure, non_overridabl ::")
+    reader = get_reader(code)
+    with pytest.raises(FortranSyntaxError) as excinfo:
+        dummy_ = testunitcls(reader)
+    assert ("at line 12\n>>>    procedure, non_overridabl ::"
+            in str(excinfo.value))
+
+
+def test_deferred_binding_attr(f2003_create):
+    '''
+    Test that the parser understands DEFFERED binding atribute.
+    '''
+
+    # Define source code to test
     source = '''! Abstract type
 module abstract_test
 
@@ -68,6 +237,22 @@ module abstract_test
 end module abstract_test
 '''
 
+    # Define test classes for individual statements and code block
+    testcls = Binding_Attr
+    testunitcls = Program
+
+    # Test individual DEFERRED attribute
+    line = source.split('\n')[8].strip()
+    obj = Specific_Binding(line).items[1]
+    assert isinstance(obj, testcls), repr(obj)
+    assert str(obj) == 'DEFERRED'
+    assert repr(obj) == "Binding_Attr('DEFERRED')"
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('deferted')
+    assert "Binding_Attr: 'deferted'" in str(excinfo)
+
+    # Test the entire source
     expected = '''! Abstract type
 MODULE abstract_test
 
@@ -84,7 +269,65 @@ END MODULE abstract_test
 '''.strip().split('\n')
 
     reader = get_reader(source, ignore_comments=False)
-    program_unit = Program(reader)
+    test_unit = testunitcls(reader)
 
-    result = str(program_unit).strip().split('\n')
+    result = str(test_unit).strip().split('\n')
     assert result == expected
+
+    code = source.replace("procedure(method_interface), deferred :: method",
+                          "procedure(method_interface), deferre :: method")
+    reader = get_reader(code)
+    with pytest.raises(FortranSyntaxError) as excinfo:
+        dummy_ = testunitcls(reader)
+    assert ("at line 9\n>>>    procedure(method_interface), deferre ::"
+            in str(excinfo.value))
+
+
+def test_accspec_binding_attr(f2003_create):
+    '''
+    Test that the parser understands Access_Spec binding atributes
+    (PUBLIC and PRIVATE).
+    '''
+
+    # Define source code to test
+    source = '''\
+type, public :: contact_type
+  private
+  character(len=50), public :: name, email_adress
+  character(len=4) :: extension_number
+contains
+  procedure, public :: print_info => print_per_info
+end type contact_type
+'''
+
+    # Define test classes for individual statements and code block
+    testcls = Binding_Attr
+    testunitcls = Derived_Type_Def
+
+    ## Test individual Access_Spec attribute
+    #line = source.split('\n')[4].strip()
+    #obj = Specific_Binding(line).items[1]
+    #assert isinstance(obj, testcls), repr(obj)
+    #assert str(obj) == 'NOPASS'
+    #assert repr(obj) == "Binding_Attr('NOPASS')"
+
+    #line = line.replace('nopass', 'nopepas')
+    #with pytest.raises(NoMatchError) as excinfo:
+        #_ = testcls(line)
+    #assert "Binding_Attr: 'procedure, nopepas :: " in str(excinfo)
+
+    ## Test the entire source
+    #expected = '''\
+#TYPE, PUBLIC, EXTENDS(kernel_type) :: buoyancy_kernel_type
+  #PRIVATE
+  #INTEGER :: iterates_over = CELLS
+  #CONTAINS
+  #PROCEDURE, NOPASS :: initial_buoyancy_code
+#END TYPE buoyancy_kernel_type
+#'''.strip().split('\n')
+
+    #reader = get_reader(source, ignore_comments=False)
+    #test_unit = testunitcls(reader)
+
+    #result = str(test_unit).strip().split('\n')
+    #assert result == expected
