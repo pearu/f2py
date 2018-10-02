@@ -70,7 +70,7 @@ def test_kind_spaces(f2003_create):
     parsed successfully.
 
     '''
-    reader = get_reader("(  kind  =  some_kind  )")
+    reader = get_reader("  (  kind  =  some_kind  )  ")
     ast = Kind_Selector(reader)
     assert "(KIND = some_kind)" in str(ast)
 
@@ -94,7 +94,7 @@ def test_nokind_spaces(f2003_create):
     kind for the output.
 
     '''
-    reader = get_reader("(  some_kind  )")
+    reader = get_reader("  (  some_kind  )  ")
     ast = Kind_Selector(reader)
     assert "(KIND = some_kind)" in str(ast)
 
@@ -148,7 +148,7 @@ def test_size_extension_spaces(f2003_create):
     pass the string directly.
 
     '''
-    ast = Kind_Selector("*  2")
+    ast = Kind_Selector("  *  2  ")
     assert "*2" in str(ast)
 
 # match() Syntax errors
@@ -208,22 +208,6 @@ def test_error_none(f2003_create):
     with pytest.raises(InternalError) as excinfo:
         _ = Kind_Selector(None)
     assert "method match() is None" in str(excinfo.value)
-
-
-def test_error_white_space_start(f2003_create):
-    '''Test that an InternalError is raised if there is white space at the
-    start of the input string'''
-    with pytest.raises(InternalError) as excinfo:
-        _ = Kind_Selector("  (some_kind)")
-    assert "white space at the start or end" in str(excinfo.value)
-
-
-def test_error_white_space_end(f2003_create):
-    '''Test that an InternalError is raised if there is white space at the
-    end of the input string'''
-    with pytest.raises(InternalError) as excinfo:
-        _ = Kind_Selector("(some_kind)  ")
-    assert "white space at the start or end" in str(excinfo.value)
 
 # tostr() Errors
 

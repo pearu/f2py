@@ -715,7 +715,8 @@ class Kind_Selector(Base):  # R404
         :return: `None` if there is no match, otherwise a `tuple` of
                  size 3 containing a '(', a single `list` which
                  contains an instance of classes that have matched and
-                 a ')'.
+                 a ')', or a `tuple` of size 2 containing a '*' and an
+                 instance of classes that have matched.
 
         :raises InternalError: if None is passed instead of a
         string. The parent rule should not pass None and the logic in
@@ -724,12 +725,11 @@ class Kind_Selector(Base):  # R404
         :raises InternalError: if the string passed is <=1 characters
         long. The parent rule passing this string should ensure the
         string is at least 2 characters long and the logic in this
-        routine relies on this.
-
-        :raises InternalError: if the string passed has leading or
-        trailing spaces. The parent rule passing this string should
-        ensure this is not the case and the logic in this routine
-        relies on this.
+        routine relies on this. The reason there is a minimum of two
+        is that the pattern '*n' where 'n' is a number is the smallest
+        valid pattern. The other valid pattern must have at least a
+        name with one character surrounded by brackets e.g. '(x)' so
+        should be at least 3 characters long.
 
         '''
         if string is None:
@@ -740,10 +740,9 @@ class Kind_Selector(Base):  # R404
             raise InternalError(
                 "String argument '{0}' in class Kind_Selector method "
                 "match() is too short to be valid.".format(string))
-        if string[0].isspace() or string[-1].isspace():
-            raise InternalError(
-                "String argument '{0}' in class Kind_Selector method "
-                "match() has white space at the start or end.".format(string))
+
+        # remove any leading or trailing white space
+        string = string.strip()
 
         if string[0]+string[-1] != '()':
             # must be the '*n' extension
@@ -752,14 +751,14 @@ class Kind_Selector(Base):  # R404
             return '*', Char_Length(string[1:].lstrip())
         # remove left and right brackets and subsequently any leading
         # or trailing spaces
-        line = string[1:-1].strip()
+        string = string[1:-1].strip()
         # check for optional 'kind='
-        if len(line) > 5:
-            # line is long enough to potentially contain 'kind=...'
-            if line[:4].upper() == 'KIND' and line[4:].lstrip()[0] == "=":
+        if len(string) > 5:
+            # string is long enough to potentially contain 'kind=...'
+            if string[:4].upper() == 'KIND' and string[4:].lstrip()[0] == "=":
                 # found 'kind=' so strip it out, including any leading spaces
-                line = line[4:].lstrip()[1:].lstrip()
-        return '(', Scalar_Int_Initialization_Expr(line), ')'
+                string = string[4:].lstrip()[1:].lstrip()
+        return '(', Scalar_Int_Initialization_Expr(string), ')'
 
     def tostr(self):
         '''
