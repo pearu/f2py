@@ -94,6 +94,33 @@ def test_write_stmt(f2003_create):
         "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
         "None)))), Real_Literal_Constant(\'1.D0\', None))")
 
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('WRIT (*,namtest)')
+    assert "Write_Stmt: 'WRIT (*,namtest)'" in str(excinfo)
+
+
+def test_io_control_spec_list_error(f2003_create):
+    ''' Test that parsing invalid Fortran syntax for mandatory
+    Io_Control_Spec_List raises an appropriate error. '''
+
+    testcls = Write_Stmt
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('WRITE [*,namtest)')
+    assert "Write_Stmt: 'WRITE [*,namtest)'" in str(excinfo)
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('WRITE(*, FMT = "(I3)" my_int')
+    assert "Write_Stmt: \'WRITE(*, FMT = \"(I3)\" my_int" in str(excinfo)
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('WRITE(*,)')
+    assert "Write_Stmt: 'WRITE(*,)'" in str(excinfo)
+
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = testcls('WRITE()')
+    assert "Write_Stmt: 'WRITE()'" in str(excinfo)
+
 
 def test_write_output_item_list(f2003_create):
     ''' Test that the Output_Item_List part of Write_Stmt can be
