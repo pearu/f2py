@@ -1507,6 +1507,8 @@ class Private_Components_Stmt(STRINGBase):
 class Type_Bound_Procedure_Part(BlockBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`448`::
+
     Fortran 2003 rule R448
     that specifies the type-bound procedure part of a derived type.
 
@@ -1537,6 +1539,8 @@ class Type_Bound_Procedure_Part(BlockBase):
 class Binding_Private_Stmt(StmtBase, STRINGBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`449`::
+
     Fortran 2003 rule R449
     for binding private statement within the type-bound procedure
     part of a derived type.
@@ -1545,6 +1549,7 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):
     '''
     subclass_names = []
 
+    @staticmethod
     def match(string):
         '''
         :param str string: Fortran code to check for a match
@@ -1552,12 +1557,13 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):
         :rtype: string
         '''
         return StringBase.match('PRIVATE', string.upper())
-    match = staticmethod(match)
 
 
 class Proc_Binding_Stmt(Base):
     # pylint: disable=invalid-name
     '''
+    :F03R:`450`::
+
     Fortran 2003 rule R450
     that specifies procedure binding for the type-bound procedures
     within a derived type.
@@ -1572,6 +1578,8 @@ class Proc_Binding_Stmt(Base):
 class Specific_Binding(StmtBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`451`::
+
     Fortran 2003 rule R451
     that specifies syntax of specific binding for a type-bound
     procedure within a derived type.
@@ -1587,12 +1595,13 @@ class Specific_Binding(StmtBase):
     def match(string):
         '''
         :param str string: Fortran code to check for a match
-        :return: 5-tuple containing strings and instances of the
-                 classes describing a specific type-bound procedure
-                 (optional interface name, optional binding attribute
-                 list, optional double colon delimiter, mandatory
-                 binding name and optional procedure name)
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a specific type-bound procedure (optional
+                 interface name, optional binding attribute list,
+                 optional double colon delimiter, mandatory binding
+                 name and optional procedure name)
         :rtype: 5-tuple of objects (1 mandatory and 4 optional)
+        :raises NoMatchError: if the interface name is not preceded by '::'
         '''
         # Incorrect 'PROCEDURE' statement
         if string[:9].upper() != 'PROCEDURE':
@@ -1652,6 +1661,8 @@ class Specific_Binding(StmtBase):
 class Binding_PASS_Arg_Name(CALLBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`451`::
+
     Fortran 2003 helper rule (for R451)
     that specifies syntax of passed-object dummy argument for a
     specific type-bound procedure.
@@ -1661,6 +1672,7 @@ class Binding_PASS_Arg_Name(CALLBase):
     subclass_names = []
     use_names = ['Arg_Name']
 
+    @staticmethod
     def match(string):
         '''
         :param str string: Fortran code to check for a match
@@ -1669,12 +1681,13 @@ class Binding_PASS_Arg_Name(CALLBase):
         :rtype: string
         '''
         return CALLBase.match('PASS', Arg_Name, string)
-    match = staticmethod(match)
 
 
 class Generic_Binding(StmtBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`452`::
+
     Fortran 2003 rule R452
     that specifies syntax of generic binding for a type-bound
     procedure within a derived type.
@@ -1728,6 +1741,8 @@ class Generic_Binding(StmtBase):
 class Binding_Attr(STRINGBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`453`::
+
     Fortran 2003 rule R453
     that specifies syntax of allowed binding attributes for a
     specific type-bound procedure binding.
@@ -1740,6 +1755,7 @@ class Binding_Attr(STRINGBase):
     '''
     subclass_names = ['Access_Spec', 'Binding_PASS_Arg_Name']
 
+    @staticmethod
     def match(string):
         '''
         :return: keywords for allowed binding attributes or
@@ -1748,12 +1764,13 @@ class Binding_Attr(STRINGBase):
         '''
         return STRINGBase.match(['PASS', 'NOPASS',
                                  'NON_OVERRIDABLE', 'DEFERRED'], string)
-    match = staticmethod(match)
 
 
 class Final_Binding(StmtBase, WORDClsBase):
     # pylint: disable=invalid-name
     '''
+    :F03R:`454`::
+
     Fortran 2003 rule R454
     that specifies syntax of final binding for a type-bound
     procedure within a derived type.
@@ -1763,6 +1780,7 @@ class Final_Binding(StmtBase, WORDClsBase):
     subclass_names = []
     use_names = ['Final_Subroutine_Name_List']
 
+    @staticmethod
     def match(string):
         '''
         :return: keyword  "FINAL" with the list of "FINAL" type-bound
@@ -1772,7 +1790,7 @@ class Final_Binding(StmtBase, WORDClsBase):
         return WORDClsBase.match(
             'FINAL', Final_Subroutine_Name_List, string, check_colons=True,
             require_cls=True)
-    match = staticmethod(match)
+
     # String representation with optional double colons included
     tostr = WORDClsBase.tostr_a
 
@@ -5995,22 +6013,33 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
         return 'READ %s, %s' % (self.items[1], self.items[2])
 
 
-class Write_Stmt(StmtBase):  # R911
-    """
-:F03R:`911`::
-    <write-stmt> = WRITE ( <io-control-spec-list> ) [ <output-item-list> ]
+class Write_Stmt(StmtBase):
+    # pylint: disable=invalid-name
+    '''
+    :F03R:`911`::
 
-Parameters
-----------
-items : (Io_Control_Spec_List, Output_Item_List)
-    """
+    Fortran 2003 rule R911
+    that specifies syntax of a "WRITE" statement.
+
+    <write-stmt> = WRITE ( <io-control-spec-list> ) [ <output-item-list> ]
+    '''
     subclass_names = []
     use_names = ['Io_Control_Spec_List', 'Output_Item_List']
 
+    @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing strings and instances of the classes
+                 describing "WRITE" statement (mandatory IO control
+                 specification list and optional output item list.
+        :rtype: 2-tuple of objects (1 mandatory and 1 optional)
+        '''
         if string[:5].upper() != 'WRITE':
             return
         line = string[5:].lstrip()
+        # Look for mandatory IO control specification list and
+        # return without a match if it is not found
         if not line.startswith('('):
             return
         line, repmap = string_replace_map(line)
@@ -6023,11 +6052,15 @@ items : (Io_Control_Spec_List, Output_Item_List)
         tmp = repmap(tmp)
         if i == len(line)-1:
             return Io_Control_Spec_List(tmp), None
+        # Return optional output item list as well
         return Io_Control_Spec_List(tmp), \
             Output_Item_List(repmap(line[i+1:].lstrip()))
-    match = staticmethod(match)
 
     def tostr(self):
+        '''
+        :return: parsed representation of a "WRITE" statement
+        :rtype: string
+        '''
         if self.items[1] is None:
             return 'WRITE(%s)' % (self.items[0])
         return 'WRITE(%s) %s' % tuple(self.items)

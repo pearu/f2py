@@ -40,8 +40,7 @@ type-bound procedure part of a derived type.
 import pytest
 from fparser.api import get_reader
 from fparser.two.utils import NoMatchError
-from fparser.two.Fortran2003 import Type_Bound_Procedure_Part, \
-    Contains_Stmt, Proc_Binding_Stmt
+from fparser.two.Fortran2003 import Type_Bound_Procedure_Part
 
 
 SOURCE = '''\
@@ -57,6 +56,7 @@ PROCEDURE, NON_OVERRIDABLE :: view_method
 PROCEDURE, PUBLIC :: method_1
 GENERIC, PUBLIC :: method => method_1
 FINAL :: method_destructor'''
+
 
 def test_type_bound_procedure_part(f2003_create):
     ''' Test that Type_Bound_Procedure_Part code block
@@ -74,24 +74,16 @@ def test_type_bound_procedure_part(f2003_create):
     assert result == expected
     assert isinstance(obj, testcls), repr(obj)
 
-    lines = SOURCE.split('\n')
-
-    cntcls = Contains_Stmt
-    cntobj = cntcls(lines[0].strip())
-    assert isinstance(cntobj, cntcls), repr(cntobj)
-    assert str(cntobj) == "CONTAINS"
-    assert repr(cntobj) == "Contains_Stmt('CONTAINS')"
-
 
 def test_type_bound_procedure_part_error(f2003_create):
+    # pylint: disable=invalid-name
     ''' Test that parsing invalid Fortran syntax for
     Type_Bound_Procedure_Part code block raises an appropriate error. '''
     testcls = Type_Bound_Procedure_Part
 
-    code = SOURCE.replace("generic, public :: method => method_1",
-                          "generic, public :: method =>")
+    code = SOURCE.replace("contains",
+                          "contai")
     reader = get_reader(code)
     with pytest.raises(NoMatchError) as excinfo:
         _ = testcls(reader)
-    assert ("Generic_Binding: 'generic, public :: method =>'"
-            in str(excinfo))
+    assert "NoMatchError: at line 1" in str(excinfo)
