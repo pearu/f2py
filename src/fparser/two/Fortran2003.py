@@ -1485,13 +1485,15 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
 
 class Private_Components_Stmt(STRINGBase):
     # pylint: disable=invalid-name
-    """
+    '''
+    :F03R:`447`::
+
     Fortran 2003 rule R447
     that specifies support for private components statement
     within a derived type.
 
     <private-components-stmt> = PRIVATE
-    """
+    '''
     subclass_names = []
 
     @staticmethod
@@ -1661,7 +1663,7 @@ class Specific_Binding(StmtBase):
 class Binding_PASS_Arg_Name(CALLBase):
     # pylint: disable=invalid-name
     '''
-    :F03R:`451`::
+    :F03R:`451_help`::
 
     Fortran 2003 helper rule (for R451)
     that specifies syntax of passed-object dummy argument for a
