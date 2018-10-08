@@ -67,9 +67,7 @@
 ''' Example script to parse a Fortran program using fparser '''
 from __future__ import print_function
 from fparser.scripts.script_options import set_fparser_options
-import fparser.common.sourceinfo
-# START UPDATE SYS.PATH
-# END UPDATE SYS.PATH
+
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
@@ -79,10 +77,11 @@ except ImportError:
 def runner(_, options, args):
     ''' Function to read, parse and output fortran source code '''
     from fparser.two.parser import ParserFactory
-    from fparser.two.Fortran2003 import FortranSyntaxError
+    from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
     if not args:
         print ("Error: No fortran files specified")
+        raise SystemExit(1)
     for filename in args:
         try:
             reader = FortranFileReader(filename)
@@ -90,9 +89,7 @@ def runner(_, options, args):
             print (error)
             return
         if options.mode != 'auto':
-            mode = fparser.common.sourceinfo\
-                   .FortranFormat.from_mode(options.mode)
-            reader.format.set_mode(mode)
+            reader.format.from_mode(options.mode)
         try:
             f2003_parser = ParserFactory().create()
             program = f2003_parser(reader)
@@ -101,19 +98,20 @@ def runner(_, options, args):
             print ("Syntax error: {0}".format(str(msg)))
             print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
             print('started at %s' % (reader.fifo_item[0]))
-            return
+            raise SystemExit(1)
+        except InternalError as msg:
+            print ("Internal error in fparser: {0}".format(str(msg)))
+            raise SystemExit(1)
 
 
 def main():
     ''' Check arguments before parsing code '''
     parser = OptionParser()
     set_fparser_options(parser)
-    if hasattr(parser, 'runner'):
-        parser.runner = runner
     options, args = parser.parse_args()
     runner(parser, options, args)
     return
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover
