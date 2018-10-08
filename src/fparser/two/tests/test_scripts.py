@@ -42,16 +42,18 @@ import pytest
 
 # fparser2.py script function runner()
 
+# Create a dummy class (DummyArgs) with the required attribute to pass
+# into runner() as an argument options class in subsequent tests
+
+
+class DummyArgs(object):
+    ''' dummy object pretending to be the argument options '''
+    mode = "auto"
+
 
 def test_runner_no_files(capsys):
     '''Test that the script deals with no files provided as expected.'''
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
     from fparser.scripts import fparser2
-
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
     # run the relevant script method (runner())
     with pytest.raises(SystemExit) as excinfo:
         fparser2.runner(None, DummyArgs(), [])
@@ -62,14 +64,11 @@ def test_runner_no_files(capsys):
 
 
 def test_runner_non_existant_file(capsys):
-    '''Test that the script deals with no files provided as expected.'''
-    from fparser.scripts import fparser2
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
+    '''Test that the script reports an error when the file name that is
+    provided does not exist.
 
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
+    '''
+    from fparser.scripts import fparser2
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgs(), ["idontexist.txt"])
     # capture the output and check that the appropriate error has been reported
@@ -84,13 +83,13 @@ def test_runner_set_mode(tmpdir, capsys):
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
     # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
+    # runner() as an argument options class
 
-    class DummyArgs(object):
+    class DummyArgsFree(object):
         ''' dummy object pretending to be the argument options '''
         mode = "free"
     # run the relevant script method (runner())
-    fparser2.runner(None, DummyArgs(), [my_file.strpath])
+    fparser2.runner(None, DummyArgsFree(), [my_file.strpath])
     # capture the output and check that the code has been output
     stdout, _ = capsys.readouterr()
     assert "PROGRAM hello\nEND PROGRAM hello\n" in stdout
@@ -102,12 +101,6 @@ def test_runner_syntax_error(tmpdir, capsys):
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("prog error\nend program error\n")
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
-
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
     # run the relevant script method (runner())
     with pytest.raises(SystemExit) as excinfo:
         fparser2.runner(None, DummyArgs(), [my_file.strpath])
@@ -124,12 +117,6 @@ def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
-
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
     # Create a dummy function that replaces the parser
     error_string = "monkey trouble"
 
@@ -155,12 +142,6 @@ def test_runner_output(tmpdir, capsys):
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
-
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgs(), [my_file.strpath])
     # capture the output and check that the code has been output
@@ -177,19 +158,12 @@ def test_runner_multi_output(tmpdir, capsys):
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
-    # Create a dummy class with the required attribute to pass into
-    # runner() as argument options
-
-    class DummyArgs(object):
-        ''' dummy object pretending to be the argument options '''
-        mode = "auto"
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgs(), [my_file.strpath, my_file.strpath])
     # capture the output and check that the code has been output
     stdout, _ = capsys.readouterr()
     assert ("PROGRAM hello\nEND PROGRAM hello\n"
             "PROGRAM hello\nEND PROGRAM hello\n") in stdout
-
 
 # fparser2.py script function main()
 
