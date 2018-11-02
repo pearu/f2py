@@ -745,7 +745,6 @@ def test_private_components_stmt():
     # Statement not 'private'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('public')
-    assert "Private_Components_Stmt: 'public'" in str(excinfo)
 
 
 def test_type_bound_procedure_part():
@@ -1913,11 +1912,9 @@ def test_parenthesis():  # R701.h
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('(a+b)*(c+d)')
-    assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo)
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('''()''')
-    assert "Parenthesis: '()'" in str(excinfo)
 
 
 def test_level_1_expr():  # R702
@@ -2828,15 +2825,12 @@ def test_loop_control():
     # More than one '=' in counter expression
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('j = 1 = 10')
-    assert "Loop_Control: 'j = 1 = 10'" in str(excinfo)
 
     # Incorrect number of elements in counter expression
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('k = 10, -10, -2, -1')
-    assert "Loop_Control: 'k = 10, -10, -2, -1'" in str(excinfo)
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('l = 5')
-    assert "Loop_Control: 'l = 5'" in str(excinfo)
 
 
 def test_nonblock_do_construct():
@@ -3260,7 +3254,6 @@ def test_inquire_spec_list():
     # Invalid list (afile= instead of file=)
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('unit=23, afile="a_file.dat"')
-    assert "NoMatchError: Inquire_Spec_List: 'unit=23, afile=" in str(excinfo)
 
 
 def test_open_stmt():
@@ -3281,7 +3274,6 @@ def test_connect_spec():
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls("afile='a_file.dat'")
-    assert 'NoMatchError: Connect_Spec: \'afile=' in str(excinfo)
 
 
 def test_connect_spec_list():
@@ -3366,7 +3358,6 @@ def test_connect_spec_list():
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls("unit=22, afile='a_file.dat', sign='PLUS', status='OLD'")
-    assert 'NoMatchError: Connect_Spec_List: \'unit=22, afile=' in str(excinfo)
 
 #
 # SECTION 10
@@ -3496,14 +3487,12 @@ def test_data_edit_desc():
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('L3.2')
-    assert "NoMatchError: Data_Edit_Desc: 'L3.2'" in str(excinfo)
 
     obj = tcls('A3')
     assert str(obj) == 'A3'
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('A3.2')
-    assert "NoMatchError: Data_Edit_Desc: 'A3.2'" in str(excinfo)
 
     obj = tcls("DT'a_name'")
     assert str(obj) == "DT'a_name'"
@@ -3513,7 +3502,6 @@ def test_data_edit_desc():
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls("DT'a_name'()")
-    assert '''Data_Edit_Desc: \'DT\'a_name\'()\'''' in str(excinfo)
 
 
 def test_format_item_list():  # R1002, R1003
@@ -3701,52 +3689,42 @@ def test_use_stmt():
     # Incorrect 'USE' statement
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('8se')
-    assert "Use_Stmt: '8se'" in str(excinfo)
 
     # Empty string after 'USE'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use')
-    assert "Use_Stmt: 'use'" in str(excinfo)
 
     # No separation between 'USE' statement and its specifiers
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('usemodulename')
-    assert "Use_Stmt: 'usemodulename'" in str(excinfo)
 
     # Missing Module_Nature between ',' and '::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use, ::')
-    assert "Use_Stmt: 'use, ::'" in str(excinfo)
 
     # No Module_Name after 'USE, Module_Nature ::'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use, intrinsic ::')
-    assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
 
     # Missing '::' after Module_Nature
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use, intrinsic a')
-    assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
 
     # Missing Module_Name before Only_List
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use , only: b')
-    assert "Use_Stmt: 'use , only: b'" in str(excinfo)
 
     # Missing 'ONLY' specification after 'USE Module_Name,'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use a,')
-    assert "Use_Stmt: 'use a,'" in str(excinfo)
 
     # Missing ':' after ', ONLY' specification
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use a, only b')
-    assert "Use_Stmt: 'use a, only b" in str(excinfo)
 
     # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('use a, only:')
-    assert "Use_Stmt: 'use a, only:" in str(excinfo)
 
 
 def test_module_nature():
@@ -3766,7 +3744,6 @@ def test_module_nature():
     # Incorrect module nature
     with pytest.raises(NoMatchError) as excinfo:
         _ = tcls('other_nature')
-    assert "Module_Nature: 'other_nature'" in str(excinfo)
 
 
 def test_rename():  # R1111

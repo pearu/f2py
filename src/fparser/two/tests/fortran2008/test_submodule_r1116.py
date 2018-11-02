@@ -137,9 +137,6 @@ def test_submodule_format_error1(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule(reader)
-    assert ("at line 2\n"
-            ">>>      1 format(a)\n"
-            in str(excinfo.value))
 
 
 def test_submodule_format_error2(f2008_create):
@@ -156,9 +153,6 @@ def test_submodule_format_error2(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule(reader)
-    assert ("at line 3\n"
-            ">>>      1 format(a)\n"
-            in str(excinfo.value))
 
 # constraint C1112 entry statement
 
@@ -176,9 +170,6 @@ def test_submodule_entry_error1(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule(reader)
-    assert ("at line 2\n"
-            ">>>      entry here\n"
-            in str(excinfo.value))
 
 
 def test_submodule_entry_error2(f2008_create):
@@ -195,9 +186,6 @@ def test_submodule_entry_error2(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule(reader)
-    assert ("at line 3\n"
-            ">>>      entry here\n"
-            in str(excinfo.value))
 
 # constraint C1112 statement-function statement
 
@@ -216,9 +204,6 @@ def test_submodule_stmt_func_error(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule(reader)
-    assert ("at line 3\n"
-            ">>>      statefunc(x) = x*2\n"
-            in str(excinfo.value))
 
 # constraint C1114
 

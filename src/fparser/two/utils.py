@@ -97,6 +97,13 @@ class FortranSyntaxError(FparserException):
     to be invalid Fortran.
 
     '''
+    def __init__(self, reader, info):
+        location = "at unknown location"
+        if isinstance(reader, FortranReaderBase):
+            location = "at line {0}\n>>>{1}".format(
+                reader.linecount,
+                reader.source_lines[reader.linecount-1])
+        Exception.__init__(self, "{0}\n{1}".format(location, info))
 
 
 class InternalError(FparserException):
@@ -271,13 +278,14 @@ class Base(ComparableMixin):
         else:
             raise AssertionError(repr(result))
         # If we get to here then we've failed to match the current line
-        if isinstance(string, FortranReaderBase):
-            errmsg = "at line {0}\n>>>{1}\n".format(
-                string.linecount,
-                string.source_lines[string.linecount-1])
-        else:
-            errmsg = "{0}: '{1}'".format(cls.__name__, string)
-        raise NoMatchError(errmsg)
+        #if isinstance(string, FortranReaderBase):
+        #    errmsg = ""
+        #    errmsg = "at line {0}\n>>>{1}\n".format(
+        #        string.linecount,
+        #        string.source_lines[string.linecount-1])
+        #else:
+        #    errmsg = "{0}: '{1}'".format(cls.__name__, string)
+        raise NoMatchError
 
     def init(self, *items):
         self.items = items
@@ -425,9 +433,10 @@ content : tuple
 
             if match_names and isinstance(obj, match_name_classes):
                 end_name = obj.get_end_name()
-                if end_name != start_name:
-                    reader.warning('expected construct name "%s" but '
-                                   'got "%s"' % (start_name, end_name))
+                if end_name and start_name and \
+                   end_name.lower() != start_name.lower():
+                    raise FortranSyntaxError(
+                        reader, "Expecting name '{0}'".format(start_name))
 
             if endcls is not None and isinstance(obj, endcls_all):
                 if match_labels:
@@ -443,10 +452,10 @@ content : tuple
                     if set_unspecified_end_name and end_name is None and \
                        start_name is not None:
                         content[-1].set_name(start_name)
-                    elif start_name != end_name:
-                        reader.warning('expected construct name "%s" but '
-                                       'got "%s"' % (start_name, end_name))
-                        continue
+                    elif start_name and end_name and \
+                         start_name.lower() != end_name.lower():
+                        raise FortranSyntaxError(
+                            reader, "Expecting name '{0}'".format(start_name))
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break

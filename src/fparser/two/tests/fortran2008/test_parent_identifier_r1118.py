@@ -68,8 +68,6 @@ def test_simple_error1(f2008_create):
     '''
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Parent_Identifier("modulename ; submodulename")
-    assert ("Parent_Identifier: 'modulename ; submodulename'"
-            in str(excinfo.value))
 
 
 def test_simple_error2(f2008_create):
@@ -79,7 +77,6 @@ def test_simple_error2(f2008_create):
     '''
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Parent_Identifier("modulename :")
-    assert "Parent_Identifier: 'modulename :'" in str(excinfo.value)
 
 
 def test_simple_error3(f2008_create):
@@ -89,7 +86,6 @@ def test_simple_error3(f2008_create):
     '''
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Parent_Identifier(": submodulename")
-    assert "Parent_Identifier: ': submodulename'" in str(excinfo.value)
 
 
 def test_simple_error4(f2008_create):
@@ -99,8 +95,6 @@ def test_simple_error4(f2008_create):
     '''
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Parent_Identifier("modulename : submodulename : anothername")
-    assert ("Parent_Identifier: 'modulename : submodulename : anothername'"
-            in str(excinfo.value))
 
 
 def test_simple_error5(f2008_create):
@@ -110,5 +104,3 @@ def test_simple_error5(f2008_create):
     '''
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Parent_Identifier("modulename : submodulename :")
-    assert ("Parent_Identifier: 'modulename : submodulename :'"
-            in str(excinfo.value))

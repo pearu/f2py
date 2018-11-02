@@ -77,5 +77,3 @@ def test_submodule_nomatch(f2008_create):
       ''')
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Program_Unit(reader)
-    assert ("at line 1\n>>>      submod (foobar) bar\n"
-            in str(excinfo.value))
