@@ -110,4 +110,3 @@ def test_blockbase_match_name_classes(f2003_create):
         ast = If_Construct(reader)
     assert ("at line 2\n>>>endif label\nName 'label' has no corresponding "
             "starting name") in str(excinfo.value)
-

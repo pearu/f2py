@@ -111,6 +111,29 @@ def test_runner_syntax_error(tmpdir, capsys):
     assert "failed at line #1'prog error'" in stdout
 
 
+def test_runner_syntax_error_2(tmpdir, capsys):
+    '''Test that the script deals with code with an invalid syntax and
+    where there is no information in the fifo buffer. I'm not sure why
+    this happens but this checks the associated code that handles it
+    works.
+
+    '''
+    from fparser.scripts import fparser2
+    # Create a temporary file containing Fortran code to pass into runner()
+    my_file = tmpdir.mkdir("sub").join("hello.f90")
+    my_file.write("program error\nif (.true.) then\nend if label\n"
+                  "end program error\n")
+    # run the relevant script method (runner())
+    with pytest.raises(SystemExit) as excinfo:
+        fparser2.runner(None, DummyArgs(), [my_file.strpath])
+    assert str(excinfo.value) == "1"
+    # capture the output and check that the appropriate error has been reported
+    # There should be no file information (output by the script)
+    stdout, _ = capsys.readouterr()
+    assert (stdout == "Syntax error: at line 3\n>>>end if label\nName 'label' has no "
+            "corresponding starting name\n")
+
+
 def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     '''Test that the script deals with an internal error as expected.'''
     from fparser.scripts import fparser2
