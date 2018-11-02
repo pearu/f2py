@@ -278,13 +278,6 @@ class Base(ComparableMixin):
         else:
             raise AssertionError(repr(result))
         # If we get to here then we've failed to match the current line
-        #if isinstance(string, FortranReaderBase):
-        #    errmsg = ""
-        #    errmsg = "at line {0}\n>>>{1}\n".format(
-        #        string.linecount,
-        #        string.source_lines[string.linecount-1])
-        #else:
-        #    errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError
 
     def init(self, *items):
@@ -433,6 +426,10 @@ content : tuple
 
             if match_names and isinstance(obj, match_name_classes):
                 end_name = obj.get_end_name()
+                if end_name and not start_name:
+                    raise FortranSyntaxError(
+                        reader, "Name '{0}' has no corresponding starting "
+                        "name".format(end_name))
                 if end_name and start_name and \
                    end_name.lower() != start_name.lower():
                     raise FortranSyntaxError(
@@ -452,6 +449,10 @@ content : tuple
                     if set_unspecified_end_name and end_name is None and \
                        start_name is not None:
                         content[-1].set_name(start_name)
+                    elif end_name and not start_name:
+                        raise FortranSyntaxError(
+                            reader, "Name '{0}' has no corresponding starting "
+                            "name".format(end_name))
                     elif start_name and end_name and \
                          start_name.lower() != end_name.lower():
                         raise FortranSyntaxError(

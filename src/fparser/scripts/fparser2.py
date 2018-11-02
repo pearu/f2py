@@ -96,8 +96,11 @@ def runner(_, options, args):
             print (program)
         except FortranSyntaxError as msg:
             print ("Syntax error: {0}".format(str(msg)))
-            print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
-            print('started at %s' % (reader.fifo_item[0]))
+            try:
+                print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
+                print('started at %s' % (reader.fifo_item[0]))
+            except IndexError:
+                pass
             raise SystemExit(1)
         except InternalError as msg:
             print ("Internal error in fparser: {0}".format(str(msg)))
