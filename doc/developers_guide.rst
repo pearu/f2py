@@ -480,25 +480,35 @@ information is not required. When textual information is provided this
 is ignored apart from one situation, which is where the `NoMatchError`
 actually indicates that there is a syntax error.
 
-To provide appropriate information when there is a syntax error, the
-last thing that the `Base` class does in its `__new__` method is raise
-a `NoMatchError` with line number and the line itself extracted from
-the `FortranReader` object and provided as argument text. This
-guarantees that the last `NoMatchError` (the one indicating a syntax
-error) will contain line number information.
-
 .. note::
 
    Need to add an explanation about when `NoMatchError` exceptions are
    used and when a null return is used.
 
-A `FortranSyntaxError` exception is raised if the parser does not
-recognise the syntax. The line number and text of the line in question
-is returned. This is implemented by catching the final `NoMatchError`
-exception and re-raising it as a `FortranSyntaxError`. This final
-`NoMatchError` is caught and re-raised by wrapping the `Base` class
-`__new__` method in the top level `Program` class with its own
-`__new__` method.
+A `FortranSyntaxError` exception should be raised if the parser does
+not recognise the syntax. `FortranSyntaxError` takes two
+arguments. The first argument is a reader object which allows the line
+number and text of the line in question to be output. The second
+argument is text which can be used to give details of the error.
+
+Currently the main use of `FortranSyntaxError` is to catch the final
+`NoMatchError` exception and re-raise it with line number and the text
+of the line to be output. This final `NoMatchError` is caught and
+re-raised by wrapping the `Base` class `__new__` method in the top
+level `Program` class with its own `__new__` method. However, this
+exception is not able to give any details of the error.
+
+`FortranSyntaxError` has started to be used in a few other places
+(e.g. curently limited to `BlockBase`), where it is know that there is
+a match, but that the match is known to have a syntax error. This
+approach leads to good quality feedback to the user on the type of
+error and its location and should be used wherever possible. One issue
+is that when `FortranSyntaxError` is raised from one of these
+additional places the fparser script is not able to use the reader's
+fifo buffer to extract position information. This is dealt with by not
+outputting anything from the script related to the fifo buffer in this
+case. It is possible that if the lines were pushed back into the
+buffer then this would to work.
 
 .. note::
 
