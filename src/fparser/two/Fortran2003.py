@@ -7314,9 +7314,9 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if line[0] != ':':
                 return
             line = line[1:].lstrip()
-            # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
             if not line:
-                return
+                # Missing Only_List after 'USE Module_Name, ONLY:'
+                return nature, dcolon, name, ', ONLY:', None
             return nature, dcolon, name, ', ONLY:', Only_List(line)
         return nature, dcolon, name, ',', Rename_List(line)
 
