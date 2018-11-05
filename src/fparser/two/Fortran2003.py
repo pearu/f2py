@@ -7310,6 +7310,10 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
+            if not line:
+                # Expected ':' but there is nothing after the 'ONLY'
+                # specification
+                return
             # Missing ':' after ', ONLY' specification
             if line[0] != ':':
                 return
