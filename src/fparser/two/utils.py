@@ -277,8 +277,15 @@ class Base(ComparableMixin):
                     return obj
         else:
             raise AssertionError(repr(result))
-        # If we get to here then we've failed to match the current line
-        raise NoMatchError
+        if isinstance(string, FortranReaderBase):
+            # If we get to here then we've failed to match the current line
+            errmsg = "at line {0}\n>>>{1}\n".format(
+                string.linecount,
+                string.source_lines[string.linecount-1])
+        else:
+            errmsg = "{0}: '{1}'".format(cls.__name__, string)
+        raise NoMatchError(errmsg)
+
 
     def init(self, *items):
         self.items = items
