@@ -74,8 +74,8 @@ def test_blockbase_match_names(f2003_create):
     reader = get_reader("select case (i)\nend select label")
     with pytest.raises(FortranSyntaxError) as excinfo:
         ast = Case_Construct(reader)
-    assert ("at line 2\n>>>end select label\nName 'label' has no corresponding "
-            "starting name") in str(excinfo.value)
+    assert ("at line 2\n>>>end select label\nName 'label' has no "
+            "corresponding starting name") in str(excinfo.value)
 
 
 def test_blockbase_match_name_classes(f2003_create):
@@ -90,12 +90,12 @@ def test_blockbase_match_name_classes(f2003_create):
     # working named example
     reader = get_reader("label:if (.true.) then\nendif label")
     ast = If_Construct(reader)
-    assert ("label:IF (.TRUE.) THEN\nEND IF label") in str(ast)
+    assert "label:IF (.TRUE.) THEN\nEND IF label" in str(ast)
 
     # case insensitive
     reader = get_reader("label:if (.true.) then\nendif LABEL")
     ast = If_Construct(reader)
-    assert ("label:IF (.TRUE.) THEN\nEND IF LABEL") in str(ast)
+    assert "label:IF (.TRUE.) THEN\nEND IF LABEL" in str(ast)
 
     # incorrect name exception
     reader = get_reader("label:if (.true.) then\nendif bella")

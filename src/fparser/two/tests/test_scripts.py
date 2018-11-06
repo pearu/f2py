@@ -105,7 +105,8 @@ def test_runner_syntax_error(tmpdir, capsys):
     with pytest.raises(SystemExit) as excinfo:
         fparser2.runner(None, DummyArgs(), [my_file.strpath])
     assert str(excinfo.value) == "1"
-    # capture the output and check that the appropriate error has been reported
+    # capture the output and check that the appropriate error has been
+    # reported
     stdout, _ = capsys.readouterr()
     assert "Syntax error: at line 1\n>>>prog error" in stdout
     assert "failed at line #1'prog error'" in stdout
@@ -130,8 +131,8 @@ def test_runner_syntax_error_2(tmpdir, capsys):
     # capture the output and check that the appropriate error has been reported
     # There should be no file information (output by the script)
     stdout, _ = capsys.readouterr()
-    assert (stdout == "Syntax error: at line 3\n>>>end if label\nName 'label' has no "
-            "corresponding starting name\n")
+    assert (stdout == "Syntax error: at line 3\n>>>end if label\nName "
+            "'label' has no corresponding starting name\n")
 
 
 def test_runner_internal_error(tmpdir, monkeypatch, capsys):

@@ -93,11 +93,19 @@ class NoMatchError(FparserException):
 
 
 class FortranSyntaxError(FparserException):
-    '''An exception indicating that fparser believes the provided code
-    to be invalid Fortran.
+    '''An exception indicating that fparser believes the provided code to
+    be invalid Fortran. Also returns information about the location of
+    the error if that information is available.
 
     '''
     def __init__(self, reader, info):
+        ''':param reader: input string or reader where the error took
+        place. This is used to provide line number and line content
+        information.
+        :type reader: str or :py:class:`FortranReaderBase`
+        :param info str: a string giving contextual error information.
+
+        '''
         location = "at unknown location"
         if isinstance(reader, FortranReaderBase):
             location = "at line {0}\n>>>{1}".format(
@@ -459,8 +467,8 @@ content : tuple
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
-                    elif start_name and end_name and \
-                         start_name.lower() != end_name.lower():
+                    elif start_name and end_name and (start_name.lower() !=
+                                                      end_name.lower()):
                         raise FortranSyntaxError(
                             reader, "Expecting name '{0}'".format(start_name))
                 # We've found the enclosing end statement so break out

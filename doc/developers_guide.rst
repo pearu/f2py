@@ -472,13 +472,42 @@ appropriate to do one or the other.
 the text is invalid, just that the text does not match this class. For
 example, it may be that some text should match one of a set of
 rules. In this case all rules would fail to match except one. It is
-only invalid text if no rules match.
+only invalid text if none of the possible rules match.
 
 Usually `NoMatchError` is raised by a class with no textual information
 (a string provided as an argument to the exception), as textual
 information is not required. When textual information is provided this
-is ignored apart from one situation, which is where the `NoMatchError`
-actually indicates that there is a syntax error.
+is ignored.
+
+.. note::
+
+   `NoMatchError` is the place where we can get context-specific
+   information about a syntax error. The problem is that there are
+   typically many `NoMatchError`s associated with invalid code. The
+   reason for this is that every (relevant) rule needs to be matched
+   with the associated invalid code. Each of these will return a
+   `NoMatchError`. One option would be to always return
+   context-specific information from `NoMatchError` and somehow
+   aggregate this information until it is known that there is a syntax
+   error. At this point a `FortranSyntaxError` is raised and the
+   aggregated messages could be used to determine the correct
+   message(s) to return. As a simple example, imagine parsing the
+   following code: `us mymodule`.  This is probably meant to mean `use
+   mymodule`. The associated rule might return a `NoMatchError` saying
+   something like `use not found`. However, there might be a missing
+   `=` and it could be that an assignment would would also return a
+   `NoMatchError` saying something like `invalid assignment`. It is
+   unclear which was the programmers intention. In general, it is
+   probable that the further into a rule one gets the more likely it
+   is a syntax error for that rule, so it may be possible to prune out
+   many `NoMatchError`s. There may even be some rule about this
+   i.e. if a hierarchy of rules is matched to a certain depth then it
+   must be a syntax error associated with this rule. However, in
+   general it will not be possible to prune `NoMatchError`s down to one.
+   The first step could be to return context information from
+   `NoMatchError` for all failures to match and then look at whether
+   there is an obvious way to prune these when raising a
+   `FortranSyntaxError`.
 
 .. note::
 
@@ -494,9 +523,10 @@ argument is text which can be used to give details of the error.
 Currently the main use of `FortranSyntaxError` is to catch the final
 `NoMatchError` exception and re-raise it with line number and the text
 of the line to be output. This final `NoMatchError` is caught and
-re-raised by wrapping the `Base` class `__new__` method in the top
-level `Program` class with its own `__new__` method. However, this
-exception is not able to give any details of the error.
+re-raised by overiding the `Base` class `__new__` method in the top
+level `Program` class. However, this exception is not able to give any
+details of the error as is knows nothing about which rules failed to
+match.
 
 `FortranSyntaxError` has started to be used in a few other places
 (e.g. curently limited to `BlockBase`), where it is know that there is
@@ -508,7 +538,7 @@ additional places the fparser script is not able to use the reader's
 fifo buffer to extract position information. This is dealt with by not
 outputting anything from the script related to the fifo buffer in this
 case. It is possible that if the lines were pushed back into the
-buffer then this would to work.
+buffer then this would work.
 
 .. note::
 
