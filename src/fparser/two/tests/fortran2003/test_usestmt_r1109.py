@@ -40,105 +40,181 @@ Use statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Use_Stmt
+from fparser.two.utils import NoMatchError, InternalError
 
 # match() use ...
 
 
-# match() 'use x'
+# match() 'use x'. Use both string and reader input here, but from
+# here on we will just use string input as that is what is passed to
+# the match() method
 def test_use(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use my_model")
-    ast = Use_Stmt(reader)
-    assert "USE my_model" in str(ast)
+    '''Check that a basic use is parsed correctly. Input separately as a
+    string and as a reader object
+
+    '''
+    def check_use(reader):
+        ''' '''
+        ast = Use_Stmt(reader)
+        assert "USE my_model" in str(ast)
+        assert repr(ast) == "Use_Stmt(None, None, Name('my_model'), '', None)"
+
+    line = "use my_model"
+    check_use(line)
+    reader = get_reader(line)
+    check_use(reader)
 
 
 # match() 'use :: x'
 def test_use_colons(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use :: my_model")
-    ast = Use_Stmt(reader)
+    '''Check that a basic use with '::' is parsed correctly.'''
+    line = "use :: my_model"
+    ast = Use_Stmt(line)
     assert "USE :: my_model" in str(ast)
+    assert repr(ast) == "Use_Stmt(None, '::', Name('my_model'), '', None)"
 
 
 # match() 'use, nature :: x'
 def test_use_nature(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use, intrinsic :: my_model")
-    ast = Use_Stmt(reader)
+    '''Check that a use with a 'nature' specification is parsed correctly.'''
+    line = "use, intrinsic :: my_model"
+    ast = Use_Stmt(line)
     assert "USE, INTRINSIC :: my_model" in str(ast)
+    assert repr(ast) == (
+        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('my_model'), "
+        "'', None)")
 
 
 # match() 'use x, rename'
 def test_use_rename(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use my_model, name=>new_name")
-    ast = Use_Stmt(reader)
-    assert "USE my_model, name => new_name" in str(ast)
+    '''Check that a use with a nename clause is parsed correctly.'''
+    line = "use my_module, name=>new_name"
+    ast = Use_Stmt(line)
+    assert "USE my_module, name => new_name" in str(ast)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_module'), ',', "
+        "Rename(None, Name('name'), Name('new_name')))")
 
 
 # match() 'use x, only: y'
 def test_use_only(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use my_model, only: name")
-    ast = Use_Stmt(reader)
+    '''Check that a use statement is parsed correctly when there is an
+    only clause.
+
+    '''
+    line = "use my_model, only: name"
+    ast = Use_Stmt(line)
     assert "USE my_model, ONLY: name" in str(ast)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Name('name'))")
 
 
 # match() 'use x, only:'
 def test_use_only_empty(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("use my_model, only:")
-    ast = Use_Stmt(reader)
+    '''Check that a use statement is parsed correctly when there is an
+    only clause without any content.
+
+    '''
+    line = "use my_model, only:"
+    ast = Use_Stmt(line)
     assert "USE my_model, ONLY:" in str(ast)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_model'), ', ONLY:', None)")
 
 
 # match() '  use  ,  nature  ::  x  ,  name=>new_name'
 def test_use_spaces_1(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("  use  ,  intrinsic  ::  my_model  ,  name=>new_name  ")
-    ast = Use_Stmt(reader)
-    assert "USE, INTRINSIC :: my_model, name => new_name" in str(ast)
+    '''Check that a use statement with spaces works correctly with
+    renaming.
 
+    '''
+    line = "  Use  ,  intrinsic  ::  my_model  ,  name=>new_name  "
+    ast = Use_Stmt(line)
+    assert "USE, INTRINSIC :: my_model, name => new_name" in str(ast)
+    assert repr(ast) == (
+        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('my_model'), ',', "
+        "Rename(None, Name('name'), Name('new_name')))")
 
 # match() '  use  ,  nature  ::  x  ,  only  :  name'
 def test_use_spaces_2(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("  use  ,  intrinsic  ::  my_model  ,  only  :  name  ")
-    ast = Use_Stmt(reader)
+    '''Check that a use statement with spaces works correctly with an only
+    clause.
+
+    '''
+    line = "  use  ,  intrinsic  ::  my_model  ,  only  :  name  "
+    ast = Use_Stmt(line)
     assert "USE, INTRINSIC :: my_model, ONLY: name" in str(ast)
+    assert repr(ast) == ("Use_Stmt(Module_Nature('INTRINSIC'), '::', "
+                         "Name('my_model'), ', ONLY:', Name('name'))")
 
 
 # match() mixed case
 def test_use_mixed_case(f2003_create):
-    '''Just get something working to start off with'''
-    reader = get_reader("UsE my_model, OnLy: name")
-    ast = Use_Stmt(reader)
+    '''Check that a use statement with mixed case keywords ('use' and
+    'only') works as expected.
+
+    '''
+    line = "UsE my_model, OnLy: name"
+    ast = Use_Stmt(line)
     assert "USE my_model, ONLY: name" in str(ast)
+    assert repr(ast) == ("Use_Stmt(None, None, Name('my_model'), ', ONLY:', "
+                         "Name('name'))")
 
 # match() Syntax errors
 
 
 def test_syntaxerror(f2003_create):
-    '''Test that None is returned if: the line is shorter than 3
-    characters, it is miss-spelt, the line is empty after use, there
-    is no space after use, nature is missing, there is a missing name
-    after nature, there is a missing :: after nature, there is a
-    missing name before only_list (*2), and there is a missing : after
-    only (*2)
-
-    '''
-    for name in ["us", "ust", "use", "usemy_model", "use, ::",
-                 "use, intrinsic::", "use, intrinsic my_module", "use,",
-                 "use, instrinsic ::,", "use my_model,", "use my_model, only",
-                 "use my_model, only ;"]:
-        reader = get_reader(name)
-        ast = Use_Stmt(reader)
-        assert not ast
-
-
+    '''Test that NoMatchError is raised for various syntax errors.'''
+    for line in ["us", "ust", "use", "usemy_model", "use, ", "use, ::",
+                 "use, intrinsic", "use, intrinsic::",
+                 "use, intrinsic my_module", "use,", "use my_model,",
+                 "use my_model, only", "use my_model, only ;",
+                 "use my_model, only name"]:
+        with pytest.raises(NoMatchError) as excinfo:
+            ast = Use_Stmt(line)
+        assert "Use_Stmt: '{0}'".format(line) in str(excinfo)
 
 # match() Internal errors
 
-# tostr() Errors
 
-# misc
+def test_use_internal_error1(f2003_create):
+    '''Check that an internal error is raised if the length of the Items
+    list is not 5 as the str() method assumes that it is.
+
+    '''
+    line = "use my_model"
+    ast = Use_Stmt(line)
+    ast.items = (None, None, None, None)
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert "should be of size 5 but found '4'" in str(excinfo)
+
+
+def test_use_internal_error2(f2003_create):
+    '''Check that an internal error is raised if the module name (entry 2
+    of Items) is empty or None as the str() method assumes that it is
+    a string with content.
+
+    '''
+    line = "use my_model"
+    ast = Use_Stmt(line)
+    for content in [None, ""]:
+        ast.items = (None, None, content, None, None)
+        with pytest.raises(InternalError) as excinfo:
+            str(ast)
+        assert ("entry 2 should be a module name but it is "
+                "empty") in str(excinfo)
+
+
+def test_use_internal_error3(f2003_create):
+    '''Check that an internal error is raised if entry 3 of Items is
+    'None' as the str() method assumes it is a (potentially empty)
+    string.
+
+    '''
+    line = "use my_model"
+    ast = Use_Stmt(line)
+    ast.items = (None, None, "my_module", None, None)
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert "entry 3 should be a string but found 'None'" in str(excinfo)

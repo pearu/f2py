@@ -7256,10 +7256,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  "ONLY" specification and optional "Rename" or "Only" list)
         :rtype: 5-tuple of objects (module name and 4 optional)
         '''
-        # Incorrect 'USE' statement
-        if string[:3].upper() != 'USE':
+        line = string.strip()
+        # Incorrect 'USE' statement or line too short
+        if line[:3].upper() != 'USE':
             return
-        line = string[3:]
+        line = line[3:]
         # Empty string after 'USE'
         if not line:
             return
@@ -7328,21 +7329,34 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''
         :return: parsed representation of "USE" statement
         :rtype: string
+        :raises InternalError: if items array is not the expected size
+        :raises InternalError: if items array[2] is not a string or is an empty string
+        :raises InternalError: if items array[3] is 'None' as it should be a string
         '''
+        if len(self.items) != 5:
+            raise InternalError(
+                "Use_Stmt.tostr(). 'Items' should be of size 5 but found "
+                "'{0}'.".format(len(self.items)))
+        if not self.items[2]:
+                raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
+                                    "be a module name but it is empty")
+        if self.items[3] == None:
+                raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
+                                    "be a string but found 'None'")
         usestmt = 'USE'
         # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
         # followed by a double colon to "USE" statement
-        if self.items[0] is not None and self.items[1] is not None:
-            usestmt += ', %s %s' % (self.items[0], self.items[1])
+        if self.items[0] and self.items[1]:
+            usestmt += ", {0} {1}".format(self.items[0], self.items[1])
         # Add optional double colon after "USE" statement without
         # Module_Nature (valid Fortran)
-        elif self.items[0] is None and self.items[1] is not None:
-            usestmt += ' %s' % (self.items[1])
+        elif not self.items[0] and self.items[1]:
+            usestmt += " {0}".format(self.items[1])
         # Add Module_Name and optional "ONLY" specifier if present
-        usestmt += ' %s%s' % (self.items[2], self.items[3])
+        usestmt += " {0}{1}".format(self.items[2], self.items[3])
         # Add optional Only_List or Rename_List if present
         if self.items[4] is not None:
-            usestmt += ' %s' % (self.items[4])
+            usestmt += " {0}".format(self.items[4])
         return usestmt
 
 
