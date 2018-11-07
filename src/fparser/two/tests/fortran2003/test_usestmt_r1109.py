@@ -54,7 +54,7 @@ def test_use(f2003_create):
 
     '''
     def check_use(reader):
-        ''' '''
+        '''Internal helper function to avoid code replication.'''
         ast = Use_Stmt(reader)
         assert "USE my_model" in str(ast)
         assert repr(ast) == "Use_Stmt(None, None, Name('my_model'), '', None)"
@@ -135,6 +135,7 @@ def test_use_spaces_1(f2003_create):
         "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('my_model'), ',', "
         "Rename(None, Name('name'), Name('new_name')))")
 
+
 # match() '  use  ,  nature  ::  x  ,  only  :  name'
 def test_use_spaces_2(f2003_create):
     '''Check that a use statement with spaces works correctly with an only
@@ -171,7 +172,7 @@ def test_syntaxerror(f2003_create):
                  "use my_model, only", "use my_model, only ;",
                  "use my_model, only name"]:
         with pytest.raises(NoMatchError) as excinfo:
-            ast = Use_Stmt(line)
+            _ = Use_Stmt(line)
         assert "Use_Stmt: '{0}'".format(line) in str(excinfo)
 
 # match() Internal errors

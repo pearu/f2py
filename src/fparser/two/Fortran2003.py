@@ -7235,14 +7235,14 @@ class Module_Subprogram(Base):  # R1108
 
 
 class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
-    """
-    R1109
+    '''
+    Fortran 2003 rule R1109
 
-    <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name>
-                                                  [ , <rename-list> ]
-                | USE [ [ , <module-nature> ] :: ] <module-name> ,
-                                                   ONLY: [ <only-list> ]
-    """
+    use-stmt is USE [ [ , module-nature ] :: ] module-name [ , rename-list ]
+             or USE [ [ , module-nature ] :: ] module-name ,
+                 ONLY : [ only-list ]
+
+    '''
     subclass_names = []
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
@@ -7297,15 +7297,15 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if nature is not None:
                 return
 
-        i = line.find(',')
-        if i == -1:
+        position = line.find(',')
+        if position == -1:
             return nature, dcolon, Module_Name(line), '', None
-        name = line[:i].rstrip()
+        name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
             return
         name = Module_Name(name)
-        line = line[i+1:].lstrip()
+        line = line[position+1:].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
         if not line:
             return
@@ -7330,8 +7330,10 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         :return: parsed representation of "USE" statement
         :rtype: string
         :raises InternalError: if items array is not the expected size
-        :raises InternalError: if items array[2] is not a string or is an empty string
-        :raises InternalError: if items array[3] is 'None' as it should be a string
+        :raises InternalError: if items array[2] is not a string or is an \
+                               empty string
+        :raises InternalError: if items array[3] is 'None' as it should be \
+                               a string
         '''
         if len(self.items) != 5:
             raise InternalError(
@@ -7340,7 +7342,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         if not self.items[2]:
                 raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
                                     "be a module name but it is empty")
-        if self.items[3] == None:
+        if self.items[3] is None:
                 raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
                                     "be a string but found 'None'")
         usestmt = 'USE'
