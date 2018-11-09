@@ -126,12 +126,6 @@ end type b
 #
 
 
-def test_name():  # R304
-
-    obj = Name('a')
-    assert isinstance(obj, Name), repr(obj)
-    obj = Name('a2')
-    assert isinstance(obj, Name), repr(obj)
     objd = Designator('a')
     assert isinstance(objd, Name), repr(objd)
     objc = Constant('a')
