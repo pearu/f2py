@@ -1082,12 +1082,28 @@ def isalnum(c):
 
 
 class WORDClsBase(Base):
-    """
-::
-    <WORD-cls> = <WORD> [ [ :: ] <cls> ]
-    """
+    '''Base class to support situations where you have a keyword which is
+    optionally followed by further text, potentially separated by
+    '::'.
+
+    For example 'program fred', or 'import :: a,b'
+
+    WORD-cls is WORD [ [ :: ] cls ]
+
+    '''
     @staticmethod
     def match(pattern, cls, string, check_colons=False, require_cls=False):
+        ''':param pattern: the pattern of the WORD to match. This can be a
+        string, a list of strings or a tuple of strings.
+        :type pattern: str, tuple of str or list of str
+        :param cls: the class to match
+        :type cls: a subclass of :py:class:`fparser.two.utils.Base`
+        :param bool check_colons: whether '::' is allowed or not
+        between WORD and cls.
+        :param bool require_cls: whether content for cls is required
+        or not.
+
+        '''
         if isinstance(pattern, (tuple, list)):
             for p in pattern:
                 try:
@@ -1100,10 +1116,14 @@ class WORDClsBase(Base):
                     return obj
             return
         if isinstance(pattern, str):
-            if string[:len(pattern)].upper() != pattern:
+            line = string.lstrip()
+            if line[:len(pattern)].upper() != pattern:
                 return
-            line = string[len(pattern):]
+            line = line[len(pattern):]
             if not line:
+                if require_cls:
+                    # no text found but it is required
+                    return
                 return pattern, None
             if isalnum(line[0]):
                 return
@@ -1141,6 +1161,7 @@ class WORDClsBase(Base):
         return pattern_value, cls(line)
 
     def tostr(self):
+        '''Convert the class into Fortran.'''
         if self.items[1] is None:
             return str(self.items[0])
         s = str(self.items[1])
@@ -1149,6 +1170,7 @@ class WORDClsBase(Base):
         return '%s %s' % (self.items[0], s)
 
     def tostr_a(self):  # colons version of tostr
+        '''Convert the class into Fortran, adding in "::".'''
         if self.items[1] is None:
             return str(self.items[0])
         return '%s :: %s' % (self.items[0], self.items[1])
