@@ -45,7 +45,7 @@ from fparser.two.Fortran2003 import Name
 # TODO: test tostr and tostr_a
 
 
-def test_wordclsbase(f2003_create):
+def test_wordclsbase():
     '''Test the wordclsbase match method with no optional arguments.'''
 
     token = "TOKEN"
@@ -105,7 +105,7 @@ def test_wordclsbase(f2003_create):
 
 
 @pytest.mark.xfail(reason="multiple names are treated as one and concatenated")
-def test_wordclsbase_multi_names(f2003_create):
+def test_wordclsbase_multi_names():
     '''Create a separate test as these examples fail as the Name class
     happily strips out spaces. I need to work out whether this is an
     issue for this class or for the Name class itself.
@@ -126,7 +126,7 @@ def test_wordclsbase_multi_names(f2003_create):
     assert not result
 
 
-def test_wordclsbase_optional_colons(f2003_create):
+def test_wordclsbase_optional_colons():
     '''Test the wordclsbase require_cls option in its match method with
     check_colons being set.
 
@@ -165,7 +165,7 @@ def test_wordclsbase_optional_colons(f2003_create):
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
 
-def test_wordclsbase_require_cls(f2003_create):
+def test_wordclsbase_require_cls():
     '''Test the wordclsbase match method with require_cls as an optional
     argument.
 
