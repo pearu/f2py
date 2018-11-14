@@ -110,6 +110,11 @@ def test_wordclsbase_multi_names():
     happily strips out spaces. I need to work out whether this is an
     issue for this class or for the Name class itself.
 
+    Test with 'require_cls' is 'False' (the default) which means that
+    content for the class ('Name' in this case) is optional and test
+    with 'require_cls' is 'True' which means that valid content should
+    exist for the class.
+
     '''
 
     token = "TOKEN"
@@ -127,8 +132,9 @@ def test_wordclsbase_multi_names():
 
 
 def test_wordclsbase_optional_colons():
-    '''Test the wordclsbase require_cls option in its match method with
-    check_colons being set.
+    '''Test the wordclsbase match method with check_colons as an optional
+    argument. No need to check in combination with the require_cls
+    optional argument as the code is independent.
 
     '''
     token = "TOKEN"
@@ -142,12 +148,12 @@ def test_wordclsbase_optional_colons():
     # token and :: no spaces match
     text = "{0}::".format(token)
     result = WORDClsBase.match(token, Name, text, check_colons=True)
-    assert str(result) == "('{0}', None)".format(token, name)
+    assert str(result) == "('{0}', None)".format(token)
 
     # token and :: with spaces match
-    text = "{0} :: ".format(token, name)
+    text = "{0} :: ".format(token)
     result = WORDClsBase.match(token, Name, text, check_colons=True)
-    assert str(result) == "('{0}', None)".format(token, name)
+    assert str(result) == "('{0}', None)".format(token)
 
     # token and name match
     text = "{0} {1}".format(token, name)
@@ -185,7 +191,7 @@ def test_wordclsbase_require_cls():
     assert not result
 
     # token and :: with spaces no match
-    text = "{0} :: ".format(token, name)
+    text = "{0} :: ".format(token)
     result = WORDClsBase.match(token, Name, text, check_colons=True,
                                require_cls=True)
     assert not result
