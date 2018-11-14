@@ -97,15 +97,14 @@ class FortranSyntaxError(FparserException):
     be invalid Fortran. Also returns information about the location of
     the error if that information is available.
 
+    :param reader: input string or reader where the error took \
+    place. This is used to provide line number and line content \
+    information.
+    :type reader: str or :py:class:`FortranReaderBase`
+    :param str info: a string giving contextual error information.
+
     '''
     def __init__(self, reader, info):
-        ''':param reader: input string or reader where the error took
-        place. This is used to provide line number and line content
-        information.
-        :type reader: str or :py:class:`FortranReaderBase`
-        :param info str: a string giving contextual error information.
-
-        '''
         location = "at unknown location"
         if isinstance(reader, FortranReaderBase):
             location = "at line {0}\n>>>{1}".format(
