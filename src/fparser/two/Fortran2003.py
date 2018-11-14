@@ -566,6 +566,7 @@ class Name(StringBase):  # R304
         :param str string: the string to match with the pattern rule.
         :returns: a tuple of size 1 containing a string with the \
         matched name if there is a match, or None if there is not.
+        :rtype: (str) or None
 
         '''
         return StringBase.match(pattern.abs_name, string.strip())
