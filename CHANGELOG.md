@@ -11,6 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+14/11/2018 PR #121 for #120. Fixes bug in BlockBase such that name
+           matches are no longer case sensitive. Improves error
+           handling.
+
 08/10/2018 PR #111 - bug fix for #110. Adds support for `kind(my_var)`
            inside a kind expression for a variable declaration.
 
