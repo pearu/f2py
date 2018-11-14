@@ -209,7 +209,7 @@ class Program(BlockBase):  # R201
         try:
             return Base.__new__(cls, string)
         except NoMatchError as error:
-            raise FortranSyntaxError(error)
+            raise FortranSyntaxError(string, error)
 
     @staticmethod
     def match(reader):
