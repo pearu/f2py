@@ -93,10 +93,24 @@ class NoMatchError(FparserException):
 
 
 class FortranSyntaxError(FparserException):
-    '''An exception indicating that fparser believes the provided code
-    to be invalid Fortran.
+    '''An exception indicating that fparser believes the provided code to
+    be invalid Fortran. Also returns information about the location of
+    the error if that information is available.
+
+    :param reader: input string or reader where the error took \
+    place. This is used to provide line number and line content \
+    information.
+    :type reader: str or :py:class:`FortranReaderBase`
+    :param str info: a string giving contextual error information.
 
     '''
+    def __init__(self, reader, info):
+        location = "at unknown location"
+        if isinstance(reader, FortranReaderBase):
+            location = "at line {0}\n>>>{1}".format(
+                reader.linecount,
+                reader.source_lines[reader.linecount-1])
+        Exception.__init__(self, "{0}\n{1}".format(location, info))
 
 
 class InternalError(FparserException):
@@ -425,9 +439,14 @@ content : tuple
 
             if match_names and isinstance(obj, match_name_classes):
                 end_name = obj.get_end_name()
-                if end_name != start_name:
-                    reader.warning('expected construct name "%s" but '
-                                   'got "%s"' % (start_name, end_name))
+                if end_name and not start_name:
+                    raise FortranSyntaxError(
+                        reader, "Name '{0}' has no corresponding starting "
+                        "name".format(end_name))
+                if end_name and start_name and \
+                   end_name.lower() != start_name.lower():
+                    raise FortranSyntaxError(
+                        reader, "Expecting name '{0}'".format(start_name))
 
             if endcls is not None and isinstance(obj, endcls_all):
                 if match_labels:
@@ -443,10 +462,14 @@ content : tuple
                     if set_unspecified_end_name and end_name is None and \
                        start_name is not None:
                         content[-1].set_name(start_name)
-                    elif start_name != end_name:
-                        reader.warning('expected construct name "%s" but '
-                                       'got "%s"' % (start_name, end_name))
-                        continue
+                    elif end_name and not start_name:
+                        raise FortranSyntaxError(
+                            reader, "Name '{0}' has no corresponding starting "
+                            "name".format(end_name))
+                    elif start_name and end_name and (start_name.lower() !=
+                                                      end_name.lower()):
+                        raise FortranSyntaxError(
+                            reader, "Expecting name '{0}'".format(start_name))
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break
