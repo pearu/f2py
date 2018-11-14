@@ -523,7 +523,7 @@ argument is text which can be used to give details of the error.
 Currently the main use of `FortranSyntaxError` is to catch the final
 `NoMatchError` exception and re-raise it with line number and the text
 of the line to be output. This final `NoMatchError` is caught and
-re-raised by overiding the `Base` class `__new__` method in the top
+re-raised by overriding the `Base` class `__new__` method in the top
 level `Program` class. However, this exception is not able to give any
 details of the error as is knows nothing about which rules failed to
 match.
