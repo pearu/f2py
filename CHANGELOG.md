@@ -11,6 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+15/11/2018 PR #123 for #117, Fixes a bug that caused fparser to crash
+           for code where a PROGRAM statement was missing an associated
+           name.
+
 14/11/2018 PR #121 for #120. Fixes bug in BlockBase such that name
            matches are no longer case sensitive. Improves error
            handling.
