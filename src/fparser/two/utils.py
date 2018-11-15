@@ -1187,8 +1187,9 @@ class WORDClsBase(Base):
     def tostr(self):
         '''Convert the class into Fortran.
 
-        :return str: String representation of this class without any \
-        optional '::'.
+        :return: String representation of this class without any \
+                 optional '::'.
+        :rtype: str
 
         '''
         if self.items[1] is None:
@@ -1201,8 +1202,9 @@ class WORDClsBase(Base):
     def tostr_a(self):
         '''Convert the class into Fortran, adding in "::".
 
-        :return str: String representation of this class including an \
-        optional '::'.
+        :return: String representation of this class including an \
+                 optional '::'.
+        :rtype: str
 
         '''
         if self.items[1] is None:
