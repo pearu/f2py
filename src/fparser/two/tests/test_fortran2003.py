@@ -126,20 +126,6 @@ end type b
 #
 
 
-def test_name():  # R304
-
-    obj = Name('a')
-    assert isinstance(obj, Name), repr(obj)
-    obj = Name('a2')
-    assert isinstance(obj, Name), repr(obj)
-    objd = Designator('a')
-    assert isinstance(objd, Name), repr(objd)
-    objc = Constant('a')
-    assert isinstance(objc, Name), repr(objc)
-    obje = Expr('a')
-    assert isinstance(obje, Name), repr(obje)
-
-
 def test_constant():
     ''' Tests that various types of constant expressions are parsed
     correctly (R305). The example here is for Literal_Constant
