@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+19/11/2018 PR #124 for #112. Bug fix - spaces within names are now
+           rejected by fparser2.
+
 15/11/2018 PR #123 for #117, Fixes a bug that caused fparser to crash
            for code where a PROGRAM statement was missing an associated
            name.
