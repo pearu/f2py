@@ -2931,6 +2931,54 @@ def test_read_stmt():
                          "Name('a_namelist_or_format')))), None, None)")
 
 
+def test_write_stmt():
+    ''' Tests for various forms of WRITE statement (R911). '''
+    tcls = Write_Stmt
+    obj = tcls('write (123)"hey"')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'WRITE(123) "hey"'
+    assert repr(obj) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
+        "Char_Literal_Constant('\"hey\"', None))")
+
+    obj = tcls('WRITE (*,"(I3)") my_int')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
+    assert repr(obj) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec('FMT', "
+        "Char_Literal_Constant('\"(I3)\"', None)))), Name('my_int'))")
+
+    obj = tcls('WRITE (*,namtest)')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'WRITE(*, namtest)'
+    assert repr(obj) == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
+        "Name('namtest')))), None)")
+
+    # Test when format specifier contains an '=' character
+    iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
+    assert isinstance(iolist, Io_Control_Spec_List)
+    obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, tcls)
+    assert repr(obj) == (
+        "Write_Stmt(Io_Control_Spec_List(\',\', "
+        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
+        "Io_Control_Spec(None, "
+        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
+        "None)))), Real_Literal_Constant(\'1.D0\', None))")
+    obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
+    assert isinstance(obj, tcls)
+    assert repr(obj) == (
+        "Write_Stmt(Io_Control_Spec_List(\',\', "
+        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
+        "Io_Control_Spec(\'FMT\', "
+        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
+        "None)))), Real_Literal_Constant(\'1.D0\', None))")
+
+
 def test_print_stmt():  # R912
 
     tcls = Print_Stmt
