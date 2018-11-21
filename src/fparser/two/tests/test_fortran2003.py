@@ -126,20 +126,6 @@ end type b
 #
 
 
-def test_name():  # R304
-
-    obj = Name('a')
-    assert isinstance(obj, Name), repr(obj)
-    obj = Name('a2')
-    assert isinstance(obj, Name), repr(obj)
-    objd = Designator('a')
-    assert isinstance(objd, Name), repr(objd)
-    objc = Constant('a')
-    assert isinstance(objc, Name), repr(objc)
-    obje = Expr('a')
-    assert isinstance(obje, Name), repr(obje)
-
-
 def test_constant():
     ''' Tests that various types of constant expressions are parsed
     correctly (R305). The example here is for Literal_Constant
@@ -238,24 +224,6 @@ def test_intrinsic_type_spec():  # R403
     obj = tcls('double  precision')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE PRECISION'
-
-
-def test_kind_selector():  # R404
-
-    tcls = Kind_Selector
-    obj = tcls('(1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(KIND = 1)'
-    assert (repr(obj) ==
-            "Kind_Selector('(', Int_Literal_Constant('1', None), ')')")
-
-    obj = tcls('(kind=1+2)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(KIND = 1 + 2)'
-
-    obj = tcls('* 1')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '*1'
 
 
 def test_signed_int_literal_constant():  # R405

@@ -11,9 +11,19 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-10/09/2018 PR #103. Re-structure fparser2 so that base classes and
-           exceptions are now in fparser.two.utils. Fortran2003.py
-           now just contains implementation of the rules.
+19/11/2018 PR #124 for #112. Bug fix - spaces within names are now
+           rejected by fparser2.
+
+15/11/2018 PR #123 for #117, Fixes a bug that caused fparser to crash
+           for code where a PROGRAM statement was missing an associated
+           name.
+
+14/11/2018 PR #121 for #120. Fixes bug in BlockBase such that name
+           matches are no longer case sensitive. Improves error
+           handling.
+
+08/10/2018 PR #111 - bug fix for #110. Adds support for `kind(my_var)`
+           inside a kind expression for a variable declaration.
 
 03/09/2018 PR #100 for issue #99. Adds new SyntaxError to fparser2 and
            fixes bug so that errors are reported correctly for multiple

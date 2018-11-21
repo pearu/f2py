@@ -76,15 +76,52 @@ from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
 
-class NoMatchError(Exception):
-    pass
-
-
-class FortranSyntaxError(Exception):
-    '''An exception indicating that the fparser believes the provided code
-    to be invalid Fortran
+class FparserException(Exception):
+    '''Base class exception for fparser. This allows an external tool to
+    capture all exceptions if required.
 
     '''
+
+
+class NoMatchError(FparserException):
+    '''An exception indicating that a particular rule implemented by a
+    class does not match the provided string. It does not necessary
+    mean there is an error as another rule may match. This exception
+    is used internally so should never be visible externally.
+
+    '''
+
+
+class FortranSyntaxError(FparserException):
+    '''An exception indicating that fparser believes the provided code to
+    be invalid Fortran. Also returns information about the location of
+    the error if that information is available.
+
+    :param reader: input string or reader where the error took \
+    place. This is used to provide line number and line content \
+    information.
+    :type reader: str or :py:class:`FortranReaderBase`
+    :param str info: a string giving contextual error information.
+
+    '''
+    def __init__(self, reader, info):
+        location = "at unknown location"
+        if isinstance(reader, FortranReaderBase):
+            location = "at line {0}\n>>>{1}".format(
+                reader.linecount,
+                reader.source_lines[reader.linecount-1])
+        Exception.__init__(self, "{0}\n{1}".format(location, info))
+
+
+class InternalError(FparserException):
+    '''An exception indicating that an unexpected error has occured in the
+    parser.
+
+    '''
+    def __init__(self, info):
+        new_info = ("'{0}'. Please report this to the "
+                    "authors.".format(info))
+        Exception.__init__(self, new_info)
 
 
 def show_result(func):
@@ -404,9 +441,14 @@ content : tuple
 
             if match_names and isinstance(obj, match_name_classes):
                 end_name = obj.get_end_name()
-                if end_name != start_name:
-                    reader.warning('expected construct name "%s" but '
-                                   'got "%s"' % (start_name, end_name))
+                if end_name and not start_name:
+                    raise FortranSyntaxError(
+                        reader, "Name '{0}' has no corresponding starting "
+                        "name".format(end_name))
+                if end_name and start_name and \
+                   end_name.lower() != start_name.lower():
+                    raise FortranSyntaxError(
+                        reader, "Expecting name '{0}'".format(start_name))
 
             if endcls is not None and isinstance(obj, endcls_all):
                 if match_labels:
@@ -422,10 +464,14 @@ content : tuple
                     if set_unspecified_end_name and end_name is None and \
                        start_name is not None:
                         content[-1].set_name(start_name)
-                    elif start_name != end_name:
-                        reader.warning('expected construct name "%s" but '
-                                       'got "%s"' % (start_name, end_name))
-                        continue
+                    elif end_name and not start_name:
+                        raise FortranSyntaxError(
+                            reader, "Name '{0}' has no corresponding starting "
+                            "name".format(end_name))
+                    elif start_name and end_name and (start_name.lower() !=
+                                                      end_name.lower()):
+                        raise FortranSyntaxError(
+                            reader, "Expecting name '{0}'".format(start_name))
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break
@@ -1061,12 +1107,29 @@ def isalnum(c):
 
 
 class WORDClsBase(Base):
-    """
-::
-    <WORD-cls> = <WORD> [ [ :: ] <cls> ]
-    """
+    '''Base class to support situations where you have a keyword which is
+    optionally followed by further text, potentially separated by
+    '::'.
+
+    For example 'program fred', or 'import :: a,b'
+
+    WORD-cls is WORD [ [ :: ] cls ]
+
+    '''
     @staticmethod
     def match(pattern, cls, string, check_colons=False, require_cls=False):
+        ''':param pattern: the pattern of the WORD to match. This can be a \
+        string, a list of strings or a tuple of strings.
+        :type pattern: str, tuple of str or list of str.
+        :param cls: the class to match.
+        :type cls: a subclass of :py:class:`fparser.two.utils.Base`.
+        :param str string: Text that we are trying to match.
+        :param bool check_colons: whether '::' is allowed or not \
+        between WORD and cls.
+        :param bool require_cls: whether content for cls is required \
+        or not.
+
+        '''
         if isinstance(pattern, (tuple, list)):
             for p in pattern:
                 try:
@@ -1079,10 +1142,14 @@ class WORDClsBase(Base):
                     return obj
             return
         if isinstance(pattern, str):
-            if string[:len(pattern)].upper() != pattern:
+            line = string.lstrip()
+            if line[:len(pattern)].upper() != pattern.upper():
                 return
-            line = string[len(pattern):]
+            line = line[len(pattern):]
             if not line:
+                if require_cls:
+                    # no text found but it is required
+                    return
                 return pattern, None
             if isalnum(line[0]):
                 return
@@ -1120,6 +1187,13 @@ class WORDClsBase(Base):
         return pattern_value, cls(line)
 
     def tostr(self):
+        '''Convert the class into Fortran.
+
+        :return: String representation of this class without any \
+                 optional '::'.
+        :rtype: str
+
+        '''
         if self.items[1] is None:
             return str(self.items[0])
         s = str(self.items[1])
@@ -1127,7 +1201,14 @@ class WORDClsBase(Base):
             return '%s%s' % (self.items[0], s)
         return '%s %s' % (self.items[0], s)
 
-    def tostr_a(self):  # colons version of tostr
+    def tostr_a(self):
+        '''Convert the class into Fortran, adding in "::".
+
+        :return: String representation of this class including an \
+                 optional '::'.
+        :rtype: str
+
+        '''
         if self.items[1] is None:
             return str(self.items[0])
         return '%s :: %s' % (self.items[0], self.items[1])

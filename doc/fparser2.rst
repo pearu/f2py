@@ -49,8 +49,35 @@ __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
 
 
-Getting Going
--------------
+Getting Going : Script
+----------------------
+
+fparser2 can be run from the command line by using the `fparser2.py`
+script located in the `scripts` directory. One or more input files can
+be provided. These files are parsed in turn and the parsed Fortran is output
+to the screen (most likely with a different formatting to the input as
+fparser2 does not preserve format), or an appropriate error is ouput.
+::
+
+   >>> cat simple.f90
+   program simple
+   end
+   >>> src/fparser/scripts/fparser2.py simple.f90
+   PROGRAM simple
+   END PROGRAM simple
+   >>> cat error.f90
+   prog error
+   end
+   >>> src/fparser/scripts/fparser2.py error.f90
+   Syntax error: at line 1
+   >>>prog error
+
+   parsing 'src/error.f90' failed at line #1'prog error'
+   started at line #1'prog error'
+
+
+Getting Going : Python
+----------------------
 
 As with the other parser (:ref:`fparser`), the source code to parse
 must be provided via a Fortran reader which is an instance of either
