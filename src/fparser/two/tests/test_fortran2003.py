@@ -718,6 +718,7 @@ def test_proc_component_def_stmt():  # R445
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b'
 
+
 def test_private_components_stmt():
     ''' Tests that declaration of PRIVATE components in a type definition
     is parsed correctly (R447). '''
