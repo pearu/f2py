@@ -1282,6 +1282,8 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     :param int indent: extent to which to indent debug output.
     :param bool debug: whether or not to write textual representation of AST \
                        to stdout.
+    :returns: a list of nodes
+    :rtype: `list` of :py:class:`fparser.two.utils.Base`
     '''
     local_list = []
     for child in children:

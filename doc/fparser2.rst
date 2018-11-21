@@ -188,7 +188,7 @@ attribute of `BlockBase` objects or the `.items` attribute of
 Walking the AST
 ---------------
 
-Currently fparser2 provides two methods for traversal of the
+fparser2 provides two functions to support the traversal of the
 AST that it constructs:
 
 .. automethod:: fparser.two.utils.walk_ast
