@@ -1318,7 +1318,12 @@ def get_child(root_node, node_type):
               None.
     :rtype: :py:class:`fparser.two.utils.Base`
     '''
-    for node in root_node.content:
+    children = []
+    if hasattr(root_node, "content"):
+        children = root_node.content
+    elif hasattr(root_node, "items"):
+        children = root_node.items
+    for node in children:
         if isinstance(node, node_type):
             return node
     return None
