@@ -718,6 +718,65 @@ def test_proc_component_def_stmt():  # R445
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE(REAL*8), POINTER, PASS(n) :: a, b'
 
+def test_private_components_stmt():
+    ''' Tests that declaration of PRIVATE components in a type definition
+    is parsed correctly (R447). '''
+    tcls = Private_Components_Stmt
+    obj = tcls('private')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'PRIVATE'
+    assert repr(obj) == "Private_Components_Stmt('PRIVATE')"
+
+    # Statement not 'private'
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = tcls('public')
+    assert "Private_Components_Stmt: 'public'" in str(excinfo)
+
+
+def test_type_bound_procedure_part():
+    ''' Tests for type-bound procedure (R448). '''
+    tcls = Type_Bound_Procedure_Part
+    obj = tcls(get_reader('''\
+contains
+procedure, pass :: length => point_length'''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert 'CONTAINS\nPROCEDURE, PASS :: length => point_length' in str(obj)
+
+
+def test_proc_binding_stmt():  # R450
+
+    tcls = Proc_Binding_Stmt
+    obj = tcls('procedure, pass :: length => point_length')
+    assert isinstance(obj, Specific_Binding), repr(obj)
+    assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
+
+
+def test_generic_binding():  # R452
+
+    tcls = Generic_Binding
+    obj = tcls('generic :: a => b')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'GENERIC :: a => b'
+
+    obj = tcls('generic, private :: read(formatted) => b,c')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'GENERIC, PRIVATE :: READ(FORMATTED) => b, c'
+
+
+def test_final_binding():  # R454
+
+    tcls = Final_Binding
+    obj = tcls('final a, b')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'FINAL :: a, b'
+    assert (repr(obj) ==
+            "Final_Binding('FINAL', Final_Subroutine_Name_List(',', "
+            "(Name('a'), Name('b'))))")
+
+    obj = tcls('final::a')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'FINAL :: a'
+
 
 def test_derived_type_spec():  # R455
 
