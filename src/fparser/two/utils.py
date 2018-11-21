@@ -198,9 +198,9 @@ class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      \.string - original argument to construct a class instance, its type \
-                is either str or FortranReaderBase.
-      \.item   - Line instance (holds label) or None.
+      self.string - original argument to construct a class instance, its type \
+                    is either str or FortranReaderBase.
+      self.item   - Line instance (holds label) or None.
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -1269,9 +1269,22 @@ class Type_Declaration_StmtBase(StmtBase):
 
 
 def walk_ast(children, my_types=None, indent=0, debug=False):
-    '''' Walk down the tree produced by fparser2 where children
+    '''
+    Walk down the tree produced by fparser2 where children
     are listed under 'content'.  Returns a list of all nodes with the
-    specified type(s). '''
+    specified type(s).
+
+    :param children: list of child nodes from which to walk.
+    :type children: list of :py:class:fparser.two.utils.Base.
+    :param my_types: list of types of Node to return. (Default is to \
+                     return all nodes.)
+    :type my_types: list of type
+    :param int indent: extent to which to indent debug output.
+    :param bool debug: whether or not to write textual representation of AST \
+                       to stdout.
+    :returns: a list of nodes
+    :rtype: `list` of :py:class:`fparser.two.utils.Base`
+    '''
     local_list = []
     for child in children:
         if debug:
@@ -1292,3 +1305,27 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
             local_list += walk_ast(child.items, my_types, indent+1, debug)
 
     return local_list
+
+
+def get_child(root_node, node_type):
+    '''
+    Searches for the first immediate child of root_node that is of the
+    specified type.
+
+    :param root_node: the parent of the child nodes we will search through.
+    :type root_node: :py:class:`fparser.two.utils.Base`
+    :param type node_type: the class of child node to search for.
+
+    :returns: the first child node of type node_type that is encountered or \
+              None.
+    :rtype: :py:class:`fparser.two.utils.Base`
+    '''
+    children = []
+    if hasattr(root_node, "content"):
+        children = root_node.content
+    elif hasattr(root_node, "items"):
+        children = root_node.items
+    for node in children:
+        if isinstance(node, node_type):
+            return node
+    return None

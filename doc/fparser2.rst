@@ -130,7 +130,7 @@ executing the AST. For example:
 
 Note that the two readers will ignore (and dispose of) comments by
 default. If you wish comments to be retained then you must set
-`ignore_comments=True` when creating the reader. The AST created by
+`ignore_comments=False` when creating the reader. The AST created by
 fparser2 will then have `Comment` nodes representing any comments
 found in the code. Nodes representing in-line comments will be added
 immediately following the node representing the code in which they
@@ -183,3 +183,15 @@ tree representing the parsed code are instances of either `BlockBase`
 or `SequenceBase`. Child nodes are then stored in the `.content`
 attribute of `BlockBase` objects or the `.items` attribute of
 `SequenceBase` objects. Both of these attributes are Tuple instances.
+
+
+Walking the AST
+---------------
+
+fparser2 provides two functions to support the traversal of the
+AST that it constructs:
+
+.. automethod:: fparser.two.utils.walk_ast
+
+.. automethod:: fparser.two.utils.get_child
+

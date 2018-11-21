@@ -11,6 +11,8 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+21/11/2018 PR #127 for #126. Adds get_child function to help AST traversal.
+
 19/11/2018 PR #124 for #112. Bug fix - spaces within names are now
            rejected by fparser2.
 
