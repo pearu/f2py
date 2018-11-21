@@ -256,8 +256,6 @@ class Base(ComparableMixin):
             # restore readers content when no match is found.
             try:
                 result = cls.match(string)
-            except IndexError:
-                pass
             except NoMatchError as msg:
                 if str(msg) == '%s: %r' % (cls.__name__, string):
                     # avoid recursion 1.
