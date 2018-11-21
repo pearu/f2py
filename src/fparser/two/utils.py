@@ -1269,9 +1269,20 @@ class Type_Declaration_StmtBase(StmtBase):
 
 
 def walk_ast(children, my_types=None, indent=0, debug=False):
-    '''' Walk down the tree produced by fparser2 where children
+    '''
+    Walk down the tree produced by fparser2 where children
     are listed under 'content'.  Returns a list of all nodes with the
-    specified type(s). '''
+    specified type(s).
+
+    :param children: list of child nodes from which to walk.
+    :type children: list of :py:class:fparser.two.utils.Base.
+    :param my_types: list of types of Node to return. (Default is to \
+                     return all nodes.)
+    :type my_types: list of type
+    :param int indent: extent to which to indent debug output.
+    :param bool debug: whether or not to write textual representation of AST \
+                       to stdout.
+    '''
     local_list = []
     for child in children:
         if debug:
@@ -1296,7 +1307,7 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
 
 def get_child(root_node, node_type):
     '''
-    Searches for the immediate child of root_node that is of the
+    Searches for the first immediate child of root_node that is of the
     specified type.
 
     :param root_node: the parent of the child nodes we will search through.
