@@ -198,9 +198,9 @@ class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      \.string - original argument to construct a class instance, its type \
-                is either str or FortranReaderBase.
-      \.item   - Line instance (holds label) or None.
+      self.string - original argument to construct a class instance, its type \
+                    is either str or FortranReaderBase.
+      self.item   - Line instance (holds label) or None.
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -1292,3 +1292,22 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
             local_list += walk_ast(child.items, my_types, indent+1, debug)
 
     return local_list
+
+
+def get_child(root_node, node_type):
+    '''
+    Searches for the immediate child of root_node that is of the
+    specified type.
+
+    :param root_node: the parent of the child nodes we will search through.
+    :type root_node: :py:class:`fparser.two.utils.Base`
+    :param type node_type: the class of child node to search for.
+
+    :returns: the first child node of type node_type that is encountered or \
+              None.
+    :rtype: :py:class:`fparser.two.utils.Base`
+    '''
+    for node in root_node.content:
+        if isinstance(node, node_type):
+            return node
+    return None
