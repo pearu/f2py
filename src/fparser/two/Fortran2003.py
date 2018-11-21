@@ -1054,36 +1054,62 @@ class Char_Length(BracketBase):  # R426
 
 
 class Char_Literal_Constant(Base):  # R427
-    """
-    <char-literal-constant> = [ <kind-param> _ ] ' <rep-char> '
-                              | [ <kind-param> _ ] \" <rep-char> \"
-    """
+    '''
+    <char-literal-constant> is [ kind-param _ ] ' <rep-char> '
+                            or [ kind-param _ ] " <rep-char> "
+    '''
     subclass_names = []
     rep = pattern.char_literal_constant
 
     @staticmethod
     def match(string):
-        if string[-1] not in '"\'':
+        '''Implements the matching for a Char_Literal_Constant.
+        
+        :param str string: a string containing the code to match
+
+        :return: `None` if there is no match, otherwise a `tuple` of
+                 size 2 containing the kind value and the character
+                 constant as strings
+        :rtype: `None` or (str, None) or (str, str)
+
+        '''
+        strip_string = string.strip()
+        if not strip_string:
+            # the string is empty or only contains blank space
             return
-        if string[-1] == '"':
+        if strip_string[-1] not in '"\'':
+            return
+        if strip_string[-1] == '"':
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named2
         else:
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named1
-        line, repmap = string_replace_map(string)
-        m = abs_a_n_char_literal_constant_named.match(line)
-        if not m:
+        line, repmap = string_replace_map(strip_string)
+        match = abs_a_n_char_literal_constant_named.match(line)
+        if not match:
             return
-        kind_param = m.group('kind_param')
-        line = m.group('value')
+        kind_param = match.group('kind_param')
+        line = match.group('value')
         line = repmap(line)
         return line, kind_param
 
     def tostr(self):
-        if self.items[1] is None:
+        '''
+        :return: this Char_Literal_Constant as a string
+        :rtype: str
+
+        :raises InternalError: if the internal items list variable is
+        not the expected size.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Char_Literal_Constant method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[1]:
             return str(self.items[0])
-        return '%s_%s' % (self.items[1], self.items[0])
+        return "{0}_{1}".format(self.items[1], self.items[0])
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
@@ -1571,8 +1597,8 @@ class Private_Components_Stmt(STRINGBase):
     def match(string):
         '''
         :param str string: Fortran code to check for a match
-        :return: keyword  "PRIVATE" or nothing if no match is found
-        :rtype: string
+        :return: keyword  "PRIVATE" or None if no match is found
+        :rtype: str or None
         '''
         return StringBase.match('PRIVATE', string.upper())
 
@@ -1596,13 +1622,12 @@ class Type_Bound_Procedure_Part(BlockBase):
     @staticmethod
     def match(reader):
         '''
-        :param reader: the Fortran file reader containing the line(s) \
-                       of code that we are trying to match
-        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
-                      or
-                      :py:class:`fparser.common.readfortran.FortranStringReader`
+        :param reader: the Fortran reader containing the line(s) of code \
+        that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
         :return: code block containing instances of the classes that match
                  the syntax of the type-bound procedure part of a derived type.
+
         '''
         return BlockBase.match(Contains_Stmt,
                                [Binding_Private_Stmt, Proc_Binding_Stmt],
@@ -1626,8 +1651,8 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):
     def match(string):
         '''
         :param str string: Fortran code to check for a match
-        :return: keyword  "PRIVATE" or nothing if no match is found
-        :rtype: string
+        :return: keyword  "PRIVATE" or None if no match is found
+        :rtype: str or None
         '''
         return StringBase.match('PRIVATE', string.upper())
 
