@@ -1055,16 +1055,25 @@ class Char_Length(BracketBase):  # R426
 
 class Char_Literal_Constant(Base):  # R427
     '''
-    <char-literal-constant> is [ kind-param _ ] ' <rep-char> '
-                            or [ kind-param _ ] " <rep-char> "
+    char-literal-constant is [ kind-param _ ] ' rep-char '
+                          or [ kind-param _ ] " rep-char "
     '''
     subclass_names = []
     rep = pattern.char_literal_constant
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a Char_Literal_Constant.
-        
+        '''Implements the matching for a Char_Literal_Constant. For example
+
+        "hello"
+        'hello'
+        nondefaultcharset_"nondefaultchars"
+
+        There is an associated constraint C422: "The value of
+        kind-param shall specify a representation method that exists
+        on the processor." However, this cannot be validated by
+        fparser so no checks are performed.
+
         :param str string: a string containing the code to match
 
         :return: `None` if there is no match, otherwise a `tuple` of

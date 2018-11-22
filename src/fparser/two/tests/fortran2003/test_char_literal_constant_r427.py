@@ -39,37 +39,77 @@ character literal constant.
 
 import pytest
 from fparser.two.Fortran2003 import Char_Literal_Constant
+from fparser.two.utils import NoMatchError
 
+def test_char_literal_constant():
+    ''' Test that valid input is parsed correctly '''
 
-def test_char_literal_constant():  # R427
-
-    tcls = Char_Literal_Constant
-    obj = tcls('NIH_"DO"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'NIH_"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
-
-    obj = tcls("'DO'")
-    assert isinstance(obj, tcls), repr(obj)
+    # simple, single quotes
+    obj = Char_Literal_Constant("'DO'")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "'DO'"
     assert repr(obj) == 'Char_Literal_Constant("\'DO\'", None)'
 
-    obj = tcls("'DON''T'")
-    assert isinstance(obj, tcls), repr(obj)
+    # simple, double quotes
+    obj = Char_Literal_Constant('"DO"')
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == '"DO"'
+    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', None)'
+
+    # single quotes inside single quotes (two means one)
+    obj = Char_Literal_Constant("'DON''T'")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "'DON''T'"
 
-    obj = tcls('"DON\'T"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"DON\'T"'
+    # double quotes inside double quotes (two means one)
+    obj = Char_Literal_Constant('"""busy"""')
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == '"""busy"""'
 
-    obj = tcls('""')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '""'
+    # single quotes, spaces
+    obj = Char_Literal_Constant("  '  D  O  '  ")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == "'  D  O  '"
+    assert repr(obj) == 'Char_Literal_Constant("\'  D  O  \'", None)'
 
-    obj = tcls("''")
-    assert isinstance(obj, tcls), repr(obj)
+    # Single quotes, empty string
+    obj = Char_Literal_Constant("''")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "''"
 
-    obj = tcls('"hey ha(ada)\t"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"hey ha(ada)\t"'
+    # Double quotes, empty string
+    obj = Char_Literal_Constant('""')
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == '""'
+
+    # include a kind parameter (which says what character set to
+    # expect)
+    obj = Char_Literal_Constant('NIH_"DO"')
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == 'NIH_"DO"'
+    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
+
+    # additional characters
+    obj = Char_Literal_Constant("'()!$%^&*_+=-01~@#;:/?.>,<|'")
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == "'()!$%^&*_+=-01~@#;:/?.>,<|'"
+
+    # single quotes escaped inside single quotes is an error
+    #obj = Char_Literal_Constant("'DON\'T'")
+    #assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    #assert str(obj) == "'DON\'T'"
+
+    # double quotes escaped inside double quotes
+    #obj = Char_Literal_Constant('""important\""')
+    #assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    #assert str(obj) == '"\"important\""'
+
+def test_char_literal_constant_error():
+    ''' Test that invalid input raises an exception '''
+
+    # empty string
+    for value in ["", None]:
+        with pytest.raises(NoMatchError) as excinfo:
+            obj = Char_Literal_Constant(value)
+        assert "Char_Literal_Constant: '{0}'".format(value) in str(excinfo.value)
+
