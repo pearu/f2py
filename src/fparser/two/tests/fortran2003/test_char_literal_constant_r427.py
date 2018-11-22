@@ -41,6 +41,7 @@ import pytest
 from fparser.two.Fortran2003 import Char_Literal_Constant
 from fparser.two.utils import NoMatchError
 
+
 def test_char_literal_constant():
     ''' Test that valid input is parsed correctly '''
 
@@ -54,7 +55,6 @@ def test_char_literal_constant():
     obj = Char_Literal_Constant('"DO"')
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == '"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', None)'
 
     # single quotes inside single quotes (two means one)
     obj = Char_Literal_Constant("'DON''T'")
@@ -84,32 +84,32 @@ def test_char_literal_constant():
 
     # include a kind parameter (which says what character set to
     # expect)
-    obj = Char_Literal_Constant('NIH_"DO"')
+    obj = Char_Literal_Constant('KP_"DO"')
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
-    assert str(obj) == 'NIH_"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
+    assert str(obj) == 'KP_"DO"'
+    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'KP\')'
+
+    # include a kind parameter with spaces
+    obj = Char_Literal_Constant('  KP  _  "  D  O  "  ')
+    assert isinstance(obj, Char_Literal_Constant), repr(obj)
+    assert str(obj) == 'KP_"  D  O  "'
+    assert repr(obj) == 'Char_Literal_Constant(\'"  D  O  "\', \'KP\')'
 
     # additional characters
     obj = Char_Literal_Constant("'()!$%^&*_+=-01~@#;:/?.>,<|'")
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "'()!$%^&*_+=-01~@#;:/?.>,<|'"
 
-    # single quotes escaped inside single quotes is an error
-    #obj = Char_Literal_Constant("'DON\'T'")
-    #assert isinstance(obj, Char_Literal_Constant), repr(obj)
-    #assert str(obj) == "'DON\'T'"
 
-    # double quotes escaped inside double quotes
-    #obj = Char_Literal_Constant('""important\""')
-    #assert isinstance(obj, Char_Literal_Constant), repr(obj)
-    #assert str(obj) == '"\"important\""'
+def test_char_literal_constant_error():  # pylint: disable=invalid-name
 
-def test_char_literal_constant_error():
     ''' Test that invalid input raises an exception '''
 
-    # empty string
-    for value in ["", None]:
+    # test various invalid options
+    for example in ["", "  ", "A", "'A", "A'", "\"A", "A\"", "A'A'", "A 'A'",
+                    "'A'A", "'A' A", "_'A'", "$_'A'", "A A_'A'", "A_'A'A",
+                    "A_'A' A"]:
         with pytest.raises(NoMatchError) as excinfo:
-            obj = Char_Literal_Constant(value)
-        assert "Char_Literal_Constant: '{0}'".format(value) in str(excinfo.value)
-
+            _ = Char_Literal_Constant(example)
+        assert "Char_Literal_Constant: '{0}'".format(example) in \
+            str(excinfo.value)
