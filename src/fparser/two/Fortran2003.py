@@ -1794,9 +1794,9 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
 class Binding_PASS_Arg_Name(CALLBase):
     # pylint: disable=invalid-name
     '''
-    :F03R:`451_help`::
+    :F03R:`453_help`::
 
-    Fortran 2003 helper rule (for R451)
+    Fortran 2003 helper rule (for R453)
     that specifies syntax of passed-object dummy argument for a
     specific type-bound procedure.
 
@@ -1811,7 +1811,7 @@ class Binding_PASS_Arg_Name(CALLBase):
         :param str string: Fortran code to check for a match
         :return: keyword  "PASS" with the name of a passed-object
                  dummy argument or nothing if no match is found
-        :rtype: string
+        :rtype: str
         '''
         return CALLBase.match('PASS', Arg_Name, string)
 

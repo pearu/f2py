@@ -40,7 +40,7 @@ part of a derived type.
 
 import pytest
 from fparser.two.utils import NoMatchError, InternalError
-from fparser.two.Fortran2003 import Specific_Binding, Binding_PASS_Arg_Name
+from fparser.two.Fortran2003 import Specific_Binding
 
 
 def test_valid(f2003_create):
@@ -122,11 +122,11 @@ def test_valid(f2003_create):
     assert str(obj) == "PROCEDURE, PASS :: sub => boat"
 
 
-def test_invalid(f2003_create):
+def test_invalid():
     ''' Test that parsing invalid Fortran syntax for
     Specific_Binding statements raises an appropriate error. '''
 
-    # includes tests for breaking C456 and C457 
+    # includes tests for breaking C456 and C457
     for string in ["",
                    "  ",
                    "procedure  ",
@@ -148,11 +148,11 @@ def test_invalid(f2003_create):
                    "procedure :: sub > boat",
                    "procedure :: sub => boat boat2"]:
         with pytest.raises(NoMatchError) as excinfo:
-            obj = Specific_Binding(string)
+            _ = Specific_Binding(string)
         assert "Specific_Binding: '{0}'".format(string) in str(excinfo.value)
 
 
-def test_tostr_invalid(monkeypatch):
+def test_tostr_invalid(f2003_create, monkeypatch):
     ''' Test that invalid input raises an exception '''
 
     # test internal error in tostr() when the items list is not the
@@ -162,32 +162,3 @@ def test_tostr_invalid(monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         _ = str(obj)
     assert "tostr() has '1' items, but expecting 5" in str(excinfo.value)
-
-
-if False:
-    def test_binding_pass_arg_name(f2003_create):
-        ''' Test that Binding_PASS_Arg_Name is parsed correctly. '''
-
-        testcls = Binding_PASS_Arg_Name
-        parsecls = Specific_Binding
-
-        aobj = testcls("pass(name)")
-        assert isinstance(aobj, testcls), repr(aobj)
-        assert repr(aobj) == ("Binding_PASS_Arg_Name('PASS', Name('name'))")
-
-        line = ("procedure(analytic_function), deferred, pass(self) :: "
-                "function_name")
-        aobj = parsecls(line).items[1].items[1]
-        assert isinstance(aobj, testcls), repr(aobj)
-        assert repr(aobj) == "Binding_PASS_Arg_Name('PASS', Name('self'))"
-
-        line = SOURCE.split('\n')[14].strip()
-        obj = parsecls(line)
-        assert isinstance(obj, parsecls), repr(obj)
-        assert (str(obj) == "PROCEDURE, PUBLIC, PASS(self) :: "
-                "abstract_method => implementation_method")
-        assert repr(obj) == (
-            "Specific_Binding(None, "
-            "Binding_Attr_List(',', (Access_Spec('PUBLIC'), "
-            "Binding_PASS_Arg_Name('PASS', Name('self')))), "
-            "'::', Name('abstract_method'), Name('implementation_method'))")
