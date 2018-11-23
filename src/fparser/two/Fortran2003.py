@@ -1718,58 +1718,76 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
         :rtype: 5-tuple of objects (1 mandatory and 4 optional)
         :raises NoMatchError: if the interface name is not preceded by '::'
         '''
-        # Incorrect 'PROCEDURE' statement
-        if string[:9].upper() != 'PROCEDURE':
+        # Remove any leading, trailing spaces.
+        string_strip = string.strip()
+        if string_strip[:9].upper() != 'PROCEDURE':
+            # There is no 'PROCEDURE' statement.
             return
-        line = string[9:].lstrip()
-        # Find optional interface name if it exists
+        line = string_strip[9:].lstrip()
+        # Find optional interface name if it exists.
         iname = None
         if line.startswith('('):
-            i = line.find(')')
-            if i != -1:
-                iname = Interface_Name(line[1:i].strip())
-                line = line[i+1:].lstrip()
-        # Find optional double colon and binding attribute list
+            index = line.find(')')
+            if index != -1:
+                iname = Interface_Name(line[1:index].strip())
+                line = line[index+1:].lstrip()
+        # Look for optional double colon and binding attribute list.
         dcolon = None
         mylist = None
-        i = line.find('::')
-        if i != -1:
+        index = line.find('::')
+        if index != -1:
             dcolon = '::'
             if line.startswith(','):
-                mylist = Binding_Attr_List(line[1:i].strip())
-            line = line[i+2:].lstrip()
-        # Find optional procedure name and raise an error if
-        # the interface name is not preceded by '::'
-        i = line.find('=>')
+                mylist = Binding_Attr_List(line[1:index].strip())
+            elif line[:index].strip():
+                # There is content between procedure (with optional
+                # interface) and :: that does not start with a ','
+                # which is a syntax error.
+                return
+            line = line[index+2:].lstrip()
+        # Find optional procedure name.
+        index = line.find('=>')
         pname = None
-        if i != -1:
-            pname = Procedure_Name(line[i+2:].lstrip())
-            line = line[:i].rstrip()
-            if dcolon is None:
-                raise NoMatchError()
-        # Return class arguments
+        if index != -1:
+            pname = Procedure_Name(line[index+2:].lstrip())
+            line = line[:index].rstrip()
+            if not dcolon:
+                # Constraint C456 requires '::' if there is a
+                # procedure-name.
+                return
+        if iname and pname:
+            # Constraint C457 disallows interface-name if there is a
+            # procedure-name.
+            return
+        # Return class arguments.
         return iname, mylist, dcolon, Binding_Name(line), pname
 
     def tostr(self):
         '''
         :return: parsed representation of a specific type-bound procedure
-        :rtype: string
+        :rtype: `str`
+
         '''
-        stmt = 'PROCEDURE'
+        if len(self.items) != 5:
+            raise InternalError(
+                "Class Specific_Binding method tostr() has '{0}' items, "
+                "but expecting 5.".format(len(self.items)))
+        
+        stmt = "PROCEDURE"
         # Add optional interface name
-        if self.items[0] is not None:
-            stmt += '(%s)' % (self.items[0])
+        if self.items[0]:
+            stmt += "({0})".format(self.items[0])
         # Add optional double colon and binding attribute list
         # (if the list is present)
-        if self.items[1] is not None and self.items[2] is not None:
-            stmt += ', %s %s' % (self.items[1], self.items[2])
-        elif self.items[1] is None and self.items[2] is not None:
-            stmt += ' %s' % (self.items[2])
+        if self.items[1] and self.items[2]:
+            stmt += ", {0} {1}".format(self.items[1], self.items[2])
+        elif not self.items[1] and self.items[2]:
+            stmt += " {0}".format(self.items[2])
         # Add mandatory Binding_Name
-        stmt += ' %s' % (self.items[3])
+        stmt += " {0}".format(self.items[3])
         # Add optional procedure name
-        if self.items[4] is not None:
-            stmt += ' => %s' % (self.items[4])
+        if self.items[4]:
+            stmt += " => {0}".format(self.items[4])
         return stmt
 
 
