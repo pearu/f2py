@@ -1589,8 +1589,7 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
     match = staticmethod(match)
 
 
-class Private_Components_Stmt(STRINGBase):
-    # pylint: disable=invalid-name
+class Private_Components_Stmt(STRINGBase): # pylint: disable=invalid-name
     '''
     :F03R:`447`::
 
@@ -1612,8 +1611,7 @@ class Private_Components_Stmt(STRINGBase):
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Type_Bound_Procedure_Part(BlockBase):
-    # pylint: disable=invalid-name
+class Type_Bound_Procedure_Part(BlockBase): # pylint: disable=invalid-name
     '''
     :F03R:`448`::
 
@@ -1634,17 +1632,17 @@ class Type_Bound_Procedure_Part(BlockBase):
         :param reader: the Fortran reader containing the line(s) of code \
         that we are trying to match
         :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
-        :return: code block containing instances of the classes that match
+        :return: code block containing instances of the classes that match \
                  the syntax of the type-bound procedure part of a derived type.
-
+        :rtype: ([`Contains_Stmt`, `Specific_Binding`, `str`, `Name`, \
+                  `Name`]) or `None`
         '''
         return BlockBase.match(Contains_Stmt,
                                [Binding_Private_Stmt, Proc_Binding_Stmt],
                                None, reader)
 
 
-class Binding_Private_Stmt(StmtBase, STRINGBase):
-    # pylint: disable=invalid-name
+class Binding_Private_Stmt(StmtBase, STRINGBase): # pylint: disable=invalid-name
     '''
     :F03R:`449`::
 
@@ -1666,8 +1664,7 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Proc_Binding_Stmt(Base):
-    # pylint: disable=invalid-name
+class Proc_Binding_Stmt(Base): # pylint: disable=invalid-name
     '''
     :F03R:`450`::
 
@@ -1682,10 +1679,8 @@ class Proc_Binding_Stmt(Base):
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
-class Specific_Binding(StmtBase):
-    # pylint: disable=invalid-name
-    '''
-    :F03R:`451`::
+class Specific_Binding(StmtBase): # pylint: disable=invalid-name
+    ''':F03R:`451`::
 
     Fortran 2003 rule R451
     that specifies syntax of specific binding for a type-bound
@@ -1693,6 +1688,19 @@ class Specific_Binding(StmtBase):
 
     <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
         [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
+
+    The following are associated constraints:
+
+    "C456 (R451) If => procedure-name appears, the double-colon
+    separator shall appear."
+
+    "C457 (R451) If => procedure-name appears, interface-name shall not
+    appear."
+
+    "C458 (R451) The procedure-name shall be the name of an accessible
+    module procedure or an external procedure that has an explicit
+    interface." Note, this is not checked by fparser.
+
     '''
     subclass_names = []
     use_names = ['Interface_Name', 'Binding_Attr_List',

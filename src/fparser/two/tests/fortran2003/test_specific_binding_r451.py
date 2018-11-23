@@ -39,61 +39,122 @@ part of a derived type.
 '''
 
 import pytest
-from fparser.api import get_reader
-from fparser.two.utils import FortranSyntaxError, NoMatchError
-from fparser.two.Fortran2003 import Specific_Binding, Binding_PASS_Arg_Name, \
-    Program
-
-SOURCE = '''\
-module test_mod
-
-  implicit none
-  private
-
-  ! Define test type
-  type, public, extends(abstract_type) :: implementation_type
-    private
-
-  contains
-
-    procedure :: internal_method_1
-    procedure internal_method_2
-    procedure, public :: submethod_1
-    procedure, public, pass(self) :: abstract_method => implementation_method
-
-  end type implementation_type
-
-end module test_mod'''
+from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Specific_Binding, Binding_PASS_Arg_Name
 
 
-def test_specific_binding(f2003_create):
-    ''' Test that individual Specific_Binding statements are
-    parsed correctly. '''
-    testcls = Specific_Binding
+def test_valid(f2003_create):
+    '''Test that valid Specific_Binding statements are parsed
+    correctly.
 
-    lines = SOURCE.split('\n')
+    '''
 
-    obj = testcls('procedure :: sub_gen => sub_spec')
-    assert isinstance(obj, testcls), repr(obj)
-    assert str(obj) == "PROCEDURE :: sub_gen => sub_spec"
+    # simple statement
+    obj = Specific_Binding('procedure sub')
+    assert str(obj) == "PROCEDURE sub"
 
-    obj = testcls('procedure, pass :: length => point_length')
-    assert isinstance(obj, testcls), repr(obj)
-    assert str(obj) == "PROCEDURE, PASS :: length => point_length"
+    # this should be valid
+    # simple statement spaces
+    #obj = Specific_Binding('  procedure  sub  ')
+    #assert str(obj) == "PROCEDURE sub"
 
-    obj = testcls(lines[11].strip())
-    assert isinstance(obj, testcls), repr(obj)
-    assert str(obj) == "PROCEDURE :: internal_method_1"
+    # multi-case procedure keyword
+    obj = Specific_Binding('PrOcEdUrE sub')
+    assert str(obj) == "PROCEDURE sub"
 
-    obj = testcls(lines[12].strip())
-    assert isinstance(obj, testcls), repr(obj)
-    assert str(obj) == "PROCEDURE internal_method_2"
+    # simple statement with ::
+    obj = Specific_Binding('procedure :: sub')
+    assert str(obj) == "PROCEDURE :: sub"
 
-    obj = testcls(lines[13].strip())
-    assert isinstance(obj, testcls), repr(obj)
-    assert str(obj) == "PROCEDURE, PUBLIC :: submethod_1"
+    # simple statement with :: no space
+    obj = Specific_Binding('procedure::sub')
+    assert str(obj) == "PROCEDURE :: sub"
+
+    # statement with procedure name
+    obj = Specific_Binding('procedure :: sub => boat')
+    assert str(obj) == "PROCEDURE :: sub => boat"
+
+    # statement with procedure name no space
+    obj = Specific_Binding('procedure::sub=>boat')
+    assert str(obj) == "PROCEDURE :: sub => boat"
+
+    # statement with interface name
+    obj = Specific_Binding('procedure ( interface ) sub')
+    assert str(obj) == "PROCEDURE(interface) sub"
+
+    # statement with interface name no space
+    obj = Specific_Binding('procedure(interface)::sub')
+    assert str(obj) == "PROCEDURE(interface) :: sub"
+
+    # statement with binding list
+    obj = Specific_Binding('procedure , PASS :: sub')
+    assert str(obj) == "PROCEDURE, PASS :: sub"
+
+    # statement with binding list no space
+    obj = Specific_Binding('procedure,PASS::sub')
+    assert str(obj) == "PROCEDURE, PASS :: sub"
+
+    # statement with multi-binding list
+    obj = Specific_Binding('procedure , PASS , PUBLIC, deferred :: sub')
+    assert str(obj) == "PROCEDURE, PASS, PUBLIC, DEFERRED :: sub"
+
+    # statement with multi-binding list no space
+    obj = Specific_Binding('procedure,PASS,PUBLIC,DEFERRED::sub')
+    assert str(obj) == "PROCEDURE, PASS, PUBLIC, DEFERRED :: sub"
+
+    # statement with interface name and binding list
+    obj = Specific_Binding('procedure ( interface ) , PASS :: sub')
+    assert str(obj) == "PROCEDURE(interface), PASS :: sub"
+
+    # statement with interface name and binding list no space
+    obj = Specific_Binding('procedure(interface),PASS::sub')
+    assert str(obj) == "PROCEDURE(interface), PASS :: sub"
+
+    # statement with binding list and procedure name
+    obj = Specific_Binding('procedure , PASS :: sub => boat')
+    assert str(obj) == "PROCEDURE, PASS :: sub => boat"
+
+    # statement with binding list and procedure name no space
+    obj = Specific_Binding('procedure,PASS::sub=>boat')
+    assert str(obj) == "PROCEDURE, PASS :: sub => boat"
 
 
+def test_invalid(f2003_create):
+    ''' Test that parsing invalid Fortran syntax for
+    Specific_Binding statements raises an appropriate error. '''
+
+    # includes tests for breaking C456 and C457 
+    for string in ["",
+                   "  ",
+                   "procedure  ",
+                   "procedure ::  ",
+                   "procedur sub",
+                   "proceduresub",
+                   "procedure : sub",
+                   "procedure sub => boat",  # C456
+                   "procedure :: sub =>",
+                   "procedure (interface sub",
+                   "procedure interface) sub",
+                   "procedure (interface) :: sub => boat",  # C457
+                   "procedure pass sub",
+                   "procedure, pass sub",
+                   "procedure, pass public sub",
+                   "procedure pass, public sub",
+                   "procedure pass :: sub",
+                   "procedure sub sub2",
+                   "procedure :: sub = boat",
+                   "procedure :: sub > boat",
+                   "procedure :: sub => boat boat2"]:
+        if string in ["proceduresub", "procedure (interface) :: sub => boat",
+                      "procedure pass :: sub"]:
+            # no error is raised but should be
+            continue
+        print string
+        with pytest.raises(NoMatchError) as excinfo:
+            obj = Specific_Binding(string)
+        assert "Specific_Binding: '{0}'".format(string) in str(excinfo.value)
+
+    
 def test_binding_pass_arg_name(f2003_create):
     ''' Test that Binding_PASS_Arg_Name is parsed correctly. '''
 
@@ -120,61 +181,3 @@ def test_binding_pass_arg_name(f2003_create):
         "Binding_Attr_List(',', (Access_Spec('PUBLIC'), "
         "Binding_PASS_Arg_Name('PASS', Name('self')))), "
         "'::', Name('abstract_method'), Name('implementation_method'))")
-
-
-def test_specific_binding_error(f2003_create):
-    ''' Test that parsing invalid Fortran syntax for
-    Specific_Binding statements raises an appropriate error. '''
-    testcls = Specific_Binding
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = testcls('procedure populate_entity => populate_cube')
-    assert ("Specific_Binding: 'procedure populate_entity => "
-            "populate_cube'" in str(excinfo))
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = testcls('procedure :: populate_entity =>')
-    assert ("Specific_Binding: 'procedure :: populate_entity =>"
-            in str(excinfo))
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = testcls('procedure, :: sub_gen => sub_spec')
-    assert ("Specific_Binding: 'procedure, :: sub_gen => sub_spec'"
-            in str(excinfo))
-
-    line = SOURCE.split('\n')[13].strip()
-    line = line.replace(" :: ", " ")
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = testcls(line)
-    assert ("Specific_Binding: 'procedure, public submethod_1'"
-            in str(excinfo))
-
-
-def test_specific_binding_fserror(f2003_create):
-    ''' Test that an error in Specific_Binding within a program
-    unit (here module) is raised as a FortranSyntaxError. '''
-
-    code = SOURCE.replace("procedure :: internal_method_1",
-                          "proced :: internal_method_1")
-    reader = get_reader(code)
-    with pytest.raises(FortranSyntaxError) as excinfo:
-        dummy_ = Program(reader)
-    assert ("at line 12\n>>>    proced :: internal_method_1\n"
-            in str(excinfo.value))
-
-    code = SOURCE.replace("procedure, public :: submethod_1",
-                          "procedure, public ::")
-    reader = get_reader(code)
-    with pytest.raises(FortranSyntaxError) as excinfo:
-        dummy_ = Program(reader)
-    assert ("at line 14\n>>>    procedure, public ::\n"
-            in str(excinfo.value))
-
-    code = SOURCE.replace("procedure, public, pass(self) :: "
-                          "abstract_method => implementation_method",
-                          "procedure abstract_method => implementation_method")
-    reader = get_reader(code)
-    with pytest.raises(FortranSyntaxError) as excinfo:
-        dummy_ = Program(reader)
-    assert ("at line 15\n>>>    procedure abstract_method =>"
-            in str(excinfo.value))

@@ -39,10 +39,10 @@ character literal constant.
 
 import pytest
 from fparser.two.Fortran2003 import Char_Literal_Constant
-from fparser.two.utils import NoMatchError
+from fparser.two.utils import NoMatchError, InternalError
 
 
-def test_char_literal_constant():
+def test_match_valid():
     ''' Test that valid input is parsed correctly '''
 
     # simple, single quotes
@@ -101,8 +101,7 @@ def test_char_literal_constant():
     assert str(obj) == "'()!$%^&*_+=-01~@#;:/?.>,<|'"
 
 
-def test_char_literal_constant_error():  # pylint: disable=invalid-name
-
+def test_match_invalid():
     ''' Test that invalid input raises an exception '''
 
     # test various invalid options
@@ -113,3 +112,15 @@ def test_char_literal_constant_error():  # pylint: disable=invalid-name
             _ = Char_Literal_Constant(example)
         assert "Char_Literal_Constant: '{0}'".format(example) in \
             str(excinfo.value)
+
+
+def test_tostr_invalid(monkeypatch):
+    ''' Test that invalid input raises an exception '''
+
+    # test internal error in tostr() when the items list is not the
+    # expected size
+    obj = Char_Literal_Constant("'A'")
+    monkeypatch.setattr(obj, "items", ['A'])
+    with pytest.raises(InternalError) as excinfo:
+        _ = str(obj)
+    assert "tostr() has '1' items, but expecting 2" in str(excinfo.value)
