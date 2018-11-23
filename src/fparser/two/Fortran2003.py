@@ -7315,8 +7315,9 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                 # Expected ':' but there is nothing after the 'ONLY'
                 # specification
                 return
-            # Missing ':' after ', ONLY' specification
             if line[0] != ':':
+                # Expected ':' but there is a different character
+                # after the 'ONLY' specification
                 return
             line = line[1:].lstrip()
             if not line:
@@ -7340,11 +7341,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                 "Use_Stmt.tostr(). 'Items' should be of size 5 but found "
                 "'{0}'.".format(len(self.items)))
         if not self.items[2]:
-                raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
-                                    "be a module name but it is empty")
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
+                                "be a module name but it is empty")
         if self.items[3] is None:
-                raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
-                                    "be a string but found 'None'")
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
+                                "be a string but found 'None'")
         usestmt = 'USE'
         # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
         # followed by a double colon to "USE" statement
