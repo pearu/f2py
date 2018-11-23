@@ -1125,32 +1125,52 @@ class Derived_Type_Def(BlockBase):  # R429
 
 
 class Derived_Type_Stmt(StmtBase):  # R430
-    """<derived-type-stmt> = TYPE [ [ , <type-attr-spec-list> ] :: ]
-    <type-name> [ ( <type-param-name-list> ) ]
+    '''
+    derived-type-stmt is TYPE [ [ , type-attr-spec-list ] :: ]
+                         type-name [ ( type-param-name-list ) ]
 
-    """
+    '''
     subclass_names = []
     use_names = ['Type_Attr_Spec_List', 'Type_Name', 'Type_Param_Name_List']
 
     @staticmethod
     def match(string):
-        if string[:4].upper() != 'TYPE':
+        '''Implements the matching for a Derived Type Statement.
+
+        :param str string: a string containing the code to match
+
+        :return: `None` if there is no match, otherwise a `tuple` of
+                 size 3 containing the Attribute Spec List (or None if
+                 there isn't one), the name of the type and parameter
+                 name list (or None is there isn't one).
+        :rtype: ( `Type_Attr_Spec_List`, str, `Type_Param_Name_List`
+                or `None` ) or `None`
+
+        '''
+        string_strip = string.strip()
+        if string_strip[:4].upper() != 'TYPE':
             return
-        line = string[4:].lstrip()
-        i = line.find('::')
+        line = string_strip[4:].lstrip()
+        position = line.find('::')
         attr_specs = None
-        if i != -1:
+        if position != -1:
             if line.startswith(','):
-                lstrip = line[1:i].strip()
+                lstrip = line[position:position].strip()
                 if not lstrip:
+                    # There is no content after the "," and before the
+                    # "::"
                     return
                 attr_specs = Type_Attr_Spec_List(lstrip)
-            line = line[i+2:].lstrip()
-        m = pattern.name.match(line)
-        if m is None:
+            elif line[:position].strip():
+                # There is invalid content between and 'TYPE' and '::'
+                return
+            line = line[position+2:].lstrip()
+        match = pattern.name.match(line)
+        if not match:
+            # There is no content after the "TYPE" or the "::"
             return
-        name = Type_Name(m.group())
-        line = line[m.end():].lstrip()
+        name = Type_Name(match.group())
+        line = line[match.end():].lstrip()
         if not line:
             return attr_specs, name, None
         if line[0] + line[-1] != '()':
@@ -1158,16 +1178,26 @@ class Derived_Type_Stmt(StmtBase):  # R430
         return attr_specs, name, Type_Param_Name_List(line[1:-1].strip())
 
     def tostr(self):
-        s = 'TYPE'
-        if self.items[0] is not None:
-            s += ', %s :: %s' % (self.items[0], self.items[1])
+        '''
+        :return: this derived type statement as a string
+        :rtype: str
+
+        '''
+        string = 'TYPE'
+        if self.items[0]:
+            string += ", {0} :: {1}".format(self.items[0], self.items[1])
         else:
-            s += ' :: %s' % (self.items[1])
-        if self.items[2] is not None:
-            s += '(%s)' % (self.items[2])
-        return s
+            string += " :: {0}".format(self.items[1])
+        if self.items[2]:
+            string += "({0})".format(self.items[2])
+        return string
 
     def get_start_name(self):
+        '''
+        :return: this derived type statement's name as a string
+        :rtype: str
+
+        '''
         return self.items[1].string
 
 
