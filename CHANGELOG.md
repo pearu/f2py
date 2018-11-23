@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+23/11/2018 PR #122 for issue #118. Bug fix for reporting invalid
+           Fortran when parsing "use module_name, only:" in fparser2.
+
 14/11/2018 PR #121 for #120. Fixes bug in BlockBase such that name
            matches are no longer case sensitive. Improves error
            handling.
