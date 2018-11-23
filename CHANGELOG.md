@@ -11,8 +11,14 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
-23/11/2018 PR #122 for issue #118. Bug fix for reporting invalid
-           Fortran when parsing "use module_name, only:" in fparser2.
+21/11/2018 PR #127 for #126. Adds get_child function to help AST traversal.
+
+19/11/2018 PR #124 for #112. Bug fix - spaces within names are now
+           rejected by fparser2.
+
+15/11/2018 PR #123 for #117, Fixes a bug that caused fparser to crash
+           for code where a PROGRAM statement was missing an associated
+           name.
 
 14/11/2018 PR #121 for #120. Fixes bug in BlockBase such that name
            matches are no longer case sensitive. Improves error

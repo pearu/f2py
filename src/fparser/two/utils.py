@@ -198,9 +198,9 @@ class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes:
-      \.string - original argument to construct a class instance, its type \
-                is either str or FortranReaderBase.
-      \.item   - Line instance (holds label) or None.
+      self.string - original argument to construct a class instance, its type \
+                    is either str or FortranReaderBase.
+      self.item   - Line instance (holds label) or None.
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -1105,12 +1105,29 @@ def isalnum(c):
 
 
 class WORDClsBase(Base):
-    """
-::
-    <WORD-cls> = <WORD> [ [ :: ] <cls> ]
-    """
+    '''Base class to support situations where you have a keyword which is
+    optionally followed by further text, potentially separated by
+    '::'.
+
+    For example 'program fred', or 'import :: a,b'
+
+    WORD-cls is WORD [ [ :: ] cls ]
+
+    '''
     @staticmethod
     def match(pattern, cls, string, check_colons=False, require_cls=False):
+        ''':param pattern: the pattern of the WORD to match. This can be a \
+        string, a list of strings or a tuple of strings.
+        :type pattern: str, tuple of str or list of str.
+        :param cls: the class to match.
+        :type cls: a subclass of :py:class:`fparser.two.utils.Base`.
+        :param str string: Text that we are trying to match.
+        :param bool check_colons: whether '::' is allowed or not \
+        between WORD and cls.
+        :param bool require_cls: whether content for cls is required \
+        or not.
+
+        '''
         if isinstance(pattern, (tuple, list)):
             for p in pattern:
                 try:
@@ -1123,10 +1140,14 @@ class WORDClsBase(Base):
                     return obj
             return
         if isinstance(pattern, str):
-            if string[:len(pattern)].upper() != pattern:
+            line = string.lstrip()
+            if line[:len(pattern)].upper() != pattern.upper():
                 return
-            line = string[len(pattern):]
+            line = line[len(pattern):]
             if not line:
+                if require_cls:
+                    # no text found but it is required
+                    return
                 return pattern, None
             if isalnum(line[0]):
                 return
@@ -1164,6 +1185,13 @@ class WORDClsBase(Base):
         return pattern_value, cls(line)
 
     def tostr(self):
+        '''Convert the class into Fortran.
+
+        :return: String representation of this class without any \
+                 optional '::'.
+        :rtype: str
+
+        '''
         if self.items[1] is None:
             return str(self.items[0])
         s = str(self.items[1])
@@ -1171,7 +1199,14 @@ class WORDClsBase(Base):
             return '%s%s' % (self.items[0], s)
         return '%s %s' % (self.items[0], s)
 
-    def tostr_a(self):  # colons version of tostr
+    def tostr_a(self):
+        '''Convert the class into Fortran, adding in "::".
+
+        :return: String representation of this class including an \
+                 optional '::'.
+        :rtype: str
+
+        '''
         if self.items[1] is None:
             return str(self.items[0])
         return '%s :: %s' % (self.items[0], self.items[1])
@@ -1234,9 +1269,22 @@ class Type_Declaration_StmtBase(StmtBase):
 
 
 def walk_ast(children, my_types=None, indent=0, debug=False):
-    '''' Walk down the tree produced by fparser2 where children
+    '''
+    Walk down the tree produced by fparser2 where children
     are listed under 'content'.  Returns a list of all nodes with the
-    specified type(s). '''
+    specified type(s).
+
+    :param children: list of child nodes from which to walk.
+    :type children: list of :py:class:fparser.two.utils.Base.
+    :param my_types: list of types of Node to return. (Default is to \
+                     return all nodes.)
+    :type my_types: list of type
+    :param int indent: extent to which to indent debug output.
+    :param bool debug: whether or not to write textual representation of AST \
+                       to stdout.
+    :returns: a list of nodes
+    :rtype: `list` of :py:class:`fparser.two.utils.Base`
+    '''
     local_list = []
     for child in children:
         if debug:
@@ -1257,3 +1305,27 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
             local_list += walk_ast(child.items, my_types, indent+1, debug)
 
     return local_list
+
+
+def get_child(root_node, node_type):
+    '''
+    Searches for the first immediate child of root_node that is of the
+    specified type.
+
+    :param root_node: the parent of the child nodes we will search through.
+    :type root_node: :py:class:`fparser.two.utils.Base`
+    :param type node_type: the class of child node to search for.
+
+    :returns: the first child node of type node_type that is encountered or \
+              None.
+    :rtype: :py:class:`fparser.two.utils.Base`
+    '''
+    children = []
+    if hasattr(root_node, "content"):
+        children = root_node.content
+    elif hasattr(root_node, "items"):
+        children = root_node.items
+    for node in children:
+        if isinstance(node, node_type):
+            return node
+    return None
