@@ -1716,7 +1716,6 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
                  optional double colon delimiter, mandatory binding
                  name and optional procedure name)
         :rtype: 5-tuple of objects (1 mandatory and 4 optional)
-        :raises NoMatchError: if the interface name is not preceded by '::'
         '''
         # Remove any leading, trailing spaces.
         string_strip = string.strip()
@@ -1772,7 +1771,7 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
             raise InternalError(
                 "Class Specific_Binding method tostr() has '{0}' items, "
                 "but expecting 5.".format(len(self.items)))
-        
+
         stmt = "PROCEDURE"
         # Add optional interface name
         if self.items[0]:
@@ -1864,15 +1863,15 @@ class Generic_Binding(StmtBase):
     def tostr(self):
         '''
         :return: parsed representation of a "GENERIC" type-bound procedure
-        :rtype: string
+        :rtype: str
         '''
         if self.items[0] is None:
             return 'GENERIC :: %s => %s' % (self.items[1:])
         return 'GENERIC, %s :: %s => %s' % (self.items)
 
 
-class Binding_Attr(STRINGBase):
-    # pylint: disable=invalid-name
+class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
+
     '''
     :F03R:`453`::
 
@@ -1893,14 +1892,14 @@ class Binding_Attr(STRINGBase):
         '''
         :return: keywords for allowed binding attributes or
                  nothing if no match is found
-        :rtype: string
+        :rtype: str
         '''
         return STRINGBase.match(['PASS', 'NOPASS',
                                  'NON_OVERRIDABLE', 'DEFERRED'], string)
 
 
-class Final_Binding(StmtBase, WORDClsBase):
-    # pylint: disable=invalid-name
+class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+
     '''
     :F03R:`454`::
 
@@ -1918,7 +1917,7 @@ class Final_Binding(StmtBase, WORDClsBase):
         '''
         :return: keyword  "FINAL" with the list of "FINAL" type-bound
                  procedures or nothing if no match is found
-        :rtype: string
+        :rtype: str
         '''
         return WORDClsBase.match(
             'FINAL', Final_Subroutine_Name_List, string, check_colons=True,
@@ -6146,8 +6145,7 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
         return 'READ %s, %s' % (self.items[1], self.items[2])
 
 
-class Write_Stmt(StmtBase):
-    # pylint: disable=invalid-name
+class Write_Stmt(StmtBase):  # pylint: disable=invalid-name
     '''
     :F03R:`911`::
 
@@ -6192,7 +6190,7 @@ class Write_Stmt(StmtBase):
     def tostr(self):
         '''
         :return: parsed representation of a "WRITE" statement
-        :rtype: string
+        :rtype: str
         '''
         if self.items[1] is None:
             return 'WRITE(%s)' % (self.items[0])
