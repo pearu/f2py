@@ -1183,6 +1183,8 @@ class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''
         :return: this derived type statement as a string
         :rtype: str
+        :raises InternalError: if items array is not the expected size
+        :raises InternalError: if items array[1] has no content
 
         '''
         if len(self.items) != 3:
