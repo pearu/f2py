@@ -1107,16 +1107,22 @@ class Char_Literal_Constant(Base):  # R427
         '''
         :return: this Char_Literal_Constant as a string
         :rtype: str
-
         :raises InternalError: if the internal items list variable is
         not the expected size.
+        :raises InternalError: if the internal items list variable
+        index 0 has no content
 
         '''
         if len(self.items) != 2:
             raise InternalError(
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
                 "but expecting 2.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
+                "should not be empty")
         if not self.items[1]:
+            # Character literal has no kind specifier.
             return str(self.items[0])
         return "{0}_{1}".format(self.items[1], self.items[0])
 

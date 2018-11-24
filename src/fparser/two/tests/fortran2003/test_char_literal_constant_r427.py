@@ -114,8 +114,8 @@ def test_match_invalid():
             str(excinfo.value)
 
 
-def test_tostr_invalid(monkeypatch):
-    ''' Test that invalid input raises an exception '''
+def test_tostr_invalid1(monkeypatch):
+    ''' Test that an invalid number of items raises an exception '''
 
     # test internal error in tostr() when the items list is not the
     # expected size
@@ -124,3 +124,15 @@ def test_tostr_invalid(monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         _ = str(obj)
     assert "tostr() has '1' items, but expecting 2" in str(excinfo.value)
+
+
+def test_tostr_invalid(monkeypatch):
+    ''' Test that an empty items value raises an exception '''
+
+    # test internal error in tostr() when the items list index 0 has
+    # no content
+    obj = Char_Literal_Constant("'A'")
+    monkeypatch.setattr(obj, "items", [None, None])
+    with pytest.raises(InternalError) as excinfo:
+        _ = str(obj)
+    assert "'Items' entry 0 should not be empty" in str(excinfo.value)
