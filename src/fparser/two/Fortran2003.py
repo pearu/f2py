@@ -1727,15 +1727,17 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
         string_strip = string.strip()
         if string_strip[:9].upper() != 'PROCEDURE':
             # There is no 'PROCEDURE' statement.
-            return
+            return None
         line = string_strip[9:].lstrip()
         # Find optional interface name if it exists.
         iname = None
         if line.startswith('('):
             index = line.find(')')
-            if index != -1:
-                iname = Interface_Name(line[1:index].strip())
-                line = line[index+1:].lstrip()
+            if index == -1:
+                # Left brace has no corresponding right brace
+                return None
+            iname = Interface_Name(line[1:index].strip())
+            line = line[index+1:].lstrip()
         # Look for optional double colon and binding attribute list.
         dcolon = None
         mylist = None
@@ -1748,7 +1750,7 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
                 # There is content between procedure (with optional
                 # interface) and :: that does not start with a ','
                 # which is a syntax error.
-                return
+                return None
             line = line[index+2:].lstrip()
         # Find optional procedure name.
         index = line.find('=>')
@@ -1759,11 +1761,11 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
             if not dcolon:
                 # Constraint C456 requires '::' if there is a
                 # procedure-name.
-                return
+                return None
         if iname and pname:
             # Constraint C457 disallows interface-name if there is a
             # procedure-name.
-            return
+            return None
         # Return class arguments.
         return iname, mylist, dcolon, Binding_Name(line), pname
 

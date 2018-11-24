@@ -126,7 +126,7 @@ def test_tostr_invalid1(monkeypatch):
     assert "tostr() has '1' items, but expecting 2" in str(excinfo.value)
 
 
-def test_tostr_invalid(monkeypatch):
+def test_tostr_invalid2(monkeypatch):
     ''' Test that an empty items value raises an exception '''
 
     # test internal error in tostr() when the items list index 0 has
