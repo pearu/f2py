@@ -7458,14 +7458,14 @@ class Module_Subprogram(Base):  # R1108
 
 
 class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
-    """
-    R1109
+    '''
+    Fortran 2003 rule R1109
 
-    <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name>
-                                                  [ , <rename-list> ]
-                | USE [ [ , <module-nature> ] :: ] <module-name> ,
-                                                   ONLY: [ <only-list> ]
-    """
+    use-stmt is USE [ [ , module-nature ] :: ] module-name [ , rename-list ]
+             or USE [ [ , module-nature ] :: ] module-name ,
+                 ONLY : [ only-list ]
+
+    '''
     subclass_names = []
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
@@ -7479,10 +7479,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  "ONLY" specification and optional "Rename" or "Only" list)
         :rtype: 5-tuple of objects (module name and 4 optional)
         '''
-        # Incorrect 'USE' statement
-        if string[:3].upper() != 'USE':
+        line = string.strip()
+        # Incorrect 'USE' statement or line too short
+        if line[:3].upper() != 'USE':
             return
-        line = string[3:]
+        line = line[3:]
         # Empty string after 'USE'
         if not line:
             return
@@ -7519,27 +7520,32 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if nature is not None:
                 return
 
-        i = line.find(',')
-        if i == -1:
+        position = line.find(',')
+        if position == -1:
             return nature, dcolon, Module_Name(line), '', None
-        name = line[:i].rstrip()
+        name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
             return
         name = Module_Name(name)
-        line = line[i+1:].lstrip()
+        line = line[position+1:].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
         if not line:
             return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
-            # Missing ':' after ', ONLY' specification
+            if not line:
+                # Expected ':' but there is nothing after the 'ONLY'
+                # specification
+                return
             if line[0] != ':':
+                # Expected ':' but there is a different character
+                # after the 'ONLY' specification
                 return
             line = line[1:].lstrip()
-            # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
             if not line:
-                return
+                # Missing Only_List after 'USE Module_Name, ONLY:'
+                return nature, dcolon, name, ', ONLY:', None
             return nature, dcolon, name, ', ONLY:', Only_List(line)
         return nature, dcolon, name, ',', Rename_List(line)
 
@@ -7547,21 +7553,36 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''
         :return: parsed representation of "USE" statement
         :rtype: string
+        :raises InternalError: if items array is not the expected size
+        :raises InternalError: if items array[2] is not a string or is an \
+                               empty string
+        :raises InternalError: if items array[3] is 'None' as it should be \
+                               a string
         '''
+        if len(self.items) != 5:
+            raise InternalError(
+                "Use_Stmt.tostr(). 'Items' should be of size 5 but found "
+                "'{0}'.".format(len(self.items)))
+        if not self.items[2]:
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
+                                "be a module name but it is empty")
+        if self.items[3] is None:
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
+                                "be a string but found 'None'")
         usestmt = 'USE'
         # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
         # followed by a double colon to "USE" statement
-        if self.items[0] is not None and self.items[1] is not None:
-            usestmt += ', %s %s' % (self.items[0], self.items[1])
+        if self.items[0] and self.items[1]:
+            usestmt += ", {0} {1}".format(self.items[0], self.items[1])
         # Add optional double colon after "USE" statement without
         # Module_Nature (valid Fortran)
-        elif self.items[0] is None and self.items[1] is not None:
-            usestmt += ' %s' % (self.items[1])
+        elif not self.items[0] and self.items[1]:
+            usestmt += " {0}".format(self.items[1])
         # Add Module_Name and optional "ONLY" specifier if present
-        usestmt += ' %s%s' % (self.items[2], self.items[3])
+        usestmt += " {0}{1}".format(self.items[2], self.items[3])
         # Add optional Only_List or Rename_List if present
         if self.items[4] is not None:
-            usestmt += ' %s' % (self.items[4])
+            usestmt += " {0}".format(self.items[4])
         return usestmt
 
 
