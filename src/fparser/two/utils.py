@@ -102,29 +102,16 @@ class FortranSyntaxError(FparserException):
     information.
     :type reader: str or :py:class:`FortranReaderBase`
     :param str info: a string giving contextual error information.
-    :raises SystemExit: to avoid a FortranSyntaxError and instead
-    raise SysExit if it is determined that the input has no content
-    other optional than white space.
 
     '''
     def __init__(self, reader, info):
-        location = "at unknown location"
+        output = "at unknown location"
         if isinstance(reader, FortranReaderBase):
-            if reader.linecount == 0 or not \
-               reader.source_lines[reader.linecount-1].strip():
-                # There are no lines in the input or the line that
-                # failed to match is empty or contains only white
-                # space. In the latter case we can infer that any
-                # previous lines must also have only contained white
-                # space and therefore there is no content in the
-                # input.
-                raise SystemExit("No content found")
-            location = "at line {0}\n>>>{1}".format(
+            output = "at line {0}\n>>>{1}\n".format(
                 reader.linecount,
                 reader.source_lines[reader.linecount-1])
-        output = "{0}".format(location)
         if info:
-            output += "\n{0}".format(info)
+            output += "{0}".format(info)
         Exception.__init__(self, output)
 
 
@@ -301,9 +288,24 @@ class Base(ComparableMixin):
             raise AssertionError(repr(result))
         # If we get to here then we've failed to match the current line
         if isinstance(string, FortranReaderBase):
-            line = ""
-            if string.linecount > 0:
-                line = string.source_lines[string.linecount-1]
+            content = False
+            for index in range(string.linecount):
+                # Check all lines up to this one for content. We
+                # should be able to only check the current line but
+                # but as the line number returned is not always
+                # correct (due to coding errors) we can not assume the
+                # line pointed to is the line where the error actually
+                # happened.
+                if string.source_lines[index]:
+                    content = True
+                    break
+            if not content:
+                # There are no lines in the input or all lines up to
+                # this one are empty or contain only white space. This
+                # is typically accepted by fortran compilers so we
+                # follow their lead and do not raise an exception.
+                return
+            line = string.source_lines[string.linecount-1]
             errmsg = "at line {0}\n>>>{1}\n".format(
                 string.linecount, line)
         else:
