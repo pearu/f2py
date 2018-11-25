@@ -48,6 +48,10 @@ from fparser.two.Fortran2003 import Program
 
 
 def test_empty_input(f2003_create):
+    '''Test that empty input or input only containing white space can be
+    parsed succesfully
+
+    '''
     for code in ["", "   ", "  \n  \n\n"]:
         reader = get_reader(code)
         ast = Program(reader)

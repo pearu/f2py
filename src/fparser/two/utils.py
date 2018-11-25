@@ -80,7 +80,11 @@ class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
 
+    :param str info: a string giving contextual error information.
+
     '''
+    def __init__(self, info):
+        Exception.__init__(self, info)
 
 
 class NoMatchError(FparserException):
@@ -112,18 +116,20 @@ class FortranSyntaxError(FparserException):
                 reader.source_lines[reader.linecount-1])
         if info:
             output += "{0}".format(info)
-        Exception.__init__(self, output)
+        FparserException.__init__(self, output)
 
 
 class InternalError(FparserException):
     '''An exception indicating that an unexpected error has occured in the
     parser.
 
+    :param str info: a string giving contextual error information.
+
     '''
     def __init__(self, info):
         new_info = ("'{0}'. Please report this to the "
                     "authors.".format(info))
-        Exception.__init__(self, new_info)
+        FparserException.__init__(self, new_info)
 
 
 def show_result(func):
