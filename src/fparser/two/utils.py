@@ -296,7 +296,7 @@ class Base(ComparableMixin):
                 # correct (due to coding errors) we can not assume the
                 # line pointed to is the line where the error actually
                 # happened.
-                if string.source_lines[index]:
+                if string.source_lines[index].strip():
                     content = True
                     break
             if not content:
