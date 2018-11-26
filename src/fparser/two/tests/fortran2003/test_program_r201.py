@@ -120,6 +120,29 @@ def test_single_error2(f2003_create):
     assert ("at line 3\n>>>end subroutin\n"
             in str(excinfo.value))
 
+
+def test_name_match(f2003_create):
+    '''Test that a single program_unit with an error in the initial
+    statement raises an appropriate exception
+
+    '''
+    reader = get_reader("program aa\nend program aa")
+    ast = Program(reader)
+    assert ("PROGRAM aa\nEND PROGRAM aa" in str(ast))
+
+
+def test_name_mismatch_error(f2003_create):
+    '''Test that a single program_unit with an error in the initial
+    statement raises an appropriate exception
+
+    '''
+    reader = get_reader("program aa\nend program bb")
+    with pytest.raises(FortranSyntaxError) as excinfo:
+        dummy_ = Program(reader)
+    assert ("at line 2\n>>>end program bb\nExpecting name "
+            "'aa'" in str(excinfo.value))
+
+
 # Test multiple program units
 
 

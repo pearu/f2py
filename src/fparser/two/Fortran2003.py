@@ -7125,7 +7125,7 @@ class Main_Program(BlockBase):  # R1101
         return BlockBase.match(
             Program_Stmt, [Specification_Part, Execution_Part,
                            Internal_Subprogram_Part], End_Program_Stmt,
-            reader)
+            reader, match_names=True)
 
 
 class Main_Program0(BlockBase):
@@ -7163,6 +7163,9 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
 
     def get_name(self):
         return self.items[1]
+
+    def get_start_name(self):
+        return self.get_name().string
 
 
 class End_Program_Stmt(EndStmtBase):  # R1103
