@@ -1107,10 +1107,10 @@ class Char_Literal_Constant(Base):  # R427
         '''
         :return: this Char_Literal_Constant as a string
         :rtype: str
-        :raises InternalError: if the internal items list variable is
+        :raises InternalError: if the internal items list variable is \
         not the expected size.
-        :raises InternalError: if the internal items list variable
-        index 0 has no content
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
 
         '''
         if len(self.items) != 2:
@@ -1118,6 +1118,9 @@ class Char_Literal_Constant(Base):  # R427
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
                 "but expecting 2.".format(len(self.items)))
         if not self.items[0]:
+            # items[0] is the value of the constant so is required. It
+            # also can't be empty as it needs to include the
+            # surrounding quotes to be valid
             raise InternalError(
                 "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
                 "should not be empty")
@@ -1595,7 +1598,7 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
     match = staticmethod(match)
 
 
-class Private_Components_Stmt(STRINGBase): # pylint: disable=invalid-name
+class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
     '''
     :F03R:`447`::
 
@@ -1617,7 +1620,7 @@ class Private_Components_Stmt(STRINGBase): # pylint: disable=invalid-name
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Type_Bound_Procedure_Part(BlockBase): # pylint: disable=invalid-name
+class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
     '''
     :F03R:`448`::
 
@@ -1648,7 +1651,8 @@ class Type_Bound_Procedure_Part(BlockBase): # pylint: disable=invalid-name
                                None, reader)
 
 
-class Binding_Private_Stmt(StmtBase, STRINGBase): # pylint: disable=invalid-name
+class Binding_Private_Stmt(StmtBase,
+                           STRINGBase):  # pylint: disable=invalid-name
     '''
     :F03R:`449`::
 
@@ -1670,7 +1674,7 @@ class Binding_Private_Stmt(StmtBase, STRINGBase): # pylint: disable=invalid-name
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Proc_Binding_Stmt(Base): # pylint: disable=invalid-name
+class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
     '''
     :F03R:`450`::
 
@@ -1685,7 +1689,7 @@ class Proc_Binding_Stmt(Base): # pylint: disable=invalid-name
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
-class Specific_Binding(StmtBase): # pylint: disable=invalid-name
+class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
     ''':F03R:`451`::
 
     Fortran 2003 rule R451
@@ -1728,6 +1732,13 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
         if string_strip[:9].upper() != 'PROCEDURE':
             # There is no 'PROCEDURE' statement.
             return None
+        if len(string_strip) < 11:
+            # Line is too short to be valid
+            return None
+        # Remember whether there was a space after the keyword
+        space_after = False
+        if string_strip[9] == " ":
+            space_after = True
         line = string_strip[9:].lstrip()
         # Find optional interface name if it exists.
         iname = None
@@ -1752,6 +1763,14 @@ class Specific_Binding(StmtBase): # pylint: disable=invalid-name
                 # which is a syntax error.
                 return None
             line = line[index+2:].lstrip()
+        if not iname and not dcolon:
+            # there is no interface name or double colon between the
+            # keyword and the binding name. Therefore we expect a
+            # space between the two.
+            if not space_after:
+                # No space was found so return to indicate an
+                # error.
+                return None
         # Find optional procedure name.
         index = line.find('=>')
         pname = None

@@ -53,10 +53,6 @@ def test_valid(f2003_create):
     obj = Specific_Binding('procedure sub')
     assert str(obj) == "PROCEDURE sub"
 
-    # simple statement no spaces
-    obj = Specific_Binding('proceduresub')
-    assert str(obj) == "PROCEDURE sub"
-
     # simple statement spaces
     obj = Specific_Binding('  procedure  sub  ')
     assert str(obj) == "PROCEDURE sub"
@@ -132,6 +128,7 @@ def test_invalid():
                    "procedure  ",
                    "procedure ::  ",
                    "procedur sub",
+                   "proceduresub",
                    "procedure : sub",
                    "procedure sub => boat",  # C456
                    "procedure :: sub =>",
