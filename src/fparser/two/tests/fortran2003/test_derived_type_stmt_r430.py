@@ -110,8 +110,8 @@ def test_errors(f2003_create):
 
 
 def test_tostr_1(f2003_create, monkeypatch):
-    '''Check that a derived_type_stmt method tostr() exception is
-    raised if there are an invalid number of items
+    '''Check that Derived_Type_Stmt.tostr() raises an exception if there
+    is an invalid number of items.
 
     '''
 
@@ -123,8 +123,8 @@ def test_tostr_1(f2003_create, monkeypatch):
 
 
 def test_tostr_2(f2003_create, monkeypatch):
-    '''Check that a derived_type_stmt method tostr() exception is
-    raised.
+    '''Check that Derived_Type_Stmt.tostr() raises an exception if the
+    content of items[1] is invalid.
 
     '''
 
@@ -132,7 +132,7 @@ def test_tostr_2(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert ("'Items[1]' should be a Name instance containing the "
+    assert ("'items[1]' should be a Name instance containing the "
             "derived type name but it is empty") in str(excinfo)
 
 

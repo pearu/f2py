@@ -1140,13 +1140,13 @@ class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''Implements the matching for a Derived Type Statement.
 
         :param str string: a string containing the code to match
-        :return: `None` if there is no match, otherwise a `tuple` of
-                 size 3 containing an `Attribute_Spec_List` (or `None` if
-                 there isn't one), the name of the type (in a `Name`
-                 class) and a `Parameter_Name_List` (or `None` is there
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 3 containing an `Attribute_Spec_List` (or `None` if \
+                 there isn't one), the name of the type (in a `Name` \
+                 class) and a `Parameter_Name_List` (or `None` is there \
                  isn't one).
-        :rtype: ( `Type_Attr_Spec_List` or `None`, `Name`, `Type_Param_Name_List`
-                or `None` ) or `None`
+        :rtype: ( `Type_Attr_Spec_List` or `None`, `Name`, \
+                  `Type_Param_Name_List` or `None` ) or `None`
 
         '''
         string_strip = string.strip()
@@ -1189,11 +1189,11 @@ class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''
         if len(self.items) != 3:
             raise InternalError(
-                "Derived_Type_Stmt.tostr(). 'Items' should be of size 3 but "
+                "Derived_Type_Stmt.tostr(). 'items' should be of size 3 but "
                 "found '{0}'.".format(len(self.items)))
         if not self.items[1]:
             raise InternalError(
-                "Derived_Type_Stmt.tostr(). 'Items[1]' should be a Name "
+                "Derived_Type_Stmt.tostr(). 'items[1]' should be a Name "
                 "instance containing the derived type name but it is empty")
         string = 'TYPE'
         if self.items[0]:
