@@ -38,8 +38,7 @@ program statement.
 '''
 
 import pytest
-from fparser.two.utils import FortranSyntaxError, NoMatchError
-from fparser.api import get_reader
+from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Program_Stmt
 
 
@@ -53,10 +52,10 @@ def test_valid(f2003_create):
 
 
 def test_invalid(f2003_create):
-    ''' Test that exceptions are raised for invalid code '''
+    ''' Test that exceptions are raised for invalid code. '''
 
     for string in ["", "  ", "prog", "program", "programa", "a program",
                    "a program a", "program a a"]:
         with pytest.raises(NoMatchError) as excinfo:
-            obj = Program_Stmt(string)
+            _ = Program_Stmt(string)
         assert "Program_Stmt: '{0}'".format(string) in str(excinfo.value)
