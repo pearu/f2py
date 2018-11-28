@@ -208,8 +208,10 @@ class Program(BlockBase):  # R201
         '''
         try:
             return Base.__new__(cls, string)
-        except NoMatchError as error:
-            raise FortranSyntaxError(string, error)
+        except NoMatchError:
+            # At the moment there is no useful information provided by
+            # NoMatchError so we pass on an empty string.
+            raise FortranSyntaxError(string, "")
 
     @staticmethod
     def match(reader):
