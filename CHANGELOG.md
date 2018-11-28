@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+28/11/2018 PR #133 for issue #130. Bug fix for handing of derived-type
+           statements.
+
 28/11/2018 PR #134 for issue #119. Bug fix for parsing files that contain
            nothing or just white space.
 
