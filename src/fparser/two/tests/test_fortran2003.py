@@ -561,23 +561,6 @@ def test_logical_literal_constant():  # R428
     assert str(obj) == '.TRUE._HA'
 
 
-def test_derived_type_stmt():  # R430
-
-    tcls = Derived_Type_Stmt
-    obj = tcls('type a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a'
-    assert repr(obj) == "Derived_Type_Stmt(None, Type_Name('a'), None)"
-
-    obj = tcls('type ::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a(b, c)'
-
-    obj = tcls('type, private, abstract::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE, PRIVATE, ABSTRACT :: a(b, c)'
-
-
 def test_type_attr_spec():  # R431
 
     tcls = Type_Attr_Spec
