@@ -52,7 +52,7 @@ from fparser.api import get_reader
 from fparser.two.Fortran2003 import Main_Program
 
 
-def test_main_program(f2003_create):
+def test_valid(f2003_create):
     ''' Test that valid code is parsed correctly. '''
 
     # basic
@@ -105,7 +105,7 @@ def test_main_program(f2003_create):
                         "SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a")
 
 
-def test_main_program_errors1(f2003_create):
+def test_invalid1(f2003_create):
     ''' Test that exceptions are raised for invalid code '''
 
     # no end
@@ -127,7 +127,7 @@ def test_main_program_errors1(f2003_create):
     
 @pytest.mark.xfail(reason="fails to raise an exception with incorrect "
                    "ordering")
-def test_main_program_errors2(f2003_create):
+def test_invalid2(f2003_create):
     ''' xxx '''
     # specification-part after execution-part
     with pytest.raises(NoMatchError) as excinfo:
@@ -138,7 +138,7 @@ def test_main_program_errors2(f2003_create):
 
 @pytest.mark.xfail(reason="fails to raise an exception with incorrect "
                    "ordering")
-def test_main_program_errors2(f2003_create):
+def test_invalid3(f2003_create):
     # execution-part after internal-subprogram-part
     with pytest.raises(NoMatchError) as excinfo:
         obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
