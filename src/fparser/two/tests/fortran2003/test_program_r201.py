@@ -32,7 +32,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R201 : This file tests the support for one
+'''Test Fortran 2003 rule R201 : This file tests the support for zero
 or more program-units.
 
 '''
@@ -41,6 +41,21 @@ import pytest
 from fparser.two.utils import FortranSyntaxError
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Program
+
+# Test no content or just white space. This is not officially a
+# Fortran rule but fortran compilers tend to accept empty content so
+# we follow their lead.
+
+
+def test_empty_input(f2003_create):
+    '''Test that empty input or input only containing white space can be
+    parsed succesfully
+
+    '''
+    for code in ["", "   ", "  \n  \n\n"]:
+        reader = get_reader(code)
+        ast = Program(reader)
+        assert str(ast) == ""
 
 # Test single program units
 
