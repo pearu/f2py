@@ -38,16 +38,22 @@ there is no program statement. That situation is covered by the
 Main_Program0 class. Tests for Main_Program0 are currently in
 test_fortran2003.py.
 
+As this rule is about ordering of other rules we only need test the
+different combinations. We don't need to test the content of
+individual rules (e.g we do not need to worry about "end", "end
+program", "end program a" as these should be covered by the tests for
+End_Program_Unit
+
 '''
 
 import pytest
-from fparser.two.utils import FortranSyntaxError
+from fparser.two.utils import FortranSyntaxError, NoMatchError
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Main_Program
 
-# Test single program units
 
 def test_main_program(f2003_create):
+    ''' Test that valid code is parsed correctly. '''
 
     # basic
     obj = Main_Program(get_reader("program a\nend"))
@@ -56,21 +62,17 @@ def test_main_program(f2003_create):
     assert repr(obj) == ("Main_Program(Program_Stmt('PROGRAM', Name('a')), "
                          "End_Program_Stmt('PROGRAM', None))")
 
-    # basic plus end program
-    obj = Main_Program(get_reader("program a\nend program"))
-    assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
-
-    # basic plus end program name
+    # name matching
     obj = Main_Program(get_reader("program a\nend program a"))
+    assert isinstance(obj, Main_Program)
     assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
+    assert repr(obj) == ("Main_Program(Program_Stmt('PROGRAM', Name('a')), "
+                         "End_Program_Stmt('PROGRAM', Name('a')))")
 
-    # spaces
-    obj = Main_Program(get_reader("  program  a  \n  end  program  a  "))
-    assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
-
-    # mixed case
-    obj = Main_Program(get_reader("pRoGrAm A\nEnD PrOgRaM a"))
-    assert str(obj) == 'PROGRAM A\nEND PROGRAM a'
+    # mixed case name matching
+    obj = Main_Program(get_reader("program a\nend program A"))
+    assert isinstance(obj, Main_Program)
+    assert str(obj) == 'PROGRAM a\nEND PROGRAM A'
 
     # specification-part
     obj = Main_Program(get_reader("program a\ninteger i\nend program a"))
@@ -101,3 +103,45 @@ def test_main_program(f2003_create):
                                   "subroutine foo\nend\nend program a"))
     assert str(obj) == ("PROGRAM a\n  INTEGER :: i\n  i = 10\n  CONTAINS\n  "
                         "SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a")
+
+
+def test_main_program_errors1(f2003_create):
+    ''' Test that exceptions are raised for invalid code '''
+
+    # no end
+    with pytest.raises(NoMatchError) as excinfo:
+        obj = Main_Program(get_reader("program a\n"))
+    assert "at line 1\n>>>program a" in str(excinfo.value)
+
+    # no start
+    with pytest.raises(NoMatchError) as excinfo:
+        obj = Main_Program(get_reader("end program a\n"))
+    assert "at line 1\n>>>end program a" in str(excinfo.value)
+
+    # name mismatch
+    with pytest.raises(FortranSyntaxError) as excinfo:
+        obj = Main_Program(get_reader("program a\nend program b"))
+    assert ("at line 2\n>>>end program b\nExpecting name 'a'") \
+        in str(excinfo.value)
+
+    
+@pytest.mark.xfail(reason="fails to raise an exception with incorrect "
+                   "ordering")
+def test_main_program_errors2(f2003_create):
+    ''' xxx '''
+    # specification-part after execution-part
+    with pytest.raises(NoMatchError) as excinfo:
+        obj = Main_Program(get_reader("program a\ni=10\ninteger i\n"
+                                      "end program a"))
+    assert "xx" in str(excinfo.value)
+
+
+@pytest.mark.xfail(reason="fails to raise an exception with incorrect "
+                   "ordering")
+def test_main_program_errors2(f2003_create):
+    # execution-part after internal-subprogram-part
+    with pytest.raises(NoMatchError) as excinfo:
+        obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
+                                      "end\ni=10\nend program a"))
+    assert "xx" in str(excinfo.value)
+
