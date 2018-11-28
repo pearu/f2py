@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+28/11/2018 PR #131 for issue #106. Bug fixes for Procedure_Binding and
+           Char_Literal_Constant classes.
+
 28/11/2018 PR #133 for issue #130. Bug fix for handing of derived-type
            statements.
 
