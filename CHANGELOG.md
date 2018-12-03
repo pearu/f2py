@@ -11,6 +11,8 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+## Release 0.0.8 (03/12/2018) ##
+
 28/11/2018 PR #131 for issue #106. Bug fixes for Procedure_Binding and
            Char_Literal_Constant classes.
 
