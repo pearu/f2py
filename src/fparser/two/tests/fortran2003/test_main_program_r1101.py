@@ -38,7 +38,7 @@ there is no program statement. That situation is covered by the
 Main_Program0 class. Tests for Main_Program0 are currently in
 test_fortran2003.py.
 
-As this rule is about ordering of other rules we only need test the
+As this rule is about ordering of other rules we only need to test the
 different combinations. We don't need to test the content of
 individual rules (e.g we do not need to worry about "end", "end
 program", "end program a" as these should be covered by the tests for
@@ -121,12 +121,12 @@ def test_invalid1(f2003_create):
     # name mismatch
     with pytest.raises(FortranSyntaxError) as excinfo:
         _ = Main_Program(get_reader("program a\nend program b"))
-    assert ("at line 2\n>>>end program b\nExpecting name 'a'") \
+    assert "at line 2\n>>>end program b\nExpecting name 'a'" \
         in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="fails to raise an exception with incorrect "
-                   "ordering")
+@pytest.mark.xfail(reason="Fails to raise an exception with incorrect "
+                   "ordering. See issue #136.")
 def test_invalid2(f2003_create):
     '''Test that specification-part after execution-part produces an
     error.
@@ -138,8 +138,8 @@ def test_invalid2(f2003_create):
     assert "ADD CORRECT OUTPUT HERE" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="fails to raise an exception with incorrect "
-                   "ordering")
+@pytest.mark.xfail(reason="Fails to raise an exception with incorrect "
+                   "ordering, See issue #136.")
 def test_invalid3(f2003_create):
     '''Test that execution-part after internal-subprogram-part produces an
     error.

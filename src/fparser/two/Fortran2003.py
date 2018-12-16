@@ -7108,7 +7108,7 @@ class Char_String_Edit_Desc(Base):  # R1019
 #
 
 
-class Main_Program(BlockBase):  # R1101
+class Main_Program(BlockBase):  # R1101 [C1101,C1102,C1103]
     '''Fortran 2003 rule R1101
 
     This class does not cater for the case where there is no
@@ -7121,6 +7121,18 @@ class Main_Program(BlockBase):  # R1101
                     [ execution-part ]
                     [ internal-subprogram-part ]
                     end-program-stmt
+
+    C1101 In a main-program, the execution-part shall not contain a
+    RETURN statement or an ENTRY statement. This is currently not
+    checked, see issue #140.
+
+    C1102 The program-name may be included in the end-program-stmt
+    only if the optional program-stmt is used and, if included, shall
+    be identical to the program-name specified in the program-stmt.
+
+    C1103 An automatic object shall not appear in the
+    specification-part (R204) of a main program. This is currently not
+    checked, see issue #140.
 
     '''
     subclass_names = []
@@ -7136,19 +7148,19 @@ class Main_Program(BlockBase):  # R1101
         set to `True` so that different names e.g. `program x` and
         `end program y` will not match.
 
-        :param reader: the fortran reader containing the line(s) of \
+        :param reader: the Fortran reader containing the line(s) of \
                        code that we are trying to match
         :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
 
-        :return: `None` if there is not match or, if there is a match,
-                 a `tuple` containing a single `list`, with minimum
-                 size 2 and maximum size 5, which contains instances
-                 of the classes that have matched. The first entry in
-                 the list will be a `Program_Stmt` and the last entry
-                 in the list will be an `End_Program_Stmt`. Inbetween
-                 these two instances will be an optional
-                 `Specification_Part` followed by an optional
-                 `Execution_Part` followed by an optional
+        :return: `None` if there is not match or, if there is a match, \
+                 a `tuple` containing a single `list`, with minimum \
+                 size 2 and maximum size 5, which contains instances \
+                 of the classes that have matched. The first entry in \
+                 the list will be a `Program_Stmt` and the last entry \
+                 in the list will be an `End_Program_Stmt`. Inbetween \
+                 these two instances will be an optional \
+                 `Specification_Part` followed by an optional \
+                 `Execution_Part` followed by an optional \
                  `Internal_Subprogram_Part`.
 
         '''
@@ -7159,12 +7171,19 @@ class Main_Program(BlockBase):  # R1101
 
 
 class Main_Program0(BlockBase):
-    """
-    <main-program> =
+    """<main-program> =
                          [ <specification-part> ]
                          [ <execution-part> ]
                          [ <internal-subprogram-part> ]
                          <end-program-stmt>
+
+    C1102 The program-name may be included in the end-program-stmt
+    only if the optional program-stmt is used and, if included, shall
+    be identical to the program-name specified in the
+    program-stmt.
+
+    In this class an end program name is not allowed due to C1102.
+
     """
     subclass_names = []
     use_names = ['Program_Stmt', 'Specification_Part',
@@ -7190,7 +7209,7 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a Program Statement. Make use of
+        '''Implements the matching for a Program Statement. Makes use of
         `WORDClsBase`, as the required match is a string followed by a
         class. The class is made compulsory for the match as the
         PROGRAM keyword is not valid without a program name.
@@ -7207,7 +7226,7 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
                                  require_cls=True)
 
     def get_name(self):
-        '''Provide the program name as an instance of the `Name` class.
+        '''Provides the program name as an instance of the `Name` class.
 
         :returns: the program name as a `Name` class
         :rtype: `Name`
@@ -7216,7 +7235,7 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
         return self.items[1]
 
     def get_start_name(self):
-        '''Provide the program name as a string. This is used for matching
+        '''Provides the program name as a string. This is used for matching
         with the equivalent `end program` name if there is one.
 
         :returns: the program name as a string
