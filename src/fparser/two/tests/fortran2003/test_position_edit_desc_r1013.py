@@ -54,7 +54,7 @@ def test_invalid_descriptor():
 
 
 def test_valid_t_descriptor(f2003_create):
-    '''Test valid NT, NTL and NTR inputs provide the expected output'''
+    '''Test valid nT, nTL and nTR inputs provide the expected output'''
 
     for name in ["T", "TL", "TR"]:
         for descriptor in ["{0}1".format(name),
@@ -66,7 +66,7 @@ def test_valid_t_descriptor(f2003_create):
 
 
 def test_valid_x_descriptor(f2003_create):
-    '''Test valid NX inputs provide the expected output'''
+    '''Test valid nX inputs provide the expected output'''
 
     for descriptor in ["1X", "  1  X  ", "999X", "999x"]:
         result = Position_Edit_Desc(descriptor)
@@ -74,8 +74,8 @@ def test_valid_x_descriptor(f2003_create):
 
 
 def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
-    '''Test that the X extension raises an exception if it is not named as
-    a valid extensions.
+    '''Test that the X extension to the standard raises an exception if it
+    is not named as a valid extension.
 
     '''
 
@@ -89,8 +89,8 @@ def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
 
 
 def test_valid_x_descriptor_extension(f2003_create, monkeypatch):
-    '''Test that the X extension produces the expected output if it is
-    named as a valid extension.
+    '''Test that the X extension to the standard produces the expected
+    output if it is named as a valid extension.
 
     '''
 

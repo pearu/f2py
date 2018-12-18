@@ -566,7 +566,7 @@ class Name(StringBase):  # R304
         pattern_tools file.
 
         :param str string: the string to match with the pattern rule.
-        :returns: a tuple of size 1 containing a string with the \
+        :return: a tuple of size 1 containing a string with the \
         matched name if there is a match, or None if there is not.
         :rtype: (str) or None
 
@@ -7309,10 +7309,10 @@ class Position_Edit_Desc(Base):  # R1013
 
         param str string: contains the Fortran that we are trying to
         match
-        :returns: `None` if there is no match, otherwise a `tuple` of \
-                  size 2 either containing a `string` which is one of \
-                  "T", "TL" or "TR", followed by an `N` class, or \
-                  containing an `N` class, or None, followed by an "X".
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 2 either containing a `string` which is one of \
+                 "T", "TL" or "TR", followed by an `N` class, or \
+                 containing an `N` class, or `None`, followed by an "X".
         :rtype: None, (str, class N), (class N, str) or (None, str)
 
         '''
@@ -7321,7 +7321,7 @@ class Position_Edit_Desc(Base):  # R1013
             # empty input string
             return None
         if strip_string_upper[0] == 'T':
-            if not len(strip_string_upper)>1:
+            if not len(strip_string_upper) > 1:
                 # string is not long enough to be valid
                 return None
             if strip_string_upper[1] in 'LR':
@@ -7334,21 +7334,20 @@ class Position_Edit_Desc(Base):  # R1013
                 start = strip_string_upper[0]
                 rest = strip_string_upper[1:].lstrip()
             # Note, if class N does not match it raises an exception
-            en = N(rest)
-            return start, en
+            number_obj = N(rest)
+            return start, number_obj
         if strip_string_upper[-1] == 'X':
             print (strip_string_upper)
             # We match *X
-            from utils import EXTENSIONS
+            from fparser.two.utils import EXTENSIONS
             if "x-format" in EXTENSIONS and len(strip_string_upper) == 1:
                 # The match just contains 'X' which is not valid
                 # fortran 2003 but is an accepted extension
                 return None, "X"
-            else:
-                # Note, if class N does not match it raises an
-                # exception
-                en = N(strip_string_upper[:-1].rstrip())
-                return en, 'X'
+            # Note, if class N does not match it raises an
+            # exception
+            number_obj = N(strip_string_upper[:-1].rstrip())
+            return number_obj, 'X'
         else:
             return None
 
@@ -7373,9 +7372,8 @@ class Position_Edit_Desc(Base):  # R1013
                 "empty or None")
         if self.items[0]:
             return "{0}{1}".format(self.items[0], self.items[1])
-        else:
-            # This output is only required for the "x-format" extension.
-            return "{0}".format(self.items[1])
+        # This output is only required for the "x-format" extension.
+        return "{0}".format(self.items[1])
 
 
 class N(Base):  # R1014

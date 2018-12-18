@@ -75,7 +75,7 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
-
+# A list of supported extensions to the standard(s)
 EXTENSIONS = ["x-format"]
 
 
