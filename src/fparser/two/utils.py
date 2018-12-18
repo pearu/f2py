@@ -76,6 +76,9 @@ from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
 
+EXTENSIONS = ["x-format"]
+
+
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
