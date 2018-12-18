@@ -83,7 +83,11 @@ class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
 
+    :param str info: a string giving contextual error information.
+
     '''
+    def __init__(self, info):
+        Exception.__init__(self, info)
 
 
 class NoMatchError(FparserException):
@@ -108,23 +112,27 @@ class FortranSyntaxError(FparserException):
 
     '''
     def __init__(self, reader, info):
-        location = "at unknown location"
+        output = "at unknown location"
         if isinstance(reader, FortranReaderBase):
-            location = "at line {0}\n>>>{1}".format(
+            output = "at line {0}\n>>>{1}\n".format(
                 reader.linecount,
                 reader.source_lines[reader.linecount-1])
-        Exception.__init__(self, "{0}\n{1}".format(location, info))
+        if info:
+            output += "{0}".format(info)
+        FparserException.__init__(self, output)
 
 
 class InternalError(FparserException):
     '''An exception indicating that an unexpected error has occured in the
     parser.
 
+    :param str info: a string giving contextual error information.
+
     '''
     def __init__(self, info):
         new_info = ("'{0}'. Please report this to the "
                     "authors.".format(info))
-        Exception.__init__(self, new_info)
+        FparserException.__init__(self, new_info)
 
 
 def show_result(func):
@@ -289,9 +297,26 @@ class Base(ComparableMixin):
             raise AssertionError(repr(result))
         # If we get to here then we've failed to match the current line
         if isinstance(string, FortranReaderBase):
+            content = False
+            for index in range(string.linecount):
+                # Check all lines up to this one for content. We
+                # should be able to only check the current line but
+                # but as the line number returned is not always
+                # correct (due to coding errors) we can not assume the
+                # line pointed to is the line where the error actually
+                # happened.
+                if string.source_lines[index].strip():
+                    content = True
+                    break
+            if not content:
+                # There are no lines in the input or all lines up to
+                # this one are empty or contain only white space. This
+                # is typically accepted by fortran compilers so we
+                # follow their lead and do not raise an exception.
+                return
+            line = string.source_lines[string.linecount-1]
             errmsg = "at line {0}\n>>>{1}\n".format(
-                string.linecount,
-                string.source_lines[string.linecount-1])
+                string.linecount, line)
         else:
             errmsg = "{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)

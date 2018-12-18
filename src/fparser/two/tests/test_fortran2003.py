@@ -502,40 +502,6 @@ def test_char_length():  # R426
     assert str(obj) == '(:)'
 
 
-def test_char_literal_constant():  # R427
-
-    tcls = Char_Literal_Constant
-    obj = tcls('NIH_"DO"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'NIH_"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
-
-    obj = tcls("'DO'")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "'DO'"
-    assert repr(obj) == 'Char_Literal_Constant("\'DO\'", None)'
-
-    obj = tcls("'DON''T'")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "'DON''T'"
-
-    obj = tcls('"DON\'T"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"DON\'T"'
-
-    obj = tcls('""')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '""'
-
-    obj = tcls("''")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "''"
-
-    obj = tcls('"hey ha(ada)\t"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"hey ha(ada)\t"'
-
-
 def test_logical_literal_constant():  # R428
 
     tcls = Logical_Literal_Constant
@@ -559,23 +525,6 @@ def test_logical_literal_constant():  # R428
     obj = tcls('.TRUE._HA')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.TRUE._HA'
-
-
-def test_derived_type_stmt():  # R430
-
-    tcls = Derived_Type_Stmt
-    obj = tcls('type a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a'
-    assert repr(obj) == "Derived_Type_Stmt(None, Type_Name('a'), None)"
-
-    obj = tcls('type ::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a(b, c)'
-
-    obj = tcls('type, private, abstract::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE, PRIVATE, ABSTRACT :: a(b, c)'
 
 
 def test_type_attr_spec():  # R431
@@ -749,14 +698,6 @@ def test_proc_binding_stmt():  # R450
     tcls = Proc_Binding_Stmt
     obj = tcls('procedure, pass :: length => point_length')
     assert isinstance(obj, Specific_Binding), repr(obj)
-    assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
-
-
-def test_specific_binding():  # R451
-
-    tcls = Specific_Binding
-    obj = tcls('procedure, pass :: length => point_length')
-    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 
@@ -3605,134 +3546,6 @@ contains
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
             '\n  a = 1.0\nEND SUBROUTINE foo')
-
-
-def test_use_stmt():
-    ''' Tests that USE statement is parsed correctly (R1109). '''
-    tcls = Use_Stmt
-    obj = tcls('use a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE a'
-    assert repr(obj) == "Use_Stmt(None, None, Name('a'), '', None)"
-
-    obj = tcls('use :: a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE :: a'
-    assert repr(obj) == "Use_Stmt(None, '::', Name('a'), '', None)"
-
-    obj = tcls('use a, only: b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE a, ONLY: b'
-    assert repr(obj) == (
-        "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
-
-    obj = tcls('use :: a, only: b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE :: a, ONLY: b'
-    assert repr(obj) == (
-        "Use_Stmt(None, '::', Name('a'), ', ONLY:', Name('b'))")
-
-    obj = tcls('use a, ONLY : b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE a, ONLY: b'
-    assert repr(obj) == (
-        "Use_Stmt(None, None, Name('a'), ', ONLY:', Name('b'))")
-
-    obj = tcls('use, intrinsic :: a, ONLY: b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE, INTRINSIC :: a, ONLY: b'
-    assert repr(obj) == (
-        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('a'), "
-        "', ONLY:', Name('b'))")
-
-    obj = tcls('use, non_intrinsic :: a, ONLY: b, c, d')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE, NON_INTRINSIC :: a, ONLY: b, c, d'
-    assert repr(obj) == (
-        "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
-        "', ONLY:', Only_List(',', (Name('b'), Name('c'), Name('d'))))")
-
-    obj = tcls('use a, c=>d')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE a, c => d'
-    assert repr(obj) == (
-        "Use_Stmt(None, None, Name('a'), "
-        "',', Rename(None, Name('c'), Name('d')))")
-
-    obj = tcls('use :: a, operator(.hey.)=>operator(.hoo.)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.)'
-    assert repr(obj) == (
-        "Use_Stmt(None, '::', Name('a'), ',', "
-        "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')))")
-
-    obj = tcls('use, intrinsic :: a, operator(.hey.)=>operator(.hoo.), c=>g')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == (
-        'USE, INTRINSIC :: a, OPERATOR(.HEY.) => OPERATOR(.HOO.), c => g')
-    assert repr(obj) == (
-        "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('a'), "
-        "',', Rename_List(',', ("
-        "Rename('OPERATOR', Defined_Op('.HEY.'), Defined_Op('.HOO.')), "
-        "Rename(None, Name('c'), Name('g')))))")
-
-    obj = tcls('use, non_intrinsic :: a, ONLY: b => c')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'USE, NON_INTRINSIC :: a, ONLY: b => c'
-    assert repr(obj) == (
-        "Use_Stmt(Module_Nature('NON_INTRINSIC'), '::', Name('a'), "
-        "', ONLY:', Rename(None, Name('b'), Name('c')))")
-
-    # Checks that no match is found for incorrect 'USE' statement contructs
-    # Incorrect 'USE' statement
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('8se')
-    assert "Use_Stmt: '8se'" in str(excinfo)
-
-    # Empty string after 'USE'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use')
-    assert "Use_Stmt: 'use'" in str(excinfo)
-
-    # No separation between 'USE' statement and its specifiers
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('usemodulename')
-    assert "Use_Stmt: 'usemodulename'" in str(excinfo)
-
-    # Missing Module_Nature between ',' and '::'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use, ::')
-    assert "Use_Stmt: 'use, ::'" in str(excinfo)
-
-    # No Module_Name after 'USE, Module_Nature ::'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use, intrinsic ::')
-    assert "Use_Stmt: 'use, intrinsic ::'" in str(excinfo)
-
-    # Missing '::' after Module_Nature
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use, intrinsic a')
-    assert "Use_Stmt: 'use, intrinsic a'" in str(excinfo)
-
-    # Missing Module_Name before Only_List
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use , only: b')
-    assert "Use_Stmt: 'use , only: b'" in str(excinfo)
-
-    # Missing 'ONLY' specification after 'USE Module_Name,'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use a,')
-    assert "Use_Stmt: 'use a,'" in str(excinfo)
-
-    # Missing ':' after ', ONLY' specification
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use a, only b')
-    assert "Use_Stmt: 'use a, only b" in str(excinfo)
-
-    # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('use a, only:')
-    assert "Use_Stmt: 'use a, only:" in str(excinfo)
 
 
 def test_module_nature():

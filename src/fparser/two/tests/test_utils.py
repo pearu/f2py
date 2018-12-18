@@ -135,4 +135,3 @@ def test_get_child(f2003_create):
     assert not hasattr(io_nodes[0], "content")
     io_unit = get_child(io_nodes[0], Fortran2003.Io_Unit)
     assert isinstance(io_unit, Fortran2003.Io_Unit)
-

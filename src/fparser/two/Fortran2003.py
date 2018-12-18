@@ -208,8 +208,10 @@ class Program(BlockBase):  # R201
         '''
         try:
             return Base.__new__(cls, string)
-        except NoMatchError as error:
-            raise FortranSyntaxError(string, error)
+        except NoMatchError:
+            # At the moment there is no useful information provided by
+            # NoMatchError so we pass on an empty string.
+            raise FortranSyntaxError(string, "")
 
     @staticmethod
     def match(reader):
@@ -1053,36 +1055,80 @@ class Char_Length(BracketBase):  # R426
 
 
 class Char_Literal_Constant(Base):  # R427
-    """
-    <char-literal-constant> = [ <kind-param> _ ] ' <rep-char> '
-                              | [ <kind-param> _ ] \" <rep-char> \"
-    """
+    '''
+    char-literal-constant is [ kind-param _ ] ' rep-char '
+                          or [ kind-param _ ] " rep-char "
+    '''
     subclass_names = []
     rep = pattern.char_literal_constant
 
     @staticmethod
     def match(string):
-        if string[-1] not in '"\'':
+        '''Implements the matching for a Char_Literal_Constant. For example
+
+        "hello"
+        'hello'
+        nondefaultcharset_"nondefaultchars"
+
+        There is an associated constraint C422: "The value of
+        kind-param shall specify a representation method that exists
+        on the processor." However, this cannot be validated by
+        fparser so no checks are performed.
+
+        :param str string: a string containing the code to match
+
+        :return: `None` if there is no match, otherwise a `tuple` of
+                 size 2 containing the kind value and the character
+                 constant as strings
+        :rtype: `None` or (str, None) or (str, str)
+
+        '''
+        strip_string = string.strip()
+        if not strip_string:
+            # the string is empty or only contains blank space
             return
-        if string[-1] == '"':
+        if strip_string[-1] not in '"\'':
+            return
+        if strip_string[-1] == '"':
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named2
         else:
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named1
-        line, repmap = string_replace_map(string)
-        m = abs_a_n_char_literal_constant_named.match(line)
-        if not m:
+        line, repmap = string_replace_map(strip_string)
+        match = abs_a_n_char_literal_constant_named.match(line)
+        if not match:
             return
-        kind_param = m.group('kind_param')
-        line = m.group('value')
+        kind_param = match.group('kind_param')
+        line = match.group('value')
         line = repmap(line)
         return line, kind_param
 
     def tostr(self):
-        if self.items[1] is None:
+        '''
+        :return: this Char_Literal_Constant as a string
+        :rtype: str
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Char_Literal_Constant method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[0]:
+            # items[0] is the value of the constant so is required. It
+            # also can't be empty as it needs to include the
+            # surrounding quotes to be valid
+            raise InternalError(
+                "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
+                "should not be empty")
+        if not self.items[1]:
+            # Character literal has no kind specifier.
             return str(self.items[0])
-        return '%s_%s' % (self.items[1], self.items[0])
+        return "{0}_{1}".format(self.items[1], self.items[0])
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
@@ -1123,50 +1169,92 @@ class Derived_Type_Def(BlockBase):  # R429
                                )
 
 
-class Derived_Type_Stmt(StmtBase):  # R430
-    """<derived-type-stmt> = TYPE [ [ , <type-attr-spec-list> ] :: ]
-    <type-name> [ ( <type-param-name-list> ) ]
+class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R430
 
-    """
+    derived-type-stmt is TYPE [ [ , type-attr-spec-list ] :: ]
+                         type-name [ ( type-param-name-list ) ]
+
+    '''
     subclass_names = []
     use_names = ['Type_Attr_Spec_List', 'Type_Name', 'Type_Param_Name_List']
 
     @staticmethod
     def match(string):
-        if string[:4].upper() != 'TYPE':
-            return
-        line = string[4:].lstrip()
-        i = line.find('::')
+        '''Implements the matching for a Derived Type Statement.
+
+        :param str string: a string containing the code to match
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 3 containing an `Attribute_Spec_List` (or `None` if \
+                 there isn't one), the name of the type (in a `Name` \
+                 class) and a `Parameter_Name_List` (or `None` is there \
+                 isn't one).
+        :rtype: ( `Type_Attr_Spec_List` or `None`, `Name`, \
+                  `Type_Param_Name_List` or `None` ) or `None`
+
+        '''
+        string_strip = string.strip()
+        if string_strip[:4].upper() != 'TYPE':
+            return None
+        line = string_strip[4:].lstrip()
+        position = line.find('::')
         attr_specs = None
-        if i != -1:
+        if position != -1:
             if line.startswith(','):
-                lstrip = line[1:i].strip()
+                lstrip = line[1:position].strip()
                 if not lstrip:
-                    return
+                    # There is no content after the "," and before the
+                    # "::"
+                    return None
                 attr_specs = Type_Attr_Spec_List(lstrip)
-            line = line[i+2:].lstrip()
-        m = pattern.name.match(line)
-        if m is None:
-            return
-        name = Type_Name(m.group())
-        line = line[m.end():].lstrip()
+            elif line[:position].strip():
+                # There is invalid content between and 'TYPE' and '::'
+                return None
+            line = line[position+2:].lstrip()
+        match = pattern.name.match(line)
+        if not match:
+            # There is no content after the "TYPE" or the "::"
+            return None
+        name = Type_Name(match.group())
+        line = line[match.end():].lstrip()
         if not line:
             return attr_specs, name, None
         if line[0] + line[-1] != '()':
-            return
+            return None
         return attr_specs, name, Type_Param_Name_List(line[1:-1].strip())
 
     def tostr(self):
-        s = 'TYPE'
-        if self.items[0] is not None:
-            s += ', %s :: %s' % (self.items[0], self.items[1])
+        '''
+        :return: this derived type statement as a string
+        :rtype: str
+        :raises InternalError: if items array is not the expected size
+        :raises InternalError: if items array[1] has no content
+
+        '''
+        if len(self.items) != 3:
+            raise InternalError(
+                "Derived_Type_Stmt.tostr(). 'items' should be of size 3 but "
+                "found '{0}'.".format(len(self.items)))
+        if not self.items[1]:
+            raise InternalError(
+                "Derived_Type_Stmt.tostr(). 'items[1]' should be a Name "
+                "instance containing the derived type name but it is empty")
+        string = 'TYPE'
+        if self.items[0]:
+            string += ", {0} :: {1}".format(self.items[0], self.items[1])
         else:
-            s += ' :: %s' % (self.items[1])
-        if self.items[2] is not None:
-            s += '(%s)' % (self.items[2])
-        return s
+            string += " :: {0}".format(self.items[1])
+        if self.items[2]:
+            string += "({0})".format(self.items[2])
+        return string
 
     def get_start_name(self):
+        '''
+        :return: this derived type statement's name as a string
+        :rtype: str
+
+        '''
         return self.items[1].string
 
 
@@ -1554,178 +1642,358 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
 
 
 class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
-    """
-    R447
+    '''
+    :F03R:`447`::
+
+    Fortran 2003 rule R447
+    that specifies support for private components statement
+    within a derived type.
 
     <private-components-stmt> = PRIVATE
-    """
+    '''
     subclass_names = []
 
     @staticmethod
     def match(string):
         '''
         :param str string: Fortran code to check for a match
-        :return: keyword  "PRIVATE" or nothing if no match is found
-        :rtype: string
+        :return: keyword  "PRIVATE" or None if no match is found
+        :rtype: str or None
         '''
         return StringBase.match('PRIVATE', string.upper())
 
 
-class Type_Bound_Procedure_Part(BlockBase):  # R448
-    """
+class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
+    '''
+    :F03R:`448`::
+
+    Fortran 2003 rule R448
+    that specifies the type-bound procedure part of a derived type.
+
     <type-bound-procedure-part> = <contains-stmt>
                                       [ <binding-private-stmt> ]
                                       <proc-binding-stmt>
                                       [ <proc-binding-stmt> ]...
-    """
+    '''
     subclass_names = []
     use_names = ['Contains_Stmt', 'Binding_Private_Stmt', 'Proc_Binding_Stmt']
 
     @staticmethod
     def match(reader):
+        '''
+        :param reader: the Fortran reader containing the line(s) of code \
+        that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+        :return: code block containing instances of the classes that match \
+                 the syntax of the type-bound procedure part of a derived type.
+        :rtype: ([`Contains_Stmt`, `Specific_Binding`, `str`, `Name`, \
+                  `Name`]) or `None`
+        '''
         return BlockBase.match(Contains_Stmt,
                                [Binding_Private_Stmt, Proc_Binding_Stmt],
                                None, reader)
 
 
-class Binding_Private_Stmt(StmtBase, STRINGBase):  # R449
-    """
+class Binding_Private_Stmt(StmtBase,
+                           STRINGBase):  # pylint: disable=invalid-name
+    '''
+    :F03R:`449`::
+
+    Fortran 2003 rule R449
+    for binding private statement within the type-bound procedure
+    part of a derived type.
+
     <binding-private-stmt> = PRIVATE
-    """
+    '''
     subclass_names = []
 
+    @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword  "PRIVATE" or None if no match is found
+        :rtype: str or None
+        '''
         return StringBase.match('PRIVATE', string.upper())
-    match = staticmethod(match)
 
 
-class Proc_Binding_Stmt(Base):  # R450
-    """
+class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
+    '''
+    :F03R:`450`::
+
+    Fortran 2003 rule R450
+    that specifies procedure binding for the type-bound procedures
+    within a derived type.
+
     <proc-binding-stmt> = <specific-binding>
                           | <generic-binding>
                           | <final-binding>
-    """
+    '''
     subclass_names = ['Specific_Binding', 'Generic_Binding', 'Final_Binding']
 
 
-class Specific_Binding(StmtBase):  # R451
-    """
+class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
+    ''':F03R:`451`::
+
+    Fortran 2003 rule R451
+    that specifies syntax of specific binding for a type-bound
+    procedure within a derived type.
+
     <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
         [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
-    """
+
+    The following are associated constraints:
+
+    "C456 (R451) If => procedure-name appears, the double-colon
+    separator shall appear."
+
+    "C457 (R451) If => procedure-name appears, interface-name shall not
+    appear."
+
+    "C458 (R451) The procedure-name shall be the name of an accessible
+    module procedure or an external procedure that has an explicit
+    interface." Note, this is not checked by fparser.
+
+    '''
     subclass_names = []
     use_names = ['Interface_Name', 'Binding_Attr_List',
                  'Binding_Name', 'Procedure_Name']
 
     @staticmethod
     def match(string):
-        if string[:9].upper() != 'PROCEDURE':
-            return
-        line = string[9:].lstrip()
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a specific type-bound procedure (optional
+                 interface name, optional binding attribute list,
+                 optional double colon delimiter, mandatory binding
+                 name and optional procedure name)
+        :rtype: 5-tuple of objects (1 mandatory and 4 optional)
+        '''
+        # Remove any leading, trailing spaces.
+        string_strip = string.strip()
+        if string_strip[:9].upper() != 'PROCEDURE':
+            # There is no 'PROCEDURE' statement.
+            return None
+        if len(string_strip) < 11:
+            # Line is too short to be valid
+            return None
+        # Remember whether there was a space after the keyword
+        space_after = False
+        if string_strip[9] == " ":
+            space_after = True
+        line = string_strip[9:].lstrip()
+        # Find optional interface name if it exists.
         iname = None
         if line.startswith('('):
-            i = line.find(')')
-            if i == -1:
-                return
-            iname = Interface_Name(line[1:i].strip())
-            line = line[i+1:].lstrip()
+            index = line.find(')')
+            if index == -1:
+                # Left brace has no corresponding right brace
+                return None
+            iname = Interface_Name(line[1:index].strip())
+            line = line[index+1:].lstrip()
+        # Look for optional double colon and binding attribute list.
+        dcolon = None
         mylist = None
-        i = line.find('::')
-        if i != -1:
+        index = line.find('::')
+        if index != -1:
+            dcolon = '::'
             if line.startswith(','):
-                mylist = Binding_Attr_List(line[1:i].strip())
-            line = line[i+2:].lstrip()
-        i = line.find('=>')
+                mylist = Binding_Attr_List(line[1:index].strip())
+            elif line[:index].strip():
+                # There is content between procedure (with optional
+                # interface) and :: that does not start with a ','
+                # which is a syntax error.
+                return None
+            line = line[index+2:].lstrip()
+        if not iname and not dcolon:
+            # there is no interface name or double colon between the
+            # keyword and the binding name. Therefore we expect a
+            # space between the two.
+            if not space_after:
+                # No space was found so return to indicate an
+                # error.
+                return None
+        # Find optional procedure name.
+        index = line.find('=>')
         pname = None
-        if i != -1:
-            pname = Procedure_Name(line[i+2:].lstrip())
-            line = line[:i].rstrip()
-        return iname, mylist, Binding_Name(line), pname
+        if index != -1:
+            pname = Procedure_Name(line[index+2:].lstrip())
+            line = line[:index].rstrip()
+            if not dcolon:
+                # Constraint C456 requires '::' if there is a
+                # procedure-name.
+                return None
+        if iname and pname:
+            # Constraint C457 disallows interface-name if there is a
+            # procedure-name.
+            return None
+        # Return class arguments.
+        return iname, mylist, dcolon, Binding_Name(line), pname
 
     def tostr(self):
-        r = 'PROCEDURE'
-        if self.items[0] is not None:
-            r += '(%s)' % (self.items[0])
-        if self.items[1] is not None:
-            r += ', %s ::' % (self.items[1])
-        r += ' %s' % (self.items[2])
-        if self.items[3] is not None:
-            r += ' => %s' % (self.items[3])
-        return r
+        '''
+        :return: parsed representation of a specific type-bound procedure
+        :rtype: `str`
+
+        '''
+        if len(self.items) != 5:
+            raise InternalError(
+                "Class Specific_Binding method tostr() has '{0}' items, "
+                "but expecting 5.".format(len(self.items)))
+
+        stmt = "PROCEDURE"
+        # Add optional interface name
+        if self.items[0]:
+            stmt += "({0})".format(self.items[0])
+        # Add optional double colon and binding attribute list
+        # (if the list is present)
+        if self.items[1] and self.items[2]:
+            stmt += ", {0} {1}".format(self.items[1], self.items[2])
+        elif not self.items[1] and self.items[2]:
+            stmt += " {0}".format(self.items[2])
+        # Add mandatory Binding_Name
+        stmt += " {0}".format(self.items[3])
+        # Add optional procedure name
+        if self.items[4]:
+            stmt += " => {0}".format(self.items[4])
+        return stmt
 
 
-class Generic_Binding(StmtBase):  # R452
-    """
+class Binding_PASS_Arg_Name(CALLBase):
+    # pylint: disable=invalid-name
+    '''
+    :F03R:`453_help`::
+
+    Fortran 2003 helper rule (for R453)
+    that specifies syntax of passed-object dummy argument for a
+    specific type-bound procedure.
+
+    <binding-PASS-arg-name> = PASS ( <arg-name> )
+    '''
+    subclass_names = []
+    use_names = ['Arg_Name']
+
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: keyword  "PASS" with the name of a passed-object
+                 dummy argument or nothing if no match is found
+        :rtype: str
+        '''
+        return CALLBase.match('PASS', Arg_Name, string)
+
+
+class Generic_Binding(StmtBase):
+    # pylint: disable=invalid-name
+    '''
+    :F03R:`452`::
+
+    Fortran 2003 rule R452
+    that specifies syntax of generic binding for a type-bound
+    procedure within a derived type.
+
     <generic-binding> = GENERIC [ , <access-spec> ] ::
         <generic-spec> => <binding-name-list>
-    """
+    '''
     subclass_names = []
     use_names = ['Access_Spec', 'Generic_Spec', 'Binding_Name_List']
 
     @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 3-tuple containing strings and instances of the
+                 classes describing a generic type-bound procedure
+                 (optional access specifier, mandatory generic
+                 identifier and mandatory binding name list)
+        :rtype: 3-tuple of objects (2 mandatory and 1 optional)
+        '''
+        # Incorrect 'GENERIC' statement
         if string[:7].upper() != 'GENERIC':
             return
         line = string[7:].lstrip()
         i = line.find('::')
+        # No mandatory double colon
         if i == -1:
             return
         aspec = None
+        # Return optional access specifier (PRIVATE or PUBLIC)
         if line.startswith(','):
             aspec = Access_Spec(line[1:i].strip())
         line = line[i+2:].lstrip()
         i = line.find('=>')
         if i == -1:
             return
+        # Return mandatory Generic_Spec and Binding_Name_List
         return aspec, Generic_Spec(line[:i].rstrip()), \
             Binding_Name_List(line[i+3:].lstrip())
 
     def tostr(self):
+        '''
+        :return: parsed representation of a "GENERIC" type-bound procedure
+        :rtype: str
+        '''
         if self.items[0] is None:
             return 'GENERIC :: %s => %s' % (self.items[1:])
         return 'GENERIC, %s :: %s => %s' % (self.items)
 
 
-class Binding_PASS_Arg_Name(CALLBase):
-    """
-    <binding-PASS-arg-name> = PASS ( <arg-name> )
-    """
-    subclass_names = []
-    use_names = ['Arg_Name']
+class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
 
-    def match(string):
-        return CALLBase.match('PASS', Arg_Name, string)
-    match = staticmethod(match)
+    '''
+    :F03R:`453`::
 
+    Fortran 2003 rule R453
+    that specifies syntax of allowed binding attributes for a
+    specific type-bound procedure binding.
 
-class Binding_Attr(STRINGBase):  # R453
-    """
     <binding-attr> = PASS [ ( <arg-name> ) ]
                      | NOPASS
                      | NON_OVERRIDABLE
                      | DEFERRED
                      | <access-spec>
-    """
+    '''
     subclass_names = ['Access_Spec', 'Binding_PASS_Arg_Name']
 
+    @staticmethod
     def match(string):
+        '''
+        :return: keywords for allowed binding attributes or
+                 nothing if no match is found
+        :rtype: str
+        '''
         return STRINGBase.match(['PASS', 'NOPASS',
                                  'NON_OVERRIDABLE', 'DEFERRED'], string)
-    match = staticmethod(match)
 
 
-class Final_Binding(StmtBase, WORDClsBase):  # R454
-    """
+class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+
+    '''
+    :F03R:`454`::
+
+    Fortran 2003 rule R454
+    that specifies syntax of final binding for a type-bound
+    procedure within a derived type.
+
     <final-binding> = FINAL [ :: ] <final-subroutine-name-list>
-    """
+    '''
     subclass_names = []
     use_names = ['Final_Subroutine_Name_List']
 
+    @staticmethod
     def match(string):
+        '''
+        :return: keyword  "FINAL" with the list of "FINAL" type-bound
+                 procedures or nothing if no match is found
+        :rtype: str
+        '''
         return WORDClsBase.match(
             'FINAL', Final_Subroutine_Name_List, string, check_colons=True,
             require_cls=True)
-    match = staticmethod(match)
+
+    # String representation with optional double colons included
     tostr = WORDClsBase.tostr_a
 
 
@@ -5947,22 +6215,32 @@ items : (Io_Control_Spec_List, Format, Input_Item_List)
         return 'READ %s, %s' % (self.items[1], self.items[2])
 
 
-class Write_Stmt(StmtBase):  # R911
-    """
-:F03R:`911`::
-    <write-stmt> = WRITE ( <io-control-spec-list> ) [ <output-item-list> ]
+class Write_Stmt(StmtBase):  # pylint: disable=invalid-name
+    '''
+    :F03R:`911`::
 
-Parameters
-----------
-items : (Io_Control_Spec_List, Output_Item_List)
-    """
+    Fortran 2003 rule R911
+    that specifies syntax of a "WRITE" statement.
+
+    <write-stmt> = WRITE ( <io-control-spec-list> ) [ <output-item-list> ]
+    '''
     subclass_names = []
     use_names = ['Io_Control_Spec_List', 'Output_Item_List']
 
+    @staticmethod
     def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing strings and instances of the classes
+                 describing "WRITE" statement (mandatory IO control
+                 specification list and optional output item list.
+        :rtype: 2-tuple of objects (1 mandatory and 1 optional)
+        '''
         if string[:5].upper() != 'WRITE':
             return
         line = string[5:].lstrip()
+        # Look for mandatory IO control specification list and
+        # return without a match if it is not found
         if not line.startswith('('):
             return
         line, repmap = string_replace_map(line)
@@ -5975,11 +6253,15 @@ items : (Io_Control_Spec_List, Output_Item_List)
         tmp = repmap(tmp)
         if i == len(line)-1:
             return Io_Control_Spec_List(tmp), None
+        # Return optional output item list as well
         return Io_Control_Spec_List(tmp), \
             Output_Item_List(repmap(line[i+1:].lstrip()))
-    match = staticmethod(match)
 
     def tostr(self):
+        '''
+        :return: parsed representation of a "WRITE" statement
+        :rtype: str
+        '''
         if self.items[1] is None:
             return 'WRITE(%s)' % (self.items[0])
         return 'WRITE(%s) %s' % tuple(self.items)
@@ -7311,14 +7593,14 @@ class Module_Subprogram(Base):  # R1108
 
 
 class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
-    """
-    R1109
+    '''
+    Fortran 2003 rule R1109
 
-    <use-stmt> = USE [ [ , <module-nature> ] :: ] <module-name>
-                                                  [ , <rename-list> ]
-                | USE [ [ , <module-nature> ] :: ] <module-name> ,
-                                                   ONLY: [ <only-list> ]
-    """
+    use-stmt is USE [ [ , module-nature ] :: ] module-name [ , rename-list ]
+             or USE [ [ , module-nature ] :: ] module-name ,
+                 ONLY : [ only-list ]
+
+    '''
     subclass_names = []
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
@@ -7332,10 +7614,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  "ONLY" specification and optional "Rename" or "Only" list)
         :rtype: 5-tuple of objects (module name and 4 optional)
         '''
-        # Incorrect 'USE' statement
-        if string[:3].upper() != 'USE':
+        line = string.strip()
+        # Incorrect 'USE' statement or line too short
+        if line[:3].upper() != 'USE':
             return
-        line = string[3:]
+        line = line[3:]
         # Empty string after 'USE'
         if not line:
             return
@@ -7372,27 +7655,32 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if nature is not None:
                 return
 
-        i = line.find(',')
-        if i == -1:
+        position = line.find(',')
+        if position == -1:
             return nature, dcolon, Module_Name(line), '', None
-        name = line[:i].rstrip()
+        name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
             return
         name = Module_Name(name)
-        line = line[i+1:].lstrip()
+        line = line[position+1:].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
         if not line:
             return
         if line[:4].upper() == 'ONLY':
             line = line[4:].lstrip()
-            # Missing ':' after ', ONLY' specification
+            if not line:
+                # Expected ':' but there is nothing after the 'ONLY'
+                # specification
+                return
             if line[0] != ':':
+                # Expected ':' but there is a different character
+                # after the 'ONLY' specification
                 return
             line = line[1:].lstrip()
-            # Missing Only_List/Rename_List after 'USE Module_Name, ONLY:'
             if not line:
-                return
+                # Missing Only_List after 'USE Module_Name, ONLY:'
+                return nature, dcolon, name, ', ONLY:', None
             return nature, dcolon, name, ', ONLY:', Only_List(line)
         return nature, dcolon, name, ',', Rename_List(line)
 
@@ -7400,21 +7688,36 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         '''
         :return: parsed representation of "USE" statement
         :rtype: string
+        :raises InternalError: if items array is not the expected size
+        :raises InternalError: if items array[2] is not a string or is an \
+                               empty string
+        :raises InternalError: if items array[3] is 'None' as it should be \
+                               a string
         '''
+        if len(self.items) != 5:
+            raise InternalError(
+                "Use_Stmt.tostr(). 'Items' should be of size 5 but found "
+                "'{0}'.".format(len(self.items)))
+        if not self.items[2]:
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 2 should "
+                                "be a module name but it is empty")
+        if self.items[3] is None:
+            raise InternalError("Use_Stmt.tostr(). 'Items' entry 3 should "
+                                "be a string but found 'None'")
         usestmt = 'USE'
         # Add optional Module_Nature ("INTRINSIC" or "NON_INTRINSIC")
         # followed by a double colon to "USE" statement
-        if self.items[0] is not None and self.items[1] is not None:
-            usestmt += ', %s %s' % (self.items[0], self.items[1])
+        if self.items[0] and self.items[1]:
+            usestmt += ", {0} {1}".format(self.items[0], self.items[1])
         # Add optional double colon after "USE" statement without
         # Module_Nature (valid Fortran)
-        elif self.items[0] is None and self.items[1] is not None:
-            usestmt += ' %s' % (self.items[1])
+        elif not self.items[0] and self.items[1]:
+            usestmt += " {0}".format(self.items[1])
         # Add Module_Name and optional "ONLY" specifier if present
-        usestmt += ' %s%s' % (self.items[2], self.items[3])
+        usestmt += " {0}{1}".format(self.items[2], self.items[3])
         # Add optional Only_List or Rename_List if present
         if self.items[4] is not None:
-            usestmt += ' %s' % (self.items[4])
+            usestmt += " {0}".format(self.items[4])
         return usestmt
 
 

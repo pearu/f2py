@@ -79,7 +79,7 @@ DOWNLOAD_URL = 'https://github.com/stfc/fparser'
 DESCRIPTION = 'The fparser Project'
 LONG_DESCRIPTION = '''\
 The fparser project is created to develop a parser for
-Fortran 77..2003 code. It is based on the work of Pearu Peterson in
+Fortran 77..2008 code. It is based on the work of Pearu Peterson in
 the F2PY project (http://www.f2py.com).
 
 See https://github.com/stfc/fparser for more information.
@@ -103,7 +103,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 7
+MICRO = 8
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
