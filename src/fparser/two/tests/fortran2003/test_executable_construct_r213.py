@@ -43,7 +43,6 @@ subclass tests.
 '''
 
 import pytest
-from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Executable_Construct
 from fparser.api import get_reader
 

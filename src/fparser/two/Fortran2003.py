@@ -430,6 +430,7 @@ class Specification_Stmt(Base):  # R212
 
 
 class Executable_Construct(Base):  # R213
+    # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R213
     executable-construct is action-stmt
