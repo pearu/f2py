@@ -11,6 +11,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+20/12/2018 PR #151 for issue #150 (and part of PR #142). Removes the
+	   triggering of Coveralls from Travis (because it often incorrectly
+	   reports that coverage has decreased).
+
 ## Release 0.0.8 (03/12/2018) ##
 
 28/11/2018 PR #131 for issue #106. Bug fixes for Procedure_Binding and
