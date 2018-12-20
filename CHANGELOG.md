@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+20/12/2018 PR #149 for issue #147. Bug fix that corrects the name of one
+	   of the subclasses (Associate_Construct) of Executable_Construct.
+
 20/12/2018 PR #151 for issue #150 (and part of PR #142). Removes the
 	   triggering of Coveralls from Travis (because it often incorrectly
 	   reports that coverage has decreased).
