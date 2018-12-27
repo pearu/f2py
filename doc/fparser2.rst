@@ -136,6 +136,11 @@ found in the code. Nodes representing in-line comments will be added
 immediately following the node representing the code in which they
 were encountered.
 
+Note that empty input, or input that consists of purely white space
+and/or newlines, is not treated as invalid Fortran and an empty AST is
+returned. Whilst this is not strictly valid, most compilers have this
+behaviour so we follow their lead.
+
 If the code is invalid Fortran then a `FortranSyntaxError` exception
 will be raised which indicates the offending line of code and its line
 number. For example:

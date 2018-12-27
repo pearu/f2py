@@ -11,6 +11,24 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+20/12/2018 PR #149 for issue #147. Bug fix that corrects the name of one
+	   of the subclasses (Associate_Construct) of Executable_Construct.
+
+20/12/2018 PR #151 for issue #150 (and part of PR #142). Removes the
+	   triggering of Coveralls from Travis (because it often incorrectly
+	   reports that coverage has decreased).
+
+## Release 0.0.8 (03/12/2018) ##
+
+28/11/2018 PR #131 for issue #106. Bug fixes for Procedure_Binding and
+           Char_Literal_Constant classes.
+
+28/11/2018 PR #133 for issue #130. Bug fix for handing of derived-type
+           statements.
+
+28/11/2018 PR #134 for issue #119. Bug fix for parsing files that contain
+           nothing or just white space.
+
 23/11/2018 PR #122 for issue #118. Bug fix for reporting invalid
            Fortran when parsing `use module_name, only:` in fparser2.
 

@@ -502,40 +502,6 @@ def test_char_length():  # R426
     assert str(obj) == '(:)'
 
 
-def test_char_literal_constant():  # R427
-
-    tcls = Char_Literal_Constant
-    obj = tcls('NIH_"DO"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'NIH_"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'NIH\')'
-
-    obj = tcls("'DO'")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "'DO'"
-    assert repr(obj) == 'Char_Literal_Constant("\'DO\'", None)'
-
-    obj = tcls("'DON''T'")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "'DON''T'"
-
-    obj = tcls('"DON\'T"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"DON\'T"'
-
-    obj = tcls('""')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '""'
-
-    obj = tcls("''")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "''"
-
-    obj = tcls('"hey ha(ada)\t"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '"hey ha(ada)\t"'
-
-
 def test_logical_literal_constant():  # R428
 
     tcls = Logical_Literal_Constant
@@ -559,23 +525,6 @@ def test_logical_literal_constant():  # R428
     obj = tcls('.TRUE._HA')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '.TRUE._HA'
-
-
-def test_derived_type_stmt():  # R430
-
-    tcls = Derived_Type_Stmt
-    obj = tcls('type a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a'
-    assert repr(obj) == "Derived_Type_Stmt(None, Type_Name('a'), None)"
-
-    obj = tcls('type ::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE :: a(b, c)'
-
-    obj = tcls('type, private, abstract::a(b,c)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'TYPE, PRIVATE, ABSTRACT :: a(b, c)'
 
 
 def test_type_attr_spec():  # R431
@@ -749,14 +698,6 @@ def test_proc_binding_stmt():  # R450
     tcls = Proc_Binding_Stmt
     obj = tcls('procedure, pass :: length => point_length')
     assert isinstance(obj, Specific_Binding), repr(obj)
-    assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
-
-
-def test_specific_binding():  # R451
-
-    tcls = Specific_Binding
-    obj = tcls('procedure, pass :: length => point_length')
-    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROCEDURE, PASS :: length => point_length'
 
 

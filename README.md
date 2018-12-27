@@ -1,5 +1,7 @@
 # News #
 
+  * 03/12/2018 Version 0.0.8 released. See the [CHANGELOG](CHANGELOG.md)
+    for details.
   * 23/04/2018 Version 0.0.7 released. See the [CHANGELOG](CHANGELOG.md)
     for details.
   * 22/03/2017 Version 0.0.2 released. Documentation made available
@@ -33,4 +35,3 @@ The documentation for fparser is hosted on [ReadTheDocs](http://fparser.readthed
 # See also #
 
 [www.f2py.com](http://www.f2py.com).
-
