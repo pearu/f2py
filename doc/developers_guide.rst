@@ -620,20 +620,21 @@ the name is found in the `EXTENSIONS` list. This will allow this list
 to be modified in the future (e.g. a `-std` option could force the
 compiler to throw out any non-standard Fortran).
 
-Currently this approach is only implemented for a formating extensions
-(see the `Position_Edit_Desc` class rule 1013 in `Fortran2003.py`) and
-any other extensions are always supported in fparser2 (e.g. support
-for `$` in names). At some point these need to be modified to use the
-new approach. The concept of extensions is expected to be eventually
-implemented as a configuration file rather than a static list.
+Currently this approach is only implemented for a formatting extension
+(see the `Position_Edit_Desc` class rule 1013 in
+`Fortran2003.py`). Any other extensions are always supported in
+fparser2 (e.g. support for `$` in names). At some point these need to
+be modified to use the new approach. The concept of extensions is
+expected to be eventually implemented as a configuration file rather
+than a static list.
 
 Utils
 +++++
 
 fparser2 includes a `utils.py` file. This file contains the base
-classes discussed in the :ref:`base-classes` section, the
-fparser2-specific exceptions discussion in the :ref:`exceptions`
-section, a list of extensions (see previous section) and a tree-walk
+classes (discussed in the :ref:`base-classes` section), the
+fparser2-specific exceptions (discussed in the :ref:`exceptions`
+section), a list of extensions (see previous section) and a tree-walk
 utility that can be used to traverse the AST produced by fparser2 for
 a valid Fortran program.
 

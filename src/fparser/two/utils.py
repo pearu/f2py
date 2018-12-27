@@ -76,8 +76,15 @@ from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
 # A list of supported extensions to the standard(s)
-EXTENSIONS = ["x-format"]
 
+# An X edit descriptor in a format statement specifies the position
+# (forward from the current position) at which the next character will
+# be transmitted to or from a record. In standard Fortran2003 the X
+# edit descriptor must be preceeded by an integer which specifies how
+# far forward from the current position. The 'x-format' extension
+# allows the X edit descriptor to be specified without a preceeding
+# integer.
+EXTENSIONS = ["x-format"]
 
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to

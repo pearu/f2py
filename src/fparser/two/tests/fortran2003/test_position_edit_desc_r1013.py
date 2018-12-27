@@ -38,7 +38,7 @@ Position_Edit_Desc class.
 '''
 
 import pytest
-from fparser.two.utils import NoMatchError
+from fparser.two.utils import NoMatchError, InternalError
 from fparser.two.Fortran2003 import Position_Edit_Desc
 
 
@@ -99,3 +99,28 @@ def test_valid_x_descriptor_extension(f2003_create, monkeypatch):
     for descriptor in ["X", "  X  ", "x"]:
         result = Position_Edit_Desc(descriptor)
         assert str(result) == "X"
+
+
+def test_tostr_invalid_1(f2003_create, monkeypatch):
+    '''Test that invalid input (the items list is not the expected size)
+    raises an exception in the tostr method
+
+    '''
+
+    obj = Position_Edit_Desc("1X")
+    monkeypatch.setattr(obj, "items", [])
+    with pytest.raises(InternalError) as excinfo:
+        _ = str(obj)
+    assert "tostr() has '0' items, but expecting 2" in str(excinfo.value)
+
+
+def test_tostr_invalid_2(f2003_create, monkeypatch):
+    '''Test that invalid input (items[1] is empty) raises an exception in
+    the tostr method'''
+
+    obj = Position_Edit_Desc("1X")
+    monkeypatch.setattr(obj, "items", ["1", ""])
+    with pytest.raises(InternalError) as excinfo:
+        _ = str(obj)
+    assert ("items[1] in Class Position_Edit_Desc method tostr() is "
+            "empty or None") in str(excinfo.value)

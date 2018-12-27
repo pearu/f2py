@@ -7285,8 +7285,7 @@ C1009: <k> is without kind parameters.
 
 
 class Position_Edit_Desc(Base):  # R1013
-    '''
-    Fortran 2003 rule R1013
+    '''Fortran 2003 rule R1013
     position-edit-desc is T n
                        or TL n
                        or TR n
@@ -7295,8 +7294,8 @@ class Position_Edit_Desc(Base):  # R1013
     where n is a positive integer.
 
     If the extensions list includes the string 'x-format' then 'X'
-    without an integer is also matched. This is a common extension
-    in Fortran compilers.
+    without a preceeding integer is also matched. This is a common
+    extension in Fortran compilers.
 
     Attributes
     ----------
@@ -7308,10 +7307,10 @@ class Position_Edit_Desc(Base):  # R1013
 
     @staticmethod
     def match(string):
-        '''Check whether the input matches the rule
+        '''Check whether the input matches the rule.
 
-        param str string: contains the Fortran that we are trying to
-        match
+        param str string: contains the Fortran that we are trying to \
+        match.
         :return: `None` if there is no match, otherwise a `tuple` of \
                  size 2 either containing a `string` which is one of \
                  "T", "TL" or "TR", followed by an `N` class, or \
