@@ -4271,8 +4271,10 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Binary_Op(STRINGBase):  # R723
-    '''Fortran 2003 rule r723
+class Defined_Binary_Op(StringBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R723
+
     defined-binary-op is . letter [ letter ]... .
 
     C704 (R723) A defined-binary-op shall not contain more than 63
@@ -4283,12 +4285,19 @@ class Defined_Binary_Op(STRINGBase):  # R723
     logical-literal-constant as this is done in Defined_Op.match().
 
     '''
-    
+
     @staticmethod
     def match(string):
-        ''' xxx '''
+        '''Implements the matching for a (user) Defined Binary Operator.
+
+        :param str string: Fortran code to check for a match
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched operator as a string
+        :rtype: None or (str)
+
+        '''
         strip_string = string.strip()
-        if len(strip_string)>65:
+        if len(strip_string) > 65:
             # C704. Must be 63 letters or fewer (Test for >65 due
             # to the two dots).
             return None

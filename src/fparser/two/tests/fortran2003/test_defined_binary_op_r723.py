@@ -32,15 +32,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1109 : This file tests the support for the
-Use statement.
+'''Test Fortran 2003 rule R723 : This file tests the support for a
+Defined Binary Operator.
 
 '''
 
 import pytest
-from fparser.api import get_reader
 from fparser.two.Fortran2003 import Defined_Binary_Op
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.utils import NoMatchError
 
 
 def test_defined_binary_operator(f2003_create):
@@ -77,3 +76,4 @@ def test_c703(f2003_create):
                  "aaaaaa.", ".eq.", ".not.", ".false.", ".FALSE."]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Defined_Binary_Op(line)
+        assert "Defined_Binary_Op: '{0}'".format(line) in str(excinfo)
