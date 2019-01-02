@@ -61,7 +61,7 @@ def test_forall_stmt(f2003_create):
         check_forall(reader)
 
 
-def test_forall_stmt(f2003_create):
+def test_forall_stmt_brackets(f2003_create):
     '''Check that a basic forall statement with brackets in the triplet
     list is parsed correctly. Input separately as a string and as a
     reader object.

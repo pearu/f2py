@@ -4811,7 +4811,7 @@ class End_Forall_Stmt(EndStmtBase):  # R758
             'FORALL', Forall_Construct_Name, string, require_stmt_type=True)
 
 
-class Forall_Stmt(StmtBase):  # R759
+class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R759
     forall-stmt is FORALL forall-header forall-assignment-stmt
@@ -4875,6 +4875,7 @@ class Forall_Stmt(StmtBase):  # R759
                 "Class Forall_Stmt method tostr(). 'Items' entry 1 "
                 "should not be empty")
         return "FORALL {0} {1}".format(self.items[0], self.items[1])
+
 #
 # SECTION  8
 #
