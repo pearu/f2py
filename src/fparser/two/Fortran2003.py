@@ -4271,11 +4271,36 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # R723
-    """
-    <defined-unary-op> = . <letter> [ <letter> ]... .
-    """
+class Defined_Binary_Op(STRINGBase):  # R723
+    '''Fortran 2003 rule r723
+    defined-binary-op is . letter [ letter ]... .
+
+    C704 (R723) A defined-binary-op shall not contain more than 63
+    letters and shall not be the same as any intrinsic-operator or
+    logical-literal-constant.
+
+    ?????? Note, it is not currently possible to test whether the
+    operator is the same as any intrinsic operator or
+    logical-literal-constant.  Or can we compare with
+    pattern.logical_literal_constant and
+    pattern.intrinsic_operator??????
+
+    '''
     subclass_names = ['Defined_Op']
+    
+    def match(string):
+        ''' xxx '''
+        if len(string.strip)>65:
+            # C704. Must be 63 letters or fewer (Test for >65 due
+            # to the two dots).
+            return None
+        if STRINGBase.match(pattern.intrinsic_operator, string):
+            # C704 do not match an existing intrinsic operator
+            return None
+        if STRINGBase.match(pattern.logical_literal_constant, string):
+            # C704 do not match an existing logical literal constant
+            return None
+        return Defined_Op.match(string)
 
 
 class Logical_Expr(Base):  # R724
