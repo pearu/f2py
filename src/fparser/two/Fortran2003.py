@@ -4742,7 +4742,7 @@ class Forall_Header(Base):  # pylint: disable=invalid-name
                  `Scalar_Mask_Expr` if there is a scalar mask
                  expresssion and `None` if not.
         :rtype: (`Forall_Triplet_Spec_List`, `Scalar_Mask_Expr`) or
-        (`Forall_Triplet_Spec_List`, `None`) or `None`
+                (`Forall_Triplet_Spec_List`, `None`) or `None`
 
         '''
         strip_string = string.strip()
