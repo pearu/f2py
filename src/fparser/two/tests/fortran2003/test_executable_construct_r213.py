@@ -92,13 +92,11 @@ def test_do_construct(f2003_create):
     assert str(result).lower() == code
 
 
-@pytest.mark.xfail(reason="Bug in parsing simple forall constructs, see #148")
 def test_forall_construct(f2003_create):
     '''Test a forall construct is supported by the executable construct
     class.
 
     '''
-    # Note, "forall(i = 1 : n, j = 1 : n)" parses correctly.
     code = ("forall(i = 1 : n)\n"
             "end forall")
     reader = get_reader(code)
