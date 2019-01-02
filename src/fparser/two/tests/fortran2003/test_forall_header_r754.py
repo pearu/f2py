@@ -38,7 +38,6 @@ forall-header statement.
 '''
 
 import pytest
-from fparser.api import get_reader
 from fparser.two.Fortran2003 import Forall_Header
 from fparser.two.utils import NoMatchError, InternalError
 
@@ -55,7 +54,7 @@ def test_triplet_list(f2003_create):
                      "(i=1:n:m,j=1:n:m,k=1:n:m)",
                      "(i=a(p,p):n:m,j=1:b(p,p):m,k=1:n:c(p,p))"]:
         ast = Forall_Header(my_input)
-        assert my_input.replace(" ","") in str(ast).replace(" ","")
+        assert my_input.replace(" ", "") in str(ast).replace(" ", "")
 
 
 def test_mask_expr(f2003_create):
@@ -73,7 +72,7 @@ def test_mask_expr(f2003_create):
                      "(i=1:n:m,j=1:n:m,k=1:n:m,i/=k)",
                      "(i=1:n:m,j=1:n:m,k=1:n:m,a(i,j,k)==0.0)"]:
         ast = Forall_Header(my_input)
-        assert my_input.replace(" ","") in str(ast).replace(" ","")
+        assert my_input.replace(" ", "") in str(ast).replace(" ", "")
 
 
 def test_parse_error(f2003_create):

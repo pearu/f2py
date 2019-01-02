@@ -4722,7 +4722,7 @@ class Forall_Construct_Stmt(StmtBase, WORDClsBase):  # R753
         return self.item.name
 
 
-class Forall_Header(Base):  # R754
+class Forall_Header(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R754
     forall-header is ( forall-triplet-spec-list [, scalar-mask-expr ] )
