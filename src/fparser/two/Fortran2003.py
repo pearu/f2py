@@ -4279,28 +4279,20 @@ class Defined_Binary_Op(STRINGBase):  # R723
     letters and shall not be the same as any intrinsic-operator or
     logical-literal-constant.
 
-    ?????? Note, it is not currently possible to test whether the
-    operator is the same as any intrinsic operator or
-    logical-literal-constant.  Or can we compare with
-    pattern.logical_literal_constant and
-    pattern.intrinsic_operator??????
+    Note, it is not necessary to check for intrinsic operator or
+    logical-literal-constant as this is done in Defined_Op.match().
 
     '''
-    subclass_names = ['Defined_Op']
     
+    @staticmethod
     def match(string):
         ''' xxx '''
-        if len(string.strip)>65:
+        strip_string = string.strip()
+        if len(strip_string)>65:
             # C704. Must be 63 letters or fewer (Test for >65 due
             # to the two dots).
             return None
-        if STRINGBase.match(pattern.intrinsic_operator, string):
-            # C704 do not match an existing intrinsic operator
-            return None
-        if STRINGBase.match(pattern.logical_literal_constant, string):
-            # C704 do not match an existing logical literal constant
-            return None
-        return Defined_Op.match(string)
+        return Defined_Op.match(strip_string)
 
 
 class Logical_Expr(Base):  # R724
