@@ -85,6 +85,8 @@ def test_syntaxerror(f2003_create):
                  "forl (i=1,2,j=1:2) a(i,j)=i+j",
                  "forall i=1,2,j=1:2) a(i,j)=i+j",
                  "forall (i=1,2,j=1:2 a(i,j)=i+j",
+                 "forall i=1,2,j=1:2) a=0.0",
+                 "forall (i=1,2,j=1:2 a=0.0",
                  "forall x (i=1,2,j=1:2) a(i,j)=i+j",
                  "forall (i=1,2,j=1:2) x a(i,j)=i+j",
                  "forall (i=1,2,j=1:2)",
