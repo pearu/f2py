@@ -32,25 +32,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R723 : This file tests the support for a
-Defined Binary Operator.
+'''Test Fortran 2003 rule R703 : This file tests the support for a
+Defined Unary Operator.
 
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Defined_Binary_Op
+from fparser.two.Fortran2003 import Defined_Unary_Op
 from fparser.two.utils import NoMatchError
 
 
-def test_defined_binary_operator(f2003_create):
-    '''Check that a basic binary operator is parsed correctly.
+def test_defined_unary_operator(f2003_create):
+    '''Check that a basic unary operator is parsed correctly.
 
     '''
     for line in [".myoperator.",
                  "  .myoperator.  ",
                  ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                  "aaaaaa."]:
-        ast = Defined_Binary_Op(line)
+        ast = Defined_Unary_Op(line)
         target = line.strip().upper()
         assert target in str(ast)
         assert repr(ast) == "Defined_Op('{0}')".format(target)
@@ -61,8 +61,8 @@ def test_syntax_error(f2003_create):
     for line in ["", "  ", "x", ".x", "x.", "..", ".,.", ". x.", ".x .",
                  ".x x."]:
         with pytest.raises(NoMatchError) as excinfo:
-            _ = Defined_Binary_Op(line)
-        assert "Defined_Binary_Op: '{0}'".format(line) in str(excinfo)
+            _ = Defined_Unary_Op(line)
+        assert "Defined_Unary_Op: '{0}'".format(line) in str(excinfo)
 
 
 def test_c703(f2003_create):
@@ -75,5 +75,5 @@ def test_c703(f2003_create):
     for line in [".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                  "aaaaaa.", ".eq.", ".not.", ".false.", ".FALSE."]:
         with pytest.raises(NoMatchError) as excinfo:
-            _ = Defined_Binary_Op(line)
-        assert "Defined_Binary_Op: '{0}'".format(line) in str(excinfo)
+            _ = Defined_Unary_Op(line)
+        assert "Defined_Unary_Op: '{0}'".format(line) in str(excinfo)
