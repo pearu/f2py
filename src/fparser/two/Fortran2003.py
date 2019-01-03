@@ -425,8 +425,9 @@ class Specification_Stmt(Base):  # R212
         'Comment', 'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt',
         'Equivalence_Stmt',
         'External_Stmt', 'Intent_Stmt', 'Intrinsic_Stmt', 'Namelist_Stmt',
-        'Optional_Stmt', 'Pointer_Stmt', 'Protected_Stmt', 'Save_Stmt',
-        'Target_Stmt', 'Volatile_Stmt', 'Value_Stmt']
+        'Optional_Stmt', 'Pointer_Stmt', 'Cray_Pointer_Stmt',
+        'Protected_Stmt', 'Save_Stmt', 'Target_Stmt', 'Volatile_Stmt',
+        'Value_Stmt']
 
 
 class Executable_Construct(Base):  # R213
@@ -3132,6 +3133,19 @@ class Named_Constant_Def(KeywordValueBase):  # R539
     match = staticmethod(match)
 
 
+class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  
+    '''
+    cray-pointer-stmt is POINTER cray-pointer-decl-list
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointer_Decl_List']
+
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match('POINTER', Cray_Pointer_Decl_List, string,
+                                 require_cls=True)
+
+
 class Pointer_Stmt(StmtBase, WORDClsBase):  # R540
     """
     <pointer-stmt> = POINTER [ :: ] <pointer-decl-list>
@@ -3160,6 +3174,41 @@ class Pointer_Decl(CallBase):  # R541
     match = staticmethod(match)
 
 
+class Cray_Pointer_Decl(Base):
+    '''
+    cray-pointer-decl is ( cray-pointer-name, cray-pointee-name [array-spec] )
+    *** cray-pointee-name can be a scalar-name, array-name or array-declarator
+    e.g. POINTER ( ix, x(n, 0:m) )
+    Use Explicit_Shape_Spec ???
+    Looks very much like a Common_Block_Object. Try to replicate this in a new class.
+    '''
+    use_names = ['Cray_Pointer_Name', 'Cray_Pointee_Name']
+
+    @staticmethod
+    def match(string):
+        ''' xxx '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        if not strip_string[0] == "(":
+            return None
+        if not strip_string[-1] == ")":
+            return None
+        strip_string_nobr = strip_string[1:-1].strip()
+        split_list = strip_string_nobr.split(',')
+        if len(split_list) != 2:
+            return None
+        pointer_name = split_list[0].strip()
+        pointee_name = split_list[1].strip()
+        return Cray_Pointer_Name(pointer_name), Cray_Pointee_Name(pointee_name)
+
+    def tostr(self):
+        ''' xxx '''
+        return "({0}, {1})".format(self.items[0], self.items[1])
+
+        
 class Protected_Stmt(StmtBase, WORDClsBase):  # R542
     """
     <protected-stmt> = PROTECTED [ :: ] <entity-name-list>
