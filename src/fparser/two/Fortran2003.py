@@ -622,9 +622,63 @@ class Char_Constant(Base):  # R309
 
 # R310: <intrinsic-operator> = <power-op> | <mult-op> | <add-op> |
 # <concat-op> | <rel-op> | <not-op> | <and-op> | <or-op> | <equiv-op>
-# R311: <defined-operator> = <defined-unary-op> | <defined-binary-op>
-# | <extended-intrinsic-op>
-# R312: <extended-intrinsic-op> = <intrinsic-op>
+# Rule 310 is defined in pattern_tools.py. As it is only used by Rule
+# 312 it does not need to be defined explicitly as a class. Note, it
+# could be created as a class if it were useful for code
+# manipulation. We could additionally create each of the operators
+# themselves as classes.
+
+
+class Defined_Operator(Base):  # pylint: disable=invalid-name
+    '''Fortran 2003 rule R311
+    R311 defined-operator is defined-unary-op
+                          or defined-binary-op
+                          or extended-intrinsic-op
+
+    Note, defined-operator is defined in pattern_tools.py so could be
+    called directly via a stringbase match. However, the defined unary
+    and binary op rules have constraints which would not be checked if
+    we did this.
+
+    Note, whilst we subclass for both Defined Unary and Binary ops,
+    the match is the same so we will only ever match with the first
+    (so the second is not really necessary here). This is OK from a
+    parsing point of view as they both return a Defined_Op class, so
+    are identical from the parsers point of view.
+
+    '''
+    subclass_names = [ 'Defined_Unary_Op', 'Defined_Binary_Op',
+                       'Extended_Intrinsic_Op']
+
+
+class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
+    '''Fortran 2003 rule R312
+    R312 extended-intrinsic-op is intrinsic-operator
+
+    Note, extended-intrinsic-op is only ever used by R311 and is
+    defined in pattern_tools.py so could be matched directly in the
+    Defined_Operator class (by changing it to STRINGBase and moving
+    the match in this class into the Defined_Operator class). This
+    would mean that this class would not be required. However, the
+    parse tree would then not have the concept of an
+    Extended_Intrinsic_Op which might be useful for code manipulation
+    tools.
+
+    '''
+    @staticmethod
+    def match(string):
+        '''Implements the matching for the extended-intrinsic-op
+        rule. Matches the string with the regular expression
+        extended_intrinsic_operator in the pattern_tools file.
+
+        :param str string: the string to match with the pattern rule.
+        :returns: a tuple of size 1 containing a string with the \
+        matched name if there is a match, or None if there is not.
+        :rtype: (str) or None
+
+        '''
+        return StringBase.match(pattern.extended_intrinsic_operator, string)
+
 
 
 class Label(StringBase):  # R313
