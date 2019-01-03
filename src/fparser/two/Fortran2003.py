@@ -647,8 +647,8 @@ class Defined_Operator(Base):  # pylint: disable=invalid-name
     are identical from the parsers point of view.
 
     '''
-    subclass_names = [ 'Defined_Unary_Op', 'Defined_Binary_Op',
-                       'Extended_Intrinsic_Op']
+    subclass_names = ['Defined_Unary_Op', 'Defined_Binary_Op',
+                      'Extended_Intrinsic_Op']
 
 
 class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
@@ -678,7 +678,6 @@ class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
 
         '''
         return StringBase.match(pattern.extended_intrinsic_operator, string)
-
 
 
 class Label(StringBase):  # R313

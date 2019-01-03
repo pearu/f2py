@@ -66,5 +66,3 @@ def test_parse_errors(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Extended_Intrinsic_Op(myinput)
         assert "Extended_Intrinsic_Op: '{0}'".format(myinput) in str(excinfo)
-
-
