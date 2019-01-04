@@ -40,7 +40,8 @@ Cray-pointer statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Cray_Pointer_Stmt
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.utils import NoMatchError
+
 
 def test_cray_pointer_stmt(f2003_create):
     '''Check that a basic Cray-pointer statement is parsed

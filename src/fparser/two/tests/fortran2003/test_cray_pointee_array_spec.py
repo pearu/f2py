@@ -39,7 +39,7 @@ Cray-pointee array specification.
 
 import pytest
 from fparser.two.Fortran2003 import Cray_Pointee_Array_Spec
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.utils import NoMatchError
 
 
 def test_cray_pointee_array_spec(f2003_create):
@@ -54,9 +54,8 @@ def test_cray_pointee_array_spec(f2003_create):
 def test_errors(f2003_create):
     '''Check that syntax errors produce a NoMatchError exception.'''
     for myinput in ["", "  ", "2n", "2 n", "*, n"]:
-        print (myinput)
         with pytest.raises(NoMatchError) as excinfo:
-            ast = Cray_Pointee_Array_Spec(myinput)
+            _ = Cray_Pointee_Array_Spec(myinput)
         assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in str(excinfo)
 
 
