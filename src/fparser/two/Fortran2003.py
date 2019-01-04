@@ -3174,15 +3174,36 @@ class Pointer_Decl(CallBase):  # R541
     match = staticmethod(match)
 
 
+class Cray_Pointee_Array_Spec(Base):
+    '''
+    cray-pointee-array-spec is explicit-shape-spec-list
+                            or assumed-size-spec
+    '''
+    subclass_names = ['Assumed_Size_Spec','Explicit_Shape_Spec_List']
+
+
+class Cray_Pointee_Decl(CallBase):
+    '''
+    cray-pointee-decl is cray-pointee-name ( cray-pointee-array-spec )
+
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointee_Name', 'Cray_Pointee_Array_Spec']
+
+    @staticmethod
+    def match(string):
+        ''' xxx '''
+        return CallBase.match(
+            Cray_Pointee_Name, Cray_Pointee_Array_Spec, string,
+            require_rhs=True)
+
+
 class Cray_Pointer_Decl(Base):
     '''
-    cray-pointer-decl is ( cray-pointer-name, cray-pointee-name [array-spec] )
-    *** cray-pointee-name can be a scalar-name, array-name or array-declarator
+    cray-pointer-decl is ( cray-pointer-name, cray-pointee-decl )
     e.g. POINTER ( ix, x(n, 0:m) )
-    Use Explicit_Shape_Spec ???
-    Looks very much like a Common_Block_Object. Try to replicate this in a new class.
     '''
-    use_names = ['Cray_Pointer_Name', 'Cray_Pointee_Name']
+    use_names = ['Cray_Pointer_Name', 'Cray_Pointee_Name', 'Cray_Pointee_Decl']
 
     @staticmethod
     def match(string):
@@ -3197,12 +3218,16 @@ class Cray_Pointer_Decl(Base):
         if not strip_string[-1] == ")":
             return None
         strip_string_nobr = strip_string[1:-1].strip()
-        split_list = strip_string_nobr.split(',')
+        line, repmap = string_replace_map(strip_string_nobr)
+        split_list = line.split(',')
         if len(split_list) != 2:
             return None
-        pointer_name = split_list[0].strip()
-        pointee_name = split_list[1].strip()
-        return Cray_Pointer_Name(pointer_name), Cray_Pointee_Name(pointee_name)
+        pointer_name = repmap(split_list[0]).strip()
+        pointee_str = repmap(split_list[1]).strip()
+        if pointee_str[-1] == ")":
+            return Cray_Pointer_Name(pointer_name), \
+                Cray_Pointee_Decl(pointee_str)
+        return Cray_Pointer_Name(pointer_name), Cray_Pointee_Name(pointee_str)
 
     def tostr(self):
         ''' xxx '''
