@@ -39,7 +39,7 @@ Cray-pointer declaration.
 
 import pytest
 from fparser.two.Fortran2003 import Cray_Pointer_Decl
-from fparser.two.utils import NoMatchError
+from fparser.two.utils import NoMatchError, InternalError
 
 
 def test_cray_pointer_decl(f2003_create):
@@ -71,3 +71,48 @@ def test_errors(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointer_Decl(myinput)
         assert "Cray_Pointer_Decl: '{0}'".format(myinput) in str(excinfo)
+
+
+def test_use_internal_error1(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the length of the Items
+    list is not 2 as the str() method assumes that it is.
+
+    '''
+    myinput = "(mypointer, mypointee)"
+    ast = Cray_Pointer_Decl(myinput)
+    monkeypatch.setattr(ast, "items", [None])
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert "should be of size 2 but found '1'" in str(excinfo)
+
+
+def test_use_internal_error2(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the pointer name (entry 0
+    of Items) is empty or None as the str() method assumes that it is
+    a string with content.
+
+    '''
+    myinput = "(mypointer, mypointee)"
+    ast = Cray_Pointer_Decl(myinput)
+    for change in [None, ""]:
+        monkeypatch.setattr(ast, "items", (change, "mypointee"))
+        with pytest.raises(InternalError) as excinfo:
+            str(ast)
+        assert ("'Items' entry 0 should be a pointer name but it is "
+                "empty") in str(excinfo)
+
+
+def test_use_internal_error3(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the pointee name (entry 1
+    of Items) is empty or None as the str() method assumes that it is
+    a string with content.
+
+    '''
+    myinput = "(mypointer, mypointee)"
+    ast = Cray_Pointer_Decl(myinput)
+    for change in [None, ""]:
+        monkeypatch.setattr(ast, "items", ("mypointer", change))
+        with pytest.raises(InternalError) as excinfo:
+            str(ast)
+        assert ("'Items' entry 1 should be a pointee name or pointee "
+                "declaration but it is empty") in str(excinfo)
