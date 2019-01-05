@@ -75,6 +75,13 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
+# Cray pointers are a well known extension to the Fortran
+# standard. See
+# https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html for
+# example. If 'cray-pointer' is specified in EXTENSIONS then this
+# extension is allowed in fparser.
+EXTENSIONS = ["cray-pointer"]
+
 
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to

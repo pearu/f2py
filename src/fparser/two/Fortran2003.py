@@ -3155,6 +3155,9 @@ class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: (str, Cray_Pointer_Decl_List) or None
 
         '''
+        from fparser.two.utils import EXTENSIONS
+        if not 'cray-pointer' in EXTENSIONS:
+            return None
         return WORDClsBase.match('POINTER', Cray_Pointer_Decl_List, string,
                                  require_cls=True)
 

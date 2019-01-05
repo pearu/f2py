@@ -89,3 +89,29 @@ def test_errors(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointer_Stmt(line)
         assert "Cray_Pointer_Stmt: '{0}'".format(line) in str(excinfo)
+
+
+def test_invalid_cray_pointer(f2003_create, monkeypatch):
+    '''Test that the cray-pointer extension to the standard raises an
+    exception if it is not named as a valid extension.
+
+    '''
+    import fparser.two.utils as utils
+    monkeypatch.setattr(utils, "EXTENSIONS", [])
+    myinput = "pointer (mypointer, mypointee)"
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cray_Pointer_Stmt(myinput)
+        assert "Cray_Pointer_Stmt: '{0}'".format(myinput) \
+            in str(excinfo.value)
+
+
+def test_valid_cray_pointer(f2003_create, monkeypatch):
+    '''Test that the cray-pointer extension to the standard produces the
+    expected output if it is named as a valid extension.
+
+    '''
+    import fparser.two.utils as utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["cray-pointer"])
+    myinput = "pointer(mypointer, mypointee)"
+    result = Cray_Pointer_Stmt(myinput)
+    assert str(result).lower() == myinput
