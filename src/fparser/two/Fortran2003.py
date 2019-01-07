@@ -6885,6 +6885,75 @@ class Format_Stmt(StmtBase, WORDClsBase):  # R1001
                                  string, require_cls=True)
 
 
+class Format_Item_List(SequenceBase):
+    ''' Replaces the generated Format_Item_List '''
+    use_names = []
+    subclass_names = ['Format_Item']
+    @staticmethod
+    def match(string):
+        '''The plan is to match one at a time as support for the hollerith xxx
+        makes it impossible to split the line a-priori without
+        potentially making a mistake.
+
+        For example 2H,x,e2.2 is 2H,x and e2.2 but a split with commas
+        would give 2H, x and e2.2
+
+        Further we can't reply on using string_replace_map a-priori as
+        it could also make a mistake
+
+        For example
+
+        2H"x,2H"x would give 2H F2PY_STRING_CONSTANT_index x
+
+        Therefore we match one item at a time and reduce the string
+        each time there is a match.
+
+        We first see if the current entry is a holerith. If so we deal
+        with it. If not, we apply the same algorithm as was previously
+        done but only check the first item, remove it from the string
+        and start again.
+
+        '''
+        try:
+            current_string = string.strip()
+        except AttributeError:
+            # string does not have a strip() method
+            return None
+        lst = []
+        while current_string:
+            # does the current item match with a hollerith?
+            match = re.search('^[1-9][0-9]*[hH]', current_string)
+            if match:
+                # current item matches with a hollerith
+                match_str = match.group(0)
+                hol_length_str = match_str[:-1]
+                hol_length = int(hol_length_str)
+                num_chars = len(match_str) + hol_length
+                if len(current_string) < num_chars:
+                    # the string is not long enough
+                    return None
+                lst.append(Format_Item(current_string[:num_chars]))
+                current_string = current_string[num_chars:].lstrip()
+                if current_string:
+                    # remove the next comma and any white space
+                    if current_string[0] != ',':
+                        # there is no comma so we have a format error
+                        return None
+                    else:
+                        current_string = current_string[1:].lstrip()
+            else:
+                line, repmap = string_replace_map(current_string)
+                splitted = line.split(',',1)
+                lst.append(Format_Item(repmap(splitted[0].strip())))
+                current_string = ""
+                if len(splitted) == 2:
+                    current_string = repmap(splitted[1]).strip()
+        if len(lst) <= 1:
+            # a list must contain at least 2 items (see SequenceBase)
+            return None
+        return ',', tuple(lst)
+
+
 class Format_Specification(BracketBase):  # R1002
     """
     <format-specification> = ( [ <format-item-list> ] )
@@ -6942,17 +7011,48 @@ items : (Format_Item, Format_Item)
     def tostr(self):
         return '%s, %s' % (self.items)
 
+class Hollerith_Item(Base):
+    ''' xxx '''
+    subclass_names = []
+    use_names = []
+    @staticmethod
+    def match(string):
+        ''' xxx '''
+        # only strip space to the left as space to the right could be
+        # part of the hollerith item.
+        strip_string = string.lstrip()
+        match = re.search('^[1-9][0-9]*[hH]', strip_string)
+        if not match:
+            return None
+        # current item matches with a hollerith
+        match_str = match.group(0)
+        hol_length_str = match_str[:-1]
+        hol_length = int(hol_length_str)
+        num_chars = len(match_str) + hol_length
+        if len(strip_string) != num_chars:
+            # the string is not the required length
+            return None
+        return strip_string[len(match_str):],
+
+    def tostr(self):
+        ''' xxx '''
+        return "{0}H{1}".format(len(self.items[0]), self.items[0])
+
 
 class Format_Item(Base):  # R1003
-    """
-    <format-item> = [ <r> ] <data-edit-desc>
-                    | <control-edit-desc>
-                    | <char-string-edit-desc>
-                    | [ <r> ] ( <format-item-list> )
-                    | <format-item-c1002>
-    """
-    subclass_names = ['Control_Edit_Desc', 'Char_String_Edit_Desc',
-                      'Format_Item_C1002']
+    '''
+    format-item is [ r ] data-edit-desc
+                 or control-edit-desc
+                 or char-string-edit-desc
+                 or [ r ] ( format-item-list )
+                 or format-item-c1002
+                 or hollerith-item
+
+    Hollerith item explanation ...
+
+    '''
+    subclass_names = ['Hollerith_Item', 'Control_Edit_Desc',
+                      'Char_String_Edit_Desc', 'Format_Item_C1002']
     use_names = ['R', 'Format_Item_List', 'Data_Edit_Desc']
 
     @staticmethod
