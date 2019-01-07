@@ -4876,14 +4876,16 @@ class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for a forall statement.
 
-        :param string: a string or the fortran reader containing the \
-                    line of code that we are trying to match
+        :param string: A string or the fortran reader containing the \
+                    line of code that we are trying to match.
         :type string: `str` or \
         :py:class:`fparser.common.readfortran.FortranReader`
         :return: `None` if there is no match or a `tuple` of size 2 \
         containing an instance of the Forall_Header class followed by \
         an instance of the Forall_Assignment_Stmt class.
-        :rtype: `None` or ( `Forall_Header`, `Forall_Assignment_Stmt`)
+        :rtype: `None` or ( \
+        :py:class:`fparser.two.Fortran2003.Forall_Header`, \
+        :py:class:`fparser.two.Fortran2003.Forall_Assignment_Stmt`)
 
         '''
         strip_string = string.strip()
@@ -4921,11 +4923,11 @@ class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
         if not self.items[0]:
             raise InternalError(
                 "Class Forall_Stmt method tostr(). 'Items' entry 0 "
-                "should not be empty")
+                "should be a valid Forall_Header.")
         if not self.items[1]:
             raise InternalError(
-                "Class Forall_Stmt method tostr(). 'Items' entry 1 "
-                "should not be empty")
+                "Class Forall_Stmt method tostr(). 'Items' entry 1 should "
+                "be should be a valid Forall_Assignment_Stmt")
         return "FORALL {0} {1}".format(self.items[0], self.items[1])
 
 #
