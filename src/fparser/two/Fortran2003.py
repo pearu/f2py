@@ -569,7 +569,7 @@ class Name(StringBase):  # R304
         pattern_tools file.
 
         :param str string: the string to match with the pattern rule.
-        :returns: a tuple of size 1 containing a string with the \
+        :return: a tuple of size 1 containing a string with the \
         matched name if there is a match, or None if there is not.
         :rtype: (str) or None
 
@@ -728,24 +728,23 @@ class Kind_Selector(Base):  # R404
         '''Implements the matching for a Kind_Selector.
 
         :param str string: a string containing the code to match
-
-        :return: `None` if there is no match, otherwise a `tuple` of
-                 size 3 containing a '(', a single `list` which
-                 contains an instance of classes that have matched and
-                 a ')', or a `tuple` of size 2 containing a '*' and an
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 3 containing a '(', a single `list` which \
+                 contains an instance of classes that have matched and \
+                 a ')', or a `tuple` of size 2 containing a '*' and an \
                  instance of classes that have matched.
 
-        :raises InternalError: if None is passed instead of a
-        string. The parent rule should not pass None and the logic in
+        :raises InternalError: if None is passed instead of a \
+        string. The parent rule should not pass None and the logic in \
         this routine relies on a valid string.
 
-        :raises InternalError: if the string passed is <=1 characters
-        long. The parent rule passing this string should ensure the
-        string is at least 2 characters long and the logic in this
-        routine relies on this. The reason there is a minimum of two
-        is that the pattern '*n' where 'n' is a number is the smallest
-        valid pattern. The other valid pattern must have at least a
-        name with one character surrounded by brackets e.g. '(x)' so
+        :raises InternalError: if the string passed is <=1 characters \
+        long. The parent rule passing this string should ensure the \
+        string is at least 2 characters long and the logic in this \
+        routine relies on this. The reason there is a minimum of two \
+        is that the pattern '*n' where 'n' is a number is the smallest \
+        valid pattern. The other valid pattern must have at least a \
+        name with one character surrounded by brackets e.g. '(x)' so \
         should be at least 3 characters long.
 
         '''
@@ -7286,36 +7285,96 @@ C1009: <k> is without kind parameters.
 
 
 class Position_Edit_Desc(Base):  # R1013
-    """
-    <position-edit-desc> = T <n>
-                           | TL <n>
-                           | TR <n>
-                           | <n> X
+    '''Fortran 2003 rule R1013
+    position-edit-desc is T n
+                       or TL n
+                       or TR n
+                       or n X
 
-Attributes
-----------
-items : ({'T', 'TL', 'TR', N}, {N, 'X'})
-    """
+    where n is a positive integer.
+
+    If the extensions list includes the string 'x-format' then 'X'
+    without a preceeding integer is also matched. This is a common
+    extension in Fortran compilers.
+
+    Attributes
+    ----------
+    items : ({'T', 'TL', 'TR', N}, {N, 'X'})
+
+    '''
     subclass_names = []
     use_names = ['N']
 
     @staticmethod
     def match(string):
-        if len(string) <= 1:
-            return
-        if string[0].upper() == 'T':
-            if string[1].upper() in 'LR':
-                start = string[:2]
-                rest = string[2:].lstrip()
+        '''Check whether the input matches the rule.
+
+        param str string: contains the Fortran that we are trying to \
+        match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 2 either containing a `string` which is one of \
+                 "T", "TL" or "TR", followed by an `N` class, or \
+                 containing an `N` class, or `None`, followed by an "X".
+        :rtype: None, (str, class N), (class N, str) or (None, str)
+
+        '''
+        strip_string_upper = string.strip().upper()
+        if not strip_string_upper:
+            # empty input string
+            return None
+        if strip_string_upper[0] == 'T':
+            if not len(strip_string_upper) > 1:
+                # string is not long enough to be valid
+                return None
+            if strip_string_upper[1] in 'LR':
+                # We match TL* or TR* where * is stored in variable
+                # rest
+                start = strip_string_upper[:2]
+                rest = strip_string_upper[2:].lstrip()
             else:
-                start = string[1]
-                rest = string[1:].lstrip()
-            return start.upper(), N(rest)
-        if string[-1].upper() == 'X':
-            return N(string[:-1].rstrip()), 'X'
+                # We match T* where * is stored in variable rest
+                start = strip_string_upper[0]
+                rest = strip_string_upper[1:].lstrip()
+            # Note, if class N does not match it raises an exception
+            number_obj = N(rest)
+            return start, number_obj
+        if strip_string_upper[-1] == 'X':
+            # We match *X
+            from fparser.two.utils import EXTENSIONS
+            if "x-format" in EXTENSIONS and len(strip_string_upper) == 1:
+                # The match just contains 'X' which is not valid
+                # fortran 2003 but is an accepted extension
+                return None, "X"
+            # Note, if class N does not match it raises an
+            # exception
+            number_obj = N(strip_string_upper[:-1].rstrip())
+            return number_obj, 'X'
+        else:
+            return None
 
     def tostr(self):
-        return '%s%s' % (self.items)
+        ''':return: parsed representation of a Position Edit Descriptor
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+
+        :raises InternalError: if the second entry of the internal \
+        items list has no content.
+
+        '''
+        if not len(self.items) == 2:
+            raise InternalError(
+                "Class Position_Edit_Desc method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[1]:
+            raise InternalError(
+                "items[1] in Class Position_Edit_Desc method tostr() is "
+                "empty or None")
+        if self.items[0]:
+            return "{0}{1}".format(self.items[0], self.items[1])
+        # This output is only required for the "x-format" extension.
+        return "{0}".format(self.items[1])
 
 
 class N(Base):  # R1014
@@ -7361,6 +7420,7 @@ class Round_Edit_Desc(STRINGBase):  # R1017
                         | RN
                         | RC
                         | RP
+
     """
     subclass_names = []
 
