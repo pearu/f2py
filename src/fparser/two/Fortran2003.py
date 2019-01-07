@@ -4787,13 +4787,13 @@ class Forall_Header(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for a Forall_Header.
 
-        :param str string: a string containing the code to match
-        :return: `None` if there is no match, otherwise a `tuple` of
-                 size 2 containing a class of type
-                 `Forall_Triplet_Spec_List` and a class of type
-                 `Scalar_Mask_Expr` if there is a scalar mask
+        :param str string: A string containing the code to match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 2 containing a class of type \
+                 `Forall_Triplet_Spec_List` and a class of type \
+                 `Scalar_Mask_Expr` if there is a scalar mask \
                  expresssion and `None` if not.
-        :rtype: (`Forall_Triplet_Spec_List`, `Scalar_Mask_Expr`) or
+        :rtype: (`Forall_Triplet_Spec_List`, `Scalar_Mask_Expr`) or \
                 (`Forall_Triplet_Spec_List`, `None`) or `None`
 
         '''
@@ -4823,9 +4823,13 @@ class Forall_Header(Base):  # pylint: disable=invalid-name
                     Scalar_Mask_Expr(right_str))
 
     def tostr(self):
-        '''
-        :return: this Forall Header as a string
+        ''':return: this Forall Header as a string
         :rtype: str
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content, as a Forall_Triplet_List is \
+        expected.
 
         '''
         if len(self.items) != 2:
