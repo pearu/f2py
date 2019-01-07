@@ -7339,7 +7339,6 @@ class Position_Edit_Desc(Base):  # R1013
             number_obj = N(rest)
             return start, number_obj
         if strip_string_upper[-1] == 'X':
-            print (strip_string_upper)
             # We match *X
             from fparser.two.utils import EXTENSIONS
             if "x-format" in EXTENSIONS and len(strip_string_upper) == 1:
