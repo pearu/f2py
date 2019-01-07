@@ -123,7 +123,8 @@ def test_internal_error2(f2003_create):
         ast.items = (content, ast.items[1])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "'Items' entry 0 should not be empty" in str(excinfo)
+        assert ("'Items' entry 0 should be a valid "
+                "Forall_Header") in str(excinfo)
 
 
 def test_internal_error3(f2003_create):
@@ -138,4 +139,5 @@ def test_internal_error3(f2003_create):
         ast.items = (ast.items[0], content)
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "'Items' entry 1 should not be empty" in str(excinfo)
+        assert ("'Items' entry 1 should be a valid "
+                "Forall_Assignment_Stmt") in str(excinfo)

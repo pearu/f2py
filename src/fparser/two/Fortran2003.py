@@ -4927,7 +4927,7 @@ class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
         if not self.items[1]:
             raise InternalError(
                 "Class Forall_Stmt method tostr(). 'Items' entry 1 should "
-                "be should be a valid Forall_Assignment_Stmt")
+                "be a valid Forall_Assignment_Stmt")
         return "FORALL {0} {1}".format(self.items[0], self.items[1])
 
 #
