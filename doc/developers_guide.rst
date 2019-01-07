@@ -620,13 +620,13 @@ the name is found in the `EXTENSIONS` list. This will allow this list
 to be modified in the future (e.g. a `-std` option could force the
 compiler to throw out any non-standard Fortran).
 
-Currently this approach is only implemented for a formatting extension
-(see the `Position_Edit_Desc` class rule 1013 in
-`Fortran2003.py`). Any other extensions are always supported in
-fparser2 (e.g. support for `$` in names). At some point these need to
-be modified to use the new approach. The concept of extensions is
-expected to be eventually implemented as a configuration file rather
-than a static list.
+.. note::
+
+   A number of extensions do not currently follow this convention and
+   are always supported in fparser2 (e.g. support for `$` in
+   names). At some point these need to be modified to use the new
+   approach. Eventually, the concept of extensions is expected to be
+   implemented as a configuration file rather than a static list.
 
 Utils
 +++++
