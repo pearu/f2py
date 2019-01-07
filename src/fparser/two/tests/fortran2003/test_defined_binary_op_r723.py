@@ -48,8 +48,7 @@ def test_defined_binary_operator(f2003_create):
     '''
     for line in [".myoperator.",
                  "  .myoperator.  ",
-                 ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                 "aaaaaa."]:
+                 "."+63*"a"+"."]:
         ast = Defined_Binary_Op(line)
         target = line.strip().upper()
         assert target in str(ast)
@@ -72,8 +71,7 @@ def test_c703(f2003_create):
     (e.g. .false.).
 
     '''
-    for line in [".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                 "aaaaaa.", ".eq.", ".not.", ".false.", ".FALSE."]:
+    for line in ["."+64*"a"+".", ".eq.", ".not.", ".false.", ".FALSE."]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Defined_Binary_Op(line)
         assert "Defined_Binary_Op: '{0}'".format(line) in str(excinfo)
