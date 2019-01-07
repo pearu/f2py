@@ -75,12 +75,24 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
+
+# A list of supported extensions to the standard(s)
+
+# An X edit descriptor in a format statement specifies the position
+# (forward from the current position) at which the next character will
+# be transmitted to or from a record. In standard Fortran2003 the X
+# edit descriptor must be preceeded by an integer which specifies how
+# far forward from the current position. The 'x-format' extension
+# allows the X edit descriptor to be specified without a preceeding
+# integer.
+EXTENSIONS = ["x-format"]
+
 # Cray pointers are a well known extension to the Fortran
 # standard. See
 # https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html for
 # example. If 'cray-pointer' is specified in EXTENSIONS then this
 # extension is allowed in fparser.
-EXTENSIONS = ["cray-pointer"]
+EXTENSIONS += ["cray-pointer"]
 
 
 class FparserException(Exception):
