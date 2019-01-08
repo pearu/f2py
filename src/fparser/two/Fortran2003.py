@@ -4820,31 +4820,76 @@ class Forall_Construct_Stmt(StmtBase, WORDClsBase):  # R753
         return self.item.name
 
 
-class Forall_Header(Base):  # R754
-    """
-    <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    """
+class Forall_Header(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R754
+    forall-header is ( forall-triplet-spec-list [, scalar-mask-expr ] )
+
+    '''
     subclass_names = []
     use_names = ['Forall_Triplet_Spec_List', 'Scalar_Mask_Expr']
 
     @staticmethod
     def match(string):
-        if not string or string[0] + string[-1] != '()':
-            return
-        line, repmap = string_replace_map(string[1:-1].strip())
-        lst = line.rsplit(',', 1)
-        if len(lst) != 2:
-            return
-        if ':' not in lst[1]:
-            return Forall_Triplet_Spec_List(
-                repmap(lst[0].rstrip())), \
-                Scalar_Mask_Expr(repmap(lst[1].lstrip()))
-        return Forall_Triplet_Spec_List(repmap(line)), None
+        '''Implements the matching for a Forall_Header.
+
+        :param str string: A string containing the code to match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 2 containing a class of type \
+                 `Forall_Triplet_Spec_List` and a class of type \
+                 `Scalar_Mask_Expr` if there is a scalar mask \
+                 expresssion and `None` if not.
+        :rtype: (`Forall_Triplet_Spec_List`, `Scalar_Mask_Expr`) or \
+                (`Forall_Triplet_Spec_List`, `None`) or `None`
+
+        '''
+        strip_string = string.strip()
+        if not strip_string:
+            # Input only contains white space
+            return None
+        if strip_string[0] + strip_string[-1] != '()':
+            # Input does not start with '(' and end with ')'
+            return None
+        strip_string_nobr = strip_string[1:-1].strip()
+        try:
+            # first try to match without a scalar mask expression
+            return Forall_Triplet_Spec_List(strip_string_nobr), None
+        except NoMatchError:
+            # The match failed so try to match with the optional
+            # scalar mask expression. Use repmap to remove any
+            # unexpected "," e.g. an array access a(i,j), when
+            # splitting the string.
+            mapped_string, repmap = string_replace_map(strip_string_nobr)
+            split_string = mapped_string.rsplit(',', 1)
+            if len(split_string) != 2:
+                return None
+            left_str = repmap(split_string[0].rstrip())
+            right_str = repmap(split_string[1].lstrip())
+            return (Forall_Triplet_Spec_List(left_str),
+                    Scalar_Mask_Expr(right_str))
 
     def tostr(self):
-        if self.items[1] is None:
-            return '(%s)' % (self.items[0])
-        return '(%s, %s)' % (self.items)
+        ''':return: this Forall Header as a string
+        :rtype: str
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content, as a Forall_Triplet_List is \
+        expected.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Forall_Header.tostr(). 'items' should be of size 2 but "
+                "found '{0}'.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Forall_Header.tostr(). 'items[0]' should be a "
+                "Forall_Triplet_Spec_List instance but it is empty.")
+        if not self.items[1]:
+            # there is no scalar mask expression
+            return "({0})".format(self.items[0])
+        return "({0}, {1})".format(self.items[0], self.items[1])
 
 
 class Forall_Triplet_Spec(Base):  # R755
@@ -4909,32 +4954,72 @@ class End_Forall_Stmt(EndStmtBase):  # R758
             'FORALL', Forall_Construct_Name, string, require_stmt_type=True)
 
 
-class Forall_Stmt(StmtBase):  # R759
-    """
-    <forall-stmt> = FORALL <forall-header> <forall-assignment-stmt>
-    """
+class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R759
+    forall-stmt is FORALL forall-header forall-assignment-stmt
+
+    '''
     subclass_names = []
     use_names = ['Forall_Header', 'Forall_Assignment_Stmt']
 
     @staticmethod
     def match(string):
-        if string[:6].upper() != 'FORALL':
-            return
-        line, repmap = string_replace_map(string[6:].lstrip())
-        if not line.startswith(')'):
-            return
-        i = line.find(')')
-        if i == -1:
-            return
-        header = repmap(line[1:i].strip())
-        if not header:
-            return
-        line = repmap(line[i+1:].lstrip())
+        '''Implements the matching for a forall statement.
+
+        :param string: A string or the fortran reader containing the \
+                    line of code that we are trying to match.
+        :type string: `str` or \
+        :py:class:`fparser.common.readfortran.FortranReader`
+        :return: `None` if there is no match or a `tuple` of size 2 \
+        containing an instance of the Forall_Header class followed by \
+        an instance of the Forall_Assignment_Stmt class.
+        :rtype: `None` or ( \
+        :py:class:`fparser.two.Fortran2003.Forall_Header`, \
+        :py:class:`fparser.two.Fortran2003.Forall_Assignment_Stmt`)
+
+        '''
+        strip_string = string.strip()
+        if strip_string[:6].upper() != 'FORALL':
+            return None
+        line, repmap = string_replace_map(strip_string[6:].lstrip())
+        if not line.startswith('('):
+            return None
+        index = line.find(')')
+        if index == -1:
+            return None
+        header = repmap(line[:index+1])
+        # No need to check if header variable is empty as we know it
+        # will contain brackets at least
+        line = repmap(line[index+1:].lstrip())
         if not line:
-            return
+            return None
         return Forall_Header(header), Forall_Assignment_Stmt(line)
 
-    def tostr(self): return 'FORALL %s %s' % self.items
+    def tostr(self):
+        '''
+        :return: this forall statement as a string
+        :rtype: str
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
+        :raises InternalError: if the second element of the internal \
+        items list is None or is an empty string.
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Forall_Stmt method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Forall_Stmt method tostr(). 'Items' entry 0 "
+                "should be a valid Forall_Header.")
+        if not self.items[1]:
+            raise InternalError(
+                "Class Forall_Stmt method tostr(). 'Items' entry 1 should "
+                "be a valid Forall_Assignment_Stmt")
+        return "FORALL {0} {1}".format(self.items[0], self.items[1])
 
 #
 # SECTION  8
