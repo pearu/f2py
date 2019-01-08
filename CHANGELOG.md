@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+08/01/2019 PR #154 for #142. Bug fixes for the Fortran 2003 forall
+           statement (r759).
+
 08/01/2019 PR #152 for #142. Bug fixes for the Fortran 2003 forall header
            rule (r754).
 
