@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -49,7 +49,7 @@ def f2003_create():
 
 @pytest.fixture(scope="module", params=[Defined_Unary_Op, Defined_Binary_Op])
 def op_type(request):
-    '''Fixture for testing the type types of defined op (unary and
+    '''Fixture for testing the two types of defined op (unary and
     binary).
 
     '''
