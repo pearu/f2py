@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -38,9 +38,19 @@ directory
 '''
 import pytest
 from fparser.two.parser import ParserFactory
+from fparser.two.Fortran2003 import Defined_Unary_Op, Defined_Binary_Op
 
 
 @pytest.fixture
 def f2003_create():
     '''Create a fortran 2003 parser class hierarchy'''
     _ = ParserFactory().create(std="f2003")
+
+
+@pytest.fixture(scope="module", params=[Defined_Unary_Op, Defined_Binary_Op])
+def op_type(request):
+    '''Fixture for testing the two types of defined op (unary and
+    binary).
+
+    '''
+    return request.param
