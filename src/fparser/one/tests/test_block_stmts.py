@@ -133,6 +133,7 @@ end module some_block
     code = mod.topyf()
     assert "IMPLICIT NONE" in code
 
+
 @pytest.fixture(scope='module',
                 params=[('do i=1, 10\nend do\n',
                          ['  DO i=1, 10', '  END DO ']),
@@ -143,9 +144,14 @@ end module some_block
                         ('do i=1, size(this%array)\nend do\n',
                          ['  DO i=1, size(this%array)', '  END DO '])])
 def do_tests(request):
+    '''
+    Yields tuples of stimulous and expected result strings.
+    '''
     yield request.param
 
+
 def test_do(do_tests):
+    #pylint: disable=redefined-outer-name
     '''
     Tests that the "do" loop parser understands a form of the syntax.
     '''
