@@ -1178,7 +1178,7 @@ class Do(BeginStatement):
             label = int(label)
         self.endlabel = label
         self.construct_name = item.name
-        self.loopcontrol = m.group('loopcontrol').strip()
+        self.loopcontrol = item.apply_map(m.group('loopcontrol').strip())
         return BeginStatement.process_item(self)
 
     def process_subitem(self, item):
