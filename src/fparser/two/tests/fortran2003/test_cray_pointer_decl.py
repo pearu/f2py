@@ -73,7 +73,7 @@ def test_errors(f2003_create):
         assert "Cray_Pointer_Decl: '{0}'".format(myinput) in str(excinfo)
 
 
-def test_use_internal_error1(f2003_create, monkeypatch):
+def test_internal_error1(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the length of the Items
     list is not 2 as the str() method assumes that it is.
 
@@ -86,7 +86,7 @@ def test_use_internal_error1(f2003_create, monkeypatch):
     assert "should be of size 2 but found '1'" in str(excinfo)
 
 
-def test_use_internal_error2(f2003_create, monkeypatch):
+def test_internal_error2(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the pointer name (entry 0
     of Items) is empty or None as the str() method assumes that it is
     a string with content.
@@ -102,7 +102,7 @@ def test_use_internal_error2(f2003_create, monkeypatch):
                 "empty") in str(excinfo)
 
 
-def test_use_internal_error3(f2003_create, monkeypatch):
+def test_internal_error3(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the pointee name (entry 1
     of Items) is empty or None as the str() method assumes that it is
     a string with content.

@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -88,7 +88,8 @@ from fparser.common.readfortran import FortranReaderBase
 EXTENSIONS = ["x-format"]
 
 # Cray pointers are a well known extension to the Fortran
-# standard. See
+# standard. See http://pubs.cray.com/content/S-3901/8.6/
+# cray-fortran-reference-manual-s-3901-86/types or
 # https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html for
 # example. If 'cray-pointer' is specified in EXTENSIONS then this
 # extension is allowed in fparser.

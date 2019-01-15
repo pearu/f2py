@@ -3208,7 +3208,7 @@ class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
 
         '''
         from fparser.two.utils import EXTENSIONS
-        if not 'cray-pointer' in EXTENSIONS:
+        if 'cray-pointer' not in EXTENSIONS:
             return None
         return WORDClsBase.match('POINTER', Cray_Pointer_Decl_List, string,
                                  require_cls=True)
@@ -3265,7 +3265,7 @@ class Cray_Pointer_Decl(Base):  # pylint: disable=invalid-name
         :raises InternalError: if the second element of the internal \
         items list is None or is empty.
         '''
-        if not len(self.items) == 2:
+        if len(self.items) != 2:
             raise InternalError(
                 "Cray_Pointer_Decl.tostr(). 'Items' should be of size 2 but "
                 "found '{0}'.".format(len(self.items)))
@@ -3311,6 +3311,8 @@ class Cray_Pointee_Array_Spec(Base):  # pylint: disable=invalid-name
 
     The above two forms of declaration are the only ones allowed
     according to
+    http://pubs.cray.com/content/S-3901/8.6/
+    cray-fortran-reference-manual-s-3901-86/types) or
     https://docs.oracle.com/cd/E19957-01/805-4941/z40000a54ba7/index.html
 
     '''

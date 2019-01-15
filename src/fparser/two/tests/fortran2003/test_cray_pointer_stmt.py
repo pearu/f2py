@@ -77,9 +77,9 @@ def test_case(f2003_create):
 
 def test_list(f2003_create):
     '''Check that a list of Cray-pointers is supported.'''
-    line = "pointer (a, b), (c, d), (e, f)"
+    line = "pointer (a, b), (c, d(1:n)), (e, f)"
     ast = Cray_Pointer_Stmt(line)
-    assert "POINTER(a, b), (c, d), (e, f)" in str(ast)
+    assert "POINTER(a, b), (c, d(1 : n)), (e, f)" in str(ast)
 
 
 def test_errors(f2003_create):
@@ -96,7 +96,7 @@ def test_invalid_cray_pointer(f2003_create, monkeypatch):
     exception if it is not named as a valid extension.
 
     '''
-    import fparser.two.utils as utils
+    from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", [])
     myinput = "pointer (mypointer, mypointee)"
     with pytest.raises(NoMatchError) as excinfo:
@@ -110,7 +110,7 @@ def test_valid_cray_pointer(f2003_create, monkeypatch):
     expected output if it is named as a valid extension.
 
     '''
-    import fparser.two.utils as utils
+    from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", ["cray-pointer"])
     myinput = "pointer(mypointer, mypointee)"
     result = Cray_Pointer_Stmt(myinput)
