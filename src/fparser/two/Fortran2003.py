@@ -7637,7 +7637,7 @@ class Char_String_Edit_Desc(Base):  # R1019
 #
 
 
-class Main_Program(BlockBase):  # R1101 [C1101,C1102,C1103]
+class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
     '''Fortran 2003 rule R1101
 
     This class does not cater for the case where there is no
@@ -7681,16 +7681,25 @@ class Main_Program(BlockBase):  # R1101 [C1101,C1102,C1103]
                        code that we are trying to match
         :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
 
-        :return: `None` if there is not match or, if there is a match, \
-                 a `tuple` containing a single `list`, with minimum \
-                 size 2 and maximum size 5, which contains instances \
-                 of the classes that have matched. The first entry in \
-                 the list will be a `Program_Stmt` and the last entry \
-                 in the list will be an `End_Program_Stmt`. Inbetween \
-                 these two instances will be an optional \
-                 `Specification_Part` followed by an optional \
-                 `Execution_Part` followed by an optional \
-                 `Internal_Subprogram_Part`.
+        :returns: `None` if there is not match or, if there is a match, \
+                  a `tuple` containing a single `list`, with minimum \
+                  size 2 and maximum size 5, which contains instances \
+                  of the classes that have matched. The first entry in \
+                  the list will be a `Program_Stmt` and the last entry \
+                  in the list will be an `End_Program_Stmt`. In-between \
+                  these two instances will be an optional \
+                  `Specification_Part` followed by an optional \
+                  `Execution_Part` followed by an optional \
+                  `Internal_Subprogram_Part`.
+        :rtype: `NoneType` or \
+                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`,
+                optional \
+                :py:class:`fparser.two.Fortran2003.Specification_Part`, \
+                optional \
+                :py:class:`fparser.two.Fortran2003.Execution_Part`, \
+                optional \
+                :py:class:`fparser.two.Fortran2003.Internal_Subprogram_Part`, \
+                :py:class:`fparser.two.Fortran2003.End_Program_Stmt`])
 
         '''
         return BlockBase.match(
@@ -7744,11 +7753,12 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
         PROGRAM keyword is not valid without a program name.
 
         :param str string: Fortran code to check for a match
-        :return: `None` if there is no match or, if there is a match, \
-        a tuple of size 2 with the first entry being the string \
-        'PROGRAM' and the second entry being a `Name` class containing \
-        the name of the program.
-        :rtype: `None` or ( `str`, `Name` )
+        :returns: `None` if there is no match or, if there is a match, \
+                  a tuple of size 2 with the first entry being the \
+                  string 'PROGRAM' and the second entry being a `Name` \
+                  class containing the name of the program.
+        :rtype: `NoneType` or ( `str`, \
+        :py:class:`fparser.two.Fortran2003.Name` )
 
         '''
         return WORDClsBase.match('PROGRAM', Program_Name, string,

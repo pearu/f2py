@@ -139,7 +139,7 @@ def test_invalid2(f2003_create):
 
 
 @pytest.mark.xfail(reason="Fails to raise an exception with incorrect "
-                   "ordering, See issue #136.")
+                   "ordering. See issue #136.")
 def test_invalid3(f2003_create):
     '''Test that execution-part after internal-subprogram-part produces an
     error.
