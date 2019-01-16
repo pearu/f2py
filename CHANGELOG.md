@@ -11,6 +11,21 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+09/01/2019 PR #156 for #142. Bug fixes for the Binary and Unary
+           Operator types.
+
+08/01/2019 PR #154 for #142. Bug fixes for the Fortran 2003 forall
+           statement (r759).
+
+08/01/2019 PR #152 for #142. Bug fixes for the Fortran 2003 forall header
+           rule (r754).
+
+07/01/2019 PR #158 for #157. Adds support for a Defined Operator (r311 and
+           r312).
+
+07/01/2019 PR #141 for issue #129. Adds extension to support the use of 'x'
+           without a preceeding integer in format strings.
+
 20/12/2018 PR #149 for issue #147. Bug fix that corrects the name of one
 	   of the subclasses (Associate_Construct) of Executable_Construct.
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 Science and Technology Facilities Council.
+# Copyright (c) 2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,25 +32,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Module which provides pytest fixtures for use by files in this
-directory
+'''Test Fortran 2003 rule R312 : This file tests the support for an
+extended intrinsic operator.
 
 '''
+
 import pytest
-from fparser.two.parser import ParserFactory
-from fparser.two.Fortran2003 import Defined_Unary_Op, Defined_Binary_Op
+from fparser.two.Fortran2003 import Extended_Intrinsic_Op
+from fparser.two.utils import NoMatchError
 
 
-@pytest.fixture
-def f2003_create():
-    '''Create a fortran 2003 parser class hierarchy'''
-    _ = ParserFactory().create(std="f2003")
-
-
-@pytest.fixture(scope="module", params=[Defined_Unary_Op, Defined_Binary_Op])
-def op_type(request):
-    '''Fixture for testing the two types of defined op (unary and
-    binary).
+def test_extended_intrinsic_op(f2003_create):
+    '''Check that correct extended intrinsic op input is parsed. No need
+    to test them all as they will be tested in the pattern_tools tests
+    but we do it anyway.
 
     '''
-    return request.param
+    for myinput in ["**", "*", "/", "+", "-", "//", ".eq.", ".NE.", ".lt.",
+                    ".LE.", ".gt.", ".GE.", "==", "/=", "<", "<=", ">", ">=",
+                    ".not.", ".AND.", ".or.", ".eQv.", ".NeqV."]:
+        ast = Extended_Intrinsic_Op(myinput)
+        assert myinput in str(ast)
+        assert repr(ast) == "Extended_Intrinsic_Op('{0}')".format(myinput)
+
+
+def test_parse_errors(f2003_create):
+    '''The full set of errors will be checked in the pattern_tools
+    tests. We just check a few here to make sure the correct
+    NoMatchError exception is raised at this level.
+
+    '''
+    for myinput in ["", "  ", "***", "///", "eq.", ".eq", "eq", "= ="]:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Extended_Intrinsic_Op(myinput)
+        assert "Extended_Intrinsic_Op: '{0}'".format(myinput) in str(excinfo)
