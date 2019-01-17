@@ -1111,8 +1111,10 @@ class Char_Length(BracketBase):  # R426
     match = staticmethod(match)
 
 
-class Char_Literal_Constant(Base):  # R427
+class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
     '''
+    Fortran 2003 rule R427
+
     char-literal-constant is [ kind-param _ ] ' rep-char '
                           or [ kind-param _ ] " rep-char "
     '''
@@ -1132,12 +1134,11 @@ class Char_Literal_Constant(Base):  # R427
         on the processor." However, this cannot be validated by
         fparser so no checks are performed.
 
-        :param str string: a string containing the code to match
-
+        :param str string: a string containing the code to match.
         :return: `None` if there is no match, otherwise a `tuple` of
-                 size 2 containing the kind value and the character
-                 constant as strings
-        :rtype: `None` or (str, None) or (str, str)
+                 size 2 containing the character constant and the kind
+                 value as strings.
+        :rtype: `NoneType` or (`str`, `NoneType`) or (`str`, `str`)
 
         '''
         if not string:
@@ -1145,9 +1146,9 @@ class Char_Literal_Constant(Base):  # R427
         strip_string = string.strip()
         if not strip_string:
             # the string is empty or only contains blank space
-            return
+            return None
         if strip_string[-1] not in '"\'':
-            return
+            return None
         if strip_string[-1] == '"':
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named2
@@ -1157,7 +1158,7 @@ class Char_Literal_Constant(Base):  # R427
         line, repmap = string_replace_map(strip_string)
         match = abs_a_n_char_literal_constant_named.match(line)
         if not match:
-            return
+            return None
         kind_param = match.group('kind_param')
         line = match.group('value')
         line = repmap(line)
@@ -1165,7 +1166,7 @@ class Char_Literal_Constant(Base):  # R427
 
     def tostr(self):
         '''
-        :return: this Char_Literal_Constant as a string
+        :return: this Char_Literal_Constant as a string.
         :rtype: str
         :raises InternalError: if the internal items list variable is \
         not the expected size.
