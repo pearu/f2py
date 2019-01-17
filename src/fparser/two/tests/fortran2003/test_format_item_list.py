@@ -107,9 +107,10 @@ def test_hollerith_only(f2003_create):
 
 
 def test_hollerith_only_spaces(f2003_create):
-    '''Check that a hollerith item is parsed correctly. We do this as a
-    hollerith item can contain commas so we can't use a simple
-    format-item-list class to split items.
+    '''Check that a hollerith item is parsed correctly in the presence of
+    additional spaces. We do this as a hollerith item must have the
+    correct number of characters so any spaces that are not required
+    must be removed.
 
     '''
     myinput = "  3Habc  ,  2hab  "
@@ -126,7 +127,8 @@ def test_errors(f2003_create):
     the subclasses.
 
     '''
-    for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2", "2Hab,2Ha,2Hab", "2Hab,2Hab x,2Hab", "2Hab,2Hab,2Ha", "2Hab,2Hab,2Hab x"]:
-        print (myinput)
+    for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2",
+                    "2Hab,2Ha,2Hab", "2Hab,2Hab x,2Hab", "2Hab,2Hab,2Ha",
+                    "2Hab,2Hab,2Hab x"]:
         with pytest.raises(NoMatchError):
             _ =  Format_Item_List(myinput)
