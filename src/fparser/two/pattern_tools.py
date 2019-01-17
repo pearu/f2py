@@ -404,7 +404,7 @@ defined_binary_op = Pattern(
 defined_operator = defined_unary_op | defined_binary_op | \
                    extended_intrinsic_operator
 abs_defined_operator = abs(defined_operator)
-defined_op = Pattern('<defined-op>', '[.]\s*[A-Z]+\s*[.]', flags=re.I)
+defined_op = Pattern('<defined-op>', '[.][A-Z]+[.]', flags=re.I)
 abs_defined_op = abs(defined_op)
 
 non_defined_binary_op = intrinsic_operator | logical_literal_constant

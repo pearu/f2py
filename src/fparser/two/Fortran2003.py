@@ -425,8 +425,9 @@ class Specification_Stmt(Base):  # R212
         'Comment', 'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt',
         'Equivalence_Stmt',
         'External_Stmt', 'Intent_Stmt', 'Intrinsic_Stmt', 'Namelist_Stmt',
-        'Optional_Stmt', 'Pointer_Stmt', 'Protected_Stmt', 'Save_Stmt',
-        'Target_Stmt', 'Volatile_Stmt', 'Value_Stmt']
+        'Optional_Stmt', 'Pointer_Stmt', 'Cray_Pointer_Stmt',
+        'Protected_Stmt', 'Save_Stmt', 'Target_Stmt', 'Volatile_Stmt',
+        'Value_Stmt']
 
 
 class Executable_Construct(Base):  # R213
@@ -3184,6 +3185,140 @@ class Named_Constant_Def(KeywordValueBase):  # R539
     match = staticmethod(match)
 
 
+class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+    '''
+    cray-pointer-stmt is POINTER cray-pointer-decl-list
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointer_Decl_List']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointer statement.
+
+        :param string: the reader or string to match as a Cray-pointer \
+        statement.
+        :type string: \
+        :py:class:`fparser.common.readfortran.FortranReaderBase` or \
+        `str`
+        :return: a tuple of size 2 containing a string with the name \
+        "POINTER" and a cray-pointer-decl-list, if there is a match, \
+        or `None` if there is not.
+        :rtype: (str, Cray_Pointer_Decl_List) or None
+
+        '''
+        from fparser.two.utils import EXTENSIONS
+        if 'cray-pointer' not in EXTENSIONS:
+            return None
+        return WORDClsBase.match('POINTER', Cray_Pointer_Decl_List, string,
+                                 require_cls=True)
+
+
+class Cray_Pointer_Decl(Base):  # pylint: disable=invalid-name
+    '''
+    cray-pointer-decl is ( cray-pointer-name, cray-pointee-decl )
+    '''
+    use_names = ['Cray_Pointer_Name', 'Cray_Pointee_Name', 'Cray_Pointee_Decl']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointer declaration.
+
+        :param str string: the string to match as a Cray-pointer \
+        declaration.
+        :return: None if there is no match, otherwise a tuple of size \
+        2 containing the name of the pointer as the first argument and \
+        either the name of the pointee as the second argument or a \
+        Cray-pointee declaration.
+        :rtype: None, (Name, Name) or (Name, Cray_Pointee_Decl)
+
+        '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        if not strip_string[0] == "(":
+            return None
+        if not strip_string[-1] == ")":
+            return None
+        strip_string_nobr = strip_string[1:-1].strip()
+        line, repmap = string_replace_map(strip_string_nobr)
+        split_list = line.split(',')
+        if len(split_list) != 2:
+            return None
+        pointer_name = repmap(split_list[0]).strip()
+        pointee_str = repmap(split_list[1]).strip()
+        if pointee_str[-1] == ")":
+            return Cray_Pointer_Name(pointer_name), \
+                Cray_Pointee_Decl(pointee_str)
+        return Cray_Pointer_Name(pointer_name), Cray_Pointee_Name(pointee_str)
+
+    def tostr(self):
+        '''
+        :return: this Cray-pointee declaration as a string
+        :rtype: str
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is empty.
+        :raises InternalError: if the second element of the internal \
+        items list is None or is empty.
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Cray_Pointer_Decl.tostr(). 'Items' should be of size 2 but "
+                "found '{0}'.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError("Cray_Pointer_Decl_Stmt.tostr(). 'Items' "
+                                "entry 0 should be a pointer name but it is "
+                                "empty")
+        if not self.items[1]:
+            raise InternalError("Cray_Pointer_Decl_Stmt.tostr(). 'Items' "
+                                "entry 1 should be a pointee name or pointee "
+                                "declaration but it is empty")
+        return "({0}, {1})".format(self.items[0], self.items[1])
+
+
+class Cray_Pointee_Decl(CallBase):  # pylint: disable=invalid-name
+    '''
+    cray-pointee-decl is cray-pointee-name ( cray-pointee-array-spec )
+
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointee_Name', 'Cray_Pointee_Array_Spec']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointee declaration.
+
+        :param str string: the string to match as a Cray-pointee \
+        declaration.
+        :return: None if there is no match, otherwise a tuple of size \
+        2 containing the name of the pointee as the first argument and \
+        a Cray-pointee array spec as the second argument.
+        :rtype: None or (Name, Cray_Pointee_Array_Spec)
+
+        '''
+        return CallBase.match(
+            Cray_Pointee_Name, Cray_Pointee_Array_Spec, string,
+            require_rhs=True)
+
+
+class Cray_Pointee_Array_Spec(Base):  # pylint: disable=invalid-name
+    '''cray-pointee-array-spec is explicit-shape-spec-list
+                            or assumed-size-spec
+
+    The above two forms of declaration are the only ones allowed
+    according to
+    http://pubs.cray.com/content/S-3901/8.6/
+    cray-fortran-reference-manual-s-3901-86/types) or
+    https://docs.oracle.com/cd/E19957-01/805-4941/z40000a54ba7/index.html
+
+    '''
+    subclass_names = ['Assumed_Size_Spec', 'Explicit_Shape_Spec_List']
+
+
 class Pointer_Stmt(StmtBase, WORDClsBase):  # R540
     """
     <pointer-stmt> = POINTER [ :: ] <pointer-decl-list>
@@ -4125,24 +4260,61 @@ class Level_1_Expr(UnaryOpBase):  # R702
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # R703
-    """
-    <defined-unary-op> = . <letter> [ <letter> ]... .
-    """
+class Defined_Unary_Op(STRINGBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R703
+
+    defined-unary-op is . letter [ letter ]... .
+
+    C704 (R703) A defined-unary-op shall not contain more than 63
+    letters and shall not be the same as any intrinsic-operator or
+    logical-literal-constant.
+
+    Implemented in Defined_Op class.
+
+    '''
     subclass_names = ['Defined_Op']
 
 
-class Defined_Op(STRINGBase):  # R703, 723
-    """
-    <defined-op> = . <letter> [ <letter> ]... .
-    """
+class Defined_Op(STRINGBase):  # pylint: disable=invalid-name
+    '''
+    Utility class that Implements the functionality of rules R703 and
+    R723 (as the rules are the same)
+
+    defined-op is . letter [ letter ]... .
+
+    C704 (R723) A defined-binary-op shall not contain more than 63
+    letters and shall not be the same as any intrinsic-operator or
+    logical-literal-constant.
+
+    C704 (R703) A defined-unary-op shall not contain more than 63
+    letters and shall not be the same as any intrinsic-operator or
+    logical-literal-constant.
+
+    '''
     subclass_names = []
 
+    @staticmethod
     def match(string):
-        if pattern.non_defined_binary_op.match(string):
-            raise NoMatchError('%s: %r' % (Defined_Unary_Op.__name__, string))
-        return STRINGBase.match(pattern.abs_defined_op, string)
-    match = staticmethod(match)
+        '''Implements the matching for a (user) Defined Unary or Binary
+        Operator.
+
+        :param str string: Fortran code to check for a match
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched operator as a string
+        :rtype: None or (str)
+
+        '''
+        strip_string = string.strip()
+        if len(strip_string) > 65:
+            # C704. Must be 63 letters or fewer (Test for >65 due
+            # to the two dots).
+            return None
+        if pattern.non_defined_binary_op.match(strip_string):
+            # C704. Must not match with an intrinsic-operator or
+            # logical-literal-constant
+            return None
+        return STRINGBase.match(pattern.abs_defined_op, strip_string)
 
 
 class Mult_Operand(BinaryOpBase):  # R704
@@ -4323,10 +4495,19 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # R723
-    """
-    <defined-unary-op> = . <letter> [ <letter> ]... .
-    """
+class Defined_Binary_Op(STRINGBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R723
+
+    defined-binary-op is . letter [ letter ]... .
+
+    C704 (R723) A defined-binary-op shall not contain more than 63
+    letters and shall not be the same as any intrinsic-operator or
+    logical-literal-constant.
+
+    Implemented in Defined_Op class.
+
+    '''
     subclass_names = ['Defined_Op']
 
 
@@ -4774,31 +4955,76 @@ class Forall_Construct_Stmt(StmtBase, WORDClsBase):  # R753
         return self.item.name
 
 
-class Forall_Header(Base):  # R754
-    """
-    <forall-header> = ( <forall-triplet-spec-list> [ , <scalar-mask-expr> ] )
-    """
+class Forall_Header(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R754
+    forall-header is ( forall-triplet-spec-list [, scalar-mask-expr ] )
+
+    '''
     subclass_names = []
     use_names = ['Forall_Triplet_Spec_List', 'Scalar_Mask_Expr']
 
     @staticmethod
     def match(string):
-        if not string or string[0] + string[-1] != '()':
-            return
-        line, repmap = string_replace_map(string[1:-1].strip())
-        lst = line.rsplit(',', 1)
-        if len(lst) != 2:
-            return
-        if ':' not in lst[1]:
-            return Forall_Triplet_Spec_List(
-                repmap(lst[0].rstrip())), \
-                Scalar_Mask_Expr(repmap(lst[1].lstrip()))
-        return Forall_Triplet_Spec_List(repmap(line)), None
+        '''Implements the matching for a Forall_Header.
+
+        :param str string: A string containing the code to match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+                 size 2 containing a class of type \
+                 `Forall_Triplet_Spec_List` and a class of type \
+                 `Scalar_Mask_Expr` if there is a scalar mask \
+                 expresssion and `None` if not.
+        :rtype: (`Forall_Triplet_Spec_List`, `Scalar_Mask_Expr`) or \
+                (`Forall_Triplet_Spec_List`, `None`) or `None`
+
+        '''
+        strip_string = string.strip()
+        if not strip_string:
+            # Input only contains white space
+            return None
+        if strip_string[0] + strip_string[-1] != '()':
+            # Input does not start with '(' and end with ')'
+            return None
+        strip_string_nobr = strip_string[1:-1].strip()
+        try:
+            # first try to match without a scalar mask expression
+            return Forall_Triplet_Spec_List(strip_string_nobr), None
+        except NoMatchError:
+            # The match failed so try to match with the optional
+            # scalar mask expression. Use repmap to remove any
+            # unexpected "," e.g. an array access a(i,j), when
+            # splitting the string.
+            mapped_string, repmap = string_replace_map(strip_string_nobr)
+            split_string = mapped_string.rsplit(',', 1)
+            if len(split_string) != 2:
+                return None
+            left_str = repmap(split_string[0].rstrip())
+            right_str = repmap(split_string[1].lstrip())
+            return (Forall_Triplet_Spec_List(left_str),
+                    Scalar_Mask_Expr(right_str))
 
     def tostr(self):
-        if self.items[1] is None:
-            return '(%s)' % (self.items[0])
-        return '(%s, %s)' % (self.items)
+        ''':return: this Forall Header as a string
+        :rtype: str
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content, as a Forall_Triplet_List is \
+        expected.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Forall_Header.tostr(). 'items' should be of size 2 but "
+                "found '{0}'.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Forall_Header.tostr(). 'items[0]' should be a "
+                "Forall_Triplet_Spec_List instance but it is empty.")
+        if not self.items[1]:
+            # there is no scalar mask expression
+            return "({0})".format(self.items[0])
+        return "({0}, {1})".format(self.items[0], self.items[1])
 
 
 class Forall_Triplet_Spec(Base):  # R755
@@ -4863,32 +5089,72 @@ class End_Forall_Stmt(EndStmtBase):  # R758
             'FORALL', Forall_Construct_Name, string, require_stmt_type=True)
 
 
-class Forall_Stmt(StmtBase):  # R759
-    """
-    <forall-stmt> = FORALL <forall-header> <forall-assignment-stmt>
-    """
+class Forall_Stmt(StmtBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R759
+    forall-stmt is FORALL forall-header forall-assignment-stmt
+
+    '''
     subclass_names = []
     use_names = ['Forall_Header', 'Forall_Assignment_Stmt']
 
     @staticmethod
     def match(string):
-        if string[:6].upper() != 'FORALL':
-            return
-        line, repmap = string_replace_map(string[6:].lstrip())
-        if not line.startswith(')'):
-            return
-        i = line.find(')')
-        if i == -1:
-            return
-        header = repmap(line[1:i].strip())
-        if not header:
-            return
-        line = repmap(line[i+1:].lstrip())
+        '''Implements the matching for a forall statement.
+
+        :param string: A string or the fortran reader containing the \
+                    line of code that we are trying to match.
+        :type string: `str` or \
+        :py:class:`fparser.common.readfortran.FortranReader`
+        :return: `None` if there is no match or a `tuple` of size 2 \
+        containing an instance of the Forall_Header class followed by \
+        an instance of the Forall_Assignment_Stmt class.
+        :rtype: `None` or ( \
+        :py:class:`fparser.two.Fortran2003.Forall_Header`, \
+        :py:class:`fparser.two.Fortran2003.Forall_Assignment_Stmt`)
+
+        '''
+        strip_string = string.strip()
+        if strip_string[:6].upper() != 'FORALL':
+            return None
+        line, repmap = string_replace_map(strip_string[6:].lstrip())
+        if not line.startswith('('):
+            return None
+        index = line.find(')')
+        if index == -1:
+            return None
+        header = repmap(line[:index+1])
+        # No need to check if header variable is empty as we know it
+        # will contain brackets at least
+        line = repmap(line[index+1:].lstrip())
         if not line:
-            return
+            return None
         return Forall_Header(header), Forall_Assignment_Stmt(line)
 
-    def tostr(self): return 'FORALL %s %s' % self.items
+    def tostr(self):
+        '''
+        :return: this forall statement as a string
+        :rtype: str
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
+        :raises InternalError: if the second element of the internal \
+        items list is None or is an empty string.
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Forall_Stmt method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Forall_Stmt method tostr(). 'Items' entry 0 "
+                "should be a valid Forall_Header.")
+        if not self.items[1]:
+            raise InternalError(
+                "Class Forall_Stmt method tostr(). 'Items' entry 1 should "
+                "be a valid Forall_Assignment_Stmt")
+        return "FORALL {0} {1}".format(self.items[0], self.items[1])
 
 #
 # SECTION  8

@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 Science and Technology Facilities Council.
+# Copyright (c) 2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,25 +32,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Module which provides pytest fixtures for use by files in this
-directory
+'''Test Fortran 2003 Cray-pointers: This file tests the support for a
+Cray-pointee array specification.
 
 '''
+
 import pytest
-from fparser.two.parser import ParserFactory
-from fparser.two.Fortran2003 import Defined_Unary_Op, Defined_Binary_Op
+from fparser.two.Fortran2003 import Cray_Pointee_Array_Spec
+from fparser.two.utils import NoMatchError
 
 
-@pytest.fixture
-def f2003_create():
-    '''Create a fortran 2003 parser class hierarchy'''
-    _ = ParserFactory().create(std="f2003")
-
-
-@pytest.fixture(scope="module", params=[Defined_Unary_Op, Defined_Binary_Op])
-def op_type(request):
-    '''Fixture for testing the two types of defined op (unary and
-    binary).
+def test_cray_pointee_array_spec(f2003_create):
+    '''Check that Cray-pointee array specifications are parsed correctly.
 
     '''
-    return request.param
+    for myinput in ["n", "0 : n", "n, m", "5, *", "*", "0 : 1, 2 : *"]:
+        ast = Cray_Pointee_Array_Spec(myinput)
+        assert myinput in str(ast)
+
+
+def test_errors(f2003_create):
+    '''Check that syntax errors produce a NoMatchError exception.'''
+    for myinput in ["", "  ", "2n", "2 n", "*, n"]:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cray_Pointee_Array_Spec(myinput)
+        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in str(excinfo)
+
+
+def test_unsupported(f2003_create):
+    '''Check that unsupported specifications produce a
+    NoMatchError exception.
+
+    '''
+    for myinput in [":", "2,:"]:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cray_Pointee_Array_Spec(myinput)
+        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in str(excinfo)
