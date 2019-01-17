@@ -7758,7 +7758,7 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
                   string 'PROGRAM' and the second entry being a `Name` \
                   class containing the name of the program.
         :rtype: `NoneType` or ( `str`, \
-        :py:class:`fparser.two.Fortran2003.Name` )
+                :py:class:`fparser.two.Fortran2003.Name` )
 
         '''
         return WORDClsBase.match('PROGRAM', Program_Name, string,
