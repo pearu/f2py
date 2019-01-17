@@ -783,10 +783,12 @@ class Kind_Selector(Base):  # R404
 
         :param str string: a string containing the code to match
         :return: `None` if there is no match, otherwise a `tuple` of \
-                  size 3 containing a '(', a single `list` which \
-                  contains an instance of classes that have matched and \
-                  a ')', or a `tuple` of size 2 containing a '*' and an \
-                  instance of classes that have matched.
+        size 3 containing a '(', a single `list` which contains an \
+        instance of classes that have matched and a ')', or a `tuple` \
+        of size 2 containing a '*' and an instance of classes that \
+        have matched.
+        :rtype: `NoneType` or ( str, [ MatchedClasses ], str) or ( \
+        str, :py:class:`fparser.two.Fortran2003.Char_Length`)
 
         :raises InternalError: if None is passed instead of a \
         string. The parent rule should not pass None and the logic in \
@@ -7289,63 +7291,111 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
 
 
 class Format_Specification(BracketBase):  # R1002
-    """
-    <format-specification> = ( [ <format-item-list> ] )
-    """
+    '''
+    Fortran 2003 rule R1002
+
+    format-specification = ( [ format-item-list ] )
+
+    C1002 is implemented in a separate class Format_Item_C1002
+
+    C1002 (R1002) The comma used to separate format-items in a
+    format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a repeat
+    specifier,
+
+    (2) Before a slash edit descriptor when the optional repeat
+    specification is not present (10.7.2),
+
+    (3) After a slash edit descriptor, or
+
+    (4) Before or after a colon edit descriptor.
+
+    '''
     subclass_names = []
     use_names = ['Format_Item_List']
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a format specification.
+
+        :param str string: The string to check for conformance with a \
+                           format specification.
+        :return: `None` if there is no match, otherwise a tuple of \
+        size three, the first entry being a string containing a left \
+        bracket and the third being a string containing a right \
+        bracket. The second entry is either a Format_Item or a \
+        Format_Item_List.
+        :rtype: `NoneType` or ( `str`, \
+        :py:class:`fparser.two.Fortran2003.Format_Item` or \
+        :py:class:`fparser.two.Fortran2003.Format_Item_List`, `str` )
+
+        '''
         return BracketBase.match('()', Format_Item_List, string,
                                  require_cls=False)
 
 
-class Format_Item_C1002(Base):  # C1002
-    """
-::
-    <format-item-c1002> = <k>P [,] (F|D)<w>.<d> | (E|EN|ES|G)<w>.<d>[E<e>]
-                          | [<r>]/ [,] <format-item>
-                          | : [,] <format-item>
-                          | <format-item> [,] / [[,] <format-item>]
-                          | <format-item> [,] : [[,] <format-item>]
+class Format_Item_C1002(Base):
+    '''
+    Fortran 2003 constraint C1002
 
-Attributes
-----------
-items : (Format_Item, Format_Item)
-    """
+    format-item-c1002 is kP [,] (F|D)w.d | (E|EN|ES|G)w.d[Ee]
+                      or [r]/ [,] format-item
+                      or : [,] format-item
+                      or format-item [,] / [[,] format-item]
+                      or format-item [,] : [[,] format-item]
+
+    C1002 (R1002) The comma used to separate format-items in a
+    format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a repeat
+    specifier,
+
+    (2) Before a slash edit descriptor when the optional repeat
+    specification is not present (10.7.2),
+
+    (3) After a slash edit descriptor, or
+
+    (4) Before or after a colon edit descriptor.
+
+    '''
     subclass_names = []
     use_names = ['K', 'W', 'D', 'E', 'Format_Item', 'R']
 
     @staticmethod
     def match(string):
+        ''' '''
         if not string:
             return None
-        if len(string) <= 1:
-            return
-        if string[0] in ':/':
-            return Control_Edit_Desc(string[0]), \
-                Format_Item(string[1:].lstrip())
-        if string[-1] in ':/':
-            return Format_Item(string[:-1].rstrip()), \
-                Control_Edit_Desc(string[-1])
-        line, repmap = string_replace_map(string)
-        i = 0
-        while i < len(line) and line[i].isdigit():
-            i += 1
-        if i:
-            p = line[i].upper()
-            if p in '/P':
-                return Control_Edit_Desc(repmap(line[:i+1])), \
-                    Format_Item(repmap(line[i+1:].lstrip()))
-        for p in '/:':
-            if p in line:
-                l, r = line.split(p, 1)
-                return Format_Item(repmap(l.rstrip())), \
-                    Format_Item(p+repmap(r.lstrip()))
+        strip_string = string.strip()
+        if len(strip_string) <= 1:
+            return None
+        if strip_string[0] in ':/':
+            return Control_Edit_Desc(strip_string[0]), \
+                Format_Item(strip_string[1:].lstrip())
+        if strip_string[-1] in ':/':
+            return Format_Item(strip_string[:-1].rstrip()), \
+                Control_Edit_Desc(strip_string[-1])
+        line, repmap = string_replace_map(strip_string)
+        index = 0
+        while index < len(line) and line[index].isdigit():
+            index += 1
+        if index:
+            result = line[index].upper()
+            if result in '/P':
+                return Control_Edit_Desc(repmap(strip_line[:index+1])), \
+                    Format_Item(repmap(strip_line[index+1:].lstrip()))
+        for option in '/:':
+            if option in line:
+                left, right = line.split(option, 1)
+                return Format_Item(repmap(left.rstrip())), \
+                    Format_Item(option+repmap(right.lstrip()))
 
     def tostr(self):
-        return '%s, %s' % (self.items)
+        ''' XXX '''
+        return "{0}, {1}".format(self.items[0], self.items[1])
 
 
 class Hollerith_Item(Base):  # pylint: disable=invalid-name
@@ -7364,9 +7414,9 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for a Hollerith string.
 
-        :param str string: The string to check for conformance with a
+        :param str string: The string to check for conformance with a \
                            Hollerith string
-        :return: String containing the contents of the Hollerith
+        :return: String containing the contents of the Hollerith \
         string.
         :rtype: str
 
@@ -7450,18 +7500,19 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         if not strip_string:
             return None
         index = 0
-        while index < len(string) and string[index].isdigit():
+        while index < len(strip_string) and strip_string[index].isdigit():
             index += 1
         rpart = None
+        my_string = strip_string
         if index:
-            rpart = R(string[:i])
-            mystring = string[i:].lstrip()
-        if not mystring:
+            rpart = R(string[:index])
+            my_string = strip_string[index:].lstrip()
+        if not my_string:
             return None
-        if mystring[0] == '(' and mystring[-1] == ')':
-            rest = Format_Item_List(mystring[1:-1].strip())
+        if my_string[0] == '(' and my_string[-1] == ')':
+            rest = Format_Item_List(my_string[1:-1].strip())
         else:
-            rest = Data_Edit_Desc(mystring)
+            rest = Data_Edit_Desc(my_string)
         return rpart, rest
 
     def tostr(self):
