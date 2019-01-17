@@ -161,6 +161,44 @@ number. For example:
    >>>en
 
 
+Extensions
+----------
+
+Many compilers support extensions to standard Fortran and codes often
+make use of them. This section documents the extensions to the
+standard that are supported by fparser2.
+
+Cray Pointers
++++++++++++++
+
+Cray pointers are part of a non-standard extension that provides a
+C-like pointer in Fortran. This is accomplished through a pair of
+variables: an integer "pointer" that holds a memory address, and a
+"pointee" that is used to dereference the pointer. For example::
+
+  pointer (my_pointer, my_pointee)
+
+For a specification and a more detailed explanation see
+http://pubs.cray.com/content/S-3901/8.6/cray-fortran-reference-manual-s-3901-86/types
+or https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html.
+
+
+X Format
+++++++++
+
+An X edit descriptor in a format statement specifies the position
+(forward from the current position) at which the next character will
+be transmitted to or from a record. In standard Fortran2003 the X edit
+descriptor must be preceeded by an integer which specifies how far
+forward from the current position. The 'x-format' extension allows the
+X edit descriptor to be specified without a preceeding integer. When
+omitted, the value is implicitly assumed to be one. For example::
+
+  100 format (x)
+
+For more information see
+https://gcc.gnu.org/onlinedocs/gfortran/X-format-descriptor-without-count-field.html
+  
 Classes
 -------
 
