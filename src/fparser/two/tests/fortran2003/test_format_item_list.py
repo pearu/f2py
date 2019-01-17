@@ -107,3 +107,11 @@ def test_hollerith_only(f2003_create):
     assert repr(ast) == (
         "Format_Item_List(',', (Hollerith_Item('abc'), "
         "Hollerith_Item('ab')))")
+
+
+def test_errors(f2003_create):
+    '''test some simple errors. Individual errors will be picked up by
+    the subclasses.'''
+    for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2"]:
+        with pytest.raises(NoMatchError):
+            _ =  Format_Item_List(myinput)

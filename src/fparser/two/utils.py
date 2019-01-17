@@ -1035,6 +1035,8 @@ class STRINGBase(StringBase):
                 if obj is not None:
                     return obj
             return
+        if not string:
+            return None
         STRING = string.upper()
         if isinstance(pattern, str):
             if len(pattern) == len(string) and pattern == STRING:

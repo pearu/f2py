@@ -1140,6 +1140,8 @@ class Char_Literal_Constant(Base):  # R427
         :rtype: `None` or (str, None) or (str, str)
 
         '''
+        if not string:
+            return None
         strip_string = string.strip()
         if not strip_string:
             # the string is empty or only contains blank space
@@ -7218,10 +7220,10 @@ class Format_Item_List(SequenceBase):
         this can be seen in the following example:
 
         `2H,x,e2.2` is `2H,x` and `e2.2` but when split with commas
-        incorrectly gives `2H`, `x` and `e2.2`
+        incorrectly gives `2H`, `x` and `e2.2`.
 
         Further, hollerith strings could also confuse any code that
-        tried to detrmine whether code was inside quotes or not. For
+        tried to determine whether code was inside quotes or not. For
         example:
 
         `2H"x,2H"x` does not mean that `x,2H` is part of a string.
@@ -7234,32 +7236,37 @@ class Format_Item_List(SequenceBase):
         try:
             current_string = string.strip()
         except AttributeError:
-            # string does not have a strip() method
+            # String argument does not have a strip() method.
+            return None
+        if not current_string:
             return None
         item_list = []
         while current_string:
-            # does the current item match the start of a
+            # Does the current item match the start of a
             # hollerith string?
             match = re.search('^[1-9][0-9]*[hH]', current_string)
             if match:
-                # current item matches with a hollerith string
+                # The current item matches with a hollerith string.
                 match_str = match.group(0)
                 hol_length_str = match_str[:-1]
                 hol_length = int(hol_length_str)
                 num_chars = len(match_str) + hol_length
                 if len(current_string) < num_chars:
-                    # the string is not long enough
+                    # The string is not long enough.
                     return None
                 item_list.append(Format_Item(current_string[:num_chars]))
                 current_string = current_string[num_chars:].lstrip()
                 if current_string:
-                    # remove the next comma and any white space
+                    # Remove the next comma and any white space.
                     if current_string[0] != ',':
-                        # there is no comma so we have a format error
+                        # There is no comma so we have a format error.
                         return None
                     else:
                         current_string = current_string[1:].lstrip()
             else:
+                # Current item does not match with a hollerith string
+                # so we are safe to split using a ',' as separator
+                # after applying string_replace_map.
                 line, repmap = string_replace_map(current_string)
                 splitted = line.split(',',1)
                 item_list.append(Format_Item(repmap(splitted[0].strip())))
@@ -7303,6 +7310,8 @@ items : (Format_Item, Format_Item)
 
     @staticmethod
     def match(string):
+        if not string:
+            return None
         if len(string) <= 1:
             return
         if string[0] in ':/':
@@ -7342,6 +7351,8 @@ class Hollerith_Item(Base):
         ''' xxx '''
         # only strip space to the left as space to the right could be
         # part of the hollerith item.
+        if not string:
+            return None
         strip_string = string.lstrip()
         match = re.search('^[1-9][0-9]*[hH]', strip_string)
         if not match:
@@ -7364,13 +7375,13 @@ class Hollerith_Item(Base):
 class Format_Item(Base):  # R1003
     '''
     format-item is [ r ] data-edit-desc
-                 or control-edit-desc
-                 or char-string-edit-desc
-                 or [ r ] ( format-item-list )
-                 or format-item-c1002
-                 or hollerith-item
+                or control-edit-desc
+                or char-string-edit-desc
+                or [ r ] ( format-item-list )
+                or format-item-c1002
+                or hollerith-item
 
-    Hollerith item explanation ...
+    Hollerith item explanation *******************
 
     '''
     subclass_names = ['Hollerith_Item', 'Control_Edit_Desc',
@@ -7379,6 +7390,13 @@ class Format_Item(Base):  # R1003
 
     @staticmethod
     def match(string):
+        try:
+            strip_string = string.strip()
+        except AttributeError:
+            # String argument does not have a strip() method.
+            return None
+        if not strip_string:
+            return None
         i = 0
         while i < len(string) and string[i].isdigit():
             i += 1
@@ -7451,6 +7469,8 @@ class Data_Edit_Desc_C1002(Base):
             else:
                 c2 = ""
             if "." in line:
+                if not line.count(".") == 1:
+                    return None
                 i1, i2 = line.split('.')
                 i1 = i1.rstrip()
                 i2 = i2.lstrip()
@@ -7679,6 +7699,13 @@ items : ({R, K, None}, {'/', 'P', ':'})
 
     @staticmethod
     def match(string):
+        try:
+            strip_string = string.strip()
+        except AttributeError:
+            # String argument does not have a strip() method.
+            return None
+        if not strip_string:
+            return None
         if len(string) == 1 and string in '/:$':
             if string == '$':
                 message = 'non-standard <control-edit-desc>: %r' % (string)
@@ -7741,6 +7768,8 @@ class Position_Edit_Desc(Base):  # R1013
         :rtype: None, (str, class N), (class N, str) or (None, str)
 
         '''
+        if not string:
+            return None
         strip_string_upper = string.strip().upper()
         if not strip_string_upper:
             # empty input string
