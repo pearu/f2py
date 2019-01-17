@@ -425,8 +425,9 @@ class Specification_Stmt(Base):  # R212
         'Comment', 'Common_Stmt', 'Data_Stmt', 'Dimension_Stmt',
         'Equivalence_Stmt',
         'External_Stmt', 'Intent_Stmt', 'Intrinsic_Stmt', 'Namelist_Stmt',
-        'Optional_Stmt', 'Pointer_Stmt', 'Protected_Stmt', 'Save_Stmt',
-        'Target_Stmt', 'Volatile_Stmt', 'Value_Stmt']
+        'Optional_Stmt', 'Pointer_Stmt', 'Cray_Pointer_Stmt',
+        'Protected_Stmt', 'Save_Stmt', 'Target_Stmt', 'Volatile_Stmt',
+        'Value_Stmt']
 
 
 class Executable_Construct(Base):  # R213
@@ -3182,6 +3183,140 @@ class Named_Constant_Def(KeywordValueBase):  # R539
         return KeywordValueBase.match(Named_Constant, Initialization_Expr,
                                       string)
     match = staticmethod(match)
+
+
+class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+    '''
+    cray-pointer-stmt is POINTER cray-pointer-decl-list
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointer_Decl_List']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointer statement.
+
+        :param string: the reader or string to match as a Cray-pointer \
+        statement.
+        :type string: \
+        :py:class:`fparser.common.readfortran.FortranReaderBase` or \
+        `str`
+        :return: a tuple of size 2 containing a string with the name \
+        "POINTER" and a cray-pointer-decl-list, if there is a match, \
+        or `None` if there is not.
+        :rtype: (str, Cray_Pointer_Decl_List) or None
+
+        '''
+        from fparser.two.utils import EXTENSIONS
+        if 'cray-pointer' not in EXTENSIONS:
+            return None
+        return WORDClsBase.match('POINTER', Cray_Pointer_Decl_List, string,
+                                 require_cls=True)
+
+
+class Cray_Pointer_Decl(Base):  # pylint: disable=invalid-name
+    '''
+    cray-pointer-decl is ( cray-pointer-name, cray-pointee-decl )
+    '''
+    use_names = ['Cray_Pointer_Name', 'Cray_Pointee_Name', 'Cray_Pointee_Decl']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointer declaration.
+
+        :param str string: the string to match as a Cray-pointer \
+        declaration.
+        :return: None if there is no match, otherwise a tuple of size \
+        2 containing the name of the pointer as the first argument and \
+        either the name of the pointee as the second argument or a \
+        Cray-pointee declaration.
+        :rtype: None, (Name, Name) or (Name, Cray_Pointee_Decl)
+
+        '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        if not strip_string[0] == "(":
+            return None
+        if not strip_string[-1] == ")":
+            return None
+        strip_string_nobr = strip_string[1:-1].strip()
+        line, repmap = string_replace_map(strip_string_nobr)
+        split_list = line.split(',')
+        if len(split_list) != 2:
+            return None
+        pointer_name = repmap(split_list[0]).strip()
+        pointee_str = repmap(split_list[1]).strip()
+        if pointee_str[-1] == ")":
+            return Cray_Pointer_Name(pointer_name), \
+                Cray_Pointee_Decl(pointee_str)
+        return Cray_Pointer_Name(pointer_name), Cray_Pointee_Name(pointee_str)
+
+    def tostr(self):
+        '''
+        :return: this Cray-pointee declaration as a string
+        :rtype: str
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is empty.
+        :raises InternalError: if the second element of the internal \
+        items list is None or is empty.
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Cray_Pointer_Decl.tostr(). 'Items' should be of size 2 but "
+                "found '{0}'.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError("Cray_Pointer_Decl_Stmt.tostr(). 'Items' "
+                                "entry 0 should be a pointer name but it is "
+                                "empty")
+        if not self.items[1]:
+            raise InternalError("Cray_Pointer_Decl_Stmt.tostr(). 'Items' "
+                                "entry 1 should be a pointee name or pointee "
+                                "declaration but it is empty")
+        return "({0}, {1})".format(self.items[0], self.items[1])
+
+
+class Cray_Pointee_Decl(CallBase):  # pylint: disable=invalid-name
+    '''
+    cray-pointee-decl is cray-pointee-name ( cray-pointee-array-spec )
+
+    '''
+    subclass_names = []
+    use_names = ['Cray_Pointee_Name', 'Cray_Pointee_Array_Spec']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Cray-pointee declaration.
+
+        :param str string: the string to match as a Cray-pointee \
+        declaration.
+        :return: None if there is no match, otherwise a tuple of size \
+        2 containing the name of the pointee as the first argument and \
+        a Cray-pointee array spec as the second argument.
+        :rtype: None or (Name, Cray_Pointee_Array_Spec)
+
+        '''
+        return CallBase.match(
+            Cray_Pointee_Name, Cray_Pointee_Array_Spec, string,
+            require_rhs=True)
+
+
+class Cray_Pointee_Array_Spec(Base):  # pylint: disable=invalid-name
+    '''cray-pointee-array-spec is explicit-shape-spec-list
+                            or assumed-size-spec
+
+    The above two forms of declaration are the only ones allowed
+    according to
+    http://pubs.cray.com/content/S-3901/8.6/
+    cray-fortran-reference-manual-s-3901-86/types) or
+    https://docs.oracle.com/cd/E19957-01/805-4941/z40000a54ba7/index.html
+
+    '''
+    subclass_names = ['Assumed_Size_Spec', 'Explicit_Shape_Spec_List']
 
 
 class Pointer_Stmt(StmtBase, WORDClsBase):  # R540
