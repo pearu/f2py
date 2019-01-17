@@ -2284,18 +2284,6 @@ def test_forall_construct():  # R752
             'n:FORALL(x = 1 : 5 : 2, j = 1 : 4)\n  a(x, j) = j\nEND FORALL n')
 
 
-def test_forall_header():  # R754
-
-    tcls = Forall_Header
-    obj = tcls('(n=1:2, a+1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(n = 1 : 2, a + 1)'
-
-    obj = tcls('(n=1:2, m=1:x-1:z(a))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(n = 1 : 2, m = 1 : x - 1 : z(a))'
-
-
 def test_forall_triplet_spec():  # R755
 
     tcls = Forall_Triplet_Spec
