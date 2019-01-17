@@ -37,6 +37,9 @@ list. List classes are usually generated, and therefore are not
 directly tested, but in this case we need to make a specific list
 class due to the complexity of supporting Hollerith format items.
 
+Note, the hollerith format was deprecated in Fortran77 and removed in
+Fortran95. However, Fortran compilers still support it.
+
 '''
 
 import pytest
@@ -62,9 +65,7 @@ def test_non_hollerith(f2003_create):
 def test_mixed_hollerith_1(f2003_create):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
-    format-item-list class to split items. Note the hollerith format
-    was deprecated in Fortran77 and removed in Fortran95. However,
-    Fortran compilers still support it.
+    format-item-list class to split items.
 
     '''
     myinput = "2Hab, 'HELLO'"
@@ -78,9 +79,7 @@ def test_mixed_hollerith_1(f2003_create):
 def test_mixed_hollerith_2(f2003_create):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
-    format-item-list class to split items. Note the hollerith format
-    was deprecated in Fortran77 and removed in Fortran95. However,
-    Fortran compilers still support it.
+    format-item-list class to split items.
 
     '''
     myinput = "'HELLO', 2hab"
@@ -95,9 +94,7 @@ def test_mixed_hollerith_2(f2003_create):
 def test_hollerith_only(f2003_create):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
-    format-item-list class to split items. Note the hollerith format
-    was deprecated in Fortran77 and removed in Fortran95. However,
-    Fortran compilers still support it.
+    format-item-list class to split items.
 
     '''
     myinput = "3Habc,2hab"
@@ -109,9 +106,27 @@ def test_hollerith_only(f2003_create):
         "Hollerith_Item('ab')))")
 
 
+def test_hollerith_only_spaces(f2003_create):
+    '''Check that a hollerith item is parsed correctly. We do this as a
+    hollerith item can contain commas so we can't use a simple
+    format-item-list class to split items.
+
+    '''
+    myinput = "  3Habc  ,  2hab  "
+    ast = Format_Item_List(myinput)
+    assert str(ast) == "3Habc, 2Hab"
+    print (repr(ast))
+    assert repr(ast) == (
+        "Format_Item_List(',', (Hollerith_Item('abc'), "
+        "Hollerith_Item('ab')))")
+
+
 def test_errors(f2003_create):
-    '''test some simple errors. Individual errors will be picked up by
-    the subclasses.'''
-    for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2"]:
+    '''test some list errors. Individual item errors will be picked up by
+    the subclasses.
+
+    '''
+    for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2", "2Hab,2Ha,2Hab", "2Hab,2Hab x,2Hab", "2Hab,2Hab,2Ha", "2Hab,2Hab,2Hab x"]:
+        print (myinput)
         with pytest.raises(NoMatchError):
             _ =  Format_Item_List(myinput)

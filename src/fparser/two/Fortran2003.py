@@ -7349,26 +7349,43 @@ class Hollerith_Item(Base):
     @staticmethod
     def match(string):
         ''' xxx '''
-        # only strip space to the left as space to the right could be
-        # part of the hollerith item.
         if not string:
             return None
+        # Only strip space to the left as space to the right could be
+        # part of the hollerith string.
         strip_string = string.lstrip()
         match = re.search('^[1-9][0-9]*[hH]', strip_string)
         if not match:
             return None
-        # current item matches with a hollerith
+        # Current item matches with a hollerith string.
         match_str = match.group(0)
         hol_length_str = match_str[:-1]
         hol_length = int(hol_length_str)
         num_chars = len(match_str) + hol_length
         if len(strip_string) != num_chars:
-            # the string is not the required length
+            # The string is not the required length.
             return None
         return strip_string[len(match_str):],
 
     def tostr(self):
-        ''' xxx '''
+        '''
+        :return: Parsed representation of a Hollerith String.
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 1.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+
+        '''
+        if not len(self.items) == 1:
+            raise InternalError(
+                "Class Hollerith_Item method tostr() should be of size 1 but "
+                "found '{0}'".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Hollerith_Item method tostr() items entry 0 should be "
+                "a valid Hollerith string but it is empty or None")
         return "{0}H{1}".format(len(self.items[0]), self.items[0])
 
 
