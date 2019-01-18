@@ -7366,7 +7366,28 @@ class Format_Item_C1002(Base):
 
     @staticmethod
     def match(string):
-        ''' XXX '''
+        '''Implements the matching for the C1002 Format Item constraint. The
+        constraints specify certain combinations of format items that
+        do not need a comma to separate them. Rather than sorting this
+        out when parsing the list, it was decided to treat these as
+        individual and match them in this class. As a result the
+        generated class hierarchy is a little more complicated.
+
+        :param str string: The string to check for conformance with a \
+                           C1002 format item constraint.
+        :return: `None` if there is no match, otherwise a tuple of \
+        size 2 containing a mixture of Control_Edit_Descriptor and \
+        Format_Item classes depending on what has been matched.
+
+        :rtype: `NoneType` or ( \
+        :py:class:`fparser.two.Control_Edit_Desc`, \
+        :py:class:`fparser.two.Format_Item` ) or \
+        (:py:class:`fparser.two.Format_Item`, \
+        :py:class:`fparser.two.Control_Edit_Desc`) or \
+        (:py:class:`fparser.two.Format_Item`, \
+        :py:class:`fparser.two.Format_Item`)
+
+        '''
         if not string:
             return None
         strip_string = string.strip()
@@ -7415,7 +7436,30 @@ class Format_Item_C1002(Base):
                     Format_Item(option+repmap(right.lstrip()))
 
     def tostr(self):
-        ''' XXX '''
+        '''
+        :return: Parsed representation of two format items
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 1.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+        :raises InternalError: if the second entry of the internal \
+        items list has no content.
+
+        '''
+        if not len(self.items) == 2:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr() should be of size "
+                "2 but found '{0}'".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr() items entry 0 should "
+                "contain a format items object but it is empty or None")
+        if not self.items[1]:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr() items entry 1 should "
+                "contain a format items object but it is empty or None")
         return "{0}, {1}".format(self.items[0], self.items[1])
 
 

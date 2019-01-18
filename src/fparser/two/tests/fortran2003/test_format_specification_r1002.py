@@ -38,7 +38,7 @@ format specification.
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Format_Specification
+from fparser.two.Fortran2003 import Format_Specification, Format_Item_C1002
 from fparser.two.utils import NoMatchError, InternalError
 
 
@@ -205,8 +205,18 @@ def test_C1002_clash(f2003_create):
     my_input = "(2P /)"
     ast = Format_Specification(my_input)
     assert str(ast) == "(2P, /)"
-    
-    
+
+
+def test_C1002_triples(f2003_create):
+    '''Test that we get expected behaviour when the C1002 rule applies to
+    a triplet of items.
+
+    '''
+    for my_input in ["(2P, F2.2, /)", "(2P F2.2 /)", "(2PF2.2/)"]:
+        ast = Format_Specification(my_input)
+        assert str(ast) == "(2P, F2.2, /)"
+
+
 def test_syntaxerror(f2003_create):
     ''' Test that we get an exception for incorrect bracket syntax. '''
     for my_input in [None, "", "  ", "(", ")", "x('hello')", "('hello')x"]:
@@ -278,3 +288,46 @@ def test_syntaxerror_C1002(f2003_create):
                      "(2H12 3H123)", "(2H123H123)"]:
         with pytest.raises(NoMatchError):
             _ = Format_Specification(my_input)
+
+
+def test_internal_errors1(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the length of the Items
+    list is not 2 as the str() method assumes that it is.
+
+    '''
+    line = "2P F2.2"
+    ast = Format_Item_C1002(line)
+    monkeypatch.setattr(ast, "items", [None, None, None])
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert "should be of size 2 but found '3'" in str(excinfo)
+
+
+def test_internal_error2(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the module name (entry 0
+    of items) is empty or None as the str() method assumes that it has
+    content.
+
+    '''
+    line = "2P F2.2"
+    ast = Format_Item_C1002(line)
+    monkeypatch.setattr(ast, "items", [None, ast.items[1]])
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert ("items entry 0 should contain a format items object but it "
+            "is empty or None") in str(excinfo)
+
+
+def test_internal_error3(f2003_create, monkeypatch):
+    '''Check that an internal error is raised if the module name (entry 1
+    of items) is empty or None as the str() method assumes that it has
+    content.
+
+    '''
+    line = "2P F2.2"
+    ast = Format_Item_C1002(line)
+    monkeypatch.setattr(ast, "items", [ast.items[0], None])
+    with pytest.raises(InternalError) as excinfo:
+        str(ast)
+    assert ("items entry 1 should contain a format items object but it "
+            "is empty or None") in str(excinfo)
