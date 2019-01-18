@@ -7306,7 +7306,7 @@ class Format_Specification(BracketBase):  # R1002
     specifier,
 
     (2) Before a slash edit descriptor when the optional repeat
-    specification is not present (10.7.2),
+    specification is not present,
 
     (3) After a slash edit descriptor, or
 
@@ -7366,7 +7366,7 @@ class Format_Item_C1002(Base):
 
     @staticmethod
     def match(string):
-        ''' '''
+        ''' XXX '''
         if not string:
             return None
         strip_string = string.strip()
@@ -7384,9 +7384,30 @@ class Format_Item_C1002(Base):
             index += 1
         if index:
             result = line[index].upper()
-            if result in '/P':
+            if result == '/':
                 return Control_Edit_Desc(repmap(line[:index+1])), \
                     Format_Item(repmap(line[index+1:].lstrip()))
+            elif result == 'P':
+                # Rule C1002 only allows a comma to be ommited between
+                # a P edit descriptor and a following F, E, EN, ES, D,
+                # or G edit descriptor with an optional repeat
+                # specifier. In fparser2 this translates to a
+                # Format_Item instance containing a
+                # Data_Edit_Desc_C1002 instance as its second item
+                # with the Data_Edit_Desc_C1002 instance's first item
+                # specifying the type of edit descriptor.
+                lhs = Control_Edit_Desc(repmap(line[:index+1]))
+                rhs = Format_Item(repmap(line[index+1:].lstrip()))
+                if not isinstance(rhs, Format_Item):
+                    return None
+                descriptor_object = rhs.items[1]
+                if not isinstance(descriptor_object, Data_Edit_Desc_C1002):
+                    return None
+                edit_descriptor = descriptor_object.items[0]
+                if edit_descriptor.upper() not in ['F', 'E', 'EN', 'ES',
+                                                   'D', 'G']:
+                    return None
+                return lhs, rhs
         for option in '/:':
             if option in line:
                 left, right = line.split(option, 1)
