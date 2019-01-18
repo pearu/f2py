@@ -7242,8 +7242,8 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
         containing a string with a comma followed by a tuple \
         containing a list which itself contains the matched \
         format items.
-        :rtype: (str, \
-        ([:py:class:`fparser.two.Fortran2003.Format_Item`s])) or None
+        :rtype: (`str`, \
+        ([:py:class:`fparser.two.Fortran2003.Format_Item`s])) or `NoneType`
 
         '''
         if not string:
@@ -7385,8 +7385,8 @@ class Format_Item_C1002(Base):
         if index:
             result = line[index].upper()
             if result in '/P':
-                return Control_Edit_Desc(repmap(strip_line[:index+1])), \
-                    Format_Item(repmap(strip_line[index+1:].lstrip()))
+                return Control_Edit_Desc(repmap(line[:index+1])), \
+                    Format_Item(repmap(line[index+1:].lstrip()))
         for option in '/:':
             if option in line:
                 left, right = line.split(option, 1)

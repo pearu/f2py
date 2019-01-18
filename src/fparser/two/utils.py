@@ -851,19 +851,23 @@ class BracketBase(Base):
     def match(brackets, cls, string, require_cls=True):
         ''' The generic match method for all types of bracketed
         expressions '''
+        if not string:
+            return None
+        string_strip = string.strip()
         bracket_len = len(brackets)//2
         left = brackets[:bracket_len]
         right = brackets[-bracket_len:]
 
-        if not (string.startswith(left) and string.endswith(right)):
-            return
+        if not (string_strip.startswith(left) and
+                string_strip.endswith(right)):
+            return None
 
         # Check whether or not there's anything between the open
         # and close brackets
-        line = string[bracket_len:-bracket_len].strip()
+        line = string_strip[bracket_len:-bracket_len].strip()
         if not line:
             if require_cls:
-                return
+                return None
             return left, None, right
 
         # There's some content between the open and close brackets.
@@ -876,17 +880,17 @@ class BracketBase(Base):
         # within strings...
         num_open = 1
         in_string = False
-        for idx in range(bracket_len, len(string)-bracket_len):
-            if string[idx] == '"' or string[idx] == "'":
+        for idx in range(bracket_len, len(string_strip)-bracket_len):
+            if string_strip[idx] == '"' or string_strip[idx] == "'":
                 in_string = not in_string
             if in_string:
                 # Ignore anything within quotes
                 continue
             # A slice in python goes up to but *does not
             # include* the last position so no need for a '-1'
-            if string[idx:idx+bracket_len] == left:
+            if string_strip[idx:idx+bracket_len] == left:
                 num_open += 1
-            elif string[idx:idx+bracket_len] == right:
+            elif string_strip[idx:idx+bracket_len] == right:
                 num_open -= 1
             if num_open == 0:
                 return
