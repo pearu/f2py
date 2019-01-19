@@ -7500,10 +7500,15 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         hol_length_str = match_str[:-1]
         hol_length = int(hol_length_str)
         num_chars = len(match_str) + hol_length
-        if len(strip_string) != num_chars:
-            # The string is not the required length.
+        if len(strip_string) < num_chars:
+            # The string is too short
             return None
-        return strip_string[len(match_str):],
+        if len(strip_string) > num_chars:
+            # The string is too long
+            if strip_string[num_chars:].strip():
+                # The extra is not just white space
+                return None
+        return strip_string[len(match_str):num_chars],
 
     def tostr(self):
         '''
@@ -7886,22 +7891,17 @@ items : ({R, K, None}, {'/', 'P', ':'})
 
     @staticmethod
     def match(string):
-        try:
-            strip_string = string.strip()
-        except AttributeError:
-            # String argument does not have a strip() method.
+        if not string:
             return None
+        strip_string = string.strip()
         if not strip_string:
             return None
-        if len(string) == 1 and string in '/:$':
-            if string == '$':
-                message = 'non-standard <control-edit-desc>: %r' % (string)
-                logging.getLogger(__name__).debug(message)
+        if len(strip_string) == 1 and strip_string in '/:$':
             return None, string
-        if string[-1] == '/':
-            return R(string[:-1].rstrip()), '/'
-        if string[-1].upper() == 'P':
-            return K(string[:-1].rstrip()), 'P'
+        if strip_string[-1] == '/':
+            return R(strip_string[:-1].rstrip()), '/'
+        if strip_string[-1].upper() == 'P':
+            return K(strip_string[:-1].rstrip()), 'P'
 
     def tostr(self):
         if self.items[0] is not None:

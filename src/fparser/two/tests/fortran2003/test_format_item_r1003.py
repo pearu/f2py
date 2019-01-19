@@ -72,7 +72,7 @@ def test_control_edit_descriptor(f2003_create):
     the associated class.
 
     '''
-    for my_input in ["2P"]: #, " 2P "]:
+    for my_input in ["2P", " 2P "]:
         ast = Format_Item(my_input)
         assert my_input.strip() in str(ast)
         assert repr(ast) == ("Control_Edit_Desc(Signed_Int_Literal_Constant("
@@ -119,7 +119,7 @@ def test_hollerith_item(f2003_create):
     tested in more detail by the associated class.
 
     '''
-    for my_input in ["2H12"]: #, " 2H12 "]:
+    for my_input in ["2H12", " 2H12 "]:
         ast = Format_Item(my_input)
         assert my_input.strip() in str(ast)
         assert repr(ast) == ("Hollerith_Item('12')")
