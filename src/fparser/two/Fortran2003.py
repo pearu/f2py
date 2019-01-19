@@ -7413,16 +7413,17 @@ class Format_Item_C1002(Base):
                 # a P edit descriptor and a following F, E, EN, ES, D,
                 # or G edit descriptor with an optional repeat
                 # specifier. In fparser2 this translates to a
-                # Format_Item instance containing a
+                # Format_Item instance containing a Data_Edit_Desc, or
                 # Data_Edit_Desc_C1002 instance as its second item
-                # with the Data_Edit_Desc_C1002 instance's first item
+                # with the data edit descriptor instance's first item
                 # specifying the type of edit descriptor.
                 lhs = Control_Edit_Desc(repmap(line[:index+1]))
                 rhs = Format_Item(repmap(line[index+1:].lstrip()))
                 if not isinstance(rhs, Format_Item):
                     return None
                 descriptor_object = rhs.items[1]
-                if not isinstance(descriptor_object, Data_Edit_Desc_C1002):
+                if not isinstance(descriptor_object, (Data_Edit_Desc,
+                                                      Data_Edit_Desc_C1002)):
                     return None
                 edit_descriptor = descriptor_object.items[0]
                 if edit_descriptor.upper() not in ['F', 'E', 'EN', 'ES',
@@ -7570,7 +7571,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         rpart = None
         my_string = strip_string
         if index:
-            rpart = R(string[:index])
+            rpart = R(strip_string[:index])
             my_string = strip_string[index:].lstrip()
         if not my_string:
             return None
@@ -7581,14 +7582,32 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         return rpart, rest
 
     def tostr(self):
+        '''
+        :return: Parsed representation of a Format Item.
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 1.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+
+        '''
+        if not len(self.items) == 2:
+            raise InternalError(
+                "Class Format_Item method tostr() should be of size 2 but "
+                "found '{0}'".format(len(self.items)))
+        if not self.items[1]:
+            raise InternalError(
+                "Class Format_Item method tostr() items entry 1 should be "
+                "a valid descriptor item but it is empty or None")
         rpart, rest = self.items
         if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
-            if rpart is not None:
-                return '%s%s' % (rpart, rest)
-            return '%s' % (rest)
-        if rpart is not None:
-            return '%s(%s)' % (rpart, rest)
-        return '(%s)' % (rest)
+            if rpart:
+                return "{0}{1}".format(rpart, rest)
+            return "{0}".format(rest)
+        if rpart:
+            return "{0}({1})".format(rpart, rest)
+        return "({0})".format(rest)
 
 
 class R(Base):  # R1004

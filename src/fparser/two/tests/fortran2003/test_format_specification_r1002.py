@@ -72,7 +72,10 @@ def test_multi(f2003_create):
 def test_spaces(f2003_create):
     '''Check that a basic format specification with multiple format items
     are parsed correctly with spaces. Individual format items are
-    tested by the associated classes.
+    tested by the associated classes. Note, the standard states that
+    spaces can occur anywhere within a format specifier and not affect
+    the meaning, other than within a format string. This is checked by
+    the individual format item classes.
 
     '''
     # spaces before and after the brackets
@@ -224,21 +227,6 @@ def test_syntaxerror(f2003_create):
             _ = Format_Specification(my_input)
 
 
-@pytest.mark.xfail(reason="Issue #168: spaces in int-literal-constant "
-                   "should not be allowed.")
-def test_syntaxerror_C1002_xfail(f2003_create):
-    '''This test should fail as the repeat specification for the '/' is
-    present and there is no comma separating the two items. However,
-    fparser treats the '3' as if it were part of the prevoious format
-    specifier i.e. it outputs "(2E2.23, /)". This looks like an issue
-    in utils.py/NumberBase.
-
-    '''
-    my_input = "(2E2.2 3/)"
-    with pytest.raises(NoMatchError):
-        _ = Format_Specification(my_input)
-
-
 def test_syntaxerror_C1002(f2003_create):
     '''Test that we get an exception in situations where no comma is
     supplied and the C1002 constraints for optional commas do not
@@ -252,8 +240,6 @@ def test_syntaxerror_C1002(f2003_create):
         ast = Format_Specification(my_input)
     # invalid syntax
     for my_input in ["(2P 2/)", "(2P2/)", "('hello' 2/)", "('hello'2/)"]:
-                    # "(2E2.2 3/)"]: to be added when previous xfail
-                    # test fixed
         with pytest.raises(NoMatchError):
             _ = Format_Specification(my_input)
     # Comma is mandatory after a P descriptor if not one of ['F', 'E',
