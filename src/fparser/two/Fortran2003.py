@@ -7628,88 +7628,75 @@ C1003, C1004: <r> shall be positive and without kind parameter specified.
 
 
 class Data_Edit_Desc_C1002(Base):
-    """
-::
-    <data-edit-desc> =   F <w> . <d>
-                       | E <w> . <d> [ E <e> ]
-                       | EN <w> . <d> [ E <e> ]
-                       | ES <w> . <d> [ E <e>]
-                       | G <w> . <d> [ E <e> ]
-                       | D <w> . <d>
+    '''
+    This class helps implement the matching for the first part of the
+    Fortran 2003 Constraint C1002 which constrains rule R1002. In
+    particular it matches with the subset of edit descriptors that can
+    follow a P edit descriptor without needing a comma, see below:
 
-    """
+    C1002 (applied to R1002) The comma used to separate format-items
+    in a format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a
+    repeat specifier,
+
+    [Constraints 2 to 4 ommitted as they are not relevant here.]
+
+    data-edit-desc is F w . d
+                   or E w . d [ E e ]
+                   or EN w . d [ E e ]
+                   or ES w . d [ E e]
+                   or G w . d [ E e ]
+                   or D w . d
+
+    '''
     subclass_names = []
     use_names = ['W', 'D', 'E']
 
     @staticmethod
     def match(string):
-        c = string[0].upper()
-        if c in ['D']:
-            line = string[1:].lstrip().upper()
-            if '.' in line:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), M(i2), None
-            return
-        if c in ['E']:
-            # Format descriptor can be 'E', 'ES' or 'EN'
-            line = string[1:].lstrip().upper()
-            c2 = line[0]
-            if c2 in ['S', 'N']:
-                line = line[1:].lstrip()
+        ''' XXX '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        char = strip_string[0].upper()
+        if char in ['F', 'D']:
+            # match w . d
+            my_str = strip_string[1:].lstrip().upper()
+            if '.' in my_str:
+                left, right = my_str.split('.', 1)
+                ieft = left.rstrip()
+                right = right.lstrip()
+                return char, W(left), D(right), None
+            return None
+        elif char in ['E', 'G']:
+            # match w . d [ E e ]
+            # Format descriptor could also be 'ES' or 'EN'
+            my_str = strip_string[1:].lstrip().upper()
+            char2 = my_str[0]
+            if char == 'E' and char2 in ['S', 'N']:
+                my_str = my_str[1:].lstrip()
             else:
-                c2 = ""
-            if "." in line:
-                if not line.count(".") == 1:
-                    return None
-                i1, i2 = line.split('.')
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                # Can optionally specify the no. of digits for the exponent
-                if i2.count('E') == 1:
-                    i2, i3 = i2.split('E')
-                    i2 = i2.lstrip()
-                    i3 = i3.lstrip()
-                    return c+c2, W(i1), D(i2), E(i3)
-                else:
-                    return c+c2, W(i1), D(i2), None
+                char2 = ""
+            if "." not in my_str:
+                return None
+            left, right = my_str.split('.', 1)
+            left = left.rstrip()
+            right = right.lstrip()
+            # Can optionally specify the number of digits for the
+            # exponent
+            if right.count('E') >= 1:
+                middle, right = right.split('E', 1)
+                middle = middle.rstrip()
+                right = right.lstrip()
+                return char+char2, W(left), D(middle), E(right)
             else:
-                return
-        if c in ['F', 'G']:
-            line = string[1:].lstrip()
-            if line.count('.') == 1:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), D(i2), None
-            elif line.count('.') == 2:
-                i1, i2, i3 = line.split('.', 2)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                i3 = i3.lstrip()
-                return c, W(i1), D(i2), E(i3)
-            else:
-                return
-        c = string[:2].upper()
-        if len(c) != 2:
-            return
-        if c in ['EN', 'ES']:
-            line = string[2:].lstrip()
-            if line.count('.') == 1:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), D(i2), None
-            elif line.count('.') == 2:
-                i1, i2, i3 = line.split('.', 2)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                i3 = i3.lstrip()
-                return c, W(i1), D(i2), E(i3)
-            else:
-                return
-        return
+                return char+char2, W(left), D(right), None
+        # Invalid char
+        return None
 
     def tostr(self):
         c = self.items[0]

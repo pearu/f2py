@@ -148,7 +148,7 @@ def test_internal_errors1(f2003_create, monkeypatch):
     assert "should be of size 2 but found '3'" in str(excinfo)
 
 
-def test_internal_error2(f2003_create, monkeypatch):
+def test_internal_errors2(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the descriptor item
     (entry 1 of items) is empty or None as the str() method assumes
     that it has content.
