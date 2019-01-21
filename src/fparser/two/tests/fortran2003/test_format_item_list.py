@@ -62,12 +62,14 @@ def test_non_hollerith(f2003_create):
         "Char_Literal_Constant(\"'HELLO'\", None)))")
 
 
-def test_mixed_hollerith_1(f2003_create):
+def test_mixed_hollerith_1(f2003_create, monkeypatch):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
     format-item-list class to split items.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "2Hab, 'HELLO'"
     ast = Format_Item_List(myinput)
     assert myinput in str(ast)
@@ -76,12 +78,14 @@ def test_mixed_hollerith_1(f2003_create):
         "Char_Literal_Constant(\"'HELLO'\", None)))")
 
 
-def test_mixed_hollerith_2(f2003_create):
+def test_mixed_hollerith_2(f2003_create, monkeypatch):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
     format-item-list class to split items.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "'HELLO', 2hab"
     ast = Format_Item_List(myinput)
     assert myinput.lower() in str(ast).lower()
@@ -91,12 +95,14 @@ def test_mixed_hollerith_2(f2003_create):
         "Hollerith_Item('ab')))")
 
 
-def test_hollerith_only(f2003_create):
+def test_hollerith_only(f2003_create, monkeypatch):
     '''Check that a hollerith item is parsed correctly. We do this as a
     hollerith item can contain commas so we can't use a simple
     format-item-list class to split items.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "3Habc,2hab"
     ast = Format_Item_List(myinput)
     assert str(ast) == "3Habc, 2Hab"
@@ -106,13 +112,15 @@ def test_hollerith_only(f2003_create):
         "Hollerith_Item('ab')))")
 
 
-def test_hollerith_only_spaces(f2003_create):
+def test_hollerith_only_spaces(f2003_create, monkeypatch):
     '''Check that a hollerith item is parsed correctly in the presence of
     additional spaces. We do this as a hollerith item must have the
     correct number of characters so any spaces that are not required
     must be removed.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "  3Habc  ,  2hab  "
     ast = Format_Item_List(myinput)
     assert str(ast) == "3Habc, 2Hab"
@@ -122,11 +130,13 @@ def test_hollerith_only_spaces(f2003_create):
         "Hollerith_Item('ab')))")
 
 
-def test_errors(f2003_create):
+def test_errors(f2003_create, monkeypatch):
     '''test some list errors. Individual item errors will be picked up by
     the subclasses.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for myinput in [None, "", "  ", "E2.2  2Hab", "E2.2, E2.2 E2.2",
                     "2Hab,2Ha,2Hab", "2Hab,2Hab x,2Hab", "2Hab,2Hab,2Ha",
                     "2Hab,2Hab,2Hab x"]:

@@ -89,18 +89,20 @@ def test_spaces(f2003_create):
     assert str(ast) == "(E2.2, 2E2.2, /, 'hello', 2(E2.2, 'there'))"
 
 
-def test_hollerith(f2003_create):
+def test_hollerith(f2003_create, monkeypatch):
     '''Check that a basic format specification with a hollerith string
     item is parsed correctly. Individual format items are tested by
     the associated classes.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     my_input = ("(2H,,)")
     ast = Format_Specification(my_input)
     assert str(ast) == my_input
 
 
-def test_C1002(f2003_create):
+def test_C1002(f2003_create, monkeypatch):
     '''Check that format specifications conforming to the C1002
     constraints are parsed correctly. This test actually checks class
     Format_Item_C1002 when a comma is missing as the constraints have
@@ -112,6 +114,8 @@ def test_C1002(f2003_create):
     # preceded by a repeat specifier. We only check the absence of a
     # repeat specifier for one case to cut down on the number of
     # tests.
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for specifier in ['F', 'E', 'EN', 'ES', 'D', 'G']:
         # Without repeat specifier.
         for my_input in ["(2P, {0}2.2)".format(specifier),

@@ -7487,6 +7487,9 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         :rtype: str
 
         '''
+        from fparser.two.utils import EXTENSIONS
+        if 'hollerith' not in EXTENSIONS:
+            return None
         if not string:
             return None
         # Only strip space to the left as space to the right could be

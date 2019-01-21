@@ -95,6 +95,14 @@ EXTENSIONS = ["x-format"]
 # extension is allowed in fparser.
 EXTENSIONS += ["cray-pointer"]
 
+# A Hollerith constant is a way of specifying a string as a sequence
+# of characters preceded by the string length and separated by an 'H'
+# e.g. 5Hhello. See
+# https://gcc.gnu.org/onlinedocs/gfortran/Hollerith-constants-support.html,
+# for example for more details. fparser currently supports Hollerith
+# constants specified in format statements when 'hollerith' is specified
+# in the EXTENSIONS list.
+EXTENSIONS += ["hollerith"]
 
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to

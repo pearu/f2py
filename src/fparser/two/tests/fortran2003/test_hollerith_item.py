@@ -46,28 +46,34 @@ from fparser.two.Fortran2003 import Hollerith_Item
 from fparser.two.utils import NoMatchError, InternalError
 
 
-def test_hollerith(f2003_create):
+def test_hollerith(f2003_create, monkeypatch):
     '''Check that a valid hollerith string is parsed correctly.'''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for myinput in ["2Hab", "  2Hab", "1h ", "7h1234567"]:
         ast = Hollerith_Item(myinput)
         assert str(ast).upper() == myinput.lstrip().upper()
 
 
-def test_repr(f2003_create):
+def test_repr(f2003_create, monkeypatch):
     '''Check that the repr output of a hollerith string gives the expected
     result.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "2Hab"
     ast = Hollerith_Item(myinput)
     assert repr(ast) == "Hollerith_Item('ab')"
 
 
-def test_syntaxerror(f2003_create):
+def test_syntaxerror(f2003_create, monkeypatch):
     '''test that an exception is raised if the supplied format is
     invalid.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for myinput in [None, "", "  ", "0H", "1H", "2Hx" "2Hxxx", "H20", "xH",
                     "2 Hxx"]:
         with pytest.raises(NoMatchError):
@@ -79,6 +85,8 @@ def test_internal_error1(f2003_create, monkeypatch):
     list is not 1 as the str() method assumes that it is.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "2Hab"
     ast = Hollerith_Item(myinput)
     monkeypatch.setattr(ast, "items", [None, None])
@@ -93,6 +101,8 @@ def test_internal_error2(f2003_create, monkeypatch):
     a string with content.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "2hab"
     ast = Hollerith_Item(myinput)
     for content in [None, ""]:
@@ -101,3 +111,29 @@ def test_internal_error2(f2003_create, monkeypatch):
             str(ast)
         assert ("entry 0 should be a valid Hollerith string but it is "
                 "empty") in str(excinfo)
+
+
+def test_invalid_hollerith(f2003_create, monkeypatch):
+    '''Test that the hollerith extension to the standard raises an
+    exception if it is not named as a valid extension.
+
+    '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", [])
+    myinput = "2Hab"
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Hollerith_Item(myinput)
+        assert "Hollerith_Item: '{0}'".format(myinput) \
+            in str(excinfo.value)
+
+
+def test_valid_hollerith(f2003_create, monkeypatch):
+    '''Test that the hollerith extension to the standard produces the
+    expected output if it is named as a valid extension.
+
+    '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
+    myinput = "2Hab"
+    result = Hollerith_Item(myinput)
+    assert str(result) == myinput

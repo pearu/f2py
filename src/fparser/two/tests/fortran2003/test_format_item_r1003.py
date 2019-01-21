@@ -114,11 +114,13 @@ def test_format_item_list_descriptor(f2003_create):
                              ", None), None)))")
 
 
-def test_hollerith_item(f2003_create):
+def test_hollerith_item(f2003_create, monkeypatch):
     '''Check that a hollerith item is parsed correctly. The description is
     tested in more detail by the associated class.
 
     '''
+    from fparser.two import utils
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for my_input in ["2H12", " 2H12 "]:
         ast = Format_Item(my_input)
         assert my_input.strip() in str(ast)
