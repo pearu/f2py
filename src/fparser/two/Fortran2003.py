@@ -8166,33 +8166,91 @@ class Char_String_Edit_Desc(Base):  # R1019
 #
 
 
-class Main_Program(BlockBase):  # R1101
-    """
-    <main-program> = <program-stmt>
-                         [ <specification-part> ]
-                         [ <execution-part> ]
-                         [ <internal-subprogram-part> ]
-                         <end-program-stmt>
-    """
+class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
+    '''Fortran 2003 rule R1101
+
+    This class does not cater for the case where there is no
+    program-stmt. The separate Main_Program0() class matches this
+    situation. See Class Program() method match() for how this is
+    implemented.
+
+    main-program is program-stmt
+                    [ specification-part ]
+                    [ execution-part ]
+                    [ internal-subprogram-part ]
+                    end-program-stmt
+
+    C1101 In a main-program, the execution-part shall not contain a
+    RETURN statement or an ENTRY statement. This is currently not
+    checked, see issue #140.
+
+    C1102 The program-name may be included in the end-program-stmt
+    only if the optional program-stmt is used and, if included, shall
+    be identical to the program-name specified in the program-stmt.
+
+    C1103 An automatic object shall not appear in the
+    specification-part (R204) of a main program. This is currently not
+    checked, see issue #140.
+
+    '''
     subclass_names = []
     use_names = ['Program_Stmt', 'Specification_Part', 'Execution_Part',
                  'Internal_Subprogram_Part', 'End_Program_Stmt']
 
     @staticmethod
     def match(reader):
+        '''Implements the matching of a main program which has a Program
+        statement. See class Main_Program0 for matching without a
+        Program Statement. Matching uses `BlockBase` as it conforms to
+        the start/end with optional content pattern. `match_names` is
+        set to `True` so that different names e.g. `program x` and
+        `end program y` will not match.
+
+        :param reader: the Fortran reader containing the line(s) of \
+                       code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
+        :returns: `None` if there is not match or, if there is a match, \
+                  a `tuple` containing a single `list`, with minimum \
+                  size 2 and maximum size 5, which contains instances \
+                  of the classes that have matched. The first entry in \
+                  the list will be a `Program_Stmt` and the last entry \
+                  in the list will be an `End_Program_Stmt`. In-between \
+                  these two instances will be an optional \
+                  `Specification_Part` followed by an optional \
+                  `Execution_Part` followed by an optional \
+                  `Internal_Subprogram_Part`.
+        :rtype: `NoneType` or \
+                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`,
+                optional \
+                :py:class:`fparser.two.Fortran2003.Specification_Part`, \
+                optional \
+                :py:class:`fparser.two.Fortran2003.Execution_Part`, \
+                optional \
+                :py:class:`fparser.two.Fortran2003.Internal_Subprogram_Part`, \
+                :py:class:`fparser.two.Fortran2003.End_Program_Stmt`])
+
+        '''
         return BlockBase.match(
             Program_Stmt, [Specification_Part, Execution_Part,
                            Internal_Subprogram_Part], End_Program_Stmt,
-            reader)
+            reader, match_names=True)
 
 
 class Main_Program0(BlockBase):
-    """
-    <main-program> =
+    """<main-program> =
                          [ <specification-part> ]
                          [ <execution-part> ]
                          [ <internal-subprogram-part> ]
                          <end-program-stmt>
+
+    C1102 The program-name may be included in the end-program-stmt
+    only if the optional program-stmt is used and, if included, shall
+    be identical to the program-name specified in the
+    program-stmt.
+
+    In this class an end program name is not allowed due to C1102.
+
     """
     subclass_names = []
     use_names = ['Program_Stmt', 'Specification_Part',
@@ -8208,19 +8266,51 @@ class Main_Program0(BlockBase):
 
 
 class Program_Stmt(StmtBase, WORDClsBase):  # R1102
-    """
-    <program-stmt> = PROGRAM <program-name>
-    """
+    '''
+    Fortran 2003 rule R1102
+    program-stmt is PROGRAM program-name
+
+    '''
     subclass_names = []
     use_names = ['Program_Name']
 
+    @staticmethod
     def match(string):
+        '''Implements the matching for a Program Statement. Makes use of
+        `WORDClsBase`, as the required match is a string followed by a
+        class. The class is made compulsory for the match as the
+        PROGRAM keyword is not valid without a program name.
+
+        :param str string: Fortran code to check for a match
+        :returns: `None` if there is no match or, if there is a match, \
+                  a tuple of size 2 with the first entry being the \
+                  string 'PROGRAM' and the second entry being a `Name` \
+                  class containing the name of the program.
+        :rtype: `NoneType` or ( `str`, \
+                :py:class:`fparser.two.Fortran2003.Name` )
+
+        '''
         return WORDClsBase.match('PROGRAM', Program_Name, string,
                                  require_cls=True)
-    match = staticmethod(match)
 
     def get_name(self):
+        '''Provides the program name as an instance of the `Name` class.
+
+        :returns: the program name as a `Name` class
+        :rtype: `Name`
+
+        '''
         return self.items[1]
+
+    def get_start_name(self):
+        '''Provides the program name as a string. This is used for matching
+        with the equivalent `end program` name if there is one.
+
+        :returns: the program name as a string
+        :rtype: str
+
+        '''
+        return self.get_name().string
 
 
 class End_Program_Stmt(EndStmtBase):  # R1103
