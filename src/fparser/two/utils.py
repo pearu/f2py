@@ -104,6 +104,12 @@ EXTENSIONS += ["cray-pointer"]
 # in the EXTENSIONS list.
 EXTENSIONS += ["hollerith"]
 
+# Many compilers support the use of '$' in a fortran write statement
+# to indicate that the carriage return should be suppressed. This is
+# an extension to the Fortran standard and is supported by fparser if
+# 'dollar-descriptor' is specified in the EXTENSIONS list.
+EXTENSIONS += ["dollar-descriptor"]
+
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
