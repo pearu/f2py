@@ -7998,7 +7998,9 @@ C1009: <k> is without kind parameters.
 
 
 class Position_Edit_Desc(Base):  # R1013
-    '''Fortran 2003 rule R1013
+    '''
+    Fortran 2003 rule R1013
+
     position-edit-desc is T n
                        or TL n
                        or TR n
@@ -8009,10 +8011,6 @@ class Position_Edit_Desc(Base):  # R1013
     If the extensions list includes the string 'x-format' then 'X'
     without a preceeding integer is also matched. This is a common
     extension in Fortran compilers.
-
-    Attributes
-    ----------
-    items : ({'T', 'TL', 'TR', N}, {N, 'X'})
 
     '''
     subclass_names = []

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -45,8 +45,8 @@ from fparser.two.Fortran2003 import Position_Edit_Desc
 def test_invalid_descriptor():
     '''Test invalid options raise an exception.'''
 
-    for descriptor in ["", "  ", "1T", "XT", "T", "TL", "TR", "XT1", "XX",
-                       "X X", "1XX"]:
+    for descriptor in [None, "", "  ", "1T", "XT", "T", "TL", "TR", "XT1",
+                       "XX", "X X", "1XX"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Position_Edit_Desc(descriptor)
         assert "Position_Edit_Desc: '{0}'".format(descriptor) \
