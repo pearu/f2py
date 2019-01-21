@@ -1069,30 +1069,57 @@ string
 
 
 class STRINGBase(StringBase):
-    """
-::
-    <STRING-base> = <XYZ>
-    """
-    match = staticmethod(StringBase.match)
+    '''STRING-base is XYZ. Matches an upper case version of the input
+    string with a pattern (typically taken from pattern.py) and
+    returns the string in upper case if there is a match. Supports
+    patterns being specified hierarchically (as lists and/or tuples).
 
+    '''
+
+    @staticmethod
     def match(pattern, string):
-        if isinstance(pattern, (list, tuple)):
-            for p in pattern:
-                obj = STRINGBase.match(p, string)
-                if obj is not None:
-                    return obj
-            return
+        '''Matches an input string with a specified pattern. Casts the string
+        to upper case before performing a match and, if there is a
+        match, returns the string in upper case.
+
+        The input pattern can be a list or a tuple. If this is the
+        case then all of the contents of the list or tuple are
+        searched for a match. This functionality can be used to
+        recurse down a tree of lists and or tuples until regular
+        expressions or strings are found (at the leaves of the tree)
+        on which to match. The patterns used to match in fparser can
+        be found in patterns_tools.py. These make use of the pattern
+        class, whose match method behaves like a regular
+        expression. For example:
+
+        from fparser.two import pattern_tools
+        pattern = pattern_tools.intrinsic_type_name
+        result = STRINGBase.match(pattern, "logical")
+
+        :param pattern: the pattern to match
+        :type pattern: `list`, `tuple`, `str` or an `re` expression
+        :param str string: the string to match with the pattern
+        :return: None if there is no match, or a tuple containing the \
+        matched string in upper case.
+        :rtype: `NoneType` or ( `str` )
+
+        '''
         if not string:
+            return None
+        if isinstance(pattern, (list, tuple)):
+            for child in pattern:
+                result = STRINGBase.match(child, string)
+                if result:
+                    return result
             return None
         STRING = string.upper()
         if isinstance(pattern, str):
             if len(pattern) == len(string) and pattern == STRING:
                 return STRING,
-            return
+            return None
         if pattern.match(STRING):
             return STRING,
-        return
-    match = staticmethod(match)
+        return None
 
 
 class StmtBase(Base):
