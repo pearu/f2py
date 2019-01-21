@@ -857,63 +857,92 @@ class KeywordValueBase(Base):
 
 
 class BracketBase(Base):
-    """
-::
-    <bracket-base> = <left-bracket-base> <something> <right-bracket>
-    """
+    '''
+    bracket-base is left-bracket something right-bracket.
+
+    This class is able to cope with nested brackets as long as they
+    are correctly nested. Brackets in strings are ignored.
+
+    The 'something' can be specified as being optional.
+
+    '''
     @staticmethod
     def match(brackets, cls, string, require_cls=True):
-        ''' The generic match method for all types of bracketed
-        expressions '''
+        '''A generic match method for all types of bracketed
+        expressions.
+
+        :param str brackets: the format of the left and right brackets \
+        provided as a string, for example '()'
+        :param cls: the class to match the content within the brackets \
+        :type cls: subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: the content to match
+        :param bool require_cls: whether the class and associated \
+        content is mandatory (True) or optional (False). The default \
+        is True.
+        :return: None if there is no match, otherwise a tuple with the \
+        first and third entries being strings containing the left and \
+        right brackets respectively and the second entry being either \
+        None or an instance of the class provided as the second \
+        argument (cls).
+        :rtype: 'NoneType', ( `str`, `NoneType`, `str`) or ( `str`, \
+        `cls`, `str` )
+
+        '''
+        if not cls and require_cls:
+            return None
         if not string:
             return None
         string_strip = string.strip()
-        bracket_len = len(brackets)//2
-        left = brackets[:bracket_len]
-        right = brackets[-bracket_len:]
-
+        if not brackets:
+            return None
+        brackets_nospc = brackets.replace(' ','')
+        if not brackets_nospc:
+            return None
+        if len(brackets_nospc) % 2 == 1:
+            #LHS and RHS bracketing must be the same size
+            return None
+        bracket_len = len(brackets_nospc)//2
+        left = brackets_nospc[:bracket_len]
+        right = brackets_nospc[-bracket_len:]
+        if len(string_strip) < bracket_len:
+            return None
         if not (string_strip.startswith(left) and
                 string_strip.endswith(right)):
             return None
-
         # Check whether or not there's anything between the open
         # and close brackets
         line = string_strip[bracket_len:-bracket_len].strip()
-        if not line:
-            if require_cls:
-                return None
+        if (not line and cls and require_cls) or (line and not cls):
+            return None
+        elif not line and (not cls or not require_cls):
             return left, None, right
-
-        # There's some content between the open and close brackets.
-        # We may have something like "(a + b)*(a - b)" so have
-        # to check - we start with one open bracket. If we reach
-        # zero open brackets before we get to the end then the
-        # opening bracket at the start of the string does not
-        # correspond to the closing bracket at the end of it.
-        # Unless of course any interim brackets we encounter are
-        # within strings...
-        num_open = 1
-        in_string = False
-        for idx in range(bracket_len, len(string_strip)-bracket_len):
-            if string_strip[idx] == '"' or string_strip[idx] == "'":
-                in_string = not in_string
-            if in_string:
-                # Ignore anything within quotes
-                continue
-            # A slice in python goes up to but *does not
-            # include* the last position so no need for a '-1'
-            if string_strip[idx:idx+bracket_len] == left:
-                num_open += 1
-            elif string_strip[idx:idx+bracket_len] == right:
-                num_open -= 1
-            if num_open == 0:
-                return
         return left, cls(line), right
 
     def tostr(self):
+        '''
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
+        '''
+
+        if len(self.items) != 3:
+            raise InternalError(
+                "Class BracketBase method tostr() has '{0}' items, "
+                "but expecting 3.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class BracketBase method tostr(). 'Items' entry 0 "
+                "should be a string containing the left hand bracket "
+                "but it is empty or None")
+        if not self.items[2]:
+            raise InternalError(
+                "Class BracketBase method tostr(). 'Items' entry 2 "
+                "should be a string containing the right hand bracket "
+                "but it is empty or None")
         if self.items[1] is None:
-            return '%s%s' % (self.items[0], self.items[2])
-        return '%s%s%s' % tuple(self.items)
+            return "{0}{1}".format(self.items[0], self.items[2])
+        return "{0}{1}{2}".format(self.items[0], self.items[1], self.items[2])
 
 
 class NumberBase(Base):

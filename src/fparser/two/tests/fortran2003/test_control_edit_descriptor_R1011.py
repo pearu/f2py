@@ -48,7 +48,6 @@ def test_descriptors_match(f2003_create):
     '''
     for my_input in ["/", " / ", "2/", " 2 / ", ":", " : ", "2P", " 2 P ",
                      "2p", " 2 p "]:
-        print my_input
         ast = Control_Edit_Desc(my_input)
         assert str(ast) == my_input.upper().replace(" ", "")
 
