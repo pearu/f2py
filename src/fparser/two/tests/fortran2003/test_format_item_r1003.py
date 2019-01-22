@@ -79,7 +79,7 @@ def test_control_edit_descriptor(f2003_create):
                              "'2', None), 'P')")
 
 
-def test_char_string_edit_descriptor(f2003_create):
+def test_char_edit_descriptor(f2003_create):
     '''Check that basic format specifications are parsed correctly for a
     char string edit descriptor. The description is tested in more
     detail by the associated class.
@@ -91,7 +91,7 @@ def test_char_string_edit_descriptor(f2003_create):
         assert repr(ast) == ("Char_Literal_Constant(\"'hello'\", None)")
 
 
-def test_format_item_list_descriptor(f2003_create):
+def test_format_list_descriptor(f2003_create):
     '''Check that basic format specifications are parsed correctly for a
     format item list descriptor. The description is tested in more
     detail by the associated class.
@@ -134,7 +134,7 @@ def test_errors(f2003_create):
     '''
     for my_input in [None, "", "  ", "2", "2  ", "(", ")"]:
         with pytest.raises(NoMatchError):
-            _ =  Format_Item(my_input)
+            _ = Format_Item(my_input)
 
 
 def test_internal_errors1(f2003_create, monkeypatch):

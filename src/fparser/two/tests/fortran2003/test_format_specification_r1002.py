@@ -38,8 +38,8 @@ format specification.
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Format_Specification, Format_Item_C1002
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.Fortran2003 import Format_Specification
+from fparser.two.utils import NoMatchError
 
 
 def test_single(f2003_create):
@@ -51,7 +51,7 @@ def test_single(f2003_create):
     # 1: data-edit-desc, 2: r data-edit-desc, 3: control-edit-desc, 4:
     # char-string-edit-desc, 5: format-item-list
     for my_input in ["()", "(E2.2)", "(2E2.2)", "(/)", "('hello')",
-                    "(2(E2.2))"]:
+                     "(2(E2.2))"]:
         ast = Format_Specification(my_input)
         assert str(ast) == my_input
 
@@ -102,7 +102,7 @@ def test_hollerith(f2003_create, monkeypatch):
     assert str(ast) == my_input
 
 
-def test_C1002(f2003_create, monkeypatch):
+def test_c1002(f2003_create, monkeypatch):
     '''Check that format specifications conforming to the C1002
     constraints are parsed correctly. This test actually checks class
     Format_Item_C1002 when a comma is missing as the constraints have
@@ -156,7 +156,7 @@ def test_C1002(f2003_create, monkeypatch):
     for my_input in ["(3H2.2, /)", "(3H2.2 /)", "(3H2.2/)"]:
         ast = Format_Specification(my_input)
         assert str(ast) == "(3H2.2, /)"
-        
+
     # Comma is optional after a slash edit descriptor.
     # data-edit-desc
     for my_input in ["(/, 2P)", "(/ 2P)", "(/2P)"]:
@@ -188,13 +188,13 @@ def test_C1002(f2003_create, monkeypatch):
     for my_input in ["(2E2.2, :, 2P)",
                      "(2E2.2 :, 2P)", "(2E2.2:, 2P)", "(2E2.2:,2P)",
                      "(2E2.2, : 2P)", "(2E2.2, :2P)", "(2E2.2,:2P)",
-                     "(2E2.2 : 2P)", "(2E2.2: 2P)" ,"(2E2.2 :2P)",
+                     "(2E2.2 : 2P)", "(2E2.2: 2P)", "(2E2.2 :2P)",
                      "(2E2.2:2P)"]:
         ast = Format_Specification(my_input)
         assert str(ast) == "(2E2.2, :, 2P)"
 
 
-def test_C1002_clash(f2003_create):
+def test_c1002_clash(f2003_create):
     '''The constraints rules can clash with each other. Here we test what
     happens when they do. fparser assumes that we can break the P rule,
     as does PGI. In contrast gfortran allows P / but does not allow P
@@ -206,7 +206,7 @@ def test_C1002_clash(f2003_create):
     my_input = "(2P :)"
     ast = Format_Specification(my_input)
     assert str(ast) == "(2P, :)"
-    
+
     # P followed by / with no comma. This breaks the P rule but is
     # satisfied by the / rule.
     my_input = "(2P /)"
@@ -214,7 +214,7 @@ def test_C1002_clash(f2003_create):
     assert str(ast) == "(2P, /)"
 
 
-def test_C1002_triples(f2003_create):
+def test_c1002_triples(f2003_create):
     '''Test that we get expected behaviour when the C1002 rule applies to
     a triplet of items.
 
@@ -231,7 +231,7 @@ def test_syntaxerror(f2003_create):
             _ = Format_Specification(my_input)
 
 
-def test_syntaxerror_C1002(f2003_create):
+def test_syntaxerror_c1002(f2003_create):
     '''Test that we get an exception in situations where no comma is
     supplied and the C1002 constraints for optional commas do not
     apply.
@@ -260,13 +260,13 @@ def test_syntaxerror_C1002(f2003_create):
             with pytest.raises(NoMatchError):
                 _ = Format_Specification(my_input)
     # Check DT data descriptor
-    my_input = "(2P, DT)".format(descriptor)
+    my_input = "(2P, DT)"
     ast = Format_Specification(my_input)
     assert str(ast) == my_input
-    my_input = "(2P DT)".format(descriptor)
+    my_input = "(2P DT)"
     with pytest.raises(NoMatchError):
         _ = Format_Specification(my_input)
-    my_input = "(2PDT)".format(descriptor)
+    my_input = "(2PDT)"
     with pytest.raises(NoMatchError):
         _ = Format_Specification(my_input)
     # Comma is mandatory if C1002 is not relevant
@@ -278,4 +278,3 @@ def test_syntaxerror_C1002(f2003_create):
                      "(2H12 3H123)", "(2H123H123)"]:
         with pytest.raises(NoMatchError):
             _ = Format_Specification(my_input)
-

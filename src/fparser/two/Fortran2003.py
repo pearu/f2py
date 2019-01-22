@@ -7216,6 +7216,7 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
     '''
     use_names = []
     subclass_names = ['Format_Item']
+
     @staticmethod
     def match(string):
         '''Implements the matching for a list of format items.
@@ -7279,7 +7280,7 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
                 # so we are safe to split using a ',' as separator
                 # after applying string_replace_map.
                 line, repmap = string_replace_map(current_string)
-                splitted = line.split(',',1)
+                splitted = line.split(',', 1)
                 item_list.append(Format_Item(repmap(splitted[0].strip())))
                 current_string = ""
                 if len(splitted) == 2:
@@ -7290,7 +7291,7 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
         return ',', tuple(item_list)
 
 
-class Format_Specification(BracketBase):  # R1002
+class Format_Specification(BracketBase):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R1002
 
@@ -7336,7 +7337,7 @@ class Format_Specification(BracketBase):  # R1002
                                  require_cls=False)
 
 
-class Format_Item_C1002(Base):
+class Format_Item_C1002(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 constraint C1002
 
@@ -7476,6 +7477,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
     '''
     subclass_names = []
     use_names = []
+
     @staticmethod
     def match(string):
         '''Implements the matching for a Hollerith string.
@@ -7608,7 +7610,8 @@ class Format_Item(Base):  # pylint: disable=invalid-name
             raise InternalError(
                 "Class Format_Item method tostr() items entry 1 should be "
                 "a valid descriptor item but it is empty or None")
-        rpart, rest = self.items
+        rpart = self.items[0]
+        rest = self.items[1]
         if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
             if rpart:
                 return "{0}{1}".format(rpart, rest)

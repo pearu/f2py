@@ -35,12 +35,10 @@
 '''File containing unit tests for the STRINGBase baseclass in
 utils.py'''
 
-import pytest
-from fparser.two.utils import STRINGBase, NoMatchError
-from fparser.two.Fortran2003 import Name
+from fparser.two.utils import STRINGBase
 
 
-def test_STRINGBase_string():
+def test_stringbase_string():
     '''Test the STRINGbase match method with a string pattern.'''
 
     pattern = "HELLO"
@@ -50,7 +48,7 @@ def test_STRINGBase_string():
         assert str(result[0]) == pattern
 
 
-def test_STRINGBase_re():
+def test_stringbase_re():
     '''Test the STRINGbase match method with a regular expression.'''
 
     import re
@@ -61,7 +59,7 @@ def test_STRINGBase_re():
         assert str(result[0]) == my_input.upper()
 
 
-def test_STRINGBase_list():
+def test_stringbase_list():
     '''Test the STRINGbase match method with a list.'''
 
     import re
@@ -74,7 +72,7 @@ def test_STRINGBase_list():
         assert str(result[0]) == my_input.upper()
 
 
-def test_STRINGBase_tuple():
+def test_stringbase_tuple():
     '''Test the STRINGbase match method with a tuple.'''
 
     import re
@@ -87,7 +85,7 @@ def test_STRINGBase_tuple():
         assert str(result[0]) == my_input.upper()
 
 
-def test_STRINGBase_pattern_class():
+def test_stringbase_pattern_class():
     '''Test the STRINGbase match method with a pattern instance as
     specified in pattern_tools.py.
 

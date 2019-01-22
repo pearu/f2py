@@ -125,5 +125,5 @@ def test_internal_error2(f2003_create, monkeypatch):
         monkeypatch.setattr(ast, "items", [ast.items[0], content])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("should be an edit descriptor name but is empty or None") \
+        assert "should be an edit descriptor name but is empty or None" \
             in str(excinfo)

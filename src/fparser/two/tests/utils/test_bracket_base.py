@@ -36,7 +36,7 @@
 utils.py'''
 
 import pytest
-from fparser.two.utils import BracketBase, NoMatchError, InternalError
+from fparser.two.utils import BracketBase, InternalError
 from fparser.two.Fortran2003 import Name
 
 
@@ -53,7 +53,7 @@ def test_brackets():
         result = BracketBase.match(brackets, None, input_text,
                                    require_cls=False)
         assert str(result) == "('{0}', None, '{1}')".format(
-            lhs.replace(' ',''), rhs.replace(' ',''))
+            lhs.replace(' ', ''), rhs.replace(' ', ''))
 
 
 def test_input_too_short():
@@ -78,8 +78,8 @@ def test_cls():
                          ["([", "])"], ["{{[(", ")]}}"]]:
             brackets = lhs + rhs
             input_text = lhs + "hello" + rhs
-            result = BracketBase.match(brackets, Name, input_text,
-                                       require_cls=require)
+            _ = BracketBase.match(brackets, Name, input_text,
+                                  require_cls=require)
 
 
 def test_brackets_error1():

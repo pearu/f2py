@@ -110,6 +110,7 @@ EXTENSIONS += ["hollerith"]
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
 EXTENSIONS += ["dollar-descriptor"]
 
+
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
@@ -895,11 +896,11 @@ class BracketBase(Base):
         string_strip = string.strip()
         if not brackets:
             return None
-        brackets_nospc = brackets.replace(' ','')
+        brackets_nospc = brackets.replace(' ', '')
         if not brackets_nospc:
             return None
         if len(brackets_nospc) % 2 == 1:
-            #LHS and RHS bracketing must be the same size
+            # LHS and RHS bracketing must be the same size
             return None
         bracket_len = len(brackets_nospc)//2
         left = brackets_nospc[:bracket_len]
@@ -1077,7 +1078,7 @@ class STRINGBase(StringBase):
     '''
 
     @staticmethod
-    def match(pattern, string):
+    def match(my_pattern, string):
         '''Matches an input string with a specified pattern. Casts the string
         to upper case before performing a match and, if there is a
         match, returns the string in upper case.
@@ -1106,19 +1107,19 @@ class STRINGBase(StringBase):
         '''
         if not string:
             return None
-        if isinstance(pattern, (list, tuple)):
-            for child in pattern:
+        if isinstance(my_pattern, (list, tuple)):
+            for child in my_pattern:
                 result = STRINGBase.match(child, string)
                 if result:
                     return result
             return None
-        STRING = string.upper()
-        if isinstance(pattern, str):
-            if len(pattern) == len(string) and pattern == STRING:
-                return STRING,
+        string_upper = string.upper()
+        if isinstance(my_pattern, str):
+            if len(my_pattern) == len(string) and my_pattern == string_upper:
+                return string_upper,
             return None
-        if pattern.match(STRING):
-            return STRING,
+        if my_pattern.match(string_upper):
+            return string_upper,
         return None
 
 

@@ -77,7 +77,7 @@ def test_syntaxerror(f2003_create, monkeypatch):
     for myinput in [None, "", "  ", "0H", "1H", "2Hx" "2Hxxx", "H20", "xH",
                     "2 Hxx"]:
         with pytest.raises(NoMatchError):
-            _ =  Hollerith_Item(myinput)
+            _ = Hollerith_Item(myinput)
 
 
 def test_internal_error1(f2003_create, monkeypatch):

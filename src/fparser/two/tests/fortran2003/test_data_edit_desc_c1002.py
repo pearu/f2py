@@ -104,7 +104,7 @@ def test_internal_error2(f2003_create, monkeypatch):
                                            ast.items[2], ast.items[3]])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("should be a descriptor name but is empty or None") \
+        assert "should be a descriptor name but is empty or None" \
             in str(excinfo)
 
 
@@ -121,7 +121,7 @@ def test_internal_error3(f2003_create, monkeypatch):
                                            ast.items[2], ast.items[3]])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("should be the w value but is empty or None") in str(excinfo)
+        assert "should be the w value but is empty or None" in str(excinfo)
 
 
 def test_internal_error4(f2003_create, monkeypatch):
@@ -137,7 +137,7 @@ def test_internal_error4(f2003_create, monkeypatch):
                                            content, ast.items[3]])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("should be the m value but is empty or None") in str(excinfo)
+        assert "should be the m value but is empty or None" in str(excinfo)
 
 
 def test_internal_error5(f2003_create, monkeypatch):
@@ -152,7 +152,7 @@ def test_internal_error5(f2003_create, monkeypatch):
                                            ast.items[2], "3"])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("has value '3' but should be None") in str(excinfo)
+        assert "has value '3' but should be None" in str(excinfo)
 
 
 def test_internal_error6(f2003_create, monkeypatch):
@@ -166,4 +166,4 @@ def test_internal_error6(f2003_create, monkeypatch):
                                        ast.items[2], ast.items[3]])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert ("Unexpected descriptor name 'INVALID'") in str(excinfo)
+    assert "Unexpected descriptor name 'INVALID'" in str(excinfo)

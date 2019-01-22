@@ -73,7 +73,7 @@ def test_valid_x_descriptor(f2003_create):
         assert str(result) == "".join(descriptor.split()).upper()
 
 
-def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
+def test_invalid_x_descriptor1(f2003_create, monkeypatch):
     '''Test that the X extension to the standard raises an exception if it
     is not named as a valid extension.
 
@@ -88,7 +88,7 @@ def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
             in str(excinfo.value)
 
 
-def test_valid_x_descriptor_extension(f2003_create, monkeypatch):
+def test_valid_x_descriptor2(f2003_create, monkeypatch):
     '''Test that the X extension to the standard produces the expected
     output if it is named as a valid extension.
 

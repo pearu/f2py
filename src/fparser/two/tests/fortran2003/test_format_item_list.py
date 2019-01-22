@@ -44,7 +44,7 @@ Fortran95. However, Fortran compilers still support it.
 
 import pytest
 from fparser.two.Fortran2003 import Format_Item_List
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.utils import NoMatchError
 
 
 def test_non_hollerith(f2003_create):
@@ -89,7 +89,6 @@ def test_mixed_hollerith_2(f2003_create, monkeypatch):
     myinput = "'HELLO', 2hab"
     ast = Format_Item_List(myinput)
     assert myinput.lower() in str(ast).lower()
-    print (repr(ast))
     assert repr(ast) == (
         "Format_Item_List(',', (Char_Literal_Constant(\"'HELLO'\", None), "
         "Hollerith_Item('ab')))")
@@ -106,7 +105,6 @@ def test_hollerith_only(f2003_create, monkeypatch):
     myinput = "3Habc,2hab"
     ast = Format_Item_List(myinput)
     assert str(ast) == "3Habc, 2Hab"
-    print (repr(ast))
     assert repr(ast) == (
         "Format_Item_List(',', (Hollerith_Item('abc'), "
         "Hollerith_Item('ab')))")
@@ -124,7 +122,6 @@ def test_hollerith_only_spaces(f2003_create, monkeypatch):
     myinput = "  3Habc  ,  2hab  "
     ast = Format_Item_List(myinput)
     assert str(ast) == "3Habc, 2Hab"
-    print (repr(ast))
     assert repr(ast) == (
         "Format_Item_List(',', (Hollerith_Item('abc'), "
         "Hollerith_Item('ab')))")
@@ -141,4 +138,4 @@ def test_errors(f2003_create, monkeypatch):
                     "2Hab,2Ha,2Hab", "2Hab,2Hab x,2Hab", "2Hab,2Hab,2Ha",
                     "2Hab,2Hab,2Hab x"]:
         with pytest.raises(NoMatchError):
-            _ =  Format_Item_List(myinput)
+            _ = Format_Item_List(myinput)

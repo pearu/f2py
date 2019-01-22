@@ -42,7 +42,8 @@ on this class.
 
 import pytest
 from fparser.two.Fortran2003 import Format_Item_C1002
-from fparser.two.utils import NoMatchError, InternalError
+from fparser.two.utils import InternalError
+
 
 def test_data_edit_descriptor_error(f2003_create, monkeypatch):
     '''Check that None is returned if the descriptor following a P edit
@@ -54,12 +55,13 @@ def test_data_edit_descriptor_error(f2003_create, monkeypatch):
     '''
     my_input = "2P F2.3"
     ast = Format_Item_C1002(my_input)
-    from fparser.two import Fortran2003
-    class MyClass:
+
+    # pylint: disable=too-few-public-methods
+    class MyClass(object):
         ''' dummy class '''
         def __init__(self, string):
             self.items = []
-            self.items.append(None)
+            self.items.append(string)
             self.items.append("hello")
     monkeypatch.setattr("fparser.two.Fortran2003.Format_Item", MyClass)
     result = ast.match("2P F2.3")
