@@ -3457,30 +3457,11 @@ def test_format_item_list():  # R1002, R1003
 #
 
 
-def test_main_program():  # R1101
+def test_main_program0():  # R1101 helper
+    '''Test for R1101 when the program statement is not supplied. This
+    case matches with the Main_Program0 class
 
-    tcls = Main_Program
-    obj = tcls(get_reader('''\
-program a
-end
-    '''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
-
-    obj = tcls(get_reader('''\
-program a
-  real b
-  b = 1
-  contains
-  subroutine foo
-  end
-end
-    '''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) ==
-            'PROGRAM a\n  REAL :: b\n  b = 1\n  CONTAINS\n  SUBROUTINE foo\n'
-            '  END SUBROUTINE foo\nEND PROGRAM a')
-
+    '''
     obj0 = Main_Program0(get_reader('''\
 end
     '''))

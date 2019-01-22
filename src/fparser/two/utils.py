@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -75,6 +75,7 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
 
+
 # A list of supported extensions to the standard(s)
 
 # An X edit descriptor in a format statement specifies the position
@@ -85,6 +86,15 @@ from fparser.common.readfortran import FortranReaderBase
 # allows the X edit descriptor to be specified without a preceeding
 # integer.
 EXTENSIONS = ["x-format"]
+
+# Cray pointers are a well known extension to the Fortran
+# standard. See http://pubs.cray.com/content/S-3901/8.6/
+# cray-fortran-reference-manual-s-3901-86/types or
+# https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html for
+# example. If 'cray-pointer' is specified in EXTENSIONS then this
+# extension is allowed in fparser.
+EXTENSIONS += ["cray-pointer"]
+
 
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
