@@ -40,6 +40,7 @@ from __future__ import absolute_import, print_function
 
 import pytest
 
+from fparser.common.utils import AnalyzeError
 from fparser.common.sourceinfo import FortranFormat
 from fparser.one.parsefortran import FortranParser
 from fparser.common.readfortran import FortranStringReader
@@ -132,33 +133,3 @@ end module some_block
     monkeypatch.setattr(mod.a, "implicit_rules", None)
     code = mod.topyf()
     assert "IMPLICIT NONE" in code
-
-
-@pytest.fixture(scope='module',
-                params=[('do i=1, 10\nend do\n',
-                         ['  DO i=1, 10', '  END DO ']),
-                        ('do i=1, x + y\nend do\n',
-                         ['  DO i=1, x + y', '  END DO ']),
-                        ('do i=1, size(array)\nend do\n',
-                         ['  DO i=1, size(array)', '  END DO ']),
-                        ('do i=1, size(this%array)\nend do\n',
-                         ['  DO i=1, size(this%array)', '  END DO '])])
-def do_tests(request):
-    '''
-    Yields tuples of stimulous and expected result strings.
-    '''
-    yield request.param
-
-
-def test_do(do_tests):
-    #pylint: disable=redefined-outer-name
-    '''
-    Tests that the "do" loop parser understands a form of the syntax.
-    '''
-    reader = FortranStringReader(do_tests[0])
-    reader.set_format(FortranFormat(True, False))
-    parser = FortranParser(reader)
-    parser.parse()
-    # Get the "Do" object
-    loop = parser.block.content[0]
-    assert str(loop).splitlines() == do_tests[1]

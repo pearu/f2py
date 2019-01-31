@@ -810,7 +810,8 @@ class EndSubroutine(EndStatement):
     """
     END [SUBROUTINE [name]]
     """
-    match = re.compile(r'end(\s*subroutine\s*\w*|)\Z', re.I).match
+    match = re.compile(r'end\s*(?:subroutine\s*(?:(?P<name>\w+)\s*)?)?$',
+                       re.IGNORECASE).match
 
 
 class Subroutine(SubProgramStatement):
@@ -1145,8 +1146,53 @@ class EndDo(EndStatement):
     """
     END DO [<do-construct-name>]
     """
-    match = re.compile(r'end\s*do\s*\w*\Z', re.I).match
+    match = re.compile(r'end\s*do\s*(?:(?P<name>\w+)\s*)?\Z',
+                       re.IGNORECASE).match
     blocktype = 'do'
+
+    def process_item(self):
+        item = self.item
+        line = item.get_line()
+        matched = self.match(line)
+        # Check for matching labels
+        found_label = getattr(self.item, 'label', None)
+        expected_label = getattr(self.parent, 'endlabel', None)
+        if expected_label:
+            if found_label:
+                if found_label != expected_label:
+                    message = 'When entering the "do" block {start} was' \
+                              + ' given as the end label but {end} was found.'
+                    self.warning(message.format(start=expected_label,
+                                                end=found_label))
+                    self.isvalid = False
+            else:
+                message = 'A label was specified when entering the "do" ' \
+                          + ' block ({label}) but none was found at the end.'
+                self.warning(message.format(label=expected_label))
+                self.isvalid = False
+        # Check for matching names
+        name = matched.group('name') or None
+        if self.parent.construct_name:
+            if name:
+                if name != self.parent.construct_name:
+                    message = 'The "do" block was specified with the name' \
+                              + ' "{open}" but was closed with the name' \
+                              + ' "{close}".'
+                    self.warning(message.format(open=self.parent.construct_name,
+                                                close=name))
+                    self.isvalid = False
+            else:
+                message = 'A name ("{name}") was specified for the "do" block' \
+                          + ' but was not given when closing the block.'
+                self.warning(message.format(name=self.parent.construct_name))
+                self.isvalid = False
+        else:
+            if name:
+                message = 'The name "{name}" was used when closing a "do"' \
+                          + 'block but none was specified when opening it.'
+                self.warning(message.format(name=name))
+                self.isvalid = False
+        return EndStatement.process_item(self)
 
 
 class Do(BeginStatement):
@@ -1157,8 +1203,8 @@ class Do(BeginStatement):
     """
 
     match = re.compile(r'do\b\s*\d*', re.I).match
-    pattern = r'do\b\s*(?P<label>\d*)\s*,?\s*(?P<loopcontrol>.*)\Z'
-    item_re = re.compile(pattern, re.I).match
+    pattern = r'do\b\s*(?:(?P<label>\d+)\s*)?(?:,\s*)?(?P<loopcontrol>.+)?\Z'
+    item_re = re.compile(pattern, re.IGNORECASE).match
     end_stmt_cls = EndDo
     name = ''
 
@@ -1172,13 +1218,13 @@ class Do(BeginStatement):
     def process_item(self):
         item = self.item
         line = item.get_line()
-        m = self.item_re(line)
-        label = m.group('label').strip() or None
-        if label:
-            label = int(label)
-        self.endlabel = label
+        matched = self.item_re(line)
+        if matched.group('label'):
+            self.endlabel = int(matched.group('label').strip())
+        else:
+            self.endlabel = None
         self.construct_name = item.name
-        self.loopcontrol = item.apply_map(m.group('loopcontrol').strip())
+        self.loopcontrol = item.apply_map(matched.group('loopcontrol').strip())
         return BeginStatement.process_item(self)
 
     def process_subitem(self, item):
