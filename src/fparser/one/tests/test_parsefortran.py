@@ -116,7 +116,8 @@ def test_log_failure(log, monkeypatch):
     unit_under_test = fparser.one.parsefortran.FortranParser(reader)
     with pytest.raises(Exception):
         unit_under_test.parse()
-    assert log.messages['debug'][0].startswith('An error occurred during parsing.')
+    assert log.messages['debug'][0] \
+        .startswith('An error occurred during parsing.')
     assert log.messages['info'] == []
     assert log.messages['warning'] == []
     assert log.messages['error'] == []

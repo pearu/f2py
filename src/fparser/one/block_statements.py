@@ -1171,26 +1171,27 @@ class EndDo(EndStatement):
                 self.warning(message.format(label=expected_label))
                 self.isvalid = False
         # Check for matching names
-        name = matched.group('name') or None
-        if self.parent.construct_name:
-            if name:
-                if name != self.parent.construct_name:
+        found_name = matched.group('name') or None
+        expected_name = self.parent.construct_name
+        if expected_name:
+            if found_name:
+                if found_name != expected_name:
                     message = 'The "do" block was specified with the name' \
                               + ' "{open}" but was closed with the name' \
                               + ' "{close}".'
-                    self.warning(message.format(open=self.parent.construct_name,
-                                                close=name))
+                    self.warning(message.format(open=expected_name,
+                                                close=found_name))
                     self.isvalid = False
             else:
-                message = 'A name ("{name}") was specified for the "do" block' \
-                          + ' but was not given when closing the block.'
-                self.warning(message.format(name=self.parent.construct_name))
+                message = 'A name ("{name}") was specified for the "do" ' \
+                          + 'block but was not given when closing the block.'
+                self.warning(message.format(name=expected_name))
                 self.isvalid = False
         else:
-            if name:
+            if found_name:
                 message = 'The name "{name}" was used when closing a "do"' \
                           + 'block but none was specified when opening it.'
-                self.warning(message.format(name=name))
+                self.warning(message.format(name=found_name))
                 self.isvalid = False
         return EndStatement.process_item(self)
 
@@ -1225,7 +1226,8 @@ class Do(BeginStatement):
             self.endlabel = None
         self.construct_name = item.name
         if matched.group('loopcontrol'):
-            self.loopcontrol = item.apply_map(matched.group('loopcontrol').strip())
+            self.loopcontrol \
+                = item.apply_map(matched.group('loopcontrol').strip())
         else:
             self.loopcontrol = None
         return BeginStatement.process_item(self)

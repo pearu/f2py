@@ -32,7 +32,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+'''
+Tests all permutations of the DO block. There are a lot of them.
+'''
 from __future__ import absolute_import, print_function
 
 import pytest
@@ -46,16 +48,19 @@ from fparser.common.readfortran import FortranStringReader
 @pytest.mark.parametrize('name', [None, 'loop_name'])
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
-@pytest.mark.parametrize('initial_expression', ['1'])
-@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('incrament_expression', ['1'])
+@pytest.mark.parametrize('initial_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('terminal_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('incrament_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
 @pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do(name, label, control_comma, initial_expression,
             terminal_expression, incrament_expression, end_name, end_label):
-    #pylint: disable=redefined-outer-name
+    # pylint: disable=redefined-outer-name, too-many-arguments, too-many-locals
     '''
-    Checks that the "do" loop parser understands a form of the syntax.
+    Checks that the "do" loop parser understands all forms of the syntax.
     '''
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None
@@ -97,14 +102,15 @@ def test_do(name, label, control_comma, initial_expression,
 @pytest.mark.parametrize('name', [None, 'loop_name'])
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
-@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('terminal_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
 @pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do_while(name, label, control_comma, terminal_expression,
                   end_name, end_label):
-    #pylint: disable=redefined-outer-name
+    # pylint: disable=redefined-outer-name, too-many-arguments
     '''
-    Checks that the "do while" loop parser understands a form of the syntax.
+    Checks that the "do while" loop parser understands all forms of the syntax.
     '''
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None
@@ -142,19 +148,26 @@ def test_do_while(name, label, control_comma, terminal_expression,
 @pytest.mark.parametrize('name', [None, 'loop_name'])
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
-@pytest.mark.parametrize('typespec', [None, 'logical', 'real(r16)', 'integer(kind=i32)'])
-@pytest.mark.parametrize('initial_expression', ['1'])
-@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('incrament_expression', ['1'])
-@pytest.mark.parametrize('mask_expression', ['1'])
+@pytest.mark.parametrize('typespec',
+                         [None, 'logical', 'real(r16)', 'integer(kind=i32)'])
+@pytest.mark.parametrize('initial_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('terminal_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('incrament_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('mask_expression',
+                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
 @pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do_concurrent(name, label, control_comma, typespec,
-                       initial_expression, terminal_expression, incrament_expression,
-                       mask_expression, end_name, end_label):
-    #pylint: disable=redefined-outer-name
+                       initial_expression, terminal_expression,
+                       incrament_expression, mask_expression,
+                       end_name, end_label):
+    # pylint: disable=redefined-outer-name, too-many-arguments, too-many-locals
     '''
-    Checks that the "do concurrent" loop parser understands a form of the syntax.
+    Checks that the "do concurrent" loop parser understands all forms of the
+    syntax.
     '''
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None

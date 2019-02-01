@@ -141,10 +141,10 @@ from __future__ import print_function
 import logging
 import os
 import re
-import six
 import sys
-import time
 import traceback
+
+import six
 
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote

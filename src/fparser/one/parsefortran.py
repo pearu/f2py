@@ -69,14 +69,13 @@
 # Author: Pearu Peterson <pearu@cens.ioc.ee>
 # Created: May 2006
 
-__autodoc__ = ['FortranParser']
-__all__ = ['FortranParser']
-
-import traceback
 import logging
 
 from fparser.one.block_statements import BeginSource
 from fparser.common.utils import AnalyzeError
+
+__autodoc__ = ['FortranParser']
+__all__ = ['FortranParser']
 
 
 class FortranParser(object):

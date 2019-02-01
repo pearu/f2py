@@ -48,7 +48,6 @@ from fparser.common.readfortran import FortranStringReader
 
 def test_get_type_by_name(monkeypatch):
     ''' Tests for HasImplicitStmt.get_type_by_name(). '''
-    from fparser.common.utils import AnalyzeError
     from fparser.one.typedecl_statements import Real, Integer
     # We can't just create a HasImplicitStmt object so we get the parser
     # to create a module object as that sub-classes HasImplicitStmt (amongst
