@@ -130,16 +130,16 @@ class FortranParser(object):
             raise
         except Exception as error:
             reader = self.reader
+            logger = logging.getLogger(__name__)
             while reader is not None:
                 message = \
                     reader.format_message('FATAL ERROR',
                                           'while processing line',
                                           reader.linecount, reader.linecount)
-                logging.getLogger(__name__).critical(message)
+                logger.critical(message)
                 reader = reader.reader
-            backtrace = ''.join(traceback.format_stack())
-            logging.getLogger(__name__).debug('Traceback\n' + backtrace)
-            logging.getLogger(__name__).critical('STOPPED PARSING')
+            logger.debug('An error occurred during parsing.', exc_info=error)
+            logger.critical('STOPPED PARSING')
             raise error
         return
 

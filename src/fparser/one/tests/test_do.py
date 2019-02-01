@@ -43,85 +43,14 @@ from fparser.one.parsefortran import FortranParser
 from fparser.common.readfortran import FortranStringReader
 
 
-@pytest.fixture(scope='module', params=[None, 'loop_name'])
-def name(request):
-    '''
-    Yields None, then a construct name string.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[None, '123'])
-def label(request):
-    '''
-    Yields None, then a label string.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[True, False])
-def control_comma(request):
-    '''
-    Yields a comma, or not.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=['1'])
-def initial_expression(request):
-    '''
-    Yields a series of loop initial conditions.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module',
-                params=['1',
-                        '10',
-                        'x+y',
-                        'size(array)',
-                        'size(this%array)'])
-def terminal_expression(request):
-    '''
-    Yields a series of loop terminating conditions.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[None, '1'])
-def incrament_expression(request):
-    '''
-    Yields a series of loop incrament expressions.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[None, '1'])
-def mask_expression(request):
-    '''
-    Yields a series of concurrent loop mask expressions.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[None, 'loop_name'])
-def end_name(request):
-    '''
-    Yields a series of potential end of loop names.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module', params=[None, '123'])
-def end_label(request):
-    '''
-    Yields a series of potential end of loop labels.
-    '''
-    yield request.param
-
-@pytest.fixture(scope='module',
-                params=[None,
-                        'logical',
-                        'real(r16)',
-                        'integer(kind=i32)'])
-def typespec(request):
-    '''
-    Yields a series of type specifications.
-    '''
-    yield request.param + ' :: ' if request.param else None
-
+@pytest.mark.parametrize('name', [None, 'loop_name'])
+@pytest.mark.parametrize('label', [None, '123'])
+@pytest.mark.parametrize('control_comma', [False, True])
+@pytest.mark.parametrize('initial_expression', ['1'])
+@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('incrament_expression', ['1'])
+@pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
+@pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do(name, label, control_comma, initial_expression,
             terminal_expression, incrament_expression, end_name, end_label):
     #pylint: disable=redefined-outer-name
@@ -131,6 +60,7 @@ def test_do(name, label, control_comma, initial_expression,
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None
     comma_snippet = ', ' if control_comma else None
+    inc_snippet = ', ' + incrament_expression if incrament_expression else None
     do_code = '''{name}do {label}{comma}variable = {init}, {term}{inc}
   write (6, '(I0)') variable
 {endlabel} end do {endname}
@@ -139,7 +69,7 @@ def test_do(name, label, control_comma, initial_expression,
            comma=comma_snippet or '',
            init=initial_expression,
            term=terminal_expression,
-           inc=incrament_expression or '',
+           inc=inc_snippet or '',
            endlabel=end_label or '',
            endname=end_name or '')
     do_expected = '''  {name}DO {label}variable = {init}, {term}{inc}
@@ -149,10 +79,9 @@ def test_do(name, label, control_comma, initial_expression,
            label=label_snippet or '',
            init=initial_expression,
            term=terminal_expression,
-           inc=incrament_expression or '',
+           inc=inc_snippet or '',
            endlabel=end_label or ' ',
            endname=end_name or '')
-    print(do_code)
     do_reader = FortranStringReader(do_code)
     do_reader.set_format(FortranFormat(True, False))
     do_parser = FortranParser(do_reader)
@@ -164,6 +93,13 @@ def test_do(name, label, control_comma, initial_expression,
         loop = do_parser.block.content[0]
         assert str(loop).splitlines() == do_expected.splitlines()
 
+
+@pytest.mark.parametrize('name', [None, 'loop_name'])
+@pytest.mark.parametrize('label', [None, '123'])
+@pytest.mark.parametrize('control_comma', [False, True])
+@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
+@pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do_while(name, label, control_comma, terminal_expression,
                   end_name, end_label):
     #pylint: disable=redefined-outer-name
@@ -202,6 +138,17 @@ def test_do_while(name, label, control_comma, terminal_expression,
         loop = parser.block.content[0]
         assert str(loop).splitlines() == expected.splitlines()
 
+
+@pytest.mark.parametrize('name', [None, 'loop_name'])
+@pytest.mark.parametrize('label', [None, '123'])
+@pytest.mark.parametrize('control_comma', [False, True])
+@pytest.mark.parametrize('typespec', [None, 'logical', 'real(r16)', 'integer(kind=i32)'])
+@pytest.mark.parametrize('initial_expression', ['1'])
+@pytest.mark.parametrize('terminal_expression', ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+@pytest.mark.parametrize('incrament_expression', ['1'])
+@pytest.mark.parametrize('mask_expression', ['1'])
+@pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
+@pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do_concurrent(name, label, control_comma, typespec,
                        initial_expression, terminal_expression, incrament_expression,
                        mask_expression, end_name, end_label):

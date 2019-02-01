@@ -1224,7 +1224,10 @@ class Do(BeginStatement):
         else:
             self.endlabel = None
         self.construct_name = item.name
-        self.loopcontrol = item.apply_map(matched.group('loopcontrol').strip())
+        if matched.group('loopcontrol'):
+            self.loopcontrol = item.apply_map(matched.group('loopcontrol').strip())
+        else:
+            self.loopcontrol = None
         return BeginStatement.process_item(self)
 
     def process_subitem(self, item):
