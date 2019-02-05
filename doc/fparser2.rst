@@ -217,10 +217,10 @@ for legacy Fortran code.
   
 The 'hollerith' extension adds support in fparser for Hollerith
 constants. This support is currently limited to those specified in
-format statements. There is currently no support for 1) constants
-in DATA statements and 2) as constant actual arguments in subroutine
-CALL statements (which are its other uses as specified in the Fortran
-66 standard).
+format statements. There is currently no support for 1) constants in
+DATA statements and 2) constant actual arguments in subroutine CALL
+statements (which are its other uses as specified in the Fortran 66
+standard).
 
 For more information see
 https://gcc.gnu.org/onlinedocs/gfortran/Hollerith-constants-support.html

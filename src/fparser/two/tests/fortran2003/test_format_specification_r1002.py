@@ -130,6 +130,11 @@ def test_c1002(f2003_create, monkeypatch):
             ast = Format_Specification(my_input)
             assert str(ast) == "(2P, 2{0}2.2)".format(specifier)
 
+    # spaces
+    for my_input in [" ( 2 2 P , / ) ", " ( 2 2 P / ) ", " ( 2 2 P / ) "]:
+        ast = Format_Specification(my_input)
+        assert str(ast) == "(22P, /)"
+
     # Comma is optional before a slash edit descriptor when the
     # optional repeat specification is not present.
     # data-edit-desc

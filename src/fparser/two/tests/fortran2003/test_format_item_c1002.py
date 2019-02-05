@@ -78,7 +78,7 @@ def test_internal_errors1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 2 but found '3'" in str(excinfo)
+    assert "should be length 2 but found '3'" in str(excinfo)
 
 
 def test_internal_error2(f2003_create, monkeypatch):

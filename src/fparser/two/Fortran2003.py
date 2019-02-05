@@ -7256,7 +7256,8 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
         while current_string:
             # Does the current item match the start of a
             # hollerith string?
-            match = re.search('^[1-9][0-9]*[hH]', current_string)
+            pattern = Hollerith_Item.match_pattern
+            match = re.search(pattern, current_string)
             if match:
                 # The current item matches with a hollerith string.
                 match_str = match.group(0)
@@ -7370,8 +7371,8 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
         '''Implements the matching for the C1002 Format Item constraint. The
         constraints specify certain combinations of format items that
         do not need a comma to separate them. Rather than sorting this
-        out when parsing the list, it was decided to treat these as
-        individual and match them in this class. As a result the
+        out when parsing the list, it was decided to treat these
+        separately and match them in this class. As a result the
         generated class hierarchy is a little more complicated.
 
         :param str string: The string to check for conformance with a \
@@ -7395,21 +7396,36 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
         if len(strip_string) <= 1:
             return None
         if strip_string[0] in ':/':
+            # No comma is required after slash edit descriptor (3) or
+            # after a colon edit descriptor (4)
             return Control_Edit_Desc(strip_string[0]), \
                 Format_Item(strip_string[1:].lstrip())
         if strip_string[-1] in ':/':
+            # No comma is required before a slash edit descriptor,
+            # when the optional repeat specification is not present
+            # (2), or before a colon edit descriptor (4). Note, if an
+            # optional repeat specification is present it will be
+            # treated as if it is part of the previous item.
             return Format_Item(strip_string[:-1].rstrip()), \
                 Control_Edit_Desc(strip_string[-1])
-        line, repmap = string_replace_map(strip_string)
         index = 0
-        while index < len(line) and line[index].isdigit():
+        # We may have a P edit descriptor (which requires a number
+        # before the 'P') (1) or a slash edit descriptor with a repeat
+        # specifier (3) so look for the repeat specifier.
+        while index < len(strip_string) and (strip_string[index].isdigit() or
+                                             strip_string[index] == ' '):
             index += 1
         if index:
-            result = line[index].upper()
+            # We found a possible repeat specifier (which may contain
+            # white space)
+            result = strip_string[index].upper()
             if result == '/':
-                return Control_Edit_Desc(repmap(line[:index+1])), \
-                    Format_Item(repmap(line[index+1:].lstrip()))
+                # We found a possible slash edit descriptor with a
+                # repeat specifier (3).
+                return Control_Edit_Desc(strip_string[:index+1]), \
+                    Format_Item(strip_string[index+1:].lstrip())
             elif result == 'P':
+                # We found a possible P edit descriptor (1).
                 # Rule C1002 only allows a comma to be ommited between
                 # a P edit descriptor and a following F, E, EN, ES, D,
                 # or G edit descriptor with an optional repeat
@@ -7418,8 +7434,8 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
                 # Data_Edit_Desc_C1002 instance as its second item
                 # with the data edit descriptor instance's first item
                 # specifying the type of edit descriptor.
-                lhs = Control_Edit_Desc(repmap(line[:index+1]))
-                rhs = Format_Item(repmap(line[index+1:].lstrip()))
+                lhs = Control_Edit_Desc(strip_string[:index+1])
+                rhs = Format_Item(strip_string[index+1:].lstrip())
                 if not isinstance(rhs, Format_Item):
                     return None
                 descriptor_object = rhs.items[1]
@@ -7431,6 +7447,16 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
                                                    'D', 'G']:
                     return None
                 return lhs, rhs
+
+        # Replace any content inside strings etc. so we dont split the
+        # line in the wrong place.
+        line, repmap = string_replace_map(strip_string)
+
+        # Slash and colon edit descriptors may have no comma's both
+        # before and after them (2,3,4) e.g. ('a' / 'b'). To match this
+        # situation we split the line with the first potential descriptor found
+        # in the string and try to match the lhs and rhs separately
+        # (adding the edit descriptor to the RHS).
         for option in '/:':
             if option in line:
                 left, right = line.split(option, 1)
@@ -7443,7 +7469,7 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
         :rtype: str
 
         :raises InternalError: if the length of the internal items \
-        list is not 1.
+        list is not 2.
         :raises InternalError: if the first entry of the internal \
         items list has no content.
         :raises InternalError: if the second entry of the internal \
@@ -7452,8 +7478,8 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
         '''
         if not len(self.items) == 2:
             raise InternalError(
-                "Class Format_Item_C1002 method tostr() should be of size "
-                "2 but found '{0}'".format(len(self.items)))
+                "Class Format_Item_C1002 method tostr(): internal items list "
+                "should be length 2 but found '{0}'".format(len(self.items)))
         if not self.items[0]:
             raise InternalError(
                 "Class Format_Item_C1002 method tostr() items entry 0 should "
@@ -7477,6 +7503,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
     '''
     subclass_names = []
     use_names = []
+    match_pattern = '^[1-9][0-9]*[hH]'
 
     @staticmethod
     def match(string):
@@ -7497,7 +7524,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         # Only strip space to the left as space to the right could be
         # part of the hollerith string.
         strip_string = string.lstrip()
-        match = re.search('^[1-9][0-9]*[hH]', strip_string)
+        match = re.search(Hollerith_Item.match_pattern, strip_string)
         if not match:
             return None
         # Current item matches with a hollerith string.
@@ -7528,8 +7555,8 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         '''
         if not len(self.items) == 1:
             raise InternalError(
-                "Class Hollerith_Item method tostr() should be of size 1 but "
-                "found '{0}'".format(len(self.items)))
+                "Class Hollerith_Item method tostr(): internal items list "
+                "should be of length 1 but found '{0}'".format(len(self.items)))
         if not self.items[0]:
             raise InternalError(
                 "Class Hollerith_Item method tostr() items entry 0 should be "
@@ -7576,18 +7603,28 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         if not strip_string:
             return None
         index = 0
-        while index < len(strip_string) and strip_string[index].isdigit():
+        # Look for an optional repeat specifier (the 'r' in this rule)
+        while index < len(strip_string) and (strip_string[index].isdigit() or
+                                             strip_string[index] == ' '):
             index += 1
         rpart = None
         my_string = strip_string
         if index:
+            # We found a repeat specifier so create an R class using
+            # the value
             rpart = R(strip_string[:index])
             my_string = strip_string[index:].lstrip()
         if not my_string:
+            # There is no content, other than a repeat specifier.
             return None
+        # We deal with format-item-list and data-edit-desc in this
+        # match method. Other matches are performed by the subclasses.
         if my_string[0] == '(' and my_string[-1] == ')':
+            # This could be a format-item-list
             rest = Format_Item_List(my_string[1:-1].strip())
         else:
+            # This is not a format-item-list so see if it is a
+            # data-edit-descriptor
             rest = Data_Edit_Desc(my_string)
         return rpart, rest
 

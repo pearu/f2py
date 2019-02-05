@@ -64,6 +64,13 @@ def test_data_edit_descriptor(f2003_create):
         assert repr(ast) == ("Format_Item(Digit_String('2', None), Data_Edit"
                              "_Desc_C1002('F', Digit_String('2', None), "
                              "Int_Literal_Constant('2', None), None))")
+    # Multi-R
+    for my_input in ["22F2.2", " 2 2 F2.2 "]:
+        ast = Format_Item(my_input)
+        assert my_input.replace(" ", "") in str(ast)
+        assert repr(ast) == ("Format_Item(Digit_String('22', None), Data_Edit"
+                             "_Desc_C1002('F', Digit_String('2', None), "
+                             "Int_Literal_Constant('2', None), None))")
 
 
 def test_control_edit_descriptor(f2003_create):
