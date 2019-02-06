@@ -132,5 +132,4 @@ def test_not_string():
     '''
     with pytest.raises(InternalError) as excinfo:
         _ = STRINGBase.match("hello", 123)
-    assert ("Supplied string should be of type str, but found "
-            "<type 'int'>") in str(excinfo.value)
+    assert ("Supplied string should be of type str") in str(excinfo.value)
