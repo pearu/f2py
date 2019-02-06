@@ -67,7 +67,7 @@ from fparser import api
 def test_reproduce_issue():
     source_str = '''\
       subroutine bndfp()
-      include "events.ins"
+      ! include "events.ins"
       end
 '''
     tree = api.parse(source_str, isfree=False, isstrict=False,
