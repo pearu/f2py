@@ -105,14 +105,14 @@ def test_format_list_descriptor(f2003_create):
 
     '''
     # No R
-    for my_input in ["(F2.2)", " (F2.2) "]:
+    for my_input in ["(F2.2)", " (F2.2) ", " ( F2.2 ) "]:
         ast = Format_Item(my_input)
         assert my_input.replace(" ", "") in str(ast)
         assert repr(ast) == ("Format_Item(None, Format_Item(None, Data_Edit"
                              "_Desc_C1002('F', Digit_String('2', None), Int"
                              "_Literal_Constant('2', None), None)))")
     # R
-    for my_input in ["2(F2.2)", " 2 (F2.2) "]:
+    for my_input in ["2(F2.2)", " 2 (F2.2) "," 2 ( F2.2 ) "]:
         ast = Format_Item(my_input)
         assert my_input.replace(" ", "") in str(ast)
         assert repr(ast) == ("Format_Item(Digit_String('2', None), Format_"
@@ -154,19 +154,19 @@ def test_internal_errors1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 2 but found '3'" in str(excinfo)
+    assert "should be of length 2 but found '3'" in str(excinfo)
 
 
 def test_internal_errors2(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the descriptor item
-    (entry 1 of items) is empty or None as the str() method assumes
-    that it has content.
+    (first entry of items) is empty or None as the str() method
+    assumes that it has content.
 
     '''
-    line = "F2.2"
-    ast = Format_Item(line)
+
+    ast = Format_Item("F2.2")
     monkeypatch.setattr(ast, "items", [ast.items[0], None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert ("items entry 1 should be a valid descriptor item but it "
+    assert ("items list second entry should be a valid descriptor but it "
             "is empty or None") in str(excinfo)

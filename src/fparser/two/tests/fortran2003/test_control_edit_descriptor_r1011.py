@@ -89,7 +89,7 @@ def test_dollar_invalid(f2003_create, monkeypatch):
             _ = Control_Edit_Desc(my_input)
 
 
-def test_errors(f2003_create):
+def test_invalid_format_errors(f2003_create):
     '''Check that invalid format for the match method raises a
     NoMatchError exception.
 
@@ -115,7 +115,7 @@ def test_internal_error1(f2003_create, monkeypatch):
 
 def test_internal_error2(f2003_create, monkeypatch):
     '''Check that an internal error is raised if the descriptor name
-    (entry 1 of items) is empty or None as the str() method assumes
+    (first entry of items) is empty or None as the str() method assumes
     that it is a string with content.
 
     '''

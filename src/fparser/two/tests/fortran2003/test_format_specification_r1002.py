@@ -81,6 +81,7 @@ def test_spaces(f2003_create):
     # spaces before and after the brackets
     my_input = ("  (  )  ")
     ast = Format_Specification(my_input)
+    assert str(ast) == "()"
     # 1: data-edit-desc, 2: r data-edit-desc, 3: control-edit-desc, 4:
     # char-string-edit-desc, 5: format-item-list
     my_input = ("(  E2.2  ,  2E2.2  ,  /  ,  'hello'  ,   "
@@ -111,9 +112,7 @@ def test_c1002(f2003_create, monkeypatch):
     '''
     # Comma is optional between a P edit descriptor and an immediately
     # following F, E, EN, ES, D, or G edit descriptor, possibly
-    # preceded by a repeat specifier. We only check the absence of a
-    # repeat specifier for one case to cut down on the number of
-    # tests.
+    # preceded by a repeat specifier.
     from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for specifier in ['F', 'E', 'EN', 'ES', 'D', 'G']:
@@ -253,13 +252,12 @@ def test_syntaxerror_c1002(f2003_create):
             _ = Format_Specification(my_input)
     # Comma is mandatory after a P descriptor if not one of ['F', 'E',
     # 'EN', 'ES', 'D', 'G'] or not a '/' or a ':'
-    # Test invalid data descriptors ...
-    # Valid syntax.
+    # Test valid syntax.
     for descriptor in ['I', 'B', 'O', 'Z', 'L', 'A']:
         my_input = "(2P, {0}2)".format(descriptor)
         ast = Format_Specification(my_input)
         assert str(ast) == my_input
-    # Invalid syntax.
+    # Test invalid syntax.
         for my_input in ["(2P {0}2)".format(descriptor),
                          "(2P{0}2)".format(descriptor)]:
             with pytest.raises(NoMatchError):

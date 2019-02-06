@@ -35,37 +35,34 @@
 '''Test Fortran 2003 constraint C1002 : This file tests the support
 for a format specification. The standard C1002 tests are performed via
 test_format_specification_r1002.py as the constraints are associated
-with R1002. This file picks up any tests that need to perform directly
-on this class.
+with R1002. This file picks up any tests that need to act directly on
+this class.
 
 '''
 
 import pytest
 from fparser.two.Fortran2003 import Format_Item_C1002
-from fparser.two.utils import InternalError
+from fparser.two.utils import InternalError, NoMatchError
 
 
-def test_data_edit_descriptor_error(f2003_create, monkeypatch):
+def test_data_edit_descriptor_error(f2003_create):
     '''Check that None is returned if the descriptor following a P edit
     descriptor is not of the expected type. What is expected is a
     Format_Item instance containing a Data_Edit_Descriptor as its
     second item. This test checks that we return None if the second
     item is not a Data_Edit_Descriptor.
 
-    '''
-    my_input = "2P F2.3"
-    ast = Format_Item_C1002(my_input)
+    We do this by trying to match with a format-item-list as this is
+    the only other thing that returns a Format_Item instance. However,
+    it does not contain a Data_Edit_Descriptor as its second item so
+    it triggers the appropriate line of code.
 
-    # pylint: disable=too-few-public-methods
-    class MyClass(object):
-        ''' dummy class '''
-        def __init__(self, string):
-            self.items = []
-            self.items.append(string)
-            self.items.append("hello")
-    monkeypatch.setattr("fparser.two.Fortran2003.Format_Item", MyClass)
-    result = ast.match("2P F2.3")
-    assert not result
+    '''
+
+    my_input = "2P ('hello')"
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Format_Item_C1002(my_input)
+    assert "Format_Item_C1002: '2P ('hello')'" in str(excinfo.value)
 
 
 def test_internal_errors1(f2003_create, monkeypatch):
@@ -82,9 +79,8 @@ def test_internal_errors1(f2003_create, monkeypatch):
 
 
 def test_internal_error2(f2003_create, monkeypatch):
-    '''Check that an internal error is raised if the module name (entry 0
-    of items) is empty or None as the str() method assumes that it has
-    content.
+    '''Check that an internal error is raised if entry 0 of items is empty
+    or None as the str() method assumes that it has content.
 
     '''
     line = "2P F2.2"
@@ -97,9 +93,8 @@ def test_internal_error2(f2003_create, monkeypatch):
 
 
 def test_internal_error3(f2003_create, monkeypatch):
-    '''Check that an internal error is raised if the module name (entry 1
-    of items) is empty or None as the str() method assumes that it has
-    content.
+    '''Check that an internal error is raised if entry 1 of items is empty
+    or None as the str() method assumes that it has content.
 
     '''
     line = "2P F2.2"

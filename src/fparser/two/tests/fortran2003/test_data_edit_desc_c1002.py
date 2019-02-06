@@ -33,7 +33,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''Tests for a Fortran 2003 data edit descriptor that only allows
-descriptors that conform to (the first claue in) constraint C1002.
+descriptors that conform to (the first clause in) constraint C1002.
 
 '''
 
@@ -44,25 +44,29 @@ from fparser.two.utils import NoMatchError, InternalError
 
 def test_wd(f2003_create):
     '''Check that valid w.d format specifications are parsed
-    correctly. Also include an example with spaces.
+    correctly. Also include an example with spaces and multiple
+    digits with spaces.
 
     '''
     for descriptor in ["F", "E", "EN", "ES", "G", "D", "f", "e", "en", "En",
                        "eN", "es", "g", "d"]:
         for my_input in ["{0}2.3".format(descriptor),
-                         " {0} 2 . 3 ".format(descriptor)]:
+                         " {0} 2 . 3 ".format(descriptor),
+                         " {0} 2 2 . 3 3 ".format(descriptor)]:
             ast = Data_Edit_Desc_C1002(my_input)
             assert str(ast) == my_input.upper().replace(" ", "")
 
 
 def test_wde(f2003_create):
     '''Check that valid w.dEe format specifications are parsed
-    correctly. Also include an example with spaces.
+    correctly. Also include an example with spaces and multiple
+    digits with spaces.
 
     '''
     for descriptor in ["E", "EN", "ES", "G", "e", "en", "En", "eN", "es", "g"]:
         for my_input in ["{0}2.3E4".format(descriptor),
-                         " {0} 2 . 3 E 4 ".format(descriptor)]:
+                         " {0} 2 . 3 E 4 ".format(descriptor),
+                         " {0} 2 2 . 3 3 E 4 4 ".format(descriptor)]:
             ast = Data_Edit_Desc_C1002(my_input)
             assert str(ast) == my_input.upper().replace(" ", "")
 
@@ -100,8 +104,7 @@ def test_internal_error2(f2003_create, monkeypatch):
     my_input = "E1.2E3"
     ast = Data_Edit_Desc_C1002(my_input)
     for content in [None, ""]:
-        monkeypatch.setattr(ast, "items", [content, ast.items[1],
-                                           ast.items[2], ast.items[3]])
+        monkeypatch.setattr(ast, "items", [content]+list(ast.items[1:]))
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert "should be a descriptor name but is empty or None" \
@@ -148,11 +151,11 @@ def test_internal_error5(f2003_create, monkeypatch):
     '''
     for my_input in ["F1.2", "D1.2"]:
         ast = Data_Edit_Desc_C1002(my_input)
-        monkeypatch.setattr(ast, "items", [ast.items[0], ast.items[1],
-                                           ast.items[2], "3"])
+        monkeypatch.setattr(ast, "items", list(ast.items[0:3])+["3"])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "has value '3' but should be None" in str(excinfo)
+        assert ("has an exponent value '3' but this is not allowed for 'F' "
+                "and 'D' descriptors" in str(excinfo))
 
 
 def test_internal_error6(f2003_create, monkeypatch):
@@ -162,8 +165,7 @@ def test_internal_error6(f2003_create, monkeypatch):
     '''
     my_input = "E1.2E3"
     ast = Data_Edit_Desc_C1002(my_input)
-    monkeypatch.setattr(ast, "items", ["INVALID", ast.items[1],
-                                       ast.items[2], ast.items[3]])
+    monkeypatch.setattr(ast, "items", ["INVALID"]+list(ast.items[1:]))
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert "Unexpected descriptor name 'INVALID'" in str(excinfo)

@@ -50,7 +50,7 @@ def test_hollerith(f2003_create, monkeypatch):
     '''Check that a valid hollerith string is parsed correctly.'''
     from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
-    for myinput in ["2Hab", "  2Hab", "1h ", "7h1234567"]:
+    for myinput in ["2Hab", "  2Hab", "1h ", "7h1234567", " 1 1 H0123456789"]:
         ast = Hollerith_Item(myinput)
         assert str(ast).upper() == myinput.lstrip().upper()
 

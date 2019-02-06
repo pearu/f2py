@@ -7634,28 +7634,30 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         :rtype: str
 
         :raises InternalError: if the length of the internal items \
-        list is not 1.
+        list is not 2.
         :raises InternalError: if the first entry of the internal \
         items list has no content.
 
         '''
         if not len(self.items) == 2:
             raise InternalError(
-                "Class Format_Item method tostr() should be of size 2 but "
-                "found '{0}'".format(len(self.items)))
+                "Class Format_Item method tostr(): internal items list "
+                "should be of length 2 but found '{0}'".
+                format(len(self.items)))
         if not self.items[1]:
             raise InternalError(
-                "Class Format_Item method tostr() items entry 1 should be "
-                "a valid descriptor item but it is empty or None")
+                "Class Format_Item method tostr(): items list second entry "
+                "should be a valid descriptor but it is empty or None")
         rpart = self.items[0]
         rest = self.items[1]
-        if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
-            if rpart:
-                return "{0}{1}".format(rpart, rest)
-            return "{0}".format(rest)
+        
+        rpart_str = ""
         if rpart:
-            return "{0}({1})".format(rpart, rest)
-        return "({0})".format(rest)
+            rpart_str = rpart
+        if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
+            return "{0}{1}".format(rpart_str, rest)
+        return "{0}({1})".format(rpart_str, rest)
+
 
 
 class R(Base):  # R1004
@@ -7726,7 +7728,7 @@ class Data_Edit_Desc_C1002(Base):
             my_str = strip_string[1:].lstrip().upper()
             if '.' in my_str:
                 left, right = my_str.split('.', 1)
-                ieft = left.rstrip()
+                left = left.rstrip()
                 right = right.lstrip()
                 return char, W(left), D(right), None
             return None
@@ -7751,8 +7753,7 @@ class Data_Edit_Desc_C1002(Base):
                 middle = middle.rstrip()
                 right = right.lstrip()
                 return char+char2, W(left), D(middle), E(right)
-            else:
-                return char+char2, W(left), D(right), None
+            return char+char2, W(left), D(right), None
         # Invalid char
         return None
 
@@ -7795,7 +7796,9 @@ class Data_Edit_Desc_C1002(Base):
             if self.items[3]:
                 raise InternalError(
                     "items[3] in Class Data_Edit_Desc_C1002 method tostr() "
-                    "has value '{0}' but should be None".format(self.items[3]))
+                    "has an exponent value '{0}' but this is not allowed for "
+                    "'F' and 'D' descriptors and should therefore be "
+                    "None".format(self.items[3]))
             return "{0}{1}.{2}".format(descriptor_name, self.items[1],
                                        self.items[2])
         elif descriptor_name in ['E', 'EN', 'ES', 'G']:
@@ -7983,8 +7986,8 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
         '$', an R class and a string containing '/' or a K class and a \
         string containing 'P'.
         :rtype: `NoneType`, (`NoneType`, `str`), \
-        (:py:class:`fparser.two.R`, `str`), or \
-        (:py:class:`fparser.two.K`, `str`)
+        (:py:class:`fparser.two.Fortran2003.R`, `str`), or \
+        (:py:class:`fparser.two.Fortran2003.K`, `str`)
 
         '''
         if not string:
@@ -8001,6 +8004,7 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
             return R(strip_string[:-1].rstrip()), '/'
         if strip_string[-1].upper() == 'P':
             return K(strip_string[:-1].rstrip()), 'P'
+        return None
 
     def tostr(self):
         '''
@@ -8012,7 +8016,7 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
         items list has no content.
 
         '''
-        if not len(self.items) == 2:
+        if len(self.items) != 2:
             raise InternalError(
                 "Class Control_Edit_Desc method tostr() has '{0}' items, "
                 "but expecting 2.".format(len(self.items)))
@@ -8063,11 +8067,13 @@ class Position_Edit_Desc(Base):  # R1013
         param str string: contains the Fortran that we are trying to \
         match.
         :return: `None` if there is no match, otherwise a `tuple` of \
-                 size 2 either containing a `string` which is one of \
-                 "T", "TL" or "TR", followed by an `N` class, or \
-                 containing an `N` class, or `None`, followed by an "X".
-        :rtype: `NoneType`, (`str`, :py:class:`fparser.two.N`), \
-        (:py:class:`fparser.two.N`, `str`) or (`NoneType`, `str`)
+        size 2 either containing a `string` which is one of "T", "TL" \
+        or "TR", followed by an `N` class, or containing an `N` class, \
+        or `None`, followed by an "X".
+        :rtype: `NoneType`, (`str`, \
+        :py:class:`fparser.two.Fortran2003.N`), \
+        (:py:class:`fparser.two.Fortran2003.N`, `str`) or (`NoneType`, \
+        `str`)
 
         '''
         if not string:
