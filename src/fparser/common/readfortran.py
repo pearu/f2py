@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -64,6 +64,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
+#
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: May 2006
+# Modified by R. W. Ford STFC Daresbury Lab
 
 """Provides Fortran reader classes.
 
@@ -133,8 +137,6 @@ To read a Fortran code from a string, use `FortranStringReader` class::
         Line('print*,\"a=\",a',(4, 4),'')
 
 """
-# Author: Pearu Peterson <pearu@cens.ioc.ee>
-# Created: May 2006
 
 from __future__ import print_function
 
@@ -143,11 +145,11 @@ import os
 import sys
 import logging
 import traceback
-
 import six
-
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
+
+logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -723,14 +725,16 @@ class FortranReaderBase(object):
                     path = os.path.join(incl_dir, filename)
                     if os.path.exists(path):
                         break
-                if not os.path.isfile(path):  # include file does not exist
-                    dirs = os.pathsep.join(include_dirs)
-                    # According to Fortran standard, INCLUDE line is
-                    # not a Fortran statement.
-                    message = '{!r} not found in {!r}. ' \
-                              + 'INLCUDE line treated as comment line.'
-                    reader.warning(message.format(filename, dirs), item)
-                    item = self.next(ignore_comments)
+                if not os.path.isfile(path):
+                    # The include file does not exist in the specified
+                    # locations.
+                    #
+                    # The Fortran standard states that an INCLUDE line
+                    # is not a Fortran statement. However, fparser is
+                    # a parser not a compiler and some subsequent tool
+                    # might need to make use of this include so we
+                    # return it and let the parser deal with it.
+                    #
                     return item
                 reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(
@@ -1449,7 +1453,7 @@ class FortranStringReader(FortranReaderBase):
                 print*,\"a=\",a
               end
         \'\'\'
-    >>> reader = FortranStringReader(code) 
+    >>> reader = FortranStringReader(code)
 
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
