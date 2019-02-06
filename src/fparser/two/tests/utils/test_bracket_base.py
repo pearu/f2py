@@ -45,9 +45,9 @@ def test_brackets():
     brackets.
 
     '''
-    for lhs, rhs in [["(", ")"], [" ( ", " ) "], ["[", "]"], ["A", "A"],
-                     ["([", "])"], ["{{[(", ")]}}"],
-                     ["  {  {  [  (  ", " ) ] } } "]]:
+    for lhs, rhs in [("(", ")"), (" ( ", " ) "), ("[", "]"), ("A", "A"),
+                     ("([", "])"), ("{{[(", ")]}}"),
+                     ("  {  {  [  (  ", " ) ] } } ")]:
         brackets = lhs + rhs
         input_text = brackets.replace(' ', '')
         result = BracketBase.match(brackets, None, input_text,
@@ -62,24 +62,30 @@ def test_input_too_short():
 
     '''
     brackets = "(())"
-    input_text = "()"
+    input_text = "(H)"
     result = BracketBase.match(brackets, None, input_text,
                                require_cls=False)
     assert result is None
 
 
 def test_cls():
-    '''Test the bracketsbase match method with content within the
-    brackets for both require_cls is False and True.
+    '''Test the bracketsbase match method with content within the brackets
+    for both require_cls is False and True. require_cls indicates
+    whether content should be expected within the brackets (and the
+    match failing if not), or whether it is optional. The actual
+    contents are passed on to the specified class ('Name' in this
+    case) to match (or not), hence the name require_cls.
 
     '''
     for require in [False, True]:
-        for lhs, rhs in [["(", ")"], [" ( ", " ) "], ["[", "]"], ["A", "A"],
-                         ["([", "])"], ["{{[(", ")]}}"]]:
+        for lhs, rhs in [("(", ")"), (" ( ", " ) "), ("[", "]"), ("A", "A"),
+                         ("([", "])"), ("{{[(", ")]}}")]:
             brackets = lhs + rhs
             input_text = lhs + "hello" + rhs
-            _ = BracketBase.match(brackets, Name, input_text,
-                                  require_cls=require)
+            result = BracketBase.match(brackets, Name, input_text,
+                                       require_cls=require)
+            assert str(result) == "('{0}', Name('hello'), '{1}')".format(
+                lhs.replace(' ', ''), rhs.replace(' ', ''))
 
 
 def test_brackets_error1():

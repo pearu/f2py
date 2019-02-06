@@ -35,10 +35,11 @@
 '''File containing unit tests for the STRINGBase baseclass in
 utils.py'''
 
-from fparser.two.utils import STRINGBase
+import pytest
+from fparser.two.utils import STRINGBase, InternalError
 
 
-def test_stringbase_string():
+def test_string():
     '''Test the STRINGbase match method with a string pattern.'''
 
     pattern = "HELLO"
@@ -48,7 +49,7 @@ def test_stringbase_string():
         assert str(result[0]) == pattern
 
 
-def test_stringbase_re():
+def test_re():
     '''Test the STRINGbase match method with a regular expression.'''
 
     import re
@@ -59,7 +60,7 @@ def test_stringbase_re():
         assert str(result[0]) == my_input.upper()
 
 
-def test_stringbase_list():
+def test_list():
     '''Test the STRINGbase match method with a list.'''
 
     import re
@@ -72,7 +73,7 @@ def test_stringbase_list():
         assert str(result[0]) == my_input.upper()
 
 
-def test_stringbase_tuple():
+def test_tuple():
     '''Test the STRINGbase match method with a tuple.'''
 
     import re
@@ -85,7 +86,7 @@ def test_stringbase_tuple():
         assert str(result[0]) == my_input.upper()
 
 
-def test_stringbase_pattern_class():
+def test_pattern_class():
     '''Test the STRINGbase match method with a pattern instance as
     specified in pattern_tools.py.
 
@@ -97,3 +98,39 @@ def test_stringbase_pattern_class():
         result = STRINGBase.match(pattern, my_input)
         assert repr(result) == "('{0}',)".format(my_input.upper())
         assert str(result[0]) == my_input.upper()
+
+
+def test_invalid_pattern():
+    '''Test the STRINGbase match method with an invalid type of
+    pattern.
+
+    '''
+
+    for invalid_pattern in [ None, 123]:
+        with pytest.raises(InternalError) as excinfo:
+            _ = STRINGBase.match(invalid_pattern, "hello")
+        assert ("Supplied pattern should be a list, tuple, str or regular "
+                "expression but found {0}".format(type(invalid_pattern))) \
+                in str(excinfo.value)
+
+
+def test_None_string():
+    '''Test the STRINGbase match method returns None when the string is
+    None.
+
+    '''
+    result = STRINGBase.match("hello", None)
+    assert result is None
+
+
+def test_not_string():
+    '''Test that the STRINGbase match method returns an internal error
+    when the string argument is not a string (and is not None), as this
+    is not something we would expect and so would indicate that
+    something serious has gone wrong.
+
+    '''
+    with pytest.raises(InternalError) as excinfo:
+        _ = STRINGBase.match("hello", 123)
+    assert ("Supplied string should be of type str, but found "
+            "<type 'int'>") in str(excinfo.value)

@@ -905,7 +905,7 @@ class BracketBase(Base):
         bracket_len = len(brackets_nospc)//2
         left = brackets_nospc[:bracket_len]
         right = brackets_nospc[-bracket_len:]
-        if len(string_strip) < bracket_len:
+        if len(string_strip) < bracket_len*2:
             return None
         if not (string_strip.startswith(left) and
                 string_strip.endswith(right)):
@@ -1070,10 +1070,9 @@ string
 
 
 class STRINGBase(StringBase):
-    '''STRING-base is XYZ. Matches an upper case version of the input
-    string with a pattern (typically taken from pattern.py) and
-    returns the string in upper case if there is a match. Supports
-    patterns being specified hierarchically (as lists and/or tuples).
+    '''STRINGBase matches an upper case version of the input string with
+    another a pattern (typically taken from pattern_tools.py) and
+    returns the string in upper case if there is a match.
 
     '''
 
@@ -1083,15 +1082,18 @@ class STRINGBase(StringBase):
         to upper case before performing a match and, if there is a
         match, returns the string in upper case.
 
-        The input pattern can be a list or a tuple. If this is the
-        case then all of the contents of the list or tuple are
-        searched for a match. This functionality can be used to
-        recurse down a tree of lists and or tuples until regular
-        expressions or strings are found (at the leaves of the tree)
-        on which to match. The patterns used to match in fparser can
-        be found in patterns_tools.py. These make use of the pattern
-        class, whose match method behaves like a regular
-        expression. For example:
+        The pattern can be a regular expression, a string, a list or a
+        tuple. If the input pattern is a regular expression or a
+        string, a direct equivalence is performed. If the input pattern is a
+        list or a tuple, then all of the contents of the list
+        or tuple are searched for a match (by recursing). The list or tuple may
+        contain regular expressions, strings, lists or tuples. This
+        functionality can be used to recurse down a tree of lists and
+        or tuples until regular expressions or strings are found (at
+        the leaves of the tree) on which to match. The patterns used
+        to match in fparser can be found in patterns_tools.py. These
+        make use of the pattern class, whose match method behaves like
+        a regular expression. For example:
 
         from fparser.two import pattern_tools
         pattern = pattern_tools.intrinsic_type_name
@@ -1105,8 +1107,12 @@ class STRINGBase(StringBase):
         :rtype: `NoneType` or ( `str` )
 
         '''
-        if not string:
+        if string is None:
             return None
+        if not isinstance(string, str):
+            raise InternalError(
+                "Supplied string should be of type str, but found "
+                "{0}".format(type(string)))
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
@@ -1118,8 +1124,13 @@ class STRINGBase(StringBase):
             if len(my_pattern) == len(string) and my_pattern == string_upper:
                 return string_upper,
             return None
-        if my_pattern.match(string_upper):
-            return string_upper,
+        try:
+            if my_pattern.match(string_upper):
+                return string_upper,
+        except AttributeError:
+            raise InternalError(
+                "Supplied pattern should be a list, tuple, str or regular "
+                "expression but found {0}".format(type(my_pattern)))
         return None
 
 

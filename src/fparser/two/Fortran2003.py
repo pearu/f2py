@@ -7503,7 +7503,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
     '''
     subclass_names = []
     use_names = []
-    match_pattern = '^[1-9][0-9]*[hH]'
+    match_pattern = '^[1-9][0-9 ]*[hH]'
 
     @staticmethod
     def match(string):
@@ -7529,7 +7529,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
             return None
         # Current item matches with a hollerith string.
         match_str = match.group(0)
-        hol_length_str = match_str[:-1]
+        hol_length_str = match_str[:-1].replace(' ', '')
         hol_length = int(hol_length_str)
         num_chars = len(match_str) + hol_length
         if len(strip_string) < num_chars:

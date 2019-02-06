@@ -50,9 +50,13 @@ def test_hollerith(f2003_create, monkeypatch):
     '''Check that a valid hollerith string is parsed correctly.'''
     from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
-    for myinput in ["2Hab", "  2Hab", "1h ", "7h1234567", " 1 1 H0123456789"]:
+    for myinput in ["2Hab", "  2Hab", "1h ", "7h1234567", " 1 1 H01234567890"]:
         ast = Hollerith_Item(myinput)
-        assert str(ast).upper() == myinput.lstrip().upper()
+        expected = myinput.upper()
+        # Remove any spaces before the H (but not after).
+        lhs, rhs = expected.split('H')
+        expected = lhs.replace(' ', '')+'H'+rhs
+        assert str(ast).upper() == expected
 
 
 def test_repr(f2003_create, monkeypatch):
@@ -74,8 +78,7 @@ def test_syntaxerror(f2003_create, monkeypatch):
     '''
     from fparser.two import utils
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
-    for myinput in [None, "", "  ", "0H", "1H", "2Hx" "2Hxxx", "H20", "xH",
-                    "2 Hxx"]:
+    for myinput in [None, "", "  ", "0H", "1H", "2Hx" "2Hxxx", "H20", "xH"]:
         with pytest.raises(NoMatchError):
             _ = Hollerith_Item(myinput)
 
@@ -123,17 +126,5 @@ def test_invalid_hollerith(f2003_create, monkeypatch):
     myinput = "2Hab"
     with pytest.raises(NoMatchError) as excinfo:
         _ = Hollerith_Item(myinput)
-        assert "Hollerith_Item: '{0}'".format(myinput) \
-            in str(excinfo.value)
-
-
-def test_valid_hollerith(f2003_create, monkeypatch):
-    '''Test that the hollerith extension to the standard produces the
-    expected output if it is named as a valid extension.
-
-    '''
-    from fparser.two import utils
-    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
-    myinput = "2Hab"
-    result = Hollerith_Item(myinput)
-    assert str(result) == myinput
+    assert "Hollerith_Item: '{0}'".format(myinput) \
+        in str(excinfo.value)
