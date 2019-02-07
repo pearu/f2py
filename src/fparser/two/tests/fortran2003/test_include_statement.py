@@ -32,8 +32,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran Include Statement: This file tests that we succesfully
-parse an include statement. Whilst include is not part of the standard
+'''Test Fortran Include Statement: This file tests the parsing of an
+include statement. Whilst include is not part of the standard Fortran
 rules (the include should include code as the code is being parsed)
 there are cases where users might like to keep the include statement
 in the Fortran parse tree and output it again.
@@ -47,7 +47,7 @@ from fparser.two.utils import NoMatchError
 
 
 def test_include_stmt(f2003_create):
-    '''Check that a basic Cray-pointer statement is parsed
+    '''Check that a basic include statement is parsed
     correctly. Input separately as a string and as a reader object
 
     '''
@@ -55,7 +55,8 @@ def test_include_stmt(f2003_create):
         '''Internal helper function to avoid code replication.'''
         ast = Include_Stmt(reader)
         assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
-        assert repr(ast) == ("****")
+        assert repr(ast) == ("Include_Stmt(Include_Filename("
+                             "'my-non-existant-file.inc'))")
 
     line = "include 'my-non-existant-file.inc'"
     check_include(line)
@@ -64,36 +65,45 @@ def test_include_stmt(f2003_create):
 
 
 def test_spaces(f2003_create):
-    '''Check that spaces are allowed.'''
+    '''Check that spaces are allowed before and after an include keyword
+    as well as after the file string.
+
+    '''
     line = " include 'my-non-existant-file.inc' "
-    ast = include_Stmt(line)
-    assert "POINTER(a, b)" in str(ast)
+    ast = Include_Stmt(line)
+    assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
 
 
 def test_no_space(f2003_create):
-    '''Check that spaces are allowed.'''
+    '''Check that no space is required between the include keyword and the
+    file string.
+
+    '''
     line = "include'my-non-existant-file.inc'"
     ast = Include_Stmt(line)
-    assert "POINTER(a, b)" in str(ast)
+    assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
 
 
 def test_case(f2003_create):
-    '''Check that different case is allowed.'''
+    '''Check that different case is allowed for the include keyword.'''
     line = "InClUdE 'my-non-existant-file.inc'"
     ast = Include_Stmt(line)
-    assert "POINTER(a, b)" in str(ast)
+    assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
 
 
 def test_double_quotes(f2003_create):
-    '''Check that different case is allowed.'''
+    '''Check that double quotes are allowed for the file string.'''
     line = 'include "my-non-existant-file.inc"'
     ast = Include_Stmt(line)
-    assert "POINTER(a, b)" in str(ast)
+    assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
 
 
 def test_errors(f2003_create):
     '''Check that syntax errors produce a NoMatchError exception.'''
-    for line in ["", "  "]:
+    for line in [None, "", "  ", "includ", "include", "includ 'x'", "include",
+                 "include ''", "include \"x'", "include 'x\"", "include 'xxx",
+                 "include \"xxx", "include xxx'", "include xxx\"",
+                 "include x'x'", "include 'x'x", "x include 'x'"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Include_Stmt(line)
         assert "Include_Stmt: '{0}'".format(line) in str(excinfo)

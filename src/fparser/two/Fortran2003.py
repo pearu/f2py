@@ -287,9 +287,7 @@ class Include_Stmt(Base):
         # Incorrect 'Include' statement or line too short
         if line[:7].upper() != 'INCLUDE':
             return None
-        print (string)
         rhs = line[7:].strip()
-        print (rhs)
         if not rhs:
             return None
         if len(rhs) < 3:
@@ -297,7 +295,6 @@ class Include_Stmt(Base):
             return None
         if not (rhs[0]=="'" and rhs[-1]=="'" or rhs[0]=='"' and rhs[-1]=='"'):
             return None
-        print ("Extracting file name")
         file_name = rhs[1:-1]
         name = Include_Filename(file_name)
         return name,
