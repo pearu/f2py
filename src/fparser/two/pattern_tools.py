@@ -287,6 +287,7 @@ if dollar_ok:
     name = Pattern('<name>', r'[A-Z][\w$]*', flags=re.I)
 else:
     name = Pattern('<name>', r'[A-Z]\w*', flags=re.I)
+file_name = Pattern('<file_name>', r'[\w][\w ]*', flags=re.I)
 digit = Pattern('<digit>', r'\d')
 underscore = Pattern('<underscore>', '_')
 binary_digit = Pattern('<binary-digit>', r'[01]')

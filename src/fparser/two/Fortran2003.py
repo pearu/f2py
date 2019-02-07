@@ -253,6 +253,63 @@ class Program(BlockBase):  # R201
         return content,
 
 
+class Include_Filename(StringBase):
+    ''' xxx '''
+    # There are no other classes. This is a simple string match.
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Match the string with the regular expression abs_name in the
+        pattern_tools file.
+
+        :param str string: the string to match with the pattern rule.
+        :return: a tuple of size 1 containing a string with the \
+        matched name if there is a match, or None if there is not.
+        :rtype: (str) or None
+
+        '''
+        return StringBase.match(pattern.file_name, string)
+
+
+class Include_Stmt(Base):
+    ''' xxx
+
+    include-stmt is INCLUDE filename
+    '''
+    use_names = ['Include_File_Name']
+    @staticmethod
+    def match(string):
+        ''' xxx '''
+        if not string:
+            return None
+        line = string.strip()
+        # Incorrect 'Include' statement or line too short
+        if line[:7].upper() != 'INCLUDE':
+            return None
+        print (string)
+        rhs = line[7:].strip()
+        print (rhs)
+        if not rhs:
+            return None
+        if len(rhs) < 3:
+            # At least quotes and one character
+            return None
+        if not (rhs[0]=="'" and rhs[-1]=="'" or rhs[0]=='"' and rhs[-1]=='"'):
+            return None
+        print ("Extracting file name")
+        file_name = rhs[1:-1]
+        name = Include_Filename(file_name)
+        return name,
+
+    def tostr(self):
+        '''
+        :return: this kind_selector as a string
+        :rtype: str
+        '''
+
+        return ("INCLUDE '{0}'".format(self.items[0]))
+
 class Program_Unit(Base):  # R202
     """
 :F03R:`202`::
