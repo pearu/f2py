@@ -166,9 +166,10 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments(content, reader):
-    '''Creates comment objects and adds them to the content list. Comment
-    objects are added until a line that is not a comment is found.
+def add_c_and_i(content, reader):
+    '''Creates comment and/or include objects and adds them to the content
+    list. Comment and/or include objects are added until a line that
+    is not a comment or include is found.
 
     :param content: a `list` of matched objects. Any matched comments \
                     in this routine are added to this list.
@@ -180,9 +181,13 @@ def add_comments(content, reader):
 
     '''
     obj = Comment(reader)
+    if not obj:
+        obj = Include_Stmt(reader)
     while obj:
         content.append(obj)
         obj = Comment(reader)
+        if not obj:
+            obj = Include_Stmt(reader)
 
 
 class Program(BlockBase):  # R201
@@ -231,12 +236,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments(content, reader)
+        add_c_and_i(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments(content, reader)
+                add_c_and_i(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines

@@ -415,13 +415,14 @@ content : tuple
         :return: instance of startcls or None if no match is found
         :rtype: startcls
         '''
-        from fparser.two.Fortran2003 import Comment, add_comments
+        from fparser.two.Fortran2003 import Comment, Include_Stmt, \
+            add_c_and_i
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
-            # Deal with any preceding comments
-            add_comments(content, reader)
+            # Deal with any preceding comments and/or includes
+            add_c_and_i(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -443,8 +444,8 @@ content : tuple
             if match_names:
                 start_name = obj.get_start_name()
 
-        # A comment is always a valid sub-class
-        classes = subclasses + [Comment]
+        # Comments and Include statements are always valid sub-classes
+        classes = subclasses + [Comment, Include_Stmt]
         if endcls is not None:
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
