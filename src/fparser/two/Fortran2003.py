@@ -253,49 +253,78 @@ class Program(BlockBase):  # R201
         return content,
 
 
-class Include_Filename(StringBase):
-    ''' xxx '''
+class Include_Filename(StringBase):  # pylint: disable=invalid-name
+
+    '''Implements the matching of a filename from an include statement.'''
     # There are no other classes. This is a simple string match.
     subclass_names = []
 
     @staticmethod
     def match(string):
-        '''Match the string with the regular expression abs_name in the
-        pattern_tools file.
+        '''Match the string with the regular expression file_name in the
+        pattern_tools file. The only content that is not accepted is
+        an empty string or white space at the start or end of the
+        string.
 
         :param str string: the string to match with the pattern rule.
         :return: a tuple of size 1 containing a string with the \
         matched name if there is a match, or None if there is not.
-        :rtype: (str) or None
+        :rtype: (str) or NoneType
 
         '''
         return StringBase.match(pattern.file_name, string)
 
 
-class Include_Stmt(Base):
-    ''' xxx
+class Include_Stmt(Base):  # pylint: disable=invalid-name
 
-    include-stmt is INCLUDE filename
+    '''Implements the matching of a Fortran include statement. There is no
+    rule for this as the compiler is expected to inline any content
+    from an include statement when one is found. However, for a parser
+    it can make sense to represent an include statement in a parse
+    tree.
+
+    include-stmt is INCLUDE ['filename' or "filename"]
+
     '''
-    use_names = ['Include_File_Name']
+    use_names = ['Include_Filename']
+
     @staticmethod
     def match(string):
-        ''' xxx '''
+        '''Implements the matching for an include statement.
+
+        :param str string: the string to match with as an include \
+        file.
+        :returns: a tuple of size 1 containing an Include_Filename \
+        object with the matched filename if there is a match, or None \
+        if there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`) \
+        or NoneType
+
+        '''
         if not string:
             return None
         line = string.strip()
-        # Incorrect 'Include' statement or line too short
         if line[:7].upper() != 'INCLUDE':
+            # The line does not start with the include token and/or the line
+            # is too short.
             return None
         rhs = line[7:].strip()
         if not rhs:
+            # There is no content after the include token
             return None
         if len(rhs) < 3:
-            # At least quotes and one character
+            # The content after the include token is too short to be
+            # valid (it must at least contain quotes and one
+            # character.
             return None
-        if not (rhs[0]=="'" and rhs[-1]=="'" or rhs[0]=='"' and rhs[-1]=='"'):
+        if not ((rhs[0] == "'" and rhs[-1] == "'") or
+                (rhs[0] == '"' and rhs[-1] == '"')):
+            # The filename should be surrounded by single or double
+            # quotes but this is not the case.
             return None
+        # Remove the quotes.
         file_name = rhs[1:-1]
+        # Pass the potential filename to the relevant class.
         name = Include_Filename(file_name)
         return name,
 
@@ -306,6 +335,7 @@ class Include_Stmt(Base):
         '''
 
         return ("INCLUDE '{0}'".format(self.items[0]))
+
 
 class Program_Unit(Base):  # R202
     """

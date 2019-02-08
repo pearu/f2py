@@ -65,9 +65,9 @@ def test_valid_include_filename(f2003_create):
 
 
 def test_invalid_include_filename(f2003_create):
-    '''As the file name is not really part of Fortran we apply very loose
-    rules to what is valid. The only things we don't accept are an empty
-    string or white space at the start or end of the string.
+    '''As the file name is not part of the Fortran standard, we apply very
+    loose rules to what is valid. The only things we don't accept are
+    an empty string or white space at the start or end of the string.
 
     '''
     for string in ["", " ", " x.inc", "x.inc ", " x.inc "]:
