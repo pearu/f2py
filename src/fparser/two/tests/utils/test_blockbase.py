@@ -86,3 +86,4 @@ def test_include(f2003_create):
         "'CONTAINS'), Include_Stmt(Include_Filename('5')), Comment("
         "'! comment5')), End_Program_Stmt('PROGRAM', Name('test'))],)") \
         in str(result)
+    assert "should" not in str(result)
