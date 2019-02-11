@@ -1151,6 +1151,11 @@ class EndDo(EndStatement):
     blocktype = 'do'
 
     def process_item(self):
+        '''
+        Parses the next line assuming it is an "End do" statement.
+
+        Overrides method in `EndStatement`.
+        '''
         item = self.item
         line = item.get_line()
         matched = self.match(line)
@@ -1217,6 +1222,11 @@ class Do(BeginStatement):
         return ' '.join(lst)
 
     def process_item(self):
+        '''
+        Parses the next line assuming it is a "Do" statement.
+
+        Overrides method in `BeginStatement`.
+        '''
         item = self.item
         line = item.get_line()
         matched = self.item_re(line)
@@ -1233,16 +1243,16 @@ class Do(BeginStatement):
         return BeginStatement.process_item(self)
 
     def process_subitem(self, item):
-        r = False
+        result = False
         if self.endlabel:
             label = item.label
             if label == self.endlabel:
-                r = True
+                result = True
                 if isinstance(self.parent,
                               Do) and label == self.parent.endlabel:
                     # the same item label may be used for different block ends
                     self.put_item(item)
-        return BeginStatement.process_subitem(self, item) or r
+        return BeginStatement.process_subitem(self, item) or result
 
     def get_classes(self):
         return execution_part_construct

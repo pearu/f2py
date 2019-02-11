@@ -33,7 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
-Tests all permutations of the DO block. There are a lot of them.
+Tests the parser against "do" block syntax.
+
+This is a complicated piece of syntax with many axes of movement. A
+comprehensive testing was felt to be too onerous so this stripped down
+version checks only a subset. Hopefully it is representative.
 '''
 from __future__ import absolute_import, print_function
 
@@ -56,8 +60,9 @@ def test_do(name, label, control_comma, terminal_expression,
             end_name, end_label):
     # pylint: disable=redefined-outer-name, too-many-arguments, too-many-locals
     '''
-    Checks that the "do" loop parser understands all forms of the syntax.
-    
+    Checks that the "do" loop parser understands the "for-next" variant of
+    the syntax. This is defined in BS ISO/IEC 1539-1:2010 with R814-R822.
+
     TODO: Only the terminal expression is tested. This is a short-cut and
           relies on expression handling being applied identically across
           all expressions. This was true at the time of writing the test.
@@ -67,7 +72,8 @@ def test_do(name, label, control_comma, terminal_expression,
     comma_snippet = ', ' if control_comma else None
     # TODO: Although the Fortran standard allows for "continue" to be used in
     # place of "end do" fparser does not support it.
-    end_snippet = 'continue' if end_name == 'continue' else 'end do {endname}'.format(endname=end_name or '')
+    end_snippet = 'continue' if end_name == 'continue' \
+                  else 'end do {endname}'.format(endname=end_name or '')
     do_code = '''{name}do {label}{comma}variable = 1, {term}, 1
   write (6, '(I0)') variable
 {endlabel} {end}
@@ -108,7 +114,8 @@ def test_do_while(name, label, control_comma, terminal_expression,
                   end_name, end_label):
     # pylint: disable=redefined-outer-name, too-many-arguments
     '''
-    Checks that the "do while" loop parser understands all forms of the syntax.
+    Checks that the "do" loop parser understands the "do-while" variant of
+    the syntax. This is defined in BS ISO/IEC 1539-1:2010 with R814-R822.
     '''
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None
@@ -141,4 +148,3 @@ def test_do_while(name, label, control_comma, terminal_expression,
         parser.parse()
         loop = parser.block.content[0]
         assert str(loop).splitlines() == expected.splitlines()
-
