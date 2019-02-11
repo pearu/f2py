@@ -48,43 +48,41 @@ from fparser.common.readfortran import FortranStringReader
 @pytest.mark.parametrize('name', [None, 'loop_name'])
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
-@pytest.mark.parametrize('initial_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('terminal_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('incrament_expression',
                          ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
 @pytest.mark.parametrize('end_label', [None, '123', '456'])
-def test_do(name, label, control_comma, initial_expression,
-            terminal_expression, incrament_expression, end_name, end_label):
+def test_do(name, label, control_comma, terminal_expression,
+            end_name, end_label):
     # pylint: disable=redefined-outer-name, too-many-arguments, too-many-locals
     '''
     Checks that the "do" loop parser understands all forms of the syntax.
+    
+    TODO: Only the terminal expression is tested. This is a short-cut and
+          relies on expression handling being applied identically across
+          all expressions. This was true at the time of writing the test.
     '''
     name_snippet = name + ': ' if name else None
     label_snippet = label + ' ' if label else None
     comma_snippet = ', ' if control_comma else None
-    inc_snippet = ', ' + incrament_expression if incrament_expression else None
-    do_code = '''{name}do {label}{comma}variable = {init}, {term}{inc}
+    # TODO: Although the Fortran standard allows for "continue" to be used in
+    # place of "end do" fparser does not support it.
+    end_snippet = 'continue' if end_name == 'continue' else 'end do {endname}'.format(endname=end_name or '')
+    do_code = '''{name}do {label}{comma}variable = 1, {term}, 1
   write (6, '(I0)') variable
-{endlabel} end do {endname}
+{endlabel} {end}
 '''.format(name=name_snippet or '',
            label=label_snippet or '',
            comma=comma_snippet or '',
-           init=initial_expression,
            term=terminal_expression,
-           inc=inc_snippet or '',
            endlabel=end_label or '',
-           endname=end_name or '')
-    do_expected = '''  {name}DO {label}variable = {init}, {term}{inc}
+           end=end_snippet)
+    do_expected = '''  {name}DO {label}variable = 1, {term}, 1
     WRITE (6, '(I0)') variable
 {endlabel} END DO {endname}
 '''.format(name=name_snippet or '',
            label=label_snippet or '',
-           init=initial_expression,
            term=terminal_expression,
-           inc=inc_snippet or '',
            endlabel=end_label or ' ',
            endname=end_name or '')
     do_reader = FortranStringReader(do_code)
@@ -103,7 +101,7 @@ def test_do(name, label, control_comma, initial_expression,
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
 @pytest.mark.parametrize('terminal_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
+                         ['1', 'x+y', 'size(array)', 'size(this%array)'])
 @pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
 @pytest.mark.parametrize('end_label', [None, '123', '456'])
 def test_do_while(name, label, control_comma, terminal_expression,
@@ -144,69 +142,3 @@ def test_do_while(name, label, control_comma, terminal_expression,
         loop = parser.block.content[0]
         assert str(loop).splitlines() == expected.splitlines()
 
-
-@pytest.mark.parametrize('name', [None, 'loop_name'])
-@pytest.mark.parametrize('label', [None, '123'])
-@pytest.mark.parametrize('control_comma', [False, True])
-@pytest.mark.parametrize('typespec',
-                         [None, 'logical', 'real(r16)', 'integer(kind=i32)'])
-@pytest.mark.parametrize('initial_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('terminal_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('incrament_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('mask_expression',
-                         ['1', '10', 'x+y', 'size(array)', 'size(this%array)'])
-@pytest.mark.parametrize('end_name', [None, 'loop_name', 'wrong_name'])
-@pytest.mark.parametrize('end_label', [None, '123', '456'])
-def test_do_concurrent(name, label, control_comma, typespec,
-                       initial_expression, terminal_expression,
-                       incrament_expression, mask_expression,
-                       end_name, end_label):
-    # pylint: disable=redefined-outer-name, too-many-arguments, too-many-locals
-    '''
-    Checks that the "do concurrent" loop parser understands all forms of the
-    syntax.
-    '''
-    name_snippet = name + ': ' if name else None
-    label_snippet = label + ' ' if label else None
-    comma_snippet = ', ' if control_comma else None
-    inc_snippet = ':' + incrament_expression if incrament_expression else None
-    mask_snippet = ', ' + mask_expression if mask_expression else None
-    code = '''{name}do {label}{comma}concurrent ({tspec}variable={init}:{term}{inc}{mask})
-  write (6, '(I0)') variable
-{endlabel} end do {endname}
-'''.format(name=name_snippet or '',
-           label=label_snippet or '',
-           comma=comma_snippet or '',
-           tspec=typespec or '',
-           init=initial_expression,
-           term=terminal_expression,
-           inc=inc_snippet or '',
-           mask=mask_snippet or '',
-           endlabel=end_label or '',
-           endname=end_name or '')
-    expected = '''  {name}DO {label}concurrent ({tspec}variable={init}:{term}{inc}{mask})
-    WRITE (6, '(I0)') variable
-{endlabel} END DO {endname}
-'''.format(name=name_snippet or '',
-           label=label_snippet or '',
-           tspec=typespec or '',
-           init=initial_expression,
-           term=terminal_expression,
-           inc=inc_snippet or '',
-           mask=mask_snippet or '',
-           endlabel=end_label or ' ',
-           endname=end_name or '')
-    print(code)
-    reader = FortranStringReader(code)
-    reader.set_format(FortranFormat(True, False))
-    parser = FortranParser(reader)
-    if (name != end_name) or (label and (label != end_label)):
-        with pytest.raises(AnalyzeError):
-            parser.parse()
-    else:
-        parser.parse()
-        loop = parser.block.content[0]
-        assert str(loop).splitlines() == expected.splitlines()
