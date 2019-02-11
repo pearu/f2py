@@ -395,6 +395,7 @@ class Comment(object):
         self.comment = comment
         self.span = linenospan
         self.reader = reader
+        self.line = comment
 
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s)' \

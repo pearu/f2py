@@ -341,7 +341,7 @@ def test_base_free_continuation(log):
 
 
 def check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir):
+                        expected, tmpdir, ignore_comments=True):
     ''' xxx '''
     try:
         oldpwd = tmpdir.chdir()
@@ -354,9 +354,11 @@ def check_include_works(fortran_filename, fortran_code, include_info,
             with open(os.path.join(cwd, include_filename), "w") as cfile:
                 cfile.write(include_info[include_filename])
         from fparser.common.readfortran import FortranFileReader
-        reader = FortranFileReader(fortran_filename)
-        for line in expected.split("\n"):
-            assert reader.next().strline == line
+        reader = FortranFileReader(fortran_filename,
+                                   ignore_comments=ignore_comments)
+        for orig_line in expected.split("\n"):
+            new_line = reader.next().line
+            assert new_line == orig_line
         with pytest.raises(StopIteration):
             reader.next()
     finally:
@@ -383,6 +385,28 @@ def test_include1(tmpdir):
 
 def test_include2(tmpdir):
     '''Test that FortranReaderBase can parse an include file when the
+    original and include files both files have multiple lines.
+
+    '''
+    fortran_filename = "prog.f90"
+    include_filename = "my-include.h"
+    fortran_code = ("module include_test\n"
+                    "  include '{0}'\n"
+                    "end module include_test".format(include_filename))
+    include_code = ("interface mpi_sizeof\n"
+                    "subroutine simple()\n"
+                    "end subroutine simple\n"
+                    "end interface mpi_sizeof")
+    split_code = fortran_code.split("\n")
+    expected = split_code[0] + "\n" + include_code + "\n" + split_code[2]
+    include_info = {}
+    include_info[include_filename] = include_code
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+def test_include3(tmpdir):
+    '''Test that FortranReaderBase can parse an include file when the
     original program is invalid without the include.
 
     '''
@@ -399,7 +423,7 @@ def test_include2(tmpdir):
                         expected, tmpdir)
 
 
-def test_include3(tmpdir):
+def test_include4(tmpdir):
     '''Test that FortranReaderBase can parse a multiple include files.'''
     fortran_filename = "prog.f90"
     include_filename1 = "prog.inc1"
@@ -421,7 +445,7 @@ def test_include3(tmpdir):
 
 @pytest.mark.xfail(reason="issue xx: nested includes are not supported by "
                    "the reader")
-def test_include4(tmpdir):
+def test_include5(tmpdir):
     '''Test that FortranReaderBase can parse nested include files.'''
     fortran_filename = "prog.f90"
     include_filename1 = "prog.inc1"
@@ -440,8 +464,59 @@ def test_include4(tmpdir):
                         expected, tmpdir)
 
 
-#with and without comment stripping
-#andy's example
+def test_include6(tmpdir):
+    '''Test that FortranReaderBase can parse an include file correctly
+    when it contains comments and the comments are removed by the file
+    reader.
+
+    '''
+    fortran_filename = "prog.f90"
+    include_filename = "prog.inc"
+    fortran_code = ("program test\n"
+                    "  ! prog comment 1\n"
+                    "  include '{0}'\n"
+                    "  ! prog comment 2\n"
+                    "end program".format(include_filename))
+    include_code = ("! include comment 1\n"
+                    "print *, 'Hello'\n"
+                    "! include comment 2")
+    expected = ("program test\n"
+                "print *, 'Hello'\n"
+                "end program")
+    include_info = {}
+    include_info[include_filename] = include_code
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+def test_include7(tmpdir):
+    '''Test that FortranReaderBase can parse an include file correctly
+    when it contains comments and the comments are kept by the file
+    reader.
+
+    '''
+    fortran_filename = "prog.f90"
+    include_filename = "prog.inc"
+    fortran_code = ("program test\n"
+                    "  ! prog comment 1\n"
+                    "  include '{0}'\n"
+                    "  ! prog comment 2\n"
+                    "end program".format(include_filename))
+    include_code = ("! include comment 1\n"
+                    "print *, 'Hello'\n"
+                    "! include comment 2")
+    expected = ("program test\n"
+                "! prog comment 1\n"
+                "! include comment 1\n"
+                "print *, 'Hello'\n"
+                "! include comment 2\n"
+                "! prog comment 2\n"
+                "end program")
+    include_info = {}
+    include_info[include_filename] = include_code
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir, ignore_comments=False)
+
 
 ##############################################################################
 
