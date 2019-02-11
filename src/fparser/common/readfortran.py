@@ -708,9 +708,22 @@ class FortranReaderBase(object):
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    return next(self.reader)
-                except StopIteration:
-                    self.reader = None
+                    # Manually check to see if something has not
+                    # matched and has been placed in the fifo. We
+                    # can't use _next() as this method is associated
+                    # with the include reader (self.reader._next()),
+                    # not this reader (self._next()).
+                    return self.fifo_item.pop(0)
+                except IndexError:
+                    # There is nothing in the fifo buffer.
+                    try:
+                        # Return a line from the include.
+                        return self.reader._next(ignore_comments)
+                    except StopIteration:
+                        # There is nothing left in the include
+                        # file. Setting reader to None indicates that
+                        # we should now read from the main reader.
+                        self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader

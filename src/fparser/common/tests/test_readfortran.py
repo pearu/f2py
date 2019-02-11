@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2019 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -339,6 +339,109 @@ def test_base_free_continuation(log):
     result = log.messages['error'][0].split('<==')[1].lstrip()
     assert result == expected
 
+
+def check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir):
+    ''' xxx '''
+    try:
+        oldpwd = tmpdir.chdir()
+        cwd = str(tmpdir)
+        
+        # Create the program
+        with open(os.path.join(cwd, fortran_filename), "w") as cfile:
+            cfile.write(fortran_code)
+        for include_filename in include_info.keys():
+            with open(os.path.join(cwd, include_filename), "w") as cfile:
+                cfile.write(include_info[include_filename])
+        from fparser.common.readfortran import FortranFileReader
+        reader = FortranFileReader(fortran_filename)
+        for line in expected.split("\n"):
+            assert reader.next().strline == line
+        with pytest.raises(StopIteration):
+            reader.next()
+    finally:
+        oldpwd.chdir()
+
+
+def test_include1(tmpdir):
+    '''Test that FortranReaderBase can parse an include file when the
+    original program consists only of an include.
+
+    '''
+    fortran_filename = "prog.f90"
+    include_filename = "prog.inc"
+    fortran_code = ("include '{0}'".format(include_filename))
+    include_code = ("program test\n"
+                    "print *, 'Hello'\n"
+                    "end program")
+    expected = include_code
+    include_info = {}
+    include_info[include_filename] = include_code
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+def test_include2(tmpdir):
+    '''Test that FortranReaderBase can parse an include file when the
+    original program is invalid without the include.
+
+    '''
+    fortran_filename = "prog.f90"
+    include_filename = "prog.inc"
+    fortran_code = ("program test\n"
+                    "include '{0}'".format(include_filename))
+    include_code = ("print *, 'Hello'\n"
+                    "end program")
+    expected = fortran_code.split("\n")[0] + "\n" + include_code
+    include_info = {}
+    include_info[include_filename] = include_code
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+def test_include3(tmpdir):
+    '''Test that FortranReaderBase can parse a multiple include files.'''
+    fortran_filename = "prog.f90"
+    include_filename1 = "prog.inc1"
+    include_filename2 = "prog.inc2"
+    fortran_code = ("program test\n"
+                    "include '{0}'\n"
+                    "include '{1}'".format(include_filename1,
+                                           include_filename2))
+    include_code1 = ("print *, 'Hello'\n")
+    include_code2 = ("end program")
+    expected = fortran_code.split("\n")[0] + "\n" + include_code1 + \
+               include_code2
+    include_info = {}
+    include_info[include_filename1] = include_code1
+    include_info[include_filename2] = include_code2
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+@pytest.mark.xfail(reason="issue xx: nested includes are not supported by "
+                   "the reader")
+def test_include4(tmpdir):
+    '''Test that FortranReaderBase can parse nested include files.'''
+    fortran_filename = "prog.f90"
+    include_filename1 = "prog.inc1"
+    include_filename2 = "prog.inc2"
+    fortran_code = ("program test\n"
+                    "include '{0}'".format(include_filename1))
+    include_code1 = ("print *, 'Hello'\n"
+                     "include '{0}'".format(include_filename2))
+    include_code2 = ("end program")
+    expected = fortran_code.split("\n")[0] + "\n" + \
+               include_code1.split("\n")[0] + "\n" + include_code2
+    include_info = {}
+    include_info[include_filename1] = include_code1
+    include_info[include_filename2] = include_code2
+    check_include_works(fortran_filename, fortran_code, include_info,
+                        expected, tmpdir)
+
+
+#with and without comment stripping
+#andy's example
 
 ##############################################################################
 
