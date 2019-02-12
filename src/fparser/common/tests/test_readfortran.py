@@ -342,7 +342,10 @@ def test_base_free_continuation(log):
 
 def check_include_works(fortran_filename, fortran_code, include_info,
                         expected, tmpdir, ignore_comments=True):
-    ''' xxx '''
+    '''Utility function used by a number of tests to check that a include
+    files work as expected.
+
+    '''
     try:
         oldpwd = tmpdir.chdir()
         cwd = str(tmpdir)
@@ -365,6 +368,17 @@ def check_include_works(fortran_filename, fortran_code, include_info,
         oldpwd.chdir()
 
 
+FORTRAN_CODE = ("program test\n"
+                "  ! prog comment 1\n"
+                "  print *, 'Hello'\n"
+                "  ! prog comment 2\n"
+                "end program")
+
+EXPECTED_CODE = ("program test\n"
+                 "print *, 'Hello'\n"
+                 "end program")
+
+
 def test_include1(tmpdir):
     '''Test that FortranReaderBase can parse an include file when the
     original program consists only of an include.
@@ -373,14 +387,11 @@ def test_include1(tmpdir):
     fortran_filename = "prog.f90"
     include_filename = "prog.inc"
     fortran_code = ("include '{0}'".format(include_filename))
-    include_code = ("program test\n"
-                    "print *, 'Hello'\n"
-                    "end program")
-    expected = include_code
+    include_code = EXPECTED_CODE
     include_info = {}
     include_info[include_filename] = include_code
     check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir)
+                        EXPECTED_CODE, tmpdir)
 
 
 def test_include2(tmpdir):
@@ -416,11 +427,10 @@ def test_include3(tmpdir):
                     "include '{0}'".format(include_filename))
     include_code = ("print *, 'Hello'\n"
                     "end program")
-    expected = fortran_code.split("\n")[0] + "\n" + include_code
     include_info = {}
     include_info[include_filename] = include_code
     check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir)
+                        EXPECTED_CODE, tmpdir)
 
 
 def test_include4(tmpdir):
@@ -443,7 +453,7 @@ def test_include4(tmpdir):
                         expected, tmpdir)
 
 
-@pytest.mark.xfail(reason="issue xx: nested includes are not supported by "
+@pytest.mark.xfail(reason="issue 175: nested includes are not supported by "
                    "the reader")
 def test_include5(tmpdir):
     '''Test that FortranReaderBase can parse nested include files.'''
@@ -455,44 +465,17 @@ def test_include5(tmpdir):
     include_code1 = ("print *, 'Hello'\n"
                      "include '{0}'".format(include_filename2))
     include_code2 = ("end program")
-    expected = fortran_code.split("\n")[0] + "\n" + \
-               include_code1.split("\n")[0] + "\n" + include_code2
     include_info = {}
     include_info[include_filename1] = include_code1
     include_info[include_filename2] = include_code2
     check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir)
+                        EXPECTED_CODE, tmpdir)
 
 
-def test_include6(tmpdir):
-    '''Test that FortranReaderBase can parse an include file correctly
-    when it contains comments and the comments are removed by the file
-    reader.
-
-    '''
-    fortran_filename = "prog.f90"
-    include_filename = "prog.inc"
-    fortran_code = ("program test\n"
-                    "  ! prog comment 1\n"
-                    "  include '{0}'\n"
-                    "  ! prog comment 2\n"
-                    "end program".format(include_filename))
-    include_code = ("! include comment 1\n"
-                    "print *, 'Hello'\n"
-                    "! include comment 2")
-    expected = ("program test\n"
-                "print *, 'Hello'\n"
-                "end program")
-    include_info = {}
-    include_info[include_filename] = include_code
-    check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir)
-
-
-def test_include7(tmpdir):
-    '''Test that FortranReaderBase can parse an include file correctly
-    when it contains comments and the comments are kept by the file
-    reader.
+def test_include6(tmpdir, ignore_comments):
+    '''Check that FortranReaderBase can parse an include file correctly
+    when it contains comments. Test with and without comments being
+    ignored.
 
     '''
     fortran_filename = "prog.f90"
@@ -505,74 +488,105 @@ def test_include7(tmpdir):
     include_code = ("! include comment 1\n"
                     "print *, 'Hello'\n"
                     "! include comment 2")
-    expected = ("program test\n"
-                "! prog comment 1\n"
-                "! include comment 1\n"
-                "print *, 'Hello'\n"
-                "! include comment 2\n"
-                "! prog comment 2\n"
-                "end program")
     include_info = {}
     include_info[include_filename] = include_code
+    if ignore_comments:
+        expected = EXPECTED_CODE
+    else:
+        expected = ("program test\n"
+                    "! prog comment 1\n"
+                    "! include comment 1\n"
+                    "print *, 'Hello'\n"
+                    "! include comment 2\n"
+                    "! prog comment 2\n"
+                    "end program")
     check_include_works(fortran_filename, fortran_code, include_info,
-                        expected, tmpdir, ignore_comments=False)
+                        expected, tmpdir, ignore_comments=ignore_comments)
 
 
-def test_get_item_no_comments():
-    '''Check the get_item() function works as expected when
-    ignore_comments is set to True in the reader.
-
-    '''
-    fortran_code = ("program test\n"
-                    "  ! prog comment 1\n"
-                    "  print *, 'Hello'\n"
-                    "  ! prog comment 2\n"
-                    "end program")
-    expected = ("program test\n"
-                "print *, 'Hello'\n"
-                "end program")
-    expected_line = expected.split("\n")
-    reader = FortranStringReader(fortran_code, ignore_comments=True)
-    output_line = reader.get_item(ignore_comments=False)
-    idx = 0
-    while output_line:
-        assert expected_line[idx] in output_line.line
-        output_line = reader.get_item(ignore_comments=False)
-        idx += 1
-
-
-def test_get_item_comments():
-    '''Check the get_item() function works as expected when
-    ignore_comments is set to False in the reader.
+def test_get_item(ignore_comments):
+    '''Check the get_item() function works as expected. Test with and
+    without comments being ignored.
 
     '''
-    fortran_code = ("program test\n"
-                    "  ! prog comment 1\n"
-                    "  print *, 'Hello'\n"
-                    "  ! prog comment 2\n"
+    if ignore_comments:
+        expected = EXPECTED_CODE
+    else:
+        expected = ("program test\n"
+                    "! prog comment 1\n"
+                    "print *, 'Hello'\n"
+                    "! prog comment 2\n"
                     "end program")
-    expected = ("program test\n"
-                "! prog comment 1\n"
-                "print *, 'Hello'\n"
-                "! prog comment 2\n"
-                "end program")
     expected_line = expected.split("\n")
-    reader = FortranStringReader(fortran_code, ignore_comments=False)
-    output_line = reader.get_item()
-    idx = 0
-    while output_line:
-        assert expected_line[idx] in output_line.line
+    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
+    while True:
         output_line = reader.get_item()
-        idx += 1
+        if not output_line:
+            break
+        assert expected_line.pop(0) in output_line.line
 
 
-#def test_put_item():
-#    '''test that when we consume a line we can push it back so it can be
-#    consumed again.'''
+def test_put_item(ignore_comments):
+    '''Check that when a line is consumed it can be pushed back so it can
+    be consumed again. Test with and without comments being
+    ignored.
+
+    '''
+    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=False)
+    while True:
+        orig_line = reader.get_item()
+        if not orig_line:
+            break
+        reader.put_item(orig_line)
+        fifo_line = reader.get_item()
+        assert fifo_line == orig_line
 
 
-# get_item(ignore_comments) - check we can override - line by line?
-# test get_item(), put_item(), next()
+def test_put_item_include(ignore_comments):
+    '''Check that when a line that has been included via an include
+    statement is consumed it can be pushed back so it can be consumed
+    again. Test with and without ignoring comments.
+
+    '''
+    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
+    while True:
+        orig_line = reader.get_item()
+        if not orig_line:
+            break
+        reader.put_item(orig_line)
+        fifo_line = reader.get_item()
+        assert fifo_line == orig_line
+
+
+def test_multi_put_item(ignore_comments):
+    '''Check that multiple lines can be pushed back and will be returned
+    correctly in the specified order. Test with and without ignoring
+    comments.
+
+    '''
+    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
+    orig_lines = []
+    while True:
+        orig_line = reader.get_item()
+        if not orig_line:
+            break
+        orig_lines.append(orig_line)
+
+    for line in orig_lines:
+        reader.put_item(orig_line)
+
+    while True:
+        fifo_line = reader.get_item()
+        if not fifo_line:
+            break
+        assert fifo_line == orig_lines.pop(0)
+
+
+# Issue 177: get_item(ignore_comments) - how does ignore_comments affect
+# processing?
+
+# Issue 178: Why is there a next() as well as a get_item()? How do they
+# (and put_item()) interact?
 
 
 ##############################################################################
