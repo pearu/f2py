@@ -349,7 +349,7 @@ def check_include_works(fortran_filename, fortran_code, include_info,
     try:
         oldpwd = tmpdir.chdir()
         cwd = str(tmpdir)
-        
+
         # Create the program
         with open(os.path.join(cwd, fortran_filename), "w") as cfile:
             cfile.write(fortran_code)
@@ -445,7 +445,7 @@ def test_include4(tmpdir):
     include_code1 = ("print *, 'Hello'\n")
     include_code2 = ("end program")
     expected = fortran_code.split("\n")[0] + "\n" + include_code1 + \
-               include_code2
+        include_code2
     include_info = {}
     include_info[include_filename1] = include_code1
     include_info[include_filename2] = include_code2
@@ -453,8 +453,6 @@ def test_include4(tmpdir):
                         expected, tmpdir)
 
 
-@pytest.mark.xfail(reason="issue 175: nested includes are not supported by "
-                   "the reader")
 def test_include5(tmpdir):
     '''Test that FortranReaderBase can parse nested include files.'''
     fortran_filename = "prog.f90"
@@ -560,8 +558,8 @@ def test_put_item_include(ignore_comments):
 
 def test_multi_put_item(ignore_comments):
     '''Check that multiple lines can be pushed back and will be returned
-    correctly in the specified order. Test with and without ignoring
-    comments.
+    correctly in the specified order (actually the reverse of the
+    original). Test with and without ignoring comments.
 
     '''
     reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
@@ -573,14 +571,14 @@ def test_multi_put_item(ignore_comments):
         orig_lines.append(orig_line)
 
     for line in orig_lines:
-        reader.put_item(orig_line)
+        reader.put_item(line)
 
     while True:
         fifo_line = reader.get_item()
         if not fifo_line:
             break
-        assert fifo_line == orig_lines.pop(0)
-
+        assert fifo_line == orig_lines.pop(-1)
+    assert not orig_lines
 
 # Issue 177: get_item(ignore_comments) - how does ignore_comments affect
 # processing?

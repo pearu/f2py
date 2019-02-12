@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -381,20 +381,27 @@ class SyntaxErrorLine(Line, FortranReaderError):
 
 
 class Comment(object):
-    """ Holds Fortran comment.
+    '''Holds a Fortran comment.
 
-    Attributes
-    ----------
-    comment : str
-      comment multiline string
-    span : 2-tuple
-      starting and ending line numbers
-    reader : FortranReaderBase
-    """
+    :param str comment: String containing the text of a single or \
+    multi-line comment
+    :param linenospan: A 2-tuple containing the start and end line \
+    numbers of the comment from the input source.
+    :type linenospan: (int, int)
+    :param reader: The reader object being used to read the input \
+    source.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
+    '''
     def __init__(self, comment, linenospan, reader):
+
         self.comment = comment
         self.span = linenospan
         self.reader = reader
+        # self.line provides a common way to retrieve the content from
+        # either a 'Line' or a 'Comment' class. This is useful for
+        # tests as a reader can return an instance of either class and
+        # we might want to check the contents is a constistent way.
         self.line = comment
 
     def __repr__(self):
@@ -689,20 +696,15 @@ class FortranReaderBase(object):
         return self.next()
 
     def next(self, ignore_comments=None):
-        """ Return the next Fortran code item.
+        '''Return the next Fortran code item. Include statements are dealt
+        with here.
 
-        Include statements are realized.
+        :param bool ignore_comments: When True then act as if Fortran \
+          code does not contain any comments or blank lines. if this \
+          optional arguement is not provided then use the default \
+          value.
 
-        Parameters
-        ----------
-        ignore_comments : bool
-          When True then act as if Fortran code does not contain
-          any comments or blank lines.
-
-        See also
-        --------
-        _next, get_source_item
-        """
+        '''
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
         try:
@@ -719,7 +721,7 @@ class FortranReaderBase(object):
                     # There is nothing in the fifo buffer.
                     try:
                         # Return a line from the include.
-                        return self.reader._next(ignore_comments)
+                        return self.reader.next(ignore_comments)
                     except StopIteration:
                         # There is nothing left in the include
                         # file. Setting reader to None indicates that
@@ -1463,7 +1465,7 @@ class FortranStringReader(FortranReaderBase):
                 print*,\"a=\",a
               end
         \'\'\'
-    >>> reader = FortranStringReader(code) 
+    >>> reader = FortranStringReader(code)
 
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
