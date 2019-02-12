@@ -518,9 +518,68 @@ def test_include7(tmpdir):
                         expected, tmpdir, ignore_comments=False)
 
 
+def test_get_item_no_comments():
+    '''Check the get_item() function works as expected when
+    ignore_comments is set to True in the reader.
+
+    '''
+    fortran_code = ("program test\n"
+                    "  ! prog comment 1\n"
+                    "  print *, 'Hello'\n"
+                    "  ! prog comment 2\n"
+                    "end program")
+    expected = ("program test\n"
+                "print *, 'Hello'\n"
+                "end program")
+    expected_line = expected.split("\n")
+    reader = FortranStringReader(fortran_code, ignore_comments=True)
+    output_line = reader.get_item(ignore_comments=False)
+    idx = 0
+    while output_line:
+        assert expected_line[idx] in output_line.line
+        output_line = reader.get_item(ignore_comments=False)
+        idx += 1
+
+
+def test_get_item_comments():
+    '''Check the get_item() function works as expected when
+    ignore_comments is set to False in the reader.
+
+    '''
+    fortran_code = ("program test\n"
+                    "  ! prog comment 1\n"
+                    "  print *, 'Hello'\n"
+                    "  ! prog comment 2\n"
+                    "end program")
+    expected = ("program test\n"
+                "! prog comment 1\n"
+                "print *, 'Hello'\n"
+                "! prog comment 2\n"
+                "end program")
+    expected_line = expected.split("\n")
+    reader = FortranStringReader(fortran_code, ignore_comments=False)
+    output_line = reader.get_item()
+    idx = 0
+    while output_line:
+        assert expected_line[idx] in output_line.line
+        output_line = reader.get_item()
+        idx += 1
+
+
+#def test_put_item():
+#    '''test that when we consume a line we can push it back so it can be
+#    consumed again.'''
+
+
+# get_item(ignore_comments) - check we can override - line by line?
+# test get_item(), put_item(), next()
+
+
 ##############################################################################
 
-FULL_FREE_SOURCE = '''
+FULL_FREE_SOURCE =
+
+    '''
 program test
 
   implicit none
