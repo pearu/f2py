@@ -568,16 +568,21 @@ def test_multi_put_item(ignore_comments):
         orig_line = reader.get_item()
         if not orig_line:
             break
-        orig_lines.append(orig_line)
+        # Make sure our original lines are kept in reverse order.
+        orig_lines.insert(0, orig_line)
 
+    # Put back original lines in reverse order as that is what we
+    # would expect when processing and rolling back.
     for line in orig_lines:
         reader.put_item(line)
 
+    # Lines should now be returned in the correct order (so compare in
+    # reverse order with the original line list)
     while True:
-        fifo_line = reader.get_item()
-        if not fifo_line:
+        filo_line = reader.get_item()
+        if not filo_line:
             break
-        assert fifo_line == orig_lines.pop(-1)
+        assert filo_line == orig_lines.pop(-1)
     assert not orig_lines
 
 # Issue 177: get_item(ignore_comments) - how does ignore_comments affect
