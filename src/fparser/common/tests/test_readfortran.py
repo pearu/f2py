@@ -577,9 +577,7 @@ def test_get_item_comments():
 
 ##############################################################################
 
-FULL_FREE_SOURCE =
-
-    '''
+FULL_FREE_SOURCE = '''
 program test
 
   implicit none
