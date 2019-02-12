@@ -530,7 +530,7 @@ def test_put_item(ignore_comments):
     ignored.
 
     '''
-    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=False)
+    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
     while True:
         orig_line = reader.get_item()
         if not orig_line:
