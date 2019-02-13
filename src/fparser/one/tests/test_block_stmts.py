@@ -36,17 +36,19 @@
 '''
 File containing tests for the one.block_statements module.
 '''
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
+
 import pytest
+
+from fparser.common.utils import AnalyzeError
+from fparser.common.sourceinfo import FortranFormat
+from fparser.one.parsefortran import FortranParser
+from fparser.common.readfortran import FortranStringReader
 
 
 def test_get_type_by_name(monkeypatch):
     ''' Tests for HasImplicitStmt.get_type_by_name(). '''
-    from fparser.common.utils import AnalyzeError
-    from fparser.common.readfortran import FortranStringReader
-    from fparser.common.sourceinfo import FortranFormat
     from fparser.one.typedecl_statements import Real, Integer
-    from fparser.one.parsefortran import FortranParser
     # We can't just create a HasImplicitStmt object so we get the parser
     # to create a module object as that sub-classes HasImplicitStmt (amongst
     # other things).
@@ -75,10 +77,7 @@ end module some_block
 def test_get_type_by_name_implicit():
     ''' Tests for HasImplicitStmt.get_type_by_name() when the source code
     contains IMPLICIT statements. '''
-    from fparser.common.readfortran import FortranStringReader
-    from fparser.common.sourceinfo import FortranFormat
     from fparser.one.typedecl_statements import Real, Integer
-    from fparser.one.parsefortran import FortranParser
     # We can't just create a HasImplicitStmt object so we get the parser
     # to create a module object as that sub-classes HasImplicitStmt (amongst
     # other things).
@@ -108,9 +107,6 @@ end module some_block
 
 def test_implicit_topyf(monkeypatch):
     ''' Tests for the topyf() method of HasImplicitStmt. '''
-    from fparser.common.readfortran import FortranStringReader
-    from fparser.common.sourceinfo import FortranFormat
-    from fparser.one.parsefortran import FortranParser
     # We can't just create a HasImplicitStmt object so we get the parser
     # to create a module object as that sub-classes HasImplicitStmt (amongst
     # other things).
@@ -127,7 +123,7 @@ end module some_block
     # Get the module object
     mod = parser.block.content[0]
     code = mod.topyf()
-    assert "! default IMPLICIT rules apply" in code
+    assert "! default IMPLICIT rules apply" not in code
     mod.content[0].analyze()
     mod.content[1].analyze()
     code = mod.topyf()
