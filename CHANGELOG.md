@@ -11,6 +11,11 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+17/01/2019 PR #137 for #125. Fixes an error in dealing with the case
+           when the names of a program and end program do not match.
+
+17/01/2019 PR #159. Adds support for the Cray pointer extension.
+
 09/01/2019 PR #156 for #142. Bug fixes for the Binary and Unary
            Operator types.
 
