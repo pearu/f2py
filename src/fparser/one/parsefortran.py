@@ -90,6 +90,7 @@ class FortranParser(object):
 
     def __init__(self, reader, ignore_comments=True):
         self.reader = reader
+        logging.getLogger(__name__).setLevel(logging.DEBUG)
         if reader.id in self.cache:
             parser = self.cache[reader.id]
             self.block = parser.block

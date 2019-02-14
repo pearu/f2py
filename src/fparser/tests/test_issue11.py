@@ -62,17 +62,18 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
+import pytest
 from fparser import api
 
+@pytest.mark.xfail(reason="Fails in fparser1 as the reader now passes "
+                   "include onto the parser if the include is not found")
 def test_reproduce_issue():
     source_str = '''\
       subroutine bndfp()
-      ! include "events.ins"
+        include "events.ins"
       end
 '''
     tree = api.parse(source_str, isfree=False, isstrict=False,
                      ignore_comments=False)
-    print(tree)
-    return
     assert str(tree).strip().split('\n')[1:]=='''
     '''.strip().split('\n')[1:]

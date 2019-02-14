@@ -100,7 +100,7 @@ def test_double_quotes(f2003_create):
 
 def test_errors(f2003_create):
     '''Check that syntax errors produce a NoMatchError exception.'''
-    for line in [None, "", "  ", "includ", "include", "includ 'x'", "include",
+    for line in [None, "", "  ", "includ", "includ 'x'", "include",
                  "include ''", "include \"x'", "include 'x\"", "include 'xxx",
                  "include \"xxx", "include xxx'", "include xxx\"",
                  "include x'x'", "include 'x'x", "x include 'x'"]:

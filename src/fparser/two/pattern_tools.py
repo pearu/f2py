@@ -287,6 +287,10 @@ if dollar_ok:
     name = Pattern('<name>', r'[A-Z][\w$]*', flags=re.I)
 else:
     name = Pattern('<name>', r'[A-Z]\w*', flags=re.I)
+# file_name pattern is start of match '^' to end of match '$', either
+# match a single character that is not space '\S', or '|' a single
+# character that is not space at the start '\S' and end '\S' of the
+# match with anything '.*' inbetween.
 file_name = Pattern('<file_name>', '^(\S|\S.*\S)$', flags=re.I)
 digit = Pattern('<digit>', r'\d')
 underscore = Pattern('<underscore>', '_')

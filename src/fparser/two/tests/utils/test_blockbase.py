@@ -36,8 +36,8 @@
 
 from fparser.two.utils import BlockBase
 
-# TODO: full testing of this class. We currently only test the comment
-# and include support.
+# TODO #179: full testing of this class. We currently only test the
+# comment and include support.
 
 
 def test_include(f2003_create):

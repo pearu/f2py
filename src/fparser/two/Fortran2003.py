@@ -337,7 +337,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
 
     def tostr(self):
         '''
-        :return: this kind_selector as a string
+        :return: this include_stmt as a string
         :rtype: str
         '''
 
