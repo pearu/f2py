@@ -112,7 +112,7 @@ def test_format_list_descriptor(f2003_create):
                              "_Desc_C1002('F', Digit_String('2', None), Int"
                              "_Literal_Constant('2', None), None)))")
     # R
-    for my_input in ["2(F2.2)", " 2 (F2.2) "," 2 ( F2.2 ) "]:
+    for my_input in ["2(F2.2)", " 2 (F2.2) ", " 2 ( F2.2 ) "]:
         ast = Format_Item(my_input)
         assert my_input.replace(" ", "") in str(ast)
         assert repr(ast) == ("Format_Item(Digit_String('2', None), Format_"

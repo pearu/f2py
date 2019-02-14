@@ -915,7 +915,7 @@ class BracketBase(Base):
         line = string_strip[bracket_len:-bracket_len].strip()
         if (not line and cls and require_cls) or (line and not cls):
             return None
-        elif not line and (not cls or not require_cls):
+        if not line and (not cls or not require_cls):
             return left, None, right
         return left, cls(line), right
 

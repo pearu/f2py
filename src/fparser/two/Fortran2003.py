@@ -7256,8 +7256,8 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
         while current_string:
             # Does the current item match the start of a
             # hollerith string?
-            pattern = Hollerith_Item.match_pattern
-            match = re.search(pattern, current_string)
+            my_pattern = Hollerith_Item.match_pattern
+            match = re.search(my_pattern, current_string)
             if match:
                 # The current item matches with a hollerith string.
                 match_str = match.group(0)
@@ -7274,8 +7274,7 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
                     if current_string[0] != ',':
                         # There is no comma so we have a format error.
                         return None
-                    else:
-                        current_string = current_string[1:].lstrip()
+                    current_string = current_string[1:].lstrip()
             else:
                 # Current item does not match with a hollerith string
                 # so we are safe to split using a ',' as separator
@@ -7336,6 +7335,32 @@ class Format_Specification(BracketBase):  # pylint: disable=invalid-name
         '''
         return BracketBase.match('()', Format_Item_List, string,
                                  require_cls=False)
+
+def skip_digits(string):
+    '''Skips over any potential digits (including spaces) to the next
+    non-digit character and return its index. If no such character is
+    found or if the first character in the string is not a digit then
+    specify that the skip has failed.
+
+    :param str string: The string to search
+    :returns: a 2-tuple with the first entry indicating if a valid \
+    character has been found and the second entry indicating the index \
+    of this character in the 'string' argument.
+    :rtype: (bool, int or NoneType)
+
+    '''
+    found = False
+    index = None
+    if string[0].isdigit():
+        index = 0
+        while True:
+            if index == len(string):
+                break
+            if not (string[index].isdigit() or string[index] == ' '):
+                found = True
+                break
+            index += 1
+    return found, index
 
 
 class Format_Item_C1002(Base):  # pylint: disable=invalid-name
@@ -7408,23 +7433,20 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
             # treated as if it is part of the previous item.
             return Format_Item(strip_string[:-1].rstrip()), \
                 Control_Edit_Desc(strip_string[-1])
-        index = 0
         # We may have a P edit descriptor (which requires a number
         # before the 'P') (1) or a slash edit descriptor with a repeat
         # specifier (3) so look for the repeat specifier.
-        while index < len(strip_string) and (strip_string[index].isdigit() or
-                                             strip_string[index] == ' '):
-            index += 1
-        if index:
+        found, index = skip_digits(strip_string)
+        if found:
             # We found a possible repeat specifier (which may contain
-            # white space)
+            # white space after the first digit)
             result = strip_string[index].upper()
             if result == '/':
                 # We found a possible slash edit descriptor with a
                 # repeat specifier (3).
                 return Control_Edit_Desc(strip_string[:index+1]), \
                     Format_Item(strip_string[index+1:].lstrip())
-            elif result == 'P':
+            if result == 'P':
                 # We found a possible P edit descriptor (1).
                 # Rule C1002 only allows a comma to be ommited between
                 # a P edit descriptor and a following F, E, EN, ES, D,
@@ -7436,7 +7458,7 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
                 # specifying the type of edit descriptor.
                 lhs = Control_Edit_Desc(strip_string[:index+1])
                 rhs = Format_Item(strip_string[index+1:].lstrip())
-                if not isinstance(rhs, Format_Item):
+                if not rhs:
                     return None
                 descriptor_object = rhs.items[1]
                 if not isinstance(descriptor_object, (Data_Edit_Desc,
@@ -7476,7 +7498,7 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
         items list has no content.
 
         '''
-        if not len(self.items) == 2:
+        if len(self.items) != 2:
             raise InternalError(
                 "Class Format_Item_C1002 method tostr(): internal items list "
                 "should be length 2 but found '{0}'".format(len(self.items)))
@@ -7553,7 +7575,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         items list has no content.
 
         '''
-        if not len(self.items) == 1:
+        if len(self.items) != 1:
             raise InternalError(
                 "Class Hollerith_Item method tostr(): internal items list "
                 "should be of length 1 but found '{0}'".format(len(self.items)))
@@ -7586,7 +7608,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         remaining options are matched via subclasses specified in the
         subclass_names variable.
 
-        :param str string: A string or the fortran reader containing the \
+        :param str string: A string or the Fortran reader containing the \
                     line of code that we are trying to match.
         :return: `None` if there is no match or a `tuple` of size 2 \
         containing an instance of the R class followed by an \
@@ -7604,12 +7626,10 @@ class Format_Item(Base):  # pylint: disable=invalid-name
             return None
         index = 0
         # Look for an optional repeat specifier (the 'r' in this rule)
-        while index < len(strip_string) and (strip_string[index].isdigit() or
-                                             strip_string[index] == ' '):
-            index += 1
+        found, index = skip_digits(strip_string)
         rpart = None
         my_string = strip_string
-        if index:
+        if found:
             # We found a repeat specifier so create an R class using
             # the value
             rpart = R(strip_string[:index])
@@ -7639,7 +7659,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         items list has no content.
 
         '''
-        if not len(self.items) == 2:
+        if len(self.items) != 2:
             raise InternalError(
                 "Class Format_Item method tostr(): internal items list "
                 "should be of length 2 but found '{0}'".
@@ -7651,9 +7671,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         rpart = self.items[0]
         rest = self.items[1]
         
-        rpart_str = ""
-        if rpart:
-            rpart_str = rpart
+        rpart_str = rpart if rpart else ""
         if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
             return "{0}{1}".format(rpart_str, rest)
         return "{0}({1})".format(rpart_str, rest)
@@ -7732,7 +7750,7 @@ class Data_Edit_Desc_C1002(Base):
                 right = right.lstrip()
                 return char, W(left), D(right), None
             return None
-        elif char in ['E', 'G']:
+        if char in ['E', 'G']:
             # match w . d [ E e ]
             # Format descriptor could also be 'ES' or 'EN'
             my_str = strip_string[1:].lstrip().upper()
