@@ -7458,7 +7458,8 @@ class Format_Item_C1002(Base):  # pylint: disable=invalid-name
                 # specifying the type of edit descriptor.
                 lhs = Control_Edit_Desc(strip_string[:index+1])
                 rhs = Format_Item(strip_string[index+1:].lstrip())
-                if not rhs:
+                if not isinstance(rhs, Format_Item):
+                    # Matched with a subclass of Format_item or no match.
                     return None
                 descriptor_object = rhs.items[1]
                 if not isinstance(descriptor_object, (Data_Edit_Desc,
@@ -7634,9 +7635,9 @@ class Format_Item(Base):  # pylint: disable=invalid-name
             # the value
             rpart = R(strip_string[:index])
             my_string = strip_string[index:].lstrip()
-        if not my_string:
-            # There is no content, other than a repeat specifier.
-            return None
+            if not my_string:
+                # There is no content, other than a repeat specifier.
+                return None
         # We deal with format-item-list and data-edit-desc in this
         # match method. Other matches are performed by the subclasses.
         if my_string[0] == '(' and my_string[-1] == ')':
