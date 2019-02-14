@@ -7631,13 +7631,10 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         rpart = None
         my_string = strip_string
         if found:
-            # We found a repeat specifier so create an R class using
-            # the value
+            # We found a repeat specifier (with content after it) so
+            # create an R class using the value
             rpart = R(strip_string[:index])
             my_string = strip_string[index:].lstrip()
-            if not my_string:
-                # There is no content, other than a repeat specifier.
-                return None
         # We deal with format-item-list and data-edit-desc in this
         # match method. Other matches are performed by the subclasses.
         if my_string[0] == '(' and my_string[-1] == ')':
