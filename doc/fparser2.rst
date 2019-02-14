@@ -273,7 +273,7 @@ simplicity, or perhaps because the files are not readily available. To
 support this, fparser has been extended to recognise `include`
 statements as part of the parse tree. If a particular `include` file
 is not found then the associated `include` statement will be parsed
-like a standard Fortran statements. If we again consider the simple
+like a standard Fortran statement. If we again consider the simple
 example from earlier::
 
   program x
@@ -309,7 +309,7 @@ file was found but would fail if the include file was not found::
 
 .. note:: The current implementation of include is not robust and the
           above example is not parsed successfully when the include
-          file is found.
+          file is found, see issue #139 pr #176.
 
 Walking the AST
 ---------------

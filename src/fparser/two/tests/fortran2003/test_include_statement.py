@@ -42,7 +42,7 @@ in the Fortran parse tree and output it again.
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Include_Stmt
+from fparser.two.Fortran2003 import Include_Stmt, InternalError
 from fparser.two.utils import NoMatchError
 
 
@@ -107,3 +107,20 @@ def test_errors(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Include_Stmt(line)
         assert "Include_Stmt: '{0}'".format(line) in str(excinfo)
+
+
+def test_include_filename_error(f2003_create, monkeypatch):
+    '''Check that we raise an InternalError if a return from
+    Include_Filename is None or an empty string. This should never
+    happen as any matching errors would cause this class to raise an
+    exception.
+
+    '''
+
+    monkeypatch.setattr("fparser.two.Fortran2003.Include_Filename",
+                        lambda file_name: None)
+    line = "include ' '"
+    with pytest.raises(InternalError) as excinfo:
+        _ = Include_Stmt(line)
+    assert ("Include_Filename should never return None or an empty "
+            "name") in str(excinfo.value)

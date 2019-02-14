@@ -655,7 +655,7 @@ subclasses (the valid classes between the start and end classes) in
 the same way that the Comments class is added. This means that any
 includes within a `BlockBase` will be matched.
 
-All Fortran rules that are responsible for matchine whole line
+All Fortran rules that are responsible for matching whole line
 statements (apart from the top level Program rule R201) make use of
 the `BlockBase` match method. Therefore by adding support for includes
 at the beginning and within a BlockBase class we support includes at

@@ -166,13 +166,13 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_c_and_i(content, reader):
+def add_comments_includes(content, reader):
     '''Creates comment and/or include objects and adds them to the content
     list. Comment and/or include objects are added until a line that
     is not a comment or include is found.
 
     :param content: a `list` of matched objects. Any matched comments \
-                    in this routine are added to this list.
+                    or includes in this routine are added to this list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -181,13 +181,11 @@ def add_c_and_i(content, reader):
 
     '''
     obj = Comment(reader)
-    if not obj:
-        obj = Include_Stmt(reader)
+    obj = Include_Stmt(reader) if not obj else obj
     while obj:
         content.append(obj)
         obj = Comment(reader)
-        if not obj:
-            obj = Include_Stmt(reader)
+        obj = Include_Stmt(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -236,12 +234,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_c_and_i(content, reader)
+        add_comments_includes(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_c_and_i(content, reader)
+                add_comments_includes(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -298,7 +296,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''Implements the matching for an include statement.
 
         :param str string: the string to match with as an include \
-        file.
+        statement.
         :returns: a tuple of size 1 containing an Include_Filename \
         object with the matched filename if there is a match, or None \
         if there is not.
@@ -331,7 +329,11 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         file_name = rhs[1:-1]
         # Pass the potential filename to the relevant class.
         name = Include_Filename(file_name)
-        return name,
+        if not name:
+            raise InternalError(
+                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "never return None or an empty name")
+        return (name,)
 
     def tostr(self):
         '''
