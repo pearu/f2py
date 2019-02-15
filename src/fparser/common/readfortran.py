@@ -140,10 +140,10 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 
 from __future__ import print_function
 
-import re
-import os
-import sys
 import logging
+import os
+import re
+import sys
 import traceback
 import six
 import fparser.common.sourceinfo
@@ -1400,6 +1400,10 @@ class FortranFileReader(FortranReaderBase):
     '''
     def __init__(self, file_candidate, include_dirs=None, source_only=None,
                  ignore_comments=True):
+        # The filename is used as a unique ID. This is then used to cache the
+        # contents of the file. Obviously if the file changes content but not
+        # filename, problems will ensue.
+        #
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
             self.file = open(file_candidate, 'r')
@@ -1458,7 +1462,16 @@ class FortranStringReader(FortranReaderBase):
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
                  ignore_comments=True):
-        self.id = 'string-' + str(id(string))
+        # The Python ID of the string was used to uniquely identify it for
+        # caching purposes. Unfortunately this ID is only unique for the
+        # lifetime of the string. In CPython it is the address of the string
+        # and the chance of a new string being allocated to the same address
+        # is actually quite high. Particularly in a unit-testing scenario.
+        #
+        # For this reason the hash is used instead. A much better solution
+        # anyway.
+        #
+        self.id = 'string-' + str(hash(string))
         source = six.StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,
