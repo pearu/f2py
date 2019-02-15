@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2018 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -213,20 +213,103 @@ Classes
 .. autoclass:: fparser.two.parser.ParserFactory
     :members:
 
+Includes
+--------
 
-Data Model
-----------
+Fortran supports the `include` statement in order to inline code from
+other locations into the current file.
 
-The module provides the classes; `Comment`, `Main_Program`,
-`Subroutine_Subprogram`, `Function_Subprogram`, `Program_Stmt`,
-`Function_Stmt`, `Subroutine_Stmt`, `Block_Do_Construct`,
-`Block_Label_Do_Construct`, `Block_Nonlabel_Do_Construct`,
-`Execution_Part`, `Name` and `Constant`, amongst others.  Nodes in the
-tree representing the parsed code are instances of either `BlockBase`
-or `SequenceBase`. Child nodes are then stored in the `.content`
-attribute of `BlockBase` objects or the `.items` attribute of
-`SequenceBase` objects. Both of these attributes are Tuple instances.
+The interpretation of where the include content comes from is defined
+as being processor dependent in the Fortran standard. Fparser assumes
+that the content comes from another another file. For example ::
 
+  program x
+  include 'content.inc'
+  end program
+
+implies that ``content.inc`` is a file containing Fortran code. For
+example ::
+
+  print *, "Hello"
+
+The above example would then be equivalent to the following Fortran
+code ::
+
+  program x
+  print *, "Hello"
+  end program
+
+The Fortran standard specifies that the `include` statement is not a
+Fortran statement, rather it indicates that when the code is processed
+the contents of the `include` file should replace the include
+statement as the code is parsed.
+
+fparser supports `include` statements in its reader classes
+(`FortranStringReader` and `FortranFileReader`), so the parser itself
+need not be aware of the original `include` statements.
+
+The directory locations in which to search for `include` files can be
+specified to a reader class instance via the optional `include_dirs`
+argument, which should be iterable. For example::
+
+  reader = FortranFileReader(my_file, include_dirs=["dir1", "dir2"])
+
+If a relative directory is specified then the location is with respect
+to the input file.  The reader class instance will search in the
+specified directory order and include the contents of the first
+matching file found.
+
+If no include_dirs argument is supplied then the default search
+location is ``['.']``. Therefore include files would need to be in the
+same directory as the input file for them to be found.
+
+.. note:: At the moment it is not possible to specify include
+          directories in the fparser2 script.
+
+In a compiler, all include files must be found otherwise there is an
+error. However, with a code parser this is not necessarily the case. A
+user might not want to include all files when parsing, perhaps for
+simplicity, or perhaps because the files are not readily available. To
+support this, fparser has been extended to recognise `include`
+statements as part of the parse tree. If a particular `include` file
+is not found then the associated `include` statement will be parsed
+like a standard Fortran statement. If we again consider the simple
+example from earlier::
+
+  program x
+  include 'content.inc'
+  end program
+
+with ``content.inc`` containing the following Fortran code::
+
+  print *, "Hello"
+
+then if the ``content.inc`` file is found the output of fparser
+would be::
+
+  PROGRAM x
+  PRINT *, "Hello"
+  END PROGRAM x
+
+but if the ``content.inc`` file is not found then the output of
+fparser would be::
+
+  PROGRAM x
+  INCLUDE 'content.inc'  
+  END PROGRAM x
+  
+Clearly in the latter case the parser does require the code to be
+valid with the `include` statement in it. For example, assuming the
+content of ``endprogram.inc`` is ``end program`` then the following
+example would be parsed successfully if the `endprogram.inc` include
+file was found but would fail if the include file was not found::
+
+  program x
+  include 'endprogram.inc'
+
+.. note:: The current implementation of include is not robust and the
+          above example is not parsed successfully when the include
+          file is found, see issue #139 pr #176.
 
 Walking the AST
 ---------------

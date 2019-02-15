@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2019 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -35,6 +35,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
 # Modified M.Hambley, UK Met Office
+# Modified R. W. Ford, STFC Daresbury Lab
 ##############################################################################
 '''
 Test battery associated with fparser.common.readfortran package.
@@ -103,24 +104,15 @@ def test_111fortranreaderbase(log, monkeypatch):
     assert log.messages['debug'][0][:len(expected)] == expected
 
 
-def test_base_next_bad_include(log):
+def test_include_not_found():
+    '''Tests that FortranReaderBase.next() provides the include line when
+    the included file is not found.
+
     '''
-    Tests that FortranReaderBase.next() causes a message to be logged when an
-    included file does not exist.
-    '''
-    code = "include 'nonexistant.f90'\nx=1"
+    code = "include 'nonexistant.f90'"
     unit_under_test = fparser.common.readfortran.FortranStringReader(code)
     line = unit_under_test.next()
-    assert str(line) == 'line #2\'x=1\''
-    assert log.messages['debug'] == []
-    assert log.messages['error'] == []
-    assert log.messages['info'] == []
-    assert log.messages['critical'] == []
-    expected = "    1:include 'nonexistant.f90' " \
-               + "<== 'nonexistant.f90' not found in '.'. " \
-               + "INLCUDE line treated as comment line."
-    result = log.messages['warning'][0].split('\n')[1]
-    assert result == expected
+    assert str(line.line) == code
 
 
 def test_base_next_good_include(log):
