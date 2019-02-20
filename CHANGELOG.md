@@ -11,6 +11,13 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+15/02/2019 Issue #138 and PR #173. Adds support for un-resolved include
+           statements such that they are included in the generated parse
+           tree (rather than being thrown away).
+
+13/02/2019 PR #163. fparser1 bug fix for complex expressions in
+           loop bounds.
+
 17/01/2019 PR #137 for #125. Fixes an error in dealing with the case
            when the names of a program and end program do not match.
 

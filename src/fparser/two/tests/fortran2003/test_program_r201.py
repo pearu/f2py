@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -339,3 +339,86 @@ def test_comment4(f2003_create):
             "MODULE example\n"
             "END MODULE example\n"
             "! comment3") in str(ast)
+
+# Check includes are supported at this level
+
+
+def test_include0(f2003_create):
+    '''Test that a single program_unit with includes can be parsed
+    succesfully.
+
+    '''
+    reader = get_reader((
+        "include '1'\n"
+        "subroutine test()\n"
+        "end subroutine\n"
+        "include '2'\n"))
+    ast = Program(reader)
+    assert ("INCLUDE '1'\n"
+            "SUBROUTINE test\n"
+            "END SUBROUTINE test\n"
+            "INCLUDE '2'") in str(ast)
+
+
+def test_include1(f2003_create):
+    '''Test that multiple program_units with includes can be parsed
+    successfully.
+
+    '''
+    reader = get_reader(
+        "include '1'\n"
+        "subroutine test()\n"
+        "end subroutine\n"
+        "include '2'\n"
+        "module example\n"
+        "end module\n"
+        "include '3'\n", ignore_comments=True)
+    ast = Program(reader)
+    assert ("INCLUDE '1'\n"
+            "SUBROUTINE test\n"
+            "END SUBROUTINE test\n"
+            "INCLUDE '2'\n"
+            "MODULE example\n"
+            "END MODULE example\n"
+            "INCLUDE '3'") in str(ast)
+    assert "! comment" not in str(ast)
+
+# Check a mix of includes and comments are supported at this level
+
+
+def test_mix(f2003_create):
+    '''Test that multiple program_units can be parsed successfully with a
+    mix of includes and comments.
+
+    '''
+    reader = get_reader((
+        "include '1'\n"
+        "! comment1\n"
+        "include '2'\n"
+        "subroutine test()\n"
+        "end subroutine\n"
+        "include '3'\n"
+        "include '4'\n"
+        "! comment2\n"
+        "! comment3\n"
+        "module example\n"
+        "end module\n"
+        "! comment4\n"
+        "include '5'\n"
+        "! comment5\n"
+    ), ignore_comments=False)
+    ast = Program(reader)
+    assert ("INCLUDE '1'\n"
+            "! comment1\n"
+            "INCLUDE '2'\n"
+            "SUBROUTINE test\n"
+            "END SUBROUTINE test\n"
+            "INCLUDE '3'\n"
+            "INCLUDE '4'\n"
+            "! comment2\n"
+            "! comment3\n"
+            "MODULE example\n"
+            "END MODULE example\n"
+            "! comment4\n"
+            "INCLUDE '5'\n"
+            "! comment5") in str(ast)
