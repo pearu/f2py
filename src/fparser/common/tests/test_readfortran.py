@@ -342,10 +342,24 @@ def test_base_free_continuation(log):
 
 def check_include_works(fortran_filename, fortran_code, include_info,
                         expected, tmpdir, ignore_comments=True):
-    '''Utility function used by a number of tests to check that a include
+    '''Utility function used by a number of tests to check that include
     files work as expected.
 
+    :param str fortran_filename: the name of the fortran file that is \
+    going to be created in the 'tmpdir' directory.
+    :param str fortran_code: the fortran code to put in the fortran \
+    file specified by 'fortran_filename'.
+    :param include_info: a list of 2-tuples each with an include \
+    filename as a string followed by include code as a string :type \
+    include_info: list of (str, str)
+    :param str expected: the expected output after parsing the code
+    :param str tmpdir: the temporary directory in which to create and \
+    process the Fortran files.
+    :param bool ignore_comments: whether to ignore (skip) comments in \
+    the Fortran code or not. Defaults to ignore them.
+
     '''
+
     try:
         oldpwd = tmpdir.chdir()
         cwd = str(tmpdir)
@@ -356,7 +370,6 @@ def check_include_works(fortran_filename, fortran_code, include_info,
         for include_filename in include_info.keys():
             with open(os.path.join(cwd, include_filename), "w") as cfile:
                 cfile.write(include_info[include_filename])
-        from fparser.common.readfortran import FortranFileReader
         reader = FortranFileReader(fortran_filename,
                                    ignore_comments=ignore_comments)
         for orig_line in expected.split("\n"):
@@ -388,15 +401,14 @@ def test_include1(tmpdir):
     include_filename = "prog.inc"
     fortran_code = ("include '{0}'".format(include_filename))
     include_code = EXPECTED_CODE
-    include_info = {}
-    include_info[include_filename] = include_code
+    include_info = {include_filename: include_code}
     check_include_works(fortran_filename, fortran_code, include_info,
                         EXPECTED_CODE, tmpdir)
 
 
 def test_include2(tmpdir):
     '''Test that FortranReaderBase can parse an include file when the
-    original and include files both files have multiple lines.
+    original and include files both have multiple lines.
 
     '''
     fortran_filename = "prog.f90"
@@ -410,8 +422,7 @@ def test_include2(tmpdir):
                     "end interface mpi_sizeof")
     split_code = fortran_code.split("\n")
     expected = split_code[0] + "\n" + include_code + "\n" + split_code[2]
-    include_info = {}
-    include_info[include_filename] = include_code
+    include_info = {include_filename: include_code}
     check_include_works(fortran_filename, fortran_code, include_info,
                         expected, tmpdir)
 
@@ -427,14 +438,16 @@ def test_include3(tmpdir):
                     "include '{0}'".format(include_filename))
     include_code = ("print *, 'Hello'\n"
                     "end program")
-    include_info = {}
-    include_info[include_filename] = include_code
+    include_info = {include_filename: include_code}
     check_include_works(fortran_filename, fortran_code, include_info,
                         EXPECTED_CODE, tmpdir)
 
 
 def test_include4(tmpdir):
-    '''Test that FortranReaderBase can parse a multiple include files.'''
+    '''Test that FortranReaderBase can parse input containing multiple
+    include files.
+
+    '''
     fortran_filename = "prog.f90"
     include_filename1 = "prog.inc1"
     include_filename2 = "prog.inc2"
@@ -446,9 +459,8 @@ def test_include4(tmpdir):
     include_code2 = ("end program")
     expected = fortran_code.split("\n")[0] + "\n" + include_code1 + \
         include_code2
-    include_info = {}
-    include_info[include_filename1] = include_code1
-    include_info[include_filename2] = include_code2
+    include_info = {include_filename1: include_code1,
+                    include_filename2: include_code2}
     check_include_works(fortran_filename, fortran_code, include_info,
                         expected, tmpdir)
 
@@ -463,9 +475,8 @@ def test_include5(tmpdir):
     include_code1 = ("print *, 'Hello'\n"
                      "include '{0}'".format(include_filename2))
     include_code2 = ("end program")
-    include_info = {}
-    include_info[include_filename1] = include_code1
-    include_info[include_filename2] = include_code2
+    include_info = {include_filename1: include_code1,
+                    include_filename2: include_code2}
     check_include_works(fortran_filename, fortran_code, include_info,
                         EXPECTED_CODE, tmpdir)
 
@@ -486,8 +497,7 @@ def test_include6(tmpdir, ignore_comments):
     include_code = ("! include comment 1\n"
                     "print *, 'Hello'\n"
                     "! include comment 2")
-    include_info = {}
-    include_info[include_filename] = include_code
+    include_info = {include_filename: include_code}
     if ignore_comments:
         expected = EXPECTED_CODE
     else:
@@ -515,13 +525,11 @@ def test_get_item(ignore_comments):
                     "print *, 'Hello'\n"
                     "! prog comment 2\n"
                     "end program")
-    expected_line = expected.split("\n")
     reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
-    while True:
+    for expected_line in expected.split("\n"):
         output_line = reader.get_item()
-        if not output_line:
-            break
-        assert expected_line.pop(0) in output_line.line
+        assert expected_line in output_line.line
+    assert not reader.get_item()
 
 
 def test_put_item(ignore_comments):

@@ -401,7 +401,7 @@ class Comment(object):
         # self.line provides a common way to retrieve the content from
         # either a 'Line' or a 'Comment' class. This is useful for
         # tests as a reader can return an instance of either class and
-        # we might want to check the contents is a constistent way.
+        # we might want to check the contents in a consistent way.
         self.line = comment
 
     def __repr__(self):
@@ -700,9 +700,16 @@ class FortranReaderBase(object):
         with here.
 
         :param bool ignore_comments: When True then act as if Fortran \
-          code does not contain any comments or blank lines. if this \
-          optional arguement is not provided then use the default \
-          value.
+        code does not contain any comments or blank lines. if this \
+        optional arguement is not provided then use the default \
+        value.
+        
+        :returns: the next line item. This can be from a local fifo \
+        buffer, from an include reader or from this reader.
+        :rtype: py:class:`fparser.common.readfortran.Line`
+
+        :raises StopIteration: if no more lines are found.
+        :raises StopIteration: if a general error has occured.
 
         '''
         if ignore_comments is None:
@@ -753,7 +760,8 @@ class FortranReaderBase(object):
                     path,
                     include_dirs=include_dirs,
                     ignore_comments=ignore_comments)
-                return self.reader.next(ignore_comments=ignore_comments)
+                result = self.reader.next(ignore_comments=ignore_comments)
+                return result
             return item
         except StopIteration:
             raise
