@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -64,6 +64,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
+#
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: May 2006
+# Modified by R. W. Ford STFC Daresbury Lab
 
 """Provides Fortran reader classes.
 
@@ -133,21 +137,19 @@ To read a Fortran code from a string, use `FortranStringReader` class::
         Line('print*,\"a=\",a',(4, 4),'')
 
 """
-# Author: Pearu Peterson <pearu@cens.ioc.ee>
-# Created: May 2006
 
 from __future__ import print_function
 
-import re
-import os
-import sys
 import logging
+import os
+import re
+import sys
 import traceback
-
 import six
-
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
+
+logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -723,14 +725,16 @@ class FortranReaderBase(object):
                     path = os.path.join(incl_dir, filename)
                     if os.path.exists(path):
                         break
-                if not os.path.isfile(path):  # include file does not exist
-                    dirs = os.pathsep.join(include_dirs)
-                    # According to Fortran standard, INCLUDE line is
-                    # not a Fortran statement.
-                    message = '{!r} not found in {!r}. ' \
-                              + 'INLCUDE line treated as comment line.'
-                    reader.warning(message.format(filename, dirs), item)
-                    item = self.next(ignore_comments)
+                if not os.path.isfile(path):
+                    # The include file does not exist in the specified
+                    # locations.
+                    #
+                    # The Fortran standard states that an INCLUDE line
+                    # is not a Fortran statement. However, fparser is
+                    # a parser not a compiler and some subsequent tool
+                    # might need to make use of this include so we
+                    # return it and let the parser deal with it.
+                    #
                     return item
                 reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(
@@ -1396,6 +1400,10 @@ class FortranFileReader(FortranReaderBase):
     '''
     def __init__(self, file_candidate, include_dirs=None, source_only=None,
                  ignore_comments=True):
+        # The filename is used as a unique ID. This is then used to cache the
+        # contents of the file. Obviously if the file changes content but not
+        # filename, problems will ensue.
+        #
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
             self.file = open(file_candidate, 'r')
@@ -1449,12 +1457,21 @@ class FortranStringReader(FortranReaderBase):
                 print*,\"a=\",a
               end
         \'\'\'
-    >>> reader = FortranStringReader(code) 
+    >>> reader = FortranStringReader(code)
 
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
                  ignore_comments=True):
-        self.id = 'string-' + str(id(string))
+        # The Python ID of the string was used to uniquely identify it for
+        # caching purposes. Unfortunately this ID is only unique for the
+        # lifetime of the string. In CPython it is the address of the string
+        # and the chance of a new string being allocated to the same address
+        # is actually quite high. Particularly in a unit-testing scenario.
+        #
+        # For this reason the hash is used instead. A much better solution
+        # anyway.
+        #
+        self.id = 'string-' + str(hash(string))
         source = six.StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,

@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2018 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -627,6 +627,46 @@ compiler to throw out any non-standard Fortran).
    names). At some point these need to be modified to use the new
    approach. Eventually, the concept of extensions is expected to be
    implemented as a configuration file rather than a static list.
+
+Include files
++++++++++++++
+
+fparser has been extended to support include files as part of the
+Fortran syntax. This has been implemented in two new classes
+`fparser.two.Fortran2003.Include_Stmt` and
+`fparser.two.Fortran2003.Include_Filename`. This allows fparser to
+parse code with unresolved include files.
+
+The filename matching pattern implemented in fparser is that the
+filename must start with a non-space character and end with a
+non-space character. This is purposely a very loose restriction
+because many characters can be used in filenames and different
+characters may be valid in different operating systems. Note that
+whilst the term filename is used here it can be a filepath.
+
+The include statement rule is added to the start of the `BlockBase`
+match method by integrating it with the `comments` rule in the
+`add_c_and_i()` function. This means that any includes before a
+BlockBase will be matched.
+
+The include statement rule is also added to the subclasses to match in
+the `BlockBase` match method by simply appending it to the existing
+subclasses (the valid classes between the start and end classes) in
+the same way that the Comments class is added. This means that any
+includes within a `BlockBase` will be matched.
+
+All Fortran rules that are responsible for matching whole line
+statements (apart from the top level Program rule R201) make use of
+the `BlockBase` match method. Therefore by adding support for includes
+at the beginning and within a BlockBase class we support includes at
+all possible locations (apart from after the very last statement).
+
+The top level Program rule R201 supports includes at the level of
+multiple program units by again making use of the `add_c_and_i()`
+function before any 'program units', between 'program units' and after
+any 'program units'. This completes all valid locations for include
+statements, including the missing last statement mentioned in the
+previous paragraph.
 
 Utils
 +++++

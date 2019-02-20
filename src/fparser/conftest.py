@@ -52,6 +52,7 @@ def log():
     logger = logging.getLogger('fparser')
     handler = fparser.common.tests.logging_utils.CaptureLoggingHandler()
     logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
     yield handler
     # When the fixture function is a generator, i.e. it uses "yield" rather
     # than "return", it will be called a second time after the test has

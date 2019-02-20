@@ -166,12 +166,13 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments(content, reader):
-    '''Creates comment objects and adds them to the content list. Comment
-    objects are added until a line that is not a comment is found.
+def add_comments_includes(content, reader):
+    '''Creates comment and/or include objects and adds them to the content
+    list. Comment and/or include objects are added until a line that
+    is not a comment or include is found.
 
     :param content: a `list` of matched objects. Any matched comments \
-                    in this routine are added to this list.
+                    or includes in this routine are added to this list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -180,9 +181,11 @@ def add_comments(content, reader):
 
     '''
     obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
     while obj:
         content.append(obj)
         obj = Comment(reader)
+        obj = Include_Stmt(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -231,12 +234,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments(content, reader)
+        add_comments_includes(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments(content, reader)
+                add_comments_includes(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -251,6 +254,94 @@ class Program(BlockBase):  # R201
             # Reader has no more lines.
             pass
         return content,
+
+
+class Include_Filename(StringBase):  # pylint: disable=invalid-name
+
+    '''Implements the matching of a filename from an include statement.'''
+    # There are no other classes. This is a simple string match.
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Match the string with the regular expression file_name in the
+        pattern_tools file. The only content that is not accepted is
+        an empty string or white space at the start or end of the
+        string.
+
+        :param str string: the string to match with the pattern rule.
+        :return: a tuple of size 1 containing a string with the \
+        matched name if there is a match, or None if there is not.
+        :rtype: (str) or NoneType
+
+        '''
+        return StringBase.match(pattern.file_name, string)
+
+
+class Include_Stmt(Base):  # pylint: disable=invalid-name
+
+    '''Implements the matching of a Fortran include statement. There is no
+    rule for this as the compiler is expected to inline any content
+    from an include statement when one is found. However, for a parser
+    it can make sense to represent an include statement in a parse
+    tree.
+
+    include-stmt is INCLUDE ['filename' or "filename"]
+
+    '''
+    use_names = ['Include_Filename']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for an include statement.
+
+        :param str string: the string to match with as an include \
+        statement.
+        :returns: a tuple of size 1 containing an Include_Filename \
+        object with the matched filename if there is a match, or None \
+        if there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`) \
+        or NoneType
+
+        '''
+        if not string:
+            return None
+        line = string.strip()
+        if line[:7].upper() != 'INCLUDE':
+            # The line does not start with the include token and/or the line
+            # is too short.
+            return None
+        rhs = line[7:].strip()
+        if not rhs:
+            # There is no content after the include token
+            return None
+        if len(rhs) < 3:
+            # The content after the include token is too short to be
+            # valid (it must at least contain quotes and one
+            # character.
+            return None
+        if not ((rhs[0] == "'" and rhs[-1] == "'") or
+                (rhs[0] == '"' and rhs[-1] == '"')):
+            # The filename should be surrounded by single or double
+            # quotes but this is not the case.
+            return None
+        # Remove the quotes.
+        file_name = rhs[1:-1]
+        # Pass the potential filename to the relevant class.
+        name = Include_Filename(file_name)
+        if not name:
+            raise InternalError(
+                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "never return None or an empty name")
+        return (name,)
+
+    def tostr(self):
+        '''
+        :return: this include_stmt as a string
+        :rtype: str
+        '''
+
+        return ("INCLUDE '{0}'".format(self.items[0]))
 
 
 class Program_Unit(Base):  # R202
