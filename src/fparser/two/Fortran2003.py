@@ -7427,6 +7427,7 @@ class Format_Specification(BracketBase):  # pylint: disable=invalid-name
         return BracketBase.match('()', Format_Item_List, string,
                                  require_cls=False)
 
+
 def skip_digits(string):
     '''Skips over any potential digits (including spaces) to the next
     non-digit character and return its index. If no such character is
@@ -7437,20 +7438,15 @@ def skip_digits(string):
     :returns: a 2-tuple with the first entry indicating if a valid \
     character has been found and the second entry indicating the index \
     of this character in the 'string' argument.
-    :rtype: (bool, int or NoneType)
+    :rtype: (bool, int)
 
     '''
     found = False
-    index = None
-    if string[0].isdigit():
-        index = 0
-        while True:
-            if index == len(string):
-                break
-            if not (string[index].isdigit() or string[index] == ' '):
+    for index, char in enumerate(string):
+        if not (char.isdigit() or char == ' '):
+            if index > 0:
                 found = True
-                break
-            index += 1
+            break
     return found, index
 
 
@@ -7670,7 +7666,8 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         if len(self.items) != 1:
             raise InternalError(
                 "Class Hollerith_Item method tostr(): internal items list "
-                "should be of length 1 but found '{0}'".format(len(self.items)))
+                "should be of length 1 but found '{0}'".
+                format(len(self.items)))
         if not self.items[0]:
             raise InternalError(
                 "Class Hollerith_Item method tostr() items entry 0 should be "
@@ -7759,12 +7756,11 @@ class Format_Item(Base):  # pylint: disable=invalid-name
                 "should be a valid descriptor but it is empty or None")
         rpart = self.items[0]
         rest = self.items[1]
-        
+
         rpart_str = rpart if rpart else ""
         if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
             return "{0}{1}".format(rpart_str, rest)
         return "{0}({1})".format(rpart_str, rest)
-
 
 
 class R(Base):  # R1004
