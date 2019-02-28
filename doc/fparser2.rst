@@ -349,10 +349,6 @@ file was found but would fail if the include file was not found::
   program x
   include 'endprogram.inc'
 
-.. note:: The current implementation of include is not robust and the
-          above example is not parsed successfully when the include
-          file is found, see issue #139 pr #176.
-
 Walking the AST
 ---------------
 

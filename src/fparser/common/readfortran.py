@@ -383,20 +383,28 @@ class SyntaxErrorLine(Line, FortranReaderError):
 
 
 class Comment(object):
-    """ Holds Fortran comment.
+    '''Holds a Fortran comment.
 
-    Attributes
-    ----------
-    comment : str
-      comment multiline string
-    span : 2-tuple
-      starting and ending line numbers
-    reader : FortranReaderBase
-    """
+    :param str comment: String containing the text of a single or \
+    multi-line comment
+    :param linenospan: A 2-tuple containing the start and end line \
+    numbers of the comment from the input source.
+    :type linenospan: (int, int)
+    :param reader: The reader object being used to read the input \
+    source.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
+    '''
     def __init__(self, comment, linenospan, reader):
+
         self.comment = comment
         self.span = linenospan
         self.reader = reader
+        # self.line provides a common way to retrieve the content from
+        # either a 'Line' or a 'Comment' class. This is useful for
+        # tests as a reader can return an instance of either class and
+        # we might want to check the contents in a consistent way.
+        self.line = comment
 
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s)' \
@@ -690,29 +698,44 @@ class FortranReaderBase(object):
         return self.next()
 
     def next(self, ignore_comments=None):
-        """ Return the next Fortran code item.
+        '''Return the next Fortran code item. Include statements are dealt
+        with here.
 
-        Include statements are realized.
+        :param bool ignore_comments: When True then act as if Fortran \
+        code does not contain any comments or blank lines. if this \
+        optional arguement is not provided then use the default \
+        value.
 
-        Parameters
-        ----------
-        ignore_comments : bool
-          When True then act as if Fortran code does not contain
-          any comments or blank lines.
+        :returns: the next line item. This can be from a local fifo \
+        buffer, from an include reader or from this reader.
+        :rtype: py:class:`fparser.common.readfortran.Line`
 
-        See also
-        --------
-        _next, get_source_item
-        """
+        :raises StopIteration: if no more lines are found.
+        :raises StopIteration: if a general error has occured.
+
+        '''
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
         try:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    return next(self.reader)
-                except StopIteration:
-                    self.reader = None
+                    # Manually check to see if something has not
+                    # matched and has been placed in the fifo. We
+                    # can't use _next() as this method is associated
+                    # with the include reader (self.reader._next()),
+                    # not this reader (self._next()).
+                    return self.fifo_item.pop(0)
+                except IndexError:
+                    # There is nothing in the fifo buffer.
+                    try:
+                        # Return a line from the include.
+                        return self.reader.next(ignore_comments)
+                    except StopIteration:
+                        # There is nothing left in the include
+                        # file. Setting reader to None indicates that
+                        # we should now read from the main reader.
+                        self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader
@@ -741,7 +764,8 @@ class FortranReaderBase(object):
                     path,
                     include_dirs=include_dirs,
                     ignore_comments=ignore_comments)
-                return self.reader.next(ignore_comments=ignore_comments)
+                result = self.reader.next(ignore_comments=ignore_comments)
+                return result
             return item
         except StopIteration:
             raise
