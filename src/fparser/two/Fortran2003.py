@@ -7442,6 +7442,7 @@ def skip_digits(string):
 
     '''
     found = False
+    index = 0
     for index, char in enumerate(string):
         if not (char.isdigit() or char == ' '):
             if index > 0:
