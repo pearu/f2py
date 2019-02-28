@@ -705,7 +705,7 @@ class FortranReaderBase(object):
         code does not contain any comments or blank lines. if this \
         optional arguement is not provided then use the default \
         value.
-        
+
         :returns: the next line item. This can be from a local fifo \
         buffer, from an include reader or from this reader.
         :rtype: py:class:`fparser.common.readfortran.Line`
