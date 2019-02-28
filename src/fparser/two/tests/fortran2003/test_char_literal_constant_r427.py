@@ -105,9 +105,9 @@ def test_match_invalid():
     ''' Test that invalid input raises an exception '''
 
     # test various invalid options
-    for example in ["", "  ", "A", "'A", "A'", "\"A", "A\"", "A'A'", "A 'A'",
-                    "'A'A", "'A' A", "_'A'", "$_'A'", "A A_'A'", "A_'A'A",
-                    "A_'A' A"]:
+    for example in [None, "", "  ", "A", "'A", "A'", "\"A", "A\"", "A'A'",
+                    "A 'A'", "'A'A", "'A' A", "_'A'", "$_'A'", "A A_'A'",
+                    "A_'A'A", "A_'A' A"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Char_Literal_Constant(example)
         assert "Char_Literal_Constant: '{0}'".format(example) in \

@@ -198,7 +198,49 @@ omitted, the value is implicitly assumed to be one. For example::
 
 For more information see
 https://gcc.gnu.org/onlinedocs/gfortran/X-format-descriptor-without-count-field.html
+
+Hollerith Constant
+++++++++++++++++++
+
+A Hollerith constant is a way of specifying a string as a sequence of
+characters preceded by the string length and separated by an 'H'. For
+example::
   
+  5Hhello
+  11Hhello there
+
+Hollerith constants were used in Fortran before character strings were
+introduced in Fortran 77. In Fortran 77 the use of Hollerith constants
+was deprecated and in Fortran 95 they were removed from the
+language. However, many compilers still support Hollerith constants
+for legacy Fortran code.
+  
+The 'hollerith' extension adds support in fparser for Hollerith
+constants. This support is currently limited to those specified in
+format statements. There is currently no support for 1) constants in
+DATA statements and 2) constant actual arguments in subroutine CALL
+statements (which are its other uses as specified in the Fortran 66
+standard).
+
+For more information see
+https://gcc.gnu.org/onlinedocs/gfortran/Hollerith-constants-support.html
+or https://en.wikipedia.org/wiki/Hollerith_constant
+
+Dollar Descriptor
++++++++++++++++++
+
+A dollar descriptor is used to specify that the carriage return in a
+write statement should be suppressed. For example::
+
+  100 FORMAT ('Enter your name ',$)
+
+This extension is not specified in the Fortran standard but is
+implemented by a number of compilers. The 'dollar-descriptor'
+extension adds support for the dollar descriptor in fparser.
+
+For more information see
+https://software.intel.com/en-us/fortran-compiler-developer-guide-and-reference-dollar-sign-and-backslash-editing
+
 Classes
 -------
 

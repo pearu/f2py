@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+28/02/2019 Issue #146 and PR #160. Adds support for Hollerith string
+  	   constants in Format specifiers.
+
 15/02/2019 Issue #138 and PR #173. Adds support for un-resolved include
            statements such that they are included in the generated parse
            tree (rather than being thrown away).

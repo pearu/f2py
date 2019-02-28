@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -45,8 +45,8 @@ from fparser.two.Fortran2003 import Position_Edit_Desc
 def test_invalid_descriptor():
     '''Test invalid options raise an exception.'''
 
-    for descriptor in ["", "  ", "1T", "XT", "T", "TL", "TR", "XT1", "XX",
-                       "X X", "1XX"]:
+    for descriptor in [None, "", "  ", "1T", "XT", "T", "TL", "TR", "XT1",
+                       "XX", "X X", "1XX"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Position_Edit_Desc(descriptor)
         assert "Position_Edit_Desc: '{0}'".format(descriptor) \
@@ -73,7 +73,7 @@ def test_valid_x_descriptor(f2003_create):
         assert str(result) == "".join(descriptor.split()).upper()
 
 
-def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
+def test_invalid_x_descriptor1(f2003_create, monkeypatch):
     '''Test that the X extension to the standard raises an exception if it
     is not named as a valid extension.
 
@@ -88,7 +88,7 @@ def test_invalid_x_descriptor_noextension(f2003_create, monkeypatch):
             in str(excinfo.value)
 
 
-def test_valid_x_descriptor_extension(f2003_create, monkeypatch):
+def test_valid_x_descriptor2(f2003_create, monkeypatch):
     '''Test that the X extension to the standard produces the expected
     output if it is named as a valid extension.
 
