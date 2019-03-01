@@ -8384,7 +8384,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
         return BlockBase.match(
             Program_Stmt, [Specification_Part, Execution_Part,
                            Internal_Subprogram_Part], End_Program_Stmt,
-            reader, match_names=True)
+            reader, match_names=True, strict_order=True)
 
 
 class Main_Program0(BlockBase):
