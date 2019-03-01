@@ -4323,9 +4323,9 @@ class Primary(Base):  # R701
                 | ( <expr> )
     """
     subclass_names = [
-        'Constant', 'Parenthesis', 'Designator', 'Array_Constructor',
+        'Constant', 'Designator', 'Array_Constructor', 
         'Structure_Constructor', 'Function_Reference',
-        'Type_Param_Inquiry', 'Type_Param_Name',
+        'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
     ]
 
 
