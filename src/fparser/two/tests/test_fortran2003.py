@@ -3560,6 +3560,14 @@ end block data
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA a'
 
+    tcls = Block_Data
+    obj = tcls(get_reader('''\
+block     data a
+end block     data a
+    '''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'BLOCK DATA a\nEND BLOCK DATA a'
+
 #
 # SECTION 12
 #
