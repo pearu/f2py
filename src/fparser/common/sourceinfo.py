@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -310,7 +311,7 @@ def get_source_info(file_candidate):
         from fparser.common.utils import make_clean_tmpfile
         tmpfile = make_clean_tmpfile(file_candidate)
         with open(tmpfile, 'r') as file_object:
-            string= get_source_info_str(file_object.read())
+            string = get_source_info_str(file_object.read())
         os.remove(tmpfile)
         return string
 

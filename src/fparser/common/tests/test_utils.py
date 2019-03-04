@@ -134,7 +134,7 @@ def create_tmp_file(string, tmpdir, filename="tmp_in.f90"):
     :param tmpdir: pytest temporary directory structure.
     :type tmpdir: :py:class:'py._path.local.LocalPath'
     :param str filename: the name of the temporary file
-    
+
     :returns: the filepath of the created file
     :rtype: str
 
