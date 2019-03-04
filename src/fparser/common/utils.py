@@ -380,7 +380,6 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     from fparser.two.utils import InternalError
 
     if skip_bad_input not in [False, True]:
-        from fparser.two.utils import InternalError
         raise InternalError(
             "utils.py: make_clean_tmpfile: skip_bad_input argument should "
             "be False or True but found '{0}'.".format(skip_bad_input))
