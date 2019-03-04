@@ -107,8 +107,6 @@ def main():
     '''Check input options then call the runner function.'''
     parser = OptionParser()
     set_read_options(parser)
-    if hasattr(parser, 'runner'):
-        parser.runner = runner
     options, args = parser.parse_args()
     runner(parser, options, args)
     return

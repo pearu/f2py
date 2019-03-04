@@ -39,6 +39,7 @@
 # pylint: disable=too-few-public-methods
 
 import pytest
+from fparser.scripts import read
 
 # fparser2.py script function runner()
 
@@ -206,3 +207,56 @@ def test_main_output(tmpdir, capsys, monkeypatch):
     # capture the output and check that the code has been output
     stdout, _ = capsys.readouterr()
     assert "PROGRAM hello\nEND PROGRAM hello\n" in stdout
+
+# read.py script function runner()
+
+# Create a dummy class (DummyReadArgs) with the required attribute to pass
+# into runner() as an argument options class in subsequent tests
+
+
+class DummyReadArgs(object):
+    '''dummy object pretending to be the argument options for the read
+    module in scripts.
+
+    '''
+    task = "show"
+
+
+def test_read_runner_nofiles(capsys):
+    '''Test that the script deals with no files provided as expected.'''
+    # run the relevant script method (runner())
+    read.runner(None, DummyArgs(), [])
+    # capture the output and check that no output is generated
+    stdout, _ = capsys.readouterr()
+    assert stdout == ""
+
+
+def test_read_runner_file(capsys, tmpdir):
+    '''Test that the script deals with one provided as expected.'''
+    *** create fortran file to parse
+    read.runner(None, DummyArgs(), [tmpfile])
+
+    stdout, _ = capsys.readouterr()
+    assert stdout == ""
+
+
+def test_read_runner_files(capsys, tmpdir):
+    '''Test that the script deals with one provided as expected.'''
+    *** create multiple fortran files to parse
+    read.runner(None, DummyArgs(), [tmpfile], tmpfile2)
+
+    stdout, _ = capsys.readouterr()
+    assert stdout == ""
+
+
+def test_read_runner_no_show(capsys, tmpdir):
+    '''Test that the script deals with one provided as expected.'''
+    *** Check we raie NotImplementedError
+    read.runner(None, DummyArgs(), [tmpfile], tmpfile2)
+
+    stdout, _ = capsys.readouterr()
+    assert stdout == ""
+
+
+def test_read_main(capsys):
+    ''' Check a simple single file example runs correctly '''
