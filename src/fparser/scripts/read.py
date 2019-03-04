@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -63,29 +64,47 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-import os
+'''Python script with command line options which calls the Fortran
+File Reader with the supplied filename(s) and outputs the readers
+representation of the code(s).
+
+'''
+from __future__ import print_function
 import sys
-### START UPDATE SYS.PATH ###
-### END UPDATE SYS.PATH ###
+
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
     from optparse import OptionParser
-from fparser.script_options import set_read_options
+from fparser.scripts.script_options import set_read_options
 
-def runner (parser, options, args):
-    from fparser.readfortran import  FortranFileReader
+
+def runner(_, options, args):
+    '''Call the Fortran File reader for each filename in args and print
+    out its content.
+
+    :param options: command line argument information from the options \
+    parser
+    :type options: :py:class:`optparse.Values`
+    :param args: a list of fortran filepaths
+    :type args: list of str
+
+    :raises NotImplementedError: if there is no task option.
+
+    '''
+    from fparser.common.readfortran import FortranFileReader
     for filename in args:
         reader = FortranFileReader(filename)
-        if options.task=='show':
+        if options.task == 'show':
             for item in reader:
-                print(item, file=sys.stdout)
+                print(item)
                 sys.stdout.flush()
         else:
             raise NotImplementedError(repr(options.task))
-        
 
-def main ():
+
+def main():
+    '''Check input options then call the runner function.'''
     parser = OptionParser()
     set_read_options(parser)
     if hasattr(parser, 'runner'):
@@ -94,5 +113,6 @@ def main ():
     runner(parser, options, args)
     return
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
