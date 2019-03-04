@@ -1428,16 +1428,20 @@ class FortranFileReader(FortranReaderBase):
         # contents of the file. Obviously if the file changes content but not
         # filename, problems will ensue.
         #
+        self._remove_on_destruction = False
+        self._close_on_destruction = False
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
-            self.file = open(file_candidate, 'r')
+            from fparser.common.utils import make_clean_tmpfile
+            tmpfile = make_clean_tmpfile(file_candidate)
+            self.file = open(tmpfile, 'r')
             self._close_on_destruction = True
+            self._remove_on_destruction = True
         elif hasattr(file_candidate,
                      'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
             self.id = file_candidate.name
             self.file = file_candidate
-            self._close_on_destruction = False
         else:  # Probably not something we can deal with
             message = 'FortranFileReader is used with a filename'
             message += ' or file-like object.'
@@ -1457,6 +1461,8 @@ class FortranFileReader(FortranReaderBase):
     def __del__(self):
         if self._close_on_destruction:
             self.file.close()
+            if self._remove_on_destruction:
+                os.remove(self.file.name)
 
     def close_source(self):
         self.file.close()

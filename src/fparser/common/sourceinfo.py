@@ -307,7 +307,11 @@ def get_source_info(file_candidate):
         # It is closed on completion so as to return it to the state it was
         # found in.
         #
-        with open(file_candidate, 'r') as file_object:
-            return get_source_info_str(file_object.read())
+        from fparser.common.utils import make_clean_tmpfile
+        tmpfile = make_clean_tmpfile(file_candidate)
+        with open(tmpfile, 'r') as file_object:
+            string= get_source_info_str(file_object.read())
+        os.remove(tmpfile)
+        return string
 
 ##############################################################################

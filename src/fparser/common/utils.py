@@ -349,3 +349,52 @@ class classes(with_metaclass(meta_classes, type)):
         _classes_cache[name] = cls
         return cls
 
+
+def make_clean_tmpfile(filename, skip_bad_input=True, encoding="ascii"):
+    '''An input file may contain invalid characters which, in Python3
+    causes an exception when the file is read. By default, this utility
+    removes any invalid characters from the input file, writes the
+    cleaned version into a temporary file, and returns the name of the
+    newly created temporary file. It is up to the user of this
+    function to remove the temporary file once it is no longer
+    required. If the skip_bad_input optional argument is set to
+    'False' then an exception will be raised if invalid characters are
+    found in either Python2 or 3.
+
+    :param str filename: the name of the original filename
+    :param bool skip_bad_input: Optional argument specifying whether \
+    to ignore and remove invalid input ('True') or whether to raise an \
+    exception ('False'). Defaults to 'True'.
+    :param str encoding: Optional argument specifying the encoding to \
+    use when reading the input file. Defaults to 'ascii'.
+
+    :returns: the name of the temporary file created by this function.
+    :rtype: str
+
+    :raises ParseError: if invalid input is found in the input file
+    and the argument 'skip_bad_input' is set to 'False'.
+
+    '''
+    import tempfile
+    import codecs
+
+    orig_file = codecs.open(filename, "r", encoding=encoding)
+    try:
+        _ = orig_file.read()
+    except UnicodeDecodeError as excinfo:
+        if not skip_bad_input:
+            raise ParseError("Bad character found in input file. Error "
+                             "returned was {0}".format(str(excinfo)))
+    orig_file.close()
+
+    # Tell codec to skip any errors
+    orig_file = codecs.open(filename, "r", encoding=encoding,
+                            errors='ignore')
+
+    # Set delete to False so file will not be deleted when closed.
+    temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
+    temp_file.write(orig_file.read())
+    temp_file.close()
+    orig_file.close()
+
+    return temp_file.name

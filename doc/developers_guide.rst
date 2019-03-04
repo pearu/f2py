@@ -50,6 +50,49 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 Note that the setting for `ignore_comments` provided here can be overridden
 on a per-call basis by methods such as `get_single_line`.
 
+Invalid input
+-------------
+
+The file reader uses 'open' to open a Fortran file. If invalid input
+is found then Python does not complain, however Python3 raises a
+`UnicodeDecodeError` exception.
+
+To get round this problem a utility function has been written in
+utils.py called `make_clean_tmpfile`. This utility gives control over
+whether an exception is raised or not in both Python2 and 3. It also
+allows the offending errors to be stripped so that the rest of the
+file can be processed successfully.
+
+The uility is required in two places in the code, in `readfortran.py`
+by the file reader and in `sourceinfo.py`. The latter is used to
+determine which Fortran formatting is used (fixed, free etc).
+
+The utility makes use of `codec.open(errors="ignore")` option. Whilst
+it would have been easier to replace the existing `open` calls with
+`codec.open` this led to many Python2 problems due to `codec.open`
+returning `unicode` for both Python 2 and 3 (whereas open returns
+`str`). The changes that would need to be made to make Python2 and the
+Python2 tests work were significant.
+
+Therefore it was decided to use `codec.open` to check for errors and
+to strip out any errors if requested. The resultant code is written
+into a temporary file (regardless of whether there were errors in it
+or not). This then allows the main code to continue to use the `open`
+function to open the temporary file, removing the need to make big
+changes to fparser.
+
+Note, if Python 2 support is dropped in the future then this function
+can be re-worked so that `codec.open` replaces `open` and no temporary
+file is required.
+
+In Python, temporary files are usually deleted when closed. This
+feature is not wanted here. Therefore the `make_clean_tmpfile`
+function creates a temporary file that will not be deleted when
+closed. This means that the main code must take responsibility for
+deleting it once it is no longer required. Logic has been added to the
+Fortran file reading code to make sure any temporary files are removed
+as required.
+
 Fparser2
 --------
 
