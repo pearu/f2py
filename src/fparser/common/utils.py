@@ -350,7 +350,7 @@ class classes(with_metaclass(meta_classes, type)):
         return cls
 
 
-def make_clean_tmpfile(filename, skip_bad_input=True, encoding="ascii"):
+def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     '''An input file may contain invalid characters which, in Python3
     causes an exception when the file is read. By default, this utility
     removes any invalid characters from the input file, writes the
@@ -377,14 +377,23 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="ascii"):
     '''
     import tempfile
     import codecs
+    from fparser.two.utils import InternalError
 
-    orig_file = codecs.open(filename, "r", encoding=encoding)
+    if skip_bad_input not in [False, True]:
+        from fparser.two.utils import InternalError
+        raise InternalError(
+            "utils.py: make_clean_tmpfile: skip_bad_input argument should "
+            "be False or True but found '{0}'.".format(skip_bad_input))
+
     try:
+        orig_file = codecs.open(filename, "r", encoding=encoding)
         _ = orig_file.read()
+    except LookupError as excinfo:
+        raise InternalError(excinfo)
     except UnicodeDecodeError as excinfo:
         if not skip_bad_input:
             raise ParseError("Bad character found in input file. Error "
-                             "returned was {0}".format(str(excinfo)))
+                             "returned was {0}.".format(str(excinfo)))
     orig_file.close()
 
     # Tell codec to skip any errors
