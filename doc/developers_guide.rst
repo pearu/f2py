@@ -50,6 +50,11 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 Note that the setting for `ignore_comments` provided here can be overridden
 on a per-call basis by methods such as `get_single_line`.
 
+A convenience script called read.py is provided in the scripts
+directory which takes a filename as input and returns the file
+reader's representation of that file. This could be useful for
+debugging purposes.
+
 Fparser2
 --------
 
