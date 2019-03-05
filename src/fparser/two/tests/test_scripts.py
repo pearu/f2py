@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -39,7 +39,7 @@
 # pylint: disable=too-few-public-methods
 
 import pytest
-from fparser.scripts import read
+from fparser.scripts import fparser2, read
 
 # fparser2.py script function runner()
 
@@ -54,7 +54,6 @@ class DummyArgs(object):
 
 def test_runner_no_files(capsys):
     '''Test that the script deals with no files provided as expected.'''
-    from fparser.scripts import fparser2
     # run the relevant script method (runner())
     with pytest.raises(SystemExit) as excinfo:
         fparser2.runner(None, DummyArgs(), [])
@@ -69,7 +68,6 @@ def test_runner_non_existant_file(capsys):
     provided does not exist.
 
     '''
-    from fparser.scripts import fparser2
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgs(), ["idontexist.txt"])
     # capture the output and check that the appropriate error has been reported
@@ -79,7 +77,6 @@ def test_runner_non_existant_file(capsys):
 
 def test_runner_set_mode(tmpdir, capsys):
     '''Test that the script can change mode.'''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
@@ -98,7 +95,6 @@ def test_runner_set_mode(tmpdir, capsys):
 
 def test_runner_syntax_error(tmpdir, capsys):
     '''Test that the script deals with code with an invalid syntax.'''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("prog error\nend program error\n")
@@ -120,7 +116,6 @@ def test_runner_syntax_error_2(tmpdir, capsys):
     works.
 
     '''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program error\nif (.true.) then\nend if label\n"
@@ -138,7 +133,6 @@ def test_runner_syntax_error_2(tmpdir, capsys):
 
 def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     '''Test that the script deals with an internal error as expected.'''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
@@ -163,7 +157,6 @@ def test_runner_internal_error(tmpdir, monkeypatch, capsys):
 
 def test_runner_output(tmpdir, capsys):
     '''Test that the script outputs the code it has parsed '''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
@@ -179,7 +172,6 @@ def test_runner_multi_output(tmpdir, capsys):
     multiple files specified
 
     '''
-    from fparser.scripts import fparser2
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
@@ -195,7 +187,6 @@ def test_runner_multi_output(tmpdir, capsys):
 
 def test_main_output(tmpdir, capsys, monkeypatch):
     '''Test that the script main() function outputs the code it has parsed'''
-    from fparser.scripts import fparser2
     import sys
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
@@ -218,8 +209,12 @@ class DummyReadArgs(object):
     '''dummy object pretending to be the argument options for the read
     module in scripts.
 
+    :param str task: the value to set the internal task
+    variable. Defaults to "show".
+
     '''
-    task = "show"
+    def __init__(self, task="show"):
+        self.task = task
 
 
 def test_read_runner_nofiles(capsys):
@@ -232,31 +227,53 @@ def test_read_runner_nofiles(capsys):
 
 
 def test_read_runner_file(capsys, tmpdir):
-    '''Test that the script deals with one provided as expected.'''
-    *** create fortran file to parse
-    read.runner(None, DummyArgs(), [tmpfile])
-
+    '''Test that the script deals with one file as expected.'''
+    my_file = tmpdir.mkdir("sub").join("hello.f90")
+    my_file.write("program hello\nend program hello\n")
+    read.runner(None, DummyReadArgs(), [str(my_file)])
     stdout, _ = capsys.readouterr()
-    assert stdout == ""
+    assert "line #1'program hello'" in stdout
+    assert "line #2'end program hello'" in stdout
 
 
 def test_read_runner_files(capsys, tmpdir):
-    '''Test that the script deals with one provided as expected.'''
-    *** create multiple fortran files to parse
-    read.runner(None, DummyArgs(), [tmpfile], tmpfile2)
-
+    '''Test that the script deals with multiple files as expected.'''
+    my_file1 = tmpdir.mkdir("sub1").join("hello1.f90")
+    my_file1.write("program hello1\nend program hello1\n")
+    my_file2 = tmpdir.mkdir("sub2").join("hello2.f90")
+    my_file2.write("program hello2\nend program hello2\n")
+    read.runner(None, DummyReadArgs(), [str(my_file1), str(my_file2)])
     stdout, _ = capsys.readouterr()
-    assert stdout == ""
+    assert "line #1'program hello1'" in stdout
+    assert "line #2'end program hello1'" in stdout
+    assert "line #1'program hello2'" in stdout
+    assert "line #2'end program hello2'" in stdout
 
 
-def test_read_runner_no_show(capsys, tmpdir):
-    '''Test that the script deals with one provided as expected.'''
-    *** Check we raie NotImplementedError
-    read.runner(None, DummyArgs(), [tmpfile], tmpfile2)
+def test_read_runner_no_show(tmpdir):
+    '''Test that the script raises an exception if the task argument !=
+    "show" as that is the only option currently supported.
 
+    '''
+    my_file = tmpdir.mkdir("sub").join("hello.f90")
+    my_file.write("program hello\nend program hello\n")
+    with pytest.raises(NotImplementedError) as excinfo:
+        read.runner(None, DummyReadArgs("invalid"), [str(my_file)])
+    assert ("The task option ''invalid'' is invalid. Currently only 'show' "
+            "is supported.") in str(excinfo.value)
+
+
+def test_read_main(capsys, tmpdir, monkeypatch):
+    '''Test that the main function works as expected.'''
+    import sys
+    # Create a temporary file containing Fortran code.
+    my_file = tmpdir.mkdir("sub").join("hello.f90")
+    my_file.write("program hello\nend program hello\n")
+    # Use monkeypatch to spoof the command-line argument
+    monkeypatch.setattr(sys, "argv", ["read", str(my_file)])
+    # run the relevant script method (main())
+    read.main()
+    # capture the output and check that the code has been output
     stdout, _ = capsys.readouterr()
-    assert stdout == ""
-
-
-def test_read_main(capsys):
-    ''' Check a simple single file example runs correctly '''
+    assert "line #1'program hello'" in stdout
+    assert "line #2'end program hello'" in stdout

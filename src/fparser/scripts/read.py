@@ -89,7 +89,8 @@ def runner(_, options, args):
     :param args: a list of fortran filepaths
     :type args: list of str
 
-    :raises NotImplementedError: if there is no task option.
+    :raises NotImplementedError: if the task option is not set to \
+    "show".
 
     '''
     from fparser.common.readfortran import FortranFileReader
@@ -100,7 +101,9 @@ def runner(_, options, args):
                 print(item)
                 sys.stdout.flush()
         else:
-            raise NotImplementedError(repr(options.task))
+            raise NotImplementedError(
+                "The task option '{0}' is invalid. Currently only "
+                "'show' is supported.".format(repr(options.task)))
 
 
 def main():
