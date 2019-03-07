@@ -205,16 +205,16 @@ def test_mct_parse_error(tmpdir):
     with pytest.raises(ParseError) as excinfo:
         _ = make_clean_tmpfile(input_filepath, skip_bad_input=False,
                                encoding="ascii")
-    assert ("Bad character found in input file. Error returned was 'ascii' "
+    assert ("Bad character in input file. Error returned was 'ascii' "
             "codec can't decode byte ") in str(excinfo.value)
     # Can't check the actual value as some versions of Python3 return
     # a different value to the one above.
     assert "in position 0: ordinal not in range(128)." in str(excinfo.value)
 
 
-def test_mct_skip_error(tmpdir):
+def test_mct_skip_error(tmpdir, caplog):
     '''Test that invalid characters are skipped in an input file by
-    default.
+    default and that logging messages are created.
 
     '''
     content = ("HELLO")
@@ -224,3 +224,10 @@ def test_mct_skip_error(tmpdir):
     with open(output_filepath, "r") as cfile:
         output = cfile.read()
     assert output == content
+    for record in caplog.records:
+        assert record.levelname != 'CRITICAL'
+    assert ("Skipped bad character in input file. Error returned was 'ascii' "
+            "codec can't decode byte ") in caplog.text
+    # Can't check the actual value as some versions of Python3 return
+    # a different value to the one above.
+    assert "in position 1: ordinal not in range(128)." in caplog.text

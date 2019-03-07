@@ -68,6 +68,9 @@
 from __future__ import print_function
 from fparser.scripts.script_options import set_fparser_options
 
+import logging
+logging.basicConfig()
+
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:

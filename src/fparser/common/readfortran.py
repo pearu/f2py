@@ -1433,6 +1433,9 @@ class FortranFileReader(FortranReaderBase):
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
             from fparser.common.utils import make_clean_tmpfile
+            # Handle potential invalid characters in the input. Done
+            # by creating a new file (tmpfile) with any errors removed
+            # (or raising an exception - see make_clean_tmpfile).
             tmpfile = make_clean_tmpfile(file_candidate)
             self.file = open(tmpfile, 'r')
             self._close_on_destruction = True

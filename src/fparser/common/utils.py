@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -81,6 +82,7 @@ __all__ = ['split_comma', 'specs_split_comma',
            'CHAR_BIT','str2stmt',
            'classes']
 
+import logging
 import re
 import os, glob
 import sys
@@ -371,7 +373,9 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     :returns: the name of the temporary file created by this function.
     :rtype: str
 
-    :raises ParseError: if invalid input is found in the input file
+    :raises InternalError: if the skip_bad_input argument has an \
+    invalid (not False or True)
+    :raises ParseError: if invalid input is found in the input file \
     and the argument 'skip_bad_input' is set to 'False'.
 
     '''
@@ -390,9 +394,12 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     except LookupError as excinfo:
         raise InternalError(excinfo)
     except UnicodeDecodeError as excinfo:
+        message = ("character in input file. Error returned was "
+                   "{0}.".format(str(excinfo)))
         if not skip_bad_input:
-            raise ParseError("Bad character found in input file. Error "
-                             "returned was {0}.".format(str(excinfo)))
+            raise ParseError("Bad "+message)
+        # Log the fact that this character will be removed from the input file
+        logging.getLogger(__name__).warning("Skipped bad "+message)
     orig_file.close()
 
     # Tell codec to skip any errors

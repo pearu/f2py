@@ -257,7 +257,12 @@ def get_source_info(file_candidate):
     '''
     Determines the format of Fortran source held in a file.
 
-    Returns a FortranFormat object.
+    :param file_candidate: a filename or a file object
+    :type file_candidate: str or (file (py2) or _io.TextIOWrapper (py3))
+
+    :returns: the Fortran format encoded as a string.
+    :rtype: str
+
     '''
     if hasattr(file_candidate, 'name') and hasattr(file_candidate, 'read'):
         filename = file_candidate.name
