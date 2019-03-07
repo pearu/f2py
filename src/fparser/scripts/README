@@ -7,8 +7,8 @@ fparser2.py
 
 Runs fparser2 on an input file and displays the de-parsed code. To see
 any command line options add -h. This script can be used to choose
-between parsing Fortran 2003 and Fortran 2008. An example of this
-scripts use is:
+between parsing Fortran 2003 and Fortran 2008. An example of the use
+of this script is:
 
 > cat tmp.f90
 program test
@@ -20,9 +20,9 @@ END PROGRAM test
 parse.py
 --------
 
-Runs fparser1 on an input file and displays the parsers representation
-of that code. To see any command line options add -h. An example of
-this scripts use is:
+Runs fparser1 on an input file and displays the parser's
+representation of that code. To see any command line options add
+-h. An example of the use of this script is:
 
 > cat tmp.f90
 program test
@@ -46,9 +46,10 @@ read.py
 -------
 
 Runs the fparser file reader on an input file and displays the file
-readers representation of that code. This is useful for testing that
+reader's representation of that code. This is useful for testing that
 the file reader is working as expected. Note the file reader is
-required by both the fparser2.py and parse.py scripts.
+required by both the fparser2.py and parse.py scripts. An example of
+the use of this script is:
 
 > cat tmp.f90
 program test

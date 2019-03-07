@@ -93,7 +93,7 @@ def runner(_, options, args):
         try:
             f2003_parser = ParserFactory().create()
             program = f2003_parser(reader)
-            print (program)
+            print (repr(program))
         except FortranSyntaxError as msg:
             print ("Syntax error: {0}".format(str(msg)))
             try:

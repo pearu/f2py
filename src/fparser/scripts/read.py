@@ -65,7 +65,7 @@
 # DAMAGE.
 
 '''Python script with command line options which calls the Fortran
-File Reader with the supplied filename(s) and outputs the readers
+File Reader with the supplied filename(s) and outputs the reader's
 representation of the code(s).
 
 '''
@@ -86,7 +86,7 @@ def runner(_, options, args):
     :param options: command line argument information from the options \
     parser
     :type options: :py:class:`optparse.Values`
-    :param args: a list of fortran filepaths
+    :param args: a list of Fortran filepaths
     :type args: list of str
 
     :raises NotImplementedError: if the task option is not set to \
@@ -112,7 +112,6 @@ def main():
     set_read_options(parser)
     options, args = parser.parse_args()
     runner(parser, options, args)
-    return
 
 
 if __name__ == "__main__":
