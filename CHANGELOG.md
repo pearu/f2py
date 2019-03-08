@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+08/03/2019 Issue #165 and PR #185. Fixes Python-3 specific code in the
+           read.py script and adds some documentation.
+
 28/02/2019 Issue #139 and PR #176. Makes the handling of include files more
            robust and adds a representation for them in the parse tree if
            they cannot be resolved.
