@@ -149,7 +149,7 @@ import six
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
 
-logging.getLogger(__name__).setLevel(logging.DEBUG)
+#logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',

@@ -79,7 +79,7 @@ from fparser.common.utils import split_comma,       \
                                  specs_split_comma, \
                                  is_int_literal_constant
 from fparser.common.utils import classes, AnalyzeError
-logging.getLogger(__name__).setLevel(logging.DEBUG)
+#logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 
 class AttributeHolder(object):

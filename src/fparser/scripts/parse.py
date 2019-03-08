@@ -65,6 +65,10 @@
 
 from fparser.scripts.script_options import set_parse_options
 import fparser.common.sourceinfo
+
+import logging
+logging.basicConfig()
+
 ### START UPDATE SYS.PATH ###
 ### END UPDATE SYS.PATH ###
 try:

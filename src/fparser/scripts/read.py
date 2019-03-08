@@ -65,6 +65,10 @@
 
 import os
 import sys
+
+import logging
+logging.basicConfig()
+
 ### START UPDATE SYS.PATH ###
 ### END UPDATE SYS.PATH ###
 try:
