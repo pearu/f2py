@@ -85,7 +85,6 @@ __all__ = ['split_comma', 'specs_split_comma',
 import logging
 import re
 import os, glob
-import sys
 import traceback
 from six import with_metaclass
 
@@ -399,7 +398,7 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
         if not skip_bad_input:
             raise ParseError("Bad "+message)
         # Log the fact that this character will be removed from the input file
-        logging.getLogger(__name__).warning("Skipped bad "+message)
+        logging.getLogger(__name__).warning("Skipped bad %s", message)
     orig_file.close()
 
     # Tell codec to skip any errors

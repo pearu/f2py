@@ -63,14 +63,14 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
+import logging
 from fparser.scripts.script_options import set_parse_options
 import fparser.common.sourceinfo
 
-import logging
 logging.basicConfig()
 
-### START UPDATE SYS.PATH ###
-### END UPDATE SYS.PATH ###
+# START UPDATE SYS.PATH ###
+# END UPDATE SYS.PATH ###
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
@@ -90,7 +90,7 @@ def runner(parser, options, args):
         parser.parse()
         parser.analyze()
         if options.task == 'show':
-            print(parser.block.torepr(4))
+            print parser.block.torepr(4)
         elif options.task == 'none':
             pass
         else:

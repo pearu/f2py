@@ -66,9 +66,9 @@
 
 ''' Example script to parse a Fortran program using fparser '''
 from __future__ import print_function
+import logging
 from fparser.scripts.script_options import set_fparser_options
 
-import logging
 logging.basicConfig()
 
 try:
