@@ -1750,62 +1750,6 @@ def test_deallocate_stmt():  # R635
 #
 
 
-def test_primary():  # R701
-
-    tcls = Primary
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
-
-    obj = tcls('(a)')
-    assert isinstance(obj, Parenthesis), repr(obj)
-    assert str(obj) == '(a)'
-
-    obj = tcls('1')
-    assert isinstance(obj, Int_Literal_Constant), repr(obj)
-    assert str(obj) == '1'
-
-    obj = tcls('1.')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '1.'
-
-    obj = tcls('(1, n)')
-    assert isinstance(obj, Complex_Literal_Constant), repr(obj)
-    assert str(obj) == '(1, n)'
-
-    obj = tcls('.true.')
-    assert isinstance(obj, Logical_Literal_Constant), repr(obj)
-    assert str(obj) == '.TRUE.'
-
-    obj = tcls('"hey a()c"')
-    assert isinstance(obj, Char_Literal_Constant), repr(obj)
-    assert str(obj) == '"hey a()c"'
-
-    obj = tcls('b"0101"')
-    assert isinstance(obj, Binary_Constant), repr(obj)
-    assert str(obj) == 'B"0101"'
-
-    obj = tcls('o"0107"')
-    assert isinstance(obj, Octal_Constant), repr(obj)
-    assert str(obj) == 'O"0107"'
-
-    obj = tcls('z"a107"')
-    assert isinstance(obj, Hex_Constant), repr(obj)
-    assert str(obj) == 'Z"A107"'
-
-    obj = tcls('a % b')
-    assert isinstance(obj, Data_Ref), repr(obj)
-    assert str(obj) == 'a % b'
-
-    obj = tcls('a(:)')
-    assert isinstance(obj, Array_Section), repr(obj)
-    assert str(obj) == 'a(:)'
-
-    obj = tcls('0.0E-1')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '0.0E-1'
-
-
 def test_parenthesis():  # R701.h
 
     tcls = Parenthesis
