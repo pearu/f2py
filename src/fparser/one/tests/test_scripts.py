@@ -80,8 +80,10 @@ def test_log(caplog, monkeypatch):
     # Check the log messages
     for record in caplog.records:
         assert record.levelname != 'CRITICAL'
-    assert ("Skipped bad character in input file. Error returned was 'utf8' "
-            "codec can't decode byte ") in caplog.text
+    assert ("Skipped bad character in input file. Error returned was "
+            "'utf") in caplog.text
+    # Output can be utf8 or utf-8 so split test in two.
+    assert "8' codec can't decode byte " in caplog.text
     # Can't check the actual value as some versions of Python3 return
     # a different value to the one above.
     assert "in position 1383: invalid continuation byte." in caplog.text
