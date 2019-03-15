@@ -84,7 +84,9 @@ __all__ = ['split_comma', 'specs_split_comma',
 
 import logging
 import re
-import os, glob
+import os
+import glob
+import sys
 import traceback
 from six import with_metaclass
 
@@ -407,7 +409,13 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
 
     # Set delete to False so file will not be deleted when closed.
     temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    temp_file.write(orig_file.read())
+    input = orig_file.read()
+    if sys.version_info.major < 3:
+        # Python 2. Unicode needs to be encoded.
+        temp_file.write(input.encode("UTF-8"))
+    else:
+        # Python 3. Unicode is used natively.
+        temp_file.write(input)
     temp_file.close()
     orig_file.close()
 

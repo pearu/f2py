@@ -87,7 +87,8 @@ def runner(_, options, args):
         raise SystemExit(1)
     for filename in args:
         try:
-            reader = FortranFileReader(filename)
+            reader = FortranFileReader(filename,
+                                       ignore_comments=False)
         except IOError as error:
             print (error)
             return
