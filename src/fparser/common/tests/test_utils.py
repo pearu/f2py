@@ -231,3 +231,13 @@ def test_mct_skip_error(tmpdir, caplog):
     # Can't check the actual value as some versions of Python3 return
     # a different value to the one above.
     assert "in position 1: ordinal not in range(128)." in caplog.text
+
+
+def test_mct_utf8():
+    '''Test that utf8 content can be read and written correctly in
+    make_clean_tmpfile.
+
+    '''
+    filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "utf.f90")
+    _ = make_clean_tmpfile(filepath)
