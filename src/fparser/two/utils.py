@@ -538,8 +538,8 @@ content : tuple
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break
-            # Return to start of classes list now that we've matched
             if not strict_order:
+                # Return to start of classes list now that we've matched.
                 i = 0
             if enable_if_construct_hook:
                 from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
