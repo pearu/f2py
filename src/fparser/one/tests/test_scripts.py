@@ -36,12 +36,12 @@
 
 '''
 
+from __future__ import print_function
 import os
 import sys
-import pytest
 from fparser.scripts import parse
 
-# pytest.py script function runner()
+# Section 1: tests for pytest.py:runner
 
 
 def test_runner(capsys, tmpdir, monkeypatch):
@@ -55,7 +55,7 @@ def test_runner(capsys, tmpdir, monkeypatch):
     parse.main()
     # capture the output and check that the code has been output
     stdout, _ = capsys.readouterr()
-    print( stdout)
+    print(stdout)
     assert(
         "    Program\n"
         "      blocktype='program'\n"
@@ -86,4 +86,4 @@ def test_log(caplog, monkeypatch):
     assert "8' codec can't decode byte " in caplog.text
     # Can't check the actual value as some versions of Python3 return
     # a different value to the one above.
-    assert "in position 1383: invalid continuation byte." in caplog.text
+    assert "in position 1815: invalid continuation byte." in caplog.text

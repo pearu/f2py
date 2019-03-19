@@ -1,55 +1,37 @@
-MODULE dynadv_cen2
-
-   IMPLICIT NONE
-   PRIVATE
-
-   PUBLIC   dyn_adv_cen2   ! routine called by step.F90
-CONTAINS
-
-   SUBROUTINE dyn_adv_cen2( kt )
-      !!----------------------------------------------------------------------
-      !!                  ***  ROUTINE dyn_adv_cen2  ***
-      !!
-      !! ** Purpose :   Compute the now momentum advection trend in flux form
-      !!              and the general trend of the momentum equation.
-      !!
-      !! ** Method  :   Trend evaluated using now fields (centered in time) 
-      !!
-      !! ** Action  :   (ua,va) updated with the now vorticity term trend
-      !!----------------------------------------------------------------------
-      INTEGER, INTENT( in ) ::   kt   ! ocean time-step index
-      !
-      INTEGER  ::   ji, jj, jk   ! dummy loop indices
-      REAL(wp) ::   zbu, zbv     ! local scalars
-      REAL(wp), POINTER, DIMENSION(:,:,:) ::  zfu_t, zfv_t, zfu_f, zfv_f, zfu_uw, zfv_vw, zfw
-      REAL(wp), POINTER, DIMENSION(:,:,:) ::  zfu, zfv
-      !!----------------------------------------------------------------------
-      !
-      !                                      ! ==================== !
-      !                                      !  Vertical advection  !
-      DO jk = 1, jpkm1                       ! ==================== !
-         !                                         ! Vertical volume fluxes 
-         zfw(:,:,jk) = 0.25 * e1t(:,:) * e2t(:,:) * wn(:,:,jk)
-         !
-         IF( jk == 1 ) THEN                        ! surface/bottom advective fluxes                   
-            zfu_uw(:,:,jpk) = 0.e0
-            zfv_vw(:,:,jpk) = 0.e0
-            !                                           ! Surface value
-            IF( lk_vvl ) THEN                                ! variable volume
-               zfu_uw(:,:, 1 ) = 0.e0    
-               zfv_vw(:,:, 1 ) = 0.e0
-            ELSE !furgle
-               DO jj = 2, jpjm1
-                  DO ji = 2, jpim1
-                     zfu_uw(ji,jj, 1 ) = 2.e0 * ( zfw(ji,jj,1) + zfw(ji+1,jj  ,1) ) * un(ji,jj,1)
-                     zfv_vw(ji,jj, 1 ) = 2.e0 * ( zfw(ji,jj,1) + zfw(ji  ,jj+1,1) ) * vn(ji,jj,1)
-                  END DO
-               END DO
-            ENDIF
-         END IF
-      END DO
-      !
-   END SUBROUTINE dyn_adv_cen2
-
-   !!==============================================================================
-END MODULE dynadv_cen2
+! -----------------------------------------------------------------------------
+! BSD 3-Clause License
+!
+! Copyright (c) 2017, Science and Technology Facilities Council
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!
+! * Redistributions of source code must retain the above copyright notice, this
+!   list of conditions and the following disclaimer.
+!
+! * Redistributions in binary form must reproduce the above copyright notice,
+!   this list of conditions and the following disclaimer in the documentation
+!   and/or other materials provided with the distribution.
+!
+! * Neither the name of the copyright holder nor the names of its
+!   contributors may be used to endorse or promote products derived from
+!   this software without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+! "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+! LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+! FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+! COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+! INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+! BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+! LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+! CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+! LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+! ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+! POSSIBILITY OF SUCH DAMAGE.
+! -----------------------------------------------------------------------------
+! Author R. W. Ford STFC Daresbury Lab
+program bad_char
+!  
+end program bad_char
