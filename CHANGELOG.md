@@ -11,6 +11,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+20/03/2019 Issue #132 and PR #184. Fixes for reading source files containing
+ 	   utf8 characters under Python 2.
+
 08/03/2019 Issue #165 and PR #185. Fixes Python-3 specific code in the
            read.py script and adds some documentation.
 
