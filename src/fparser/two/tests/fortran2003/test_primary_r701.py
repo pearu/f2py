@@ -42,33 +42,30 @@ import fparser.two.utils
 
 
 # A list of [Expression, Expected Type, ToString] for the test cases.
-cases = [
-    ['1.2e-03', f2003.Real_Literal_Constant, '1.2E-03'],
-    ['(1, n)', f2003.Complex_Literal_Constant, '(1, n)'],
-    ['.true.', f2003.Logical_Literal_Constant, '.TRUE.'],
-    ['"hey a()c"', f2003.Char_Literal_Constant, '"hey a()c"'],
-    ['b"0101"', f2003.Binary_Constant, 'B"0101"'],
+SUBCLASS_CASES = [
+    ['1.2e-03', f2003.Real_Literal_Constant, '1.2E-03'],  # Constructor
 
-    ['o"0107"', f2003.Octal_Constant, 'O"0107"'],
-    ['z"a107"', f2003.Hex_Constant, 'Z"A107"'],
-    ['a%b', f2003.Data_Ref, 'a % b'],
-    ['[ 1.2, 2.3e+2, -5.1e-3 ]', f2003.Array_Constructor,
+    ['a%b', f2003.Data_Ref, 'a % b'],  # Designator
+    ['[ 1.2, 2.3e+2, -5.1e-3 ]', f2003.Array_Constructor,  # Array constructor
      '[1.2, 2.3E+2, - 5.1E-3]'],
     ['PERSON  (12,  "Jones")', f2003.Part_Ref,
-     'PERSON(12, "Jones")'],
-    ['a', f2003.Name, 'a'],
-    ['(a)', f2003.Parenthesis, '(a)'],
-    ['(a +  b)', f2003.Parenthesis, '(a + b)'],
+     'PERSON(12, "Jones")'],  # Structure constructor
+    ['a', f2003.Name, 'a'],  # Type param name
+    ['(a +  b)', f2003.Parenthesis, '(a + b)'], # Parenthesis (expr)
 ]
 
 
-@pytest.mark.parametrize('source, expected_type, to_str', cases)
+@pytest.mark.parametrize('source, expected_type, to_str', SUBCLASS_CASES)
 def test_primary_subclasses(f2003_create, source, expected_type, to_str):
+    '''
+    '''
     obj = f2003.Primary(source)
     assert type(obj) == expected_type
     assert str(obj) == to_str
 
 
 def test_no_match(f2003_create):
+    '''
+    '''
     with pytest.raises(fparser.two.utils.NoMatchError):
         obj = f2003.Primary('! A comment')

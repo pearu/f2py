@@ -4312,7 +4312,7 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    """
+    '''
     Fortran 2003 rule R701
 
     primary is constant
@@ -4324,7 +4324,7 @@ class Primary(Base):  # R701
             or type-param-name
             or ( expr )
 
-    """
+    '''
     subclass_names = [
         'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
