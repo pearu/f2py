@@ -66,7 +66,10 @@
 
 ''' Example script to parse a Fortran program using fparser '''
 from __future__ import print_function
+import logging
 from fparser.scripts.script_options import set_fparser_options
+
+logging.basicConfig()
 
 try:
     from iocbio.optparse_gui import OptionParser
@@ -84,7 +87,8 @@ def runner(_, options, args):
         raise SystemExit(1)
     for filename in args:
         try:
-            reader = FortranFileReader(filename)
+            reader = FortranFileReader(filename,
+                                       ignore_comments=False)
         except IOError as error:
             print (error)
             return

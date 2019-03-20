@@ -71,12 +71,15 @@ representation of the code(s).
 '''
 from __future__ import print_function
 import sys
+import logging
+from fparser.scripts.script_options import set_read_options
+
+logging.basicConfig()
 
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
     from optparse import OptionParser
-from fparser.scripts.script_options import set_read_options
 
 
 def runner(_, options, args):

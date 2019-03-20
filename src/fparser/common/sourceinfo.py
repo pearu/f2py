@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -256,7 +257,12 @@ def get_source_info(file_candidate):
     '''
     Determines the format of Fortran source held in a file.
 
-    Returns a FortranFormat object.
+    :param file_candidate: a filename or a file object
+    :type file_candidate: str or (file (py2) or _io.TextIOWrapper (py3))
+
+    :returns: the Fortran format encoded as a string.
+    :rtype: str
+
     '''
     if hasattr(file_candidate, 'name') and hasattr(file_candidate, 'read'):
         filename = file_candidate.name
@@ -307,7 +313,11 @@ def get_source_info(file_candidate):
         # It is closed on completion so as to return it to the state it was
         # found in.
         #
-        with open(file_candidate, 'r') as file_object:
-            return get_source_info_str(file_object.read())
+        from fparser.common.utils import make_clean_tmpfile
+        tmpfile = make_clean_tmpfile(file_candidate)
+        with open(tmpfile, 'r') as file_object:
+            string = get_source_info_str(file_object.read())
+        os.remove(tmpfile)
+        return string
 
 ##############################################################################
