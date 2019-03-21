@@ -9762,7 +9762,6 @@ class %s_List(SequenceBase):
 class %s_Name(Base):
     subclass_names = [\'Name\']
 ''' % (n))
-            print('CREATED:', n)
         elif n.startswith('Scalar_'):
             _names.append(n)
             n = n[7:]
@@ -9770,4 +9769,5 @@ class %s_Name(Base):
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
+
 # EOF

@@ -52,8 +52,14 @@ import fparser.two.utils
 
 def assert_subclass_parse(source, base_type, actual_type=None,
                           expected_str=None):
-
+    '''Assert that the given source matches the given ``base_type``
+    and optionally the specific type that it should produce.
+    '''
     obj = f2003.Primary(source)
+    # Note: Check that the type exists in the possible types, rather than
+    # checking the type is an instance of one of the possible types (and
+    # all of its ancestor types). This is a much more targetted test as a
+    # result.
     assert type(obj) in possible_subclasses(base_type)
 
     if actual_type:
@@ -65,7 +71,27 @@ def assert_subclass_parse(source, base_type, actual_type=None,
         assert expected_str == str(obj)
 
 
+def possible_subclasses(node_type, _seen=None):
+    '''Given a type (e.g. Fortran2003.Primary), return all of the
+    subtypes that could have been matched after parsing.
+    '''
+    seen = _seen or []
+    subclasses = getattr(node_type, 'subclass_names', [])
+    if node_type not in seen:
+        seen.append(node_type)
+
+    for subclass_name in subclasses:
+        module = sys.modules[node_type.__module__]
+        subclass = getattr(module, subclass_name, None)
+        if subclass is not None and subclass not in seen:
+            seen.append(subclass)
+            possible_subclasses(subclass, seen)
+    return seen
+
+
 def test_Constant(f2003_create):
+    '''Test that Constant types are matched by Primary.
+    '''
     assert_subclass_parse(
         '1.2e-03', f2003.Constant,
         actual_type=f2003.Real_Literal_Constant,
@@ -73,6 +99,8 @@ def test_Constant(f2003_create):
 
 
 def test_Designator(f2003_create):
+    '''Test that Designator types are matched by Primary.
+    '''
     assert_subclass_parse(
         'array(1:5)', f2003.Designator,
         actual_type=f2003.Array_Section,
@@ -80,6 +108,8 @@ def test_Designator(f2003_create):
 
 
 def test_Array_Constructor(f2003_create):
+    '''Test that Array Constructor types are matched by Primary.
+    '''
     assert_subclass_parse(
         '[ 1.2, 2.3e + 2,    -5.1 e-3 ]', f2003.Array_Constructor,
         actual_type=f2003.Array_Constructor,
@@ -87,8 +117,12 @@ def test_Array_Constructor(f2003_create):
 
 
 def test_Structure_Constructor(f2003_create):
-    # The actual type is Part_Ref - it is possible that this could
-    # change in the future.
+    '''Test that Structure Constructor types are matched by Primary.
+    '''
+    # Note: The actual returned type is Part_Ref. With more context of what
+    # has already been parsed it is possible that this could change in the
+    # future. For instance, in this example "PERSON" could actually be the
+    # name of a function.
     assert_subclass_parse(
         'PERSON ( 12,   "Jones" )', f2003.Structure_Constructor,
         actual_type=f2003.Part_Ref,
@@ -112,41 +146,24 @@ def test_Type_Param_Inquiry():
     provided.
     '''
     assert_subclass_parse(
-        'an_object % a_type_bound_function', f2003.Type_Param_Inquiry)
+        'X % KIND', f2003.Type_Param_Inquiry)
 
 
-@pytest.mark.xfail
 def test_Type_Param_Name():
-    '''This test demonstrates the inability to distinguish Constant from
-    Type_Param_Name without more parse context than is currently being
-    provided.
+    '''Test that Type_Param_Name types are matched by Primary.
     '''
     assert_subclass_parse(
-        'A_TYPE', f2003.Type_Param_Name)
+        'INTEGER', f2003.Type_Param_Name,
+        actual_type=f2003.Name,
+        expected_str='INTEGER')
 
 
 def test_Parenthesis(f2003_create):
+    '''Test that Parenthesis types are matched by Primary.
+    '''
     assert_subclass_parse(
         '(a +  b)', f2003.Parenthesis,
         expected_str='(a + b)')
-
-
-def possible_subclasses(node_type, _seen=None):
-    '''Given a type, return all of the subtypes that could
-    have been matched.
-    '''
-    seen = _seen or []
-    subclasses = getattr(node_type, 'subclass_names', [])
-    if node_type not in seen:
-        seen.append(node_type)
-
-    for subclass_name in subclasses:
-        module = sys.modules[node_type.__module__]
-        subclass = getattr(module, subclass_name, None)
-        if subclass is not None and subclass not in seen:
-            seen.append(subclass)
-            possible_subclasses(subclass, seen)
-    return seen
 
 
 def test_no_match(f2003_create):
@@ -158,14 +175,22 @@ def test_no_match(f2003_create):
 
 
 @pytest.mark.xfail
+def test_C701_no_assumed_size_array(f2003_create):
+    '''Test C701 (R701) The type-param-name shall be the name of a type.
+    This test cannot be passed without more parse context of things like
+    defined types.
+    '''
+    context = f2003.Type_Declaration_Stmt("INTEGER :: not_a_type")
+    with pytest.raises(fparser.two.utils.NoMatchError):
+        f2003.Primary('not_a_type',)  # context)
+
+
+@pytest.mark.xfail
 def test_C702_no_assumed_size_array(f2003_create):
     '''Test C702 (R701) The designator shall not be a whole assumed-size array.
     This test cannot be passed without more parse context of things like
     defined types.
     '''
-    source = """
-        integer(*)  :: assumed_size_array, result
-        result = assumed_size_array
-    """
-    # TODO: Implement the actual parsing of this source.
-    assert source is None
+    context = f2003.Type_Declaration_Stmt("integer(*) :: assumed_size_array")
+    with pytest.raises(fparser.two.utils.NoMatchError):
+        f2003.Primary('assumed_size_array',)  # context)
