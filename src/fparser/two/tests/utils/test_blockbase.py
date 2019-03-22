@@ -92,6 +92,9 @@ def test_include(f2003_create):
 
 @pytest.mark.parametrize('strict_order', [True, False])
 def test_strict_order_invalid_code(f2003_create, strict_order):
+    '''Check that the strict_order flag toggles the parse behaviour as
+    expected.
+    '''
     subclasses = [F2003.Specification_Part, F2003.Execution_Part]
     reader = get_reader("""
         program main
@@ -124,7 +127,8 @@ def test_strict_order_invalid_code(f2003_create, strict_order):
 
 
 def test_strict_order_valid_code(f2003_create):
-    # Tests that the strict_order keyword allows repeated types.
+    '''Tests that the strict_order keyword allows repeated types.
+    '''
     subclasses = [F2003.Specification_Part, F2003.Execution_Part]
     reader = get_reader("""
         program main
