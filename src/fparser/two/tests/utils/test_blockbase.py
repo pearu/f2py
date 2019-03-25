@@ -121,7 +121,7 @@ def test_strict_order_invalid_code(f2003_create, strict_order):
         strict_order=strict_order)
 
     if strict_order:
-        assert result == None
+        assert result is None
     else:
         assert str(result) == expected
 
@@ -166,6 +166,9 @@ def test_strict_order_valid_code(f2003_create):
 def remove_indentation(string):
     '''
     A utility function that removes indented multiline strings of reprs.
+
+    :param string: the string to dedent
+    :type reader: str
 
     '''
     # Note, unlike textwrap.dedent this function removes the leading

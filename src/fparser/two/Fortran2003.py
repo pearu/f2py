@@ -8371,7 +8371,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
                   `Execution_Part` followed by an optional \
                   `Internal_Subprogram_Part`.
         :rtype: `NoneType` or \
-                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`,
+                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`, \
                 optional \
                 :py:class:`fparser.two.Fortran2003.Specification_Part`, \
                 optional \
