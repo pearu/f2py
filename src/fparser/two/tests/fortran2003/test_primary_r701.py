@@ -129,7 +129,7 @@ def test_Structure_Constructor(f2003_create):
         expected_str='PERSON(12, "Jones")')
 
 
-@pytest.mark.xfail(reason="Unable to reach Function_Reference when parsing")
+@pytest.mark.xfail(reason="Requires more parse context (#190)")
 def test_Function_Reference(f2003_create):
     '''This test demonstrates the inability to distinguish
     Structure_Constructor from Function_Reference without more parse context
@@ -139,7 +139,7 @@ def test_Function_Reference(f2003_create):
         'a_function(1.2, some_kwarg="hello")', f2003.Function_Reference)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Requires more parse context (#190)")
 def test_Type_Param_Inquiry():
     '''This test demonstrates the inability to distinguish Designator from
     Type_Param_Inquiry without more parse context than is currently being
@@ -174,7 +174,7 @@ def test_no_match(f2003_create):
         obj = f2003.Primary('! A comment')
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Requires more parse context (#190)")
 def test_C701_no_assumed_size_array(f2003_create):
     '''Test C701 (R701) The type-param-name shall be the name of a type.
     This test cannot be passed without more parse context of things like
@@ -185,7 +185,7 @@ def test_C701_no_assumed_size_array(f2003_create):
         f2003.Primary('not_a_type',)  # context)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Requires more parse context (#190)")
 def test_C702_no_assumed_size_array(f2003_create):
     '''Test C702 (R701) The designator shall not be a whole assumed-size array.
     This test cannot be passed without more parse context of things like
