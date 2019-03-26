@@ -406,7 +406,9 @@ content : tuple
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
               enable_select_type_construct_hook=False,
-              enable_case_construct_hook=False):
+              enable_case_construct_hook=False,
+              strict_order=False,
+              ):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -426,6 +428,8 @@ content : tuple
         :param bool enable_where_construct_hook: TBD
         :param bool enable_select_type_construct_hook: TBD
         :param bool enable_case_construct_hook: TBD
+        :param bool strict_order: Whether to enforce the order of the
+                                  given subclasses.
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls
@@ -534,8 +538,9 @@ content : tuple
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break
-            # Return to start of classes list now that we've matched
-            i = 0
+            if not strict_order:
+                # Return to start of classes list now that we've matched.
+                i = 0
             if enable_if_construct_hook:
                 from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
                     End_If_Stmt
