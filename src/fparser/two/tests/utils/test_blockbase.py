@@ -167,8 +167,9 @@ def remove_indentation(string):
     '''
     A utility function that removes indented multiline strings of reprs.
 
-    :param string: the string to dedent
-    :type reader: str
+    :param str string: the string to dedent.
+    :returns: a dedented version of the string.
+    :rtype: str
 
     '''
     # Note, unlike textwrap.dedent this function removes the leading

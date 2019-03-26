@@ -4,12 +4,17 @@ Original code by Pearu Peterson.
 
 Modifications by (in alphabetical order):
 
+* P. Elson, UK Met Office
 * R. W. Ford, Science & Technology Facilities Council, UK
 * M. Hambley, UK Met Office
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
+
+26/03/2019 Issue #136 and PR #183. Adds the ability to enforce the ordering
+	   of matches in the blockbase class and uses this functionality
+	   to fix potential errors in in Fortran2003 rule 1101.
 
 20/03/2019 Issue #132 and PR #184. Fixes for reading source files containing
  	   utf8 characters under Python 2.
