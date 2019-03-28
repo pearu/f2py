@@ -54,6 +54,15 @@ def assert_subclass_parse(source, base_type, actual_type=None,
                           expected_str=None):
     '''Assert that the given source matches the given ``base_type``
     and optionally the specific type that it should produce.
+
+    :param source: The Fortran source to be parsed.
+    :type source: str or :py:class:`FortranReaderBase`
+    :param base_type: the base type from which a match is expected to be found
+    :type base_type: :py:class:`fortran.two.Fortran2003.Base` subclass
+    :param actual_type: The actual type matched by the parser.
+    :type actual_type: :py:class:`fortran.two.Fortran2003.Base` subclass
+    :param str expected_str: The expected ``str(result)`` of the parsed result
+
     '''
     obj = f2003.Primary(source)
     # Note: Check that the type exists in the possible types, rather than
@@ -74,6 +83,17 @@ def assert_subclass_parse(source, base_type, actual_type=None,
 def possible_subclasses(node_type, _seen=None):
     '''Given a type (e.g. Fortran2003.Primary), return all of the
     subtypes that could have been matched after parsing.
+
+    NOTE: This is not a general implementation. It is useful for testing
+    in some limited situations. Please refer to the Base.__new__ for the
+    actual logic for identifying possible_subclasses.
+
+    :param node_type: The root node from which to find all subclasses. 
+    :type source: :py:class:`fortran.two.Fortran2003.Base` subclass
+    :param _seen: Private list of seen subclasses, designed to support \
+                  recursive calls to this function.
+    :type _seen: None or list
+
     '''
     seen = _seen or []
     subclasses = getattr(node_type, 'subclass_names', [])
@@ -171,7 +191,7 @@ def test_no_match(f2003_create):
     that isn't allowed as a Primary type (e.g. a comment).
     '''
     with pytest.raises(fparser.two.utils.NoMatchError):
-        obj = f2003.Primary('! A comment')
+        _ = f2003.Primary('! A comment')
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
