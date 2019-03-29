@@ -4312,20 +4312,23 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    """
-    <primary> = <constant>
-                | <designator>
-                | <array-constructor>
-                | <structure-constructor>
-                | <function-reference>
-                | <type-param-inquiry>
-                | <type-param-name>
-                | ( <expr> )
-    """
+    '''
+    Fortran 2003 rule R701
+
+    primary is constant
+            or designator
+            or array-constructor
+            or structure-constructor
+            or function-reference
+            or type-param-inquiry
+            or type-param-name
+            or ( expr )
+
+    '''
     subclass_names = [
-        'Constant', 'Parenthesis', 'Designator', 'Array_Constructor',
+        'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
-        'Type_Param_Inquiry', 'Type_Param_Name',
+        'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
     ]
 
 
