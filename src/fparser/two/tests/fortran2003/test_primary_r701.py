@@ -88,8 +88,8 @@ def possible_subclasses(node_type, _seen=None):
     in some limited situations. Please refer to the Base.__new__ for the
     actual logic for identifying possible_subclasses.
 
-    :param node_type: The root node from which to find all subclasses. 
-    :type source: :py:class:`fortran.two.Fortran2003.Base` subclass
+    :param node_type: The root node from which to find all subclasses.
+    :type node_type: :py:class:`fortran.two.Fortran2003.Base` subclass
     :param _seen: Private list of seen subclasses, designed to support \
                   recursive calls to this function.
     :type _seen: None or list
@@ -109,7 +109,7 @@ def possible_subclasses(node_type, _seen=None):
     return seen
 
 
-def test_Constant(f2003_create):
+def test_constant(f2003_create):
     '''Test that Constant types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -118,7 +118,7 @@ def test_Constant(f2003_create):
         expected_str='1.2E-03')
 
 
-def test_Designator(f2003_create):
+def test_designator(f2003_create):
     '''Test that Designator types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -127,7 +127,7 @@ def test_Designator(f2003_create):
         expected_str='array(1 : 5)')
 
 
-def test_Array_Constructor(f2003_create):
+def test_array_constructor(f2003_create):
     '''Test that Array Constructor types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -136,7 +136,7 @@ def test_Array_Constructor(f2003_create):
         expected_str='[1.2, 2.3E+2, - 5.1E-3]')
 
 
-def test_Structure_Constructor(f2003_create):
+def test_structure_constructor(f2003_create):
     '''Test that Structure Constructor types are matched by Primary.
     '''
     # Note: The actual returned type is Part_Ref. With more context of what
@@ -150,7 +150,7 @@ def test_Structure_Constructor(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_Function_Reference(f2003_create):
+def test_function_reference(f2003_create):
     '''This test demonstrates the inability to distinguish
     Structure_Constructor from Function_Reference without more parse context
     than is currently being provided.
@@ -160,7 +160,7 @@ def test_Function_Reference(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_Type_Param_Inquiry():
+def test_type_param_inquiry():
     '''This test demonstrates the inability to distinguish Designator from
     Type_Param_Inquiry without more parse context than is currently being
     provided.
@@ -169,7 +169,7 @@ def test_Type_Param_Inquiry():
         'X % KIND', f2003.Type_Param_Inquiry)
 
 
-def test_Type_Param_Name():
+def test_type_param_name():
     '''Test that Type_Param_Name types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -178,7 +178,7 @@ def test_Type_Param_Name():
         expected_str='INTEGER')
 
 
-def test_Parenthesis(f2003_create):
+def test_parenthesis(f2003_create):
     '''Test that Parenthesis types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -195,7 +195,7 @@ def test_no_match(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_C701_no_assumed_size_array(f2003_create):
+def test_c701_no_assumed_size_array(f2003_create):
     '''Test C701 (R701) The type-param-name shall be the name of a type.
     This test cannot be passed without more parse context of things like
     defined types.
@@ -206,7 +206,7 @@ def test_C701_no_assumed_size_array(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_C702_no_assumed_size_array(f2003_create):
+def test_c702_no_assumed_size_array(f2003_create):
     '''Test C702 (R701) The designator shall not be a whole assumed-size array.
     This test cannot be passed without more parse context of things like
     defined types.

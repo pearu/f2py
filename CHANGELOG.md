@@ -12,9 +12,12 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+29/03/2019 Issue #167 and PR #182. Fix to Fortran2003 rule 701 where large
+           codes were causing recurse-depth errors in Python.
+
 26/03/2019 Issue #136 and PR #183. Adds the ability to enforce the ordering
 	   of matches in the blockbase class and uses this functionality
-	   to fix potential errors in in Fortran2003 rule 1101.
+	   to fix potential errors in Fortran2003 rule 1101.
 
 20/03/2019 Issue #132 and PR #184. Fixes for reading source files containing
  	   utf8 characters under Python 2.
