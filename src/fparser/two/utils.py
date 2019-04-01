@@ -598,8 +598,6 @@ content : tuple
                             'expected <%s-name> is %s but got %s. Ignoring.'
                             % (end_stmt.get_type().lower(),
                                start_stmt.get_name(), end_stmt.get_name()))
-                else:
-                    end_stmt.set_name(start_stmt.get_name())
         return content,
 
     def init(self, content):
@@ -1196,12 +1194,13 @@ class EndStmtBase(StmtBase):
         else:
             if require_stmt_type:
                 return
-            line = ''
+            return None, None
         if line:
             if stmt_name is None:
                 return
             return stmt_type, stmt_name(line)
-        return stmt_type, None
+        else:
+            return stmt_type, None
 
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
@@ -1214,21 +1213,12 @@ class EndStmtBase(StmtBase):
     def get_type(self):
         return self.items[0]
 
-    def set_name(self, name):
-        from fparser.two.Fortran2003 import Name
-        if self.items[1] is not None:
-            self.warning(
-                'item already has name %r, changing it to %r' %
-                (self.items[1], name))
-        if isinstance(name, Name):
-            self.items[1] = name
-        else:
-            self.items[1] = Name(name)
-
     def tostr(self):
         if self.items[1] is not None:
             return 'END %s %s' % tuple(self.items)
-        return 'END %s' % (self.items[0])
+        if self.items[0] is not None:
+            return 'END %s' % (self.items[0])
+        return 'END'
 
     def torepr(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.type, self.name)
