@@ -400,7 +400,6 @@ content : tuple
     def match(startcls, subclasses, endcls, reader,
               match_labels=False,
               match_names=False,
-              set_unspecified_end_name=False,
               match_name_classes=(),
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
@@ -421,7 +420,6 @@ content : tuple
         :type reader: str or instance of :py:class:`FortranReaderBase`
         :param bool match_labels: TBD
         :param bool match_names: TBD
-        :param bool set_unspecified_end_name: TBD
         :param tuple match_name_classes: TBD
         :param bool enable_do_label_construct_hook: TBD
         :param bool enable_if_construct_hook: TBD
@@ -524,10 +522,7 @@ content : tuple
                     start_name, end_name = content[start_idx].\
                                            get_start_name(), \
                                            content[-1].get_end_name()
-                    if set_unspecified_end_name and end_name is None and \
-                       start_name is not None:
-                        content[-1].set_name(start_name)
-                    elif end_name and not start_name:
+                    if end_name and not start_name:
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
@@ -1199,8 +1194,7 @@ class EndStmtBase(StmtBase):
             if stmt_name is None:
                 return
             return stmt_type, stmt_name(line)
-        else:
-            return stmt_type, None
+        return stmt_type, None
 
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
