@@ -1198,7 +1198,6 @@ class EndStmtBase(StmtBase):
 
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
-        self.type, self.name = stmt_type, stmt_name
         return
 
     def get_name(self):
@@ -1215,7 +1214,8 @@ class EndStmtBase(StmtBase):
         return 'END'
 
     def torepr(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.type, self.name)
+        return '%s(%r, %r)' % (
+            self.__class__.__name__, self.get_type(), self.get_name())
 
     def get_end_name(self):
         name = self.items[1]
