@@ -1317,7 +1317,7 @@ class Derived_Type_Def(BlockBase):  # R429
                                [Type_Param_Def_Stmt, Private_Or_Sequence,
                                 Component_Part, Type_Bound_Procedure_Part],
                                End_Type_Stmt, reader,
-                               match_names=True,
+                               match_names=True  # C431
                                )
 
 

@@ -12,6 +12,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+05/04/2019 PR #192. END statements which use class EndStmtBase now output
+	   the same tokens as the input e.g. names are not added if they
+	   don't exist in the input.
+
 29/03/2019 Issue #167 and PR #182. Fix to Fortran2003 rule 701 where large
            codes were causing recurse-depth errors in Python.
 
