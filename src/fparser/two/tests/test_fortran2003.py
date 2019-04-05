@@ -3410,7 +3410,7 @@ def test_main_program0():  # R1101 helper
 end
     '''))
     assert isinstance(obj0, Main_Program0), repr(obj0)
-    assert str(obj0) == 'END PROGRAM'
+    assert str(obj0) == 'END'
 
     obj0 = Main_Program0(get_reader('''\
 contains
@@ -3419,7 +3419,7 @@ contains
 end
     '''))
     assert isinstance(obj0, Main_Program0), repr(obj0)
-    assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND FUNCTION\nEND PROGRAM'
+    assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND\nEND'
 
 
 def test_module():  # R1104
@@ -3430,7 +3430,7 @@ module m
 end
     '''))
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'MODULE m\nEND MODULE m'
+    assert str(obj) == 'MODULE m\nEND'
 
     obj = tcls(get_reader('''\
 module m
@@ -3442,8 +3442,8 @@ end
     '''))
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
-            'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b'
-            '\nEND MODULE m')
+            'MODULE m\n  TYPE :: a\n  END TYPE\n  TYPE :: b\n  END TYPE b'
+            '\nEND')
 
 
 def test_module_subprogram_part():  # R1107
@@ -3458,7 +3458,7 @@ contains
     ''', isfree=True))
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
-            '\n  a = 1.0\nEND SUBROUTINE foo')
+            '\n  a = 1.0\nEND')
 
 
 def test_module_nature():
@@ -3502,7 +3502,7 @@ real b
 end block data
     '''))
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA a'
+    assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA'
 
 #
 # SECTION 12
@@ -3538,7 +3538,7 @@ def test_interface_specification():  # R1202
     end
     '''))
     assert isinstance(obj, Function_Body), repr(obj)
-    assert str(obj) == 'FUNCTION foo()\nEND FUNCTION'
+    assert str(obj) == 'FUNCTION foo()\nEND'
 
 
 def test_interface_stmt():  # R1203
@@ -3590,7 +3590,7 @@ end
 '''))
     assert isinstance(obj, Function_Body), repr(obj)
     assert (str(obj) ==
-            'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
+            'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND')
 
 
 def test_subroutine_body():
@@ -3964,7 +3964,7 @@ def test_end_function_stmt():  # R1230
     tcls = End_Function_Stmt
     obj = tcls('end')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END FUNCTION'
+    assert str(obj) == 'END'
 
     obj = tcls('endfunction')
     assert str(obj) == 'END FUNCTION'
@@ -4054,7 +4054,7 @@ def test_end_subroutine_stmt():  # R1234
 
     obj = tcls('end')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END SUBROUTINE'
+    assert str(obj) == 'END'
 
     obj = tcls('endsubroutine')
     assert isinstance(obj, tcls), repr(obj)

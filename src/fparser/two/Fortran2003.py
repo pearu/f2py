@@ -1318,7 +1318,6 @@ class Derived_Type_Def(BlockBase):  # R429
                                 Component_Part, Type_Bound_Procedure_Part],
                                End_Type_Stmt, reader,
                                match_names=True,
-                               set_unspecified_end_name=True  # C431
                                )
 
 
