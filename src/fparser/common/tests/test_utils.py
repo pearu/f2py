@@ -38,7 +38,10 @@ Test the various utility functions
 """
 import io
 import os
+
 import pytest
+import six
+
 from fparser.common.utils import split_comma, ParseError, make_clean_tmpfile
 from fparser.two.utils import InternalError
 
@@ -142,7 +145,9 @@ def create_tmp_file(string, tmpdir, filename="tmp_in.f90"):
     '''
     filepath = os.path.join(str(tmpdir), filename)
     # Create the input_file
-    tmp_file = io.open(filepath, "w", encoding='utf8')
+    tmp_file = io.open(filepath, "w", encoding='UTF-8')
+    if six.PY2:
+        string = unicode(string)
     tmp_file.write(string)
     return tmp_file.name
 
@@ -201,7 +206,7 @@ def test_mct_parse_error(tmpdir):
     False.
 
     '''
-    invalid_content = "\xca"
+    invalid_content = u"\xca"
     input_filepath = create_tmp_file(invalid_content, tmpdir)
     with pytest.raises(ParseError) as excinfo:
         _ = make_clean_tmpfile(input_filepath, skip_bad_input=False,
@@ -218,8 +223,8 @@ def test_mct_skip_error(tmpdir, caplog):
     default and that logging messages are created.
 
     '''
-    content = ("HELLO")
-    invalid_content = "\xca".join(content)
+    content = "HELLO"
+    invalid_content = u"\xca".join(content)
     input_filepath = create_tmp_file(invalid_content, tmpdir)
     output_filepath = make_clean_tmpfile(input_filepath, encoding="ascii")
     with open(output_filepath, "r") as cfile:

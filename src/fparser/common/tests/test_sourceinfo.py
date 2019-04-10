@@ -354,15 +354,14 @@ def test_get_source_info_file(extension, header, content):
 
 
 def test_get_source_info_utf8():
-    kwargs = dict(encoding='utf8') if six.PY3 else {}
-    with tempfile.NamedTemporaryFile(mode='w', **kwargs) as tmp_file:
+    encoding = dict(encoding='UTF-8') if six.PY3 else {}
+    with tempfile.NamedTemporaryFile(mode='w', **encoding) as tmp_file:
         content = u'''
             ! A fortran comment with a unicode character "{}"
         '''.format(u"\u2014")
-        if six.PY3:
-            tmp_file.write(content)
-        else:
-            tmp_file.write(content.encode('utf8'))
+        if six.PY2:
+            content = content.encode('UTF-8')
+        tmp_file.write(content)
         tmp_file.flush()
 
         source_info = get_source_info(tmp_file.name)

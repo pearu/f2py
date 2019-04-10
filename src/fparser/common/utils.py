@@ -83,11 +83,14 @@ __all__ = ['split_comma', 'specs_split_comma',
            'classes']
 
 import logging
-import re
-import os
 import glob
+import io
+import os
+import re
 import traceback
+
 import six
+
 
 class ParseError(Exception):
     pass
@@ -403,22 +406,18 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     orig_file.close()
 
     # Tell codec to skip any errors
-    orig_file = codecs.open(filename, "r", encoding=encoding,
-                            errors='ignore')
+    with io.open(filename, "r",
+                 encoding=encoding, errors='ignore') as orig_file:
+        file_input = orig_file.read()
 
-    # Set delete to False so file will not be deleted when closed.
-    tempfile_kwargs = dict(mode='w', delete=False)
-    if six.PY3:
-        tempfile_kwargs['encoding'] = 'utf8'
-    temp_file = tempfile.NamedTemporaryFile(**tempfile_kwargs)
-    input = orig_file.read()
     if six.PY2:
-        # Python 2. Unicode needs to be encoded.
-        temp_file.write(input.encode("UTF-8"))
-    else:
-        # Python 3. Unicode is used natively.
-        temp_file.write(input)
-    temp_file.close()
-    orig_file.close()
+        # Unicode needs to be encoded.
+        file_input = file_input.encode('UTF-8')
+
+    encoding = {'encoding': 'UTF-8'} if six.PY3 else {}
+    # Set delete to False so file will not be deleted when closed.
+    with tempfile.NamedTemporaryFile(mode='w',
+                                     delete=False, **encoding) as temp_file:
+        temp_file.write(file_input)
 
     return temp_file.name
