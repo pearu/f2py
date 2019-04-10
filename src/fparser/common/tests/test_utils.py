@@ -36,6 +36,7 @@
 Test the various utility functions
 
 """
+import io
 import os
 import pytest
 from fparser.common.utils import split_comma, ParseError, make_clean_tmpfile
@@ -141,7 +142,7 @@ def create_tmp_file(string, tmpdir, filename="tmp_in.f90"):
     '''
     filepath = os.path.join(str(tmpdir), filename)
     # Create the input_file
-    tmp_file = open(filepath, "w")
+    tmp_file = io.open(filepath, "w", encoding='utf8')
     tmp_file.write(string)
     return tmp_file.name
 

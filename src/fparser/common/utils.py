@@ -86,9 +86,8 @@ import logging
 import re
 import os
 import glob
-import sys
 import traceback
-from six import with_metaclass
+import six
 
 class ParseError(Exception):
     pass
@@ -331,7 +330,7 @@ class meta_classes(type):
             raise AttributeError('instance does not have attribute %r' % (name))
         return cls
 
-class classes(with_metaclass(meta_classes, type)):
+class classes(six.with_metaclass(meta_classes, type)):
     """Make classes available as attributes of this class.
 
     To add a class to the attributes list, one must use::
@@ -408,9 +407,12 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
                             errors='ignore')
 
     # Set delete to False so file will not be deleted when closed.
-    temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
+    tempfile_kwargs = dict(mode='w', delete=False)
+    if six.PY3:
+        tempfile_kwargs['encoding'] = 'utf8'
+    temp_file = tempfile.NamedTemporaryFile(**tempfile_kwargs)
     input = orig_file.read()
-    if sys.version_info.major < 3:
+    if six.PY2:
         # Python 2. Unicode needs to be encoded.
         temp_file.write(input.encode("UTF-8"))
     else:
