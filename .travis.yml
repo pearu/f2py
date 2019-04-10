@@ -41,6 +41,9 @@ before_install:
 install:
   - "pip install ."
 script:
+  # fparser should work even under limited terminal conditions
+  # (this is only relevant for versions before Python 3.7).
+  - export LANG=ascii
   - coverage run --source=fparser -m py.test
   - coverage report -m
 after_success:
