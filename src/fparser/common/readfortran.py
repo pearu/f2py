@@ -141,6 +141,7 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 from __future__ import print_function
 
 import logging
+import io
 import os
 import re
 import sys
@@ -632,8 +633,24 @@ class FortranReaderBase(object):
             self.close_source()
             return None
         self.linecount += 1
+
+        if six.PY2 and not isinstance(line, six.text_type):
+            # Ensure we always have a unicode object in Python 2.
+            line = unicode(line, 'UTF-8')
+
         # expand tabs, replace special symbols, get rid of nl characters
-        line = line.expandtabs().replace('\xa0', ' ').rstrip()
+        line = line.expandtabs().replace(u'\xa0', u' ').rstrip()
+
+        if six.PY2:
+            # Cast the unicode to str if we can do so safely. This
+            # maximises compatibility with the existing Python 2 tests
+            # and avoids the need to proliferate the use of unicode
+            # literals (e.g. u"") in the parse tree repr.
+            try:
+                line = line.encode('ascii', errors='strict')
+            except UnicodeEncodeError:
+                pass
+
         self.source_lines.append(line)
 
         if ignore_comments and (self.format.is_fixed or self.format.is_f77):
@@ -1436,7 +1453,7 @@ class FortranFileReader(FortranReaderBase):
             # by creating a new file (tmpfile) with any errors removed
             # (or raising an exception - see make_clean_tmpfile).
             tmpfile = make_clean_tmpfile(file_candidate)
-            self.file = open(tmpfile, 'r')
+            self.file = io.open(tmpfile, 'r', encoding='UTF-8')
             self._close_on_destruction = True
             self._remove_on_destruction = True
         elif hasattr(file_candidate,
