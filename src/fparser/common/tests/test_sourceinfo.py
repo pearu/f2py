@@ -354,6 +354,11 @@ def test_get_source_info_file(extension, header, content):
 
 
 def test_get_source_info_utf8():
+    '''
+    Tests that Fortran code containing a unicode character can be read
+    by the get_source_info method.
+
+    '''
     encoding = dict(encoding='UTF-8') if six.PY3 else {}
     with tempfile.NamedTemporaryFile(mode='w', **encoding) as tmp_file:
         content = u'''
