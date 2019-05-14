@@ -67,7 +67,8 @@
 #
 # Author: Pearu Peterson <pearu@cens.ioc.ee>
 # Created: May 2006
-# Modified by R. W. Ford STFC Daresbury Lab
+# Modified by R. W. Ford, STFC Daresbury Lab
+# Modified by P. Elson, Met Office
 
 """Provides Fortran reader classes.
 
@@ -649,6 +650,8 @@ class FortranReaderBase(object):
             try:
                 line = line.encode('ascii', errors='strict')
             except UnicodeEncodeError:
+                # Can't cast to str as there are non-ascii characters
+                # in the line.
                 pass
 
         self.source_lines.append(line)

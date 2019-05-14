@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
-# Modified M.Hambley, UK Met Office
+# Modified M. Hambley and P. Elson, Met Office
 # Modified R. W. Ford, STFC Daresbury Lab
 ##############################################################################
 '''
@@ -47,7 +47,6 @@ import os.path
 import tempfile
 
 import pytest
-import six
 
 from fparser.common.readfortran import FortranFileReader, FortranStringReader
 import fparser.common.sourceinfo
@@ -606,7 +605,7 @@ program test
 
   implicit none
 
-  character, paramater :: nature = 'free format'
+  character, parameter :: nature = 'free format'
 
 end program test
 '''
@@ -614,7 +613,7 @@ end program test
 FULL_FREE_EXPECTED = [u'!> Unicode comment: ❤ ✓ ☂ ♞ ☯',
                       'program test',
                       '  implicit none',
-                      "  character, paramater :: nature = 'free format'",
+                      "  character, parameter :: nature = 'free format'",
                       'end program test']
 
 
