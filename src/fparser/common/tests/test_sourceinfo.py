@@ -362,7 +362,7 @@ def test_get_source_info_utf8():
     encoding = dict(encoding='UTF-8') if six.PY3 else {}
     with tempfile.NamedTemporaryFile(mode='w', **encoding) as tmp_file:
         content = u'''
-            ! A fortran comment with a unicode character "{}"
+            ! A fortran comment with a unicode character "{0}"
         '''.format(u"\u2014")
         if six.PY2:
             content = content.encode('UTF-8')

@@ -333,6 +333,7 @@ class meta_classes(type):
             raise AttributeError('instance does not have attribute %r' % (name))
         return cls
 
+
 class classes(six.with_metaclass(meta_classes, type)):
     """Make classes available as attributes of this class.
 
