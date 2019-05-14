@@ -3493,6 +3493,7 @@ def test_rename():  # R1111
     assert str(obj) == 'OPERATOR(.FOO.) => OPERATOR(.BAR.)'
 
 
+@pytest.mark.xfail(reason="Match fails with multiple spaces, see issue #197")
 def test_block_data():  # R1116
 
     tcls = Block_Data
@@ -3503,6 +3504,14 @@ end block data
     '''))
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA'
+
+    tcls = Block_Data
+    obj = tcls(get_reader('''\
+block     data a
+end block     data a
+    '''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'BLOCK DATA a\nEND BLOCK DATA a'
 
 #
 # SECTION 12
