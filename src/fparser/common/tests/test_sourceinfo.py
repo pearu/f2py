@@ -44,6 +44,7 @@ from __future__ import print_function
 import os
 import tempfile
 import pytest
+import six
 
 from fparser.common.sourceinfo import FortranFormat, \
                                       get_source_info_str, get_source_info
@@ -350,6 +351,26 @@ def test_get_source_info_file(extension, header, content):
             assert source_info == header[1]
         else:  # No header
             assert source_info == content[1]
+
+
+def test_get_source_info_utf8():
+    '''
+    Tests that Fortran code containing a unicode character can be read
+    by the get_source_info method.
+
+    '''
+    encoding = dict(encoding='UTF-8') if six.PY3 else {}
+    with tempfile.NamedTemporaryFile(mode='w', **encoding) as tmp_file:
+        content = u'''
+            ! A fortran comment with a unicode character "{0}"
+        '''.format(u"\u2014")
+        if six.PY2:
+            content = content.encode('UTF-8')
+        tmp_file.write(content)
+        tmp_file.flush()
+
+        source_info = get_source_info(tmp_file.name)
+    assert source_info is not None
 
 
 ##############################################################################
