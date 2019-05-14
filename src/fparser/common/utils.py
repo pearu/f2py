@@ -83,12 +83,14 @@ __all__ = ['split_comma', 'specs_split_comma',
            'classes']
 
 import logging
-import re
-import os
 import glob
-import sys
+import io
+import os
+import re
 import traceback
-from six import with_metaclass
+
+import six
+
 
 class ParseError(Exception):
     pass
@@ -331,7 +333,8 @@ class meta_classes(type):
             raise AttributeError('instance does not have attribute %r' % (name))
         return cls
 
-class classes(with_metaclass(meta_classes, type)):
+
+class classes(six.with_metaclass(meta_classes, type)):
     """Make classes available as attributes of this class.
 
     To add a class to the attributes list, one must use::
@@ -404,19 +407,18 @@ def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
     orig_file.close()
 
     # Tell codec to skip any errors
-    orig_file = codecs.open(filename, "r", encoding=encoding,
-                            errors='ignore')
+    with io.open(filename, "r",
+                 encoding=encoding, errors='ignore') as orig_file:
+        file_input = orig_file.read()
 
+    if six.PY2:
+        # Unicode needs to be encoded.
+        file_input = file_input.encode('UTF-8')
+
+    encoding = {'encoding': 'UTF-8'} if six.PY3 else {}
     # Set delete to False so file will not be deleted when closed.
-    temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    input = orig_file.read()
-    if sys.version_info.major < 3:
-        # Python 2. Unicode needs to be encoded.
-        temp_file.write(input.encode("UTF-8"))
-    else:
-        # Python 3. Unicode is used natively.
-        temp_file.write(input)
-    temp_file.close()
-    orig_file.close()
+    with tempfile.NamedTemporaryFile(mode='w',
+                                     delete=False, **encoding) as temp_file:
+        temp_file.write(file_input)
 
     return temp_file.name
