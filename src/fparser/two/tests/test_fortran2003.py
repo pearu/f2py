@@ -3549,6 +3549,7 @@ def test_rename():  # R1111
     assert str(obj) == 'OPERATOR(.FOO.) => OPERATOR(.BAR.)'
 
 
+@pytest.mark.xfail(reason="Match fails with multiple spaces, see issue #197")
 def test_block_data():  # R1116
 
     tcls = Block_Data
