@@ -1317,8 +1317,7 @@ class Derived_Type_Def(BlockBase):  # R429
                                [Type_Param_Def_Stmt, Private_Or_Sequence,
                                 Component_Part, Type_Bound_Procedure_Part],
                                End_Type_Stmt, reader,
-                               match_names=True,
-                               set_unspecified_end_name=True  # C431
+                               match_names=True  # C431
                                )
 
 
@@ -4312,20 +4311,23 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    """
-    <primary> = <constant>
-                | <designator>
-                | <array-constructor>
-                | <structure-constructor>
-                | <function-reference>
-                | <type-param-inquiry>
-                | <type-param-name>
-                | ( <expr> )
-    """
+    '''
+    Fortran 2003 rule R701
+
+    primary is constant
+            or designator
+            or array-constructor
+            or structure-constructor
+            or function-reference
+            or type-param-inquiry
+            or type-param-name
+            or ( expr )
+
+    '''
     subclass_names = [
-        'Constant', 'Parenthesis', 'Designator', 'Array_Constructor',
+        'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
-        'Type_Param_Inquiry', 'Type_Param_Name',
+        'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
     ]
 
 
@@ -8371,7 +8373,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
                   `Execution_Part` followed by an optional \
                   `Internal_Subprogram_Part`.
         :rtype: `NoneType` or \
-                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`,
+                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`, \
                 optional \
                 :py:class:`fparser.two.Fortran2003.Specification_Part`, \
                 optional \
@@ -8384,7 +8386,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
         return BlockBase.match(
             Program_Stmt, [Specification_Part, Execution_Part,
                            Internal_Subprogram_Part], End_Program_Stmt,
-            reader, match_names=True)
+            reader, match_names=True, strict_order=True)
 
 
 class Main_Program0(BlockBase):

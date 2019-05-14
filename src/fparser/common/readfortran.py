@@ -67,7 +67,8 @@
 #
 # Author: Pearu Peterson <pearu@cens.ioc.ee>
 # Created: May 2006
-# Modified by R. W. Ford STFC Daresbury Lab
+# Modified by R. W. Ford, STFC Daresbury Lab
+# Modified by P. Elson, Met Office
 
 """Provides Fortran reader classes.
 
@@ -141,6 +142,7 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 from __future__ import print_function
 
 import logging
+import io
 import os
 import re
 import sys
@@ -149,7 +151,6 @@ import six
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
 
-logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -633,8 +634,26 @@ class FortranReaderBase(object):
             self.close_source()
             return None
         self.linecount += 1
+
+        if six.PY2 and not isinstance(line, six.text_type):
+            # Ensure we always have a unicode object in Python 2.
+            line = unicode(line, 'UTF-8')
+
         # expand tabs, replace special symbols, get rid of nl characters
-        line = line.expandtabs().replace('\xa0', ' ').rstrip()
+        line = line.expandtabs().replace(u'\xa0', u' ').rstrip()
+
+        if six.PY2:
+            # Cast the unicode to str if we can do so safely. This
+            # maximises compatibility with the existing Python 2 tests
+            # and avoids the need to proliferate the use of unicode
+            # literals (e.g. u"") in the parse tree repr.
+            try:
+                line = line.encode('ascii', errors='strict')
+            except UnicodeEncodeError:
+                # Can't cast to str as there are non-ascii characters
+                # in the line.
+                pass
+
         self.source_lines.append(line)
 
         if ignore_comments and (self.format.is_fixed or self.format.is_f77):
@@ -1428,16 +1447,23 @@ class FortranFileReader(FortranReaderBase):
         # contents of the file. Obviously if the file changes content but not
         # filename, problems will ensue.
         #
+        self._remove_on_destruction = False
+        self._close_on_destruction = False
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
-            self.file = open(file_candidate, 'r')
+            from fparser.common.utils import make_clean_tmpfile
+            # Handle potential invalid characters in the input. Done
+            # by creating a new file (tmpfile) with any errors removed
+            # (or raising an exception - see make_clean_tmpfile).
+            tmpfile = make_clean_tmpfile(file_candidate)
+            self.file = io.open(tmpfile, 'r', encoding='UTF-8')
             self._close_on_destruction = True
+            self._remove_on_destruction = True
         elif hasattr(file_candidate,
                      'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
             self.id = file_candidate.name
             self.file = file_candidate
-            self._close_on_destruction = False
         else:  # Probably not something we can deal with
             message = 'FortranFileReader is used with a filename'
             message += ' or file-like object.'
@@ -1457,6 +1483,8 @@ class FortranFileReader(FortranReaderBase):
     def __del__(self):
         if self._close_on_destruction:
             self.file.close()
+            if self._remove_on_destruction:
+                os.remove(self.file.name)
 
     def close_source(self):
         self.file.close()

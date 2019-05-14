@@ -34,7 +34,11 @@
 
 ''' File containing unit tests for the BlockBase baseclass in utils.py '''
 
+import pytest
+
+from fparser.api import get_reader
 from fparser.two.utils import BlockBase
+import fparser.two.Fortran2003 as F2003
 
 # TODO #179: full testing of this class. We currently only test the
 # comment and include support.
@@ -47,13 +51,10 @@ def test_include(f2003_create):
 
     '''
     # Use the Main Program rule R1101 as an example
-    from fparser.two.Fortran2003 import Program_Stmt, Specification_Part, \
-        Execution_Part, Internal_Subprogram_Part, End_Program_Stmt
-    from fparser.api import get_reader
-    startcls = Program_Stmt
-    subclasses = [Specification_Part, Execution_Part,
-                  Internal_Subprogram_Part]
-    endcls = End_Program_Stmt
+    startcls = F2003.Program_Stmt
+    subclasses = [F2003.Specification_Part, F2003.Execution_Part,
+                  F2003.Internal_Subprogram_Part]
+    endcls = F2003.End_Program_Stmt
     reader = get_reader((
         "include '1'\n"
         "! comment1\n"
@@ -87,3 +88,100 @@ def test_include(f2003_create):
         "'! comment5')), End_Program_Stmt('PROGRAM', Name('test'))],)") \
         in str(result)
     assert "should" not in str(result)
+
+
+@pytest.mark.parametrize('strict_order', [True, False])
+def test_strict_order_invalid_code(f2003_create, strict_order):
+    '''Check that the strict_order flag toggles the parse behaviour as
+    expected.
+    '''
+    subclasses = [F2003.Specification_Part, F2003.Execution_Part]
+    reader = get_reader("""
+        program main
+            i = 2
+            integer :: i
+        end program main
+        """)
+
+    expected = remove_indentation("""([
+      Program_Stmt('PROGRAM', Name('main')),
+      Execution_Part(
+          Assignment_Stmt(Name('i'), '=',
+          Int_Literal_Constant('2', None))),
+      Specification_Part(
+          Type_Declaration_Stmt(
+              Intrinsic_Type_Spec('INTEGER', None),
+              None,
+              Entity_Decl(Name('i'), None, None, None))),
+      End_Program_Stmt('PROGRAM', Name('main'))
+     ],)
+    """)
+    result = BlockBase.match(
+        F2003.Program_Stmt, subclasses, F2003.End_Program_Stmt, reader,
+        strict_order=strict_order)
+
+    if strict_order:
+        assert result is None
+    else:
+        assert str(result) == expected
+
+
+def test_strict_order_valid_code(f2003_create):
+    '''Tests that the strict_order keyword allows repeated types.
+    '''
+    subclasses = [F2003.Specification_Part, F2003.Execution_Part]
+    reader = get_reader("""
+        program main
+            integer :: i
+            real    :: rho
+            i = 2
+            rho = i * 3.14
+        end program main
+        """)
+
+    expected = remove_indentation("""([
+      Program_Stmt('PROGRAM', Name('main')),
+      Specification_Part(
+          Type_Declaration_Stmt(
+              Intrinsic_Type_Spec('INTEGER', None), None,
+              Entity_Decl(Name('i'), None, None, None)),
+          Type_Declaration_Stmt(
+              Intrinsic_Type_Spec('REAL', None), None,
+              Entity_Decl(Name('rho'), None, None, None))),
+      Execution_Part(
+          Assignment_Stmt(Name('i'), '=', Int_Literal_Constant('2', None)),
+          Assignment_Stmt(
+              Name('rho'), '=', Add_Operand(Name('i'), '*',
+              Real_Literal_Constant('3.14', None)))),
+      End_Program_Stmt('PROGRAM', Name('main'))
+     ],)
+    """)
+    result = BlockBase.match(
+        F2003.Program_Stmt, subclasses, F2003.End_Program_Stmt, reader,
+        strict_order=True)
+
+    assert str(result) == expected
+
+
+def remove_indentation(string):
+    '''
+    A utility function that removes indented multiline strings of reprs.
+
+    :param str string: the string to dedent.
+    :returns: a dedented version of the string.
+    :rtype: str
+
+    '''
+    # Note, unlike textwrap.dedent this function removes the leading
+    # whitespace on each line in a context sensitive way.
+    block_indent = 0
+    result = ''
+    for line in string.split('\n'):
+        this_indent = len(line) - len(line.lstrip())
+        line = line.lstrip()
+        if this_indent > block_indent or not result.endswith(','):
+            result += line
+        else:
+            result += ' ' + line
+        block_indent = this_indent
+    return result.strip()

@@ -58,9 +58,9 @@ def test_valid(f2003_create):
     # basic
     obj = Main_Program(get_reader("program a\nend"))
     assert isinstance(obj, Main_Program)
-    assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
+    assert str(obj) == 'PROGRAM a\nEND'
     assert repr(obj) == ("Main_Program(Program_Stmt('PROGRAM', Name('a')), "
-                         "End_Program_Stmt('PROGRAM', None))")
+                         "End_Program_Stmt(None, None))")
 
     # name matching
     obj = Main_Program(get_reader("program a\nend program a"))
@@ -86,7 +86,7 @@ def test_valid(f2003_create):
     obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  CONTAINS\n  SUBROUTINE foo\n"
-                        "  END SUBROUTINE foo\nEND PROGRAM a")
+                        "  END\nEND PROGRAM a")
 
     # specification-part + execution-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\nend program a"))
@@ -96,13 +96,13 @@ def test_valid(f2003_create):
     obj = Main_Program(get_reader("program a\ni=10\ncontains\nsubroutine foo\n"
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  i = 10\n  CONTAINS\n  SUBROUTINE foo\n"
-                        "  END SUBROUTINE foo\nEND PROGRAM a")
+                        "  END\nEND PROGRAM a")
 
     # specification-part + execution-part + internal-subprogram-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\ncontains\n"
                                   "subroutine foo\nend\nend program a"))
     assert str(obj) == ("PROGRAM a\n  INTEGER :: i\n  i = 10\n  CONTAINS\n  "
-                        "SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a")
+                        "SUBROUTINE foo\n  END\nEND PROGRAM a")
 
 
 def test_invalid1(f2003_create):
@@ -125,8 +125,6 @@ def test_invalid1(f2003_create):
         in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Fails to raise an exception with incorrect "
-                   "ordering. See issue #136.")
 def test_invalid2(f2003_create):
     '''Test that specification-part after execution-part produces an
     error.
@@ -135,11 +133,9 @@ def test_invalid2(f2003_create):
     with pytest.raises(NoMatchError) as excinfo:
         _ = Main_Program(get_reader("program a\ni=10\ninteger i\n"
                                     "end program a"))
-    assert "ADD CORRECT OUTPUT HERE" in str(excinfo.value)
+    assert "at line 3\n>>>integer i\n" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Fails to raise an exception with incorrect "
-                   "ordering. See issue #136.")
 def test_invalid3(f2003_create):
     '''Test that execution-part after internal-subprogram-part produces an
     error.
@@ -148,4 +144,4 @@ def test_invalid3(f2003_create):
     with pytest.raises(NoMatchError) as excinfo:
         _ = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
                                     "end\ni=10\nend program a"))
-    assert "ADD CORRECT OUTPUT HERE" in str(excinfo.value)
+    assert "at line 5\n>>>i=10\n" in str(excinfo.value)

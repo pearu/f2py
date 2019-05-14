@@ -45,7 +45,7 @@ from fparser.two.Fortran2008 import End_Submodule_Stmt
 def test_simple_1(f2008_create):
     '''Test the parsing of a minimal end-submodule statement.'''
     result = End_Submodule_Stmt("end")
-    assert str(result) == "END SUBMODULE"
+    assert str(result) == "END"
 
 
 def test_simple_2(f2008_create):
