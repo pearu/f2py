@@ -4325,6 +4325,7 @@ class Primary(Base):  # R701
 
     '''
     subclass_names = [
+        'Intrinsic_Function_Reference',
         'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
         'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
@@ -9232,6 +9233,69 @@ class Function_Reference(CallBase):  # R1217
         return CallBase.match(
             Procedure_Designator, Actual_Arg_Spec_List, string)
     match = staticmethod(match)
+
+
+class Intrinsic_Name(STRINGBase):
+    ''' xxx '''
+
+    numeric_function_names = {
+        "ABS": "(A) Absolute value",
+        "AIMAG": "(Z) Imaginary part of a complex number",
+        "AINT": "(A [, KIND]) Truncation to whole number",
+        "ANINT": "(A [, KIND]) Nearest whole number",
+        "CEILING": "(A [, KIND]) Least integer greater than or equal to number",
+        "CMPLX": "(X [, Y, KIND]) Conversion to complex type",
+        "CONJG": "(Z) Conjugate of a complex number",
+        "DBLE": "(A) Conversion to double precision real type",
+        "DIM": "(X, Y) Positive difference",
+        "DPROD": "(X, Y) Double precision real product",
+        "FLOOR": "(A [, KIND]) Greatest integer less than or equal to number",
+        "INT": "(A [, KIND]) Conversion to integer type",
+        "MAX": "(A1, A2 [, A3,...]) Maximum value",
+        "MIN": "(A1, A2 [, A3,...]) Minimum value",
+        "MOD": "(A, P) Remainder function",
+        "MODULO": "(A, P) Modulo function",
+        "NINT": "(A [, KIND]) Nearest integer",
+        "REAL": "(A [, KIND]) Conversion to real type",
+        "SIGN": "(A, B) Transfer of sign"}
+
+    mathematical_function_names = {
+        "ACOS": "(X) Arccosine",
+        "ASIN": "(X) Arcsine",
+        "ATAN": "(X) Arctangent",
+        "ATAN2": "(Y, X) Arctangent",
+        "COS": "(X) Cosine",
+        "COSH": "(X) Hyperbolic cosine",
+        "EXP": "(X) Exponential",
+        "LOG": "(X) Natural logarithm",
+        "LOG10": "(X) Common logarithm (base 10)",
+        "SIN": "(X) Sine",
+        "SINH": "(X) Hyperbolic sine",
+        "SQRT": "(X) Square root",
+        "TAN": "(X) Tangent",
+        "TANH": "(X) Hyperbolic tangent"}
+
+    function_names = {}
+    function_names.update(numeric_function_names)
+    function_names.update(mathematical_function_names)
+
+    @staticmethod
+    def match(string):
+        return STRINGBase.match(Intrinsic_Name.function_names.keys(), string)
+
+
+class Intrinsic_Function_Reference(CallBase):  # R1217
+    """
+    <function-reference> = <intrinsic-name>
+        ( [ <actual-arg-spec-list> ] )
+    """
+    subclass_names = []
+    use_names = ['Intrinsic_Name', 'Actual_Arg_Spec_List']
+
+    @staticmethod
+    def match(string):
+        return CallBase.match(
+            Intrinsic_Name, Actual_Arg_Spec_List, string)
 
 
 class Call_Stmt(StmtBase):  # R1218
