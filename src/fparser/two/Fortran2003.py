@@ -9239,41 +9239,17 @@ class Intrinsic_Name(STRINGBase):
     ''' xxx '''
 
     numeric_function_names = {
-        "ABS": "(A) Absolute value",
-        "AIMAG": "(Z) Imaginary part of a complex number",
-        "AINT": "(A [, KIND]) Truncation to whole number",
-        "ANINT": "(A [, KIND]) Nearest whole number",
-        "CEILING": "(A [, KIND]) Least integer greater than or equal to number",
-        "CMPLX": "(X [, Y, KIND]) Conversion to complex type",
-        "CONJG": "(Z) Conjugate of a complex number",
-        "DBLE": "(A) Conversion to double precision real type",
-        "DIM": "(X, Y) Positive difference",
-        "DPROD": "(X, Y) Double precision real product",
-        "FLOOR": "(A [, KIND]) Greatest integer less than or equal to number",
-        "INT": "(A [, KIND]) Conversion to integer type",
-        "MAX": "(A1, A2 [, A3,...]) Maximum value",
-        "MIN": "(A1, A2 [, A3,...]) Minimum value",
-        "MOD": "(A, P) Remainder function",
-        "MODULO": "(A, P) Modulo function",
-        "NINT": "(A [, KIND]) Nearest integer",
-        "REAL": "(A [, KIND]) Conversion to real type",
-        "SIGN": "(A, B) Transfer of sign"}
+        "ABS": (1, 1), "AIMAG": (1, 1), "AINT":  (1, 2), "ANINT": (1, 2),
+        "CEILING": (1, 2), "CMPLX": (1, 2), "CONJG": (1, 1), "DBLE": (1, 1),
+        "DIM": (2, 2), "DPROD": (2, 2), "FLOOR": (1, 2), "INT": (1, 2),
+        "MAX": (2, -1), "MIN": (2, -1), "MOD": (2, 2), "MODULO": (2, 2),
+        "NINT": (1, 2), "REAL": (1, 2), "SIGN": (2, 2)}
 
     mathematical_function_names = {
-        "ACOS": "(X) Arccosine",
-        "ASIN": "(X) Arcsine",
-        "ATAN": "(X) Arctangent",
-        "ATAN2": "(Y, X) Arctangent",
-        "COS": "(X) Cosine",
-        "COSH": "(X) Hyperbolic cosine",
-        "EXP": "(X) Exponential",
-        "LOG": "(X) Natural logarithm",
-        "LOG10": "(X) Common logarithm (base 10)",
-        "SIN": "(X) Sine",
-        "SINH": "(X) Hyperbolic sine",
-        "SQRT": "(X) Square root",
-        "TAN": "(X) Tangent",
-        "TANH": "(X) Hyperbolic tangent"}
+        "ACOS": (1, 1), "ASIN": (1, 1), "ATAN": (1, 1), "ATAN2": (2, 2),
+        "COS": (1, 1), "COSH": (1, 1), "EXP": (1, 1), "LOG": (1, 1),
+        "LOG10": (1, 1), "SIN": (1, 1), "SINH": (1, 1), "SQRT": (1, 1),
+        "TAN": (1, 1), "TANH": (1, 1)}
 
     function_names = {}
     function_names.update(numeric_function_names)
@@ -9284,19 +9260,38 @@ class Intrinsic_Name(STRINGBase):
         return STRINGBase.match(Intrinsic_Name.function_names.keys(), string)
 
 
-class Intrinsic_Function_Reference(CallBase):  # R1217
-    """
-    <function-reference> = <intrinsic-name>
-        ( [ <actual-arg-spec-list> ] )
-    """
+class Intrinsic_Function_Reference(CallBase):  # No rule
+    '''
+    function-reference is intrinsic-name ( [ actual-arg-spec-list ] )
+
+    '''
     subclass_names = []
     use_names = ['Intrinsic_Name', 'Actual_Arg_Spec_List']
 
     @staticmethod
     def match(string):
-        return CallBase.match(
+        result = CallBase.match(
             Intrinsic_Name, Actual_Arg_Spec_List, string)
+        if result:
+            # There is a match.
+            # Check the number of args provided matches what is expected.
+            function_name = str(result[0])
+            function_args = result[1]
+            if (isinstance(function_args, Actual_Arg_Spec_List)):
+                nargs = len(function_args.items)
+            else:
+                nargs = 1
 
+            min_nargs = Intrinsic_Name.function_names[function_name][0]
+            max_nargs = Intrinsic_Name.function_names[function_name][1]
+
+            *** if not nargs >= min_nargs:
+            ***    raise FortranSyntaxError(string, "XXX")
+            *** if not nargs <= max_nargs:
+                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects between {1} args but found {2}")
+                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects between {1} and {2} args but found {3}")
+                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects at least {1} args but found {2}")
+        return result
 
 class Call_Stmt(StmtBase):  # R1218
     """

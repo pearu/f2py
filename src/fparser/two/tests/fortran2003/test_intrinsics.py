@@ -34,21 +34,14 @@
 
 '''Test that Fortran 2003 intrinsic functions are parsed correctly.'''
 
-from fparser.two.Fortran2003 import Program
+from fparser.two.Fortran2003 import Program, Intrinsic_Function_Reference
 from fparser.api import get_reader
+from fparser.two.utils import walk_ast
 
-def test_simple(f2003_create):
 
-    reader = get_reader("subroutine sub()\na = sin(b)\nend subroutine sub\n")
+def test_intrinsic_recognised(f2003_create):
+    '''Test that an intrinsic is picked up when used in a program.'''
+
+    reader = get_reader("subroutine sub()\na = sin(b,c)\nend subroutine sub\n")
     ast = Program(reader)
-    print repr(ast)
-    # r701
-    #    primary is constant
-    #        or designator
-    #        or array-constructor
-    #        or structure-constructor
-    #        or function-reference .... R1217
-    #        or type-param-inquiry
-    #        or type-param-name
-    #        or ( expr )
-    exit(1)
+    assert walk_ast([ast], [Intrinsic_Function_Reference])
