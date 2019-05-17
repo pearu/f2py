@@ -81,7 +81,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalError, show_result
+    InternalSyntaxError, InternalError, show_result
 
 #
 # SECTION  1
@@ -215,6 +215,8 @@ class Program(BlockBase):  # R201
             # At the moment there is no useful information provided by
             # NoMatchError so we pass on an empty string.
             raise FortranSyntaxError(string, "")
+        except InternalSyntaxError as excinfo:
+            raise FortranSyntaxError(string, str(excinfo))
 
     @staticmethod
     def match(reader):
@@ -9260,8 +9262,9 @@ class Intrinsic_Name(STRINGBase):
         return STRINGBase.match(Intrinsic_Name.function_names.keys(), string)
 
 
-class Intrinsic_Function_Reference(CallBase):  # No rule
-    '''
+class Intrinsic_Function_Reference(CallBase):  # No explicit rule
+    '''Represents Fortran intrinsics.
+
     function-reference is intrinsic-name ( [ actual-arg-spec-list ] )
 
     '''
@@ -9270,13 +9273,33 @@ class Intrinsic_Function_Reference(CallBase):  # No rule
 
     @staticmethod
     def match(string):
+        '''Match the string as an intrinsic function. Also check that the
+        number of arguments provided matches the number expected by
+        the intrinsic.
+
+        :param str string: the string to match with the pattern rule.
+
+        :return: a tuple of size 2 containing the name of the \
+        intrinsic and its arguments if there is a match, or None if \
+        there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Intrinsic_Name`, \
+        :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`) or \
+        NoneType
+
+        :raises InternalSyntaxError: If the number of arguments \
+        provided does not match the number of arguments expected by \
+        the intrinsic.
+
+        '''
         result = CallBase.match(
             Intrinsic_Name, Actual_Arg_Spec_List, string)
         if result:
-            # There is a match.
-            # Check the number of args provided matches what is expected.
+            # There is a match so check the number of args provided
+            # matches the number of args expected by the intrinsic.
             function_name = str(result[0])
             function_args = result[1]
+            # This if/else will not be needed once issue #170 has been
+            # addressed.
             if (isinstance(function_args, Actual_Arg_Spec_List)):
                 nargs = len(function_args.items)
             else:
@@ -9285,13 +9308,23 @@ class Intrinsic_Function_Reference(CallBase):  # No rule
             min_nargs = Intrinsic_Name.function_names[function_name][0]
             max_nargs = Intrinsic_Name.function_names[function_name][1]
 
-            *** if not nargs >= min_nargs:
-            ***    raise FortranSyntaxError(string, "XXX")
-            *** if not nargs <= max_nargs:
-                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects between {1} args but found {2}")
-                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects between {1} and {2} args but found {3}")
-                *** raise FortranSyntaxError(string, "Fortran intrinsic {0} expects at least {1} args but found {2}")
+            if min_nargs == max_nargs and nargs != min_nargs:
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects {1} arg(s) but found {2}."
+                    "".format(function_name, min_nargs, nargs))
+            if min_nargs < max_nargs and nargs < min_nargs or \
+               nargs > max_nargs:
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects between {1} and {2} args but "
+                    "found {3}".format(function_name, min_nargs, max_nargs,
+                                       nargs))
+            if max_nargs == -1 and nargs < min_nargs:
+                # -1 indicates an unlimited number of arguments
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects at least {1} args but found {2}"
+                    "".format(function_name, min_nargs, nargs))
         return result
+
 
 class Call_Stmt(StmtBase):  # R1218
     """
