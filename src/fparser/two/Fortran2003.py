@@ -9312,8 +9312,8 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
                     "".format(function_name, min_nargs, nargs))
-            if min_nargs < max_nargs and nargs < min_nargs or \
-               nargs > max_nargs:
+            if min_nargs < max_nargs and (nargs < min_nargs or \
+               nargs > max_nargs):
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects between {1} and {2} args but "
                     "found {3}".format(function_name, min_nargs, max_nargs,
