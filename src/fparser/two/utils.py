@@ -169,7 +169,8 @@ class InternalError(FparserException):
 
 class InternalSyntaxError(FparserException):
     '''An exception indicating that a syntax error has been found by the
-    parser.
+    parser. This is used instead of `FortranSyntaxError` when the
+    reader object is not available.
 
     '''
 

@@ -500,7 +500,7 @@ In this way fparser2 captures the `R202` rule hierarchy in its
 Exceptions
 ++++++++++
 
-There are 6 types of exception raised in fparser2: `NoMatchError`,
+There are 7 types of exception raised in fparser2: `NoMatchError`,
 `FortranSyntaxError`, `ValueError`, `InternalError`, `AssertionError` and
 `NotImplementedError`.
 
@@ -568,25 +568,24 @@ arguments. The first argument is a reader object which allows the line
 number and text of the line in question to be output. The second
 argument is text which can be used to give details of the error.
 
-Currently the main use of `FortranSyntaxError` is to catch the final
-`NoMatchError` exception and re-raise it with line number and the text
-of the line to be output. This final `NoMatchError` is caught and
-re-raised by overriding the `Base` class `__new__` method in the top
-level `Program` class. However, this exception is not able to give any
-details of the error as is knows nothing about which rules failed to
+Currently the main use of `FortranSyntaxError` is to catch either an
+`InternalSyntaxError` exception or the final `NoMatchError` exception
+and re-raise it with line number and the text of the line to be
+output. These exceptions are caught and re-raised by overriding the
+`Base` class `__new__` method in the top level `Program` class. A
+limitation of the `NoMatchError` exception (but not the
+`InternalSyntaxError` exception) is that it is not able to give any
+details of the error, as is knows nothing about which rules failed to
 match.
 
-`FortranSyntaxError` has started to be used in a few other places
-(e.g. curently limited to `BlockBase`), where it is know that there is
-a match, but that the match is known to have a syntax error. This
-approach leads to good quality feedback to the user on the type of
-error and its location and should be used wherever possible. One issue
-is that when `FortranSyntaxError` is raised from one of these
-additional places the fparser script is not able to use the reader's
-fifo buffer to extract position information. This is dealt with by not
-outputting anything from the script related to the fifo buffer in this
-case. It is possible that if the lines were pushed back into the
-buffer then this would work.
+`FortranSyntaxError` should also be used when it is know that there is
+a match, the match has a syntax error and the line number information
+is available via the reader object. One issue is that when
+`FortranSyntaxError` is raised from such a location, the fparser
+script is not able to use the reader's fifo buffer to extract position
+information. This is dealt with by not outputting anything from the
+script related to the fifo buffer in this case. It is possible that if
+the lines were pushed back into the buffer then this would work.
 
 .. note::
 
@@ -595,6 +594,15 @@ buffer then this would work.
    number of lines and the first line could be returned as well as the
    last. At the moment the last line and the line number are returned.
 
+An `InternalSyntaxError` exception should be raised when it is known
+that there is a match and that a syntax error has occured but it is
+not possible to use the `FortranSyntaxError` exception as the line
+number information is not known (typically because the match is part
+of a line rather than a full line so the input to the associated match
+method is a string not a reader object). As mentioned earlier, this
+exception is subsequently picked up and re-raised as a
+`FortranSyntaxError` exception with line number information added.
+   
 A `ValueError` exception is raised if an invalid standard is passed to
 the `create` method of the `ParserFactory` class.
 

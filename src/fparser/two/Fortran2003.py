@@ -4313,10 +4313,10 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    '''
-    Fortran 2003 rule R701
+    '''Fortran 2003 rule R701
 
-    primary is constant
+    primary is intrinsic_function_reference
+            or constant
             or designator
             or array-constructor
             or structure-constructor
@@ -4324,6 +4324,12 @@ class Primary(Base):  # R701
             or type-param-inquiry
             or type-param-name
             or ( expr )
+
+    `intrinsic_function_reference` is not part of rule R701 but is
+    required for fparser to recognise intrinsic functions. This should
+    be placed before array-constructor in the list so that an
+    intrinsic is not (incorrectly) matched as an array (as class
+    `Base` matches rules in list order).
 
     '''
     subclass_names = [
@@ -9237,8 +9243,22 @@ class Function_Reference(CallBase):  # R1217
     match = staticmethod(match)
 
 
-class Intrinsic_Name(STRINGBase):
-    ''' xxx '''
+class Intrinsic_Name(STRINGBase):  # No explicit rule
+    '''Represents the name of a Fortran intrinsic function.
+
+    All generic intrinsic names are specified as keys in the
+    `generic_function_names` dictionary, with their values indicating
+    the minimum and maximum number of arguments allowed for this
+    intrinsic function. A `-1` indicates an unlimited number of
+    arguments. The names are split into the categories specified in
+    the Fortran2003 specification document.
+
+    All specific intrinsic names (which have a different name to their
+    generic counterpart) are specified as keys in the
+    `specific_function_names` dictionary, with their values indicating
+    which generic function they are associated with.
+
+    '''
 
     numeric_names = {
         "ABS": {"min": 1, "max": 1}, "AIMAG": {"min": 1, "max": 1},
@@ -9415,11 +9435,14 @@ class Intrinsic_Name(STRINGBase):
     generic_function_names.update(random_number_names)
     generic_function_names.update(system_environment_names)
 
+    subclass_names = []
+
     @staticmethod
     def match(string):
         '''Attempt to match the input `string` with the intrinsic function
-        names defined in `function_names`. If there is a match the
-        resultant string will be converted to upper case.
+        names defined in `generic_function_names` or
+        `specific_function_names`. If there is a match the resultant
+        string will be converted to upper case.
 
         :param str string: The pattern to be matched.
 
@@ -9476,8 +9499,8 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 nargs = 1
 
             if function_name in Intrinsic_Name.specific_function_names.keys():
-                # if this is a specific function then use its generic
-                # name to test min and max number of arguments
+                # If this is a specific function then use its generic
+                # name to test min and max number of arguments.
                 test_name = Intrinsic_Name.specific_function_names[function_name]
             else:
                 test_name = function_name
