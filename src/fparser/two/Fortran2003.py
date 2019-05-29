@@ -9428,8 +9428,8 @@ class Intrinsic_Name(STRINGBase):
         :rtype: (str) or NoneType
 
         '''
-        return STRINGBase.match(Intrinsic_Name.generic_function_names.keys() +
-                                Intrinsic_Name.specific_function_names.keys(), string)
+        return STRINGBase.match(list(Intrinsic_Name.generic_function_names) +
+                                list(Intrinsic_Name.specific_function_names), string)
 
 
 class Intrinsic_Function_Reference(CallBase):  # No explicit rule
