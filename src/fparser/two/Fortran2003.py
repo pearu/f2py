@@ -216,7 +216,7 @@ class Program(BlockBase):  # R201
             # NoMatchError so we pass on an empty string.
             raise FortranSyntaxError(string, "")
         except InternalSyntaxError as excinfo:
-            raise FortranSyntaxError(string, str(excinfo))
+            raise FortranSyntaxError(string, excinfo)
 
     @staticmethod
     def match(reader):
@@ -9495,6 +9495,8 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             # addressed.
             if (isinstance(function_args, Actual_Arg_Spec_List)):
                 nargs = len(function_args.items)
+            elif function_args is None:
+                nargs = 0
             else:
                 nargs = 1
 
@@ -9516,12 +9518,12 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                nargs > max_nargs):
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects between {1} and {2} args but "
-                    "found {3}".format(function_name, min_nargs, max_nargs,
-                                       nargs))
+                    "found {3}.".format(function_name, min_nargs, max_nargs,
+                                        nargs))
             if max_nargs == -1 and nargs < min_nargs:
                 # -1 indicates an unlimited number of arguments
                 raise InternalSyntaxError(
-                    "Intrinsic '{0}' expects at least {1} args but found {2}"
+                    "Intrinsic '{0}' expects at least {1} args but found {2}."
                     "".format(function_name, min_nargs, nargs))
         return result
 
