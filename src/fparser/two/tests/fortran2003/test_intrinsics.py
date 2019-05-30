@@ -46,7 +46,7 @@ from fparser.api import get_reader
 
 def test_intrinsic_recognised(f2003_create):
     '''Test that an intrinsic is picked up when used in a program.'''
-    
+
     reader = get_reader("subroutine sub()\na = sin(b)\nend subroutine sub\n")
     ast = Program(reader)
     assert walk_ast([ast], [Intrinsic_Function_Reference])

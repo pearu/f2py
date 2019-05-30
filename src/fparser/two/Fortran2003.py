@@ -9452,7 +9452,8 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
 
         '''
         return STRINGBase.match(list(Intrinsic_Name.generic_function_names) +
-                                list(Intrinsic_Name.specific_function_names), string)
+                                list(Intrinsic_Name.specific_function_names),
+                                string)
 
 
 class Intrinsic_Function_Reference(CallBase):  # No explicit rule
@@ -9503,7 +9504,8 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             if function_name in Intrinsic_Name.specific_function_names.keys():
                 # If this is a specific function then use its generic
                 # name to test min and max number of arguments.
-                test_name = Intrinsic_Name.specific_function_names[function_name]
+                test_name = Intrinsic_Name.specific_function_names[
+                    function_name]
             else:
                 test_name = function_name
 
