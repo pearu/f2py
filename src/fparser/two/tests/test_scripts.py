@@ -239,6 +239,7 @@ def test_runner_multi_output(tmpdir, capsys):
 
 # fparser2.py script function main()
 
+
 def test_main_output_task_default(tmpdir, capsys, monkeypatch):
     '''Test that the script main() function outputs the code it has parsed
     by default.'''

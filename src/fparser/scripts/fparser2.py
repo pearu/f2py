@@ -83,14 +83,14 @@ def runner(_, options, args):
     from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
     if not args:
-        print ("Error: No fortran files specified")
+        print("Error: No fortran files specified")
         raise SystemExit(1)
     for filename in args:
         try:
             reader = FortranFileReader(filename,
                                        ignore_comments=False)
         except IOError as error:
-            print (error)
+            print(error)
             return
         if options.mode != 'auto':
             reader.format.from_mode(options.mode)
@@ -98,21 +98,22 @@ def runner(_, options, args):
             f2003_parser = ParserFactory().create()
             program = f2003_parser(reader)
             if options.task == "show":
-                print (program)
+                print(program)
             if options.task == "repr":
-                print (repr(program))
+                print(repr(program))
         except FortranSyntaxError as msg:
-            print ("Syntax error: {0}".format(str(msg)))
+            print("Syntax error: {0}".format(str(msg)))
             try:
                 # protect the access to fifo_item[-1] in case the fifo
                 # buffer is empty
-                print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
+                print('parsing %r failed at %s' % (filename,
+                                                   reader.fifo_item[-1]))
                 print('started at %s' % (reader.fifo_item[0]))
             except IndexError:
                 pass
             raise SystemExit(1)
         except InternalError as msg:
-            print ("Internal error in fparser: {0}".format(str(msg)))
+            print("Internal error in fparser: {0}".format(str(msg)))
             raise SystemExit(1)
 
 

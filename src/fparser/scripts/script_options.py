@@ -93,15 +93,22 @@ Description:
     parser.add_option_group(get_fortran_code_group(parser))
 
 def set_fparser_options(parser):
+    ''' Command line options used by the fparser2 script.
+
+    :param parser: The OptionParser object.
+    :type parser: :py:class:`optparse.OptionParser`
+
+    '''
+
     parser.set_usage('''\
 %prog [options] <Fortran files>
 
 Description:
   %prog parses Fortran code.''')
     parser.add_option('--task',
-                      default = 'show',
-                      choices = ['show', 'repr', 'none'],
-                      help = 'Specify parsing result task. Default: %default.'
+                      default='show',
+                      choices=['show', 'repr', 'none'],
+                      help='Specify parsing result task. Default: %default.'
                       )
     parser.add_option('--std',
                       default = 'f2003',
