@@ -9423,11 +9423,9 @@ class Prefix(SequenceBase):  # R1227
     <prefix> = <prefix-spec> [ <prefix-spec> ]..
     """
     subclass_names = ['Prefix_Spec']
-    _separator = (' ', re.compile(r'\s+(?=[a-z_])', re.I))
-
+    @staticmethod
     def match(string):
-        return SequenceBase.match(Prefix._separator, Prefix_Spec, string)
-    match = staticmethod(match)
+        return SequenceBase.match(' ', Prefix_Spec, string, keep_empty=False)
 
 
 class Prefix_Spec(STRINGBase):  # R1226

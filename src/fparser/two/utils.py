@@ -641,78 +641,106 @@ content : tuple
 
 class SequenceBase(Base):
     '''
-    Match one or more fparser2 rules separated by a defined
-    separator in a supplied string.
+    Match one or more fparser2 rules separated by a defined separator.
 
     sequence-base is obj [sep obj ] ...
 
     '''
     @staticmethod
-    def match(separator, subcls, string):
+    def match(separator, subcls, string, keep_empty=True):
         '''Match one or more 'subcls' fparser2 rules separated by 'separator'
         in string 'string'. If separator is a string then the
         separator is used to split the input string. If it is a tuple
         then a regular expression in the second entry of the tuple is
-        used to split the input string and the separator returned is
-        the first argument.
+        used to split the input string and the the first argument is
+        returned as the separator.
 
-        :param separator: The separator used to split the supplied
-        string. This is either 1) a string containing the separator or
-        2) a tuple with the first argument containing the separator to
-        return and the second argument providing a regular expression
-        to match.
-        :type separator: str or (str, :py:class:'_sre.SRE_Pattern')
+        :param str separator: The separator used to split the supplied \
+        string.
         :param subcls: An fparser2 object representing the rule that \
         should be matched.
         :type subcls: Subclass of :py:class:`fparser.two.utils.Base`
         :param str string: The input string to match.
+        :param bool keep_empty: An optional boolean specifying whether \
+        empty entries should be kept (True) or removed (False) after \
+        splitting the input with the separator. Defaults to True.
 
-        :returns: a tuple containing 1) the separator and 2) the \
+        :returns: A tuple containing 1) the separator and 2) the \
         matched objects in a tuple, or None if there is no match.
         :rtype: (str, (Subclass of \
         :py:class:`fparser.two.utils.Base`)) or NoneType
 
+        :raises InternalError: If the separator, string or keep_empty \
+        arguments are not the expected type.
+
         '''
+        if not isinstance(separator, str):
+            raise InternalError(
+                "SequenceBase class match method argument separator expected "
+                "to be a string but found '{0}'.".format(type(string)))
+        if not isinstance(string, str):
+            raise InternalError(
+                "SequenceBase class match method argument string expected to "
+                "be a string but found '{0}'.".format(type(string)))
+        if not isinstance(keep_empty, bool):
+            raise InternalError(
+                "SequenceBase class match method optional argument keep_empty "
+                "expected to be a boolean but found '{0}'."
+                "".format(type(string)))
+        
         line, repmap = string_replace_map(string)
-        if isinstance(separator, str):
-            splitted = line.split(separator)
-        else:
-            # A tuple with the 1st argument being the separator to
-            # return and the second argument being an expression to
-            # use to split the line.
-            splitted = separator[1].split(line)
-            separator = separator[0]
-        if len(splitted) < 1:
-            # There was nothing to split.
-            return None
-        lst = []
-        for entry in splitted:
-            lst.append(subcls(repmap(entry.strip())))
+        splitted = line.split(separator)
+        if not keep_empty:
+            # Remove any empty entries.
+            splitted = [entry for entry in splitted if entry]
+        lst = [subcls(repmap(entry.strip())) for entry in splitted]
         return separator, tuple(lst)
 
     def init(self, separator, items):
+        '''Store the result of the match method if the match is successful.
+
+        :param str separator: The separator used to split the supplied \
+        string.
+        :param items: A tuple containing the matched objects in a \
+        tuple.
+        :type items: (Subclass of :py:class:`fparser.two.utils.Base`)
+
+        '''
         self.separator = separator
         self.items = items
-        return
 
     def tostr(self):
-        s = self.separator
-        if s == ',':
-            s = s + ' '
-        elif s == ' ':
+        '''
+        :returns: The Fortran representation of this object as a string.
+        :rtype: str
+
+        '''
+        sep = self.separator
+        if sep == ',':
+            sep = sep + ' '
+        elif sep == ' ':
             pass
         else:
-            s = ' ' + s + ' '
-        return s.join(map(str, self.items))
+            sep = ' ' + sep + ' '
+        return sep.join(map(str, self.items))
 
     def torepr(self):
-        return '%s(%r, %r)' % (self.__class__.__name__,
-                               self.separator, self.items)
+        '''
+        :returns: The Python representation of this object as a string.
+        :rtype: str
 
-    def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
-        return (self.separator, self.items)
+        '''
+        return "{0}('{1}', {2})".format(self.__class__.__name__,
+                                      self.separator, self.items)
+
+    # The mixin class is likely to be removed so _cmpkey would not be
+    # needed. It is not used at the moment. It is only commented out
+    # at this point, rather than removed, in case it turns out that
+    # the mixin class is useful.
+    # def _cmpkey(self):
+    #     """ Provides a key of objects to be used for comparing.
+    #     """
+    #     return (self.separator, self.items)
 
 
 class UnaryOpBase(Base):

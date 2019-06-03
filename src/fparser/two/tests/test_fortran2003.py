@@ -3938,9 +3938,8 @@ def test_prefix():  # R1227
     assert (repr(obj) ==
             "Prefix(' ', (Prefix_Spec('PURE'), Prefix_Spec('RECURSIVE')))")
 
-    obj = tcls('integer * 2 pure')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'INTEGER*2 PURE'
+    with pytest.raises(NoMatchError):
+        _ = tcls('integer * 2 pure')
 
 
 @pytest.mark.parametrize(
