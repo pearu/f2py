@@ -640,24 +640,55 @@ content : tuple
 
 
 class SequenceBase(Base):
-    """
-::
-    <sequence-base> = <obj>, <obj> [ , <obj> ]...
-    """
+    '''
+    Match one or more fparser2 rules separated by a defined
+    separator in a supplied string.
+
+    sequence-base is obj [sep obj ] ...
+
+    '''
+    @staticmethod
     def match(separator, subcls, string):
+        '''Match one or more 'subcls' fparser2 rules separated by 'separator'
+        in string 'string'. If separator is a string then the
+        separator is used to split the input string. If it is a tuple
+        then a regular expression in the second entry of the tuple is
+        used to split the input string and the separator returned is
+        the first argument.
+
+        :param separator: The separator used to split the supplied
+        string. This is either 1) a string containing the separator or
+        2) a tuple with the first argument containing the separator to
+        return and the second argument providing a regular expression
+        to match.
+        :type separator: str or (str, :py:class:'_sre.SRE_Pattern')
+        :param subcls: An fparser2 object representing the rule that \
+        should be matched.
+        :type subcls: Subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: The input string to match.
+
+        :returns: a tuple containing 1) the separator and 2) the \
+        matched objects in a tuple, or None if there is no match.
+        :rtype: (str, (Subclass of \
+        :py:class:`fparser.two.utils.Base`)) or NoneType
+
+        '''
         line, repmap = string_replace_map(string)
         if isinstance(separator, str):
             splitted = line.split(separator)
         else:
+            # A tuple with the 1st argument being the separator to
+            # return and the second argument being an expression to
+            # use to split the line.
             splitted = separator[1].split(line)
             separator = separator[0]
-        if len(splitted) <= 1:
-            return
+        if len(splitted) < 1:
+            # There was nothing to split.
+            return None
         lst = []
-        for p in splitted:
-            lst.append(subcls(repmap(p.strip())))
+        for entry in splitted:
+            lst.append(subcls(repmap(entry.strip())))
         return separator, tuple(lst)
-    match = staticmethod(match)
 
     def init(self, separator, items):
         self.separator = separator
@@ -799,6 +830,7 @@ class KeywordValueBase(Base):
     """
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
+
         '''
         :param lhs_cls: list, tuple or single value of classes to attempt to
                         match LHS against (in order), or string containing

@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -110,7 +110,7 @@ def test_specification_part():
     assert str(obj) == 'INTEGER :: a'
     assert (repr(obj) == "Specification_Part(Type_Declaration_Stmt("
             "Intrinsic_Type_Spec('INTEGER', None), None, "
-            "Entity_Decl(Name('a'), None, None, None)))")
+            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, None),))))")
 
     obj = tcls(get_reader('''\
 type a
@@ -578,7 +578,7 @@ def test_type_param_def_stmt():  # R435
     assert str(obj) == 'INTEGER, KIND :: a'
     assert (repr(obj) ==
             "Type_Param_Def_Stmt(None, Type_Param_Attr_Spec('KIND'), "
-            "Name('a'))")
+            "Type_Param_Decl_List(',', (Name('a'),)))")
 
     obj = tcls('integer*2 ,len :: a=3, b=2+c')
     assert isinstance(obj, tcls), repr(obj)
@@ -640,8 +640,10 @@ def test_component_decl():  # R442
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
-            "Component_Decl(Name('a'), Explicit_Shape_Spec(None, "
-            "Int_Literal_Constant('1', None)), None, None)")
+            "Component_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
+            "None, None)")
+
 
     obj = tcls('a(1)*(3)')
     assert isinstance(obj, tcls), repr(obj)
@@ -734,7 +736,8 @@ def test_derived_type_spec():  # R455
     obj = tcls('a(b)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(b)'
-    assert repr(obj) == "Derived_Type_Spec(Type_Name('a'), Name('b'))"
+    assert repr(obj) == ("Derived_Type_Spec(Type_Name('a'), "
+                         "Type_Param_Spec_List(',', (Name('b'),)))")
 
     obj = tcls('a(b,c,g=1)')
     assert isinstance(obj, tcls), repr(obj)
@@ -777,7 +780,7 @@ def test_type_param_spec_list():  # R456-list
             "Type_Param_Spec_List(',', (Name('a'), Name('b')))")
 
     obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
 
     obj = tcls('k=a,c,g=1')
     assert isinstance(obj, tcls), repr(obj)
@@ -884,12 +887,14 @@ def test_array_constructor():  # R465
     obj = tcls('(/a/)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(/a/)'
-    assert repr(obj) == "Array_Constructor('(/', Name('a'), '/)')"
+    assert repr(obj) == ("Array_Constructor('(/', Ac_Value_List(',', "
+                         "(Name('a'),)), '/)')")
 
     obj = tcls('[a]')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '[a]'
-    assert repr(obj) == "Array_Constructor('[', Name('a'), ']')"
+    assert repr(obj) == ("Array_Constructor('[', Ac_Value_List(',', "
+                         "(Name('a'),)), ']')")
 
     obj = tcls('[integer::a]')
     assert isinstance(obj, tcls), repr(obj)
@@ -931,7 +936,7 @@ def test_ac_value_list():  # R469-list
     assert repr(obj) == "Ac_Value_List(',', (Name('a'), Name('b')))"
 
     obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a'
 
 
@@ -972,9 +977,9 @@ def test_type_declaration_stmt():  # R501
     obj = tcls('integer a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
-    assert (repr(obj) ==
-            "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', None), "
-            "None, Entity_Decl(Name('a'), None, None, None))")
+    assert (repr(obj) == "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', "
+            "None), None, Entity_Decl_List(',', (Entity_Decl(Name('a'), None, "
+            "None, None),)))")
 
     obj = tcls('integer ,dimension(2):: a*3')
     assert isinstance(obj, tcls), repr(obj)
@@ -984,8 +989,9 @@ def test_type_declaration_stmt():  # R501
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL :: a'
     assert (repr(obj) ==
-            "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), "
-            "None, Entity_Decl(Name('a'), None, None, None))")
+            "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), None, "
+            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, "
+            "None),)))")
 
     obj = tcls('REAL A( LDA, * ), B( LDB, * )')
     assert isinstance(obj, tcls), repr(obj)
@@ -1040,8 +1046,8 @@ def test_dimension_attr_spec():  # R503.d
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DIMENSION(a)'
     assert (repr(obj) ==
-            "Dimension_Attr_Spec('DIMENSION', Explicit_Shape_Spec(None, "
-            "Name('a')))")
+            "Dimension_Attr_Spec('DIMENSION', Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Name('a')),)))")
 
 
 def test_intent_attr_spec():  # R503.f
@@ -1060,8 +1066,9 @@ def test_entity_decl():  # 504
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
-            "Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
-            "Int_Literal_Constant('1', None)), None, None)")
+            "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
+            "None, None)")
 
     obj = tcls('a(1)*(3)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1095,8 +1102,9 @@ def test_target_entity_decl():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)'
     assert (repr(obj) ==
-            "Target_Entity_Decl(Name('a'), Explicit_Shape_Spec(None, "
-            "Int_Literal_Constant('1', None)), None, None)")
+            "Target_Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
+            "None, None)")
 
 
 def test_access_spec():  # R508
@@ -1250,8 +1258,9 @@ def test_dimension_stmt():  # R535
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DIMENSION :: a(5)'
     assert (repr(obj) ==
-            "Dimension_Stmt([(Name('a'), Explicit_Shape_Spec(None, "
-            "Int_Literal_Constant('5', None)))])")
+            "Dimension_Stmt([(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Int_Literal_Constant('5', "
+            "None)),)))])")
 
     obj = tcls('dimension a(n,m), b(:), c(2:n), d(*), e(n, 2:*)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1265,7 +1274,8 @@ def test_intent_stmt():  # R536
     obj = tcls('intent(in) :: a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTENT(IN) :: a'
-    assert repr(obj) == "Intent_Stmt(Intent_Spec('IN'), Name('a'))"
+    assert repr(obj) == ("Intent_Stmt(Intent_Spec('IN'), "
+                         "Dummy_Arg_Name_List(',', (Name('a'),)))")
 
     obj = tcls('intent(out) a, b')
     assert isinstance(obj, tcls), repr(obj)
@@ -1281,7 +1291,8 @@ def test_optional_stmt():  # R537
     obj = tcls('optional :: a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'OPTIONAL :: a'
-    assert repr(obj) == "Optional_Stmt('OPTIONAL', Name('a'))"
+    assert repr(obj) == ("Optional_Stmt('OPTIONAL', Dummy_Arg_Name_List(',', "
+                         "(Name('a'),)))")
 
     obj = tcls('optional :: a, b, c')
     assert isinstance(obj, tcls), repr(obj)
@@ -1298,8 +1309,9 @@ def test_parameter_stmt():  # R538
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PARAMETER(a = 1)'
     assert (repr(obj) ==
-            "Parameter_Stmt('PARAMETER', Named_Constant_Def(Name('a'), "
-            "Int_Literal_Constant('1', None)))")
+            "Parameter_Stmt('PARAMETER', Named_Constant_Def_List(',', "
+            "(Named_Constant_Def(Name('a'), Int_Literal_Constant('1', "
+            "None)),)))")
 
     obj = tcls('parameter(a=1, b=a+2)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1327,8 +1339,9 @@ def test_pointer_stmt():  # R540
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'POINTER :: a(:), b'
     assert (repr(obj) ==
-            "Pointer_Stmt('POINTER', Pointer_Decl_List(',', (Pointer_Decl("
-            "Name('a'), Deferred_Shape_Spec(None, None)), Name('b'))))")
+            "Pointer_Stmt('POINTER', Pointer_Decl_List(',', "
+            "(Pointer_Decl(Name('a'), Deferred_Shape_Spec_List(',', "
+            "(Deferred_Shape_Spec(None, None),))), Name('b'))))")
 
 
 def test_pointer_decl():  # R541
@@ -1338,7 +1351,8 @@ def test_pointer_decl():  # R541
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert (repr(obj) ==
-            "Pointer_Decl(Name('a'), Deferred_Shape_Spec(None, None))")
+            "Pointer_Decl(Name('a'), Deferred_Shape_Spec_List(',', "
+            "(Deferred_Shape_Spec(None, None),)))")
 
     obj = tcls('a(:,:)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1358,7 +1372,8 @@ def test_protected_stmt():  # R542
     obj = tcls('protected ::a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PROTECTED :: a'
-    assert repr(obj) == "Protected_Stmt('PROTECTED', Name('a'))"
+    assert repr(obj) == ("Protected_Stmt('PROTECTED', Entity_Name_List(',', "
+                         "(Name('a'),)))")
 
 
 def test_save_stmt():  # R543
@@ -1458,7 +1473,7 @@ def test_implicit_spec():  # R550
     assert str(obj) == 'INTEGER(A - Z)'
     assert (repr(obj) ==
             "Implicit_Spec(Intrinsic_Type_Spec('INTEGER', None), "
-            "Letter_Spec('A', 'Z'))")
+            "Letter_Spec_List(',', (Letter_Spec('A', 'Z'),)))")
 
     obj = tcls('double  complex (r,d-g)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1496,8 +1511,9 @@ def test_equivalence_stmt():  # R554
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'EQUIVALENCE(a, b, z)'
     assert (repr(obj) ==
-            "Equivalence_Stmt('EQUIVALENCE', Equivalence_Set(Name('a'), "
-            "Equivalence_Object_List(',', (Name('b'), Name('z')))))")
+            "Equivalence_Stmt('EQUIVALENCE', Equivalence_Set_List(',', "
+            "(Equivalence_Set(Name('a'), Equivalence_Object_List(',', "
+            "(Name('b'), Name('z')))),)))")
 
     obj = tcls('equivalence (a, b ,z),(b,l)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1510,7 +1526,8 @@ def test_common_stmt():  # R557
     obj = tcls('common a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'COMMON // a'
-    assert repr(obj) == "Common_Stmt([(None, Name('a'))])"
+    assert repr(obj) == ("Common_Stmt([(None, Common_Block_Object_List(',', "
+                         "(Name('a'),)))])")
 
     obj = tcls('common // a,b')
     assert isinstance(obj, tcls), repr(obj)
@@ -1532,8 +1549,8 @@ def test_common_block_object():  # R558
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(2)'
     assert (repr(obj) ==
-            "Common_Block_Object(Name('a'), Explicit_Shape_Spec(None, "
-            "Int_Literal_Constant('2', None)))")
+            "Common_Block_Object(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Int_Literal_Constant('2', None)),)))")
 
     obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
@@ -1599,7 +1616,7 @@ def test_data_ref():  # R612
     assert repr(obj) == "Data_Ref('%', (Name('a'), Name('b')))"
 
     obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a'
 
 
@@ -1627,7 +1644,8 @@ def test_array_section():  # R617
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert (repr(obj) ==
-            "Array_Section(Name('a'), Substring_Range(None, None))")
+            "Array_Section(Data_Ref('%', (Name('a'),)), "
+            "Substring_Range(None, None))")
 
     obj = tcls('a(2:)')
     assert isinstance(obj, tcls), repr(obj)
@@ -1658,7 +1676,7 @@ def test_section_subscript_list():  # R619-list
             "'2', None)))")
 
     obj = tcls('::1')
-    assert isinstance(obj, Subscript_Triplet), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == ': : 1'
 
     obj = tcls('::1, 3')
@@ -1725,7 +1743,8 @@ def test_nullify_stmt():  # R633
     obj = tcls('nullify (a)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'NULLIFY(a)'
-    assert repr(obj) == "Nullify_Stmt('NULLIFY', Name('a'))"
+    assert repr(obj) == ("Nullify_Stmt('NULLIFY', Pointer_Object_List(',', "
+                         "(Name('a'),)))")
 
     obj = tcls('nullify (a,c)')
     assert isinstance(obj, tcls), repr(obj)
@@ -2792,14 +2811,16 @@ def test_read_stmt():
     obj = tcls('read*, a(  2), b')
     assert str(obj) == 'READ *, a(2), b'
     assert repr(obj) == (
-        "Read_Stmt(None, Format('*'), Output_Item_List(',', (Part_Ref("
-        "Name('a'), Int_Literal_Constant('2', None)), Name('b'))))")
-
+        "Read_Stmt(None, Format('*'), Output_Item_List(',', (Data_Ref('%', "
+        "(Part_Ref(Name('a'), Section_Subscript_List(',', "
+        "(Int_Literal_Constant('2', None),))),)), Name('b'))))")
     # With format specified by label number
     obj = tcls("READ 13, a(2)")
     assert str(obj) == 'READ 13, a(2)'
-    assert repr(obj) == ("Read_Stmt(None, Label('13'), Part_Ref(Name('a'), "
-                         "Int_Literal_Constant('2', None)))")
+    assert (repr(obj) ==
+            "Read_Stmt(None, Label('13'), Output_Item_List(',', "
+            "(Data_Ref('%', (Part_Ref(Name('a'), Section_Subscript_List(',', "
+            "(Int_Literal_Constant('2', None),))),)),)))")
 
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
@@ -2819,17 +2840,18 @@ def test_write_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
     assert repr(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec(None, Int_Literal_Constant('123', None)),)), "
-        "Char_Literal_Constant('\"hey\"', None))")
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
+        "(Char_Literal_Constant('\"hey\"', None),)))")
 
     obj = tcls('WRITE (*,"(I3)") my_int')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
     assert repr(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\"(I3)\"', None)))), Name('my_int'))")
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec('FMT', "
+        "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
+        "(Name('my_int'),)))")
 
     obj = tcls('WRITE (*,namtest)')
     assert isinstance(obj, tcls), repr(obj)
@@ -2845,19 +2867,18 @@ def test_write_stmt():
     obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
     assert repr(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(\',\', "
-        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
-        "Io_Control_Spec(None, "
-        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
-        "None)))), Real_Literal_Constant(\'1.D0\', None))")
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec(None, "
+        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
+        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
+
     obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
     assert repr(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(\',\', "
-        "(Io_Control_Spec(None, Io_Unit(\'*\')), "
-        "Io_Control_Spec(\'FMT\', "
-        "Char_Literal_Constant(\'\\\'(5X,\"q_mesh =\",1F12.8)\\\'\', "
-        "None)))), Real_Literal_Constant(\'1.D0\', None))")
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec('FMT', "
+        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
+        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
 
 
 def test_print_stmt():  # R912
@@ -3788,7 +3809,8 @@ def test_procedure_designator():  # R1219
     obj = tcls('a%b')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
-    assert repr(obj) == "Procedure_Designator(Name('a'), '%', Name('b'))"
+    assert repr(obj) == ("Procedure_Designator(Data_Ref('%', (Name('a'),)), "
+                         "'%', Name('b'))")
 
 
 def test_actual_arg_spec():  # R1220
@@ -3813,15 +3835,15 @@ def test_actual_arg_spec_list():
     assert repr(obj) == "Actual_Arg_Spec_List(',', (Name('a'), Name('b')))"
 
     obj = tcls('a = k')
-    assert isinstance(obj, Actual_Arg_Spec), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = k'
 
     obj = tcls('a = k,b')
-    assert isinstance(obj, Actual_Arg_Spec_List), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a = k, b'
 
     obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
+    assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a'
 
 
