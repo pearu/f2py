@@ -81,13 +81,13 @@ def test_match(f2003_create):
     separator = ","
     subcls = Name
     string = "a"
-    result  = SequenceBase.match(separator, subcls, string)
+    result = SequenceBase.match(separator, subcls, string)
     assert str(result) == "(',', (Name('a'),))"
     string = "a,b"
-    result  = SequenceBase.match(separator, subcls, string)
+    result = SequenceBase.match(separator, subcls, string)
     assert str(result) == "(',', (Name('a'), Name('b')))"
     string = "a,b,c"
-    result  = SequenceBase.match(separator, subcls, string)
+    result = SequenceBase.match(separator, subcls, string)
     assert str(result) == "(',', (Name('a'), Name('b'), Name('c')))"
 
 
@@ -100,7 +100,7 @@ def test_match_repmap(f2003_create):
     separator = ","
     subcls = Entity_Decl_List
     string = "a(n, n), b(n, n)"
-    result  = SequenceBase.match(separator, subcls, string)
+    result = SequenceBase.match(separator, subcls, string)
     assert (str(result) ==
             "(',', (Entity_Decl_List(',', (Entity_Decl(Name('a'), "
             "Explicit_Shape_Spec_List(',', (Explicit_Shape_Spec(None, "
@@ -125,14 +125,14 @@ def test_match_keepempty(f2003_create):
 
     # Default should be True so should fail to match.
     with pytest.raises(NoMatchError):
-        _  = SequenceBase.match(separator, subcls, string)
-        
+        _ = SequenceBase.match(separator, subcls, string)
+
     # Set to True so should fail to match.
     with pytest.raises(NoMatchError):
-        _  = SequenceBase.match(separator, subcls, string, keep_empty=True)
+        _ = SequenceBase.match(separator, subcls, string, keep_empty=True)
 
     # Set to False so should match.
-    result  = SequenceBase.match(separator, subcls, string, keep_empty=False)
+    result = SequenceBase.match(separator, subcls, string, keep_empty=False)
     assert str(result) == "(' ', (Name('a'), Name('b')))"
 
 
@@ -152,7 +152,7 @@ def test_match_instance(f2003_create):
     assert obj.tostr() == "a, b, c"
     assert (obj.torepr() ==
             "Type_Param_Name_List(',', (Name('a'), Name('b'), Name('c')))")
-    
+
     # Separator that is not ',' or ' '
     obj = Data_Ref("a%b%c")
     assert obj.tostr() == "a % b % c"

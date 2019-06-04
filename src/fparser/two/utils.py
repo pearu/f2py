@@ -687,7 +687,7 @@ class SequenceBase(Base):
                 "SequenceBase class match method optional argument keep_empty "
                 "expected to be a boolean but found '{0}'."
                 "".format(type(string)))
-        
+
         line, repmap = string_replace_map(string)
         splitted = line.split(separator)
         if not keep_empty:
@@ -734,7 +734,7 @@ class SequenceBase(Base):
 
         '''
         return "{0}('{1}', {2})".format(self.__class__.__name__,
-                                      self.separator, self.items)
+                                        self.separator, self.items)
 
     # The mixin class is likely to be removed so _cmpkey would not be
     # needed. It is not used at the moment. It is only commented out

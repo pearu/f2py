@@ -9428,6 +9428,7 @@ class Prefix(SequenceBase):  # R1227
 
     '''
     subclass_names = ['Prefix_Spec']
+
     @staticmethod
     def match(string):
         '''Match a space separated list of Prefix_Spec objects. The

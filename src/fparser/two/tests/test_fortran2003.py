@@ -110,7 +110,8 @@ def test_specification_part():
     assert str(obj) == 'INTEGER :: a'
     assert (repr(obj) == "Specification_Part(Type_Declaration_Stmt("
             "Intrinsic_Type_Spec('INTEGER', None), None, "
-            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, None),))))")
+            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, "
+            "None),))))")
 
     obj = tcls(get_reader('''\
 type a
@@ -644,7 +645,6 @@ def test_component_decl():  # R442
             "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
             "None, None)")
 
-
     obj = tcls('a(1)*(3)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(1)*(3)'
@@ -977,7 +977,8 @@ def test_type_declaration_stmt():  # R501
     obj = tcls('integer a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
-    assert (repr(obj) == "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', "
+    assert (repr(obj) ==
+            "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', "
             "None), None, Entity_Decl_List(',', (Entity_Decl(Name('a'), None, "
             "None, None),)))")
 
@@ -3927,19 +3928,6 @@ def test_dummy_arg_name():  # R1226
     obj = tcls('a')
     assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
-
-
-def test_prefix():  # R1227
-
-    tcls = Prefix
-    obj = tcls('pure  recursive')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'PURE RECURSIVE'
-    assert (repr(obj) ==
-            "Prefix(' ', (Prefix_Spec('PURE'), Prefix_Spec('RECURSIVE')))")
-
-    with pytest.raises(NoMatchError):
-        _ = tcls('integer * 2 pure')
 
 
 @pytest.mark.parametrize(

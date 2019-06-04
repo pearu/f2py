@@ -51,7 +51,7 @@ def test_prefix(f2003_create):
     assert (result.torepr() ==
             "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
             "Prefix_Spec('MODULE')))")
-    
+
     # multiple spaces
     result = f2003.Prefix("  impure  elemental  module  ")
     assert result.tostr() == "IMPURE ELEMENTAL MODULE"
@@ -66,5 +66,4 @@ def test_prefix_nomatch(f2003_create):
     '''
     for string in ["invalid", "pure impure purile", "", " "]:
         with pytest.raises(NoMatchError):
-            print (string)
             _ = f2003.Prefix(string)
