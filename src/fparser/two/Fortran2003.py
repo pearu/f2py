@@ -2489,6 +2489,8 @@ class Declaration_Type_Spec(Base):  # R502
     use_names = ['Derived_Type_Spec']
 
     def match(string):
+        if not string:
+            return None
         if string[-1] != ')':
             return
         start = string[:4].upper()
@@ -9419,12 +9421,28 @@ class Dummy_Arg_Name(Base):  # R1226
 
 
 class Prefix(SequenceBase):  # R1227
-    """
-    <prefix> = <prefix-spec> [ <prefix-spec> ]..
-    """
+    '''
+    Fortran2003 rule R1227
+
+    prefix is prefix-spec [ prefix-spec ] ...
+
+    '''
     subclass_names = ['Prefix_Spec']
     @staticmethod
     def match(string):
+        '''Match a space separated list of Prefix_Spec objects. The
+        keep_empty=False option ensures that empty matches i.e. '' are
+        removed rather than being presented as matches for Prefix_Spec
+        objects.
+
+        :returns: A tuple of size 2 containing the separator and a \
+        tuple containing Prefix_Spec objects if there is a match and \
+        None if not.
+
+        :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`)) \
+        or NoneType
+
+        '''
         return SequenceBase.match(' ', Prefix_Spec, string, keep_empty=False)
 
 

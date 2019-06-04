@@ -693,6 +693,9 @@ class SequenceBase(Base):
         if not keep_empty:
             # Remove any empty entries.
             splitted = [entry for entry in splitted if entry]
+        if not splitted:
+            # There should be at least one entry.
+            return
         lst = [subcls(repmap(entry.strip())) for entry in splitted]
         return separator, tuple(lst)
 
@@ -858,7 +861,6 @@ class KeywordValueBase(Base):
     """
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
-
         '''
         :param lhs_cls: list, tuple or single value of classes to attempt to
                         match LHS against (in order), or string containing
