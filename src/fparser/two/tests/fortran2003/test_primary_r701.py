@@ -110,7 +110,7 @@ def possible_subclasses(node_type, _seen=None):
 
 
 def test_intrinsic_function(f2003_create):
-    '''Test that an intrinsic functions are matched by Primary.
+    '''Test that an intrinsic function is matched by Primary.
     '''
     assert_subclass_parse(
         'sin(x)', f2003.Intrinsic_Function_Reference,

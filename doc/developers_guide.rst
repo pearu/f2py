@@ -575,17 +575,18 @@ output. These exceptions are caught and re-raised by overriding the
 `Base` class `__new__` method in the top level `Program` class. A
 limitation of the `NoMatchError` exception (but not the
 `InternalSyntaxError` exception) is that it is not able to give any
-details of the error, as is knows nothing about which rules failed to
+details of the error, as it knows nothing about which rules failed to
 match.
 
-`FortranSyntaxError` should also be used when it is know that there is
-a match, the match has a syntax error and the line number information
-is available via the reader object. One issue is that when
-`FortranSyntaxError` is raised from such a location, the fparser
-script is not able to use the reader's fifo buffer to extract position
-information. This is dealt with by not outputting anything from the
-script related to the fifo buffer in this case. It is possible that if
-the lines were pushed back into the buffer then this would work.
+`FortranSyntaxError` should also be used when it is known that there
+is a match, the match has a syntax error and the line number
+information is available via the reader object. One issue is that when
+`FortranSyntaxError` is raised from such a location, the `fparser2.py`
+script may not be able to use the reader's fifo buffer to extract
+position information. In this case, position information is not
+provided in the output. It is possible that if the lines were pushed
+back into the buffer in the parser code then this problem would not
+occur.
 
 .. note::
 

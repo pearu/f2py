@@ -216,6 +216,11 @@ class Program(BlockBase):  # R201
             # NoMatchError so we pass on an empty string.
             raise FortranSyntaxError(string, "")
         except InternalSyntaxError as excinfo:
+            # InternalSyntaxError is used when a syntax error has been
+            # found in a rule that does not have access to the reader
+            # object. This is then re-raised here as a
+            # FortranSyntaxError, adding the reader object (which
+            # provides line number information).
             raise FortranSyntaxError(string, excinfo)
 
     @staticmethod
@@ -4326,10 +4331,10 @@ class Primary(Base):  # R701
             or ( expr )
 
     `intrinsic_function_reference` is not part of rule R701 but is
-    required for fparser to recognise intrinsic functions. This should
-    be placed before array-constructor in the list so that an
-    intrinsic is not (incorrectly) matched as an array (as class
-    `Base` matches rules in list order).
+    required for fparser to recognise intrinsic functions. This is
+    placed before array-constructor in the `subclass_names` list so
+    that an intrinsic is not (incorrectly) matched as an array (as
+    class `Base` matches rules in list order).
 
     '''
     subclass_names = [
@@ -9267,7 +9272,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "CONJG": {"min": 1, "max": 1}, "DBLE": {"min": 1, "max": 1},
         "DIM": {"min": 2, "max": 2}, "DPROD": {"min": 2, "max": 2},
         "FLOOR": {"min": 1, "max": 2}, "INT": {"min": 1, "max": 2},
-        "MAX": {"min": 2, "max": -1}, "MIN": {"min": 2, "max": -1},
+        "MAX": {"min": 2, "max": None}, "MIN": {"min": 2, "max": None},
         "MOD": {"min": 2, "max": 2}, "MODULO": {"min": 2, "max": 2},
         "NINT": {"min": 1, "max": 2}, "REAL": {"min": 1, "max": 2},
         "SIGN": {"min": 2, "max": 2}}
@@ -9349,7 +9354,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "NEAREST": {"min": 2, "max": 2},
         "RRSPACING": {"min": 1, "max": 1},
         "SCALE": {"min": 2, "max": 2},
-        "SET EXPONENT": {"min": 2, "max": 2},
+        "SET_EXPONENT": {"min": 2, "max": 2},
         "SPACING": {"min": 1, "max": 1}}
 
     vector_and_matrix_multiply_names = {
@@ -9413,7 +9418,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "DSQRT": "SQRT", "DTAN": "TAN", "DTANH": "TANH", "FLOAT": "REAL",
         "IABS": "ABS", "IDIM": "DIM", "IDINT": "INT", "IDNINT": "NINT",
         "IFIX": "INT", "ISIGN": "SIGN", "MAX0": "MAX", "MAX1": "MAX",
-        "MIN0": "MIN", "MIN1": "MIN1", "SNGL": "REAL"}
+        "MIN0": "MIN", "MIN1": "MIN", "SNGL": "REAL"}
 
     generic_function_names = {}
     generic_function_names.update(numeric_names)
@@ -9435,6 +9440,10 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
     generic_function_names.update(random_number_names)
     generic_function_names.update(system_environment_names)
 
+    # A list of all function names
+    function_names = generic_function_names.keys() + \
+                     specific_function_names.keys()
+
     subclass_names = []
 
     @staticmethod
@@ -9448,7 +9457,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
 
         :returns: A tuple containing the matched string (converted to \
         upper case) if there is a match or None if there is not.
-        :rtype: (str) or NoneType
+        :rtype: (str,) or NoneType
 
         '''
         return STRINGBase.match(list(Intrinsic_Name.generic_function_names) +
@@ -9494,7 +9503,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             function_args = result[1]
             # This if/else will not be needed once issue #170 has been
             # addressed.
-            if (isinstance(function_args, Actual_Arg_Spec_List)):
+            if isinstance(function_args, Actual_Arg_Spec_List):
                 nargs = len(function_args.items)
             elif function_args is None:
                 nargs = 0
@@ -9512,21 +9521,21 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
             max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
 
+            if max_nargs is None and nargs < min_nargs:
+                # None indicates an unlimited number of arguments
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects at least {1} args but found {2}."
+                    "".format(function_name, min_nargs, nargs))
             if min_nargs == max_nargs and nargs != min_nargs:
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
                     "".format(function_name, min_nargs, nargs))
             if min_nargs < max_nargs and (nargs < min_nargs or
-               nargs > max_nargs):
+                                          nargs > max_nargs):
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects between {1} and {2} args but "
                     "found {3}.".format(function_name, min_nargs, max_nargs,
                                         nargs))
-            if max_nargs == -1 and nargs < min_nargs:
-                # -1 indicates an unlimited number of arguments
-                raise InternalSyntaxError(
-                    "Intrinsic '{0}' expects at least {1} args but found {2}."
-                    "".format(function_name, min_nargs, nargs))
         return result
 
 

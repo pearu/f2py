@@ -1,25 +1,24 @@
-# Copyright (c) 2019 Science and Technology Facilities Council
-
+# -----------------------------------------------------------------------------
+# BSD 3-Clause License
+#
+# Copyright (c) 2019, Science and Technology Facilities Council.
 # All rights reserved.
-
-# Modifications made as part of the fparser project are distributed
-# under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -31,6 +30,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# -----------------------------------------------------------------------------
 
 '''Test that Fortran 2003 intrinsic functions are parsed correctly.'''
 
@@ -83,7 +83,10 @@ def test_intrinsic_name_specific(f2003_create):
 
 
 def test_intrinsic_name_invalid(f2003_create):
-    '''Test that class Intrinsic_Name correctly matches a specific name.'''
+    '''Test that class Intrinsic_Name raises the expected exception if an
+    invalid intrinsic name is provided.
+
+    '''
     with pytest.raises(NoMatchError):
         result = Intrinsic_Name("NOT_AN_INTRINSIC")
 
@@ -215,3 +218,14 @@ def test_intrinsic_function_reference_error3(f2003_create):
         _ = Intrinsic_Function_Reference("MIN(A)")
     assert ("Intrinsic 'MIN' expects at least 2 args but found 1."
             "" in str(excinfo.value))
+
+def test_intrinsic_inside_intrinsic(f2003_create):
+    '''Test that when an intrinsic is within another instrinsic then both
+    are recognised as intrinsics.
+
+    '''
+    reader = get_reader("subroutine sub()\na = sin(cos(b))\nend subroutine sub\n")
+    ast = Program(reader)
+    #assert walk_ast([ast], [Intrinsic_Function_Reference])
+    assert "Intrinsic_Name('SIN')" in repr(ast)
+    assert "Intrinsic_Name('COS')" in repr(ast)
