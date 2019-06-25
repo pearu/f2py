@@ -9441,8 +9441,8 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
     generic_function_names.update(system_environment_names)
 
     # A list of all function names
-    function_names = generic_function_names.keys() + \
-                     specific_function_names.keys()
+    function_names = (generic_function_names.keys() +
+                      specific_function_names.keys())
 
     subclass_names = []
 
@@ -9460,9 +9460,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         :rtype: (str,) or NoneType
 
         '''
-        return STRINGBase.match(list(Intrinsic_Name.generic_function_names) +
-                                list(Intrinsic_Name.specific_function_names),
-                                string)
+        return STRINGBase.match(Intrinsic_Name.function_names, string)
 
 
 class Intrinsic_Function_Reference(CallBase):  # No explicit rule
@@ -9608,11 +9606,11 @@ class Actual_Arg(Base):  # R1221
                  | <proc-component-ref>
                  | <alt-return-spec>
     """
-    subclass_names = ['Procedure_Name',
+    subclass_names = ['Expr',
+                      'Procedure_Name',
                       'Proc_Component_Ref',
                       'Alt_Return_Spec',
-                      'Variable',
-                      'Expr']
+                      'Variable']
 
 
 class Alt_Return_Spec(Base):  # R1222

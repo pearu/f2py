@@ -88,7 +88,7 @@ def test_intrinsic_name_invalid(f2003_create):
 
     '''
     with pytest.raises(NoMatchError):
-        result = Intrinsic_Name("NOT_AN_INTRINSIC")
+        _ = Intrinsic_Name("NOT_AN_INTRINSIC")
 
 
 def test_intrinsic_name_case_insensitive(f2003_create):
@@ -219,13 +219,14 @@ def test_intrinsic_function_reference_error3(f2003_create):
     assert ("Intrinsic 'MIN' expects at least 2 args but found 1."
             "" in str(excinfo.value))
 
+
 def test_intrinsic_inside_intrinsic(f2003_create):
     '''Test that when an intrinsic is within another instrinsic then both
     are recognised as intrinsics.
 
     '''
-    reader = get_reader("subroutine sub()\na = sin(cos(b))\nend subroutine sub\n")
+    reader = get_reader("subroutine sub()\na = sin(cos(b))\nend "
+                        "subroutine sub\n")
     ast = Program(reader)
-    #assert walk_ast([ast], [Intrinsic_Function_Reference])
     assert "Intrinsic_Name('SIN')" in repr(ast)
     assert "Intrinsic_Name('COS')" in repr(ast)

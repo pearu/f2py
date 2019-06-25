@@ -97,14 +97,15 @@ def runner(_, options, args):
         try:
             f2003_parser = ParserFactory().create()
             program = f2003_parser(reader)
-            print (repr(program))
-            #print (program)
+            # print (repr(program))
+            print (program)
         except FortranSyntaxError as msg:
             print ("Syntax error: {0}".format(str(msg)))
             try:
                 # protect the access to fifo_item[-1] in case the fifo
                 # buffer is empty
-                print('parsing %r failed at %s' % (filename, reader.fifo_item[-1]))
+                print('parsing %r failed at %s' % (filename,
+                                                   reader.fifo_item[-1]))
                 print('started at %s' % (reader.fifo_item[0]))
             except IndexError:
                 pass
