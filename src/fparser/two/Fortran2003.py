@@ -9441,8 +9441,8 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
     generic_function_names.update(system_environment_names)
 
     # A list of all function names
-    function_names = (generic_function_names.keys() +
-                      specific_function_names.keys())
+    function_names = (list(generic_function_names.keys()) +
+                      list(specific_function_names.keys()))
 
     subclass_names = []
 
