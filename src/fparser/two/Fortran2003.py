@@ -9525,11 +9525,10 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                     raise InternalSyntaxError(
                         "Intrinsic '{0}' expects at least {1} args but found "
                         "{2}.".format(function_name, min_nargs, nargs))
-                else:
-                    # The number of arguments is valid. Return here as
-                    # further tests will fail due to max_args being
-                    # None.
-                    return result
+                # The number of arguments is valid. Return here as
+                # further tests will fail due to max_args being
+                # None.
+                return result
             if min_nargs == max_nargs and nargs != min_nargs:
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
