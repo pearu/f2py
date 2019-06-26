@@ -149,7 +149,7 @@ def test_specification_stmt(f2003_create):
 
 
 def test_type_declaration_stmt(f2003_create):
-    '''Test a type declarations statement is supported by the declaration
+    '''Test a type declaration statement is supported by the declaration
     construct class.
 
     '''
@@ -162,7 +162,7 @@ def test_type_declaration_stmt(f2003_create):
 
 @pytest.mark.xfail(reason="#202. Statement Function support removed.")
 def test_stmt_function_stmt(f2003_create):
-    '''Test a type declarations statement is supported by the declaration
+    '''Test a statement function statement is supported by the declaration
     construct class.
 
     '''

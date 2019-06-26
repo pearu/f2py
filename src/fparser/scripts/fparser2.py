@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -123,7 +123,6 @@ def main():
     set_fparser_options(parser)
     options, args = parser.parse_args()
     runner(parser, options, args)
-    return
 
 
 if __name__ == "__main__":
