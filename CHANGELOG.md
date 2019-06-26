@@ -12,6 +12,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+26/06/2019 PR #199 for #189. Adds an Intrinsic_Function_Reference node
+           to represent Fortran Intrinsics with the parse tree.
+
 15/06/2019 PR #195. Travis change to make it raise errors with failing
 	   unicode tests.
 
