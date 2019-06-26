@@ -144,7 +144,7 @@ class FortranSyntaxError(FparserException):
 
     '''
     def __init__(self, reader, info):
-        output = "at unknown location"
+        output = "at unknown location "
         if isinstance(reader, FortranReaderBase):
             output = "at line {0}\n>>>{1}\n".format(
                 reader.linecount,
@@ -165,6 +165,14 @@ class InternalError(FparserException):
         new_info = ("'{0}'. Please report this to the "
                     "authors.".format(info))
         FparserException.__init__(self, new_info)
+
+
+class InternalSyntaxError(FparserException):
+    '''An exception indicating that a syntax error has been found by the
+    parser. This is used instead of `FortranSyntaxError` when the
+    reader object is not available.
+
+    '''
 
 
 def show_result(func):
