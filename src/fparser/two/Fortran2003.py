@@ -81,7 +81,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalError, show_result
+    InternalSyntaxError, InternalError, show_result
 
 #
 # SECTION  1
@@ -215,6 +215,13 @@ class Program(BlockBase):  # R201
             # At the moment there is no useful information provided by
             # NoMatchError so we pass on an empty string.
             raise FortranSyntaxError(string, "")
+        except InternalSyntaxError as excinfo:
+            # InternalSyntaxError is used when a syntax error has been
+            # found in a rule that does not have access to the reader
+            # object. This is then re-raised here as a
+            # FortranSyntaxError, adding the reader object (which
+            # provides line number information).
+            raise FortranSyntaxError(string, excinfo)
 
     @staticmethod
     def match(reader):
@@ -1325,8 +1332,7 @@ class Derived_Type_Def(BlockBase):  # R429
                                [Type_Param_Def_Stmt, Private_Or_Sequence,
                                 Component_Part, Type_Bound_Procedure_Part],
                                End_Type_Stmt, reader,
-                               match_names=True,
-                               set_unspecified_end_name=True  # C431
+                               match_names=True  # C431
                                )
 
 
@@ -4320,20 +4326,30 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    """
-    <primary> = <constant>
-                | <designator>
-                | <array-constructor>
-                | <structure-constructor>
-                | <function-reference>
-                | <type-param-inquiry>
-                | <type-param-name>
-                | ( <expr> )
-    """
+    '''Fortran 2003 rule R701
+
+    primary is intrinsic_function_reference
+            or constant
+            or designator
+            or array-constructor
+            or structure-constructor
+            or function-reference
+            or type-param-inquiry
+            or type-param-name
+            or ( expr )
+
+    `intrinsic_function_reference` is not part of rule R701 but is
+    required for fparser to recognise intrinsic functions. This is
+    placed before array-constructor in the `subclass_names` list so
+    that an intrinsic is not (incorrectly) matched as an array (as
+    class `Base` matches rules in list order).
+
+    '''
     subclass_names = [
-        'Constant', 'Parenthesis', 'Designator', 'Array_Constructor',
+        'Intrinsic_Function_Reference',
+        'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
-        'Type_Param_Inquiry', 'Type_Param_Name',
+        'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
     ]
 
 
@@ -9240,6 +9256,300 @@ class Function_Reference(CallBase):  # R1217
     match = staticmethod(match)
 
 
+class Intrinsic_Name(STRINGBase):  # No explicit rule
+    '''Represents the name of a Fortran intrinsic function.
+
+    All generic intrinsic names are specified as keys in the
+    `generic_function_names` dictionary, with their values indicating
+    the minimum and maximum number of arguments allowed for this
+    intrinsic function. A `-1` indicates an unlimited number of
+    arguments. The names are split into the categories specified in
+    the Fortran2003 specification document.
+
+    All specific intrinsic names (which have a different name to their
+    generic counterpart) are specified as keys in the
+    `specific_function_names` dictionary, with their values indicating
+    which generic function they are associated with.
+
+    '''
+
+    numeric_names = {
+        "ABS": {"min": 1, "max": 1}, "AIMAG": {"min": 1, "max": 1},
+        "AINT": {"min": 1, "max": 2}, "ANINT": {"min": 1, "max": 2},
+        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 2},
+        "CONJG": {"min": 1, "max": 1}, "DBLE": {"min": 1, "max": 1},
+        "DIM": {"min": 2, "max": 2}, "DPROD": {"min": 2, "max": 2},
+        "FLOOR": {"min": 1, "max": 2}, "INT": {"min": 1, "max": 2},
+        "MAX": {"min": 2, "max": None}, "MIN": {"min": 2, "max": None},
+        "MOD": {"min": 2, "max": 2}, "MODULO": {"min": 2, "max": 2},
+        "NINT": {"min": 1, "max": 2}, "REAL": {"min": 1, "max": 2},
+        "SIGN": {"min": 2, "max": 2}}
+
+    mathematical_names = {
+        "ACOS": {"min": 1, "max": 1}, "ASIN": {"min": 1, "max": 1},
+        "ATAN": {"min": 1, "max": 1}, "ATAN2": {"min": 2, "max": 2},
+        "COS": {"min": 1, "max": 1}, "COSH": {"min": 1, "max": 1},
+        "EXP": {"min": 1, "max": 1}, "LOG": {"min": 1, "max": 1},
+        "LOG10": {"min": 1, "max": 1}, "SIN": {"min": 1, "max": 1},
+        "SINH": {"min": 1, "max": 1}, "SQRT": {"min": 1, "max": 1},
+        "TAN": {"min": 1, "max": 1}, "TANH": {"min": 1, "max": 1}}
+
+    # Removed max and min from this dictionary as they already appear
+    # in numeric_function_names.
+    character_names = {
+        "ACHAR": {"min": 1, "max": 2}, "ADJUSTL": {"min": 1, "max": 1},
+        "ADJUSTR": {"min": 1, "max": 1}, "CHAR": {"min": 1, "max": 2},
+        "IACHAR": {"min": 1, "max": 2}, "ICHAR": {"min": 1, "max": 2},
+        "INDEX": {"min": 2, "max": 4}, "LEN_TRIM": {"min": 1, "max": 2},
+        "LGE": {"min": 2, "max": 2}, "LGT": {"min": 2, "max": 2},
+        "LLE": {"min": 2, "max": 2}, "LLT": {"min": 2, "max": 2},
+        "REPEAT": {"min": 2, "max": 2}, "SCAN": {"min": 2, "max": 4},
+        "TRIM": {"min": 1, "max": 1}, "VERIFY": {"min": 2, "max": 4}}
+
+    kind_names = {
+        "KIND": {"min": 1, "max": 1},
+        "SELECTED_CHAR_KIND": {"min": 1, "max": 1},
+        "SELECTED_INT_KIND": {"min": 1, "max": 1},
+        "SELECTED_REAL_KIND": {"min": 0, "max": 2}}
+
+    miscellaneous_type_conversion_names = {
+        "LOGICAL": {"min": 1, "max": 2},
+        "TRANSFER": {"min": 2, "max": 3}}
+
+    numeric_inquiry_names = {
+        "DIGITS": {"min": 1, "max": 1},
+        "EPSILON": {"min": 1, "max": 1},
+        "HUGE": {"min": 1, "max": 1},
+        "MAXEXPONENT": {"min": 1, "max": 1},
+        "MINEXPONENT": {"min": 1, "max": 1},
+        "PRECISION": {"min": 1, "max": 1},
+        "RADIX": {"min": 1, "max": 1},
+        "RANGE": {"min": 1, "max": 1},
+        "TINY": {"min": 1, "max": 1}}
+
+    array_inquiry_names = {
+        "LBOUND": {"min": 1, "max": 3},
+        "SHAPE": {"min": 1, "max": 2},
+        "SIZE": {"min": 1, "max": 3},
+        "UBOUND": {"min": 1, "max": 3}}
+
+    other_inquiry_names = {
+        "ALLOCATED": {"min": 1, "max": 1},
+        "ASSOCIATED": {"min": 1, "max": 2},
+        "BIT_SIZE": {"min": 1, "max": 1},
+        "EXTENDS_TYPE_OF": {"min": 2, "max": 2},
+        "LEN": {"min": 1, "max": 2},
+        "NEW_LINE": {"min": 1, "max": 1},
+        "PRESENT": {"min": 1, "max": 1},
+        "SAME_TYPE_AS": {"min": 2, "max": 2}}
+
+    bit_manipulation_names = {
+        "BTEST": {"min": 2, "max": 2},
+        "IAND": {"min": 2, "max": 2},
+        "IBCLR": {"min": 2, "max": 2},
+        "IBITS": {"min": 2, "max": 2},
+        "IBSET": {"min": 2, "max": 2},
+        "IEOR": {"min": 2, "max": 2},
+        "IOR": {"min": 2, "max": 2},
+        "ISHFT": {"min": 2, "max": 2},
+        "ISHFTC": {"min": 2, "max": 3},
+        "MVBITS": {"min": 5, "max": 5},
+        "NOT": {"min": 1, "max": 1}}
+
+    floating_point_manipulation_names = {
+        "EXPONENT": {"min": 1, "max": 1},
+        "FRACTION": {"min": 1, "max": 1},
+        "NEAREST": {"min": 2, "max": 2},
+        "RRSPACING": {"min": 1, "max": 1},
+        "SCALE": {"min": 2, "max": 2},
+        "SET_EXPONENT": {"min": 2, "max": 2},
+        "SPACING": {"min": 1, "max": 1}}
+
+    vector_and_matrix_multiply_names = {
+        "DOT_PRODUCT": {"min": 2, "max": 2},
+        "MATMUL": {"min": 2, "max": 2}}
+
+    array_reduction_names = {
+        "ALL": {"min": 1, "max": 2},
+        "ANY": {"min": 1, "max": 2},
+        "COUNT": {"min": 1, "max": 3},
+        "MAXVAL": {"min": 1, "max": 3},
+        "MINVAL": {"min": 1, "max": 3},
+        "PRODUCT": {"min": 1, "max": 3},
+        "SUM": {"min": 1, "max": 3}}
+
+    array_construction_names = {
+        "CSHIFT": {"min": 2, "max": 3},
+        "EOSHIFT": {"min": 2, "max": 4},
+        "MERGE": {"min": 3, "max": 3},
+        "PACK": {"min": 2, "max": 3},
+        "RESHAPE": {"min": 2, "max": 4},
+        "SPREAD": {"min": 3, "max": 3},
+        "TRANSPOSE": {"min": 1, "max": 1},
+        "UNPACK": {"min": 3, "max": 3}}
+
+    array_location_names = {
+        "MAXLOC": {"min": 1, "max": 4},
+        "MINLOC": {"min": 1, "max": 4}}
+
+    null_names = {
+        "NULL": {"min": 0, "max": 1}}
+
+    allocation_transfer_names = {
+        "MOVE_ALLOC": {"min": 2, "max": 2}}
+
+    random_number_names = {
+        "RANDOM_NUMBER": {"min": 1, "max": 1},
+        "RANDOM_SEED": {"min": 0, "max": 3}}
+
+    system_environment_names = {
+        "COMMAND_ARGUMENT_COUNT": {"min": 0, "max": 0},
+        "CPU_TIME": {"min": 1, "max": 1},
+        "DATE_AND_TIME": {"min": 0, "max": 4},
+        "GET_COMMAND": {"min": 0, "max": 3},
+        "GET_COMMAND_ARGUMENT": {"min": 1, "max": 4},
+        "GET_ENVIRONMENT_VARIABLE": {"min": 1, "max": 5},
+        "IS_IOSTAT_END": {"min": 1, "max": 1},
+        "IS_IOSTAT_EOR": {"min": 1, "max": 1},
+        "SYSTEM_CLOCK": {"min": 0, "max": 3}}
+
+    # A map from specific function names to their generic equivalent.
+    specific_function_names = {
+        "ALOG": "LOG", "ALOG10": "LOG10", "AMAX0": "MAX", "AMAX1": "MAX",
+        "AMIN0": "MIN", "AMIN1": "MIN", "AMOD": "MOD", "CABS": "ABS",
+        "CCOS": "COS", "CEXP": "EXP", "CLOG": "LOG", "CSIN": "SIN",
+        "CSQRT": "SQRT", "DABS": "ABS", "DACOS": "ACOS", "DASIN": "ASIN",
+        "DATAN": "ATAN", "DATAN2": "ATAN2", "DCOS": "COS", "DCOSH": "COSH",
+        "DDIM": "DIM", "DEXP": "EXP", "DINT": "AINT", "DLOG": "LOG",
+        "DLOG10": "LOG10", "DMAX1": "MAX", "DMIN1": "MIN", "DMOD": "MOD",
+        "DNINT": "ANINT", "DSIGN": "SIGN", "DSIN": "SIN", "DSINH": "SINH",
+        "DSQRT": "SQRT", "DTAN": "TAN", "DTANH": "TANH", "FLOAT": "REAL",
+        "IABS": "ABS", "IDIM": "DIM", "IDINT": "INT", "IDNINT": "NINT",
+        "IFIX": "INT", "ISIGN": "SIGN", "MAX0": "MAX", "MAX1": "MAX",
+        "MIN0": "MIN", "MIN1": "MIN", "SNGL": "REAL"}
+
+    generic_function_names = {}
+    generic_function_names.update(numeric_names)
+    generic_function_names.update(mathematical_names)
+    generic_function_names.update(character_names)
+    generic_function_names.update(kind_names)
+    generic_function_names.update(miscellaneous_type_conversion_names)
+    generic_function_names.update(numeric_inquiry_names)
+    generic_function_names.update(array_inquiry_names)
+    generic_function_names.update(other_inquiry_names)
+    generic_function_names.update(bit_manipulation_names)
+    generic_function_names.update(floating_point_manipulation_names)
+    generic_function_names.update(vector_and_matrix_multiply_names)
+    generic_function_names.update(array_reduction_names)
+    generic_function_names.update(array_construction_names)
+    generic_function_names.update(array_location_names)
+    generic_function_names.update(null_names)
+    generic_function_names.update(allocation_transfer_names)
+    generic_function_names.update(random_number_names)
+    generic_function_names.update(system_environment_names)
+
+    # A list of all function names
+    function_names = (list(generic_function_names.keys()) +
+                      list(specific_function_names.keys()))
+
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Attempt to match the input `string` with the intrinsic function
+        names defined in `generic_function_names` or
+        `specific_function_names`. If there is a match the resultant
+        string will be converted to upper case.
+
+        :param str string: The pattern to be matched.
+
+        :returns: A tuple containing the matched string (converted to \
+        upper case) if there is a match or None if there is not.
+        :rtype: (str,) or NoneType
+
+        '''
+        return STRINGBase.match(Intrinsic_Name.function_names, string)
+
+
+class Intrinsic_Function_Reference(CallBase):  # No explicit rule
+    '''Represents Fortran intrinsics.
+
+    function-reference is intrinsic-name ( [ actual-arg-spec-list ] )
+
+    '''
+    subclass_names = []
+    use_names = ['Intrinsic_Name', 'Actual_Arg_Spec_List']
+
+    @staticmethod
+    def match(string):
+        '''Match the string as an intrinsic function. Also check that the
+        number of arguments provided matches the number expected by
+        the intrinsic.
+
+        :param str string: the string to match with the pattern rule.
+
+        :return: a tuple of size 2 containing the name of the \
+        intrinsic and its arguments if there is a match, or None if \
+        there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Intrinsic_Name`, \
+        :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`) or \
+        NoneType
+
+        :raises InternalSyntaxError: If the number of arguments \
+        provided does not match the number of arguments expected by \
+        the intrinsic.
+
+        '''
+        result = CallBase.match(
+            Intrinsic_Name, Actual_Arg_Spec_List, string)
+        if result:
+            # There is a match so check the number of args provided
+            # matches the number of args expected by the intrinsic.
+            function_name = str(result[0])
+            function_args = result[1]
+            # This if/else will not be needed once issue #170 has been
+            # addressed.
+            if isinstance(function_args, Actual_Arg_Spec_List):
+                nargs = len(function_args.items)
+            elif function_args is None:
+                nargs = 0
+            else:
+                nargs = 1
+
+            if function_name in Intrinsic_Name.specific_function_names.keys():
+                # If this is a specific function then use its generic
+                # name to test min and max number of arguments.
+                test_name = Intrinsic_Name.specific_function_names[
+                    function_name]
+            else:
+                test_name = function_name
+
+            min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
+            max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
+
+            if max_nargs is None:
+                if nargs < min_nargs:
+                    # None indicates an unlimited number of arguments
+                    raise InternalSyntaxError(
+                        "Intrinsic '{0}' expects at least {1} args but found "
+                        "{2}.".format(function_name, min_nargs, nargs))
+                # The number of arguments is valid. Return here as
+                # further tests will fail due to max_args being
+                # None.
+                return result
+            if min_nargs == max_nargs and nargs != min_nargs:
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects {1} arg(s) but found {2}."
+                    "".format(function_name, min_nargs, nargs))
+            if min_nargs < max_nargs and (nargs < min_nargs or
+                                          nargs > max_nargs):
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects between {1} and {2} args but "
+                    "found {3}.".format(function_name, min_nargs, max_nargs,
+                                        nargs))
+        return result
+
+
 class Call_Stmt(StmtBase):  # R1218
     """
     <call-stmt> = CALL <procedure-designator>
@@ -9309,11 +9619,11 @@ class Actual_Arg(Base):  # R1221
                  | <proc-component-ref>
                  | <alt-return-spec>
     """
-    subclass_names = ['Procedure_Name',
+    subclass_names = ['Expr',
+                      'Procedure_Name',
                       'Proc_Component_Ref',
                       'Alt_Return_Spec',
-                      'Variable',
-                      'Expr']
+                      'Variable']
 
 
 class Alt_Return_Spec(Base):  # R1222

@@ -69,6 +69,7 @@ fixed format. It also tries to differentiate between strict and "pyf" although
 I'm not sure what that is.
 '''
 
+import io
 import os
 import re
 import six
@@ -315,7 +316,7 @@ def get_source_info(file_candidate):
         #
         from fparser.common.utils import make_clean_tmpfile
         tmpfile = make_clean_tmpfile(file_candidate)
-        with open(tmpfile, 'r') as file_object:
+        with io.open(tmpfile, 'r', encoding='utf8') as file_object:
             string = get_source_info_str(file_object.read())
         os.remove(tmpfile)
         return string

@@ -12,9 +12,29 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+26/06/2019 PR #199 for #189. Adds an Intrinsic_Function_Reference node
+           to represent Fortran Intrinsics with the parse tree.
+
+15/06/2019 PR #195. Travis change to make it raise errors with failing
+	   unicode tests.
+
+14/06/2019 PR #181. Added an xfailing test to demonstrate an error in
+	   EndStmtBase.
+
+14/06/2019 PR #196. Fix for unicode input errors in Python.
+
+14/06/2019 PR #194. Fix for unicode input errors in Python 3.6.
+
+05/04/2019 PR #192. END statements which use class EndStmtBase now output
+	   the same tokens as the input e.g. names are not added if they
+	   don't exist in the input.
+
+29/03/2019 Issue #167 and PR #182. Fix to Fortran2003 rule 701 where large
+           codes were causing recurse-depth errors in Python.
+
 26/03/2019 Issue #136 and PR #183. Adds the ability to enforce the ordering
 	   of matches in the blockbase class and uses this functionality
-	   to fix potential errors in in Fortran2003 rule 1101.
+	   to fix potential errors in Fortran2003 rule 1101.
 
 20/03/2019 Issue #132 and PR #184. Fixes for reading source files containing
  	   utf8 characters under Python 2.

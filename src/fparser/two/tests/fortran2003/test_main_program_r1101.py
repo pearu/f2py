@@ -58,9 +58,9 @@ def test_valid(f2003_create):
     # basic
     obj = Main_Program(get_reader("program a\nend"))
     assert isinstance(obj, Main_Program)
-    assert str(obj) == 'PROGRAM a\nEND PROGRAM a'
+    assert str(obj) == 'PROGRAM a\nEND'
     assert repr(obj) == ("Main_Program(Program_Stmt('PROGRAM', Name('a')), "
-                         "End_Program_Stmt('PROGRAM', None))")
+                         "End_Program_Stmt(None, None))")
 
     # name matching
     obj = Main_Program(get_reader("program a\nend program a"))
@@ -86,7 +86,7 @@ def test_valid(f2003_create):
     obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  CONTAINS\n  SUBROUTINE foo\n"
-                        "  END SUBROUTINE foo\nEND PROGRAM a")
+                        "  END\nEND PROGRAM a")
 
     # specification-part + execution-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\nend program a"))
@@ -96,13 +96,13 @@ def test_valid(f2003_create):
     obj = Main_Program(get_reader("program a\ni=10\ncontains\nsubroutine foo\n"
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  i = 10\n  CONTAINS\n  SUBROUTINE foo\n"
-                        "  END SUBROUTINE foo\nEND PROGRAM a")
+                        "  END\nEND PROGRAM a")
 
     # specification-part + execution-part + internal-subprogram-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\ncontains\n"
                                   "subroutine foo\nend\nend program a"))
     assert str(obj) == ("PROGRAM a\n  INTEGER :: i\n  i = 10\n  CONTAINS\n  "
-                        "SUBROUTINE foo\n  END SUBROUTINE foo\nEND PROGRAM a")
+                        "SUBROUTINE foo\n  END\nEND PROGRAM a")
 
 
 def test_invalid1(f2003_create):

@@ -144,7 +144,7 @@ class FortranSyntaxError(FparserException):
 
     '''
     def __init__(self, reader, info):
-        output = "at unknown location"
+        output = "at unknown location "
         if isinstance(reader, FortranReaderBase):
             output = "at line {0}\n>>>{1}\n".format(
                 reader.linecount,
@@ -165,6 +165,14 @@ class InternalError(FparserException):
         new_info = ("'{0}'. Please report this to the "
                     "authors.".format(info))
         FparserException.__init__(self, new_info)
+
+
+class InternalSyntaxError(FparserException):
+    '''An exception indicating that a syntax error has been found by the
+    parser. This is used instead of `FortranSyntaxError` when the
+    reader object is not available.
+
+    '''
 
 
 def show_result(func):
@@ -400,7 +408,6 @@ content : tuple
     def match(startcls, subclasses, endcls, reader,
               match_labels=False,
               match_names=False,
-              set_unspecified_end_name=False,
               match_name_classes=(),
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
@@ -421,7 +428,6 @@ content : tuple
         :type reader: str or instance of :py:class:`FortranReaderBase`
         :param bool match_labels: TBD
         :param bool match_names: TBD
-        :param bool set_unspecified_end_name: TBD
         :param tuple match_name_classes: TBD
         :param bool enable_do_label_construct_hook: TBD
         :param bool enable_if_construct_hook: TBD
@@ -524,10 +530,7 @@ content : tuple
                     start_name, end_name = content[start_idx].\
                                            get_start_name(), \
                                            content[-1].get_end_name()
-                    if set_unspecified_end_name and end_name is None and \
-                       start_name is not None:
-                        content[-1].set_name(start_name)
-                    elif end_name and not start_name:
+                    if end_name and not start_name:
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
@@ -598,8 +601,6 @@ content : tuple
                             'expected <%s-name> is %s but got %s. Ignoring.'
                             % (end_stmt.get_type().lower(),
                                start_stmt.get_name(), end_stmt.get_name()))
-                else:
-                    end_stmt.set_name(start_stmt.get_name())
         return content,
 
     def init(self, content):
@@ -1196,7 +1197,7 @@ class EndStmtBase(StmtBase):
         else:
             if require_stmt_type:
                 return
-            line = ''
+            return None, None
         if line:
             if stmt_name is None:
                 return
@@ -1205,7 +1206,6 @@ class EndStmtBase(StmtBase):
 
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
-        self.type, self.name = stmt_type, stmt_name
         return
 
     def get_name(self):
@@ -1214,24 +1214,16 @@ class EndStmtBase(StmtBase):
     def get_type(self):
         return self.items[0]
 
-    def set_name(self, name):
-        from fparser.two.Fortran2003 import Name
-        if self.items[1] is not None:
-            self.warning(
-                'item already has name %r, changing it to %r' %
-                (self.items[1], name))
-        if isinstance(name, Name):
-            self.items[1] = name
-        else:
-            self.items[1] = Name(name)
-
     def tostr(self):
         if self.items[1] is not None:
             return 'END %s %s' % tuple(self.items)
-        return 'END %s' % (self.items[0])
+        if self.items[0] is not None:
+            return 'END %s' % (self.items[0])
+        return 'END'
 
     def torepr(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.type, self.name)
+        return '%s(%r, %r)' % (
+            self.__class__.__name__, self.get_type(), self.get_name())
 
     def get_end_name(self):
         name = self.items[1]

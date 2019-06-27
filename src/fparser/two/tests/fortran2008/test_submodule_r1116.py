@@ -61,7 +61,7 @@ def test_submodule(f2008_create):
       ''')
     ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
-        "END SUBMODULE bar" in str(ast)
+        "END" in str(ast)
 
 
 def test_submodule_sp(f2008_create):
@@ -77,7 +77,7 @@ def test_submodule_sp(f2008_create):
     ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "  USE empty\n" \
-        "END SUBMODULE bar" in str(ast)
+        "END" in str(ast)
 
 
 def test_submodule_msp(f2008_create):
@@ -97,7 +97,7 @@ def test_submodule_msp(f2008_create):
         "  CONTAINS\n" \
         "  SUBROUTINE info\n" \
         "  END SUBROUTINE info\n" \
-        "END SUBMODULE bar" in str(ast)
+        "END" in str(ast)
 
 
 def test_submodule_both(f2008_create):
@@ -119,7 +119,7 @@ def test_submodule_both(f2008_create):
         "  CONTAINS\n" \
         "  SUBROUTINE info\n" \
         "  END SUBROUTINE info\n" \
-        "END SUBMODULE bar" in str(ast)
+        "END" in str(ast)
 
 # constraint C1112 format statement
 

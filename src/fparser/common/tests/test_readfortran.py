@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
-# Modified M.Hambley, UK Met Office
+# Modified M. Hambley and P. Elson, Met Office
 # Modified R. W. Ford, STFC Daresbury Lab
 ##############################################################################
 '''
@@ -42,9 +42,12 @@ Test battery associated with fparser.common.readfortran package.
 '''
 from __future__ import print_function
 
+import io
 import os.path
 import tempfile
+
 import pytest
+
 from fparser.common.readfortran import FortranFileReader, FortranStringReader
 import fparser.common.sourceinfo
 import fparser.common.tests.logging_utils
@@ -594,19 +597,23 @@ def test_multi_put_item(ignore_comments):
 
 ##############################################################################
 
-FULL_FREE_SOURCE = '''
+FULL_FREE_SOURCE = u'''
+
+!> Unicode comment: ❤ ✓ ☂ ♞ ☯
+
 program test
 
   implicit none
 
-  character, paramater :: nature = 'free format'
+  character, parameter :: nature = 'free format'
 
 end program test
 '''
 
-FULL_FREE_EXPECTED = ['program test',
+FULL_FREE_EXPECTED = [u'!> Unicode comment: ❤ ✓ ☂ ♞ ☯',
+                      'program test',
                       '  implicit none',
-                      "  character, paramater :: nature = 'free format'",
+                      "  character, parameter :: nature = 'free format'",
                       'end program test']
 
 
@@ -619,8 +626,8 @@ def test_filename_reader():
     handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
     os.close(handle)
     try:
-        with open(filename, mode='w') as source_file:
-            print(FULL_FREE_SOURCE, file=source_file)
+        with io.open(filename, mode='w', encoding='UTF-8') as source_file:
+            source_file.write(FULL_FREE_SOURCE)
 
         unit_under_test = FortranFileReader(filename)
         expected = fparser.common.sourceinfo.FortranFormat(True, False)
@@ -642,10 +649,10 @@ def test_file_reader():
     handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
     os.close(handle)
     try:
-        with open(filename, mode='w') as source_file:
-            print(FULL_FREE_SOURCE, file=source_file)
+        with io.open(filename, mode='w', encoding='UTF-8') as source_file:
+            source_file.write(FULL_FREE_SOURCE)
 
-        with open(filename, mode='r') as source_file:
+        with io.open(filename, mode='r', encoding='UTF-8') as source_file:
             unit_under_test = FortranFileReader(source_file)
 
             expected = fparser.common.sourceinfo.FortranFormat(True, False)
