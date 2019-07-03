@@ -648,12 +648,8 @@ class SequenceBase(Base):
     '''
     @staticmethod
     def match(separator, subcls, string, keep_empty=True):
-        '''Match one or more 'subcls' fparser2 rules separated by 'separator'
-        in string 'string'. If separator is a string then the
-        separator is used to split the input string. If it is a tuple
-        then a regular expression in the second entry of the tuple is
-        used to split the input string and the the first argument is
-        returned as the separator.
+        '''Match one or more 'subcls' fparser2 rules in the string 'string'
+        separated by 'separator'.
 
         :param str separator: The separator used to split the supplied \
         string.
@@ -695,7 +691,7 @@ class SequenceBase(Base):
             splitted = [entry for entry in splitted if entry]
         if not splitted:
             # There should be at least one entry.
-            return
+            return None
         lst = [subcls(repmap(entry.strip())) for entry in splitted]
         return separator, tuple(lst)
 

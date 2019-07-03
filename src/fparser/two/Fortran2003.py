@@ -3943,16 +3943,24 @@ class Substring_Range(SeparatorBase):  # R611
         return SeparatorBase.match(Scalar_Int_Expr, Scalar_Int_Expr, string)
 
 
-class Data_Ref(SequenceBase):  # R612
-    """
-    <data-ref> = <part-ref> [ % <part-ref> ]...
-    """
+class Data_Ref(SequenceBase):
+    '''Fortran 2003 Rule R612
+
+    data-ref is part-ref [ % part-ref ] ...
+
+    If there is only one part-ref then return a 'Part_Ref' object (or
+    an object from a matching sub-rule). If there is more than one
+    part ref then return a 'Data_Ref' object containing the
+    part-ref's.
+
+    '''
     subclass_names = ['Part_Ref']
     use_names = []
 
+    @staticmethod
     def match(string):
+        ''' xxx '''
         return SequenceBase.match(r'%', Part_Ref, string)
-    match = staticmethod(match)
 
 
 class Part_Ref(CallBase):  # R613
@@ -9420,7 +9428,7 @@ class Dummy_Arg_Name(Base):  # R1226
     subclass_names = ['Name']
 
 
-class Prefix(SequenceBase):  # R1227
+class Prefix(SequenceBase):
     '''
     Fortran2003 rule R1227
 
