@@ -9310,7 +9310,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "KIND": {"min": 1, "max": 1},
         "SELECTED_CHAR_KIND": {"min": 1, "max": 1},
         "SELECTED_INT_KIND": {"min": 1, "max": 1},
-        "SELECTED_REAL_KIND": {"min": 0, "max": 2}}
+        "SELECTED_REAL_KIND": {"min": 1, "max": 2}}
 
     miscellaneous_type_conversion_names = {
         "LOGICAL": {"min": 1, "max": 2},

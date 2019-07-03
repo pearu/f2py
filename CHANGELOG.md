@@ -12,6 +12,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+02/07/2019 PR #205 for #204. Corrects the minimum number of arguments
+           for the SELECTED_REAL_KIND intrinsic.
+
 26/06/2019 PR #199 for #189. Adds an Intrinsic_Function_Reference node
            to represent Fortran Intrinsics with the parse tree.
 
