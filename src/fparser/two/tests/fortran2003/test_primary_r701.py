@@ -145,7 +145,7 @@ def test_structure_constructor(f2003_create):
     # name of a function.
     assert_subclass_parse(
         'PERSON ( 12,   "Jones" )', f2003.Structure_Constructor,
-        actual_type=f2003.Data_Ref,
+        actual_type=f2003.Part_Ref,
         expected_str='PERSON(12, "Jones")')
 
 

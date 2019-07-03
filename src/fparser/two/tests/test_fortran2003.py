@@ -1617,7 +1617,7 @@ def test_data_ref():  # R612
     assert repr(obj) == "Data_Ref('%', (Name('a'), Name('b')))"
 
     obj = tcls('a')
-    assert isinstance(obj, tcls), repr(obj)
+    assert isinstance(obj, Name), repr(obj)
     assert str(obj) == 'a'
 
 
@@ -1645,7 +1645,7 @@ def test_array_section():  # R617
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
     assert (repr(obj) ==
-            "Array_Section(Data_Ref('%', (Name('a'),)), "
+            "Array_Section(Name('a'), "
             "Substring_Range(None, None))")
 
     obj = tcls('a(2:)')
@@ -2812,16 +2812,17 @@ def test_read_stmt():
     obj = tcls('read*, a(  2), b')
     assert str(obj) == 'READ *, a(2), b'
     assert repr(obj) == (
-        "Read_Stmt(None, Format('*'), Output_Item_List(',', (Data_Ref('%', "
+        "Read_Stmt(None, Format('*'), Output_Item_List(',', "
         "(Part_Ref(Name('a'), Section_Subscript_List(',', "
-        "(Int_Literal_Constant('2', None),))),)), Name('b'))))")
+        "(Int_Literal_Constant('2', None),))), Name('b'))))")
     # With format specified by label number
     obj = tcls("READ 13, a(2)")
     assert str(obj) == 'READ 13, a(2)'
+    print (repr(obj))
     assert (repr(obj) ==
             "Read_Stmt(None, Label('13'), Output_Item_List(',', "
-            "(Data_Ref('%', (Part_Ref(Name('a'), Section_Subscript_List(',', "
-            "(Int_Literal_Constant('2', None),))),)),)))")
+            "(Part_Ref(Name('a'), Section_Subscript_List(',', "
+            "(Int_Literal_Constant('2', None),))),)))")
 
     # If there is no preceding "FMT=" or "NML=" then there is no way of
     # knowing whether the second argument is a format string or a namelist
@@ -3810,8 +3811,7 @@ def test_procedure_designator():  # R1219
     obj = tcls('a%b')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a % b'
-    assert repr(obj) == ("Procedure_Designator(Data_Ref('%', (Name('a'),)), "
-                         "'%', Name('b'))")
+    assert repr(obj) == "Procedure_Designator(Name('a'), '%', Name('b'))"
 
 
 def test_actual_arg_spec():  # R1220

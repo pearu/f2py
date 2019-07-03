@@ -3948,19 +3948,42 @@ class Data_Ref(SequenceBase):
 
     data-ref is part-ref [ % part-ref ] ...
 
-    If there is only one part-ref then return a 'Part_Ref' object (or
-    an object from a matching sub-rule). If there is more than one
-    part ref then return a 'Data_Ref' object containing the
-    part-ref's.
-
     '''
     subclass_names = ['Part_Ref']
     use_names = []
 
     @staticmethod
     def match(string):
-        ''' xxx '''
-        return SequenceBase.match(r'%', Part_Ref, string)
+        '''Implements the matching for a data-reference. This defines a series
+        of dereferences e.g. a%b%c.
+
+        If there is only one part-ref then return a 'Part_Ref' object (or
+        an object from a matching sub-rule). If there is more than one
+        part-ref then return a 'Data_Ref' object containing the
+        part-ref's.
+
+        :param str string: Fortran code to check for a match
+
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched operator as a string and another tuple \
+                 containing the matched subclasses.
+
+        :rtype: None or (str, (obj, obj, ...))
+
+        '''
+        result = SequenceBase.match(r'%', Part_Ref, string)
+        if not result:
+            # There is no match.
+            return None
+        values = result[1]
+        if len(values) > 1:
+            # There is more than one part-ref so return a Data_Ref
+            # object containing the part-refs.
+            return result
+        # There is only one part-ref so return None to indicate there
+        # is no match and allow the subclass_names Part_Ref class to
+        # match instead.
+        return None
 
 
 class Part_Ref(CallBase):  # R613
