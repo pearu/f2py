@@ -160,6 +160,27 @@ number. For example:
    fparser.two.Fortran2003.FortranSyntaxError: at line 2
    >>>en
 
+Unsupported Features
+--------------------
+
+Statement Functions
++++++++++++++++++++
+
+Fparser2 is currently not able to distinguish between statement
+functions and array assignments when one or more array assignment
+statements are the first statements after a declaration section. This
+limitation leads to these particular array assignments being
+incorrectly parsed as statement functions.
+
+To avoid this incorrect behaviour, support for statement functions has
+been temporarily removed from fparser2. However, with this change,
+statement functions will be incorrectly parsed as array assignments
+when one or more statement function statements are the last statements
+in a declaration section.
+
+Whilst any incorrect behaviour should be avoided, the behaviour of
+this temporary change is considered preferable to the former case, as
+array assigments are more common than statement functions.
 
 Extensions
 ----------

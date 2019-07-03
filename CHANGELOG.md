@@ -12,6 +12,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+03/07/2019 PR #200 for #171. Disable Statement Function support
+           in fparser2.
+
 02/07/2019 PR #205 for #204. Corrects the minimum number of arguments
            for the SELECTED_REAL_KIND intrinsic.
 
