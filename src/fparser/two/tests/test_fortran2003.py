@@ -1608,19 +1608,6 @@ def test_substring_range():  # R611
     assert str(obj) == ': b'
 
 
-def test_data_ref():  # R612
-
-    tcls = Data_Ref
-    obj = tcls('a%b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a % b'
-    assert repr(obj) == "Data_Ref('%', (Name('a'), Name('b')))"
-
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
-
-
 def test_part_ref():  # R613
 
     tcls = Part_Ref

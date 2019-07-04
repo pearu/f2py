@@ -3944,7 +3944,8 @@ class Substring_Range(SeparatorBase):  # R611
 
 
 class Data_Ref(SequenceBase):
-    '''Fortran 2003 Rule R612
+    '''
+    Fortran 2003 Rule R612
 
     data-ref is part-ref [ % part-ref ] ...
 
@@ -3971,6 +3972,8 @@ class Data_Ref(SequenceBase):
         :rtype: None or (str, (obj, obj, ...))
 
         '''
+        # Use SequenceBase as normal, then force no match when there is
+        # only one entry in the sequence.
         result = SequenceBase.match(r'%', Part_Ref, string)
         if not result:
             # There is no match.
