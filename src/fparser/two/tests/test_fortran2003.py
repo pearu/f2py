@@ -2048,7 +2048,7 @@ def test_logical_expr():  # R724
     obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
     assert isinstance(obj, Equiv_Operand), repr(obj)
     assert (str(obj) ==
-            '(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
+            '(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) .OR. .NOT. root')
 
 
 def test_logical_initialization_expr():  # R733
@@ -2222,8 +2222,8 @@ def test_forall_construct():  # R752
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n'
-            '  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + '
-            'b(i, j) * real(i * j)\nEND FORALL')
+            '  a(i, j) = REAL(i + j - 2)\n  b(i, j) = a(i, j) + '
+            'b(i, j) * REAL(i * j)\nEND FORALL')
 
     obj = tcls(get_reader('''\
     n: forall (x = 1:5:2, j = 1:4)
