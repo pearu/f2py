@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2018 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -160,6 +160,27 @@ number. For example:
    fparser.two.Fortran2003.FortranSyntaxError: at line 2
    >>>en
 
+Unsupported Features
+--------------------
+
+Statement Functions
++++++++++++++++++++
+
+Fparser2 is currently not able to distinguish between statement
+functions and array assignments when one or more array assignment
+statements are the first statements after a declaration section. This
+limitation leads to these particular array assignments being
+incorrectly parsed as statement functions.
+
+To avoid this incorrect behaviour, support for statement functions has
+been temporarily removed from fparser2. However, with this change,
+statement functions will be incorrectly parsed as array assignments
+when one or more statement function statements are the last statements
+in a declaration section.
+
+Whilst any incorrect behaviour should be avoided, the behaviour of
+this temporary change is considered preferable to the former case, as
+array assigments are more common than statement functions.
 
 Extensions
 ----------
@@ -198,7 +219,49 @@ omitted, the value is implicitly assumed to be one. For example::
 
 For more information see
 https://gcc.gnu.org/onlinedocs/gfortran/X-format-descriptor-without-count-field.html
+
+Hollerith Constant
+++++++++++++++++++
+
+A Hollerith constant is a way of specifying a string as a sequence of
+characters preceded by the string length and separated by an 'H'. For
+example::
   
+  5Hhello
+  11Hhello there
+
+Hollerith constants were used in Fortran before character strings were
+introduced in Fortran 77. In Fortran 77 the use of Hollerith constants
+was deprecated and in Fortran 95 they were removed from the
+language. However, many compilers still support Hollerith constants
+for legacy Fortran code.
+  
+The 'hollerith' extension adds support in fparser for Hollerith
+constants. This support is currently limited to those specified in
+format statements. There is currently no support for 1) constants in
+DATA statements and 2) constant actual arguments in subroutine CALL
+statements (which are its other uses as specified in the Fortran 66
+standard).
+
+For more information see
+https://gcc.gnu.org/onlinedocs/gfortran/Hollerith-constants-support.html
+or https://en.wikipedia.org/wiki/Hollerith_constant
+
+Dollar Descriptor
++++++++++++++++++
+
+A dollar descriptor is used to specify that the carriage return in a
+write statement should be suppressed. For example::
+
+  100 FORMAT ('Enter your name ',$)
+
+This extension is not specified in the Fortran standard but is
+implemented by a number of compilers. The 'dollar-descriptor'
+extension adds support for the dollar descriptor in fparser.
+
+For more information see
+https://software.intel.com/en-us/fortran-compiler-developer-guide-and-reference-dollar-sign-and-backslash-editing
+
 Classes
 -------
 
@@ -213,20 +276,99 @@ Classes
 .. autoclass:: fparser.two.parser.ParserFactory
     :members:
 
+Includes
+--------
 
-Data Model
-----------
+Fortran supports the `include` statement in order to inline code from
+other locations into the current file.
 
-The module provides the classes; `Comment`, `Main_Program`,
-`Subroutine_Subprogram`, `Function_Subprogram`, `Program_Stmt`,
-`Function_Stmt`, `Subroutine_Stmt`, `Block_Do_Construct`,
-`Block_Label_Do_Construct`, `Block_Nonlabel_Do_Construct`,
-`Execution_Part`, `Name` and `Constant`, amongst others.  Nodes in the
-tree representing the parsed code are instances of either `BlockBase`
-or `SequenceBase`. Child nodes are then stored in the `.content`
-attribute of `BlockBase` objects or the `.items` attribute of
-`SequenceBase` objects. Both of these attributes are Tuple instances.
+The interpretation of where the include content comes from is defined
+as being processor dependent in the Fortran standard. Fparser assumes
+that the content comes from another another file. For example ::
 
+  program x
+  include 'content.inc'
+  end program
+
+implies that ``content.inc`` is a file containing Fortran code. For
+example ::
+
+  print *, "Hello"
+
+The above example would then be equivalent to the following Fortran
+code ::
+
+  program x
+  print *, "Hello"
+  end program
+
+The Fortran standard specifies that the `include` statement is not a
+Fortran statement, rather it indicates that when the code is processed
+the contents of the `include` file should replace the include
+statement as the code is parsed.
+
+fparser supports `include` statements in its reader classes
+(`FortranStringReader` and `FortranFileReader`), so the parser itself
+need not be aware of the original `include` statements.
+
+The directory locations in which to search for `include` files can be
+specified to a reader class instance via the optional `include_dirs`
+argument, which should be iterable. For example::
+
+  reader = FortranFileReader(my_file, include_dirs=["dir1", "dir2"])
+
+If a relative directory is specified then the location is with respect
+to the input file.  The reader class instance will search in the
+specified directory order and include the contents of the first
+matching file found.
+
+If no include_dirs argument is supplied then the default search
+location is ``['.']``. Therefore include files would need to be in the
+same directory as the input file for them to be found.
+
+.. note:: At the moment it is not possible to specify include
+          directories in the fparser2 script.
+
+In a compiler, all include files must be found otherwise there is an
+error. However, with a code parser this is not necessarily the case. A
+user might not want to include all files when parsing, perhaps for
+simplicity, or perhaps because the files are not readily available. To
+support this, fparser has been extended to recognise `include`
+statements as part of the parse tree. If a particular `include` file
+is not found then the associated `include` statement will be parsed
+like a standard Fortran statement. If we again consider the simple
+example from earlier::
+
+  program x
+  include 'content.inc'
+  end program
+
+with ``content.inc`` containing the following Fortran code::
+
+  print *, "Hello"
+
+then if the ``content.inc`` file is found the output of fparser
+would be::
+
+  PROGRAM x
+  PRINT *, "Hello"
+  END PROGRAM x
+
+but if the ``content.inc`` file is not found then the output of
+fparser would be::
+
+  PROGRAM x
+  INCLUDE 'content.inc'  
+  END PROGRAM x
+  
+Clearly in the latter case the parser does require the code to be
+valid with the `include` statement in it. For example, assuming the
+content of ``endprogram.inc`` is ``end program`` then the following
+example would be parsed successfully if the `endprogram.inc` include
+file was found but would fail if the include file was not found::
+
+  program x
+  include 'endprogram.inc'
 
 Walking the AST
 ---------------

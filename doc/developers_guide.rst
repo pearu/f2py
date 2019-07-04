@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2018 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -49,6 +49,54 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 
 Note that the setting for `ignore_comments` provided here can be overridden
 on a per-call basis by methods such as `get_single_line`.
+
+A convenience script called read.py is provided in the scripts
+directory which takes a filename as input and returns the file
+reader's representation of that file. This could be useful for
+debugging purposes.
+
+Invalid input
+-------------
+
+The file reader uses 'open' to open a Fortran file. If invalid input
+is found then Python2 does not complain, however Python3 raises a
+`UnicodeDecodeError` exception.
+
+To get round this problem a utility function has been written in
+`utils.py` called `make_clean_tmpfile`. This utility gives control
+over whether an exception is raised or not in both Python2 and 3. It
+also allows the offending errors to be stripped so that the rest of
+the file can be processed successfully.
+
+The uility is required in two places in the code, in `readfortran.py`
+by the file reader and in `sourceinfo.py`. The latter is used to
+determine which Fortran formatting to use (fixed, free etc).
+
+The utility makes use of the `codec.open(errors="ignore")`
+function. Whilst it would have been easier in theory to replace the
+existing `open` calls with `codec.open` this led to many Python2
+problems due to `codec.open` returning `unicode` for both Python 2 and
+3 (whereas open returns `str`). The changes that would need to be made
+to make Python2 and the Python2 tests, work were significant.
+
+Therefore it was decided to use `codec.open` to check for errors and
+to strip out any errors if requested. Once checked and stripped, the
+resultant code is written into a temporary file (regardless of whether
+there were errors in it or not). This then allows the unchanged
+original code to continue to use the `open` function to open the newly
+created temporary file.
+
+Note, if Python2 support is dropped in the future then this function
+can be re-worked so that `codec.open` replaces `open` and no temporary
+file would be required.
+
+In Python, temporary files are usually deleted when closed. This
+feature is not wanted here. Therefore the `make_clean_tmpfile`
+function creates a temporary file that will not be deleted when
+closed. This means that the main code must take responsibility for
+deleting the file once it is no longer required. Logic has been added
+to the Fortran file reading and formatting code to make sure any
+temporary files are removed when required.
 
 Fparser2
 --------
@@ -452,7 +500,7 @@ In this way fparser2 captures the `R202` rule hierarchy in its
 Exceptions
 ++++++++++
 
-There are 6 types of exception raised in fparser2: `NoMatchError`,
+There are 7 types of exception raised in fparser2: `NoMatchError`,
 `FortranSyntaxError`, `ValueError`, `InternalError`, `AssertionError` and
 `NotImplementedError`.
 
@@ -520,25 +568,25 @@ arguments. The first argument is a reader object which allows the line
 number and text of the line in question to be output. The second
 argument is text which can be used to give details of the error.
 
-Currently the main use of `FortranSyntaxError` is to catch the final
-`NoMatchError` exception and re-raise it with line number and the text
-of the line to be output. This final `NoMatchError` is caught and
-re-raised by overriding the `Base` class `__new__` method in the top
-level `Program` class. However, this exception is not able to give any
-details of the error as is knows nothing about which rules failed to
+Currently the main use of `FortranSyntaxError` is to catch either an
+`InternalSyntaxError` exception or the final `NoMatchError` exception
+and re-raise it with line number and the text of the line to be
+output. These exceptions are caught and re-raised by overriding the
+`Base` class `__new__` method in the top level `Program` class. A
+limitation of the `NoMatchError` exception (but not the
+`InternalSyntaxError` exception) is that it is not able to give any
+details of the error, as it knows nothing about which rules failed to
 match.
 
-`FortranSyntaxError` has started to be used in a few other places
-(e.g. curently limited to `BlockBase`), where it is know that there is
-a match, but that the match is known to have a syntax error. This
-approach leads to good quality feedback to the user on the type of
-error and its location and should be used wherever possible. One issue
-is that when `FortranSyntaxError` is raised from one of these
-additional places the fparser script is not able to use the reader's
-fifo buffer to extract position information. This is dealt with by not
-outputting anything from the script related to the fifo buffer in this
-case. It is possible that if the lines were pushed back into the
-buffer then this would work.
+`FortranSyntaxError` should also be used when it is known that there
+is a match, the match has a syntax error and the line number
+information is available via the reader object. One issue is that when
+`FortranSyntaxError` is raised from such a location, the `fparser2.py`
+script may not be able to use the reader's fifo buffer to extract
+position information. In this case, position information is not
+provided in the output. It is possible that if the lines were pushed
+back into the buffer in the parser code then this problem would not
+occur.
 
 .. note::
 
@@ -547,6 +595,15 @@ buffer then this would work.
    number of lines and the first line could be returned as well as the
    last. At the moment the last line and the line number are returned.
 
+An `InternalSyntaxError` exception should be raised when it is known
+that there is a match and that a syntax error has occured but it is
+not possible to use the `FortranSyntaxError` exception as the line
+number information is not known (typically because the match is part
+of a line rather than a full line so the input to the associated match
+method is a string not a reader object). As mentioned earlier, this
+exception is subsequently picked up and re-raised as a
+`FortranSyntaxError` exception with line number information added.
+   
 A `ValueError` exception is raised if an invalid standard is passed to
 the `create` method of the `ParserFactory` class.
 
@@ -627,6 +684,46 @@ compiler to throw out any non-standard Fortran).
    names). At some point these need to be modified to use the new
    approach. Eventually, the concept of extensions is expected to be
    implemented as a configuration file rather than a static list.
+
+Include files
++++++++++++++
+
+fparser has been extended to support include files as part of the
+Fortran syntax. This has been implemented in two new classes
+`fparser.two.Fortran2003.Include_Stmt` and
+`fparser.two.Fortran2003.Include_Filename`. This allows fparser to
+parse code with unresolved include files.
+
+The filename matching pattern implemented in fparser is that the
+filename must start with a non-space character and end with a
+non-space character. This is purposely a very loose restriction
+because many characters can be used in filenames and different
+characters may be valid in different operating systems. Note that
+whilst the term filename is used here it can be a filepath.
+
+The include statement rule is added to the start of the `BlockBase`
+match method by integrating it with the `comments` rule in the
+`add_c_and_i()` function. This means that any includes before a
+BlockBase will be matched.
+
+The include statement rule is also added to the subclasses to match in
+the `BlockBase` match method by simply appending it to the existing
+subclasses (the valid classes between the start and end classes) in
+the same way that the Comments class is added. This means that any
+includes within a `BlockBase` will be matched.
+
+All Fortran rules that are responsible for matching whole line
+statements (apart from the top level Program rule R201) make use of
+the `BlockBase` match method. Therefore by adding support for includes
+at the beginning and within a BlockBase class we support includes at
+all possible locations (apart from after the very last statement).
+
+The top level Program rule R201 supports includes at the level of
+multiple program units by again making use of the `add_c_and_i()`
+function before any 'program units', between 'program units' and after
+any 'program units'. This completes all valid locations for include
+statements, including the missing last statement mentioned in the
+previous paragraph.
 
 Utils
 +++++

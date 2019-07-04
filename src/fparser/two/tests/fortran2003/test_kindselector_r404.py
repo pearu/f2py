@@ -122,7 +122,7 @@ def test_nokind_kind_function(f2003_create):
     '''
     reader = get_reader("(kind(kind_id))")
     ast = Kind_Selector(reader)
-    assert "(KIND = kind(kind_id))" in str(ast)
+    assert "(KIND = KIND(kind_id))" in str(ast)
 
 # match() *n extension
 

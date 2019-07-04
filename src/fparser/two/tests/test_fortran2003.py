@@ -1750,62 +1750,6 @@ def test_deallocate_stmt():  # R635
 #
 
 
-def test_primary():  # R701
-
-    tcls = Primary
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
-
-    obj = tcls('(a)')
-    assert isinstance(obj, Parenthesis), repr(obj)
-    assert str(obj) == '(a)'
-
-    obj = tcls('1')
-    assert isinstance(obj, Int_Literal_Constant), repr(obj)
-    assert str(obj) == '1'
-
-    obj = tcls('1.')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '1.'
-
-    obj = tcls('(1, n)')
-    assert isinstance(obj, Complex_Literal_Constant), repr(obj)
-    assert str(obj) == '(1, n)'
-
-    obj = tcls('.true.')
-    assert isinstance(obj, Logical_Literal_Constant), repr(obj)
-    assert str(obj) == '.TRUE.'
-
-    obj = tcls('"hey a()c"')
-    assert isinstance(obj, Char_Literal_Constant), repr(obj)
-    assert str(obj) == '"hey a()c"'
-
-    obj = tcls('b"0101"')
-    assert isinstance(obj, Binary_Constant), repr(obj)
-    assert str(obj) == 'B"0101"'
-
-    obj = tcls('o"0107"')
-    assert isinstance(obj, Octal_Constant), repr(obj)
-    assert str(obj) == 'O"0107"'
-
-    obj = tcls('z"a107"')
-    assert isinstance(obj, Hex_Constant), repr(obj)
-    assert str(obj) == 'Z"A107"'
-
-    obj = tcls('a % b')
-    assert isinstance(obj, Data_Ref), repr(obj)
-    assert str(obj) == 'a % b'
-
-    obj = tcls('a(:)')
-    assert isinstance(obj, Array_Section), repr(obj)
-    assert str(obj) == 'a(:)'
-
-    obj = tcls('0.0E-1')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '0.0E-1'
-
-
 def test_parenthesis():  # R701.h
 
     tcls = Parenthesis
@@ -2097,7 +2041,7 @@ def test_logical_expr():  # R724
     obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
     assert isinstance(obj, Equiv_Operand), repr(obj)
     assert (str(obj) ==
-            '(f0 .LT. f1) .AND. abs(x1 - x0) .GT. abs(x2) .OR. .NOT. root')
+            '(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) .OR. .NOT. root')
 
 
 def test_logical_initialization_expr():  # R733
@@ -2271,8 +2215,8 @@ def test_forall_construct():  # R752
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
             'FORALL(i = 1 : 10, j = 1 : 10, b(i, j) /= 0.0)\n'
-            '  a(i, j) = real(i + j - 2)\n  b(i, j) = a(i, j) + '
-            'b(i, j) * real(i * j)\nEND FORALL')
+            '  a(i, j) = REAL(i + j - 2)\n  b(i, j) = a(i, j) + '
+            'b(i, j) * REAL(i * j)\nEND FORALL')
 
     obj = tcls(get_reader('''\
     n: forall (x = 1:5:2, j = 1:4)
@@ -3466,7 +3410,7 @@ def test_main_program0():  # R1101 helper
 end
     '''))
     assert isinstance(obj0, Main_Program0), repr(obj0)
-    assert str(obj0) == 'END PROGRAM'
+    assert str(obj0) == 'END'
 
     obj0 = Main_Program0(get_reader('''\
 contains
@@ -3475,7 +3419,7 @@ contains
 end
     '''))
     assert isinstance(obj0, Main_Program0), repr(obj0)
-    assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND FUNCTION\nEND PROGRAM'
+    assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND\nEND'
 
 
 def test_module():  # R1104
@@ -3486,7 +3430,7 @@ module m
 end
     '''))
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'MODULE m\nEND MODULE m'
+    assert str(obj) == 'MODULE m\nEND'
 
     obj = tcls(get_reader('''\
 module m
@@ -3498,8 +3442,8 @@ end
     '''))
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) ==
-            'MODULE m\n  TYPE :: a\n  END TYPE a\n  TYPE :: b\n  END TYPE b'
-            '\nEND MODULE m')
+            'MODULE m\n  TYPE :: a\n  END TYPE\n  TYPE :: b\n  END TYPE b'
+            '\nEND')
 
 
 def test_module_subprogram_part():  # R1107
@@ -3514,7 +3458,7 @@ contains
     ''', isfree=True))
     assert isinstance(obj, tcls), repr(obj)
     assert (str(obj) == 'CONTAINS\nSUBROUTINE foo(a)\n  REAL :: a'
-            '\n  a = 1.0\nEND SUBROUTINE foo')
+            '\n  a = 1.0\nEND')
 
 
 def test_module_nature():
@@ -3549,6 +3493,7 @@ def test_rename():  # R1111
     assert str(obj) == 'OPERATOR(.FOO.) => OPERATOR(.BAR.)'
 
 
+@pytest.mark.xfail(reason="Match fails with multiple spaces, see issue #197")
 def test_block_data():  # R1116
 
     tcls = Block_Data
@@ -3558,7 +3503,15 @@ real b
 end block data
     '''))
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA a'
+    assert str(obj) == 'BLOCK DATA a\n  REAL :: b\nEND BLOCK DATA'
+
+    tcls = Block_Data
+    obj = tcls(get_reader('''\
+block     data a
+end block     data a
+    '''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'BLOCK DATA a\nEND BLOCK DATA a'
 
 #
 # SECTION 12
@@ -3594,7 +3547,7 @@ def test_interface_specification():  # R1202
     end
     '''))
     assert isinstance(obj, Function_Body), repr(obj)
-    assert str(obj) == 'FUNCTION foo()\nEND FUNCTION'
+    assert str(obj) == 'FUNCTION foo()\nEND'
 
 
 def test_interface_stmt():  # R1203
@@ -3646,7 +3599,7 @@ end
 '''))
     assert isinstance(obj, Function_Body), repr(obj)
     assert (str(obj) ==
-            'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND FUNCTION')
+            'FUNCTION foo(a) RESULT(c)\n  REAL :: a, c\nEND')
 
 
 def test_subroutine_body():
@@ -4020,7 +3973,7 @@ def test_end_function_stmt():  # R1230
     tcls = End_Function_Stmt
     obj = tcls('end')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END FUNCTION'
+    assert str(obj) == 'END'
 
     obj = tcls('endfunction')
     assert str(obj) == 'END FUNCTION'
@@ -4110,7 +4063,7 @@ def test_end_subroutine_stmt():  # R1234
 
     obj = tcls('end')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END SUBROUTINE'
+    assert str(obj) == 'END'
 
     obj = tcls('endsubroutine')
     assert isinstance(obj, tcls), repr(obj)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -64,6 +64,11 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
+#
+# Author: Pearu Peterson <pearu@cens.ioc.ee>
+# Created: May 2006
+# Modified by R. W. Ford, STFC Daresbury Lab
+# Modified by P. Elson, Met Office
 
 """Provides Fortran reader classes.
 
@@ -133,21 +138,19 @@ To read a Fortran code from a string, use `FortranStringReader` class::
         Line('print*,\"a=\",a',(4, 4),'')
 
 """
-# Author: Pearu Peterson <pearu@cens.ioc.ee>
-# Created: May 2006
 
 from __future__ import print_function
 
-import re
-import os
-import sys
 import logging
+import io
+import os
+import re
+import sys
 import traceback
-
 import six
-
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
+
 
 __all__ = ['FortranFileReader',
            'FortranStringReader',
@@ -381,20 +384,28 @@ class SyntaxErrorLine(Line, FortranReaderError):
 
 
 class Comment(object):
-    """ Holds Fortran comment.
+    '''Holds a Fortran comment.
 
-    Attributes
-    ----------
-    comment : str
-      comment multiline string
-    span : 2-tuple
-      starting and ending line numbers
-    reader : FortranReaderBase
-    """
+    :param str comment: String containing the text of a single or \
+    multi-line comment
+    :param linenospan: A 2-tuple containing the start and end line \
+    numbers of the comment from the input source.
+    :type linenospan: (int, int)
+    :param reader: The reader object being used to read the input \
+    source.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
+    '''
     def __init__(self, comment, linenospan, reader):
+
         self.comment = comment
         self.span = linenospan
         self.reader = reader
+        # self.line provides a common way to retrieve the content from
+        # either a 'Line' or a 'Comment' class. This is useful for
+        # tests as a reader can return an instance of either class and
+        # we might want to check the contents in a consistent way.
+        self.line = comment
 
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s)' \
@@ -623,8 +634,26 @@ class FortranReaderBase(object):
             self.close_source()
             return None
         self.linecount += 1
+
+        if six.PY2 and not isinstance(line, six.text_type):
+            # Ensure we always have a unicode object in Python 2.
+            line = unicode(line, 'UTF-8')
+
         # expand tabs, replace special symbols, get rid of nl characters
-        line = line.expandtabs().replace('\xa0', ' ').rstrip()
+        line = line.expandtabs().replace(u'\xa0', u' ').rstrip()
+
+        if six.PY2:
+            # Cast the unicode to str if we can do so safely. This
+            # maximises compatibility with the existing Python 2 tests
+            # and avoids the need to proliferate the use of unicode
+            # literals (e.g. u"") in the parse tree repr.
+            try:
+                line = line.encode('ascii', errors='strict')
+            except UnicodeEncodeError:
+                # Can't cast to str as there are non-ascii characters
+                # in the line.
+                pass
+
         self.source_lines.append(line)
 
         if ignore_comments and (self.format.is_fixed or self.format.is_f77):
@@ -688,29 +717,44 @@ class FortranReaderBase(object):
         return self.next()
 
     def next(self, ignore_comments=None):
-        """ Return the next Fortran code item.
+        '''Return the next Fortran code item. Include statements are dealt
+        with here.
 
-        Include statements are realized.
+        :param bool ignore_comments: When True then act as if Fortran \
+        code does not contain any comments or blank lines. if this \
+        optional arguement is not provided then use the default \
+        value.
 
-        Parameters
-        ----------
-        ignore_comments : bool
-          When True then act as if Fortran code does not contain
-          any comments or blank lines.
+        :returns: the next line item. This can be from a local fifo \
+        buffer, from an include reader or from this reader.
+        :rtype: py:class:`fparser.common.readfortran.Line`
 
-        See also
-        --------
-        _next, get_source_item
-        """
+        :raises StopIteration: if no more lines are found.
+        :raises StopIteration: if a general error has occured.
+
+        '''
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
         try:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    return next(self.reader)
-                except StopIteration:
-                    self.reader = None
+                    # Manually check to see if something has not
+                    # matched and has been placed in the fifo. We
+                    # can't use _next() as this method is associated
+                    # with the include reader (self.reader._next()),
+                    # not this reader (self._next()).
+                    return self.fifo_item.pop(0)
+                except IndexError:
+                    # There is nothing in the fifo buffer.
+                    try:
+                        # Return a line from the include.
+                        return self.reader.next(ignore_comments)
+                    except StopIteration:
+                        # There is nothing left in the include
+                        # file. Setting reader to None indicates that
+                        # we should now read from the main reader.
+                        self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader
@@ -723,21 +767,24 @@ class FortranReaderBase(object):
                     path = os.path.join(incl_dir, filename)
                     if os.path.exists(path):
                         break
-                if not os.path.isfile(path):  # include file does not exist
-                    dirs = os.pathsep.join(include_dirs)
-                    # According to Fortran standard, INCLUDE line is
-                    # not a Fortran statement.
-                    message = '{!r} not found in {!r}. ' \
-                              + 'INLCUDE line treated as comment line.'
-                    reader.warning(message.format(filename, dirs), item)
-                    item = self.next(ignore_comments)
+                if not os.path.isfile(path):
+                    # The include file does not exist in the specified
+                    # locations.
+                    #
+                    # The Fortran standard states that an INCLUDE line
+                    # is not a Fortran statement. However, fparser is
+                    # a parser not a compiler and some subsequent tool
+                    # might need to make use of this include so we
+                    # return it and let the parser deal with it.
+                    #
                     return item
                 reader.info('including file %r' % (path), item)
                 self.reader = FortranFileReader(
                     path,
                     include_dirs=include_dirs,
                     ignore_comments=ignore_comments)
-                return self.reader.next(ignore_comments=ignore_comments)
+                result = self.reader.next(ignore_comments=ignore_comments)
+                return result
             return item
         except StopIteration:
             raise
@@ -1396,16 +1443,27 @@ class FortranFileReader(FortranReaderBase):
     '''
     def __init__(self, file_candidate, include_dirs=None, source_only=None,
                  ignore_comments=True):
+        # The filename is used as a unique ID. This is then used to cache the
+        # contents of the file. Obviously if the file changes content but not
+        # filename, problems will ensue.
+        #
+        self._remove_on_destruction = False
+        self._close_on_destruction = False
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
-            self.file = open(file_candidate, 'r')
+            from fparser.common.utils import make_clean_tmpfile
+            # Handle potential invalid characters in the input. Done
+            # by creating a new file (tmpfile) with any errors removed
+            # (or raising an exception - see make_clean_tmpfile).
+            tmpfile = make_clean_tmpfile(file_candidate)
+            self.file = io.open(tmpfile, 'r', encoding='UTF-8')
             self._close_on_destruction = True
+            self._remove_on_destruction = True
         elif hasattr(file_candidate,
                      'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
             self.id = file_candidate.name
             self.file = file_candidate
-            self._close_on_destruction = False
         else:  # Probably not something we can deal with
             message = 'FortranFileReader is used with a filename'
             message += ' or file-like object.'
@@ -1425,6 +1483,8 @@ class FortranFileReader(FortranReaderBase):
     def __del__(self):
         if self._close_on_destruction:
             self.file.close()
+            if self._remove_on_destruction:
+                os.remove(self.file.name)
 
     def close_source(self):
         self.file.close()
@@ -1449,12 +1509,21 @@ class FortranStringReader(FortranReaderBase):
                 print*,\"a=\",a
               end
         \'\'\'
-    >>> reader = FortranStringReader(code) 
+    >>> reader = FortranStringReader(code)
 
     '''
     def __init__(self, string, include_dirs=None, source_only=None,
                  ignore_comments=True):
-        self.id = 'string-' + str(id(string))
+        # The Python ID of the string was used to uniquely identify it for
+        # caching purposes. Unfortunately this ID is only unique for the
+        # lifetime of the string. In CPython it is the address of the string
+        # and the chance of a new string being allocated to the same address
+        # is actually quite high. Particularly in a unit-testing scenario.
+        #
+        # For this reason the hash is used instead. A much better solution
+        # anyway.
+        #
+        self.id = 'string-' + str(hash(string))
         source = six.StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,

@@ -64,7 +64,7 @@ def test_parserfactory_std():
     reader = FortranStringReader(fstring)
     ast = parser(reader)
     code = str(ast)
-    assert "SUBMODULE (x) y\nEND SUBMODULE y" in code
+    assert "SUBMODULE (x) y\nEND" in code
 
     # Repeat f2003 example to make sure that a previously valid (f2008)
     # match does not affect the current (f2003) invalid match.

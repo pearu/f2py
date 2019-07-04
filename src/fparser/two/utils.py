@@ -95,6 +95,21 @@ EXTENSIONS = ["x-format"]
 # extension is allowed in fparser.
 EXTENSIONS += ["cray-pointer"]
 
+# A Hollerith constant is a way of specifying a string as a sequence
+# of characters preceded by the string length and separated by an 'H'
+# e.g. 5Hhello. See
+# https://gcc.gnu.org/onlinedocs/gfortran/Hollerith-constants-support.html,
+# for example for more details. fparser currently supports Hollerith
+# constants specified in format statements when 'hollerith' is specified
+# in the EXTENSIONS list.
+EXTENSIONS += ["hollerith"]
+
+# Many compilers support the use of '$' in a fortran write statement
+# to indicate that the carriage return should be suppressed. This is
+# an extension to the Fortran standard and is supported by fparser if
+# 'dollar-descriptor' is specified in the EXTENSIONS list.
+EXTENSIONS += ["dollar-descriptor"]
+
 
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
@@ -129,7 +144,7 @@ class FortranSyntaxError(FparserException):
 
     '''
     def __init__(self, reader, info):
-        output = "at unknown location"
+        output = "at unknown location "
         if isinstance(reader, FortranReaderBase):
             output = "at line {0}\n>>>{1}\n".format(
                 reader.linecount,
@@ -150,6 +165,14 @@ class InternalError(FparserException):
         new_info = ("'{0}'. Please report this to the "
                     "authors.".format(info))
         FparserException.__init__(self, new_info)
+
+
+class InternalSyntaxError(FparserException):
+    '''An exception indicating that a syntax error has been found by the
+    parser. This is used instead of `FortranSyntaxError` when the
+    reader object is not available.
+
+    '''
 
 
 def show_result(func):
@@ -385,13 +408,14 @@ content : tuple
     def match(startcls, subclasses, endcls, reader,
               match_labels=False,
               match_names=False,
-              set_unspecified_end_name=False,
               match_name_classes=(),
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
               enable_select_type_construct_hook=False,
-              enable_case_construct_hook=False):
+              enable_case_construct_hook=False,
+              strict_order=False,
+              ):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -404,24 +428,26 @@ content : tuple
         :type reader: str or instance of :py:class:`FortranReaderBase`
         :param bool match_labels: TBD
         :param bool match_names: TBD
-        :param bool set_unspecified_end_name: TBD
         :param tuple match_name_classes: TBD
         :param bool enable_do_label_construct_hook: TBD
         :param bool enable_if_construct_hook: TBD
         :param bool enable_where_construct_hook: TBD
         :param bool enable_select_type_construct_hook: TBD
         :param bool enable_case_construct_hook: TBD
+        :param bool strict_order: Whether to enforce the order of the
+                                  given subclasses.
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls
         '''
-        from fparser.two.Fortran2003 import Comment, add_comments
+        from fparser.two.Fortran2003 import Comment, Include_Stmt, \
+            add_comments_includes
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
-            # Deal with any preceding comments
-            add_comments(content, reader)
+            # Deal with any preceding comments and/or includes
+            add_comments_includes(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -443,8 +469,8 @@ content : tuple
             if match_names:
                 start_name = obj.get_start_name()
 
-        # A comment is always a valid sub-class
-        classes = subclasses + [Comment]
+        # Comments and Include statements are always valid sub-classes
+        classes = subclasses + [Comment, Include_Stmt]
         if endcls is not None:
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
@@ -504,10 +530,7 @@ content : tuple
                     start_name, end_name = content[start_idx].\
                                            get_start_name(), \
                                            content[-1].get_end_name()
-                    if set_unspecified_end_name and end_name is None and \
-                       start_name is not None:
-                        content[-1].set_name(start_name)
-                    elif end_name and not start_name:
+                    if end_name and not start_name:
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
@@ -518,8 +541,9 @@ content : tuple
                 # We've found the enclosing end statement so break out
                 found_end = True
                 break
-            # Return to start of classes list now that we've matched
-            i = 0
+            if not strict_order:
+                # Return to start of classes list now that we've matched.
+                i = 0
             if enable_if_construct_hook:
                 from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
                     End_If_Stmt
@@ -577,8 +601,6 @@ content : tuple
                             'expected <%s-name> is %s but got %s. Ignoring.'
                             % (end_stmt.get_type().lower(),
                                start_stmt.get_name(), end_stmt.get_name()))
-                else:
-                    end_stmt.set_name(start_stmt.get_name())
         return content,
 
     def init(self, content):
@@ -843,59 +865,92 @@ class KeywordValueBase(Base):
 
 
 class BracketBase(Base):
-    """
-::
-    <bracket-base> = <left-bracket-base> <something> <right-bracket>
-    """
+    '''
+    bracket-base is left-bracket something right-bracket.
+
+    This class is able to cope with nested brackets as long as they
+    are correctly nested. Brackets in strings are ignored.
+
+    The 'something' can be specified as being optional.
+
+    '''
     @staticmethod
     def match(brackets, cls, string, require_cls=True):
-        ''' The generic match method for all types of bracketed
-        expressions '''
-        bracket_len = len(brackets)//2
-        left = brackets[:bracket_len]
-        right = brackets[-bracket_len:]
+        '''A generic match method for all types of bracketed
+        expressions.
 
-        if not (string.startswith(left) and string.endswith(right)):
-            return
+        :param str brackets: the format of the left and right brackets \
+        provided as a string, for example '()'
+        :param cls: the class to match the content within the brackets \
+        :type cls: subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: the content to match
+        :param bool require_cls: whether the class and associated \
+        content is mandatory (True) or optional (False). The default \
+        is True.
+        :return: None if there is no match, otherwise a tuple with the \
+        first and third entries being strings containing the left and \
+        right brackets respectively and the second entry being either \
+        None or an instance of the class provided as the second \
+        argument (cls).
+        :rtype: 'NoneType', ( `str`, `NoneType`, `str`) or ( `str`, \
+        `cls`, `str` )
 
+        '''
+        if not cls and require_cls:
+            return None
+        if not string:
+            return None
+        string_strip = string.strip()
+        if not brackets:
+            return None
+        brackets_nospc = brackets.replace(' ', '')
+        if not brackets_nospc:
+            return None
+        if len(brackets_nospc) % 2 == 1:
+            # LHS and RHS bracketing must be the same size
+            return None
+        bracket_len = len(brackets_nospc)//2
+        left = brackets_nospc[:bracket_len]
+        right = brackets_nospc[-bracket_len:]
+        if len(string_strip) < bracket_len*2:
+            return None
+        if not (string_strip.startswith(left) and
+                string_strip.endswith(right)):
+            return None
         # Check whether or not there's anything between the open
         # and close brackets
-        line = string[bracket_len:-bracket_len].strip()
-        if not line:
-            if require_cls:
-                return
+        line = string_strip[bracket_len:-bracket_len].strip()
+        if (not line and cls and require_cls) or (line and not cls):
+            return None
+        if not line and (not cls or not require_cls):
             return left, None, right
-
-        # There's some content between the open and close brackets.
-        # We may have something like "(a + b)*(a - b)" so have
-        # to check - we start with one open bracket. If we reach
-        # zero open brackets before we get to the end then the
-        # opening bracket at the start of the string does not
-        # correspond to the closing bracket at the end of it.
-        # Unless of course any interim brackets we encounter are
-        # within strings...
-        num_open = 1
-        in_string = False
-        for idx in range(bracket_len, len(string)-bracket_len):
-            if string[idx] == '"' or string[idx] == "'":
-                in_string = not in_string
-            if in_string:
-                # Ignore anything within quotes
-                continue
-            # A slice in python goes up to but *does not
-            # include* the last position so no need for a '-1'
-            if string[idx:idx+bracket_len] == left:
-                num_open += 1
-            elif string[idx:idx+bracket_len] == right:
-                num_open -= 1
-            if num_open == 0:
-                return
         return left, cls(line), right
 
     def tostr(self):
+        '''
+        :raises InternalError: if the internal items list variable is \
+        not the expected size.
+        :raises InternalError: if the first element of the internal \
+        items list is None or is an empty string.
+        '''
+
+        if len(self.items) != 3:
+            raise InternalError(
+                "Class BracketBase method tostr() has '{0}' items, "
+                "but expecting 3.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class BracketBase method tostr(). 'Items' entry 0 "
+                "should be a string containing the left hand bracket "
+                "but it is empty or None")
+        if not self.items[2]:
+            raise InternalError(
+                "Class BracketBase method tostr(). 'Items' entry 2 "
+                "should be a string containing the right hand bracket "
+                "but it is empty or None")
         if self.items[1] is None:
-            return '%s%s' % (self.items[0], self.items[2])
-        return '%s%s%s' % tuple(self.items)
+            return "{0}{1}".format(self.items[0], self.items[2])
+        return "{0}{1}{2}".format(self.items[0], self.items[1], self.items[2])
 
 
 class NumberBase(Base):
@@ -1022,28 +1077,68 @@ string
 
 
 class STRINGBase(StringBase):
-    """
-::
-    <STRING-base> = <XYZ>
-    """
-    match = staticmethod(StringBase.match)
+    '''STRINGBase matches an upper case version of the input string with
+    another a pattern (typically taken from pattern_tools.py) and
+    returns the string in upper case if there is a match.
 
-    def match(pattern, string):
-        if isinstance(pattern, (list, tuple)):
-            for p in pattern:
-                obj = STRINGBase.match(p, string)
-                if obj is not None:
-                    return obj
-            return
-        STRING = string.upper()
-        if isinstance(pattern, str):
-            if len(pattern) == len(string) and pattern == STRING:
-                return STRING,
-            return
-        if pattern.match(STRING):
-            return STRING,
-        return
-    match = staticmethod(match)
+    '''
+
+    @staticmethod
+    def match(my_pattern, string):
+        '''Matches an input string with a specified pattern. Casts the string
+        to upper case before performing a match and, if there is a
+        match, returns the string in upper case.
+
+        The pattern can be a regular expression, a string, a list or a
+        tuple. If the input pattern is a regular expression or a
+        string, a direct equivalence is performed. If the input pattern is a
+        list or a tuple, then all of the contents of the list
+        or tuple are searched for a match (by recursing). The list or tuple may
+        contain regular expressions, strings, lists or tuples. This
+        functionality can be used to recurse down a tree of lists and
+        or tuples until regular expressions or strings are found (at
+        the leaves of the tree) on which to match. The patterns used
+        to match in fparser can be found in patterns_tools.py. These
+        make use of the pattern class, whose match method behaves like
+        a regular expression. For example:
+
+        from fparser.two import pattern_tools
+        pattern = pattern_tools.intrinsic_type_name
+        result = STRINGBase.match(pattern, "logical")
+
+        :param pattern: the pattern to match
+        :type pattern: `list`, `tuple`, `str` or an `re` expression
+        :param str string: the string to match with the pattern
+        :return: None if there is no match, or a tuple containing the \
+        matched string in upper case.
+        :rtype: `NoneType` or ( `str` )
+
+        '''
+        if string is None:
+            return None
+        if not isinstance(string, str):
+            raise InternalError(
+                "Supplied string should be of type str, but found "
+                "{0}".format(type(string)))
+        if isinstance(my_pattern, (list, tuple)):
+            for child in my_pattern:
+                result = STRINGBase.match(child, string)
+                if result:
+                    return result
+            return None
+        string_upper = string.upper()
+        if isinstance(my_pattern, str):
+            if len(my_pattern) == len(string) and my_pattern == string_upper:
+                return string_upper,
+            return None
+        try:
+            if my_pattern.match(string_upper):
+                return string_upper,
+        except AttributeError:
+            raise InternalError(
+                "Supplied pattern should be a list, tuple, str or regular "
+                "expression but found {0}".format(type(my_pattern)))
+        return None
 
 
 class StmtBase(Base):
@@ -1102,7 +1197,7 @@ class EndStmtBase(StmtBase):
         else:
             if require_stmt_type:
                 return
-            line = ''
+            return None, None
         if line:
             if stmt_name is None:
                 return
@@ -1111,7 +1206,6 @@ class EndStmtBase(StmtBase):
 
     def init(self, stmt_type, stmt_name):
         self.items = [stmt_type, stmt_name]
-        self.type, self.name = stmt_type, stmt_name
         return
 
     def get_name(self):
@@ -1120,24 +1214,16 @@ class EndStmtBase(StmtBase):
     def get_type(self):
         return self.items[0]
 
-    def set_name(self, name):
-        from fparser.two.Fortran2003 import Name
-        if self.items[1] is not None:
-            self.warning(
-                'item already has name %r, changing it to %r' %
-                (self.items[1], name))
-        if isinstance(name, Name):
-            self.items[1] = name
-        else:
-            self.items[1] = Name(name)
-
     def tostr(self):
         if self.items[1] is not None:
             return 'END %s %s' % tuple(self.items)
-        return 'END %s' % (self.items[0])
+        if self.items[0] is not None:
+            return 'END %s' % (self.items[0])
+        return 'END'
 
     def torepr(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.type, self.name)
+        return '%s(%r, %r)' % (
+            self.__class__.__name__, self.get_type(), self.get_name())
 
     def get_end_name(self):
         name = self.items[1]

@@ -66,7 +66,7 @@ def test_submodule(f2008_create):
       ''')
     ast = Program_Unit(reader)
     assert "SUBMODULE (foobar) bar\n" \
-        "END SUBMODULE bar" in str(ast)
+        "END" in str(ast)
 
 
 def test_submodule_nomatch(f2008_create):

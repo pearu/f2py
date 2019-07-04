@@ -4,12 +4,63 @@ Original code by Pearu Peterson.
 
 Modifications by (in alphabetical order):
 
+* P. Elson, UK Met Office
 * R. W. Ford, Science & Technology Facilities Council, UK
 * M. Hambley, UK Met Office
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
+
+03/07/2019 PR #200 for #171. Disable Statement Function support
+           in fparser2.
+
+02/07/2019 PR #205 for #204. Corrects the minimum number of arguments
+           for the SELECTED_REAL_KIND intrinsic.
+
+26/06/2019 PR #199 for #189. Adds an Intrinsic_Function_Reference node
+           to represent Fortran Intrinsics with the parse tree.
+
+15/06/2019 PR #195. Travis change to make it raise errors with failing
+	   unicode tests.
+
+14/06/2019 PR #181. Added an xfailing test to demonstrate an error in
+	   EndStmtBase.
+
+14/06/2019 PR #196. Fix for unicode input errors in Python.
+
+14/06/2019 PR #194. Fix for unicode input errors in Python 3.6.
+
+05/04/2019 PR #192. END statements which use class EndStmtBase now output
+	   the same tokens as the input e.g. names are not added if they
+	   don't exist in the input.
+
+29/03/2019 Issue #167 and PR #182. Fix to Fortran2003 rule 701 where large
+           codes were causing recurse-depth errors in Python.
+
+26/03/2019 Issue #136 and PR #183. Adds the ability to enforce the ordering
+	   of matches in the blockbase class and uses this functionality
+	   to fix potential errors in Fortran2003 rule 1101.
+
+20/03/2019 Issue #132 and PR #184. Fixes for reading source files containing
+ 	   utf8 characters under Python 2.
+
+08/03/2019 Issue #165 and PR #185. Fixes Python-3 specific code in the
+           read.py script and adds some documentation.
+
+28/02/2019 Issue #139 and PR #176. Makes the handling of include files more
+           robust and adds a representation for them in the parse tree if
+           they cannot be resolved.
+
+28/02/2019 Issue #146 and PR #160. Adds support for Hollerith string
+  	   constants in Format specifiers.
+
+15/02/2019 Issue #138 and PR #173. Adds support for un-resolved include
+           statements such that they are included in the generated parse
+           tree (rather than being thrown away).
+
+13/02/2019 PR #163. fparser1 bug fix for complex expressions in
+           loop bounds.
 
 17/01/2019 PR #137 for #125. Fixes an error in dealing with the case
            when the names of a program and end program do not match.

@@ -81,7 +81,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalError, show_result
+    InternalSyntaxError, InternalError, show_result
 
 #
 # SECTION  1
@@ -166,12 +166,13 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments(content, reader):
-    '''Creates comment objects and adds them to the content list. Comment
-    objects are added until a line that is not a comment is found.
+def add_comments_includes(content, reader):
+    '''Creates comment and/or include objects and adds them to the content
+    list. Comment and/or include objects are added until a line that
+    is not a comment or include is found.
 
     :param content: a `list` of matched objects. Any matched comments \
-                    in this routine are added to this list.
+                    or includes in this routine are added to this list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -180,9 +181,11 @@ def add_comments(content, reader):
 
     '''
     obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
     while obj:
         content.append(obj)
         obj = Comment(reader)
+        obj = Include_Stmt(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -212,6 +215,13 @@ class Program(BlockBase):  # R201
             # At the moment there is no useful information provided by
             # NoMatchError so we pass on an empty string.
             raise FortranSyntaxError(string, "")
+        except InternalSyntaxError as excinfo:
+            # InternalSyntaxError is used when a syntax error has been
+            # found in a rule that does not have access to the reader
+            # object. This is then re-raised here as a
+            # FortranSyntaxError, adding the reader object (which
+            # provides line number information).
+            raise FortranSyntaxError(string, excinfo)
 
     @staticmethod
     def match(reader):
@@ -231,12 +241,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments(content, reader)
+        add_comments_includes(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments(content, reader)
+                add_comments_includes(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -251,6 +261,94 @@ class Program(BlockBase):  # R201
             # Reader has no more lines.
             pass
         return content,
+
+
+class Include_Filename(StringBase):  # pylint: disable=invalid-name
+
+    '''Implements the matching of a filename from an include statement.'''
+    # There are no other classes. This is a simple string match.
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Match the string with the regular expression file_name in the
+        pattern_tools file. The only content that is not accepted is
+        an empty string or white space at the start or end of the
+        string.
+
+        :param str string: the string to match with the pattern rule.
+        :return: a tuple of size 1 containing a string with the \
+        matched name if there is a match, or None if there is not.
+        :rtype: (str) or NoneType
+
+        '''
+        return StringBase.match(pattern.file_name, string)
+
+
+class Include_Stmt(Base):  # pylint: disable=invalid-name
+
+    '''Implements the matching of a Fortran include statement. There is no
+    rule for this as the compiler is expected to inline any content
+    from an include statement when one is found. However, for a parser
+    it can make sense to represent an include statement in a parse
+    tree.
+
+    include-stmt is INCLUDE ['filename' or "filename"]
+
+    '''
+    use_names = ['Include_Filename']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for an include statement.
+
+        :param str string: the string to match with as an include \
+        statement.
+        :returns: a tuple of size 1 containing an Include_Filename \
+        object with the matched filename if there is a match, or None \
+        if there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`) \
+        or NoneType
+
+        '''
+        if not string:
+            return None
+        line = string.strip()
+        if line[:7].upper() != 'INCLUDE':
+            # The line does not start with the include token and/or the line
+            # is too short.
+            return None
+        rhs = line[7:].strip()
+        if not rhs:
+            # There is no content after the include token
+            return None
+        if len(rhs) < 3:
+            # The content after the include token is too short to be
+            # valid (it must at least contain quotes and one
+            # character.
+            return None
+        if not ((rhs[0] == "'" and rhs[-1] == "'") or
+                (rhs[0] == '"' and rhs[-1] == '"')):
+            # The filename should be surrounded by single or double
+            # quotes but this is not the case.
+            return None
+        # Remove the quotes.
+        file_name = rhs[1:-1]
+        # Pass the potential filename to the relevant class.
+        name = Include_Filename(file_name)
+        if not name:
+            raise InternalError(
+                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "never return None or an empty name")
+        return (name,)
+
+    def tostr(self):
+        '''
+        :return: this include_stmt as a string
+        :rtype: str
+        '''
+
+        return ("INCLUDE '{0}'".format(self.items[0]))
 
 
 class Program_Unit(Base):  # R202
@@ -321,23 +419,31 @@ class Implicit_Part_Stmt(Base):  # R206
 
 
 class Declaration_Construct(Base):  # R207
-    """
-:F03R:`207`::
-    <declaration-construct> = <derived-type-def>
-                              | <entry-stmt>
-                              | <enum-def>
-                              | <format-stmt>
-                              | <interface-block>
-                              | <parameter-stmt>
-                              | <procedure-declaration-stmt>
-                              | <specification-stmt>
-                              | <type-declaration-stmt>
-                              | <stmt-function-stmt>
-    """
-    subclass_names = ['Comment', 'Derived_Type_Def', 'Entry_Stmt', 'Enum_Def',
+    '''Fortran 2003 rule R207
+
+    declaration-construct is derived-type-def
+                           or entry-stmt
+                           or enum-def
+                           or format-stmt
+                           or interface-block
+                           or parameter-stmt
+                           or procedure-declaration-stmt
+                           or specification-stmt
+                           or type-declaration-stmt
+                           or stmt-function-stmt
+
+    Note, stmt-function-stmt is not currently matched.
+
+    '''
+    # Commented out Stmt_Function_Stmt as it can falsely match an
+    # access to an array or function. Reintroducing statement
+    # functions is captured in issue #202.
+
+    #                   'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
+    subclass_names = ['Derived_Type_Def', 'Entry_Stmt', 'Enum_Def',
                       'Format_Stmt', 'Interface_Block', 'Parameter_Stmt',
                       'Procedure_Declaration_Stmt', 'Specification_Stmt',
-                      'Type_Declaration_Stmt', 'Stmt_Function_Stmt']
+                      'Type_Declaration_Stmt']
 
 
 class Execution_Part(BlockBase):  # R208
@@ -673,7 +779,7 @@ class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
         extended_intrinsic_operator in the pattern_tools file.
 
         :param str string: the string to match with the pattern rule.
-        :returns: a tuple of size 1 containing a string with the \
+        :return: a tuple of size 1 containing a string with the \
         matched name if there is a match, or None if there is not.
         :rtype: (str) or None
 
@@ -783,10 +889,12 @@ class Kind_Selector(Base):  # R404
 
         :param str string: a string containing the code to match
         :return: `None` if there is no match, otherwise a `tuple` of \
-                 size 3 containing a '(', a single `list` which \
-                 contains an instance of classes that have matched and \
-                 a ')', or a `tuple` of size 2 containing a '*' and an \
-                 instance of classes that have matched.
+        size 3 containing a '(', a single `list` which contains an \
+        instance of classes that have matched and a ')', or a `tuple` \
+        of size 2 containing a '*' and an instance of classes that \
+        have matched.
+        :rtype: `NoneType` or ( str, [ MatchedClasses ], str) or ( \
+        str, :py:class:`fparser.two.Fortran2003.Char_Length`)
 
         :raises InternalError: if None is passed instead of a \
         string. The parent rule should not pass None and the logic in \
@@ -1111,8 +1219,10 @@ class Char_Length(BracketBase):  # R426
     match = staticmethod(match)
 
 
-class Char_Literal_Constant(Base):  # R427
+class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
     '''
+    Fortran 2003 rule R427
+
     char-literal-constant is [ kind-param _ ] ' rep-char '
                           or [ kind-param _ ] " rep-char "
     '''
@@ -1132,20 +1242,21 @@ class Char_Literal_Constant(Base):  # R427
         on the processor." However, this cannot be validated by
         fparser so no checks are performed.
 
-        :param str string: a string containing the code to match
-
+        :param str string: a string containing the code to match.
         :return: `None` if there is no match, otherwise a `tuple` of
-                 size 2 containing the kind value and the character
-                 constant as strings
-        :rtype: `None` or (str, None) or (str, str)
+                 size 2 containing the character constant and the kind
+                 value as strings.
+        :rtype: `NoneType` or (`str`, `NoneType`) or (`str`, `str`)
 
         '''
+        if not string:
+            return None
         strip_string = string.strip()
         if not strip_string:
             # the string is empty or only contains blank space
-            return
+            return None
         if strip_string[-1] not in '"\'':
-            return
+            return None
         if strip_string[-1] == '"':
             abs_a_n_char_literal_constant_named = \
                     pattern.abs_a_n_char_literal_constant_named2
@@ -1155,7 +1266,7 @@ class Char_Literal_Constant(Base):  # R427
         line, repmap = string_replace_map(strip_string)
         match = abs_a_n_char_literal_constant_named.match(line)
         if not match:
-            return
+            return None
         kind_param = match.group('kind_param')
         line = match.group('value')
         line = repmap(line)
@@ -1163,7 +1274,7 @@ class Char_Literal_Constant(Base):  # R427
 
     def tostr(self):
         '''
-        :return: this Char_Literal_Constant as a string
+        :return: this Char_Literal_Constant as a string.
         :rtype: str
         :raises InternalError: if the internal items list variable is \
         not the expected size.
@@ -1221,8 +1332,7 @@ class Derived_Type_Def(BlockBase):  # R429
                                [Type_Param_Def_Stmt, Private_Or_Sequence,
                                 Component_Part, Type_Bound_Procedure_Part],
                                End_Type_Stmt, reader,
-                               match_names=True,
-                               set_unspecified_end_name=True  # C431
+                               match_names=True  # C431
                                )
 
 
@@ -4216,20 +4326,30 @@ class Scalar_Char_Initialization_Expr(Base):
 
 
 class Primary(Base):  # R701
-    """
-    <primary> = <constant>
-                | <designator>
-                | <array-constructor>
-                | <structure-constructor>
-                | <function-reference>
-                | <type-param-inquiry>
-                | <type-param-name>
-                | ( <expr> )
-    """
+    '''Fortran 2003 rule R701
+
+    primary is intrinsic_function_reference
+            or constant
+            or designator
+            or array-constructor
+            or structure-constructor
+            or function-reference
+            or type-param-inquiry
+            or type-param-name
+            or ( expr )
+
+    `intrinsic_function_reference` is not part of rule R701 but is
+    required for fparser to recognise intrinsic functions. This is
+    placed before array-constructor in the `subclass_names` list so
+    that an intrinsic is not (incorrectly) matched as an array (as
+    class `Base` matches rules in list order).
+
+    '''
     subclass_names = [
-        'Constant', 'Parenthesis', 'Designator', 'Array_Constructor',
+        'Intrinsic_Function_Reference',
+        'Constant', 'Designator', 'Array_Constructor',
         'Structure_Constructor', 'Function_Reference',
-        'Type_Param_Inquiry', 'Type_Param_Name',
+        'Type_Param_Inquiry', 'Type_Param_Name', 'Parenthesis',
     ]
 
 
@@ -7203,102 +7323,469 @@ class Format_Stmt(StmtBase, WORDClsBase):  # R1001
                                  string, require_cls=True)
 
 
-class Format_Specification(BracketBase):  # R1002
-    """
-    <format-specification> = ( [ <format-item-list> ] )
-    """
+class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
+    '''This class replaces the one generated by fparser. This class is
+    required as support for hollerith strings makes matching more
+    complicated.
+
+    '''
+    use_names = []
+    subclass_names = ['Format_Item']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a list of format items.
+
+        Supporting Hollerith strings makes it very difficult to
+        correctly split the input string into items a-priori. The
+        reason for this can be seen in the following example:
+
+        `2H,x,e2.2` is `2H,x` and `e2.2` but when split with commas
+        incorrectly gives `2H`, `x` and `e2.2`.
+
+        Further, hollerith strings could also confuse any code that
+        tried to determine whether code was inside quotes or not. For
+        example:
+
+        `2H"x,2H"x` does not mean that `x,2H` is part of a string.
+
+        The solution chosen is to match one item at a time, first
+        checking for a valid Hollerith string and then checking for
+        any other valid input.
+
+        :param str string: the string to match as a Format List.
+        :return: None if there is no match or a tuple of size 2 \
+        containing a string with a comma followed by a tuple \
+        containing a list which itself contains the matched \
+        format items.
+        :rtype: (`str`, \
+        ([:py:class:`fparser.two.Fortran2003.Format_Item`s])) or `NoneType`
+
+        '''
+        if not string:
+            return None
+        current_string = string.strip()
+        if not current_string:
+            return None
+        item_list = []
+        while current_string:
+            # Does the current item match the start of a
+            # hollerith string?
+            my_pattern = Hollerith_Item.match_pattern
+            match = re.search(my_pattern, current_string)
+            if match:
+                # The current item matches with a hollerith string.
+                match_str = match.group(0)
+                hol_length_str = match_str[:-1]
+                hol_length = int(hol_length_str)
+                num_chars = len(match_str) + hol_length
+                if len(current_string) < num_chars:
+                    # The string is not long enough.
+                    return None
+                item_list.append(Format_Item(current_string[:num_chars]))
+                current_string = current_string[num_chars:].lstrip()
+                if current_string:
+                    # Remove the next comma and any white space.
+                    if current_string[0] != ',':
+                        # There is no comma so we have a format error.
+                        return None
+                    current_string = current_string[1:].lstrip()
+            else:
+                # Current item does not match with a hollerith string
+                # so we are safe to split using a ',' as separator
+                # after applying string_replace_map.
+                line, repmap = string_replace_map(current_string)
+                splitted = line.split(',', 1)
+                item_list.append(Format_Item(repmap(splitted[0].strip())))
+                current_string = ""
+                if len(splitted) == 2:
+                    current_string = repmap(splitted[1]).strip()
+        if len(item_list) <= 1:
+            # a list must contain at least 2 items (see SequenceBase)
+            return None
+        return ',', tuple(item_list)
+
+
+class Format_Specification(BracketBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R1002
+
+    format-specification = ( [ format-item-list ] )
+
+    C1002 is implemented in a separate class Format_Item_C1002
+
+    C1002 (R1002) The comma used to separate format-items in a
+    format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a repeat
+    specifier,
+
+    (2) Before a slash edit descriptor when the optional repeat
+    specification is not present,
+
+    (3) After a slash edit descriptor, or
+
+    (4) Before or after a colon edit descriptor.
+
+    '''
     subclass_names = []
     use_names = ['Format_Item_List']
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a format specification.
+
+        :param str string: The string to check for conformance with a \
+                           format specification.
+        :return: `None` if there is no match, otherwise a tuple of \
+        size three, the first entry being a string containing a left \
+        bracket and the third being a string containing a right \
+        bracket. The second entry is either a Format_Item or a \
+        Format_Item_List.
+        :rtype: `NoneType` or ( `str`, \
+        :py:class:`fparser.two.Fortran2003.Format_Item` or \
+        :py:class:`fparser.two.Fortran2003.Format_Item_List`, `str` )
+
+        '''
         return BracketBase.match('()', Format_Item_List, string,
                                  require_cls=False)
 
 
-class Format_Item_C1002(Base):  # C1002
-    """
-::
-    <format-item-c1002> = <k>P [,] (F|D)<w>.<d> | (E|EN|ES|G)<w>.<d>[E<e>]
-                          | [<r>]/ [,] <format-item>
-                          | : [,] <format-item>
-                          | <format-item> [,] / [[,] <format-item>]
-                          | <format-item> [,] : [[,] <format-item>]
+def skip_digits(string):
+    '''Skips over any potential digits (including spaces) to the next
+    non-digit character and return its index. If no such character is
+    found or if the first character in the string is not a digit then
+    specify that the skip has failed.
 
-Attributes
-----------
-items : (Format_Item, Format_Item)
-    """
+    :param str string: The string to search
+    :returns: a 2-tuple with the first entry indicating if a valid \
+    character has been found and the second entry indicating the index \
+    of this character in the 'string' argument.
+    :rtype: (bool, int)
+
+    '''
+    found = False
+    index = 0
+    for index, char in enumerate(string):
+        if not (char.isdigit() or char == ' '):
+            if index > 0:
+                found = True
+            break
+    return found, index
+
+
+class Format_Item_C1002(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 constraint C1002
+
+    format-item-c1002 is kP [,] (F|D)w.d | (E|EN|ES|G)w.d[Ee]
+                      or [r]/ [,] format-item
+                      or : [,] format-item
+                      or format-item [,] / [[,] format-item]
+                      or format-item [,] : [[,] format-item]
+
+    C1002 (R1002) The comma used to separate format-items in a
+    format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a repeat
+    specifier,
+
+    (2) Before a slash edit descriptor when the optional repeat
+    specification is not present (10.7.2),
+
+    (3) After a slash edit descriptor, or
+
+    (4) Before or after a colon edit descriptor.
+
+    '''
     subclass_names = []
     use_names = ['K', 'W', 'D', 'E', 'Format_Item', 'R']
 
     @staticmethod
     def match(string):
-        if len(string) <= 1:
-            return
-        if string[0] in ':/':
-            return Control_Edit_Desc(string[0]), \
-                Format_Item(string[1:].lstrip())
-        if string[-1] in ':/':
-            return Format_Item(string[:-1].rstrip()), \
-                Control_Edit_Desc(string[-1])
-        line, repmap = string_replace_map(string)
-        i = 0
-        while i < len(line) and line[i].isdigit():
-            i += 1
-        if i:
-            p = line[i].upper()
-            if p in '/P':
-                return Control_Edit_Desc(repmap(line[:i+1])), \
-                    Format_Item(repmap(line[i+1:].lstrip()))
-        for p in '/:':
-            if p in line:
-                l, r = line.split(p, 1)
-                return Format_Item(repmap(l.rstrip())), \
-                    Format_Item(p+repmap(r.lstrip()))
+        '''Implements the matching for the C1002 Format Item constraint. The
+        constraints specify certain combinations of format items that
+        do not need a comma to separate them. Rather than sorting this
+        out when parsing the list, it was decided to treat these
+        separately and match them in this class. As a result the
+        generated class hierarchy is a little more complicated.
+
+        :param str string: The string to check for conformance with a \
+                           C1002 format item constraint.
+        :return: `None` if there is no match, otherwise a tuple of \
+        size 2 containing a mixture of Control_Edit_Descriptor and \
+        Format_Item classes depending on what has been matched.
+
+        :rtype: `NoneType` or ( \
+        :py:class:`fparser.two.Control_Edit_Desc`, \
+        :py:class:`fparser.two.Format_Item` ) or \
+        (:py:class:`fparser.two.Format_Item`, \
+        :py:class:`fparser.two.Control_Edit_Desc`) or \
+        (:py:class:`fparser.two.Format_Item`, \
+        :py:class:`fparser.two.Format_Item`)
+
+        '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if len(strip_string) <= 1:
+            return None
+        if strip_string[0] in ':/':
+            # No comma is required after slash edit descriptor (3) or
+            # after a colon edit descriptor (4)
+            return Control_Edit_Desc(strip_string[0]), \
+                Format_Item(strip_string[1:].lstrip())
+        if strip_string[-1] in ':/':
+            # No comma is required before a slash edit descriptor,
+            # when the optional repeat specification is not present
+            # (2), or before a colon edit descriptor (4). Note, if an
+            # optional repeat specification is present it will be
+            # treated as if it is part of the previous item.
+            return Format_Item(strip_string[:-1].rstrip()), \
+                Control_Edit_Desc(strip_string[-1])
+        # We may have a P edit descriptor (which requires a number
+        # before the 'P') (1) or a slash edit descriptor with a repeat
+        # specifier (3) so look for the repeat specifier.
+        found, index = skip_digits(strip_string)
+        if found:
+            # We found a possible repeat specifier (which may contain
+            # white space after the first digit)
+            result = strip_string[index].upper()
+            if result == '/':
+                # We found a possible slash edit descriptor with a
+                # repeat specifier (3).
+                return Control_Edit_Desc(strip_string[:index+1]), \
+                    Format_Item(strip_string[index+1:].lstrip())
+            if result == 'P':
+                # We found a possible P edit descriptor (1).
+                # Rule C1002 only allows a comma to be ommited between
+                # a P edit descriptor and a following F, E, EN, ES, D,
+                # or G edit descriptor with an optional repeat
+                # specifier. In fparser2 this translates to a
+                # Format_Item instance containing a Data_Edit_Desc, or
+                # Data_Edit_Desc_C1002 instance as its second item
+                # with the data edit descriptor instance's first item
+                # specifying the type of edit descriptor.
+                lhs = Control_Edit_Desc(strip_string[:index+1])
+                rhs = Format_Item(strip_string[index+1:].lstrip())
+                if not isinstance(rhs, Format_Item):
+                    # Matched with a subclass of Format_item or no match.
+                    return None
+                descriptor_object = rhs.items[1]
+                if not isinstance(descriptor_object, (Data_Edit_Desc,
+                                                      Data_Edit_Desc_C1002)):
+                    return None
+                edit_descriptor = descriptor_object.items[0]
+                if edit_descriptor.upper() not in ['F', 'E', 'EN', 'ES',
+                                                   'D', 'G']:
+                    return None
+                return lhs, rhs
+
+        # Replace any content inside strings etc. so we dont split the
+        # line in the wrong place.
+        line, repmap = string_replace_map(strip_string)
+
+        # Slash and colon edit descriptors may have no comma's both
+        # before and after them (2,3,4) e.g. ('a' / 'b'). To match this
+        # situation we split the line with the first potential descriptor found
+        # in the string and try to match the lhs and rhs separately
+        # (adding the edit descriptor to the RHS).
+        for option in '/:':
+            if option in line:
+                left, right = line.split(option, 1)
+                return Format_Item(repmap(left.rstrip())), \
+                    Format_Item(option+repmap(right.lstrip()))
 
     def tostr(self):
-        return '%s, %s' % (self.items)
+        '''
+        :return: Parsed representation of two format items
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+        :raises InternalError: if the second entry of the internal \
+        items list has no content.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr(): internal items list "
+                "should be length 2 but found '{0}'".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr() items entry 0 should "
+                "contain a format items object but it is empty or None")
+        if not self.items[1]:
+            raise InternalError(
+                "Class Format_Item_C1002 method tostr() items entry 1 should "
+                "contain a format items object but it is empty or None")
+        return "{0}, {1}".format(self.items[0], self.items[1])
 
 
-class Format_Item(Base):  # R1003
-    """
-    <format-item> = [ <r> ] <data-edit-desc>
-                    | <control-edit-desc>
-                    | <char-string-edit-desc>
-                    | [ <r> ] ( <format-item-list> )
-                    | <format-item-c1002>
-    """
-    subclass_names = ['Control_Edit_Desc', 'Char_String_Edit_Desc',
-                      'Format_Item_C1002']
+class Hollerith_Item(Base):  # pylint: disable=invalid-name
+    '''Hollerith strings take the form `nHx`, where `n` is an integer and
+    `x` is a sequence of characters of length `n`.
+
+    Note, the Hollerith format was deprecated in Fortran77 and removed in
+    Fortran95. However, Fortran compilers still support it. See, for example
+    https://gcc.gnu.org/onlinedocs/gcc-4.8.2/gfortran/
+    Hollerith-constants-support.html
+
+    '''
+    subclass_names = []
+    use_names = []
+    match_pattern = '^[1-9][0-9 ]*[hH]'
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a Hollerith string.
+
+        :param str string: The string to check for conformance with a \
+                           Hollerith string
+        :return: String containing the contents of the Hollerith \
+        string.
+        :rtype: str
+
+        '''
+        from fparser.two.utils import EXTENSIONS
+        if 'hollerith' not in EXTENSIONS:
+            return None
+        if not string:
+            return None
+        # Only strip space to the left as space to the right could be
+        # part of the hollerith string.
+        strip_string = string.lstrip()
+        match = re.search(Hollerith_Item.match_pattern, strip_string)
+        if not match:
+            return None
+        # Current item matches with a hollerith string.
+        match_str = match.group(0)
+        hol_length_str = match_str[:-1].replace(' ', '')
+        hol_length = int(hol_length_str)
+        num_chars = len(match_str) + hol_length
+        if len(strip_string) < num_chars:
+            # The string is too short
+            return None
+        if len(strip_string) > num_chars:
+            # The string is too long
+            if strip_string[num_chars:].strip():
+                # The extra is not just white space
+                return None
+        return strip_string[len(match_str):num_chars],
+
+    def tostr(self):
+        '''
+        :return: Parsed representation of a Hollerith String.
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 1.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+
+        '''
+        if len(self.items) != 1:
+            raise InternalError(
+                "Class Hollerith_Item method tostr(): internal items list "
+                "should be of length 1 but found '{0}'".
+                format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "Class Hollerith_Item method tostr() items entry 0 should be "
+                "a valid Hollerith string but it is empty or None")
+        return "{0}H{1}".format(len(self.items[0]), self.items[0])
+
+
+class Format_Item(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R1003
+    format-item is [ r ] data-edit-desc
+                or control-edit-desc
+                or char-string-edit-desc
+                or [ r ] ( format-item-list )
+                or format-item-c1002
+                or hollerith-item
+
+    '''
+    subclass_names = ['Hollerith_Item', 'Control_Edit_Desc',
+                      'Char_String_Edit_Desc', 'Format_Item_C1002']
     use_names = ['R', 'Format_Item_List', 'Data_Edit_Desc']
 
     @staticmethod
     def match(string):
-        i = 0
-        while i < len(string) and string[i].isdigit():
-            i += 1
-        rpart = None
-        if i:
-            rpart = R(string[:i])
-            string = string[i:].lstrip()
+        '''Implements the matching of a Format Item. This method matches '[ r
+        ] data-edit-desc' and '[ r ] ( format-item-list )'. The
+        remaining options are matched via subclasses specified in the
+        subclass_names variable.
+
+        :param str string: A string or the Fortran reader containing the \
+                    line of code that we are trying to match.
+        :return: `None` if there is no match or a `tuple` of size 2 \
+        containing an instance of the R class followed by an \
+        instance of either the Format_Item_List or the Data_Edit_Desc \
+        class.
+        :rtype: `None` or ( :py:class:`fparser.two.Fortran2003.R`, \
+        :py:class:`fparser.two.Fortran2003.Format_Item_List` or \
+        :py:class:`fparser.two.Fortran2003.Data_Edit_Desc`)
+
+        '''
         if not string:
-            return
-        if string[0] == '(' and string[-1] == ')':
-            rest = Format_Item_List(string[1:-1].strip())
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        index = 0
+        # Look for an optional repeat specifier (the 'r' in this rule)
+        found, index = skip_digits(strip_string)
+        rpart = None
+        my_string = strip_string
+        if found:
+            # We found a repeat specifier (with content after it) so
+            # create an R class using the value
+            rpart = R(strip_string[:index])
+            my_string = strip_string[index:].lstrip()
+        # We deal with format-item-list and data-edit-desc in this
+        # match method. Other matches are performed by the subclasses.
+        if my_string[0] == '(' and my_string[-1] == ')':
+            # This could be a format-item-list
+            rest = Format_Item_List(my_string[1:-1].strip())
         else:
-            rest = Data_Edit_Desc(string)
+            # This is not a format-item-list so see if it is a
+            # data-edit-descriptor
+            rest = Data_Edit_Desc(my_string)
         return rpart, rest
 
     def tostr(self):
-        rpart, rest = self.items
+        '''
+        :return: Parsed representation of a Format Item.
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the first entry of the internal \
+        items list has no content.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Format_Item method tostr(): internal items list "
+                "should be of length 2 but found '{0}'".
+                format(len(self.items)))
+        if not self.items[1]:
+            raise InternalError(
+                "Class Format_Item method tostr(): items list second entry "
+                "should be a valid descriptor but it is empty or None")
+        rpart = self.items[0]
+        rest = self.items[1]
+
+        rpart_str = rpart if rpart else ""
         if isinstance(rest, (Data_Edit_Desc, Data_Edit_Desc_C1002)):
-            if rpart is not None:
-                return '%s%s' % (rpart, rest)
-            return '%s' % (rest)
-        if rpart is not None:
-            return '%s(%s)' % (rpart, rest)
-        return '(%s)' % (rest)
+            return "{0}{1}".format(rpart_str, rest)
+        return "{0}({1})".format(rpart_str, rest)
 
 
 class R(Base):  # R1004
@@ -7314,99 +7801,143 @@ C1003, C1004: <r> shall be positive and without kind parameter specified.
 
 
 class Data_Edit_Desc_C1002(Base):
-    """
-::
-    <data-edit-desc> =   F <w> . <d>
-                       | E <w> . <d> [ E <e> ]
-                       | EN <w> . <d> [ E <e> ]
-                       | ES <w> . <d> [ E <e>]
-                       | G <w> . <d> [ E <e> ]
-                       | D <w> . <d>
+    '''This class helps implement the matching for the first part of the
+    Fortran 2003 Constraint C1002 which constrains rule R1002. In
+    particular it matches with the subset of edit descriptors that can
+    follow a P edit descriptor without needing a comma, see below:
 
-    """
+    C1002 (applied to R1002) The comma used to separate format-items
+    in a format-item-list may be omitted
+
+    (1) Between a P edit descriptor and an immediately following F, E,
+    EN, ES, D, or G edit descriptor, possibly preceded by a
+    repeat specifier.
+
+    [Remaining constraint clauses ommitted as they are not relevant
+    here.]
+
+    data-edit-desc is F w . d
+                   or E w . d [ E e ]
+                   or EN w . d [ E e ]
+                   or ES w . d [ E e]
+                   or G w . d [ E e ]
+                   or D w . d
+
+    '''
     subclass_names = []
     use_names = ['W', 'D', 'E']
 
     @staticmethod
     def match(string):
-        c = string[0].upper()
-        if c in ['D']:
-            line = string[1:].lstrip().upper()
-            if '.' in line:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), M(i2), None
-            return
-        if c in ['E']:
-            # Format descriptor can be 'E', 'ES' or 'EN'
-            line = string[1:].lstrip().upper()
-            c2 = line[0]
-            if c2 in ['S', 'N']:
-                line = line[1:].lstrip()
+        '''Check whether the input matches the rule.
+
+        param str string: contains the Fortran that we are trying to \
+        match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+        size 4, the first entry containing a string with one of ['F', \
+        'E', 'EN', 'ES', 'G', 'D'], the second entry containing a W \
+        class instance, the third entry containing D class instance \
+        and the fourth entry containing either None or an E class \
+        instance.
+        :rtype: `NoneType`, (`str`, :py:class:`fparser.two.W`, \
+        :py:class:`fparser.two.D`, `NoneType`) or, (`str`, \
+        :py:class:`fparser.two.W`, :py:class:`fparser.two.D`, \
+        :py:class:`fparser.two.E`)
+
+        '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        char = strip_string[0].upper()
+        if char in ['F', 'D']:
+            # match w . d
+            my_str = strip_string[1:].lstrip().upper()
+            if '.' in my_str:
+                left, right = my_str.split('.', 1)
+                left = left.rstrip()
+                right = right.lstrip()
+                return char, W(left), D(right), None
+            return None
+        if char in ['E', 'G']:
+            # match w . d [ E e ]
+            # Format descriptor could also be 'ES' or 'EN'
+            my_str = strip_string[1:].lstrip().upper()
+            char2 = my_str[0]
+            if char == 'E' and char2 in ['S', 'N']:
+                my_str = my_str[1:].lstrip()
             else:
-                c2 = ""
-            if "." in line:
-                i1, i2 = line.split('.')
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                # Can optionally specify the no. of digits for the exponent
-                if i2.count('E') == 1:
-                    i2, i3 = i2.split('E')
-                    i2 = i2.lstrip()
-                    i3 = i3.lstrip()
-                    return c+c2, W(i1), D(i2), E(i3)
-                else:
-                    return c+c2, W(i1), D(i2), None
-            else:
-                return
-        if c in ['F', 'G']:
-            line = string[1:].lstrip()
-            if line.count('.') == 1:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), D(i2), None
-            elif line.count('.') == 2:
-                i1, i2, i3 = line.split('.', 2)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                i3 = i3.lstrip()
-                return c, W(i1), D(i2), E(i3)
-            else:
-                return
-        c = string[:2].upper()
-        if len(c) != 2:
-            return
-        if c in ['EN', 'ES']:
-            line = string[2:].lstrip()
-            if line.count('.') == 1:
-                i1, i2 = line.split('.', 1)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                return c, W(i1), D(i2), None
-            elif line.count('.') == 2:
-                i1, i2, i3 = line.split('.', 2)
-                i1 = i1.rstrip()
-                i2 = i2.lstrip()
-                i3 = i3.lstrip()
-                return c, W(i1), D(i2), E(i3)
-            else:
-                return
-        return
+                char2 = ""
+            if "." not in my_str:
+                return None
+            left, right = my_str.split('.', 1)
+            left = left.rstrip()
+            right = right.lstrip()
+            # Can optionally specify the number of digits for the
+            # exponent
+            if right.count('E') >= 1:
+                middle, right = right.split('E', 1)
+                middle = middle.rstrip()
+                right = right.lstrip()
+                return char+char2, W(left), D(middle), E(right)
+            return char+char2, W(left), D(right), None
+        # Invalid char
+        return None
 
     def tostr(self):
-        c = self.items[0]
-        if c in ['F', 'D']:
-            if self.items[2] is None:
-                return '%s%s' % (c, self.items[1])
-            return '%s%s.%s' % (c, self.items[1], self.items[2])
-        if c in ['E', 'EN', 'ES', 'G']:
+        '''
+        :return: parsed representation of a Data Edit Descriptor \
+        conforming to constraint C1002.
+        :rtype: str
+
+        :raises InternalError: if the length of the internal items \
+        list is not 4.
+        :raises InternalError: if the first, second or third entry of \
+        the internal items list has no content.
+        :raises InternalError: if the value of the first entry is \
+        unsupported.
+        :raises InternalError: if the value of the first entry is 'F' \
+        or 'D' and the fourth entry has content.
+        :raises InternalError: if the value of the first entry is 'E', \
+        'EN', 'ES' or 'G' and the fourth entry is empty or None.
+
+        '''
+        if not len(self.items) == 4:
+            raise InternalError(
+                "Class Data_Edit_Desc_C1002 method tostr() has '{0}' items, "
+                "but expecting 4.".format(len(self.items)))
+        if not self.items[0]:
+            raise InternalError(
+                "items[0] in Class Data_Edit_Desc_C1002 method tostr() "
+                "should be a descriptor name but is empty or None")
+        if not self.items[1]:
+            raise InternalError(
+                "items[1] in Class Data_Edit_Desc_C1002 method tostr() "
+                "should be the w value but is empty or None")
+        if not self.items[2]:
+            raise InternalError(
+                "items[2] in Class Data_Edit_Desc_C1002 method tostr() "
+                "should be the m value but is empty or None")
+        descriptor_name = self.items[0]
+        if descriptor_name in ['F', 'D']:
+            if self.items[3]:
+                raise InternalError(
+                    "items[3] in Class Data_Edit_Desc_C1002 method tostr() "
+                    "has an exponent value '{0}' but this is not allowed for "
+                    "'F' and 'D' descriptors and should therefore be "
+                    "None".format(self.items[3]))
+            return "{0}{1}.{2}".format(descriptor_name, self.items[1],
+                                       self.items[2])
+        elif descriptor_name in ['E', 'EN', 'ES', 'G']:
             if self.items[3] is None:
-                return '%s%s.%s' % (c, self.items[1], self.items[2])
-            return '%s%s.%sE%s' % (c, self.items[1], self.items[2],
-                                   self.items[3])
-        raise NotImplementedError(repr(c))
+                return "{0}{1}.{2}".format(descriptor_name, self.items[1],
+                                           self.items[2])
+            return "{0}{1}.{2}E{3}".format(descriptor_name, self.items[1],
+                                           self.items[2], self.items[3])
+        raise InternalError(
+            "Unexpected descriptor name '{0}' in Class Data_Edit_Desc_C1002 "
+            "method tostr()".format(descriptor_name))
 
 
 class Data_Edit_Desc(Base):  # R1005
@@ -7549,25 +8080,24 @@ C1007: <w> is without kind parameters.
     subclass_names = ['Signed_Int_Literal_Constant']
 
 
-class Control_Edit_Desc(Base):  # R1011
-    """
-::
-    <control-edit-desc> = <position-edit-desc>
-                          | [ <r> ] /
-                          | :
-                          | <sign-edit-desc>
-                          | <k> P
-                          | <blank-interp-edit-desc>
-                          | <round-edit-desc>
-                          | <decimal-edit-desc>
-                          | $
+class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R1011
 
-Note that `$` is not in Fortran 90 or newer standards.
+    control-edit-desc is position-edit-desc
+                      or [ r ] /
+                      or :
+                      or sign-edit-desc
+                      or k P
+                      or blank-interp-edit-desc
+                      or round-edit-desc
+                      or decimal-edit-desc
+                      or $
 
-Attributes
-----------
-items : ({R, K, None}, {'/', 'P', ':'})
-    """
+    '$' is used to suppress the carriage return on output.  Note that
+    this is an extension to the Fortran standard.
+
+    '''
     subclass_names = ['Position_Edit_Desc', 'Sign_Edit_Desc',
                       'Blank_Interp_Edit_Desc', 'Round_Edit_Desc',
                       'Decimal_Edit_Desc']
@@ -7575,20 +8105,56 @@ items : ({R, K, None}, {'/', 'P', ':'})
 
     @staticmethod
     def match(string):
-        if len(string) == 1 and string in '/:$':
-            if string == '$':
-                message = 'non-standard <control-edit-desc>: %r' % (string)
-                logging.getLogger(__name__).debug(message)
-            return None, string
-        if string[-1] == '/':
-            return R(string[:-1].rstrip()), '/'
-        if string[-1].upper() == 'P':
-            return K(string[:-1].rstrip()), 'P'
+        '''Check whether the input matches the rule.
+
+        param str string: contains the Fortran that we are trying to \
+        match.
+        :return: `None` if there is no match, otherwise a `tuple` of \
+        size 2 containing, None and a string with one of '/', ':', or \
+        '$', an R class and a string containing '/' or a K class and a \
+        string containing 'P'.
+        :rtype: `NoneType`, (`NoneType`, `str`), \
+        (:py:class:`fparser.two.Fortran2003.R`, `str`), or \
+        (:py:class:`fparser.two.Fortran2003.K`, `str`)
+
+        '''
+        if not string:
+            return None
+        strip_string = string.strip()
+        if not strip_string:
+            return None
+        if len(strip_string) == 1 and strip_string in '/:$':
+            from fparser.two.utils import EXTENSIONS
+            if strip_string == '$' and 'dollar-descriptor' not in EXTENSIONS:
+                return None
+            return None, strip_string
+        if strip_string[-1] == '/':
+            return R(strip_string[:-1].rstrip()), '/'
+        if strip_string[-1].upper() == 'P':
+            return K(strip_string[:-1].rstrip()), 'P'
+        return None
 
     def tostr(self):
+        '''
+        :return: parsed representation of a Control Edit Descriptor
+        :rtype: str
+        :raises InternalError: if the length of the internal items \
+        list is not 2.
+        :raises InternalError: if the second entry of the internal \
+        items list has no content.
+
+        '''
+        if len(self.items) != 2:
+            raise InternalError(
+                "Class Control_Edit_Desc method tostr() has '{0}' items, "
+                "but expecting 2.".format(len(self.items)))
+        if not self.items[1]:
+            raise InternalError(
+                "items[1] in Class Control_Edit_Desc method tostr() should "
+                "be an edit descriptor name but is empty or None")
         if self.items[0] is not None:
-            return '%s%s' % (self.items)
-        return '%s' % (self.items[1])
+            return "{0}{1}".format(self.items[0], self.items[1])
+        return "{0}".format(self.items[1])
 
 
 class K(Base):  # R1012
@@ -7604,7 +8170,9 @@ C1009: <k> is without kind parameters.
 
 
 class Position_Edit_Desc(Base):  # R1013
-    '''Fortran 2003 rule R1013
+    '''
+    Fortran 2003 rule R1013
+
     position-edit-desc is T n
                        or TL n
                        or TR n
@@ -7615,10 +8183,6 @@ class Position_Edit_Desc(Base):  # R1013
     If the extensions list includes the string 'x-format' then 'X'
     without a preceeding integer is also matched. This is a common
     extension in Fortran compilers.
-
-    Attributes
-    ----------
-    items : ({'T', 'TL', 'TR', N}, {N, 'X'})
 
     '''
     subclass_names = []
@@ -7631,12 +8195,17 @@ class Position_Edit_Desc(Base):  # R1013
         param str string: contains the Fortran that we are trying to \
         match.
         :return: `None` if there is no match, otherwise a `tuple` of \
-                 size 2 either containing a `string` which is one of \
-                 "T", "TL" or "TR", followed by an `N` class, or \
-                 containing an `N` class, or `None`, followed by an "X".
-        :rtype: None, (str, class N), (class N, str) or (None, str)
+        size 2 either containing a `string` which is one of "T", "TL" \
+        or "TR", followed by an `N` class, or containing an `N` class, \
+        or `None`, followed by an "X".
+        :rtype: `NoneType`, (`str`, \
+        :py:class:`fparser.two.Fortran2003.N`), \
+        (:py:class:`fparser.two.Fortran2003.N`, `str`) or (`NoneType`, \
+        `str`)
 
         '''
+        if not string:
+            return None
         strip_string_upper = string.strip().upper()
         if not strip_string_upper:
             # empty input string
@@ -7672,12 +8241,11 @@ class Position_Edit_Desc(Base):  # R1013
             return None
 
     def tostr(self):
-        ''':return: parsed representation of a Position Edit Descriptor
+        '''
+        :return: parsed representation of a Position Edit Descriptor
         :rtype: str
-
         :raises InternalError: if the length of the internal items \
         list is not 2.
-
         :raises InternalError: if the second entry of the internal \
         items list has no content.
 
@@ -7827,7 +8395,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
                   `Execution_Part` followed by an optional \
                   `Internal_Subprogram_Part`.
         :rtype: `NoneType` or \
-                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`,
+                ([:py:class:`fparser.two.Fortran2003.Program_Stmt`, \
                 optional \
                 :py:class:`fparser.two.Fortran2003.Specification_Part`, \
                 optional \
@@ -7840,7 +8408,7 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
         return BlockBase.match(
             Program_Stmt, [Specification_Part, Execution_Part,
                            Internal_Subprogram_Part], End_Program_Stmt,
-            reader, match_names=True)
+            reader, match_names=True, strict_order=True)
 
 
 class Main_Program0(BlockBase):
@@ -8711,6 +9279,300 @@ class Function_Reference(CallBase):  # R1217
     match = staticmethod(match)
 
 
+class Intrinsic_Name(STRINGBase):  # No explicit rule
+    '''Represents the name of a Fortran intrinsic function.
+
+    All generic intrinsic names are specified as keys in the
+    `generic_function_names` dictionary, with their values indicating
+    the minimum and maximum number of arguments allowed for this
+    intrinsic function. A `-1` indicates an unlimited number of
+    arguments. The names are split into the categories specified in
+    the Fortran2003 specification document.
+
+    All specific intrinsic names (which have a different name to their
+    generic counterpart) are specified as keys in the
+    `specific_function_names` dictionary, with their values indicating
+    which generic function they are associated with.
+
+    '''
+
+    numeric_names = {
+        "ABS": {"min": 1, "max": 1}, "AIMAG": {"min": 1, "max": 1},
+        "AINT": {"min": 1, "max": 2}, "ANINT": {"min": 1, "max": 2},
+        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 2},
+        "CONJG": {"min": 1, "max": 1}, "DBLE": {"min": 1, "max": 1},
+        "DIM": {"min": 2, "max": 2}, "DPROD": {"min": 2, "max": 2},
+        "FLOOR": {"min": 1, "max": 2}, "INT": {"min": 1, "max": 2},
+        "MAX": {"min": 2, "max": None}, "MIN": {"min": 2, "max": None},
+        "MOD": {"min": 2, "max": 2}, "MODULO": {"min": 2, "max": 2},
+        "NINT": {"min": 1, "max": 2}, "REAL": {"min": 1, "max": 2},
+        "SIGN": {"min": 2, "max": 2}}
+
+    mathematical_names = {
+        "ACOS": {"min": 1, "max": 1}, "ASIN": {"min": 1, "max": 1},
+        "ATAN": {"min": 1, "max": 1}, "ATAN2": {"min": 2, "max": 2},
+        "COS": {"min": 1, "max": 1}, "COSH": {"min": 1, "max": 1},
+        "EXP": {"min": 1, "max": 1}, "LOG": {"min": 1, "max": 1},
+        "LOG10": {"min": 1, "max": 1}, "SIN": {"min": 1, "max": 1},
+        "SINH": {"min": 1, "max": 1}, "SQRT": {"min": 1, "max": 1},
+        "TAN": {"min": 1, "max": 1}, "TANH": {"min": 1, "max": 1}}
+
+    # Removed max and min from this dictionary as they already appear
+    # in numeric_function_names.
+    character_names = {
+        "ACHAR": {"min": 1, "max": 2}, "ADJUSTL": {"min": 1, "max": 1},
+        "ADJUSTR": {"min": 1, "max": 1}, "CHAR": {"min": 1, "max": 2},
+        "IACHAR": {"min": 1, "max": 2}, "ICHAR": {"min": 1, "max": 2},
+        "INDEX": {"min": 2, "max": 4}, "LEN_TRIM": {"min": 1, "max": 2},
+        "LGE": {"min": 2, "max": 2}, "LGT": {"min": 2, "max": 2},
+        "LLE": {"min": 2, "max": 2}, "LLT": {"min": 2, "max": 2},
+        "REPEAT": {"min": 2, "max": 2}, "SCAN": {"min": 2, "max": 4},
+        "TRIM": {"min": 1, "max": 1}, "VERIFY": {"min": 2, "max": 4}}
+
+    kind_names = {
+        "KIND": {"min": 1, "max": 1},
+        "SELECTED_CHAR_KIND": {"min": 1, "max": 1},
+        "SELECTED_INT_KIND": {"min": 1, "max": 1},
+        "SELECTED_REAL_KIND": {"min": 1, "max": 2}}
+
+    miscellaneous_type_conversion_names = {
+        "LOGICAL": {"min": 1, "max": 2},
+        "TRANSFER": {"min": 2, "max": 3}}
+
+    numeric_inquiry_names = {
+        "DIGITS": {"min": 1, "max": 1},
+        "EPSILON": {"min": 1, "max": 1},
+        "HUGE": {"min": 1, "max": 1},
+        "MAXEXPONENT": {"min": 1, "max": 1},
+        "MINEXPONENT": {"min": 1, "max": 1},
+        "PRECISION": {"min": 1, "max": 1},
+        "RADIX": {"min": 1, "max": 1},
+        "RANGE": {"min": 1, "max": 1},
+        "TINY": {"min": 1, "max": 1}}
+
+    array_inquiry_names = {
+        "LBOUND": {"min": 1, "max": 3},
+        "SHAPE": {"min": 1, "max": 2},
+        "SIZE": {"min": 1, "max": 3},
+        "UBOUND": {"min": 1, "max": 3}}
+
+    other_inquiry_names = {
+        "ALLOCATED": {"min": 1, "max": 1},
+        "ASSOCIATED": {"min": 1, "max": 2},
+        "BIT_SIZE": {"min": 1, "max": 1},
+        "EXTENDS_TYPE_OF": {"min": 2, "max": 2},
+        "LEN": {"min": 1, "max": 2},
+        "NEW_LINE": {"min": 1, "max": 1},
+        "PRESENT": {"min": 1, "max": 1},
+        "SAME_TYPE_AS": {"min": 2, "max": 2}}
+
+    bit_manipulation_names = {
+        "BTEST": {"min": 2, "max": 2},
+        "IAND": {"min": 2, "max": 2},
+        "IBCLR": {"min": 2, "max": 2},
+        "IBITS": {"min": 2, "max": 2},
+        "IBSET": {"min": 2, "max": 2},
+        "IEOR": {"min": 2, "max": 2},
+        "IOR": {"min": 2, "max": 2},
+        "ISHFT": {"min": 2, "max": 2},
+        "ISHFTC": {"min": 2, "max": 3},
+        "MVBITS": {"min": 5, "max": 5},
+        "NOT": {"min": 1, "max": 1}}
+
+    floating_point_manipulation_names = {
+        "EXPONENT": {"min": 1, "max": 1},
+        "FRACTION": {"min": 1, "max": 1},
+        "NEAREST": {"min": 2, "max": 2},
+        "RRSPACING": {"min": 1, "max": 1},
+        "SCALE": {"min": 2, "max": 2},
+        "SET_EXPONENT": {"min": 2, "max": 2},
+        "SPACING": {"min": 1, "max": 1}}
+
+    vector_and_matrix_multiply_names = {
+        "DOT_PRODUCT": {"min": 2, "max": 2},
+        "MATMUL": {"min": 2, "max": 2}}
+
+    array_reduction_names = {
+        "ALL": {"min": 1, "max": 2},
+        "ANY": {"min": 1, "max": 2},
+        "COUNT": {"min": 1, "max": 3},
+        "MAXVAL": {"min": 1, "max": 3},
+        "MINVAL": {"min": 1, "max": 3},
+        "PRODUCT": {"min": 1, "max": 3},
+        "SUM": {"min": 1, "max": 3}}
+
+    array_construction_names = {
+        "CSHIFT": {"min": 2, "max": 3},
+        "EOSHIFT": {"min": 2, "max": 4},
+        "MERGE": {"min": 3, "max": 3},
+        "PACK": {"min": 2, "max": 3},
+        "RESHAPE": {"min": 2, "max": 4},
+        "SPREAD": {"min": 3, "max": 3},
+        "TRANSPOSE": {"min": 1, "max": 1},
+        "UNPACK": {"min": 3, "max": 3}}
+
+    array_location_names = {
+        "MAXLOC": {"min": 1, "max": 4},
+        "MINLOC": {"min": 1, "max": 4}}
+
+    null_names = {
+        "NULL": {"min": 0, "max": 1}}
+
+    allocation_transfer_names = {
+        "MOVE_ALLOC": {"min": 2, "max": 2}}
+
+    random_number_names = {
+        "RANDOM_NUMBER": {"min": 1, "max": 1},
+        "RANDOM_SEED": {"min": 0, "max": 3}}
+
+    system_environment_names = {
+        "COMMAND_ARGUMENT_COUNT": {"min": 0, "max": 0},
+        "CPU_TIME": {"min": 1, "max": 1},
+        "DATE_AND_TIME": {"min": 0, "max": 4},
+        "GET_COMMAND": {"min": 0, "max": 3},
+        "GET_COMMAND_ARGUMENT": {"min": 1, "max": 4},
+        "GET_ENVIRONMENT_VARIABLE": {"min": 1, "max": 5},
+        "IS_IOSTAT_END": {"min": 1, "max": 1},
+        "IS_IOSTAT_EOR": {"min": 1, "max": 1},
+        "SYSTEM_CLOCK": {"min": 0, "max": 3}}
+
+    # A map from specific function names to their generic equivalent.
+    specific_function_names = {
+        "ALOG": "LOG", "ALOG10": "LOG10", "AMAX0": "MAX", "AMAX1": "MAX",
+        "AMIN0": "MIN", "AMIN1": "MIN", "AMOD": "MOD", "CABS": "ABS",
+        "CCOS": "COS", "CEXP": "EXP", "CLOG": "LOG", "CSIN": "SIN",
+        "CSQRT": "SQRT", "DABS": "ABS", "DACOS": "ACOS", "DASIN": "ASIN",
+        "DATAN": "ATAN", "DATAN2": "ATAN2", "DCOS": "COS", "DCOSH": "COSH",
+        "DDIM": "DIM", "DEXP": "EXP", "DINT": "AINT", "DLOG": "LOG",
+        "DLOG10": "LOG10", "DMAX1": "MAX", "DMIN1": "MIN", "DMOD": "MOD",
+        "DNINT": "ANINT", "DSIGN": "SIGN", "DSIN": "SIN", "DSINH": "SINH",
+        "DSQRT": "SQRT", "DTAN": "TAN", "DTANH": "TANH", "FLOAT": "REAL",
+        "IABS": "ABS", "IDIM": "DIM", "IDINT": "INT", "IDNINT": "NINT",
+        "IFIX": "INT", "ISIGN": "SIGN", "MAX0": "MAX", "MAX1": "MAX",
+        "MIN0": "MIN", "MIN1": "MIN", "SNGL": "REAL"}
+
+    generic_function_names = {}
+    generic_function_names.update(numeric_names)
+    generic_function_names.update(mathematical_names)
+    generic_function_names.update(character_names)
+    generic_function_names.update(kind_names)
+    generic_function_names.update(miscellaneous_type_conversion_names)
+    generic_function_names.update(numeric_inquiry_names)
+    generic_function_names.update(array_inquiry_names)
+    generic_function_names.update(other_inquiry_names)
+    generic_function_names.update(bit_manipulation_names)
+    generic_function_names.update(floating_point_manipulation_names)
+    generic_function_names.update(vector_and_matrix_multiply_names)
+    generic_function_names.update(array_reduction_names)
+    generic_function_names.update(array_construction_names)
+    generic_function_names.update(array_location_names)
+    generic_function_names.update(null_names)
+    generic_function_names.update(allocation_transfer_names)
+    generic_function_names.update(random_number_names)
+    generic_function_names.update(system_environment_names)
+
+    # A list of all function names
+    function_names = (list(generic_function_names.keys()) +
+                      list(specific_function_names.keys()))
+
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Attempt to match the input `string` with the intrinsic function
+        names defined in `generic_function_names` or
+        `specific_function_names`. If there is a match the resultant
+        string will be converted to upper case.
+
+        :param str string: The pattern to be matched.
+
+        :returns: A tuple containing the matched string (converted to \
+        upper case) if there is a match or None if there is not.
+        :rtype: (str,) or NoneType
+
+        '''
+        return STRINGBase.match(Intrinsic_Name.function_names, string)
+
+
+class Intrinsic_Function_Reference(CallBase):  # No explicit rule
+    '''Represents Fortran intrinsics.
+
+    function-reference is intrinsic-name ( [ actual-arg-spec-list ] )
+
+    '''
+    subclass_names = []
+    use_names = ['Intrinsic_Name', 'Actual_Arg_Spec_List']
+
+    @staticmethod
+    def match(string):
+        '''Match the string as an intrinsic function. Also check that the
+        number of arguments provided matches the number expected by
+        the intrinsic.
+
+        :param str string: the string to match with the pattern rule.
+
+        :return: a tuple of size 2 containing the name of the \
+        intrinsic and its arguments if there is a match, or None if \
+        there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Intrinsic_Name`, \
+        :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`) or \
+        NoneType
+
+        :raises InternalSyntaxError: If the number of arguments \
+        provided does not match the number of arguments expected by \
+        the intrinsic.
+
+        '''
+        result = CallBase.match(
+            Intrinsic_Name, Actual_Arg_Spec_List, string)
+        if result:
+            # There is a match so check the number of args provided
+            # matches the number of args expected by the intrinsic.
+            function_name = str(result[0])
+            function_args = result[1]
+            # This if/else will not be needed once issue #170 has been
+            # addressed.
+            if isinstance(function_args, Actual_Arg_Spec_List):
+                nargs = len(function_args.items)
+            elif function_args is None:
+                nargs = 0
+            else:
+                nargs = 1
+
+            if function_name in Intrinsic_Name.specific_function_names.keys():
+                # If this is a specific function then use its generic
+                # name to test min and max number of arguments.
+                test_name = Intrinsic_Name.specific_function_names[
+                    function_name]
+            else:
+                test_name = function_name
+
+            min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
+            max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
+
+            if max_nargs is None:
+                if nargs < min_nargs:
+                    # None indicates an unlimited number of arguments
+                    raise InternalSyntaxError(
+                        "Intrinsic '{0}' expects at least {1} args but found "
+                        "{2}.".format(function_name, min_nargs, nargs))
+                # The number of arguments is valid. Return here as
+                # further tests will fail due to max_args being
+                # None.
+                return result
+            if min_nargs == max_nargs and nargs != min_nargs:
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects {1} arg(s) but found {2}."
+                    "".format(function_name, min_nargs, nargs))
+            if min_nargs < max_nargs and (nargs < min_nargs or
+                                          nargs > max_nargs):
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects between {1} and {2} args but "
+                    "found {3}.".format(function_name, min_nargs, max_nargs,
+                                        nargs))
+        return result
+
+
 class Call_Stmt(StmtBase):  # R1218
     """
     <call-stmt> = CALL <procedure-designator>
@@ -8780,11 +9642,11 @@ class Actual_Arg(Base):  # R1221
                  | <proc-component-ref>
                  | <alt-return-spec>
     """
-    subclass_names = ['Procedure_Name',
+    subclass_names = ['Expr',
+                      'Procedure_Name',
                       'Proc_Component_Ref',
                       'Alt_Return_Spec',
-                      'Variable',
-                      'Expr']
+                      'Variable']
 
 
 class Alt_Return_Spec(Base):  # R1222
