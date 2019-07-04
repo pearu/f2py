@@ -38,12 +38,12 @@ fparser2
 ========
 
 Fparser2 provides support for parsing Fortran up to and including
-Fortran 2003. This is implemented in
-the Fortran2003.py `file`__ and contains an entirely separate parser
-that includes rules for Fortran 2003 syntax. Support for Fortran 2008
-is being added in the Fortran2008.py `file`__ which extends the
-Fortran2003 rules appropriately. At this time Fortran2008 support is
-limited to submodules.
+Fortran 2003. This is implemented in the Fortran2003.py `file`__ and
+contains an entirely separate parser to fparser1 that includes rules
+for Fortran 2003 syntax. Support for Fortran 2008 is being added in
+the Fortran2008.py `file`__ which extends the Fortran2003 rules
+appropriately. At this time Fortran2008 support is limited to
+submodules.
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
@@ -56,7 +56,7 @@ fparser2 can be run from the command line by using the `fparser2.py`
 script located in the `scripts` directory. One or more input files can
 be provided. These files are parsed in turn and the parsed Fortran is output
 to the screen (most likely with a different formatting to the input as
-fparser2 does not preserve format), or an appropriate error is ouput.
+fparser2 does not preserve format), or an appropriate error is output.
 ::
 
    >>> cat simple.f90
@@ -90,10 +90,10 @@ Fortran2003-compliant parser or a Fortran2008-compliant parser
 depending on the `std` argument provided to its create method.
 
 Finally the parser is provided with the Fortran reader and returns an
-abstract representation (an abstract syntax tree - AST) of the code,
-if the code is valid Fortran. This AST can be output as Fortran by
-printing it. The AST hierarchy can also be output in textual form by
-executing the AST. For example:
+abstract representation (a parse-tree) of the code,
+if the code is valid Fortran. This parse-tree can be output as Fortran by
+printing it. The parse-tree hierarchy can also be output in textual form by
+executing it. For example:
 
 ::
    
@@ -102,8 +102,8 @@ executing the AST. For example:
     >>> reader = FortranFileReader("compute_unew_mod.f90",
                                    ignore_comments=False)
     >>> f2008_parser = ParserFactory().create(std="f2008")
-    >>> ast = f2008_parser(reader)
-    >>> print ast
+    >>> parse_tree = f2008_parser(reader)
+    >>> print parse_tree
     MODULE compute_unew_mod
       USE :: kind_params_mod
       USE :: kernel_mod
