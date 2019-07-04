@@ -647,7 +647,7 @@ class SequenceBase(Base):
 
     '''
     @staticmethod
-    def match(separator, subcls, string, keep_empty=True):
+    def match(separator, subcls, string, ignore_empty=True):
         '''Match one or more 'subcls' fparser2 rules in the string 'string'
         separated by 'separator'.
 
@@ -657,7 +657,7 @@ class SequenceBase(Base):
         should be matched.
         :type subcls: Subclass of :py:class:`fparser.two.utils.Base`
         :param str string: The input string to match.
-        :param bool keep_empty: An optional boolean specifying whether \
+        :param bool ignore_empty: An optional boolean specifying whether \
         empty entries should be kept (True) or removed (False) after \
         splitting the input with the separator. Defaults to True.
 
@@ -666,7 +666,7 @@ class SequenceBase(Base):
         :rtype: (str, (Subclass of \
         :py:class:`fparser.two.utils.Base`)) or NoneType
 
-        :raises InternalError: If the separator, string or keep_empty \
+        :raises InternalError: If the separator, string or ignore_empty \
         arguments are not the expected type.
 
         '''
@@ -678,15 +678,15 @@ class SequenceBase(Base):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
                 "be a string but found '{0}'.".format(type(string)))
-        if not isinstance(keep_empty, bool):
+        if not isinstance(ignore_empty, bool):
             raise InternalError(
-                "SequenceBase class match method optional argument keep_empty "
-                "expected to be a boolean but found '{0}'."
+                "SequenceBase class match method optional argument "
+                "ignore_empty expected to be a boolean but found '{0}'."
                 "".format(type(string)))
 
         line, repmap = string_replace_map(string)
         splitted = line.split(separator)
-        if not keep_empty:
+        if not ignore_empty:
             # Remove any empty entries.
             splitted = [entry for entry in splitted if entry]
         if not splitted:

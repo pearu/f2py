@@ -9466,7 +9466,7 @@ class Prefix(SequenceBase):
     @staticmethod
     def match(string):
         '''Match a space separated list of Prefix_Spec objects. The
-        keep_empty=False option ensures that empty matches i.e. '' are
+        ignore_empty=False option ensures that empty matches i.e. '' are
         removed rather than being presented as matches for Prefix_Spec
         objects.
 
@@ -9478,7 +9478,7 @@ class Prefix(SequenceBase):
         or NoneType
 
         '''
-        return SequenceBase.match(' ', Prefix_Spec, string, keep_empty=False)
+        return SequenceBase.match(' ', Prefix_Spec, string, ignore_empty=False)
 
 
 class Prefix_Spec(STRINGBase):  # R1226
