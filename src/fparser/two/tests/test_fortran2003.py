@@ -1027,6 +1027,10 @@ def test_declaration_type_spec():  # R502
     assert str(obj) == 'TYPE(foo)'
     assert repr(obj) == "Declaration_Type_Spec('TYPE', Type_Name('foo'))"
 
+    # No content should not match.
+    with pytest.raises(NoMatchError):
+        obj = tcls('')
+
 
 def test_attr_spec():  # R503
 

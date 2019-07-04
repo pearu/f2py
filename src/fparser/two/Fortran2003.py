@@ -3990,11 +3990,8 @@ class Data_Ref(SequenceBase):
         # Use SequenceBase as normal, then force no match when there is
         # only one entry in the sequence.
         result = SequenceBase.match(r'%', Part_Ref, string)
-        if not result:
-            # There is no match.
-            return None
-        values = result[1]
-        if len(values) > 1:
+        entries = result[1]
+        if len(entries) > 1:
             # There is more than one part-ref so return a Data_Ref
             # object containing the part-refs.
             return result
