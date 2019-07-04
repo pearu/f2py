@@ -9777,7 +9777,7 @@ class Prefix(SequenceBase):
     prefix is prefix-spec [ prefix-spec ] ...
 
     '''
-    subclass_names = ['Prefix_Spec']
+    subclass_names = []
 
     @staticmethod
     def match(string):

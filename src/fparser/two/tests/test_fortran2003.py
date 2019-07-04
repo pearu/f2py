@@ -2805,7 +2805,6 @@ def test_read_stmt():
     # With format specified by label number
     obj = tcls("READ 13, a(2)")
     assert str(obj) == 'READ 13, a(2)'
-    print (repr(obj))
     assert (repr(obj) ==
             "Read_Stmt(None, Label('13'), Output_Item_List(',', "
             "(Part_Ref(Name('a'), Section_Subscript_List(',', "
