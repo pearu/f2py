@@ -9471,8 +9471,8 @@ class Prefix(SequenceBase):
         objects.
 
         :returns: A tuple of size 2 containing the separator and a \
-        tuple containing Prefix_Spec objects if there is a match and \
-        None if not.
+        tuple containing one or more Prefix_Spec objects if there is a \
+        match and None if not.
 
         :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`)) \
         or NoneType

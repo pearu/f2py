@@ -32,49 +32,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1227 : prefix.'''
-import sys
+'''Test Fortran 2003 rule R612 : This file tests support for the
+Data_Ref class.
+
+'''
 
 import pytest
-
-import fparser.two.Fortran2003 as f2003
 from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Data_Ref, Part_Ref, Name
 
 
-def test_prefix(f2003_create):
-    '''Test that valid Prefix strings are matched successfully.
-
-    '''
-    # single space
-    result = f2003.Prefix("impure elemental module")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
-    assert (result.torepr() ==
-            "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
-            "Prefix_Spec('MODULE')))")
-
-    # multiple spaces
-    result = f2003.Prefix("  impure  elemental  module  ")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
-    assert (result.torepr() ==
-            "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
-            "Prefix_Spec('MODULE')))")
-
-
-def test_single_prefix_spec(f2003_create):
-    '''Test that a single prefix-spec is returned as a Prefix containing a
-    Prefix_Spec.
+def test_valid_sequence(f2003_create):
+    '''Test that a data_ref object is returned when a valid sequence is
+    supplied.
 
     '''
-    result = f2003.Prefix("impure")
-    assert result.tostr() == "IMPURE"
-    assert (result.torepr() ==
-            "Prefix(' ', (Prefix_Spec('IMPURE'),))")
+    for string in ["a%b", " a % b ", "a%b%c", "A%B%C"]:
+        result = Data_Ref(string)
+        assert str(result) == str(result).strip()
+        assert isinstance(result, Data_Ref)
 
 
-def test_prefix_nomatch(f2003_create):
-    '''Test that invalid Prefix strings raise a NoMatchError exception.
+def test_single_entry(f2003_create):
+    '''Test that a data_ref object is not returned when the sequence is
+    valid but contains a single entry.
 
     '''
-    for string in ["invalid", "pure impure purile", "", " "]:
+    for string in ["a", " a ", "A"]:
+        result = Data_Ref(string)
+        assert str(result) == str(result).strip()
+        assert isinstance(result, Name)
+
+    result = Data_Ref("a(2)")
+    assert str(result) == str(result).strip()
+    assert isinstance(result, Part_Ref)
+
+
+def test_invalid(f2003_create):
+    '''Test that there is no match when the input is invalid. '''
+
+    for string in ["", "  ", "1", "%", "a b"]:
         with pytest.raises(NoMatchError):
-            _ = f2003.Prefix(string)
+            assert Data_Ref(string) is None
