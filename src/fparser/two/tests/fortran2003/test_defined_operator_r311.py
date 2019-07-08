@@ -69,4 +69,4 @@ def test_parse_errors(f2003_create):
     for myinput in ["", "  ", ".inv", "inv.", ".false.", "***"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Defined_Operator(myinput)
-        assert "Defined_Operator: '{0}'".format(myinput) in str(excinfo)
+        assert "Defined_Operator: '{0}'".format(myinput) in str(excinfo.value)

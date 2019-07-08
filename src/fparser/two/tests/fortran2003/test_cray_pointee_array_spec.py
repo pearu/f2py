@@ -56,7 +56,8 @@ def test_errors(f2003_create):
     for myinput in ["", "  ", "2n", "2 n", "*, n"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointee_Array_Spec(myinput)
-        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in str(excinfo)
+        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in \
+            str(excinfo.value)
 
 
 def test_unsupported(f2003_create):
@@ -67,4 +68,5 @@ def test_unsupported(f2003_create):
     for myinput in [":", "2,:"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointee_Array_Spec(myinput)
-        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in str(excinfo)
+        assert "Cray_Pointee_Array_Spec: '{0}'".format(myinput) in \
+            str(excinfo.value)

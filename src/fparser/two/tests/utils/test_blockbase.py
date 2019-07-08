@@ -86,7 +86,7 @@ def test_include(f2003_create):
         ", Comment('! comment4')), Internal_Subprogram_Part(Contains_Stmt("
         "'CONTAINS'), Include_Stmt(Include_Filename('5')), Comment("
         "'! comment5')), End_Program_Stmt('PROGRAM', Name('test'))],)") \
-        in str(result)
+        in str(result).replace("u'", "'")
     assert "should" not in str(result)
 
 

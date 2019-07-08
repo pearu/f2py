@@ -228,5 +228,6 @@ def test_intrinsic_inside_intrinsic(f2003_create):
     reader = get_reader("subroutine sub()\na = sin(cos(b))\nend "
                         "subroutine sub\n")
     ast = Program(reader)
-    assert "Intrinsic_Name('SIN')" in repr(ast)
-    assert "Intrinsic_Name('COS')" in repr(ast)
+    rep = repr(ast).replace("u'", "'")
+    assert "Intrinsic_Name('SIN')" in rep
+    assert "Intrinsic_Name('COS')" in rep

@@ -88,7 +88,7 @@ def test_errors(f2003_create):
                  "pointer (a, b) (a, b)"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointer_Stmt(line)
-        assert "Cray_Pointer_Stmt: '{0}'".format(line) in str(excinfo)
+        assert "Cray_Pointer_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_invalid_cray_pointer(f2003_create, monkeypatch):

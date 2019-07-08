@@ -75,7 +75,7 @@ def test_internal_errors1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be length 2 but found '3'" in str(excinfo)
+    assert "should be length 2 but found '3'" in str(excinfo.value)
 
 
 def test_internal_error2(f2003_create, monkeypatch):
@@ -89,7 +89,7 @@ def test_internal_error2(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert ("items entry 0 should contain a format items object but it "
-            "is empty or None") in str(excinfo)
+            "is empty or None") in str(excinfo.value)
 
 
 def test_internal_error3(f2003_create, monkeypatch):
@@ -103,4 +103,4 @@ def test_internal_error3(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert ("items entry 1 should contain a format items object but it "
-            "is empty or None") in str(excinfo)
+            "is empty or None") in str(excinfo.value)

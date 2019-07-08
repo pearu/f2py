@@ -95,7 +95,8 @@ def test_char_edit_descriptor(f2003_create):
     for my_input in ["'hello'", " 'hello' "]:
         ast = Format_Item(my_input)
         assert my_input.strip() in str(ast)
-        assert repr(ast) == ("Char_Literal_Constant(\"'hello'\", None)")
+        assert repr(ast).replace("u", "") == \
+            "Char_Literal_Constant(\"'hello'\", None)"
 
 
 def test_format_list_descriptor(f2003_create):
@@ -154,7 +155,7 @@ def test_internal_errors1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of length 2 but found '3'" in str(excinfo)
+    assert "should be of length 2 but found '3'" in str(excinfo.value)
 
 
 def test_internal_errors2(f2003_create, monkeypatch):
@@ -169,4 +170,4 @@ def test_internal_errors2(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert ("items list second entry should be a valid descriptor but it "
-            "is empty or None") in str(excinfo)
+            "is empty or None") in str(excinfo.value)

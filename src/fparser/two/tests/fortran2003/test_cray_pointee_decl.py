@@ -57,7 +57,7 @@ def test_errors(f2003_create):
     for myinput in ["", "  ", "a", "a2)", "a(2", "a()"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointee_Decl(myinput)
-        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo)
+        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo.value)
 
 
 def test_unsupported(f2003_create):
@@ -68,4 +68,4 @@ def test_unsupported(f2003_create):
     for myinput in ["a(:)", "a(2,:)"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointee_Decl(myinput)
-        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo)
+        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo.value)

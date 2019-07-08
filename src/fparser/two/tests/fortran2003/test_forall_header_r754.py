@@ -86,7 +86,7 @@ def test_parse_error(f2003_create):
                      "(error)"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Forall_Header(my_input)
-        assert "Forall_Header: '{0}'".format(my_input) in str(excinfo)
+        assert "Forall_Header: '{0}'".format(my_input) in str(excinfo.value)
 
 
 def test_internal_error1(f2003_create, monkeypatch):
@@ -99,7 +99,7 @@ def test_internal_error1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 2 but found '3'" in str(excinfo)
+    assert "should be of size 2 but found '3'" in str(excinfo.value)
 
 
 def test_use_internal_error2(f2003_create, monkeypatch):
@@ -115,4 +115,4 @@ def test_use_internal_error2(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("'items[0]' should be a Forall_Triplet_Spec_List instance "
-                "but it is empty") in str(excinfo)
+                "but it is empty") in str(excinfo.value)

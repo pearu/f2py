@@ -78,7 +78,15 @@ except ImportError:
 
 
 def runner(_, options, args):
-    ''' Function to read, parse and output fortran source code '''
+    '''
+    Function to read, parse and output fortran source code.
+
+    :param options: object constructed by OptionParser with cmd-line flags.
+    :param args: list of Fortran files to parse.
+    :type args: list of str
+
+    '''
+    import six
     from fparser.two.parser import ParserFactory
     from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
@@ -98,11 +106,11 @@ def runner(_, options, args):
             f2003_parser = ParserFactory().create()
             program = f2003_parser(reader)
             if options.task == "show":
-                print(program)
+                print(six.text_type(program))
             if options.task == "repr":
                 print(repr(program))
         except FortranSyntaxError as msg:
-            print("Syntax error: {0}".format(str(msg)))
+            print("Syntax error: {0}".format(six.text_type(msg)))
             try:
                 # protect the access to fifo_item[-1] in case the fifo
                 # buffer is empty
@@ -113,7 +121,7 @@ def runner(_, options, args):
                 pass
             raise SystemExit(1)
         except InternalError as msg:
-            print("Internal error in fparser: {0}".format(str(msg)))
+            print("Internal error in fparser: {0}".format(six.text_type(msg)))
             raise SystemExit(1)
 
 

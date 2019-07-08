@@ -35,7 +35,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
 # Modified M. Hambley and P. Elson, Met Office
-# Modified R. W. Ford, STFC Daresbury Lab
+# Modified R. W. Ford and A. R. Porter, STFC Daresbury Lab
 ##############################################################################
 '''
 Test battery associated with fparser.common.readfortran package.
@@ -45,7 +45,8 @@ from __future__ import print_function
 import io
 import os.path
 import tempfile
-
+import six
+import re
 import pytest
 
 from fparser.common.readfortran import FortranFileReader, FortranStringReader
@@ -59,7 +60,7 @@ def test_empty_line_err():
     from fparser.common.readfortran import Line, FortranReaderError
     with pytest.raises(FortranReaderError) as err:
         _ = Line("   ", 1, "", "a_name", None)
-    assert "Got empty line: \'   \'" in str(err)
+    assert "Got empty line: \'   \'" in str(err.value)
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -137,7 +138,8 @@ def test_base_next_good_include(log):
     expected = "    1:include 'modfile.f95' " \
                + "<== including file '{path}/modfile.f95'"
     result = log.messages['info'][0].split('\n')[1]
-    assert result == expected.format(path=include_directories[0])
+    assert re.sub("u", "", result) == \
+        re.sub("u", "", expected.format(path=include_directories[0]))
 
 
 def test_fortranreaderbase_info(log):
@@ -675,7 +677,7 @@ def test_bad_file_reader():
     with pytest.raises(ValueError) as ex:
         unit_under_test = FortranFileReader(42)
     expected = 'FortranFileReader is used with a filename or file-like object.'
-    assert expected in str(ex)
+    assert expected in str(ex.value)
 
 
 ##############################################################################
@@ -781,8 +783,8 @@ end python module foo
                 + "[' single line mline '],"
                 + "\"a='hi!fake comment'\",(8, 8))",
                 "Comment('!should be a comment',(8, 8))",
-                'line #9"a=\\\\\\\\\\\\\\\\\\\\\'\'\'not a multiline\'\'\'"',
-                'Comment("!blah=\'\'\'never ending multiline",(10, 10))',
+                'line #9"a=\\\\\\\\\\\\\\\\\\\\\'\'\'not a mltiline\'\'\'"',
+                'Comment("!blah=\'\'\'never ending mltiline",(10, 10))',
                 "line #11'b=3'",
                 "Comment('! hey, fake line continuation:&',(11, 11))",
                 "line #12'c=445'",
@@ -806,7 +808,7 @@ end python module foo
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
-        assert str(item) == expected.pop(0)
+        assert re.sub("u", "", str(item)) == re.sub("u", "", expected.pop(0))
 
 
 def test_fix90():
@@ -832,30 +834,31 @@ cComment
      & foo
       end
 """
-    expected = ["Comment('c -*- fix -*-',(1, 1))",
-                "line #2'subroutine foo'",
-                "Comment('cComment',(3, 3))",
-                "line #4 1234 'a = 3'",
-                "Comment('!inline comment',(4, 4))",
-                "line #5'b = 345'",
-                "Comment('!',(6, 6))",
-                "Comment('!line cont. with comment symbol',(7, 7))",
-                "line #9'a = 3.14'",
-                "Comment('! pi!',(9, 9))",
-                "Comment('!   KDMO',(10, 10))",
-                'line #11"write (obj%print_lun, *) \' KDMO : \'"',
-                'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
-                + ' \'  BIN_WID = \',             &"',
-                'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
-                "line #14'end subroutine foo'",
-                "line #15'subroutine foo'",
-                "Comment('',(16, 16))",
-                "line #18'end'"]
+    expected = [u"Comment('c -*- fix -*-',(1, 1))",
+                u"line #2'subroutine foo'",
+                u"Comment('cComment',(3, 3))",
+                u"line #4 1234 'a = 3'",
+                u"Comment('!inline comment',(4, 4))",
+                u"line #5'b = 345'",
+                u"Comment('!',(6, 6))",
+                u"Comment('!line cont. with comment symbol',(7, 7))",
+                u"line #9'a = 3.14'",
+                u"Comment('! pi!',(9, 9))",
+                u"Comment('!   KDMO',(10, 10))",
+                u'line #11"write (obj%print_lun, *) \' KDMO : \'"',
+                u'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
+                + u' \'  BIN_WID = \',             &"',
+                u'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
+                u"line #14'end subroutine foo'",
+                u"line #15'subroutine foo'",
+                u"Comment('',(16, 16))",
+                u"line #18'end'"]
     reader = fparser.common.readfortran.FortranStringReader(
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
-        assert str(item) == expected.pop(0)
+        assert re.sub("u", "", six.text_type(item)) == \
+            re.sub("u", "", expected.pop(0))
 
 
 def test_utf_char_in_code(log):
@@ -867,6 +870,5 @@ def test_utf_char_in_code(log):
                                ignore_comments=True)
     out_line = reader.get_item()
     while out_line:
-        print(out_line)
         out_line = reader.get_item()
     assert log.messages['critical'] == []

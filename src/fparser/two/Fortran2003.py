@@ -153,7 +153,8 @@ class Comment(Base):
         :return: this comment as a string
         :rtype: str
         '''
-        return str(self.items[0])
+        import six
+        return six.text_type(self.items[0])
 
     def restore_reader(self, reader):
         '''

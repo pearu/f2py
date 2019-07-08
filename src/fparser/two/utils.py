@@ -71,6 +71,7 @@
 
 import re
 import logging
+import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
@@ -355,10 +356,10 @@ class Base(ComparableMixin):
                 # follow their lead and do not raise an exception.
                 return
             line = string.source_lines[string.linecount-1]
-            errmsg = "at line {0}\n>>>{1}\n".format(
+            errmsg = u"at line {0}\n>>>{1}\n".format(
                 string.linecount, line)
         else:
-            errmsg = "{0}: '{1}'".format(cls.__name__, string)
+            errmsg = u"{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
     def init(self, *items):
@@ -381,7 +382,16 @@ class Base(ComparableMixin):
         return self.items
 
     def tofortran(self, tab='', isfix=None):
-        this_str = str(self)
+        '''
+        Produce the Fortran representation of this Comment.
+
+        :param str tab: characters to pre-pend to output.
+        :param bool isfix: whether or not this is fixed-format code.
+
+        :returns: Fortran representation of this comment.
+        :rtype: str
+        '''
+        this_str = six.text_type(self)
         if this_str.strip():
             return tab + this_str
         else:
@@ -1116,10 +1126,10 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, str):
+        if not isinstance(string, (str, six.text_type)):
             raise InternalError(
-                "Supplied string should be of type str, but found "
-                "{0}".format(type(string)))
+                "Supplied string should be of type str or {0}, but found "
+                "{1}".format(six.text_type, type(string)))
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
