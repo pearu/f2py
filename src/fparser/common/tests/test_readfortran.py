@@ -856,3 +856,17 @@ cComment
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
+
+
+def test_utf_char_in_code(log):
+    ''' Check that we cope with Fortran code that contains UTF characters. This
+    is not valid Fortran but most compilers cope with it. '''
+    log.reset()
+    fort_file = os.path.join(os.path.dirname(__file__), "utf_in_code.f90")
+    reader = FortranFileReader(fort_file,
+                               ignore_comments=True)
+    out_line = reader.get_item()
+    while out_line:
+        print(out_line)
+        out_line = reader.get_item()
+    assert log.messages['critical'] == []
