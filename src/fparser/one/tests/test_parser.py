@@ -239,7 +239,8 @@ def test_allocate():
         'ALLOCATE (a_type :: a)'
     with pytest.raises(ParseError) as err:
         parse(Allocate, 'allocate(not valid :: a)')
-    assert "Unrecognised type-specification in ALLOCATE statement" in str(err)
+    assert "Unrecognised type-specification in ALLOCATE statement" in \
+        str(err.value)
 
 
 def test_deallocate():
@@ -895,10 +896,10 @@ def test_invalid_type_bound_array_access():  # pylint: disable=invalid-name
     syntax is flagged as invalid '''
     with pytest.raises(ValueError) as excinfo:
         _ = parse(Call, 'call an_array(idx)%a_func)')
-    assert "with Call pattern failed" in str(excinfo)
+    assert "with Call pattern failed" in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = parse(Call, 'call an_array(idx)%)')
-    assert "with Call pattern failed" in str(excinfo)
+    assert "with Call pattern failed" in str(excinfo.value)
 
 
 def test_analyze_errors():

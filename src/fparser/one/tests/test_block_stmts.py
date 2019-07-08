@@ -71,7 +71,7 @@ end module some_block
     monkeypatch.setattr(mod.a, "implicit_rules", None)
     with pytest.raises(AnalyzeError) as err:
         _ = mod.get_type_by_name("i_int")
-    assert "Implicit rules mapping is null" in str(err)
+    assert "Implicit rules mapping is null" in str(err.value)
 
 
 def test_get_type_by_name_implicit():

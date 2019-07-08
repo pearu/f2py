@@ -375,7 +375,7 @@ def test_type_is_to_fortran():
     typeis.items = None
     with pytest.raises(ParseError) as excinfo:
         _ = typeis.tofortran()
-    assert "TYPE IS construct must have arguments" in str(excinfo)
+    assert "TYPE IS construct must have arguments" in str(excinfo.value)
 
 
 def test_class_is_process_item(monkeypatch, capsys):
