@@ -783,8 +783,8 @@ end python module foo
                 + "[' single line mline '],"
                 + "\"a='hi!fake comment'\",(8, 8))",
                 "Comment('!should be a comment',(8, 8))",
-                'line #9"a=\\\\\\\\\\\\\\\\\\\\\'\'\'not a mltiline\'\'\'"',
-                'Comment("!blah=\'\'\'never ending mltiline",(10, 10))',
+                'line #9"a=\\\\\\\\\\\\\\\\\\\\\'\'\'not a multiline\'\'\'"',
+                'Comment("!blah=\'\'\'never ending multiline",(10, 10))',
                 "line #11'b=3'",
                 "Comment('! hey, fake line continuation:&',(11, 11))",
                 "line #12'c=445'",
@@ -808,6 +808,7 @@ end python module foo
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
+        # Remove 'u's to allow for py2/3 unicode differences
         assert re.sub("u", "", str(item)) == re.sub("u", "", expected.pop(0))
 
 
@@ -857,6 +858,7 @@ cComment
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
+        # Remove 'u's to allow for py2/3 unicode differences
         assert re.sub("u", "", six.text_type(item)) == \
             re.sub("u", "", expected.pop(0))
 
