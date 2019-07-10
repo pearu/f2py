@@ -12,6 +12,9 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+11/07/2019 PR #210 for #209. Corrects the maximum number of arguments
+           for the CMPLX instrinsic.
+
 03/07/2019 PR #200 for #171. Disable Statement Function support
            in fparser2.
 
