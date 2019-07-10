@@ -9276,7 +9276,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
     numeric_names = {
         "ABS": {"min": 1, "max": 1}, "AIMAG": {"min": 1, "max": 1},
         "AINT": {"min": 1, "max": 2}, "ANINT": {"min": 1, "max": 2},
-        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 2},
+        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 3},
         "CONJG": {"min": 1, "max": 1}, "DBLE": {"min": 1, "max": 1},
         "DIM": {"min": 2, "max": 2}, "DPROD": {"min": 2, "max": 2},
         "FLOOR": {"min": 1, "max": 2}, "INT": {"min": 1, "max": 2},
