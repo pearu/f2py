@@ -655,7 +655,7 @@ class SequenceBase(Base):
 
     '''
     @staticmethod
-    def match(separator, subcls, string, ignore_empty=True):
+    def match(separator, subcls, string, match_empty_entries=True):
         '''Match one or more 'subcls' fparser2 rules in the string 'string'
         separated by 'separator'.
 
@@ -665,17 +665,22 @@ class SequenceBase(Base):
         should be matched.
         :type subcls: Subclass of :py:class:`fparser.two.utils.Base`
         :param str string: The input string to match.
-        :param bool ignore_empty: An optional boolean specifying whether \
-        empty entries should be kept (True) or removed (False) after \
-        splitting the input with the separator. Defaults to True.
+        :param bool match_empty_entries: The optional boolean argument \
+        'match_empty_entries' specifies whether entries with no \
+        content are matched with 'subcls'. Consider the example 'a,,b' \
+        with the separator being ','. If 'match_empty_entries' is \
+        'True' then each of the following ('a', '', 'c') would be \
+        matched with 'subcls'. If 'match_empty_entries' is 'False' \
+        then only ('a', 'b') would be matched with the 'subcls'. \
+        Defaults to True.
 
         :returns: A tuple containing 1) the separator and 2) the \
         matched objects in a tuple, or None if there is no match.
         :rtype: (str, (Subclass of \
         :py:class:`fparser.two.utils.Base`)) or NoneType
 
-        :raises InternalError: If the separator, string or ignore_empty \
-        arguments are not the expected type.
+        :raises InternalError: If the separator, string or \
+        match_empty_entries arguments are not the expected type.
 
         '''
         if not isinstance(separator, str):
@@ -686,15 +691,15 @@ class SequenceBase(Base):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
                 "be a string but found '{0}'.".format(type(string)))
-        if not isinstance(ignore_empty, bool):
+        if not isinstance(match_empty_entries, bool):
             raise InternalError(
                 "SequenceBase class match method optional argument "
-                "ignore_empty expected to be a boolean but found '{0}'."
-                "".format(type(string)))
+                "match_empty_entries expected to be a boolean but found "
+                "'{0}'.".format(type(string)))
 
         line, repmap = string_replace_map(string)
         splitted = line.split(separator)
-        if not ignore_empty:
+        if not match_empty_entries:
             # Remove any empty entries.
             splitted = [entry for entry in splitted if entry]
         if not splitted:

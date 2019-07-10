@@ -64,17 +64,19 @@ def test_match_invalid_string(f2003_create):
                 "be a string but found " in str(excinfo.value))
 
 
-def test_match_invalid_ignoreempty(f2003_create):
+def test_match_invalid_matchempty(f2003_create):
     '''Test the sequencebase match method raises the expected exception if
-    arg ignoreempty is not a bool.
+    arg match_empty_entries is not a bool.
 
     '''
     for option in [None, 12, Name]:
         with pytest.raises(InternalError) as excinfo:
-            _ = SequenceBase.match(",", Name, "hello", ignore_empty=option)
+            _ = SequenceBase.match(",", Name, "hello",
+                                   match_empty_entries=option)
         assert (
-            "SequenceBase class match method optional argument ignore_empty "
-            "expected to be a boolean but found " in str(excinfo.value))
+            "SequenceBase class match method optional argument "
+            "match_empty_entries expected to be a boolean but found "
+            in str(excinfo.value))
 
 
 def test_match(f2003_create):
@@ -112,11 +114,12 @@ def test_match_repmap(f2003_create):
             "None),))))")
 
 
-def test_match_ignoreempty(f2003_create):
-    '''Test the sequencebase match method ignore_empty option behaves as
-    expected when set to True or False and when left to its default
-    value. This also tests that a NoMatchError exception occurs if one
-    or more of the entries does not match with the supplied subclass.
+def test_match_matchempty(f2003_create):
+    '''Test the sequencebase match method match_empty_entries option
+    behaves as expected when set to True or False and when left to its
+    default value. This also tests that a NoMatchError exception
+    occurs if one or more of the entries does not match with the
+    supplied subclass.
 
     '''
     separator = " "
@@ -130,10 +133,12 @@ def test_match_ignoreempty(f2003_create):
 
     # Set to True so should fail to match.
     with pytest.raises(NoMatchError):
-        _ = SequenceBase.match(separator, subcls, string, ignore_empty=True)
+        _ = SequenceBase.match(separator, subcls, string,
+                               match_empty_entries=True)
 
     # Set to False so should match.
-    result = SequenceBase.match(separator, subcls, string, ignore_empty=False)
+    result = SequenceBase.match(separator, subcls, string,
+                                match_empty_entries=False)
     assert str(result) == "(' ', (Name('a'), Name('b')))"
 
 

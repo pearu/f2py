@@ -2503,28 +2503,41 @@ class Declaration_Type_Spec(Base):  # R502
     subclass_names = ['Intrinsic_Type_Spec']
     use_names = ['Derived_Type_Spec']
 
+    @staticmethod
     def match(string):
+        '''Implements the matching of a declaration type specification.
+
+        :param str string: the reader or string to match as a \
+        declaration type specification.
+
+        :return: A tuple of size 2 containing a string with the value \
+        'TYPE' or 'CLASS' and a 'Derived_Type_Spec' instance if there \
+        is a match or None if not.
+        :rtype: (str, \
+        py:class:`fparser.two.Fortran2003.Derived_Type_Spec`,) or \
+        NoneType
+
+        '''
         if not string:
             return None
         if string[-1] != ')':
-            return
+            return None
         start = string[:4].upper()
         if start == 'TYPE':
             line = string[4:].lstrip()
             if not line.startswith('('):
-                return
+                return None
             return 'TYPE', Derived_Type_Spec(line[1:-1].strip())
         start = string[:5].upper()
         if start == 'CLASS':
             line = string[5:].lstrip()
             if not line.startswith('('):
-                return
+                return None
             line = line[1:-1].strip()
             if line == '*':
                 return 'CLASS', '*'
             return 'CLASS', Derived_Type_Spec(line)
-        return
-    match = staticmethod(match)
+        return None
 
     def tostr(self):
         return '%s(%s)' % self.items
@@ -3964,6 +3977,11 @@ class Data_Ref(SequenceBase):
 
     data-ref is part-ref [ % part-ref ] ...
 
+    If there is only one part-ref then return a 'Part_Ref' object (or
+    another object from a matching sub-rule). If there is more than
+    one part-ref then return a 'Data_Ref' object containing the
+    part-ref's.
+
     '''
     subclass_names = ['Part_Ref']
     use_names = []
@@ -3973,10 +3991,9 @@ class Data_Ref(SequenceBase):
         '''Implements the matching for a data-reference. This defines a series
         of dereferences e.g. a%b%c.
 
-        If there is only one part-ref then return a 'Part_Ref' object (or
-        an object from a matching sub-rule). If there is more than one
-        part-ref then return a 'Data_Ref' object containing the
-        part-ref's.
+        If there is more than one part-ref then return a 'Data_Ref'
+        object containing the part-ref's, otherwise return 'None'. A
+        single 'part-ref' is purposely not matched here.
 
         :param str string: Fortran code to check for a match
 
@@ -3984,7 +4001,7 @@ class Data_Ref(SequenceBase):
                  the matched operator as a string and another tuple \
                  containing the matched subclasses.
 
-        :rtype: None or (str, (obj, obj, ...))
+        :rtype: NoneType or (str, (obj, obj, ...))
 
         '''
         # Use SequenceBase as normal, then force no match when there is
@@ -9779,19 +9796,20 @@ class Prefix(SequenceBase):
     @staticmethod
     def match(string):
         '''Match a space separated list of Prefix_Spec objects. The
-        ignore_empty=False option ensures that empty matches i.e. '' are
-        removed rather than being presented as matches for Prefix_Spec
-        objects.
+        match_empty_entries=False option ensures that empty matches
+        i.e. '' are removed rather than being presented as matches for
+        Prefix_Spec objects.
 
         :returns: A tuple of size 2 containing the separator and a \
         tuple containing one or more Prefix_Spec objects if there is a \
         match and None if not.
 
-        :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`)) \
+        :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`,)) \
         or NoneType
 
         '''
-        return SequenceBase.match(' ', Prefix_Spec, string, ignore_empty=False)
+        return SequenceBase.match(' ', Prefix_Spec, string,
+                                  match_empty_entries=False)
 
 
 class Prefix_Spec(STRINGBase):  # R1226
