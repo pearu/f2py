@@ -36,8 +36,8 @@
 utils.py'''
 
 import pytest
-from fparser.two.utils import SequenceBase, InternalError, NoMatchError
-from fparser.two.Fortran2003 import Name
+from fparser.two.utils import SequenceBase, InternalError
+from fparser.two.Fortran2003 import Name, Entity_Decl
 
 
 def test_match_invalid_separator(f2003_create):
@@ -62,21 +62,6 @@ def test_match_invalid_string(f2003_create):
             _ = SequenceBase.match(",", Name, string)
         assert ("SequenceBase class match method argument string expected to "
                 "be a string but found " in str(excinfo.value))
-
-
-def test_match_invalid_matchempty(f2003_create):
-    '''Test the sequencebase match method raises the expected exception if
-    arg match_empty_entries is not a bool.
-
-    '''
-    for option in [None, 12, Name]:
-        with pytest.raises(InternalError) as excinfo:
-            _ = SequenceBase.match(",", Name, "hello",
-                                   match_empty_entries=option)
-        assert (
-            "SequenceBase class match method optional argument "
-            "match_empty_entries expected to be a boolean but found "
-            in str(excinfo.value))
 
 
 def test_match(f2003_create):
@@ -115,31 +100,17 @@ def test_match_repmap(f2003_create):
 
 
 def test_match_matchempty(f2003_create):
-    '''Test the sequencebase match method match_empty_entries option
-    behaves as expected when set to True or False and when left to its
-    default value. This also tests that a NoMatchError exception
-    occurs if one or more of the entries does not match with the
-    supplied subclass.
+    '''Test the sequencebase match method matches when the separator is a
+    space and there are multiple spaces between the items.
 
     '''
     separator = " "
     subcls = Name
-    # Two spaces which means an empty entry between the spaces.
-    string = "a  b"
-
-    # Default should be True so should fail to match.
-    with pytest.raises(NoMatchError):
-        _ = SequenceBase.match(separator, subcls, string)
-
-    # Set to True so should fail to match.
-    with pytest.raises(NoMatchError):
-        _ = SequenceBase.match(separator, subcls, string,
-                               match_empty_entries=True)
-
-    # Set to False so should match.
-    result = SequenceBase.match(separator, subcls, string,
-                                match_empty_entries=False)
-    assert str(result) == "(' ', (Name('a'), Name('b')))"
+    # Multiple spaces should match
+    options = ["a b", "a  b", " a    b "]
+    for string in options:
+        result = SequenceBase.match(separator, subcls, string)
+        assert str(result) == "(' ', (Name('a'), Name('b')))"
 
 
 def test_match_instance(f2003_create):
@@ -163,3 +134,26 @@ def test_match_instance(f2003_create):
     obj = Data_Ref("a%b%c")
     assert obj.tostr() == "a % b % c"
     assert obj.torepr() == "Data_Ref('%', (Name('a'), Name('b'), Name('c')))"
+
+
+def test_match_repmap_spaces(f2003_create):
+    '''Test the sequencebase match method matches when the separator is a
+    space, repmap is required and there are multiple spaces between
+    the items. This situation does not currently occur in the existing
+    Fortran classes but should be checked in any case.
+
+    '''
+    separator = " "
+    subcls = Entity_Decl
+    # Multiple spaces with repmap tuples should match
+    options = ["a(n(1)) b(n(2))", "a(n(1))  b(n(2))", " a(n(1))    b(n(2)) "]
+    for string in options:
+        result = SequenceBase.match(separator, subcls, string)
+        assert str(result) == (
+            "(' ', (Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+            "(Explicit_Shape_Spec(None, Part_Ref(Name('n'), "
+            "Section_Subscript_List(',', (Int_Literal_Constant('1', "
+            "None),)))),)), None, None), Entity_Decl(Name('b'), "
+            "Explicit_Shape_Spec_List(',', (Explicit_Shape_Spec(None, "
+            "Part_Ref(Name('n'), Section_Subscript_List(',', "
+            "(Int_Literal_Constant('2', None),)))),)), None, None)))")

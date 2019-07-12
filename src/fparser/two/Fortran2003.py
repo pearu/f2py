@@ -9795,10 +9795,8 @@ class Prefix(SequenceBase):
 
     @staticmethod
     def match(string):
-        '''Match a space separated list of Prefix_Spec objects. The
-        match_empty_entries=False option ensures that empty matches
-        i.e. '' are removed rather than being presented as matches for
-        Prefix_Spec objects.
+        '''Match a space separated list of Prefix_Spec objects. Objects may be
+        separated by 1 or more spaces.
 
         :returns: A tuple of size 2 containing the separator and a \
         tuple containing one or more Prefix_Spec objects if there is a \
@@ -9808,8 +9806,7 @@ class Prefix(SequenceBase):
         or NoneType
 
         '''
-        return SequenceBase.match(' ', Prefix_Spec, string,
-                                  match_empty_entries=False)
+        return SequenceBase.match(' ', Prefix_Spec, string)
 
 
 class Prefix_Spec(STRINGBase):  # R1226
