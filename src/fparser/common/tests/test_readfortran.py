@@ -835,25 +835,25 @@ cComment
      & foo
       end
 """
-    expected = [u"Comment('c -*- fix -*-',(1, 1))",
-                u"line #2'subroutine foo'",
-                u"Comment('cComment',(3, 3))",
-                u"line #4 1234 'a = 3'",
-                u"Comment('!inline comment',(4, 4))",
-                u"line #5'b = 345'",
-                u"Comment('!',(6, 6))",
-                u"Comment('!line cont. with comment symbol',(7, 7))",
-                u"line #9'a = 3.14'",
-                u"Comment('! pi!',(9, 9))",
-                u"Comment('!   KDMO',(10, 10))",
-                u'line #11"write (obj%print_lun, *) \' KDMO : \'"',
-                u'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
-                + u' \'  BIN_WID = \',             &"',
-                u'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
-                u"line #14'end subroutine foo'",
-                u"line #15'subroutine foo'",
-                u"Comment('',(16, 16))",
-                u"line #18'end'"]
+    expected = ["Comment('c -*- fix -*-',(1, 1))",
+                "line #2'subroutine foo'",
+                "Comment('cComment',(3, 3))",
+                "line #4 1234 'a = 3'",
+                "Comment('!inline comment',(4, 4))",
+                "line #5'b = 345'",
+                "Comment('!',(6, 6))",
+                "Comment('!line cont. with comment symbol',(7, 7))",
+                "line #9'a = 3.14'",
+                "Comment('! pi!',(9, 9))",
+                "Comment('!   KDMO',(10, 10))",
+                'line #11"write (obj%print_lun, *) \' KDMO : \'"',
+                'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
+                + ' \'  BIN_WID = \',             &"',
+                'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
+                "line #14'end subroutine foo'",
+                "line #15'subroutine foo'",
+                "Comment('',(16, 16))",
+                "line #18'end'"]
     reader = fparser.common.readfortran.FortranStringReader(
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
