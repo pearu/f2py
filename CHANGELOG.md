@@ -12,6 +12,10 @@ Modifications by (in alphabetical order):
 * A. R. Porter, Science & Technology Facilities Council, UK
 * P. Vitt, University of Siegen, Germany
 
+15/07/2019 PR #203 for #170. Allows List objects to contain a single
+           object meaning that the Parse Tree now has a more consistent
+           structure.
+
 03/07/2019 PR #200 for #171. Disable Statement Function support
            in fparser2.
 
