@@ -77,16 +77,16 @@ def test_include(f2003_create):
     assert (
         "([Include_Stmt(Include_Filename('1')), Comment('! comment1'), "
         "Program_Stmt('PROGRAM', Name('test')), Specification_Part("
-        "Implicit_Part(Include_Stmt(Include_Filename('2')), Comment("
-        "'! comment2')), Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER'"
-        ", None), None, Entity_Decl(Name('i'), None, None, None)), "
-        "Implicit_Part(Include_Stmt(Include_Filename('3')), Comment("
-        "'! comment3'))), Execution_Part(Assignment_Stmt(Name('i'), '=', "
-        "Int_Literal_Constant('1', None)), Include_Stmt(Include_Filename('4'))"
-        ", Comment('! comment4')), Internal_Subprogram_Part(Contains_Stmt("
-        "'CONTAINS'), Include_Stmt(Include_Filename('5')), Comment("
-        "'! comment5')), End_Program_Stmt('PROGRAM', Name('test'))],)") \
-        in str(result).replace("u'", "'")
+        "Implicit_Part(Include_Stmt(Include_Filename('2')), "
+        "Comment('! comment2')), Type_Declaration_Stmt(Intrinsic_Type_Spec("
+        "'INTEGER', None), None, Entity_Decl_List(',', (Entity_Decl(Name("
+        "'i'), None, None, None),))), Implicit_Part(Include_Stmt("
+        "Include_Filename('3')), Comment('! comment3'))), Execution_Part("
+        "Assignment_Stmt(Name('i'), '=', Int_Literal_Constant('1', None)), "
+        "Include_Stmt(Include_Filename('4')), Comment('! comment4')), "
+        "Internal_Subprogram_Part(Contains_Stmt('CONTAINS'), Include_Stmt("
+        "Include_Filename('5')), Comment('! comment5')), End_Program_Stmt("
+        "'PROGRAM', Name('test'))],)" in str(result).replace("u'", "'"))
     assert "should" not in str(result)
 
 
@@ -112,10 +112,13 @@ def test_strict_order_invalid_code(f2003_create, strict_order):
           Type_Declaration_Stmt(
               Intrinsic_Type_Spec('INTEGER', None),
               None,
-              Entity_Decl(Name('i'), None, None, None))),
+              Entity_Decl_List(
+                  ',',
+                  (Entity_Decl(Name('i'), None, None, None),)))),
       End_Program_Stmt('PROGRAM', Name('main'))
      ],)
     """)
+
     result = BlockBase.match(
         F2003.Program_Stmt, subclasses, F2003.End_Program_Stmt, reader,
         strict_order=strict_order)
@@ -144,10 +147,14 @@ def test_strict_order_valid_code(f2003_create):
       Specification_Part(
           Type_Declaration_Stmt(
               Intrinsic_Type_Spec('INTEGER', None), None,
-              Entity_Decl(Name('i'), None, None, None)),
+              Entity_Decl_List(
+                  ',',
+                  (Entity_Decl(Name('i'), None, None, None),))),
           Type_Declaration_Stmt(
               Intrinsic_Type_Spec('REAL', None), None,
-              Entity_Decl(Name('rho'), None, None, None))),
+              Entity_Decl_List(
+                  ',',
+                  (Entity_Decl(Name('rho'), None, None, None),)))),
       Execution_Part(
           Assignment_Stmt(Name('i'), '=', Int_Literal_Constant('2', None)),
           Assignment_Stmt(

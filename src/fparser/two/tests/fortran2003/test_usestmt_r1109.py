@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -92,8 +92,8 @@ def test_use_rename(f2003_create):
     ast = Use_Stmt(line)
     assert "USE my_module, name => new_name" in str(ast)
     assert repr(ast) == (
-        "Use_Stmt(None, None, Name('my_module'), ',', "
-        "Rename(None, Name('name'), Name('new_name')))")
+        "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
+        "(Rename(None, Name('name'), Name('new_name')),)))")
 
 
 # match() 'use x, only: y'
@@ -106,7 +106,8 @@ def test_use_only(f2003_create):
     ast = Use_Stmt(line)
     assert "USE my_model, ONLY: name" in str(ast)
     assert repr(ast) == (
-        "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Name('name'))")
+        "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Only_List(',', "
+        "(Name('name'),)))")
 
 
 # match() 'use x, only:'
@@ -133,7 +134,7 @@ def test_use_spaces_1(f2003_create):
     assert "USE, INTRINSIC :: my_model, name => new_name" in str(ast)
     assert repr(ast) == (
         "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('my_model'), ',', "
-        "Rename(None, Name('name'), Name('new_name')))")
+        "Rename_List(',', (Rename(None, Name('name'), Name('new_name')),)))")
 
 
 # match() '  use  ,  nature  ::  x  ,  only  :  name'
@@ -145,8 +146,9 @@ def test_use_spaces_2(f2003_create):
     line = "  use  ,  intrinsic  ::  my_model  ,  only  :  name  "
     ast = Use_Stmt(line)
     assert "USE, INTRINSIC :: my_model, ONLY: name" in str(ast)
-    assert repr(ast) == ("Use_Stmt(Module_Nature('INTRINSIC'), '::', "
-                         "Name('my_model'), ', ONLY:', Name('name'))")
+    assert (repr(ast) ==
+            "Use_Stmt(Module_Nature('INTRINSIC'), '::', Name('my_model'), ', "
+            "ONLY:', Only_List(',', (Name('name'),)))")
 
 
 # match() mixed case
@@ -158,8 +160,9 @@ def test_use_mixed_case(f2003_create):
     line = "UsE my_model, OnLy: name"
     ast = Use_Stmt(line)
     assert "USE my_model, ONLY: name" in str(ast)
-    assert repr(ast) == ("Use_Stmt(None, None, Name('my_model'), ', ONLY:', "
-                         "Name('name'))")
+    assert (repr(ast) ==
+            "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Only_List(',', "
+            "(Name('name'),)))")
 
 # match() Syntax errors
 

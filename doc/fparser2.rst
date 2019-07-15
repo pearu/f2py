@@ -38,12 +38,12 @@ fparser2
 ========
 
 Fparser2 provides support for parsing Fortran up to and including
-Fortran 2003. This is implemented in
-the Fortran2003.py `file`__ and contains an entirely separate parser
-that includes rules for Fortran 2003 syntax. Support for Fortran 2008
-is being added in the Fortran2008.py `file`__ which extends the
-Fortran2003 rules appropriately. At this time Fortran2008 support is
-limited to submodules.
+Fortran 2003. This is implemented in the Fortran2003.py `file`__ and
+contains an entirely separate parser to fparser1 that includes rules
+for Fortran 2003 syntax. Support for Fortran 2008 is being added in
+the Fortran2008.py `file`__ which extends the Fortran2003 rules
+appropriately. At this time Fortran2008 support is limited to
+submodules.
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
@@ -56,7 +56,7 @@ fparser2 can be run from the command line by using the `fparser2.py`
 script located in the `scripts` directory. One or more input files can
 be provided. These files are parsed in turn and the parsed Fortran is output
 to the screen (most likely with a different formatting to the input as
-fparser2 does not preserve format), or an appropriate error is ouput.
+fparser2 does not preserve format), or an appropriate error is output.
 ::
 
    >>> cat simple.f90
@@ -90,10 +90,10 @@ Fortran2003-compliant parser or a Fortran2008-compliant parser
 depending on the `std` argument provided to its create method.
 
 Finally the parser is provided with the Fortran reader and returns an
-abstract representation (an abstract syntax tree - AST) of the code,
-if the code is valid Fortran. This AST can be output as Fortran by
-printing it. The AST hierarchy can also be output in textual form by
-executing the AST. For example:
+abstract representation (a parse-tree) of the code,
+if the code is valid Fortran. This parse-tree can be output as Fortran by
+printing it. The parse-tree hierarchy can also be output in textual form by
+executing it. For example:
 
 ::
    
@@ -102,8 +102,8 @@ executing the AST. For example:
     >>> reader = FortranFileReader("compute_unew_mod.f90",
                                    ignore_comments=False)
     >>> f2008_parser = ParserFactory().create(std="f2008")
-    >>> ast = f2008_parser(reader)
-    >>> print ast
+    >>> parse_tree = f2008_parser(reader)
+    >>> print parse_tree
     MODULE compute_unew_mod
       USE :: kind_params_mod
       USE :: kernel_mod
@@ -116,7 +116,7 @@ executing the AST. For example:
       PUBLIC :: compute_unew, compute_unew_code
       TYPE, EXTENDS(kernel_type) :: compute_unew
       ...
-    >>> ast
+    >>> parse_tree
     Program(Module(Module_Stmt('MODULE', Name('compute_unew_mod')),Spec
     ification_Part(Use_Stmt(None, Name('kind_params_mod'), '', None),Us
     e_Stmt(None, Name('kernel_mod'), '', None),Use_Stmt(None, Name('arg
@@ -130,16 +130,16 @@ executing the AST. For example:
 
 Note that the two readers will ignore (and dispose of) comments by
 default. If you wish comments to be retained then you must set
-`ignore_comments=False` when creating the reader. The AST created by
-fparser2 will then have `Comment` nodes representing any comments
-found in the code. Nodes representing in-line comments will be added
-immediately following the node representing the code in which they
-were encountered.
+`ignore_comments=False` when creating the reader. The parse tree
+created by fparser2 will then have `Comment` nodes representing any
+comments found in the code. Nodes representing in-line comments will
+be added immediately following the node representing the code in which
+they were encountered.
 
 Note that empty input, or input that consists of purely white space
-and/or newlines, is not treated as invalid Fortran and an empty AST is
-returned. Whilst this is not strictly valid, most compilers have this
-behaviour so we follow their lead.
+and/or newlines, is not treated as invalid Fortran and an empty parse
+tree is returned. Whilst this is not strictly valid, most compilers
+have this behaviour so we follow their lead.
 
 If the code is invalid Fortran then a `FortranSyntaxError` exception
 will be raised which indicates the offending line of code and its line
@@ -152,7 +152,7 @@ number. For example:
    >>> reader = FortranStringReader(code)
    >>> from fparser.two.parser import ParserFactory
    >>> f2008_parser = ParserFactory().create(std="f2008")
-   >>> ast = f2008_parser(reader)
+   >>> parse_tree = f2008_parser(reader)
    Traceback (most recent call last):
      File "<stdin>", line 1, in <module>
      File "fparser/two/Fortran2003.py", line 1300, in __new__
@@ -370,11 +370,11 @@ file was found but would fail if the include file was not found::
   program x
   include 'endprogram.inc'
 
-Walking the AST
----------------
+Walking the parse tree
+----------------------
 
 fparser2 provides two functions to support the traversal of the
-AST that it constructs:
+parse tree that it constructs:
 
 .. automethod:: fparser.two.utils.walk_ast
 
