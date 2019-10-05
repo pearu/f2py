@@ -121,6 +121,11 @@ if __name__ == '__main__':
         packages=PACKAGES,
         package_dir={"": "src"},
         install_requires=['six'],
+        entry_points={
+            'console_scripts': [
+                'fparser2=fparser.scripts.fparser2:main',
+            ],
+        },
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
         include_package_data=True)
