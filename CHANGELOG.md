@@ -10,7 +10,11 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
+* J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
+
+06/10/2019 PR #212. Change setup.py to make fparser2 automatically
+           available on the command line when installing.
 
 15/07/2019 PR #203 for #170. Allows List objects to contain a single
            object meaning that the Parse Tree now has a more consistent
