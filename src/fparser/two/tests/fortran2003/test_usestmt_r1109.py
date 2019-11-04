@@ -176,7 +176,7 @@ def test_syntaxerror(f2003_create):
                  "use my_model, only name"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Use_Stmt(line)
-        assert "Use_Stmt: '{0}'".format(line) in str(excinfo)
+        assert "Use_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 # match() Internal errors
 
@@ -191,7 +191,7 @@ def test_use_internal_error1(f2003_create):
     ast.items = (None, None, None, None)
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 5 but found '4'" in str(excinfo)
+    assert "should be of size 5 but found '4'" in str(excinfo.value)
 
 
 def test_use_internal_error2(f2003_create):
@@ -207,7 +207,7 @@ def test_use_internal_error2(f2003_create):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("entry 2 should be a module name but it is "
-                "empty") in str(excinfo)
+                "empty") in str(excinfo.value)
 
 
 def test_use_internal_error3(f2003_create):
@@ -221,4 +221,4 @@ def test_use_internal_error3(f2003_create):
     ast.items = (None, None, "my_module", None, None)
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "entry 3 should be a string but found 'None'" in str(excinfo)
+    assert "entry 3 should be a string but found 'None'" in str(excinfo.value)

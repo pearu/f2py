@@ -76,16 +76,14 @@ First version created: May 2006
 
 
 import re
+import six
+
+class String(six.text_type):
+    ''' Dummy string class. '''
 
 
-class String(str):
-    '''Dummy string class'''
-    pass
-
-
-class ParenString(str):
-    '''Class representing a parenthesis string.'''
-    pass
+class ParenString(six.text_type):
+    ''' Class representing a parenthesis string. '''
 
 
 __all__ = ['String', 'string_replace_map', 'splitquote', 'splitparen']
@@ -209,7 +207,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                 i += 1
             except IndexError:
                 if l:
-                    item = String(''.join(l))
+                    item = String(u''.join(l))
                     items.append(item)
                 break
         # else continued string
@@ -229,7 +227,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
             except IndexError:
                 break
         if l:
-            item = String(''.join(l))
+            item = String(u''.join(l))
             items.append(item)
     return items, stopchar
 

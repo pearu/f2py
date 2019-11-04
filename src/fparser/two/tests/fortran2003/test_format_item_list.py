@@ -56,7 +56,7 @@ def test_non_hollerith(f2003_create):
     myinput = "E2.2, 'HELLO'"
     ast = Format_Item_List(myinput)
     assert myinput in str(ast)
-    assert repr(ast) == (
+    assert repr(ast).replace("u", "") == (
         "Format_Item_List(',', (Format_Item(None, Data_Edit_Desc_C1002('E', "
         "Digit_String('2', None), Int_Literal_Constant('2', None), None)), "
         "Char_Literal_Constant(\"'HELLO'\", None)))")
@@ -73,7 +73,7 @@ def test_mixed_hollerith_1(f2003_create, monkeypatch):
     myinput = "2Hab, 'HELLO'"
     ast = Format_Item_List(myinput)
     assert myinput in str(ast)
-    assert repr(ast) == (
+    assert repr(ast).replace("u", "") == (
         "Format_Item_List(',', (Hollerith_Item('ab'), "
         "Char_Literal_Constant(\"'HELLO'\", None)))")
 
@@ -89,7 +89,7 @@ def test_mixed_hollerith_2(f2003_create, monkeypatch):
     myinput = "'HELLO', 2hab"
     ast = Format_Item_List(myinput)
     assert myinput.lower() in str(ast).lower()
-    assert repr(ast) == (
+    assert repr(ast).replace("u", "") == (
         "Format_Item_List(',', (Char_Literal_Constant(\"'HELLO'\", None), "
         "Hollerith_Item('ab')))")
 

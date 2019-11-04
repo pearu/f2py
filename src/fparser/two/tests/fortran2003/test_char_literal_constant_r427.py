@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -49,7 +49,8 @@ def test_match_valid():
     obj = Char_Literal_Constant("'DO'")
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "'DO'"
-    assert repr(obj) == 'Char_Literal_Constant("\'DO\'", None)'
+    assert repr(obj).replace("u", "") == \
+        'Char_Literal_Constant("\'DO\'", None)'
 
     # simple, double quotes
     obj = Char_Literal_Constant('"DO"')
@@ -70,7 +71,8 @@ def test_match_valid():
     obj = Char_Literal_Constant("  '  D  O  '  ")
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == "'  D  O  '"
-    assert repr(obj) == 'Char_Literal_Constant("\'  D  O  \'", None)'
+    assert repr(obj).replace('u"', '"') == \
+        'Char_Literal_Constant("\'  D  O  \'", None)'
 
     # Single quotes, empty string
     obj = Char_Literal_Constant("''")
@@ -87,13 +89,15 @@ def test_match_valid():
     obj = Char_Literal_Constant('KP_"DO"')
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == 'KP_"DO"'
-    assert repr(obj) == 'Char_Literal_Constant(\'"DO"\', \'KP\')'
+    assert repr(obj).replace("u'", "'") == \
+        'Char_Literal_Constant(\'"DO"\', \'KP\')'
 
     # include a kind parameter with spaces
     obj = Char_Literal_Constant('  KP  _  "  D  O  "  ')
     assert isinstance(obj, Char_Literal_Constant), repr(obj)
     assert str(obj) == 'KP_"  D  O  "'
-    assert repr(obj) == 'Char_Literal_Constant(\'"  D  O  "\', \'KP\')'
+    assert repr(obj).replace("u'", "'") == \
+        'Char_Literal_Constant(\'"  D  O  "\', \'KP\')'
 
     # additional characters
     obj = Char_Literal_Constant("'()!$%^&*_+=-01~@#;:/?.>,<|'")

@@ -70,7 +70,7 @@ def test_errors(f2003_create):
                     "(1, a)", "(a, 1)", "(a, b(2)", "(a, b2))", "(a, b())"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointer_Decl(myinput)
-        assert "Cray_Pointer_Decl: '{0}'".format(myinput) in str(excinfo)
+        assert "Cray_Pointer_Decl: '{0}'".format(myinput) in str(excinfo.value)
 
 
 def test_internal_error1(f2003_create, monkeypatch):
@@ -83,7 +83,7 @@ def test_internal_error1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 2 but found '1'" in str(excinfo)
+    assert "should be of size 2 but found '1'" in str(excinfo.value)
 
 
 def test_internal_error2(f2003_create, monkeypatch):
@@ -99,7 +99,7 @@ def test_internal_error2(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("'Items' entry 0 should be a pointer name but it is "
-                "empty") in str(excinfo)
+                "empty") in str(excinfo.value)
 
 
 def test_internal_error3(f2003_create, monkeypatch):
@@ -115,4 +115,4 @@ def test_internal_error3(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("'Items' entry 1 should be a pointee name or pointee "
-                "declaration but it is empty") in str(excinfo)
+                "declaration but it is empty") in str(excinfo.value)

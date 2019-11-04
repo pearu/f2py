@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -242,8 +243,9 @@ class Variable(object, with_metaclass(classes)):
         return
 
     def set_dimension(self, dims):
+        import six
         dims = [tuple(dim.split(':')) for dim in dims]
-        dims = [tuple(map(str.strip, dim)) for dim in dims]
+        dims = [tuple(map(six.text_type.strip, dim)) for dim in dims]
         if self.dimension is not None:
             if not self.dimension == dims:
                 self.parent.warning(

@@ -63,7 +63,7 @@ def test_syntax_error(f2003_create, op_type):
                  ".x x."]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = op_type(line)
-        assert "_Op: '{0}'".format(line) in str(excinfo)
+        assert "_Op: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_c703(f2003_create, op_type):
@@ -76,4 +76,4 @@ def test_c703(f2003_create, op_type):
     for line in ["."+64*"a"+".", ".eq.", ".not.", ".false.", ".FALSE."]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = op_type(line)
-        assert "_Op: '{0}'".format(line) in str(excinfo)
+        assert "_Op: '{0}'".format(line) in str(excinfo.value)

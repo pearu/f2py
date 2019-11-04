@@ -65,4 +65,5 @@ def test_parse_errors(f2003_create):
     for myinput in ["", "  ", "***", "///", "eq.", ".eq", "eq", "= ="]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Extended_Intrinsic_Op(myinput)
-        assert "Extended_Intrinsic_Op: '{0}'".format(myinput) in str(excinfo)
+        assert "Extended_Intrinsic_Op: '{0}'".format(myinput) in \
+            str(excinfo.value)

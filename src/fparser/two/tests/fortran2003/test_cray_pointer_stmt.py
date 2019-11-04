@@ -52,7 +52,7 @@ def test_cray_pointer_stmt(f2003_create):
         '''Internal helper function to avoid code replication.'''
         ast = Cray_Pointer_Stmt(reader)
         assert "POINTER(a, b)" in str(ast)
-        assert (repr(ast) ==
+        assert (repr(ast).replace('u', '') ==
                 "Cray_Pointer_Stmt('POINTER', Cray_Pointer_Decl_List(',', "
                 "(Cray_Pointer_Decl(Name('a'), Name('b')),)))")
 
@@ -89,7 +89,7 @@ def test_errors(f2003_create):
                  "pointer (a, b) (a, b)"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cray_Pointer_Stmt(line)
-        assert "Cray_Pointer_Stmt: '{0}'".format(line) in str(excinfo)
+        assert "Cray_Pointer_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_invalid_cray_pointer(f2003_create, monkeypatch):
