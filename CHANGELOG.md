@@ -13,6 +13,11 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+## Release 0.0.9 (04/11/2019) ##
+
+04/11/2019 PR #208 for #207. Adds support for utf characters in Fortran
+           strings when using Python 2.
+
 06/10/2019 PR #212. Change setup.py to make fparser2 automatically
            available on the command line when installing.
 
