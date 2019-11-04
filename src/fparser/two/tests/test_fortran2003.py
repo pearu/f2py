@@ -1590,7 +1590,8 @@ def test_substring():  # R609
     obj = tcls('a(:)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(:)'
-    assert _repr_utf(obj) == "Substring(Name('a'), Substring_Range(None, None))"
+    assert _repr_utf(obj) == ("Substring(Name('a'), Substring_Range(None,"
+                              " None))")
 
     obj = tcls('a(1:2)')
     assert isinstance(obj, tcls), repr(obj)
