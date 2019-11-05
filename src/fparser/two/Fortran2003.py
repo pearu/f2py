@@ -315,19 +315,19 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''
         if not string:
             return None
+
         line = string.strip()
-        if line[:7].upper() != 'INCLUDE':
-            # The line does not start with the include token and/or the line
-            # is too short.
-            return None
-        rhs = line[7:].strip()
-        if not rhs:
-            # There is no content after the include token
-            return None
-        if len(rhs) < 3:
-            # The content after the include token is too short to be
-            # valid (it must at least contain quotes and one
-            # character.
+        rhs = None
+        # Match first mention of include to allow both,
+        # ``#include 'foo.h'`` and ``include 'foo.h'``.
+        idx = line.lower().find('include')
+        if 0 <= idx <= 1 :
+            rhs = line[idx+7:].strip()
+
+        if rhs is None or len(rhs) < 3:
+            # Either we didn't find any includes or the content after
+            # the include token is too short to be valid (it must at
+            # least contain quotes and one character.
             return None
         if not ((rhs[0] == "'" and rhs[-1] == "'") or
                 (rhs[0] == '"' and rhs[-1] == '"')):
