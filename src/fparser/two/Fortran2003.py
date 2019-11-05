@@ -167,7 +167,7 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments_includes(content, reader):
+def add_comments_directives(content, reader):
     '''Creates comment and/or include objects and adds them to the content
     list. Comment and/or include objects are added until a line that
     is not a comment or include is found.
@@ -181,12 +181,21 @@ def add_comments_includes(content, reader):
                   :py:class:`fparser.common.readfortran.FortranStringReader`
 
     '''
-    obj = Comment(reader)
-    obj = Include_Stmt(reader) if not obj else obj
+    obj = match_comment_or_directive(content, reader)
     while obj:
         content.append(obj)
-        obj = Comment(reader)
-        obj = Include_Stmt(reader) if not obj else obj
+        obj = match_comment_or_directive(content, reader)
+
+
+def match_comment_or_directive(content, reader):
+    """
+    Matches a single comment or preprocessor directive, indlucing
+    INCLUDE statements.
+    """
+    obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
+    obj = Define_Stmt(reader) if not obj else obj
+    return obj
 
 
 class Program(BlockBase):  # R201
@@ -243,12 +252,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments_includes(content, reader)
+        add_comments_directives(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments_includes(content, reader)
+                add_comments_directives(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -351,6 +360,42 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''
 
         return ("INCLUDE '{0}'".format(self.items[0]))
+
+
+class Define_Stmt(Base):  # pylint: disable=invalid-name
+    """
+    Implementes matching a `#define` preprocessor directive.
+
+    Accepting preprocessor directives is not part of the standard,
+    but often makes sense for a pure parser, as the handling is
+    left for the compiler that uses it.
+
+    Note that no syntax matching is preformed for anything after
+    the `#include` keyword. This is left for donwstream processing.
+    """
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        """
+        Implements the matching for an `#include` statement.
+        """
+        if not string:
+            return None
+
+        line = string.strip()
+        if line.lower().startswith('#define'):
+            rhs = line[7:].strip()
+            return StringBase.match(pattern.named_constant, rhs)
+        else:
+            return None
+
+    def tostr(self):
+        """
+        :return: this define_stmt as a string
+        :rtype: str
+        """
+        return ("DEFINE {0}".format(self.items[0]))
 
 
 class Program_Unit(Base):  # R202

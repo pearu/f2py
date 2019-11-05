@@ -44,7 +44,7 @@ tools that expect more rigorous semantic checks.
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Program, Include_Stmt
+from fparser.two.Fortran2003 import Program, Include_Stmt, Define_Stmt
 from fparser.two.utils import NoMatchError, InternalError
 
 
@@ -77,10 +77,10 @@ subroutine bar()
     print *, FOO
 end subroutine bar
 """
-
     reader = get_reader(code)
     ast = Program(reader)
-    #TODO: assert
+    assert 'DEFINE FOO "Hello Foo"' in str(ast)
+    assert isinstance(ast.content[0], Define_Stmt)
 
 
 def test_subroutine_external_ifdef(f2003_create):

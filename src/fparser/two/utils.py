@@ -534,13 +534,13 @@ content : tuple
         :rtype: startcls
         '''
         from fparser.two.Fortran2003 import Comment, Include_Stmt, \
-            add_comments_includes
+            add_comments_directives
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
             # Deal with any preceding comments and/or includes
-            add_comments_includes(content, reader)
+            add_comments_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
