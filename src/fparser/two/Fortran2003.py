@@ -1277,12 +1277,14 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
         '''
         :return: this Char_Literal_Constant as a string.
         :rtype: str
-        :raises InternalError: if the internal items list variable is \
-        not the expected size.
-        :raises InternalError: if the first element of the internal \
-        items list is None or is an empty string.
 
+        :raises InternalError: if the internal items list variable is \
+                not the expected size.
+        :raises InternalError: if the first element of the internal \
+                items list is None or is an empty string.
         '''
+        import six
+
         if len(self.items) != 2:
             raise InternalError(
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
@@ -1294,10 +1296,20 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
             raise InternalError(
                 "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
                 "should not be empty")
-        if not self.items[1]:
-            # Character literal has no kind specifier.
-            return str(self.items[0])
-        return "{0}_{1}".format(self.items[1], self.items[0])
+        if six.PY2:
+            # In Python2 we must return a byte str and the contents of this
+            # string may include non-ASCII characters
+            char_str = self.items[0].encode('utf-8')
+        else:
+            char_str = str(self.items[0])
+        if self.items[1]:
+            # The character constant has a kind specifier
+            if six.PY2:
+                kind_str = self.items[1].encode('utf-8')
+                return kind_str + "_".encode('utf-8') + char_str
+            kind_str = str(self.items[1])
+            return "{0}_{1}".format(kind_str, char_str)
+        return char_str
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
