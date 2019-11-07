@@ -140,3 +140,15 @@ def test_tostr_invalid2(monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         _ = str(obj)
     assert "'Items' entry 0 should not be empty" in str(excinfo.value)
+
+
+def test_tostr_non_ascii():
+    ''' Check that the tostr() method works when the character string
+    contains non-ascii characters. '''
+    obj = Char_Literal_Constant(u"'for e1=1\xb0'")
+    out_str = str(obj)
+    assert "for e1=1" in out_str
+    # With a kind specifier...
+    obj = Char_Literal_Constant(u"ckind_'for e1=1\xb0'")
+    out_str = str(obj)
+    assert "ckind_'for e1=" in out_str
