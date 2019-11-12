@@ -44,23 +44,25 @@ def test_prefix(f2003_create):
 
     '''
     # single space
-    result = f2003.Prefix("impure elemental module")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
-    assert (result.torepr() ==
+    result = f2003.Prefix("impure elemental module type(my_type)")
+    assert result.tostr() == "IMPURE ELEMENTAL MODULE TYPE(my_type)"
+    assert (result.torepr().replace("u'", "'") ==
             "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
-            "Prefix_Spec('MODULE')))")
+            "Prefix_Spec('MODULE'), Declaration_Type_Spec('TYPE', "
+            "Type_Name('my_type'))))")
 
     # multiple spaces
-    result = f2003.Prefix("  impure  elemental  module  ")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
-    assert (result.torepr() ==
+    result = f2003.Prefix("  impure  elemental  module  type ( my_type )  ")
+    assert result.tostr() == "IMPURE ELEMENTAL MODULE TYPE(my_type)"
+    assert (result.torepr().replace("u'", "'") ==
             "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
-            "Prefix_Spec('MODULE')))")
+            "Prefix_Spec('MODULE'), Declaration_Type_Spec('TYPE', "
+            "Type_Name('my_type'))))")
 
 
 def test_single_prefix_spec(f2003_create):
-    '''Test that a single prefix-spec is returned as a Prefix containing a
-    Prefix_Spec.
+    '''Test that a single prefix-spec can be returned as a Prefix
+    containing a Prefix_Spec.
 
     '''
     result = f2003.Prefix("impure")
@@ -69,10 +71,23 @@ def test_single_prefix_spec(f2003_create):
             "Prefix(' ', (Prefix_Spec('IMPURE'),))")
 
 
+def test_single_decl_spec(f2003_create):
+    '''Test that a single prefix-spec can be returned as a Prefix containing a
+    Declaration_Type_Spec.
+
+    '''
+    result = f2003.Prefix(" type ( my_type ) ")
+    assert result.tostr() == "TYPE(my_type)"
+    assert (result.torepr().replace("u'", "'") ==
+            "Prefix(' ', (Declaration_Type_Spec('TYPE', "
+            "Type_Name('my_type')),))")
+
+
 def test_prefix_nomatch(f2003_create):
     '''Test that invalid Prefix strings raise a NoMatchError exception.
 
     '''
-    for string in ["invalid", "pure impure purile", "", " "]:
+    for string in ["invalid", "pure impure purile", "", " ", "typ(my_type)",
+                   "type()", "pure type()", "type(my_type) purile"]:
         with pytest.raises(NoMatchError):
             _ = f2003.Prefix(string)
