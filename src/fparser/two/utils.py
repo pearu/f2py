@@ -702,7 +702,28 @@ class SequenceBase(Base):
         if not splitted:
             # There should be at least one entry.
             return None
-        lst = [subcls(repmap(entry.strip())) for entry in splitted]
+        lst = []
+        while len(splitted)>1:
+            str_to_match = repmap(splitted[0].strip())
+            try:
+                result = subcls(str_to_match)
+            except:
+                result = None
+            if result:
+                # print "MATCHED {0}".format(splitted[0])
+                splitted = splitted[1:]
+                lst.append(result)
+            else:
+                # print "FAILED TO MATCH {0}".format(splitted[0])
+                orig = []
+                if len(splitted)>2:
+                    orig = splitted[2:]
+                splitted = [splitted[0] + splitted[1]]
+                splitted.extend(orig)
+
+        lst.append(subcls(repmap(splitted[0].strip())))
+
+        #lst = [subcls(repmap(entry.strip())) for entry in splitted]
         return separator, tuple(lst)
 
     def init(self, separator, items):
