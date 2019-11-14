@@ -702,42 +702,29 @@ class SequenceBase(Base):
         if not splitted:
             # There should be at least one entry.
             return None
-
-        # Attempt to match each of the entries one at a time. If the
-        # match fails then join the first two entries and repeat. The
-        # reason for doing this is that a simple split might split a
-        # valid match in two in certain circumstances. For example
-        # 'recursive type( my_type ) module' should match as
-        # 'recursive', 'type( my_type )' and 'module'. However, as the
-        # splitting is based on spaces in this case, we get
-        # ['recursive', 'type(', 'my_type', 'module'].
-        result_list = []
-        while len(splitted) > 1:
+        lst = []
+        while len(splitted)>1:
             str_to_match = repmap(splitted[0].strip())
             try:
                 result = subcls(str_to_match)
-            except NoMatchError:
-                # Catch any exception as it is not fatal if we do
-                # not match.
+            except:
                 result = None
             if result:
-                # We have a match, so save it and move on to the next
-                # entry.
+                # print "MATCHED {0}".format(splitted[0])
                 splitted = splitted[1:]
-                result_list.append(result)
+                lst.append(result)
             else:
-                # We have failed to match so merge the 1st and second
-                # entries and retry.
-                orig_rhs = []
-                if len(splitted) > 2:
-                    orig_rhs = splitted[2:]
+                # print "FAILED TO MATCH {0}".format(splitted[0])
+                orig = []
+                if len(splitted)>2:
+                    orig = splitted[2:]
                 splitted = [splitted[0] + splitted[1]]
-                splitted.extend(orig_rhs)
+                splitted.extend(orig)
 
-        # This is the last match, so do not intercept any exceptions.
-        result_list.append(subcls(repmap(splitted[0].strip())))
+        lst.append(subcls(repmap(splitted[0].strip())))
 
-        return separator, tuple(result_list)
+        #lst = [subcls(repmap(entry.strip())) for entry in splitted]
+        return separator, tuple(lst)
 
     def init(self, separator, items):
         '''Store the result of the match method if the match is successful.
