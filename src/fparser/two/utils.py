@@ -693,7 +693,9 @@ class SequenceBase(Base):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
                 "be a string but found '{0}'.".format(type(string)))
-
+        if separator == ' ':
+            raise InternalError(
+                "SequenceBase class match method argument separator can not be white space")
         line, repmap = string_replace_map(string)
         # Remove multiple spaces in the string. This avoids empty
         # matches when the separator is white space.
