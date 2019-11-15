@@ -3950,6 +3950,7 @@ def test_function_stmt():  # R1224
     with pytest.raises(NoMatchError):
         _ = tcls('elemental real function foo() result(b) bind(c)')
 
+
 def test_dummy_arg_name():  # R1226
 
     tcls = Dummy_Arg_Name
@@ -4083,6 +4084,7 @@ def test_subroutine_stmt():  # R1232
     # subroutine-stmt.
     with pytest.raises(NoMatchError):
         _ = tcls('elemental module subroutine foo() bind(c)')
+
 
 def test_dummy_arg():  # R1233
 

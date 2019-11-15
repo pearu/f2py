@@ -92,8 +92,8 @@ def test_decl_spec_lhs(f2003_create):
     result = f2003.Prefix("impure type(my_type)")
     assert result.tostr() == "IMPURE TYPE(my_type)"
     assert (result.torepr() ==
-            "Prefix(' ', (Prefix_Spec('IMPURE'), Declaration_Type_Spec('TYPE', "
-            "Type_Name('my_type'))))")
+            "Prefix(' ', (Prefix_Spec('IMPURE'), Declaration_Type_Spec("
+            "'TYPE', Type_Name('my_type'))))")
 
 
 def test_decl_spec_rhs(f2003_create):
@@ -148,4 +148,3 @@ def test_prefix_c1241(f2003_create):
     '''
     with pytest.raises(NoMatchError):
         _ = f2003.Prefix("recursive elemental")
-

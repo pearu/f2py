@@ -9877,7 +9877,7 @@ class Prefix(SequenceBase):
             # C1240 A prefix shall contain at most one of each
             # prefix-spec. No need to check declaration-type-spec as
             # that is limited to at most one by design.
-            return None 
+            return None
         if "ELEMENTAL" in keyword_list and "RECURSIVE" in keyword_list:
             # C1241 A prefix shall not specify both ELEMENTAL and RECURSIVE.
             return None
@@ -9900,6 +9900,7 @@ class Prefix_Spec(STRINGBase):  # R1228
     subclass_names = ['Declaration_Type_Spec']
     # issue #221. IMPURE and MODULE are Fortran2008.
     keywords = ['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE', 'RECURSIVE']
+
     def match(string):
         '''
         Matches procedure prefixes.

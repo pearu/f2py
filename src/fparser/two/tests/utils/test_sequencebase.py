@@ -37,7 +37,7 @@ utils.py'''
 
 import pytest
 from fparser.two.utils import SequenceBase, InternalError
-from fparser.two.Fortran2003 import Name, Entity_Decl
+from fparser.two.Fortran2003 import Name
 
 
 def test_match_invalid_separator(f2003_create):
