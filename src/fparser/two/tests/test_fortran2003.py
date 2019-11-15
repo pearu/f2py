@@ -3932,6 +3932,23 @@ def test_function_stmt():  # R1224
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL FUNCTION foo(a) RESULT(b) BIND(C)'
 
+    obj = tcls('elemental real function foo(a) result(b)')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'ELEMENTAL REAL FUNCTION foo(a) RESULT(b)'
+
+    obj = tcls('type(ELEMENTAL_type) function foo(a) bind(c)')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'TYPE(ELEMENTAL_type) FUNCTION foo(a) BIND(C)'
+
+    # Constraint C1242. A prefix shall not specify ELEMENTAL if
+    # proc-language-binding-spec appears in the function-stmt or
+    # subroutine-stmt.
+    with pytest.raises(NoMatchError):
+        _ = tcls('elemental real function foo() bind(c)')
+    with pytest.raises(NoMatchError):
+        _ = tcls('elemental real function foo() bind(c) result(b)')
+    with pytest.raises(NoMatchError):
+        _ = tcls('elemental real function foo() result(b) bind(c)')
 
 def test_dummy_arg_name():  # R1226
 
@@ -4061,6 +4078,11 @@ def test_subroutine_stmt():  # R1232
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'SUBROUTINE foo(*)'
 
+    # Constraint C1242. A prefix shall not specify ELEMENTAL if
+    # proc-language-binding-spec appears in the function-stmt or
+    # subroutine-stmt.
+    with pytest.raises(NoMatchError):
+        _ = tcls('elemental module subroutine foo() bind(c)')
 
 def test_dummy_arg():  # R1233
 

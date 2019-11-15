@@ -79,7 +79,7 @@ from fparser.common.readfortran import FortranReaderBase
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
-    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
+    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk_ast
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
     InternalSyntaxError, InternalError, show_result
 
@@ -9739,7 +9739,7 @@ class Function_Stmt(StmtBase):  # R1224
     C1242 (R1227) A prefix shall not specify ELEMENTAL if
     proc-language-binding-spec appears in the function-stmt or
     subroutine-stmt. The spec associates this constraint with R1227
-    but it needs to be checked here. ******
+    but it needs to be checked here.
 
     """
     subclass_names = []
@@ -9772,6 +9772,18 @@ class Function_Stmt(StmtBase):  # R1224
         suffix = None
         if line:
             suffix = Suffix(repmap(line))
+        if suffix and prefix:
+            # A suffix may or may not contain a binding spec
+            binding_spec = walk_ast([suffix], my_types=[Language_Binding_Spec])
+            # Prefix(es) may or may not be of type ELEMENTAL
+            elemental = any("ELEMENTAL" in str(child)
+                            for child in walk_ast(prefix.items,
+                                                  my_types=[Prefix_Spec]))
+            if binding_spec and elemental:
+                # Constraint C1242. A prefix shall not specify ELEMENTAL if
+                # proc-language-binding-spec appears in the function-stmt or
+                # subroutine-stmt.
+                return None
         return prefix, name, dummy_args, suffix
 
     def tostr(self):
@@ -9819,8 +9831,6 @@ class Prefix(SequenceBase):
     subroutine-stmt. This constraint can not be checked here, it is
     checked in R1224 and R1232.
 
-    ****** f2003 spec only has recursive, pure and elemental. So what about the others?
-
     '''
     subclass_names = []
 
@@ -9836,8 +9846,6 @@ class Prefix(SequenceBase):
         :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`,)) \
         or NoneType
 
-        ****** better error messages.
-
         '''
         start_match_list = []
         end_match_list = []
@@ -9845,22 +9853,23 @@ class Prefix(SequenceBase):
         keyword_list = []
         split = string.split()
         # Match prefix-spec (apart from declaration-type-spec) from
-        # the left of the string. These are simple as they are
-        # guaranteed to not contain any whitespace (as they are
-        # keywords).
+        # the left end of the string. These can be tokenised with a
+        # simple split as they are guaranteed to not contain any
+        # whitespace (as they are keywords).
         while split and split[0].upper() in Prefix_Spec.keywords:
             start_match_list.append(Prefix_Spec(split[0]))
             keyword_list.append(split[0].upper())
             split = split[1:]
         # Match prefix-spec (apart from declaration-type-spec) from
-        # the right of the string.
+        # the right end of the string.
         while split and split[-1].upper() in Prefix_Spec.keywords:
             end_match_list.insert(0, Prefix_Spec(split[-1]))
             keyword_list.append(split[0].upper())
             split = split[:-1]
         # What is remaining must be a declaration-type-spec (or is
         # empty) as only one of each prefix-spec is allowed in a
-        # prefix (C1240).
+        # prefix (C1240). This may contain internal white space so
+        # join the remaining parts together.
         remaining = " ".join(split)
         if remaining:
             decl_spec_list = [Declaration_Type_Spec(remaining)]
@@ -9868,7 +9877,6 @@ class Prefix(SequenceBase):
             # C1240 A prefix shall contain at most one of each
             # prefix-spec. No need to check declaration-type-spec as
             # that is limited to at most one by design.
-            # ???? raise FortranSyntaxError(string, "A prefix should only contain one of each prefix-spec")
             return None 
         if "ELEMENTAL" in keyword_list and "RECURSIVE" in keyword_list:
             # C1241 A prefix shall not specify both ELEMENTAL and RECURSIVE.
@@ -9880,7 +9888,7 @@ class Prefix(SequenceBase):
         return None
 
 
-class Prefix_Spec(STRINGBase):  # R1226
+class Prefix_Spec(STRINGBase):  # R1228
     """
     <prefix-spec> = <declaration-type-spec>
                     | ELEMENTAL
@@ -9890,6 +9898,7 @@ class Prefix_Spec(STRINGBase):  # R1226
                     | RECURSIVE
     """
     subclass_names = ['Declaration_Type_Spec']
+    # issue #221. IMPURE and MODULE are Fortran2008.
     keywords = ['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE', 'RECURSIVE']
     def match(string):
         '''
@@ -9991,7 +10000,7 @@ class Subroutine_Stmt(StmtBase):  # R1232
     C1242 (R1227) A prefix shall not specify ELEMENTAL if
     proc-language-binding-spec appears in the function-stmt or
     subroutine-stmt. The spec associates this constraint with R1227
-    but it needs to be checked here. ******
+    but it needs to be checked here.
 
     """
     subclass_names = []
@@ -10024,6 +10033,16 @@ class Subroutine_Stmt(StmtBase):  # R1232
         binding_spec = None
         if line:
             binding_spec = Proc_Language_Binding_Spec(repmap(line))
+        if binding_spec and prefix:
+            # Prefix(es) may or may not be of type ELEMENTAL
+            elemental = any("ELEMENTAL" in str(child)
+                            for child in walk_ast(prefix.items,
+                                                  my_types=[Prefix_Spec]))
+            if elemental:
+                # Constraint C1242. A prefix shall not specify ELEMENTAL if
+                # proc-language-binding-spec appears in the function-stmt or
+                # subroutine-stmt.
+                return None
         return prefix, name, dummy_args, binding_spec
     match = staticmethod(match)
 
