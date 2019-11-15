@@ -9735,6 +9735,12 @@ class Function_Stmt(StmtBase):  # R1224
     """
     <function-stmt> = [ <prefix> ] FUNCTION <function-name>
                       ( [ <dummy-arg-name-list> ] ) [ <suffix> ]
+
+    C1242 (R1227) A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt. The spec associates this constraint with R1227
+    but it needs to be checked here. ******
+
     """
     subclass_names = []
     use_names = ['Prefix', 'Function_Name', 'Dummy_Arg_Name_List', 'Suffix']
@@ -9810,9 +9816,10 @@ class Prefix(SequenceBase):
 
     C1242 (R1227) A prefix shall not specify ELEMENTAL if
     proc-language-binding-spec appears in the function-stmt or
-    subroutine-stmt. This constraint can not be checked here.
+    subroutine-stmt. This constraint can not be checked here, it is
+    checked in R1224 and R1232.
 
-    *** f2003 spec only has recursive, pure and elemental. So what about the others?
+    ****** f2003 spec only has recursive, pure and elemental. So what about the others?
 
     '''
     subclass_names = []
@@ -9828,6 +9835,8 @@ class Prefix(SequenceBase):
 
         :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`,)) \
         or NoneType
+
+        ****** better error messages.
 
         '''
         start_match_list = []
@@ -9859,6 +9868,7 @@ class Prefix(SequenceBase):
             # C1240 A prefix shall contain at most one of each
             # prefix-spec. No need to check declaration-type-spec as
             # that is limited to at most one by design.
+            # ???? raise FortranSyntaxError(string, "A prefix should only contain one of each prefix-spec")
             return None 
         if "ELEMENTAL" in keyword_list and "RECURSIVE" in keyword_list:
             # C1241 A prefix shall not specify both ELEMENTAL and RECURSIVE.
@@ -9974,10 +9984,15 @@ class Subroutine_Subprogram(BlockBase):  # R1231
 
 
 class Subroutine_Stmt(StmtBase):  # R1232
-    """
-    <subroutine-stmt>
+    """<subroutine-stmt>
     = [ <prefix> ] SUBROUTINE <subroutine-name>
       [ ( [ <dummy-arg-list> ] ) [ <proc-language-binding-spec> ] ]
+
+    C1242 (R1227) A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt. The spec associates this constraint with R1227
+    but it needs to be checked here. ******
+
     """
     subclass_names = []
     use_names = ['Prefix', 'Subroutine_Name', 'Dummy_Arg_List',
