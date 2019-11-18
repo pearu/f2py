@@ -44,17 +44,19 @@ def test_prefix(f2003_create):
 
     '''
     # single space
-    result = f2003.Prefix("impure elemental module")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
+    result = f2003.Prefix("impure elemental type(my_type) module")
+    assert result.tostr() == "IMPURE ELEMENTAL TYPE(my_type) MODULE"
     assert (result.torepr() ==
             "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
+            "Declaration_Type_Spec('TYPE', Type_Name('my_type')), "
             "Prefix_Spec('MODULE')))")
 
     # multiple spaces
-    result = f2003.Prefix("  impure  elemental  module  ")
-    assert result.tostr() == "IMPURE ELEMENTAL MODULE"
+    result = f2003.Prefix("  impure  elemental  type  (  my_type  )  module  ")
+    assert result.tostr() == "IMPURE ELEMENTAL TYPE(my_type) MODULE"
     assert (result.torepr() ==
             "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('ELEMENTAL'), "
+            "Declaration_Type_Spec('TYPE', Type_Name('my_type')), "
             "Prefix_Spec('MODULE')))")
 
 
@@ -69,10 +71,84 @@ def test_single_prefix_spec(f2003_create):
             "Prefix(' ', (Prefix_Spec('IMPURE'),))")
 
 
-def test_prefix_nomatch(f2003_create):
+def test_single_decl_spec(f2003_create):
+    '''Test that a single prefix-spec is returned as a Prefix containing a
+    declaration-type-spec.
+
+    '''
+    result = f2003.Prefix("type(my_type)")
+    assert result.tostr() == "TYPE(my_type)"
+    assert (result.torepr() ==
+            "Prefix(' ', (Declaration_Type_Spec('TYPE', "
+            "Type_Name('my_type')),))")
+
+
+def test_decl_spec_lhs(f2003_create):
+    '''Test that a Prefix containing a declaration-type-spec and
+    prefix-spec keywords (e.g. IMPURE) to its left, produce the
+    expected output.
+
+    '''
+    result = f2003.Prefix("impure recursive type(my_type)")
+    assert result.tostr() == "IMPURE RECURSIVE TYPE(my_type)"
+    assert (result.torepr() ==
+            "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('RECURSIVE'), "
+            "Declaration_Type_Spec('TYPE', Type_Name('my_type'))))")
+
+
+def test_decl_spec_rhs(f2003_create):
+    '''Test that a Prefix containing a declaration-type-spec and
+    prefix-spec keywords (e.g. IMPURE) to its right, produce the
+    expected output.
+
+    '''
+    result = f2003.Prefix("type(my_type) impure recursive")
+    assert result.tostr() == "TYPE(my_type) IMPURE RECURSIVE"
+    assert (result.torepr() ==
+            "Prefix(' ', (Declaration_Type_Spec('TYPE', "
+            "Type_Name('my_type')), Prefix_Spec('IMPURE'), "
+            "Prefix_Spec('RECURSIVE')))")
+
+
+def test_no_decl_spec(f2003_create):
+    '''Test that a Prefix without a declaration-type-spec produces the
+    expected output.
+
+    '''
+    result = f2003.Prefix("module impure")
+    assert result.tostr() == "MODULE IMPURE"
+    assert (result.torepr() ==
+            "Prefix(' ', (Prefix_Spec('MODULE'), Prefix_Spec('IMPURE')))")
+
+
+@pytest.mark.parametrize("string", ["invalid", "pure impure purile", "", " "])
+def test_prefix_nomatch(f2003_create, string):
     '''Test that invalid Prefix strings raise a NoMatchError exception.
 
     '''
-    for string in ["invalid", "pure impure purile", "", " "]:
-        with pytest.raises(NoMatchError):
-            _ = f2003.Prefix(string)
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix(string)
+
+
+def test_prefix_c1240(f2003_create):
+    '''Test that an exception is raised if constraint c1240 is broken (at
+    most one of each prefix-spec).
+
+    '''
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix("module module")
+
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix("type(my_type) type(my_type2)")
+
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix("module type(my_type2) module")
+
+
+def test_prefix_c1241(f2003_create):
+    '''Test that an exception is raised if constraint c1241 is broken
+    (elemental and recursive are used together).
+
+    '''
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix("recursive elemental")

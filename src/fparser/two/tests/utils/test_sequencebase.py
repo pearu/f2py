@@ -37,7 +37,7 @@ utils.py'''
 
 import pytest
 from fparser.two.utils import SequenceBase, InternalError
-from fparser.two.Fortran2003 import Name, Entity_Decl
+from fparser.two.Fortran2003 import Name
 
 
 def test_match_invalid_separator(f2003_create):
@@ -99,30 +99,23 @@ def test_match_repmap(f2003_create):
             "None),))))")
 
 
-def test_match_matchempty(f2003_create):
-    '''Test the sequencebase match method matches when the separator is a
-    space and there are multiple spaces between the items.
+def test_match_space(f2003_create):
+    '''Test the sequencebase match method raises an exception when the
+    separator is white space.
 
     '''
     separator = " "
     subcls = Name
-    # Multiple spaces should match
-    options = ["a b", "a  b", " a    b "]
-    for string in options:
-        result = SequenceBase.match(separator, subcls, string)
-        assert str(result) == "(' ', (Name('a'), Name('b')))"
+    with pytest.raises(InternalError) as excinfo:
+        _ = SequenceBase.match(separator, subcls, "a b")
+    assert (
+        "SequenceBase class match method argument separator cannot be white "
+        "space." in str(excinfo.value))
 
 
 def test_match_instance(f2003_create):
     '''Test the sequencebase init, tostr and torepr methods.'''
-    from fparser.two.Fortran2003 import Data_Ref, Prefix, Type_Param_Name_List
-
-    # ' ' separator.
-    obj = Prefix("ELEMENTAL  IMPURE RECURSIVE")
-    assert obj.tostr() == "ELEMENTAL IMPURE RECURSIVE"
-    assert (obj.torepr() ==
-            "Prefix(' ', (Prefix_Spec('ELEMENTAL'), Prefix_Spec('IMPURE'), "
-            "Prefix_Spec('RECURSIVE')))")
+    from fparser.two.Fortran2003 import Data_Ref, Type_Param_Name_List
 
     # ',' separator.
     obj = Type_Param_Name_List("a,b,c")
@@ -130,30 +123,7 @@ def test_match_instance(f2003_create):
     assert (obj.torepr() ==
             "Type_Param_Name_List(',', (Name('a'), Name('b'), Name('c')))")
 
-    # Separator that is not ',' or ' '
+    # '%' separator.
     obj = Data_Ref("a%b%c")
     assert obj.tostr() == "a % b % c"
     assert obj.torepr() == "Data_Ref('%', (Name('a'), Name('b'), Name('c')))"
-
-
-def test_match_repmap_spaces(f2003_create):
-    '''Test the sequencebase match method matches when the separator is a
-    space, repmap is required and there are multiple spaces between
-    the items. This situation does not currently occur in the existing
-    Fortran classes but should be checked in any case.
-
-    '''
-    separator = " "
-    subcls = Entity_Decl
-    # Multiple spaces with repmap tuples should match
-    options = ["a(n(1)) b(n(2))", "a(n(1))  b(n(2))", " a(n(1))    b(n(2)) "]
-    for string in options:
-        result = SequenceBase.match(separator, subcls, string)
-        assert str(result).replace('u', '') == (
-            "(' ', (Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
-            "(Explicit_Shape_Spec(None, Part_Ref(Name('n'), "
-            "Section_Sbscript_List(',', (Int_Literal_Constant('1', "
-            "None),)))),)), None, None), Entity_Decl(Name('b'), "
-            "Explicit_Shape_Spec_List(',', (Explicit_Shape_Spec(None, "
-            "Part_Ref(Name('n'), Section_Sbscript_List(',', "
-            "(Int_Literal_Constant('2', None),)))),)), None, None)))")

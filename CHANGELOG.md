@@ -13,6 +13,9 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+18/11/2019 PR #220 for #219. Fixes bug in the parsing of prefix
+           specifications containing white space.
+
 ## Release 0.0.9 (04/11/2019) ##
 
 04/11/2019 PR #208 for #207. Adds support for utf characters in Fortran
