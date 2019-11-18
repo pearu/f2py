@@ -89,11 +89,11 @@ def test_decl_spec_lhs(f2003_create):
     expected output.
 
     '''
-    result = f2003.Prefix("impure type(my_type)")
-    assert result.tostr() == "IMPURE TYPE(my_type)"
+    result = f2003.Prefix("impure recursive type(my_type)")
+    assert result.tostr() == "IMPURE RECURSIVE TYPE(my_type)"
     assert (result.torepr() ==
-            "Prefix(' ', (Prefix_Spec('IMPURE'), Declaration_Type_Spec("
-            "'TYPE', Type_Name('my_type'))))")
+            "Prefix(' ', (Prefix_Spec('IMPURE'), Prefix_Spec('RECURSIVE'), "
+            "Declaration_Type_Spec('TYPE', Type_Name('my_type'))))")
 
 
 def test_decl_spec_rhs(f2003_create):
@@ -102,11 +102,12 @@ def test_decl_spec_rhs(f2003_create):
     expected output.
 
     '''
-    result = f2003.Prefix("type(my_type) impure")
-    assert result.tostr() == "TYPE(my_type) IMPURE"
+    result = f2003.Prefix("type(my_type) impure recursive")
+    assert result.tostr() == "TYPE(my_type) IMPURE RECURSIVE"
     assert (result.torepr() ==
             "Prefix(' ', (Declaration_Type_Spec('TYPE', "
-            "Type_Name('my_type')), Prefix_Spec('IMPURE')))")
+            "Type_Name('my_type')), Prefix_Spec('IMPURE'), "
+            "Prefix_Spec('RECURSIVE')))")
 
 
 def test_no_decl_spec(f2003_create):
@@ -139,6 +140,9 @@ def test_prefix_c1240(f2003_create):
 
     with pytest.raises(NoMatchError):
         _ = f2003.Prefix("type(my_type) type(my_type2)")
+
+    with pytest.raises(NoMatchError):
+        _ = f2003.Prefix("module type(my_type2) module")
 
 
 def test_prefix_c1241(f2003_create):

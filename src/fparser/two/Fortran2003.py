@@ -9772,17 +9772,11 @@ class Function_Stmt(StmtBase):  # R1224
         suffix = None
         if line:
             suffix = Suffix(repmap(line))
-        if suffix and prefix:
-            # A suffix may or may not contain a binding spec
+        if suffix:
+            # A suffix may or may not contain a binding spec.
             binding_spec = walk_ast([suffix], my_types=[Language_Binding_Spec])
-            # Prefix(es) may or may not be of type ELEMENTAL
-            elemental = any("ELEMENTAL" in str(child)
-                            for child in walk_ast(prefix.items,
-                                                  my_types=[Prefix_Spec]))
-            if binding_spec and elemental:
-                # Constraint C1242. A prefix shall not specify ELEMENTAL if
-                # proc-language-binding-spec appears in the function-stmt or
-                # subroutine-stmt.
+            # Check that we conform to C1242.
+            if not c1242_valid(prefix, binding_spec):
                 return None
         return prefix, name, dummy_args, suffix
 
@@ -9864,7 +9858,7 @@ class Prefix(SequenceBase):
         # the right end of the string.
         while split and split[-1].upper() in Prefix_Spec.keywords:
             end_match_list.insert(0, Prefix_Spec(split[-1]))
-            keyword_list.append(split[0].upper())
+            keyword_list.append(split[-1].upper())
             split = split[:-1]
         # What is remaining must be a declaration-type-spec (or is
         # empty) as only one of each prefix-spec is allowed in a
@@ -9993,6 +9987,37 @@ class Subroutine_Subprogram(BlockBase):  # R1231
     match = staticmethod(match)
 
 
+def c1242_valid(prefix, binding_spec):
+    '''If prefix and binding-spec exist then check whether they conform to
+    constraint C1242 : "A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt."
+
+    :param prefix: matching prefix instance if one exists.
+    :type: :py:class:`fparser.two.Fortran2003.Prefix` or `NoneType`
+    :param binding_spec: matching binding specification instance if \
+        one exists.
+    :type binding_spec: \
+        :py:class:`fparser.two.Fortran2003.Language_Binding_Spec` or
+        `NoneType`
+    :returns: False if prefix and binding-spec break constraint C1242, \
+        otherwise True.
+    :rtype: bool
+
+    '''
+    if binding_spec and prefix:
+        # Prefix(es) may or may not be of type ELEMENTAL
+        elemental = any("ELEMENTAL" in str(child)
+                        for child in walk_ast(prefix.items,
+                                              my_types=[Prefix_Spec]))
+        if elemental:
+            # Constraint C1242. A prefix shall not specify ELEMENTAL if
+            # proc-language-binding-spec appears in the function-stmt or
+            # subroutine-stmt.
+            return False
+    return True
+
+
 class Subroutine_Stmt(StmtBase):  # R1232
     """<subroutine-stmt>
     = [ <prefix> ] SUBROUTINE <subroutine-name>
@@ -10034,16 +10059,8 @@ class Subroutine_Stmt(StmtBase):  # R1232
         binding_spec = None
         if line:
             binding_spec = Proc_Language_Binding_Spec(repmap(line))
-        if binding_spec and prefix:
-            # Prefix(es) may or may not be of type ELEMENTAL
-            elemental = any("ELEMENTAL" in str(child)
-                            for child in walk_ast(prefix.items,
-                                                  my_types=[Prefix_Spec]))
-            if elemental:
-                # Constraint C1242. A prefix shall not specify ELEMENTAL if
-                # proc-language-binding-spec appears in the function-stmt or
-                # subroutine-stmt.
-                return None
+        if not c1242_valid(prefix, binding_spec):
+            return None
         return prefix, name, dummy_args, binding_spec
     match = staticmethod(match)
 

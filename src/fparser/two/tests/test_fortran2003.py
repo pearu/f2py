@@ -3894,6 +3894,7 @@ def test_function_subprogram():  # R1223
 
 
 def test_function_stmt():  # R1224
+    '''Check that rule R1224 (function-stmt) is parsed correctly.'''
 
     tcls = Function_Stmt
     obj = tcls('function foo()')
@@ -4044,6 +4045,7 @@ def test_subroutine_subprogram():  # R1231
 
 
 def test_subroutine_stmt():  # R1232
+    '''Check that rule R1232 (subroutine-stmt) is parsed correctly.'''
 
     tcls = Subroutine_Stmt
     obj = tcls('subroutine foo')

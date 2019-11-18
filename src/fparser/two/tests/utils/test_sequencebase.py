@@ -100,8 +100,8 @@ def test_match_repmap(f2003_create):
 
 
 def test_match_space(f2003_create):
-    '''Test the sequencebase match method matches when the separator is a
-    space and there are multiple spaces between the items.
+    '''Test the sequencebase match method raises an exception when the
+    separator is white space.
 
     '''
     separator = " "
@@ -109,7 +109,7 @@ def test_match_space(f2003_create):
     with pytest.raises(InternalError) as excinfo:
         _ = SequenceBase.match(separator, subcls, "a b")
     assert (
-        "SequenceBase class match method argument separator can not be white "
+        "SequenceBase class match method argument separator cannot be white "
         "space." in str(excinfo.value))
 
 

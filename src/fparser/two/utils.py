@@ -343,7 +343,7 @@ class Base(ComparableMixin):
                 # Check all lines up to this one for content. We
                 # should be able to only check the current line but
                 # but as the line number returned is not always
-                # correct (due to coding errors) we can not assume the
+                # correct (due to coding errors) we cannot assume the
                 # line pointed to is the line where the error actually
                 # happened.
                 if string.source_lines[index].strip():
@@ -669,20 +669,21 @@ class SequenceBase(Base):
         '''Match one or more 'subcls' fparser2 rules in the string 'string'
         separated by 'separator'.
 
-        :param str separator: The separator used to split the supplied \
+        :param str separator: the separator used to split the supplied \
         string.
-        :param subcls: An fparser2 object representing the rule that \
+        :param subcls: an fparser2 object representing the rule that \
         should be matched.
-        :type subcls: Subclass of :py:class:`fparser.two.utils.Base`
-        :param str string: The input string to match.
+        :type subcls: subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: the input string to match.
 
-        :returns: A tuple containing 1) the separator and 2) the \
+        :returns: a tuple containing 1) the separator and 2) the \
         matched objects in a tuple, or None if there is no match.
         :rtype: (str, (Subclass of \
         :py:class:`fparser.two.utils.Base`)) or NoneType
 
-        :raises InternalError: If the separator or string arguments \
+        :raises InternalError: if the separator or string arguments \
         are not the expected type.
+        :raises InternalError: if the separator is white space.
 
         '''
         if not isinstance(separator, (str, six.text_type)):
@@ -696,12 +697,9 @@ class SequenceBase(Base):
 
         if separator == ' ':
             raise InternalError(
-                "SequenceBase class match method argument separator can not "
+                "SequenceBase class match method argument separator cannot "
                 "be white space.")
         line, repmap = string_replace_map(string)
-        # Remove multiple spaces in the string. This avoids empty
-        # matches when the separator is white space.
-        line = ' '.join(line.split())
         splitted = line.split(separator)
         if not splitted:
             # There should be at least one entry.
