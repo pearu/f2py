@@ -1,5 +1,7 @@
 # News #
 
+  * 18/11/2019 Version 0.0.10 released. See the [CHANGELOG](CHANGELOG.md)
+    for details.
   * 04/11/2019 Version 0.0.9 released. See the [CHANGELOG](CHANGELOG.md)
     for details.
   * 03/12/2018 Version 0.0.8 released. See the [CHANGELOG](CHANGELOG.md)
