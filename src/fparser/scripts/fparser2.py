@@ -101,12 +101,12 @@ def runner(_, options, args):
                                        ignore_comments=False)
         except IOError as error:
             print(error, file=sys.stderr)
-            break
+            continue
         if options.mode != 'auto':
             reader.format.from_mode(options.mode)
         try:
-            f2003_parser = ParserFactory().create(std=options.std)
-            program = f2003_parser(reader)
+            fparser = ParserFactory().create(std=options.std)
+            program = fparser(reader)
             if options.task == "show":
                 print(six.text_type(program))
             if options.task == "repr":
