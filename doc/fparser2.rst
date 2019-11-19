@@ -87,13 +87,13 @@ fparser2 provides a number of command line options
      --task=TASK    Specify parsing result task. Default: show.
      --std=STD      Specify the Fortran standard to use. Default: f2003.
 
-The `--task` option supports 'show' (the default) which outputs the
-parsed code to stdout, 'repr' which outputs the fparser2
-representation of its internal parse tree and 'none' which outputs
+The ``--task`` option supports `show` (the default) which outputs the
+parsed code to stdout, `repr` which outputs the fparser2
+representation of its internal parse tree and `none` which outputs
 nothing.
 
-The `--std` option chooses the flavour of Fortran to parse. Valid
-options are currently limited to 'f2003' (the default) and 'f2008'.
+The ``--std`` option chooses the flavour of Fortran to parse. Valid
+options are currently limited to `f2003` (the default) and `f2008`.
 
 Getting Going : Python
 ----------------------
