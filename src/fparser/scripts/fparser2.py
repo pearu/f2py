@@ -102,8 +102,6 @@ def runner(_, options, args):
         except IOError as error:
             print(error, file=sys.stderr)
             continue
-        if options.mode != 'auto':
-            reader.format.from_mode(options.mode)
         try:
             fparser = ParserFactory().create(std=options.std)
             program = fparser(reader)

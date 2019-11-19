@@ -52,29 +52,48 @@ __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
 Getting Going : Script
 ----------------------
 
-fparser2 can be run from the command line by using the `fparser2.py`
-script located in the `scripts` directory. One or more input files can
-be provided. These files are parsed in turn and the parsed Fortran is output
-to the screen (most likely with a different formatting to the input as
+Once installed, fparser2 can be run from the command line by using the
+`fparser2` script. One or more input files can be provided. These
+files are parsed in turn and the parsed Fortran is output to the
+screen (most likely with a different formatting to the input as
 fparser2 does not preserve format), or an appropriate error is output.
 ::
 
-   >>> cat simple.f90
+   > cat simple.f90
    program simple
    end
-   >>> src/fparser/scripts/fparser2.py simple.f90
+   > fparser2 simple.f90
    PROGRAM simple
    END PROGRAM simple
-   >>> cat error.f90
+   > cat error.f90
    prog error
    end
-   >>> src/fparser/scripts/fparser2.py error.f90
+   > fparser2 error.f90
+   File: 'error.f90'
    Syntax error: at line 1
    >>>prog error
 
-   parsing 'src/error.f90' failed at line #1'prog error'
-   started at line #1'prog error'
+fparser2 provides a number of command line options
+::
 
+   > fparser2 -h
+   Usage: fparser2 [options] <Fortran files>
+
+   Description:
+     fparser2 parses Fortran code.
+
+   Options:
+     -h, --help     show this help message and exit
+     --task=TASK    Specify parsing result task. Default: show.
+     --std=STD      Specify the Fortran standard to use. Default: f2003.
+
+The `--task` option supports 'show' (the default) which outputs the
+parsed code to stdout, 'repr' which outputs the fparser2
+representation of its internal parse tree and 'none' which outputs
+nothing.
+
+The `--std` option chooses the flavour of Fortran to parse. Valid
+options are currently limited to 'f2003' (the default) and 'f2008'.
 
 Getting Going : Python
 ----------------------

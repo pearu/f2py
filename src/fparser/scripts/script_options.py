@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -115,8 +116,8 @@ Description:
                       choices = ['f2003', 'f2008'],
                       help = 'Specify the Fortran standard to use. Default: %default.'
                       )
-    parser.add_option_group(get_fortran_code_group(parser))
-    
+
+
 def get_fortran_code_group(parser):
     group = OptionGroup (parser, 'Fortran code options',
                          description = 'Specify information about Fortran codes.')
