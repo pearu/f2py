@@ -51,6 +51,7 @@ class DummyArgs(object):
     ''' dummy object pretending to be the argument options '''
     mode = "auto"
     task = "show"
+    std = "f2003"
 
 
 def test_runner_no_files(capsys):
@@ -60,8 +61,8 @@ def test_runner_no_files(capsys):
         fparser2.runner(None, DummyArgs(), [])
     assert str(excinfo.value) == "1"
     # capture the output and check that the appropriate error has been reported
-    stdout, _ = capsys.readouterr()
-    assert "Error: No fortran files specified" in stdout
+    _, stderr = capsys.readouterr()
+    assert "Error: No fortran files specified" in stderr
 
 
 def test_runner_non_existant_file(capsys):
@@ -72,8 +73,8 @@ def test_runner_non_existant_file(capsys):
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgs(), ["idontexist.txt"])
     # capture the output and check that the appropriate error has been reported
-    stdout, _ = capsys.readouterr()
-    assert "No such file or directory" in stdout
+    _, stderr = capsys.readouterr()
+    assert "No such file or directory" in stderr
 
 
 def test_runner_set_mode(tmpdir, capsys):
@@ -88,6 +89,7 @@ def test_runner_set_mode(tmpdir, capsys):
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "show"
+        std = "f2003"
     # run the relevant script method (runner())
     fparser2.runner(None, DummyArgsFree(), [my_file.strpath])
     # capture the output and check that the code has been output
@@ -101,14 +103,13 @@ def test_runner_syntax_error(tmpdir, capsys):
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("prog error\nend program error\n")
     # run the relevant script method (runner())
-    with pytest.raises(SystemExit) as excinfo:
-        fparser2.runner(None, DummyArgs(), [my_file.strpath])
-    assert str(excinfo.value) == "1"
+    fparser2.runner(None, DummyArgs(), [my_file.strpath])
     # capture the output and check that the appropriate error has been
     # reported
-    stdout, _ = capsys.readouterr()
-    assert "Syntax error: at line 1\n>>>prog error" in stdout
-    assert "failed at line #1'prog error'" in stdout
+    _, stderr = capsys.readouterr()
+    assert "File: '" in stderr
+    assert "hello.f90'" in stderr
+    assert "Syntax error: at line 1\n>>>prog error" in stderr
 
 
 def test_runner_syntax_error_2(tmpdir, capsys):
@@ -123,14 +124,14 @@ def test_runner_syntax_error_2(tmpdir, capsys):
     my_file.write("program error\nif (.true.) then\nend if label\n"
                   "end program error\n")
     # run the relevant script method (runner())
-    with pytest.raises(SystemExit) as excinfo:
-        fparser2.runner(None, DummyArgs(), [my_file.strpath])
-    assert str(excinfo.value) == "1"
+    fparser2.runner(None, DummyArgs(), [my_file.strpath])
     # capture the output and check that the appropriate error has been reported
     # There should be no file information (output by the script)
-    stdout, _ = capsys.readouterr()
-    assert (stdout == "Syntax error: at line 3\n>>>end if label\nName "
-            "'label' has no corresponding starting name\n")
+    _, stderr = capsys.readouterr()
+    assert "File: '" in stderr
+    assert "hello.f90'" in stderr
+    assert ("Syntax error: at line 3\n>>>end if label\nName "
+            "'label' has no corresponding starting name\n" in stderr)
 
 
 def test_runner_internal_error(tmpdir, monkeypatch, capsys):
@@ -141,7 +142,7 @@ def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     # Create a dummy function that replaces the parser
     error_string = "monkey trouble"
 
-    def dummy_parser(_):
+    def dummy_parser(_self, std="f2003"):
         ''' dummy function that simply raises an internal error '''
         raise InternalError(error_string)
     # monkeypatch the parser so that it returns an InternalError exception.
@@ -149,12 +150,10 @@ def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     from fparser.two.utils import InternalError
     monkeypatch.setattr(ParserFactory, "create", dummy_parser)
     # run the relevant script method (runner())
-    with pytest.raises(SystemExit) as excinfo:
-        fparser2.runner(None, DummyArgs(), [my_file.strpath])
-    assert str(excinfo.value) == "1"
+    fparser2.runner(None, DummyArgs(), [my_file.strpath])
     # capture the output and check that the appropriate error has been reported
-    stdout, _ = capsys.readouterr()
-    assert "Internal error in fparser: '{0}'".format(error_string) in stdout
+    _, stderr = capsys.readouterr()
+    assert "Internal error in fparser: '{0}'".format(error_string) in stderr
 
 
 def test_runner_output_task_show(tmpdir, capsys):
@@ -166,6 +165,7 @@ def test_runner_output_task_show(tmpdir, capsys):
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "show"
+        std = "f2003"
 
     # Create a temporary file containing Fortran code to pass into
     # runner().
@@ -187,6 +187,7 @@ def test_runner_output_task_repr(tmpdir, capsys):
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "repr"
+        std = "f2003"
 
     # Create a temporary file containing Fortran code to pass into
     # runner().
@@ -210,6 +211,7 @@ def test_runner_output_task_none(tmpdir, capsys):
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "none"
+        std = "f2003"
 
     # Create a temporary file containing Fortran code to pass into
     # runner().

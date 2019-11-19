@@ -67,6 +67,7 @@
 ''' Example script to parse a Fortran program using fparser '''
 from __future__ import print_function
 import logging
+import sys
 from fparser.scripts.script_options import set_fparser_options
 
 logging.basicConfig()
@@ -91,38 +92,31 @@ def runner(_, options, args):
     from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
     if not args:
-        print("Error: No fortran files specified")
+        print("Error: No fortran files specified", file=sys.stderr)
         raise SystemExit(1)
     for filename in args:
+        print("File: '{0}'".format(filename), file=sys.stderr)
         try:
             reader = FortranFileReader(filename,
                                        ignore_comments=False)
         except IOError as error:
-            print(error)
-            return
+            print(error, file=sys.stderr)
+            break
         if options.mode != 'auto':
             reader.format.from_mode(options.mode)
         try:
-            f2003_parser = ParserFactory().create()
+            f2003_parser = ParserFactory().create(std=options.std)
             program = f2003_parser(reader)
             if options.task == "show":
                 print(six.text_type(program))
             if options.task == "repr":
                 print(repr(program))
         except FortranSyntaxError as msg:
-            print("Syntax error: {0}".format(six.text_type(msg)))
-            try:
-                # protect the access to fifo_item[-1] in case the fifo
-                # buffer is empty
-                print('parsing %r failed at %s' % (filename,
-                                                   reader.fifo_item[-1]))
-                print('started at %s' % (reader.fifo_item[0]))
-            except IndexError:
-                pass
-            raise SystemExit(1)
+            print("Syntax error: {0}".format(six.text_type(msg)),
+                  file=sys.stderr)
         except InternalError as msg:
-            print("Internal error in fparser: {0}".format(six.text_type(msg)))
-            raise SystemExit(1)
+            print("Internal error in fparser: {0}".format(six.text_type(msg)),
+                  file=sys.stderr)
 
 
 def main():
