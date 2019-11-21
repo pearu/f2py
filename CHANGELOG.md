@@ -13,6 +13,10 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+20/11/2019 PR #224 for #223. Improvements to the fparser2 script. Errors
+           now output to stderr, command-line setting of Fortran flavour
+           honoured and no longer aborts if a syntax error is found.
+
 ## Release 0.0.10 (18/11/2019) ##
 
 18/11/2019 PR #220 for #219. Fixes bug in the parsing of prefix
