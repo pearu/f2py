@@ -38,19 +38,24 @@ of a derived type.
 '''
 
 import pytest
+from fparser.common.sourceinfo import FortranFormat
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import Component_Part
 from fparser.two.utils import NoMatchError
 
 
-@pytest.mark.parametrize("var_type", ["integer", "logical",
-                                      "character(len=1)", "real*8",
+@pytest.mark.parametrize("var_type", ["integer",
+                                      "logical",
+                                      "character(len=1)",
+                                      "real*8",
                                       "real(r_def)"])
 def test_data_component_part(f2003_create, var_type):
     ''' Test that various data component declarations are
     recognised. R440. '''
-    code = (var_type +" :: iflag")
+    code = var_type + " :: iflag"
     reader = FortranStringReader(code, ignore_comments=False)
+    # Ensure reader in in 'free-format' mode
+    reader.set_format(FortranFormat(True, False))
     obj = Component_Part(reader)
     assert "iflag" in str(obj)
 
@@ -64,6 +69,8 @@ def test_proc_component_part(f2003_create, interface, attributes):
     recognised. R445. '''
     code = "procedure({0}), {1} :: my_proc".format(interface, attributes)
     reader = FortranStringReader(code, ignore_comments=False)
+    # Ensure reader in in 'free-format' mode
+    reader.set_format(FortranFormat(True, False))
     obj = Component_Part(reader)
 
 
@@ -73,5 +80,7 @@ def test_proc_component_pointer(f2003_create, attributes):
     proc-component-attr-spec-list. '''
     code = "procedure(), {0} :: my_proc".format(attributes)
     reader = FortranStringReader(code, ignore_comments=False)
+    # Ensure reader in in 'free-format' mode
+    reader.set_format(FortranFormat(True, False))
     with pytest.raises(NoMatchError):
         _ = Component_Part(reader)

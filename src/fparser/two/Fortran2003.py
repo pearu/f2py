@@ -1594,7 +1594,7 @@ class Type_Param_Attr_Spec(STRINGBase):  # R437
 
 class Component_Part(BlockBase):  # R438
     """
-    <component-part> = [ <component-def-stmt> ]...
+    <component-part> is [ <component-def-stmt> ]...
     """
     subclass_names = []
     use_names = ['Component_Def_Stmt']
@@ -1634,16 +1634,16 @@ class Component_Part(BlockBase):  # R438
 
 class Component_Def_Stmt(Base):  # R439
     """
-    <component-def-stmt> = <data-component-def-stmt>
-                           | <proc-component-def-stmt>
+    <component-def-stmt> is <data-component-def-stmt>
+                         or <proc-component-def-stmt>
     """
     subclass_names = ['Data_Component_Def_Stmt', 'Proc_Component_Def_Stmt']
 
 
 class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
     """
-    <data-component-def-stmt> = <declaration-type-spec> [
-        [ , <component-attr-spec-list> ] :: ] <component-decl-list>
+    <data-component-def-stmt> is <declaration-type-spec> [
+             [ , <component-attr-spec-list> ] :: ] <component-decl-list>
     """
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Component_Attr_Spec_List',
@@ -1795,9 +1795,13 @@ class Proc_Component_Def_Stmt(StmtBase):  # R445
         i = line.find('::')
         if i == -1:
             return
-        return p, Proc_Component_Attr_Spec_List(
-            repmap(line[:i].rstrip())), Proc_Decl_List(
-                repmap(line[i+2:].lstrip()))
+        attr_spec_list = Proc_Component_Attr_Spec_List(
+            repmap(line[:i].rstrip()))
+        # C449 POINTER must be present in the attribute list
+        if Proc_Component_Attr_Spec('POINTER') not in attr_spec_list.items:
+            return
+        return p, attr_spec_list, Proc_Decl_List(
+            repmap(line[i+2:].lstrip()))
 
     def tostr(self):
         if self.items[0] is not None:
