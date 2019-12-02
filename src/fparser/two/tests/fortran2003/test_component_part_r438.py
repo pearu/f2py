@@ -1,4 +1,3 @@
-# This Python file uses the following encoding: utf-8
 # Copyright (c) 2019 Science and Technology Facilities Council.
 
 # All rights reserved.
@@ -33,20 +32,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-''' pytest module for the Fortran2003 Case Construct - R808.'''
+'''Test Fortran 2003 rule R438: This file tests the support for the components
+of a derived type.
 
+'''
+
+import pytest
 from fparser.common.readfortran import FortranStringReader
-from fparser.two.Fortran2003 import Case_Construct
+from fparser.two.Fortran2003 import Component_Part
+from fparser.two.utils import NoMatchError
 
 
-def test_tofortran_non_ascii(f2003_create):
-    ''' Check that the tofortran() method works when the character string
-    contains non-ascii characters. '''
-    code = (u"SELECT CASE(iflag)\n"
-            u"CASE(  30  ) ! This is a comment\n"
-            u"  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
-            u"END SELECT\n")
+@pytest.mark.parametrize("var_type", ["integer", "logical",
+                                      "character(len=1)", "real*8",
+                                      "real(r_def)"])
+def test_data_component_part(f2003_create, var_type):
+    ''' Test that various data component declarations are
+    recognised. R440. '''
+    code = (var_type +" :: iflag")
     reader = FortranStringReader(code, ignore_comments=False)
-    obj = Case_Construct(reader)
-    out_str = str(obj)
-    assert "for e1=1" in out_str
+    obj = Component_Part(reader)
+    assert "iflag" in str(obj)
+
+
+@pytest.mark.parametrize("interface, attributes",
+                         [("", "pointer, nopass"),
+                          ("real_func", "pointer"),
+                          ("real_func", "pointer, pass")])
+def test_proc_component_part(f2003_create, interface, attributes):
+    ''' Test that various procedure component declarations are
+    recognised. R445. '''
+    code = "procedure({0}), {1} :: my_proc".format(interface, attributes)
+    reader = FortranStringReader(code, ignore_comments=False)
+    obj = Component_Part(reader)
+
+
+@pytest.mark.parametrize("attributes", ["nopass", "pass"])
+def test_proc_component_pointer(f2003_create, attributes):
+    ''' R445, C449: POINTER shall appear in each
+    proc-component-attr-spec-list. '''
+    code = "procedure(), {0} :: my_proc".format(attributes)
+    reader = FortranStringReader(code, ignore_comments=False)
+    with pytest.raises(NoMatchError):
+        _ = Component_Part(reader)

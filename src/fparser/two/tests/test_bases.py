@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017-2019 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -114,3 +114,21 @@ def test_io_ctrl_spec_errors():
     # description
     obj = Io_Control_Spec.match("not_unit=23")
     assert obj is None
+
+
+def test_blockbase_tofortran_non_ascii(f2003_create):
+    ''' Check that the tofortran() method works when we have a program
+    containing non-ascii characters within a sub-class of BlockBase. '''
+    from fparser.common.readfortran import FortranStringReader
+    from fparser.two.Fortran2003 import Program
+    code = (u"program my_test\n"
+            u"! A comment outside the select block\n"
+            u"SELECT CASE(iflag)\n"
+            u"CASE(  30  )\n"
+            u"  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
+            u"END SELECT\n"
+            u"end program\n")
+    reader = FortranStringReader(code, ignore_comments=False)
+    obj = Program(reader)
+    out_str = str(obj)
+    assert "for e1=1" in out_str
