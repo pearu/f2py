@@ -112,6 +112,24 @@ EXTENSIONS += ["hollerith"]
 EXTENSIONS += ["dollar-descriptor"]
 
 
+def py2_encode_list_items(mylist):
+    '''
+    If we are running under Python2 then ensure that all strings in the
+    supplied list are encoded as bytes. If we are running under Python3
+    then all strings are unicode and this routine does nothing.
+
+    :param list mylist: List of strings to modify.
+
+    '''
+    if six.PY2:
+        # If we're in Python2 then we have to take care as comments
+        # and character literals may be UTF while other elements are not.
+        for idx, item in enumerate(mylist[:]):
+            if isinstance(item, six.text_type):
+                # This item is UTF so encode it as bytes
+                mylist[idx] = item.encode('utf-8')
+
+
 class FparserException(Exception):
     '''Base class exception for fparser. This allows an external tool to
     capture all exceptions if required.
@@ -633,9 +651,10 @@ content : tuple
         '''
         Create a string containing the Fortran representation of this class
 
-        :param str tab: Indent to prefix to code
-        :param bool isfix: Whether or not to generate fixed-format code
-        :return: Fortran representation of this class
+        :param str tab: indent to prefix to code.
+        :param bool isfix: whether or not to generate fixed-format code.
+
+        :return: Fortran representation of this class.
         :rtype: str
         '''
         mylist = []
@@ -650,6 +669,8 @@ content : tuple
             mylist.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             mylist.append(end.tofortran(tab=tab, isfix=isfix))
+        # Ensure all strings in list are encoded consistently
+        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
     def restore_reader(self, reader):

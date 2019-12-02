@@ -12,10 +12,8 @@ def test_tofortran_non_ascii(f2003_create):
             u"END SELECT\n")
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Case_Construct(reader)
-    out_str = obj.tofortran()
+    out_str = str(obj)
     assert "for e1=1" in out_str
-    print(out_str)
-    assert 0
 
 
 def test_blockbase_tofortran_non_ascii(f2003_create):
@@ -31,7 +29,5 @@ def test_blockbase_tofortran_non_ascii(f2003_create):
             u"end program\n")
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Program(reader)
-    out_str = obj.tofortran()
+    out_str = str(obj)
     assert "for e1=1" in out_str
-    print(out_str)
-    assert 0

@@ -81,7 +81,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk_ast
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalSyntaxError, InternalError, show_result
+    InternalSyntaxError, InternalError, show_result, py2_encode_list_items
 
 #
 # SECTION  1
@@ -1615,9 +1615,20 @@ class Component_Part(BlockBase):  # R438
     match = staticmethod(match)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         mylist = []
         for item in self.content:
             mylist.append(item.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
 
@@ -4960,6 +4971,16 @@ class Where_Construct(BlockBase):  # R744
             enable_where_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -4970,6 +4991,7 @@ class Where_Construct(BlockBase):  # R744
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5386,6 +5408,16 @@ class If_Construct(BlockBase):  # R802
             enable_if_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -5396,6 +5428,7 @@ class If_Construct(BlockBase):  # R802
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5558,6 +5591,16 @@ class Case_Construct(BlockBase):  # R808
         )
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -5568,6 +5611,8 @@ class Case_Construct(BlockBase):  # R808
             else:
                 tmp.append(item.tofortran(tab=tab + '  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        # Ensure all strings in list are encoded consistently
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5947,10 +5992,11 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
 
     def tofortran(self, tab='', isfix=None):
         '''
-        :param str tab: tab character or empty string
-        :param bool isfix: whether the reader is in fixed format
-        :return: parsed representation of the labeled "DO" construct
-        :rtype: string
+        :param str tab: tab character or empty string.
+        :param bool isfix: whether the reader is in fixed format.
+
+        :return: parsed representation of the labeled "DO" construct.
+        :rtype: str
         '''
         lblock = []
         start = self.content[0]
@@ -5961,6 +6007,7 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
             lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             lblock.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(lblock)
         return '\n'.join(lblock)
 
 
@@ -6252,6 +6299,16 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                                enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         line = []
         start = self.content[0]
         end = self.content[-1]
@@ -6263,6 +6320,7 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                 extra_tab += '  '
         if len(self.content) > 1:
             line.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(line)
         return '\n'.join(line)
 
 
