@@ -95,6 +95,40 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 #
 
 
+class Cpp_Include_Stmt(Base):
+    '''Implements the matching of a preprocessor include statement of the form
+    #include "filename"'''
+
+    _regex = re.compile("#\s*include")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Include_Stmt._regex.match(line)
+        if not found:
+            # The line does not match an include statement
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) < 3:
+            # There is no content after the include token
+            return None
+        if not (rhs[0] == '"' and rhs[-1] == '"'):
+            return None
+        # Remove the quotes.
+        file_name = rhs[1:-1]
+        # Pass the potential filename to the relevant class.
+        name = Include_Filename(file_name)
+        if not name:
+            raise InternalError(
+                "Fortran2003.py:Include_Stmt:match Include_Filename should "
+                "never return None or an empty name")
+        return (name,)
+
+    def tostr(self):
+        return ('#include "{}"'.format(self.items[0]))
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
