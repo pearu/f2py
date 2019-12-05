@@ -99,7 +99,7 @@ class Cpp_Include_Stmt(Base):
     '''Implements the matching of a preprocessor include statement of the form
     #include "filename"'''
 
-    _regex = re.compile("#\s*include")
+    _regex = re.compile(r"#\s*include\b")
 
     @staticmethod
     def match(string):
@@ -134,7 +134,7 @@ class Cpp_Define_Stmt(Base):
     #define MACRO definition
     #define MACRO'''
 
-    _regex = re.compile("#\s*define")
+    _regex = re.compile(r"#\s*define\b")
 
     @staticmethod
     def match(string):
