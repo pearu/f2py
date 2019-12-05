@@ -187,6 +187,28 @@ class Cpp_If_Stmt(Base):
     def tostr(self):
         return ('#{} {}'.format(self.items[0], self.items[1]))
 
+class Cpp_Elif_Stmt(Base):
+    '''Implements the matching of a preprocessor elif statement of the form
+    #elif CONDITION'''
+
+    _regex = re.compile(r"#\s*elif\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Elif_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return None
+        return (rhs,)
+
+    def tostr(self):
+        return ('#elif {}'.format(self.items[0]))
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
