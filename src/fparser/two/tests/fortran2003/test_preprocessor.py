@@ -1,6 +1,6 @@
 import pytest
 from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_If_Stmt,
-    Cpp_Elif_Stmt)
+    Cpp_Elif_Stmt, Cpp_Endif_Stmt)
 from fparser.two.utils import NoMatchError
 
 def test_include_stmt(f2003_create):
@@ -95,3 +95,20 @@ def test_incorrect_elif_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Elif_Stmt(line)
         assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_endif_stmt(f2003_create):
+    '''Test that #endif is correctly recognized'''
+    ref = '#endif'
+    for line in [
+        '#endif',
+        '  #  endif  ',
+    ]:
+        result = Cpp_Endif_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_endif_stmt(f2003_create):
+    '''Test that incorrectly formed #endif statements raise exception'''
+    for line in [None, '', ' ', '#ednif', '#endif text']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Endif_Stmt(line)
+        assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
