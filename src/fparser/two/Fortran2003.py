@@ -309,6 +309,62 @@ class Cpp_If_Construct(BlockBase):
         tmp.append(end.tofortran(tab='', isfix=isfix))
         return '\n'.join(tmp)
 
+class Cpp_Error_Stmt(Base):
+    '''Implements the matching of a preprocessor error statement of the form
+    #error MESSAGE
+    #error'''
+
+    subclass_names = []
+    _regex = re.compile(r"#\s*error\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Error_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return ()
+        else:
+            return (rhs,)
+
+    def tostr(self):
+        if len(self.items) > 0:
+            return ('#error {}'.format(self.items[0]))
+        else:
+            return ('#error')
+
+class Cpp_Warning_Stmt(Base):
+    '''Implements the matching of a preprocessor warning statement of the form
+    #warning MESSAGE
+    #warning'''
+
+    subclass_names = []
+    _regex = re.compile(r"#\s*warning\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Warning_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return ()
+        else:
+            return (rhs,)
+
+    def tostr(self):
+        if len(self.items) > 0:
+            return ('#warning {}'.format(self.items[0]))
+        else:
+            return ('#warning')
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.

@@ -1,6 +1,7 @@
 import pytest
 from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_Undef_Stmt,
-    Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct)
+    Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct,
+    Cpp_Error_Stmt, Cpp_Warning_Stmt)
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
@@ -169,3 +170,55 @@ def test_if_construct(f2003_create):
     ''')
     result = Cpp_If_Construct(reader)
     assert str(result) == ref
+
+def test_error_statement(f2003_create):
+    '''Test that #error is recognized'''
+    # error with message
+    ref = '#error MSG'
+    for line in [
+        '#error MSG',
+        '  #  error  MSG  ',
+    ]:
+        result = Cpp_Error_Stmt(line)
+        assert str(result) == ref
+    # error without message
+    ref = '#error'
+    for line in [
+        '#error',
+        '   #  error  ',
+    ]:
+        result = Cpp_Error_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_error_stmt(f2003_create):
+    '''Test that incorrectly formed #error statements raise exception'''
+    for line in [None, '', ' ', '#erorr', '#errorx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Error_Stmt(line)
+        assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_warning_statement(f2003_create):
+    '''Test that #warning is recognized'''
+    # warning with message
+    ref = '#warning MSG'
+    for line in [
+        '#warning MSG',
+        '  #  warning  MSG  ',
+    ]:
+        result = Cpp_Warning_Stmt(line)
+        assert str(result) == ref
+    # warning without message
+    ref = '#warning'
+    for line in [
+        '#warning',
+        '   #  warning  ',
+    ]:
+        result = Cpp_Warning_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_warning_stmt(f2003_create):
+    '''Test that incorrectly formed #warning statements raise exception'''
+    for line in [None, '', ' ', '#wrning', '#warningx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Warning_Stmt(line)
+        assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
