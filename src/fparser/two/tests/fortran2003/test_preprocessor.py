@@ -1,7 +1,7 @@
 import pytest
 from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_Undef_Stmt,
     Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct,
-    Cpp_Error_Stmt, Cpp_Warning_Stmt, Cpp_Line_Stmt)
+    Cpp_Error_Stmt, Cpp_Warning_Stmt, Cpp_Line_Stmt, Cpp_Macro)
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
@@ -35,10 +35,10 @@ def test_define_stmt(f2003_create):
         result = Cpp_Define_Stmt(line)
         assert str(result) == ref
     # definition without value
-    ref = '#define MACRO'
+    ref = '#define _MACRO'
     for line in [
-        '#define MACRO',
-        '   #  define  MACRO  ',
+        '#define _MACRO',
+        '   #  define  _MACRO  ',
     ]:
         result = Cpp_Define_Stmt(line)
         assert str(result) == ref
@@ -52,10 +52,10 @@ def test_incorrect_define_stmt(f2003_create):
 
 def test_undef_stmt(f2003_create):
     '''Test that #undef is recognized'''
-    ref = '#undef MACRO'
+    ref = '#undef _MACRO'
     for line in [
-        '#undef MACRO',
-        '   #  undef  MACRO  ',
+        '#undef _MACRO',
+        '   #  undef  _MACRO  ',
     ]:
         result = Cpp_Undef_Stmt(line)
         assert str(result) == ref
@@ -83,10 +83,10 @@ def test_if_stmt(f2003_create):
     ]:
         result = Cpp_If_Stmt(line)
         assert str(result) == ref
-    ref = '#ifndef MACRO'
+    ref = '#ifndef _MACRO'
     for line in [
-        '#ifndef MACRO',
-        '  #  ifndef  MACRO  '
+        '#ifndef _MACRO',
+        '  #  ifndef  _MACRO  '
     ]:
         result = Cpp_If_Stmt(line)
         assert str(result) == ref
@@ -95,6 +95,7 @@ def test_incorrect_if_stmt(f2003_create):
     '''Test that incorrectly formed #if statements raise exception'''
     for line in [None, '', ' ', '#ifdfe', '#if', '#ifdef', '#ifdef two macros']:
         with pytest.raises(NoMatchError) as excinfo:
+            print(line)
             _ = Cpp_If_Stmt(line)
         assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
 
@@ -239,3 +240,9 @@ def test_incorrect_warning_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Line_Stmt(line)
         assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_macro(f2003_create):
+    '''Test that all allowed names can be parsed'''
+    for name in ['MACRO', 'MACRO1', 'MACRO_', 'macro', '_', '_12']:
+        result = Cpp_Macro(name)
+        assert str(result) == name

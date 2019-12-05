@@ -147,7 +147,7 @@ class Cpp_Define_Stmt(Base):
             return None
         rhs = line[found.end():].strip()
         rhs = rhs.split(maxsplit=1)
-        name = Name(rhs[0])
+        name = Cpp_Macro(rhs[0])
         if len(rhs) > 1:
             definition = rhs[1]
             return (name,definition)
@@ -177,7 +177,7 @@ class Cpp_Undef_Stmt(Base):
         rhs = line[found.end():].strip()
         if len(rhs) == 0:
             return None
-        return (Name(rhs),)
+        return (Cpp_Macro(rhs),)
 
     def tostr(self):
         return ('#undef {}'.format(self.items[0]))
@@ -203,7 +203,7 @@ class Cpp_If_Stmt(Base):
         if len(rhs) == 0:
             return None
         if kind in ['ifdef', 'ifndef']:
-            rhs = Name(rhs)
+            rhs = Cpp_Macro(rhs)
         return (kind,rhs)
 
     def tostr(self):
@@ -388,7 +388,14 @@ class Cpp_Line_Stmt(Base):
 
     def tostr(self):
         return ('#line {}'.format(self.items[0]))
-            
+
+class Cpp_Macro(StringBase):
+    '''In addition to everything allowed in Fortran leading underscore is allowed'''
+
+    @staticmethod
+    def match(string):
+        return StringBase.match(pattern.abs_macro_name, string.strip())
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.

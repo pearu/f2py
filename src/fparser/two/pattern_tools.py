@@ -293,6 +293,7 @@ else:
 # character that is not space at the start '\S' and end '\S' of the
 # match with anything '.*' inbetween.
 file_name = Pattern('<file_name>', r'^(\S|\S.*\S)$', flags=re.I)
+abs_macro_name = abs(Pattern('<macro_name>', r'[A-Z_]\w*', flags=re.I))
 digit = Pattern('<digit>', r'\d')
 underscore = Pattern('<underscore>', '_')
 binary_digit = Pattern('<binary-digit>', r'[01]')
