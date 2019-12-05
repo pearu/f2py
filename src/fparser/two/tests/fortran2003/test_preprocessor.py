@@ -1,6 +1,6 @@
 import pytest
-from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_If_Stmt,
-    Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct)
+from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_Undef_Stmt,
+    Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct)
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
@@ -48,6 +48,23 @@ def test_incorrect_define_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Define_Stmt(line)
         assert "Cpp_Define_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_undef_stmt(f2003_create):
+    '''Test that #undef is recognized'''
+    ref = '#undef MACRO'
+    for line in [
+        '#undef MACRO',
+        '   #  undef  MACRO  ',
+    ]:
+        result = Cpp_Undef_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_undef_stmt(f2003_create):
+    '''Test that incorrectly formed #undef statements raise exception'''
+    for line in [None, '', ' ', '#undef', '#unfed', '#undefx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Undef_Stmt(line)
+        assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 def test_if_stmt(f2003_create):
     '''Test that various forms of #if, #ifdef, #ifndef are recognized'''
