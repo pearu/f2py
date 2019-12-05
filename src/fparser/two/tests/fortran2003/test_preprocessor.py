@@ -1,7 +1,7 @@
 import pytest
 from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_Undef_Stmt,
     Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct,
-    Cpp_Error_Stmt, Cpp_Warning_Stmt)
+    Cpp_Error_Stmt, Cpp_Warning_Stmt, Cpp_Line_Stmt)
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
@@ -222,3 +222,20 @@ def test_incorrect_warning_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Warning_Stmt(line)
         assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_line_statement(f2003_create):
+    '''Test that #line is recognized'''
+    ref = '#line CONFIG'
+    for line in [
+        '#line CONFIG',
+        '  #  line   CONFIG  ',
+    ]:
+        result = Cpp_Line_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_warning_stmt(f2003_create):
+    '''Test that incorrectly formed #line statements raise exception'''
+    for line in [None, '', ' ', '#line', '#linex', '#lien']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Line_Stmt(line)
+        assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)

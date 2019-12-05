@@ -365,6 +365,30 @@ class Cpp_Warning_Stmt(Base):
         else:
             return ('#warning')
 
+class Cpp_Line_Stmt(Base):
+    '''Implements the matching of a preprocessor line statement of the form
+    #line NUMBER FILENAME
+    #line NUMBER'''
+
+    subclass_names = []
+    _regex = re.compile(r"#\s*line\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Line_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return None
+        return (rhs,)
+
+    def tostr(self):
+        return ('#line {}'.format(self.items[0]))
+            
 class Comment(Base):
     '''
     Represents a Fortran Comment.
