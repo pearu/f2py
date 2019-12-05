@@ -209,6 +209,24 @@ class Cpp_Elif_Stmt(Base):
     def tostr(self):
         return ('#elif {}'.format(self.items[0]))
 
+class Cpp_Else_Stmt(Base):
+    '''Implements the matching of a preprocessor endif statement'''
+
+    _regex = re.compile(r"#\s*else$")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Else_Stmt._regex.match(line)
+        if not found:
+            return None
+        return ()
+
+    def tostr(self):
+        return ('#else')
+
 class Cpp_Endif_Stmt(Base):
     '''Implements the matching of a preprocessor endif statement'''
 
