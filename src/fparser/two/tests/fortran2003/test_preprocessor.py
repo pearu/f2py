@@ -1,5 +1,5 @@
 import pytest
-from fparser.two.Fortran2003 import Cpp_Include_Stmt, Cpp_Define_Stmt
+from fparser.two.Fortran2003 import Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_If_Stmt
 from fparser.two.utils import NoMatchError
 
 def test_include_stmt(f2003_create):
@@ -46,3 +46,34 @@ def test_incorrect_define_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Define_Stmt(line)
         assert "Cpp_Define_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_if_stmt(f2003_create):
+    '''Test that various forms of #if, #ifdef, #ifndef are recognized'''
+    ref = '#if CONSTANT'
+    for line in [
+        '#if CONSTANT',
+        '  #  if    CONSTANT  ',
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+    ref = '#ifdef MACRO'
+    for line in [
+        '#ifdef MACRO',
+        '  #  ifdef  MACRO  '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+    ref = '#ifndef MACRO'
+    for line in [
+        '#ifndef MACRO',
+        '  #  ifndef  MACRO  '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+
+def test_incorrect_if_stmt(f2003_create):
+    '''Test that incorrectly formed #if statements raise exception'''
+    for line in [None, '', ' ', '#ifdfe', '#if', '#ifdef', '#ifdef two macros']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_If_Stmt(line)
+        assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)

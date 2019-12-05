@@ -160,6 +160,33 @@ class Cpp_Define_Stmt(Base):
         else:
             return ('#define {}'.format(self.items[0]))
 
+class Cpp_If_Stmt(Base):
+    '''Implements the matching of a preprocessor if statement of the form
+    #if CONDITION
+    #ifdef MACRO
+    #ifndef MACRO'''
+
+    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b") # 'if' last because order matters
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_If_Stmt._regex.match(line)
+        if not found:
+            return None
+        kind = found.group()[1:].strip()
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return None
+        if kind in ['ifdef', 'ifndef']:
+            rhs = Name(rhs)
+        return (kind,rhs)
+
+    def tostr(self):
+        return ('#{} {}'.format(self.items[0], self.items[1]))
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
