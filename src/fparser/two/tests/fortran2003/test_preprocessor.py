@@ -1,7 +1,8 @@
 import pytest
 from fparser.two.Fortran2003 import (Cpp_Include_Stmt, Cpp_Define_Stmt, Cpp_If_Stmt,
-    Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt)
+    Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_If_Construct)
 from fparser.two.utils import NoMatchError
+from fparser.api import get_reader
 
 def test_include_stmt(f2003_create):
     '''Test that #include is recognized'''
@@ -129,3 +130,25 @@ def test_incorrect_endif_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Endif_Stmt(line)
         assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+def test_if_construct(f2003_create):
+    ref = '''
+#if defined(MACRO)
+  CALL sub1
+#elif FOO
+  CALL sub2
+#else
+  CALL sub3
+#endif
+'''.strip()
+    reader = get_reader('''
+#if defined(MACRO)
+    call sub1()
+#elif FOO
+    call sub2()
+#else
+    call sub3()
+#endif
+    ''')
+    result = Cpp_If_Construct(reader)
+    assert str(result) == ref

@@ -230,6 +230,7 @@ class Cpp_Else_Stmt(Base):
 class Cpp_Endif_Stmt(Base):
     '''Implements the matching of a preprocessor endif statement'''
 
+    subclass_names = []
     _regex = re.compile(r"#\s*endif$")
 
     @staticmethod
@@ -244,6 +245,47 @@ class Cpp_Endif_Stmt(Base):
 
     def tostr(self):
         return ('#endif')
+
+class Cpp_If_Construct(BlockBase):
+    '''
+    <cpp-if-construct> = <cpp-if-stmt>
+                            <block>
+                         [ <cpp-elif-stmt>
+                            <block>
+                         ]...
+                         [ <cpp-else-stmt>
+                            <block>
+                         ]
+                         <cpp-endif-stmt>
+    '''
+
+    subclass_names = []
+    use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt',
+                 'Cpp_Else']
+
+    @staticmethod
+    def match(string):
+        return BlockBase.match(
+            Cpp_If_Stmt, [Execution_Part_Construct,
+                          Cpp_Elif_Stmt,
+                          Execution_Part_Construct,
+                          Cpp_Else_Stmt,
+                          Execution_Part_Construct],
+            Cpp_Endif_Stmt, string,
+            enable_cpp_construct_hook = True)
+
+    def tofortran(self, tab='', isfix=None):
+        tmp = []
+        start = self.content[0]
+        end = self.content[-1]
+        tmp.append(start.tofortran(tab='', isfix=isfix))
+        for item in self.content[1:-1]:
+            if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
+                tmp.append(item.tofortran(tab='', isfix=isfix))
+            else:
+                tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
+        tmp.append(end.tofortran(tab='', isfix=isfix))
+        return '\n'.join(tmp)
 
 class Comment(Base):
     '''

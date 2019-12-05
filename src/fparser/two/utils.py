@@ -527,6 +527,7 @@ content : tuple
         :param bool enable_where_construct_hook: TBD
         :param bool enable_select_type_construct_hook: TBD
         :param bool enable_case_construct_hook: TBD
+        :param bool enable_cpp_construct_hook: TBD
         :param bool strict_order: Whether to enforce the order of the
                                   given subclasses.
 
@@ -669,6 +670,16 @@ content : tuple
                     i = 1
                 if isinstance(obj, End_Select_Stmt):
                     enable_case_construct_hook = False
+            if enable_cpp_construct_hook:
+                from fparser.two.Fortran2003 import Cpp_Elif_Stmt, Cpp_Else_Stmt, \
+                    Cpp_Endif_Stmt
+                if isinstance(obj, Cpp_Elif_Stmt):
+                    # Got an else-if so go back to start of possible
+                    # classes to match
+                    i = 0
+                if isinstance(obj, (Cpp_Else_Stmt, Cpp_Endif_Stmt)):
+                    # Found end-if
+                    enable_cpp_construct_hook = False
             continue
 
         if not had_match or endcls and not found_end:
