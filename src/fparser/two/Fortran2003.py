@@ -129,6 +129,37 @@ class Cpp_Include_Stmt(Base):
     def tostr(self):
         return ('#include "{}"'.format(self.items[0]))
 
+class Cpp_Define_Stmt(Base):
+    '''Implements the matching of a preprocessor define statement of the form
+    #define MACRO definition
+    #define MACRO'''
+
+    _regex = re.compile("#\s*define")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Define_Stmt._regex.match(line)
+        if not found:
+            # The line does not match a define statement
+            return None
+        rhs = line[found.end():].strip()
+        rhs = rhs.split(maxsplit=1)
+        name = Name(rhs[0])
+        if len(rhs) > 1:
+            definition = rhs[1]
+            return (name,definition)
+        else:
+            return (name,)
+
+    def tostr(self):
+        if len(self.items) > 1:
+            return ('#define {} {}'.format(self.items[0], self.items[1]))
+        else:
+            return ('#define {}'.format(self.items[0]))
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
