@@ -132,6 +132,7 @@ class Cpp_Include_Stmt(Base):
 class Cpp_Define_Stmt(Base):
     '''Implements the matching of a preprocessor define statement of the form
     #define MACRO definition
+    #define MACRO(args) definition
     #define MACRO'''
 
     _regex = re.compile(r"#\s*define\b")
@@ -146,16 +147,29 @@ class Cpp_Define_Stmt(Base):
             # The line does not match a define statement
             return None
         rhs = line[found.end():].strip()
-        rhs = rhs.split(maxsplit=1)
-        name = Cpp_Macro(rhs[0])
-        if len(rhs) > 1:
-            definition = rhs[1]
-            return (name,definition)
+        found = pattern.macro_name.match(rhs)
+        if not found:
+            return None
+        name = Cpp_Macro(found.group())
+        definition = rhs[found.end():]
+            # note no strip here, because '#define MACRO(x)' and '#define MACRO (x)'
+            # are functionally different
+        found = Cpp_Macro_Parameter_List._regex.match(definition)
+        if found:
+            parameter_list = found.group()
+            definition = definition[found.end():].strip()
+            return (name, parameter_list, definition)
+        definition = definition.strip()
+            # now that we now it doesn't have a parameter list, we can strip
+        if len(definition) > 1:
+            return (name, definition)
         else:
             return (name,)
 
     def tostr(self):
-        if len(self.items) > 1:
+        if len(self.items) > 2:
+            return ('#define {}{} {}'.format(self.items[0], self.items[1], self.items[2]))
+        elif len(self.items) > 1:
             return ('#define {} {}'.format(self.items[0], self.items[1]))
         else:
             return ('#define {}'.format(self.items[0]))
@@ -395,6 +409,24 @@ class Cpp_Macro(StringBase):
     @staticmethod
     def match(string):
         return StringBase.match(pattern.abs_macro_name, string.strip())
+
+class Cpp_Macro_Parameter_List(Base):
+    '''Implements the parameter list of a macro definition'''
+
+    _regex = re.compile(r'\(\s*[A-Za-z_]\w*(\s*,\s*[A-Za-z_])*\s*\)')
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Macro_Parameter_List._regex.match(line)
+        if not found:
+            return None
+        return (found.group(),)
+
+    def tostr(self):
+        return (self.items[0])
 
 class Comment(Base):
     '''

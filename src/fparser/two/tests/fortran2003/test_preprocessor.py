@@ -42,6 +42,15 @@ def test_define_stmt(f2003_create):
     ]:
         result = Cpp_Define_Stmt(line)
         assert str(result) == ref
+    # more definitions with parameters and similar
+    for ref in [
+        '#define MACRO(x) call func(x)',
+        '#define MACRO (x, y)',
+        '#define MACRO(x, y) (x) + (y)',
+        '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
+    ]:
+        result = Cpp_Define_Stmt(ref)
+        assert str(result) == ref
 
 def test_incorrect_define_stmt(f2003_create):
     '''Test that incorrectly formed #define statements raises exception'''
