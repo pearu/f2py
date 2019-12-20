@@ -135,3 +135,28 @@ def test_get_child(f2003_create):
     assert not hasattr(io_nodes[0], "content")
     io_unit = get_child(io_nodes[0], Fortran2003.Io_Unit)
     assert isinstance(io_unit, Fortran2003.Io_Unit)
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_parent_info():
+    ''' Check that parent information is correctly set-up in the
+    parse tree. '''
+    import six
+    from fparser.two import Fortran2003
+    from fparser.two.utils import get_child, walk_ast, Base
+    reader = get_reader("program hello\n"
+                        "  implicit none\n"
+                        "  integer :: var1, ji\n"
+                        "  real(wp), dimension(10,10) :: var2\n"
+                        "  write(*,*) 'hello'\n"
+                        "  do ji = 1, var1\n"
+                        "    var2(ji, 5) = -1.0\n"
+                        "  end do\n"
+                        "end program hello\n")
+    main = Fortran2003.Program(reader)
+    node_list = walk_ast([main], my_types=[Base])
+    for node in node_list[1:]:
+        if not isinstance(node, six.text_type):
+            print(node)
+            assert node.parent
+    assert 0

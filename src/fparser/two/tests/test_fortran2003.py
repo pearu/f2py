@@ -130,6 +130,12 @@ def test_specification_part():
             "Intrinsic_Type_Spec('INTEGER', None), None, "
             "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, "
             "None),))))")
+    # Check that parent information is correctly setup
+    assert obj.parent == None
+    assert obj.content[0].parent is obj
+    assert obj.content[0].items[0].parent is obj.content[0]
+    assert obj.content[0].items[2].parent is obj.content[0]
+    assert obj.content[0].items[2].items[0].parent is obj.content[0].items[2]
 
     obj = tcls(get_reader('''\
 type a

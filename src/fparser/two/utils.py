@@ -260,6 +260,9 @@ class Base(ComparableMixin):
     # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
+    def __init__(self, string, parent_cls=None):
+        self.parent = None
+
     @show_result
     def __new__(cls, string, parent_cls=None):
         """
@@ -362,9 +365,24 @@ class Base(ComparableMixin):
             errmsg = u"{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
+    def set_parent(self, items):
+        ''' Recursively set the parent of all of the non-string elements
+        in the list.
+        :param items: TODO
+        '''
+        for item in items:
+            if item:
+                if isinstance(item, six.text_type):
+                    pass
+                elif isinstance(item, (list, tuple)):
+                    self.set_parent(item)
+                else:
+                    item.parent = self
+
     def init(self, *items):
         self.items = items
-        return
+        self.set_parent(self.items)
+                        
 
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
@@ -474,6 +492,7 @@ content : tuple
             # excluding any comments)
             start_idx = len(content)
             content.append(obj)
+
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
             if match_names:
@@ -611,11 +630,13 @@ content : tuple
                             'expected <%s-name> is %s but got %s. Ignoring.'
                             % (end_stmt.get_type().lower(),
                                start_stmt.get_name(), end_stmt.get_name()))
-        return content,
+        return (content,)
 
     def init(self, content):
         self.content = content
-        return
+        for obj in self.content:
+            if obj:
+                obj.parent = self
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -719,6 +740,8 @@ class SequenceBase(Base):
         '''
         self.separator = separator
         self.items = items
+        for item in self.items:
+            item.parent = self
 
     def tostr(self):
         '''
