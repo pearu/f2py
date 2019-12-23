@@ -254,6 +254,12 @@ class Base(ComparableMixin):
                     is either str or FortranReaderBase.
       self.item   - Line instance (holds label) or None.
 
+    :param type cls: the class of object to create.
+    :param string: (source of) Fortran string to parse.
+    :type string: str or :py:class:`FortranReaderBase`
+    :param parent_cls: the parent class of this object.
+    :type parent_cls: :py:type:`type`
+
     '''
     # This dict of subclasses is populated dynamically by code at the end
     # of this module. That code uses the entries in the
@@ -261,19 +267,11 @@ class Base(ComparableMixin):
     subclasses = {}
 
     def __init__(self, string, parent_cls=None):
+        # pylint:disable=unused-argument
         self.parent = None
 
     @show_result
     def __new__(cls, string, parent_cls=None):
-        """
-        Create a new instance of this object.
-
-        :param type cls: the class of object to create
-        :param string: (source of) Fortran string to parse
-        :type string: str or :py:class:`FortranReaderBase`
-        :param parent_cls: the parent class of this object
-        :type parent_cls: :py:type:`type`
-        """
         from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
@@ -288,7 +286,7 @@ class Base(ComparableMixin):
             reader = string
             item = reader.get_item()
             if item is None:
-                return
+                return None
             if isinstance(item, readfortran.Comment):
                 # We got a comment but we weren't after a comment (we handle
                 # those in Comment.__new__)
@@ -301,7 +299,7 @@ class Base(ComparableMixin):
             if obj is None:
                 # No match so give the item back to the reader
                 reader.put_item(item)
-                return
+                return None
             obj.item = item
             return obj
 
@@ -399,7 +397,8 @@ class Base(ComparableMixin):
 
     def init(self, *items):
         '''
-        Store the supplied list of nodes in the `items` list of this node.
+        Store the supplied list of nodes in the `items` list of this node and
+        set the parent of each of those nodes.
 
         :param *items: the children of this node.
         :type *params: tuple of :py:class:`fparser.two.utils.Base`
@@ -657,10 +656,16 @@ content : tuple
         return (content,)
 
     def init(self, content):
+        '''
+        Initialise the `content` attribute with the list of child nodes. Set
+        the parent of each of the child nodes.
+
+        :param content: list of nodes that are children of this one.
+        :type content: list of :py:class:`fparser.two.utils.Base` or NoneType
+
+        '''
         self.content = content
-        for obj in self.content:
-            if obj:
-                obj.parent = self
+        self.set_parent(self.content)
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -754,12 +759,11 @@ class SequenceBase(Base):
 
     def init(self, separator, items):
         '''Store the result of the match method if the match is successful.
+        Set-up the parent information of the child nodes.
 
-        :param str separator: The separator used to split the supplied \
-        string.
-        :param items: A tuple containing the matched objects in a \
-        tuple.
-        :type items: (Subclass of :py:class:`fparser.two.utils.Base`)
+        :param str separator: the separator used to split the supplied string.
+        :param items: a tuple containing the matched objects.
+        :type items: tuple(Subclass of :py:class:`fparser.two.utils.Base`)
 
         '''
         self.separator = separator
