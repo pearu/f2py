@@ -135,6 +135,8 @@ def test_get_child(f2003_create):
     assert not hasattr(io_nodes[0], "content")
     io_unit = io_nodes[0].get_child(Fortran2003.Io_Unit)
     assert isinstance(io_unit, Fortran2003.Io_Unit)
+    missing = io_nodes[0].get_child(Fortran2003.Execution_Part)
+    assert missing is None
 
 
 @pytest.mark.usefixtures("f2003_create")
