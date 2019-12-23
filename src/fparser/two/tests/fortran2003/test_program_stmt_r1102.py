@@ -42,16 +42,20 @@ from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Program_Stmt
 
 
-def test_valid(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_valid():
     ''' Test that valid code is parsed correctly. '''
 
     obj = Program_Stmt("program a")
     assert isinstance(obj, Program_Stmt)
     assert str(obj) == 'PROGRAM a'
     assert repr(obj) == "Program_Stmt('PROGRAM', Name('a'))"
+    # Check that the parent of the Name is correctly set
+    assert obj.items[1].parent is obj
 
 
-def test_invalid(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_invalid():
     ''' Test that exceptions are raised for invalid code. '''
 
     for string in ["", "  ", "prog", "program", "programa", "a program",

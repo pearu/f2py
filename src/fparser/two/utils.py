@@ -366,23 +366,48 @@ class Base(ComparableMixin):
         raise NoMatchError(errmsg)
 
     def set_parent(self, items):
-        ''' Recursively set the parent of all of the non-string elements
-        in the list.
-        :param items: TODO
+        ''' Recursively set the parent of all of the elements
+        in the list that are a sub-class of Base. (Recursive because
+        sometimes the list of elements itself contains a list or tuple.)
+
+        :param items: list or tuple of nodes for which to set the parent
+                      to be `self`.
+        :type items: list or tuple of :py:class:`fparser.two.utils.Base` or \
+                     `str` or `list` or `tuple` or NoneType.
         '''
         for item in items:
             if item:
-                if isinstance(item, six.text_type):
-                    pass
+                if isinstance(item, Base):
+                    # We can only set the parent of `Base` objects. Anything
+                    # else (e.g. str) is passed over.
+                    item.parent = self
                 elif isinstance(item, (list, tuple)):
                     self.set_parent(item)
-                else:
-                    item.parent = self
+
+    def get_root(self):
+        '''
+        Returns the root of the parse tree to which this node belongs.
+
+        :returns: the node at the root of the tree.
+        :rtype: :py:class:`fparser.two.utils.Base`
+
+        '''
+        parent = self
+        while parent.parent:
+            parent = parent.parent
+        return parent
 
     def init(self, *items):
+        '''
+        Store the supplied list of nodes in the `items` list of this node.
+
+        :param *items: the children of this node.
+        :type *params: tuple of :py:class:`fparser.two.utils.Base`
+
+        '''
         self.items = items
+        # Set-up parent information for the child nodes.
         self.set_parent(self.items)
-                        
 
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
@@ -442,8 +467,7 @@ content : tuple
               enable_where_construct_hook=False,
               enable_select_type_construct_hook=False,
               enable_case_construct_hook=False,
-              strict_order=False,
-              ):
+              strict_order=False):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -740,8 +764,7 @@ class SequenceBase(Base):
         '''
         self.separator = separator
         self.items = items
-        for item in self.items:
-            item.parent = self
+        self.set_parent(self.items)
 
     def tostr(self):
         '''
@@ -1290,8 +1313,17 @@ class EndStmtBase(StmtBase):
         return stmt_type, None
 
     def init(self, stmt_type, stmt_name):
+        '''
+        Initialise this EndStmtBase object.
+
+        :param str stmt_type: the type of statement, e.g. 'PROGRAM'.
+        :param stmt_name: the name associated with the statement or None.
+        :type stmt_name: :py:class:`fparser.two.Fortran2003.Name`
+
+        '''
         self.items = [stmt_type, stmt_name]
-        return
+        # Set parent information for the children of this object.
+        self.set_parent(self.items)
 
     def get_name(self):
         return self.items[1]

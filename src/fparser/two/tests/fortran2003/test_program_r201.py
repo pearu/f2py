@@ -60,7 +60,8 @@ def test_empty_input(f2003_create):
 # Test single program units
 
 
-def test_single(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_single():
     '''Test that a single program_unit can be parsed successfully.'''
     reader = get_reader('''\
       subroutine test()
@@ -69,6 +70,25 @@ def test_single(f2003_create):
     ast = Program(reader)
     assert "SUBROUTINE test\n" \
         "END SUBROUTINE" in str(ast)
+    # Check that the Name of the subroutine has the correct parent
+    assert ast.content[0].content[0].items[1].parent is \
+        ast.content[0].content[0]
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_single_with_end_name():
+    '''Test that a single program_unit can be parsed successfully when it
+    has a name specified on the end clause.'''
+    reader = get_reader('''\
+      subroutine test()
+      end subroutine test
+      ''')
+    ast = Program(reader)
+    assert "SUBROUTINE test\n" \
+        "END SUBROUTINE test" in str(ast)
+    # Check parent information has been set-up correctly
+    end_sub = ast.content[0].content[-1]
+    assert end_sub.items[1].parent is end_sub
 
 
 @pytest.mark.xfail(reason="5 spaces causes the error exception to occur at "

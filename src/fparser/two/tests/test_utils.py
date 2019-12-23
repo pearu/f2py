@@ -143,20 +143,25 @@ def test_parent_info():
     parse tree. '''
     import six
     from fparser.two import Fortran2003
-    from fparser.two.utils import get_child, walk_ast, Base
+    from fparser.two.utils import walk_ast
     reader = get_reader("program hello\n"
                         "  implicit none\n"
                         "  integer :: var1, ji\n"
                         "  real(wp), dimension(10,10) :: var2\n"
-                        "  write(*,*) 'hello'\n"
+                        "  write(*,*) 'Guten Tag'\n"
                         "  do ji = 1, var1\n"
                         "    var2(ji, 5) = -1.0\n"
                         "  end do\n"
                         "end program hello\n")
     main = Fortran2003.Program(reader)
-    node_list = walk_ast([main], my_types=[Base])
+    node_list = walk_ast([main])
+
+    # Root node in the parse tree has no parent
+    parent_prog = node_list[0]
+    assert parent_prog.parent is None
+
+    # Check connectivity of all non-string nodes
     for node in node_list[1:]:
-        if not isinstance(node, six.text_type):
-            print(node)
+        if node and not isinstance(node, (six.text_type, tuple)):
             assert node.parent
-    assert 0
+            assert node.get_root() is parent_prog
