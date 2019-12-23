@@ -256,9 +256,10 @@ class Base(ComparableMixin):
 
     :param type cls: the class of object to create.
     :param string: (source of) Fortran string to parse.
-    :type string: str or :py:class:`FortranReaderBase`
+    :type string: `str` or \
+                  :py:class:`fparser.common.readfortran.FortranReaderBase`
     :param parent_cls: the parent class of this object.
-    :type parent_cls: :py:type:`type`
+    :type parent_cls: `type`
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -395,13 +396,31 @@ class Base(ComparableMixin):
             parent = parent.parent
         return parent
 
+    def get_child(self, node_type):
+        '''
+        Searches for the first immediate child of this node that is of the
+        specified type.
+
+        :param type node_type: the class of child node to search for.
+
+        :returns: the first child node of type node_type that is encountered \
+                  or None.
+        :rtype: :py:class:`fparser.two.utils.Base`
+
+        '''
+        for node in self.items:
+            if isinstance(node, node_type):
+                return node
+        return None
+
+
     def init(self, *items):
         '''
         Store the supplied list of nodes in the `items` list of this node and
         set the parent of each of those nodes.
 
-        :param *items: the children of this node.
-        :type *params: tuple of :py:class:`fparser.two.utils.Base`
+        :param items: the children of this node.
+        :type items: tuple of :py:class:`fparser.two.utils.Base`
 
         '''
         self.items = items
@@ -666,6 +685,22 @@ content : tuple
         '''
         self.content = content
         self.set_parent(self.content)
+
+    def get_child(self, node_type):
+        '''
+        Searches for the first immediate child of this node that is of the
+        specified type.
+
+        :param type node_type: the class of child node to search for.
+
+        :returns: the first child node of type node_type that is encountered \
+                  or None.
+        :rtype: :py:class:`fparser.two.utils.Base`
+        '''
+        for node in self.content:
+            if isinstance(node, node_type):
+                return node
+        return None
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -1557,27 +1592,3 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
             local_list += walk_ast(child.items, my_types, indent+1, debug)
 
     return local_list
-
-
-def get_child(root_node, node_type):
-    '''
-    Searches for the first immediate child of root_node that is of the
-    specified type.
-
-    :param root_node: the parent of the child nodes we will search through.
-    :type root_node: :py:class:`fparser.two.utils.Base`
-    :param type node_type: the class of child node to search for.
-
-    :returns: the first child node of type node_type that is encountered or \
-              None.
-    :rtype: :py:class:`fparser.two.utils.Base`
-    '''
-    children = []
-    if hasattr(root_node, "content"):
-        children = root_node.content
-    elif hasattr(root_node, "items"):
-        children = root_node.items
-    for node in children:
-        if isinstance(node, node_type):
-            return node
-    return None
