@@ -315,9 +315,11 @@ such as programs, subroutines, if statements etc.).
 
 .. autoclass:: fparser.two.utils.Base
 	       :members:
+	       :noindex:
 
 .. autoclass:: fparser.two.utils.BlockBase
 	       :members:
+               :noindex:
 
 .. note::
 

@@ -392,10 +392,15 @@ file was found but would fail if the include file was not found::
 Walking the parse tree
 ----------------------
 
-fparser2 provides two functions to support the traversal of the
+fparser2 provides one utility function to support the traversal of the
 parse tree that it constructs:
 
 .. automethod:: fparser.two.utils.walk_ast
 
-.. automethod:: fparser.two.utils.get_child
+In addition to this, each node in the parse tree has a ``parent`` property and
+the methods:
+
+.. automethod:: fparser.two.utils.Base.get_child
+
+.. automethod:: fparser.two.utils.Base.get_root
 
