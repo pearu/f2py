@@ -141,9 +141,8 @@ def test_get_child(f2003_create):
 def test_parent_info():
     ''' Check that parent information is correctly set-up in the
     parse tree. '''
-    import six
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk_ast
+    from fparser.two.utils import walk_ast, Base
     reader = get_reader("program hello\n"
                         "  implicit none\n"
                         "  integer :: var1, ji\n"
@@ -152,6 +151,9 @@ def test_parent_info():
                         "  do ji = 1, var1\n"
                         "    var2(ji, 5) = -1.0\n"
                         "  end do\n"
+                        "  if(var1 < 3)then\n"
+                        "    call a_routine(var2)\n"
+                        "  end if\n"
                         "end program hello\n")
     main = Fortran2003.Program(reader)
     node_list = walk_ast([main])
@@ -162,6 +164,6 @@ def test_parent_info():
 
     # Check connectivity of all non-string nodes
     for node in node_list[1:]:
-        if node and not isinstance(node, (six.text_type, tuple)):
+        if isinstance(node, Base):
             assert node.parent
             assert node.get_root() is parent_prog
