@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2019 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -145,20 +145,20 @@ def test_wordclsbase_optional_colons():
     result = WORDClsBase.match(token, Name, text, check_colons=True)
     assert str(result) == "('{0}', None)".format(token)
 
-    # token and :: no spaces match
-    text = "{0}::".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
-    assert str(result) == "('{0}', None)".format(token)
-
-    # token and :: with spaces match
-    text = "{0} :: ".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
-    assert str(result) == "('{0}', None)".format(token)
-
     # token and name match
     text = "{0} {1}".format(token, name)
     result = WORDClsBase.match(token, Name, text, check_colons=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
+
+    # token and :: no spaces no match
+    text = "{0}::".format(token)
+    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    assert not result
+
+    # token and :: with no spaces match
+    text = "{0} :: ".format(token)
+    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    assert not result
 
     # token, :: and name with no spaces match
     text = "{0}::{1}".format(token, name)
