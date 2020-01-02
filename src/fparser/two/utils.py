@@ -1349,10 +1349,7 @@ class WORDClsBase(Base):
             if my_match is None:
                 return
             line = string[len(my_match.group()):]
-            if pattern.value is not None:
-                pattern_value = pattern.value
-            else:
-                pattern_value = my_match.group().upper()
+            pattern_value = pattern.value
 
         if not line:
             if require_cls:
