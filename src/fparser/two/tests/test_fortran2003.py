@@ -2249,25 +2249,6 @@ endif'''))
     assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
 
 
-def test_case_construct():  # R808
-
-    tcls = Case_Construct
-    obj = tcls(get_reader('''\
-select case (n)
-case (:-1)
-  signum = -1
-case (0)
-  signum = 0
-case (1:)
-  signum = 1
-end select
-'''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) ==
-            'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n'
-            '  signum = 0\nCASE (1 :)\n  signum = 1\nEND SELECT')
-
-
 def test_case_selector():  # R813
 
     tcls = Case_Selector

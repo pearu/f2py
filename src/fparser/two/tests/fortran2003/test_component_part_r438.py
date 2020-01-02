@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Science and Technology Facilities Council.
+# Copyright (c) 2019-2020 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,55 +32,72 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R438: This file tests the support for the components
-of a derived type.
-
+'''Test Fortran 2003 rule R438: this module contains pytest tests for the
+   support for the components of a derived type. Note that only condition
+   C449 is tested for here. The other conditions (C436-C452) are untested.
 '''
 
 import pytest
-from fparser.common.sourceinfo import FortranFormat
-from fparser.common.readfortran import FortranStringReader
+from fparser.api import get_reader
 from fparser.two.Fortran2003 import Component_Part
 from fparser.two.utils import NoMatchError
 
 
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("var_type", ["integer",
                                       "logical",
                                       "character(len=1)",
                                       "real*8",
                                       "real(r_def)"])
-def test_data_component_part(f2003_create, var_type):
+def test_data_component_part(var_type):
     ''' Test that various data component declarations are
     recognised. R440. '''
     code = var_type + " :: iflag"
-    reader = FortranStringReader(code, ignore_comments=False)
-    # Ensure reader in in 'free-format' mode
-    reader.set_format(FortranFormat(True, False))
+    reader = get_reader(code, isfree=True, isstrict=True)
     obj = Component_Part(reader)
     assert "iflag" in str(obj)
 
 
+@pytest.mark.usefixtures("f2003_create")
+def test_invalid_data_component_part():
+    ''' Check that we don't get a match for an invalid component decln. '''
+    code = "log :: iflag"
+    reader = get_reader(code)
+    with pytest.raises(NoMatchError):
+        _ = Component_Part(reader)
+
+
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("interface, attributes",
                          [("", "pointer, nopass"),
                           ("real_func", "pointer"),
                           ("real_func", "pointer, pass")])
-def test_proc_component_part(f2003_create, interface, attributes):
+def test_proc_component_part(interface, attributes):
     ''' Test that various procedure component declarations are
     recognised. R445. '''
     code = "procedure({0}), {1} :: my_proc".format(interface, attributes)
-    reader = FortranStringReader(code, ignore_comments=False)
-    # Ensure reader in in 'free-format' mode
-    reader.set_format(FortranFormat(True, False))
+    reader = get_reader(code)
     obj = Component_Part(reader)
+    assert obj is not None
 
 
+@pytest.mark.usefixtures("f2003_create")
+def test_invalid_proc_component():
+    ''' Check that we don't get a match for an invalid procedure
+    declaration. '''
+    # Missing parentheses after "procedure"
+    code = "procedure, nopass :: my_proc"
+    reader = get_reader(code)
+    with pytest.raises(NoMatchError):
+        Component_Part(reader)
+
+
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("attributes", ["nopass", "pass"])
-def test_proc_component_pointer(f2003_create, attributes):
+def test_proc_component_pointer(attributes):
     ''' R445, C449: POINTER shall appear in each
     proc-component-attr-spec-list. '''
     code = "procedure(), {0} :: my_proc".format(attributes)
-    reader = FortranStringReader(code, ignore_comments=False)
-    # Ensure reader in in 'free-format' mode
-    reader.set_format(FortranFormat(True, False))
+    reader = get_reader(code)
     with pytest.raises(NoMatchError):
         _ = Component_Part(reader)

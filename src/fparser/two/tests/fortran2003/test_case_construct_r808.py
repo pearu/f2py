@@ -1,5 +1,5 @@
 # This Python file uses the following encoding: utf-8
-# Copyright (c) 2019 Science and Technology Facilities Council.
+# Copyright (c) 2019-2020 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -33,13 +33,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-''' pytest module for the Fortran2003 Case Construct - R808.'''
+''' pytest module for the Fortran2003 Case Construct - R808.
+    Does not test all aspects of R808, in particular the conditions C803-7
+    are not checked. '''
 
+import pytest
+from fparser.api import get_reader
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import Case_Construct
 
 
-def test_tofortran_non_ascii(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_case_construct():
+    ''' Basic test that we parse a Case Construct successfully. '''
+    tcls = Case_Construct
+    obj = tcls(get_reader('''\
+select case (n)
+case (:-1)
+  signum = -1
+case (0)
+  signum = 0
+case (1:)
+  signum = 1
+case default
+  signum = -2
+end select
+'''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert (str(obj) ==
+            'SELECT CASE (n)\nCASE (: - 1)\n  signum = - 1\nCASE (0)\n'
+            '  signum = 0\nCASE (1 :)\n  signum = 1\nCASE DEFAULT\n'
+            '  signum = - 2\nEND SELECT')
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_tofortran_non_ascii():
     ''' Check that the tofortran() method works when the character string
     contains non-ascii characters. '''
     code = (u"SELECT CASE(iflag)\n"
