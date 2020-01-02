@@ -1298,7 +1298,7 @@ def isalnum(c):
 
 
 class WORDClsBase(Base):
-    '''Base class to support situations where you have a keyword which is
+    '''Base class to support situations where there is a keyword which is
     optionally followed by further text, potentially separated by
     '::'.
 
@@ -1308,8 +1308,25 @@ class WORDClsBase(Base):
 
     '''
     @staticmethod
-    def match(pattern, cls, string, check_colons=False, require_cls=False):
-        '''
+    def match(pattern, cls, string, colons=False, require_cls=False):
+        '''Checks whether the content in string matches the expected
+        WORDClsBase format with 'pattern' providing the keyword, 'cls'
+        providing the following text, 'colons' specifying whether an
+        optional '::' is allowed as a separator between the keyword
+        and cls and 'require_cls' specifying whether cls must have
+        content or not.
+
+        Note, if the optional '::' is allowed and exists in the string
+        then 1) cls must also have content i.e. it implies
+        `require_cls=True` and 2) white space is not required between
+        the keyword and the '::' and the '::' and cls.
+
+        The simplest form of pattern is a string. However this method
+        can also match more complex patterns as specified by the
+        Pattern class in pattern_tools.py. As patterns can be built
+        from combinations of other patterns (again see
+        pattern_tool.py) this method also supports a hierarchy of
+        lists and/or tuples of patterns.
 
         :param pattern: the pattern of the WORD to match. This can be \
             a Pattern, string, list or tuple, with a list or tuple \
@@ -1318,19 +1335,25 @@ class WORDClsBase(Base):
             str, tuple of str/Pattern/tuple/list or list of \
             str/Pattern/tuple/list
         :param cls: the class to match.
-        :type cls: a subclass of :py:class:`fparser.two.utils.Base`.
+        :type cls: a subclass of :py:class:`fparser.two.utils.Base`
         :param str string: Text that we are trying to match.
-        :param bool check_colons: whether '::' is allowed or not \
-            between WORD and cls.
+        :param bool colons: whether '::' is allowed as an optional \
+            separator between between WORD and cls.
         :param bool require_cls: whether content for cls is required \
             or not.
+
+        :returns: None if there is no match or, if there is a match, a \
+            2-tuple containing a string matching the 'WORD' and an \
+            instance of 'cls' (or None if an instance of cls is not \
+            required and not provided).
+        :rtype: (str, cls or NoneType) or NoneType
 
         '''
         if isinstance(pattern, (tuple, list)):
             for p in pattern:
                 try:
                     obj = WORDClsBase.match(p, cls, string,
-                                            check_colons=check_colons,
+                                            colons=colons,
                                             require_cls=require_cls)
                 except NoMatchError:
                     obj = None
@@ -1360,7 +1383,7 @@ class WORDClsBase(Base):
             return
         line = line.lstrip()
         has_colons = False
-        if check_colons and line.startswith('::'):
+        if colons and line.startswith('::'):
             has_colons = True
             line = line[2:].lstrip()
         if not line:

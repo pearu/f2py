@@ -132,7 +132,7 @@ def test_wordclsbase_multi_names():
 
 
 def test_wordclsbase_optional_colons():
-    '''Test the wordclsbase match method with check_colons as an optional
+    '''Test the wordclsbase match method with colons as an optional
     argument. No need to check in combination with the require_cls
     optional argument as the code is independent.
 
@@ -140,34 +140,34 @@ def test_wordclsbase_optional_colons():
     token = "TOKEN"
     name = "name"
 
-    # token only match
+    # token only - match
     text = token
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert str(result) == "('{0}', None)".format(token)
 
-    # token and name match
+    # token then name - match
     text = "{0} {1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
-    # token and :: no spaces no match
+    # token then :: (no spaces) with no following name - no match
     text = "{0}::".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert not result
 
-    # token and :: with no spaces match
+    # token then :: with no following name - no match
     text = "{0} :: ".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert not result
 
-    # token, :: and name with no spaces match
+    # token, :: then name (no spaces) - match
     text = "{0}::{1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
-    # token, :: and name with spaces match
+    # token, :: then name - match
     text = "{0} :: {1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True)
+    result = WORDClsBase.match(token, Name, text, colons=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
 
@@ -179,37 +179,37 @@ def test_wordclsbase_require_cls():
     token = "TOKEN"
     name = "name"
 
-    # token only no match
+    # token only - no match
     text = token
     result = WORDClsBase.match(token, Name, text, require_cls=True)
     assert not result
 
-    # token and :: no spaces no match
+    # token then :: (no spaces) with no following name - no match
     text = "{0}::".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True,
+    result = WORDClsBase.match(token, Name, text, colons=True,
                                require_cls=True)
     assert not result
 
-    # token and :: with spaces no match
+    # token then :: with no following name - no match
     text = "{0} :: ".format(token)
-    result = WORDClsBase.match(token, Name, text, check_colons=True,
+    result = WORDClsBase.match(token, Name, text, colons=True,
                                require_cls=True)
     assert not result
 
-    # token and name match
+    # token then name - match
     text = "{0} {1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True,
+    result = WORDClsBase.match(token, Name, text, colons=True,
                                require_cls=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
-    # token, :: and name no spaces match
+    # token, :: then name (no spaces) - match
     text = "{0}::{1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True,
+    result = WORDClsBase.match(token, Name, text, colons=True,
                                require_cls=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
 
-    # token, :: and name with spaces match
+    # token, :: then name - match
     text = "{0} :: {1}".format(token, name)
-    result = WORDClsBase.match(token, Name, text, check_colons=True,
+    result = WORDClsBase.match(token, Name, text, colons=True,
                                require_cls=True)
     assert str(result) == "('{0}', Name('{1}'))".format(token, name)
