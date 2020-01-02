@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -103,7 +103,7 @@ class Comment(Base):
     subclass_names = []
 
     @show_result
-    def __new__(cls, string, parent_cls=None):
+    def __new__(cls, string, parent_cls=None, parent=None):
         """
         Create a new Comment instance.
 
@@ -210,6 +210,7 @@ class Program(BlockBase):  # R201
         :raises FortranSyntaxError: if the code is not valid Fortran
 
         '''
+        # pylint: disable=unused-argument
         try:
             return Base.__new__(cls, string)
         except NoMatchError:

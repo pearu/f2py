@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2020 Science and Technology Facilities Council
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -299,10 +299,12 @@ end subroutine my_mod
     assert "! First comment" in str(comment)
     comment = spec_part.content[2].content[0]
     assert isinstance(comment, Comment)
+    assert comment.parent is spec_part.content[2]
     assert "! Body comment" in str(comment)
     exec_part = fn_unit.content[2]
     comment = exec_part.content[1]
     assert isinstance(comment, Comment)
+    assert comment.parent is exec_part
     assert "! Inline comment" in str(comment)
 
 
@@ -350,3 +352,14 @@ end if
     assert isinstance(ifstmt, If_Construct)
     assert isinstance(ifstmt.content[1], Allocate_Stmt)
     assert "a big array" in str(ifstmt)
+
+
+def test_comment_parent():
+    ''' Check that we can create a new Comment object with a
+    specified parent. '''
+    from fparser.two.Fortran2003 import Specification_Part
+    declns = Specification_Part(get_reader("integer :: flag\n",
+                                           isfree=True, ignore_comments=False))
+    comment = Comment(get_reader("! This is a comment\n",isfree=True,
+                                 ignore_comments=False), parent=declns)
+    assert comment.parent is declns
