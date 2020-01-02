@@ -2395,43 +2395,6 @@ def test_loop_control():
     assert "Loop_Control: 'l = 5'" in str(excinfo.value)
 
 
-def test_nonblock_do_construct():
-    ''' Tests that nonblock DO construct is parsed correctly (R835). '''
-    tcls = Nonblock_Do_Construct
-    obj = tcls(get_reader('''\
-      do  20,  i = 1, 3
- 20     rotm(i,j) = r2(j,i)
-    '''))
-    assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
-    assert str(obj) == 'DO 20 , i = 1, 3\n20 rotm(i, j) = r2(j, i)'
-
-    obj = tcls(get_reader('''\
-      do  20,  i = 1, 3
-      k = 3
-      do  20,  j = 1, 3
-      l = 3
- 20     rotm(i,j) = r2(j,i)
-    '''))
-    assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
-    assert str(obj) == (
-        'DO 20 , i = 1, 3\n  k = 3\n  DO 20 , j = 1, 3\n    l = 3\n'
-        '20 rotm(i, j) = r2(j, i)')
-
-    obj = tcls(get_reader('''\
-      do  20  i = 1, 3
- 20     rotm(i,j) = r2(j,i)
-    '''))
-    assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
-    assert str(obj) == 'DO 20 i = 1, 3\n20 rotm(i, j) = r2(j, i)'
-
-    obj = tcls(get_reader('''\
-    do  50,  i = n, m, -1
-  50 call foo(a)
-    '''))
-    assert isinstance(obj, Action_Term_Do_Construct), repr(obj)
-    assert str(obj) == 'DO 50 , i = n, m, - 1\n50 CALL foo(a)'
-
-
 def test_continue_stmt():  # R848
 
     tcls = Continue_Stmt
