@@ -9136,12 +9136,12 @@ class Import_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
     import-stmt is IMPORT [[ :: ] import-name-list ]
 
     C1210 (R1209) The IMPORT statement is allowed only in an
-    interface-body. Note, this constraint is not currently enforced,
-    see xfailing test *** and issue #xxx.
+    interface-body. Note, this constraint is not currently enforced.
 
     C1211 (R1209) Each import-name shall be the name of an entity in
-    the host scoping unit. This constraint is not currently enforced,
-    see xfailing test *** and issue #xxx.
+    the host scoping unit. This constraint is not currently enforced
+    and can not be generally enforced as the name may come from a use
+    statement without an only clause.
 
     '''
     subclass_names = []
@@ -9150,17 +9150,21 @@ class Import_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
 
     @staticmethod
     def match(string):
-        '''Implements the matching for the import-stmt
-        rule. Makes use of the WORDClsBase base class.
+        '''
+        Implements the matching for the import-stmt rule.
+
+        Makes use of the WORDClsBase base class.
 
         :param str string: the string to match.
+
         :returns: None if there is no match, otherwise a tuple of size \
-        2 containing the string 'IMPORT' as the first entry and an \
-        object of type `Import_Name_List` if names are specified in the \
-        string or `None` if not.
+            2 containing the string `IMPORT` as the first entry and \
+            an object of type `Import_Name_List` if names are \
+            specified in the string or `None` if not.
+
         :rtype: None, or (str, \
-        :py:class:`fparser.two.Fortran2003.Import_Name_List`) or (str, \
-        None)
+            :py:class:`fparser.two.Fortran2003.Import_Name_List`) or \
+            (str, None)
 
         '''
         return WORDClsBase.match(

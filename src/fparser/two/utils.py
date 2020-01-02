@@ -1332,6 +1332,7 @@ class WORDClsBase(Base):
                 if obj is not None:
                     return obj
             return
+        has_colons = False
         if isinstance(pattern, str):
             line = string.lstrip()
             if line[:len(pattern)].upper() != pattern.upper():
@@ -1346,9 +1347,11 @@ class WORDClsBase(Base):
                 return
             line = line.lstrip()
             if check_colons and line.startswith('::'):
+                has_colons = True
                 line = line[2:].lstrip()
             if not line:
-                if require_cls:
+                if has_colons or require_cls:
+                    # colons without following content is not allowed.
                     return
                 return pattern, None
             if cls is None:
@@ -1368,9 +1371,11 @@ class WORDClsBase(Base):
             return
         line = line.lstrip()
         if check_colons and line.startswith('::'):
+            has_colons = True
             line = line[2:].lstrip()
         if not line:
-            if require_cls:
+            if has_colons or require_cls:
+                # colons without following content is not allowed.
                 return
             return pattern_value, None
         if cls is None:
