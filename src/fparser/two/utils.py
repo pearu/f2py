@@ -260,6 +260,8 @@ class Base(ComparableMixin):
                   :py:class:`fparser.common.readfortran.FortranReaderBase`
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
+    :param parent: the parent of this node in the parse tree.
+    :type parent: :py:class:`fparser.two.utils.Base` or NoneType
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -267,12 +269,15 @@ class Base(ComparableMixin):
     # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
-    def __init__(self, string, parent_cls=None):
+    def __init__(self, string, parent_cls=None, parent=None):
         # pylint:disable=unused-argument
-        self.parent = None
+        # During normal construction of the parse tree the parent information
+        # is set-up in the `init` method. However, it may also be provided
+        # to this constructor.
+        self.parent = parent
 
     @show_result
-    def __new__(cls, string, parent_cls=None):
+    def __new__(cls, string, parent_cls=None, parent=None):
         from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
