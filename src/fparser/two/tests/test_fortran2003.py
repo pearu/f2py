@@ -2165,66 +2165,6 @@ def test_where_stmt():  # R743
             "Int_Literal_Constant('2', None)))")
 
 
-def test_where_construct():  # R745
-
-    tcls = Where_Construct
-    obj = tcls(get_reader('''\
-    where (pressure <= 1.0)
-    pressure = pressure + inc_pressure
-    temp = temp - 5.0
-    elsewhere
-    raining = .true.
-    end where
-'''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) == "WHERE (pressure <= 1.0)\n  "
-            "pressure = pressure + inc_pressure\n  "
-            "temp = temp - 5.0\n"
-            "ELSEWHERE\n  raining = .TRUE.\nEND WHERE")
-
-    obj = tcls(get_reader('''\
-    where (cond1)
-    else    where (cond2)
-    end where
-'''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WHERE (cond1)\nELSEWHERE(cond2)\nEND WHERE'
-
-    obj = tcls(get_reader('''\
-    n:where (cond1)
-    elsewhere (cond2) n
-    else   where n
-    end where n
-'''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) == "n:WHERE (cond1)\nELSEWHERE(cond2) n\n"
-            "ELSEWHERE n\nEND WHERE n")
-
-    obj = tcls(get_reader('''\
-    n:where (cond1)
-    else where (cond2) n
-    else where n
-    end where n
-'''))
-    assert isinstance(obj, tcls), repr(obj)
-    print(str(obj))
-    assert (str(obj) ==
-            'n:WHERE (cond1)\nELSEWHERE(cond2) n\nELSEWHERE n\n'
-            'END WHERE n')
-
-    obj = tcls(get_reader('''\
-    n:where (me(:)=="hello")
-    else where (me(:)=="goodbye") n
-    else where n
-    end where n
-'''))
-    print(str(obj))
-    assert (str(obj) ==
-            'n:WHERE (me(:) == "hello")\nELSEWHERE(me(:) == "goodbye") n\n'
-            'ELSEWHERE n\n'
-            'END WHERE n')
-
-
 def test_where_construct_stmt():  # R745
 
     tcls = Where_Construct_Stmt
