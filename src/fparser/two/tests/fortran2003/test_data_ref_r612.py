@@ -32,40 +32,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 Cray-pointers: This file tests the support for a
-Cray-pointee declaration.
+'''Test Fortran 2003 rule R612 : This file tests support for the
+Data_Ref class.
 
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Cray_Pointee_Decl
 from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Data_Ref, Part_Ref, Name
 
 
-def test_cray_pointee_decl(f2003_create):
-    '''Check that Cray-pointee declarations are parsed correctly.
-
-    '''
-    for myinput in ["a(n)", "a(0 : n)", "a(n, m)", "a(5, *)", "a(*)",
-                    "a(0 : 1, 2 : *)"]:
-        ast = Cray_Pointee_Decl(myinput)
-        assert myinput in str(ast)
-
-
-def test_errors(f2003_create):
-    '''Check that syntax errors produce a NoMatchError exception.'''
-    for myinput in ["", "  ", "a", "a2)", "a(2", "a()"]:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cray_Pointee_Decl(myinput)
-        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo.value)
-
-
-def test_unsupported(f2003_create):
-    '''Check that unsupported assumed shape declarations produce a
-    NoMatchError exception.
+def test_valid_sequence(f2003_create):
+    '''Test that a data_ref object is returned when a valid sequence is
+    supplied.
 
     '''
-    for myinput in ["a(:)", "a(2,:)"]:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cray_Pointee_Decl(myinput)
-        assert "Cray_Pointee_Decl: '{0}'".format(myinput) in str(excinfo.value)
+    for string in ["a%b", " a % b ", "a%b%c", "A%B%C"]:
+        result = Data_Ref(string)
+        assert str(result) == str(result).strip()
+        assert isinstance(result, Data_Ref)
+
+
+def test_single_entry(f2003_create):
+    '''Test that a data_ref object is not returned when the sequence is
+    valid but contains a single entry.
+
+    '''
+    for string in ["a", " a ", "A"]:
+        result = Data_Ref(string)
+        assert str(result) == str(result).strip()
+        assert isinstance(result, Name)
+
+    result = Data_Ref("a(2)")
+    assert str(result) == str(result).strip()
+    assert isinstance(result, Part_Ref)
+
+
+def test_invalid(f2003_create):
+    '''Test that there is no match when the input is invalid. '''
+
+    for string in ["", "  ", "1", "%", "a b"]:
+        with pytest.raises(NoMatchError):
+            assert Data_Ref(string) is None

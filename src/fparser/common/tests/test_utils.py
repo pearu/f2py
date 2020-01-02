@@ -66,13 +66,13 @@ def test_split_comma_exceptions():
     the brackets in the right form '''
     with pytest.raises(ParseError) as excinfo:
         _ = split_comma("one, two", brackets="()")
-    assert "brackets must be a tuple" in str(excinfo)
+    assert "brackets must be a tuple" in str(excinfo.value)
     with pytest.raises(ParseError) as excinfo:
         _ = split_comma("one, two", brackets=("()", ))
-    assert "brackets tuple must contain just two items" in str(excinfo)
+    assert "brackets tuple must contain just two items" in str(excinfo.value)
     with pytest.raises(ParseError) as excinfo:
         _ = split_comma("one, two", brackets=("(", "(", "("))
-    assert "brackets tuple must contain just two items" in str(excinfo)
+    assert "brackets tuple must contain just two items" in str(excinfo.value)
 
 
 def test_split_bracketed_list():
@@ -115,16 +115,20 @@ def test_extract_bracketed_list_err():
     from fparser.common.utils import extract_bracketed_list_items
     with pytest.raises(ParseError) as excinfo:
         _ = extract_bracketed_list_items("hello (this, is, wrong(")
-    assert "more than one opening/closing parenthesis found" in str(excinfo)
+    assert "more than one opening/closing parenthesis found" in \
+        str(excinfo.value)
     with pytest.raises(ParseError) as excinfo:
         _ = extract_bracketed_list_items("hello )this, is, wrong)")
-    assert "more than one opening/closing parenthesis found" in str(excinfo)
+    assert "more than one opening/closing parenthesis found" in \
+        str(excinfo.value)
     with pytest.raises(ParseError) as excinfo:
         _ = extract_bracketed_list_items("hello (this, is, wrong) (too)")
-    assert "more than one opening/closing parenthesis found" in str(excinfo)
+    assert "more than one opening/closing parenthesis found" in \
+        str(excinfo.value)
     with pytest.raises(ParseError) as excinfo:
         _ = extract_bracketed_list_items("hello )this, is, wrong( too")
-    assert "failed to find expression within parentheses in" in str(excinfo)
+    assert "failed to find expression within parentheses in" in \
+        str(excinfo.value)
 
 # utility for the make_clean_tmpfile tests
 

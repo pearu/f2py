@@ -2,27 +2,27 @@
 # Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
-
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -67,6 +67,7 @@
 ''' Example script to parse a Fortran program using fparser '''
 from __future__ import print_function
 import logging
+import sys
 from fparser.scripts.script_options import set_fparser_options
 
 logging.basicConfig()
@@ -78,43 +79,42 @@ except ImportError:
 
 
 def runner(_, options, args):
-    ''' Function to read, parse and output fortran source code '''
+    '''
+    Function to read, parse and output Fortran source code.
+
+    :param options: object constructed by OptionParser with cmd-line flags.
+    :param args: list of Fortran files to parse.
+    :type args: list of str
+
+    '''
+    import six
     from fparser.two.parser import ParserFactory
     from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
     if not args:
-        print("Error: No fortran files specified")
+        print("Error: No fortran files specified", file=sys.stderr)
         raise SystemExit(1)
     for filename in args:
+        print("File: '{0}'".format(filename), file=sys.stderr)
         try:
             reader = FortranFileReader(filename,
                                        ignore_comments=False)
         except IOError as error:
-            print(error)
-            return
-        if options.mode != 'auto':
-            reader.format.from_mode(options.mode)
+            print(error, file=sys.stderr)
+            continue
         try:
-            f2003_parser = ParserFactory().create()
-            program = f2003_parser(reader)
+            fparser = ParserFactory().create(std=options.std)
+            program = fparser(reader)
             if options.task == "show":
-                print(program)
+                print(six.text_type(program))
             if options.task == "repr":
                 print(repr(program))
         except FortranSyntaxError as msg:
-            print("Syntax error: {0}".format(str(msg)))
-            try:
-                # protect the access to fifo_item[-1] in case the fifo
-                # buffer is empty
-                print('parsing %r failed at %s' % (filename,
-                                                   reader.fifo_item[-1]))
-                print('started at %s' % (reader.fifo_item[0]))
-            except IndexError:
-                pass
-            raise SystemExit(1)
+            print("Syntax error: {0}".format(six.text_type(msg)),
+                  file=sys.stderr)
         except InternalError as msg:
-            print("Internal error in fparser: {0}".format(str(msg)))
-            raise SystemExit(1)
+            print("Internal error in fparser: {0}".format(six.text_type(msg)),
+                  file=sys.stderr)
 
 
 def main():

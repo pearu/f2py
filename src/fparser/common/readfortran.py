@@ -797,7 +797,7 @@ class FortranReaderBase(object):
             logging.getLogger(__name__).critical(message)
             message = 'Traceback\n' + ''.join(traceback.format_stack())
             logging.getLogger(__name__).debug(message)
-            logging.getLogger(__name__).debug(str(err))
+            logging.getLogger(__name__).debug(six.text_type(err))
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 

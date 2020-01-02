@@ -110,7 +110,7 @@ def test_internal_error1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "has '3' items, but expecting 2." in str(excinfo)
+    assert "has '3' items, but expecting 2." in str(excinfo.value)
 
 
 def test_internal_error2(f2003_create, monkeypatch):
@@ -126,4 +126,4 @@ def test_internal_error2(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert "should be an edit descriptor name but is empty or None" \
-            in str(excinfo)
+            in str(excinfo.value)

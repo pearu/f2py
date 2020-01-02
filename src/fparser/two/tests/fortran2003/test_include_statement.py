@@ -55,8 +55,9 @@ def test_include_stmt(f2003_create):
         '''Internal helper function to avoid code replication.'''
         ast = Include_Stmt(reader)
         assert "INCLUDE 'my-non-existant-file.inc'" in str(ast)
-        assert repr(ast) == ("Include_Stmt(Include_Filename("
-                             "'my-non-existant-file.inc'))")
+        assert repr(ast).replace("u'", "'") == \
+            ("Include_Stmt(Include_Filename("
+             "'my-non-existant-file.inc'))")
 
     line = "include 'my-non-existant-file.inc'"
     check_include(line)
@@ -106,7 +107,7 @@ def test_errors(f2003_create):
                  "include x'x'", "include 'x'x", "x include 'x'"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Include_Stmt(line)
-        assert "Include_Stmt: '{0}'".format(line) in str(excinfo)
+        assert "Include_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_include_filename_error(f2003_create, monkeypatch):

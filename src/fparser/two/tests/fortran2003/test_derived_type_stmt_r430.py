@@ -119,7 +119,7 @@ def test_tostr_1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", ["A"])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "should be of size 3 but found '1'" in str(excinfo)
+    assert "should be of size 3 but found '1'" in str(excinfo.value)
 
 
 def test_tostr_2(f2003_create, monkeypatch):
@@ -133,7 +133,7 @@ def test_tostr_2(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert ("'items[1]' should be a Name instance containing the "
-            "derived type name but it is empty") in str(excinfo)
+            "derived type name but it is empty") in str(excinfo.value)
 
 
 def test_get_start_name(f2003_create):

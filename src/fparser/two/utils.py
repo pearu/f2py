@@ -71,6 +71,7 @@
 
 import re
 import logging
+import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
@@ -342,7 +343,7 @@ class Base(ComparableMixin):
                 # Check all lines up to this one for content. We
                 # should be able to only check the current line but
                 # but as the line number returned is not always
-                # correct (due to coding errors) we can not assume the
+                # correct (due to coding errors) we cannot assume the
                 # line pointed to is the line where the error actually
                 # happened.
                 if string.source_lines[index].strip():
@@ -355,10 +356,10 @@ class Base(ComparableMixin):
                 # follow their lead and do not raise an exception.
                 return
             line = string.source_lines[string.linecount-1]
-            errmsg = "at line {0}\n>>>{1}\n".format(
+            errmsg = u"at line {0}\n>>>{1}\n".format(
                 string.linecount, line)
         else:
-            errmsg = "{0}: '{1}'".format(cls.__name__, string)
+            errmsg = u"{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
     def init(self, *items):
@@ -381,7 +382,16 @@ class Base(ComparableMixin):
         return self.items
 
     def tofortran(self, tab='', isfix=None):
-        this_str = str(self)
+        '''
+        Produce the Fortran representation of this Comment.
+
+        :param str tab: characters to pre-pend to output.
+        :param bool isfix: whether or not this is fixed-format code.
+
+        :returns: Fortran representation of this comment.
+        :rtype: str
+        '''
+        this_str = six.text_type(self)
         if this_str.strip():
             return tab + this_str
         else:
@@ -648,48 +658,100 @@ content : tuple
 
 
 class SequenceBase(Base):
-    """
-::
-    <sequence-base> = <obj>, <obj> [ , <obj> ]...
-    """
+    '''
+    Match one or more fparser2 rules separated by a defined separator.
+
+    sequence-base is obj [sep obj ] ...
+
+    '''
+    @staticmethod
     def match(separator, subcls, string):
+        '''Match one or more 'subcls' fparser2 rules in the string 'string'
+        separated by 'separator'.
+
+        :param str separator: the separator used to split the supplied \
+        string.
+        :param subcls: an fparser2 object representing the rule that \
+        should be matched.
+        :type subcls: subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: the input string to match.
+
+        :returns: a tuple containing 1) the separator and 2) the \
+        matched objects in a tuple, or None if there is no match.
+        :rtype: (str, (Subclass of \
+        :py:class:`fparser.two.utils.Base`)) or NoneType
+
+        :raises InternalError: if the separator or string arguments \
+        are not the expected type.
+        :raises InternalError: if the separator is white space.
+
+        '''
+        if not isinstance(separator, (str, six.text_type)):
+            raise InternalError(
+                "SequenceBase class match method argument separator expected "
+                "to be a string but found '{0}'.".format(type(string)))
+        if not isinstance(string, (str, six.text_type)):
+            raise InternalError(
+                "SequenceBase class match method argument string expected to "
+                "be a string but found '{0}'.".format(type(string)))
+
+        if separator == ' ':
+            raise InternalError(
+                "SequenceBase class match method argument separator cannot "
+                "be white space.")
         line, repmap = string_replace_map(string)
-        if isinstance(separator, str):
-            splitted = line.split(separator)
-        else:
-            splitted = separator[1].split(line)
-            separator = separator[0]
-        if len(splitted) <= 1:
-            return
-        lst = []
-        for p in splitted:
-            lst.append(subcls(repmap(p.strip())))
+        splitted = line.split(separator)
+        if not splitted:
+            # There should be at least one entry.
+            return None
+        lst = [subcls(repmap(entry.strip())) for entry in splitted]
         return separator, tuple(lst)
-    match = staticmethod(match)
 
     def init(self, separator, items):
+        '''Store the result of the match method if the match is successful.
+
+        :param str separator: The separator used to split the supplied \
+        string.
+        :param items: A tuple containing the matched objects in a \
+        tuple.
+        :type items: (Subclass of :py:class:`fparser.two.utils.Base`)
+
+        '''
         self.separator = separator
         self.items = items
-        return
 
     def tostr(self):
-        s = self.separator
-        if s == ',':
-            s = s + ' '
-        elif s == ' ':
+        '''
+        :returns: The Fortran representation of this object as a string.
+        :rtype: str
+
+        '''
+        sep = self.separator
+        if sep == ',':
+            sep = sep + ' '
+        elif sep == ' ':
             pass
         else:
-            s = ' ' + s + ' '
-        return s.join(map(str, self.items))
+            sep = ' ' + sep + ' '
+        return sep.join(map(str, self.items))
 
     def torepr(self):
-        return '%s(%r, %r)' % (self.__class__.__name__,
-                               self.separator, self.items)
+        '''
+        :returns: The Python representation of this object as a string.
+        :rtype: str
 
-    def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
-        return (self.separator, self.items)
+        '''
+        return "{0}('{1}', {2})".format(self.__class__.__name__,
+                                        self.separator, self.items)
+
+    # The mixin class is likely to be removed so _cmpkey would not be
+    # needed. It is not used at the moment. It is only commented out
+    # at this point, rather than removed, in case it turns out that
+    # the mixin class is useful.
+    # def _cmpkey(self):
+    #     """ Provides a key of objects to be used for comparing.
+    #     """
+    #     return (self.separator, self.items)
 
 
 class UnaryOpBase(Base):
@@ -1116,10 +1178,10 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, str):
+        if not isinstance(string, (str, six.text_type)):
             raise InternalError(
-                "Supplied string should be of type str, but found "
-                "{0}".format(type(string)))
+                "Supplied string should be of type str or {0}, but found "
+                "{1}".format(six.text_type, type(string)))
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)

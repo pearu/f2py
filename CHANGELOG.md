@@ -10,7 +10,32 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
+* J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
+
+20/11/2019 PR #224 for #223. Improvements to the fparser2 script. Errors
+           now output to stderr, command-line setting of Fortran flavour
+           honoured and no longer aborts if a syntax error is found.
+
+## Release 0.0.10 (18/11/2019) ##
+
+18/11/2019 PR #220 for #219. Fixes bug in the parsing of prefix
+           specifications containing white space.
+
+## Release 0.0.9 (04/11/2019) ##
+
+04/11/2019 PR #208 for #207. Adds support for utf characters in Fortran
+           strings when using Python 2.
+
+06/10/2019 PR #212. Change setup.py to make fparser2 automatically
+           available on the command line when installing.
+
+15/07/2019 PR #203 for #170. Allows List objects to contain a single
+           object meaning that the Parse Tree now has a more consistent
+           structure.
+
+11/07/2019 PR #210 for #209. Corrects the maximum number of arguments
+           for the CMPLX instrinsic.
 
 03/07/2019 PR #200 for #171. Disable Statement Function support
            in fparser2.

@@ -79,7 +79,7 @@ from fparser.common.readfortran import FortranReaderBase
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
-    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase
+    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk_ast
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
     InternalSyntaxError, InternalError, show_result
 
@@ -150,10 +150,11 @@ class Comment(Base):
 
     def tostr(self):
         '''
-        :return: this comment as a string
-        :rtype: str
+        :returns: this comment as a string.
+        :rtype: :py:class:`six.text_type`
         '''
-        return str(self.items[0])
+        import six
+        return six.text_type(self.items[0])
 
     def restore_reader(self, reader):
         '''
@@ -1276,12 +1277,14 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
         '''
         :return: this Char_Literal_Constant as a string.
         :rtype: str
-        :raises InternalError: if the internal items list variable is \
-        not the expected size.
-        :raises InternalError: if the first element of the internal \
-        items list is None or is an empty string.
 
+        :raises InternalError: if the internal items list variable is \
+                not the expected size.
+        :raises InternalError: if the first element of the internal \
+                items list is None or is an empty string.
         '''
+        import six
+
         if len(self.items) != 2:
             raise InternalError(
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
@@ -1293,10 +1296,20 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
             raise InternalError(
                 "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
                 "should not be empty")
+        if six.PY2:
+            # In Python2 we must return a byte str and the contents of this
+            # string may include non-ASCII characters
+            char_str = self.items[0].encode('utf-8')
+        else:
+            char_str = str(self.items[0])
         if not self.items[1]:
-            # Character literal has no kind specifier.
-            return str(self.items[0])
-        return "{0}_{1}".format(self.items[1], self.items[0])
+            return char_str
+        # The character constant has a kind specifier
+        if six.PY2:
+            kind_str = self.items[1].encode('utf-8')
+            return kind_str + "_".encode('utf-8') + char_str
+        kind_str = str(self.items[1])
+        return "{0}_{1}".format(kind_str, char_str)
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
@@ -2503,26 +2516,41 @@ class Declaration_Type_Spec(Base):  # R502
     subclass_names = ['Intrinsic_Type_Spec']
     use_names = ['Derived_Type_Spec']
 
+    @staticmethod
     def match(string):
+        '''Implements the matching of a declaration type specification.
+
+        :param str string: the reader or string to match as a \
+        declaration type specification.
+
+        :return: A tuple of size 2 containing a string with the value \
+        'TYPE' or 'CLASS' and a 'Derived_Type_Spec' instance if there \
+        is a match or None if not.
+        :rtype: (str, \
+        py:class:`fparser.two.Fortran2003.Derived_Type_Spec`,) or \
+        NoneType
+
+        '''
+        if not string:
+            return None
         if string[-1] != ')':
-            return
+            return None
         start = string[:4].upper()
         if start == 'TYPE':
             line = string[4:].lstrip()
             if not line.startswith('('):
-                return
+                return None
             return 'TYPE', Derived_Type_Spec(line[1:-1].strip())
         start = string[:5].upper()
         if start == 'CLASS':
             line = string[5:].lstrip()
             if not line.startswith('('):
-                return
+                return None
             line = line[1:-1].strip()
             if line == '*':
                 return 'CLASS', '*'
             return 'CLASS', Derived_Type_Spec(line)
-        return
-    match = staticmethod(match)
+        return None
 
     def tostr(self):
         return '%s(%s)' % self.items
@@ -3956,16 +3984,51 @@ class Substring_Range(SeparatorBase):  # R611
         return SeparatorBase.match(Scalar_Int_Expr, Scalar_Int_Expr, string)
 
 
-class Data_Ref(SequenceBase):  # R612
-    """
-    <data-ref> = <part-ref> [ % <part-ref> ]...
-    """
+class Data_Ref(SequenceBase):
+    '''
+    Fortran 2003 Rule R612
+
+    data-ref is part-ref [ % part-ref ] ...
+
+    If there is only one part-ref then return a 'Part_Ref' object (or
+    another object from a matching sub-rule). If there is more than
+    one part-ref then return a 'Data_Ref' object containing the
+    part-ref's.
+
+    '''
     subclass_names = ['Part_Ref']
     use_names = []
 
+    @staticmethod
     def match(string):
-        return SequenceBase.match(r'%', Part_Ref, string)
-    match = staticmethod(match)
+        '''Implements the matching for a data-reference. This defines a series
+        of dereferences e.g. a%b%c.
+
+        If there is more than one part-ref then return a 'Data_Ref'
+        object containing the part-ref's, otherwise return 'None'. A
+        single 'part-ref' is purposely not matched here.
+
+        :param str string: Fortran code to check for a match
+
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched operator as a string and another tuple \
+                 containing the matched subclasses.
+
+        :rtype: NoneType or (str, (obj, obj, ...))
+
+        '''
+        # Use SequenceBase as normal, then force no match when there is
+        # only one entry in the sequence.
+        result = SequenceBase.match(r'%', Part_Ref, string)
+        entries = result[1]
+        if len(entries) > 1:
+            # There is more than one part-ref so return a Data_Ref
+            # object containing the part-refs.
+            return result
+        # There is only one part-ref so return None to indicate there
+        # is no match and allow the subclass_names Part_Ref class to
+        # match instead.
+        return None
 
 
 class Part_Ref(CallBase):  # R613
@@ -9299,7 +9362,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
     numeric_names = {
         "ABS": {"min": 1, "max": 1}, "AIMAG": {"min": 1, "max": 1},
         "AINT": {"min": 1, "max": 2}, "ANINT": {"min": 1, "max": 2},
-        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 2},
+        "CEILING": {"min": 1, "max": 2}, "CMPLX": {"min": 1, "max": 3},
         "CONJG": {"min": 1, "max": 1}, "DBLE": {"min": 1, "max": 1},
         "DIM": {"min": 2, "max": 2}, "DPROD": {"min": 2, "max": 2},
         "FLOOR": {"min": 1, "max": 2}, "INT": {"min": 1, "max": 2},
@@ -9695,6 +9758,12 @@ class Function_Stmt(StmtBase):  # R1224
     """
     <function-stmt> = [ <prefix> ] FUNCTION <function-name>
                       ( [ <dummy-arg-name-list> ] ) [ <suffix> ]
+
+    C1242 (R1227) A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt. The spec associates this constraint with R1227
+    but it needs to be checked here.
+
     """
     subclass_names = []
     use_names = ['Prefix', 'Function_Name', 'Dummy_Arg_Name_List', 'Suffix']
@@ -9726,6 +9795,12 @@ class Function_Stmt(StmtBase):  # R1224
         suffix = None
         if line:
             suffix = Suffix(repmap(line))
+        if suffix:
+            # A suffix may or may not contain a binding spec.
+            binding_spec = walk_ast([suffix], my_types=[Language_Binding_Spec])
+            # Check that we conform to C1242.
+            if not c1242_valid(prefix, binding_spec):
+                return None
         return prefix, name, dummy_args, suffix
 
     def tostr(self):
@@ -9757,19 +9832,80 @@ class Dummy_Arg_Name(Base):  # R1226
     subclass_names = ['Name']
 
 
-class Prefix(SequenceBase):  # R1227
-    """
-    <prefix> = <prefix-spec> [ <prefix-spec> ]..
-    """
-    subclass_names = ['Prefix_Spec']
-    _separator = (' ', re.compile(r'\s+(?=[a-z_])', re.I))
+class Prefix(SequenceBase):
+    '''Fortran2003 rule R1227
 
+    prefix is prefix-spec [ prefix-spec ] ...
+
+    C1240 (R1227) A prefix shall contain at most one of each
+    prefix-spec. Checked below.
+
+    C1241 (R1227) A prefix shall not specify both ELEMENTAL and
+    RECURSIVE. Checked below.
+
+    C1242 (R1227) A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt. This constraint can not be checked here, it is
+    checked in R1224 and R1232.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
     def match(string):
-        return SequenceBase.match(Prefix._separator, Prefix_Spec, string)
-    match = staticmethod(match)
+        '''Match a space separated list of Prefix_Spec objects. Objects may be
+        separated by 1 or more spaces.
+
+        :returns: A tuple of size 2 containing the separator and a \
+        tuple containing one or more Prefix_Spec objects if there is a \
+        match and None if not.
+
+        :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`,)) \
+        or NoneType
+
+        '''
+        start_match_list = []
+        end_match_list = []
+        decl_spec_list = []
+        keyword_list = []
+        split = string.split()
+        # Match prefix-spec (apart from declaration-type-spec) from
+        # the left end of the string. These can be tokenised with a
+        # simple split as they are guaranteed to not contain any
+        # whitespace (as they are keywords).
+        while split and split[0].upper() in Prefix_Spec.keywords:
+            start_match_list.append(Prefix_Spec(split[0]))
+            keyword_list.append(split[0].upper())
+            split = split[1:]
+        # Match prefix-spec (apart from declaration-type-spec) from
+        # the right end of the string.
+        while split and split[-1].upper() in Prefix_Spec.keywords:
+            end_match_list.insert(0, Prefix_Spec(split[-1]))
+            keyword_list.append(split[-1].upper())
+            split = split[:-1]
+        # What is remaining must be a declaration-type-spec (or is
+        # empty) as only one of each prefix-spec is allowed in a
+        # prefix (C1240). This may contain internal white space so
+        # join the remaining parts together.
+        remaining = " ".join(split)
+        if remaining:
+            decl_spec_list = [Declaration_Type_Spec(remaining)]
+        if len(set(keyword_list)) != len(keyword_list):
+            # C1240 A prefix shall contain at most one of each
+            # prefix-spec. No need to check declaration-type-spec as
+            # that is limited to at most one by design.
+            return None
+        if "ELEMENTAL" in keyword_list and "RECURSIVE" in keyword_list:
+            # C1241 A prefix shall not specify both ELEMENTAL and RECURSIVE.
+            return None
+        result_list = start_match_list + decl_spec_list + end_match_list
+        if result_list:
+            return " ", tuple(result_list)
+        # A prefix must contain at least one prefix-spec.
+        return None
 
 
-class Prefix_Spec(STRINGBase):  # R1226
+class Prefix_Spec(STRINGBase):  # R1228
     """
     <prefix-spec> = <declaration-type-spec>
                     | ELEMENTAL
@@ -9779,6 +9915,8 @@ class Prefix_Spec(STRINGBase):  # R1226
                     | RECURSIVE
     """
     subclass_names = ['Declaration_Type_Spec']
+    # issue #221. IMPURE and MODULE are Fortran2008.
+    keywords = ['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE', 'RECURSIVE']
 
     def match(string):
         '''
@@ -9788,8 +9926,7 @@ class Prefix_Spec(STRINGBase):  # R1226
         :return: Discovered prefix.
         :rtype: str
         '''
-        return STRINGBase.match(['ELEMENTAL', 'IMPURE', 'MODULE', 'PURE',
-                                 'RECURSIVE'], string)
+        return STRINGBase.match(Prefix_Spec.keywords, string)
     match = staticmethod(match)
 
 
@@ -9873,11 +10010,47 @@ class Subroutine_Subprogram(BlockBase):  # R1231
     match = staticmethod(match)
 
 
+def c1242_valid(prefix, binding_spec):
+    '''If prefix and binding-spec exist then check whether they conform to
+    constraint C1242 : "A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt."
+
+    :param prefix: matching prefix instance if one exists.
+    :type: :py:class:`fparser.two.Fortran2003.Prefix` or `NoneType`
+    :param binding_spec: matching binding specification instance if \
+        one exists.
+    :type binding_spec: \
+        :py:class:`fparser.two.Fortran2003.Language_Binding_Spec` or
+        `NoneType`
+    :returns: False if prefix and binding-spec break constraint C1242, \
+        otherwise True.
+    :rtype: bool
+
+    '''
+    if binding_spec and prefix:
+        # Prefix(es) may or may not be of type ELEMENTAL
+        elemental = any("ELEMENTAL" in str(child)
+                        for child in walk_ast(prefix.items,
+                                              my_types=[Prefix_Spec]))
+        if elemental:
+            # Constraint C1242. A prefix shall not specify ELEMENTAL if
+            # proc-language-binding-spec appears in the function-stmt or
+            # subroutine-stmt.
+            return False
+    return True
+
+
 class Subroutine_Stmt(StmtBase):  # R1232
-    """
-    <subroutine-stmt>
+    """<subroutine-stmt>
     = [ <prefix> ] SUBROUTINE <subroutine-name>
       [ ( [ <dummy-arg-list> ] ) [ <proc-language-binding-spec> ] ]
+
+    C1242 (R1227) A prefix shall not specify ELEMENTAL if
+    proc-language-binding-spec appears in the function-stmt or
+    subroutine-stmt. The spec associates this constraint with R1227
+    but it needs to be checked here.
+
     """
     subclass_names = []
     use_names = ['Prefix', 'Subroutine_Name', 'Dummy_Arg_List',
@@ -9909,6 +10082,8 @@ class Subroutine_Stmt(StmtBase):  # R1232
         binding_spec = None
         if line:
             binding_spec = Proc_Language_Binding_Spec(repmap(line))
+        if not c1242_valid(prefix, binding_spec):
+            return None
         return prefix, name, dummy_args, binding_spec
     match = staticmethod(match)
 

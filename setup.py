@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2019 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson.
 
@@ -103,7 +103,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 8
+MICRO = 10
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
@@ -121,6 +121,11 @@ if __name__ == '__main__':
         packages=PACKAGES,
         package_dir={"": "src"},
         install_requires=['six'],
+        entry_points={
+            'console_scripts': [
+                'fparser2=fparser.scripts.fparser2:main',
+            ],
+        },
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
         include_package_data=True)

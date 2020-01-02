@@ -94,7 +94,7 @@ def test_syntaxerror(f2003_create):
                  "forall () a(i,j)=i+j"]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Forall_Stmt(line)
-        assert "Forall_Stmt: '{0}'".format(line) in str(excinfo)
+        assert "Forall_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_internal_error1(f2003_create, monkeypatch):
@@ -108,7 +108,7 @@ def test_internal_error1(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert ("Class Forall_Stmt method tostr() has '3' items, but "
-            "expecting 2.") in str(excinfo)
+            "expecting 2.") in str(excinfo.value)
 
 
 def test_internal_error2(f2003_create):
@@ -124,7 +124,7 @@ def test_internal_error2(f2003_create):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("'Items' entry 0 should be a valid "
-                "Forall_Header") in str(excinfo)
+                "Forall_Header") in str(excinfo.value)
 
 
 def test_internal_error3(f2003_create):
@@ -140,4 +140,4 @@ def test_internal_error3(f2003_create):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("'Items' entry 1 should be a valid "
-                "Forall_Assignment_Stmt") in str(excinfo)
+                "Forall_Assignment_Stmt") in str(excinfo.value)

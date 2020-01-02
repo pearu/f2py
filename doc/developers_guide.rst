@@ -102,9 +102,8 @@ Fparser2
 --------
 
 Fparser2 supports Fortran2003 and is being extended to support
-Fortran2008. It is a little less mature than fparser but is being
-actively developed and is planned to replace fparser in the near
-future.
+Fortran2008. Fparser2 is being actively developed and will fully
+replace fparser1 in the future.
 
 .. _rules:
 

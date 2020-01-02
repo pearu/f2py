@@ -92,7 +92,7 @@ def test_internal_error1(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", [None, None, None])
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "has '3' items, but expecting 4." in str(excinfo)
+    assert "has '3' items, but expecting 4." in str(excinfo.value)
 
 
 def test_internal_error2(f2003_create, monkeypatch):
@@ -108,7 +108,7 @@ def test_internal_error2(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert "should be a descriptor name but is empty or None" \
-            in str(excinfo)
+            in str(excinfo.value)
 
 
 def test_internal_error3(f2003_create, monkeypatch):
@@ -124,7 +124,8 @@ def test_internal_error3(f2003_create, monkeypatch):
                                            ast.items[2], ast.items[3]])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "should be the w value but is empty or None" in str(excinfo)
+        assert "should be the w value but is empty or None" in \
+            str(excinfo.value)
 
 
 def test_internal_error4(f2003_create, monkeypatch):
@@ -140,7 +141,8 @@ def test_internal_error4(f2003_create, monkeypatch):
                                            content, ast.items[3]])
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "should be the m value but is empty or None" in str(excinfo)
+        assert "should be the m value but is empty or None" in \
+            str(excinfo.value)
 
 
 def test_internal_error5(f2003_create, monkeypatch):
@@ -155,7 +157,7 @@ def test_internal_error5(f2003_create, monkeypatch):
         with pytest.raises(InternalError) as excinfo:
             str(ast)
         assert ("has an exponent value '3' but this is not allowed for 'F' "
-                "and 'D' descriptors" in str(excinfo))
+                "and 'D' descriptors" in str(excinfo.value))
 
 
 def test_internal_error6(f2003_create, monkeypatch):
@@ -168,4 +170,4 @@ def test_internal_error6(f2003_create, monkeypatch):
     monkeypatch.setattr(ast, "items", ["INVALID"]+list(ast.items[1:]))
     with pytest.raises(InternalError) as excinfo:
         str(ast)
-    assert "Unexpected descriptor name 'INVALID'" in str(excinfo)
+    assert "Unexpected descriptor name 'INVALID'" in str(excinfo.value)

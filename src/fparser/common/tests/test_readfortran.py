@@ -35,7 +35,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##############################################################################
 # Modified M. Hambley and P. Elson, Met Office
-# Modified R. W. Ford, STFC Daresbury Lab
+# Modified R. W. Ford and A. R. Porter, STFC Daresbury Lab
 ##############################################################################
 '''
 Test battery associated with fparser.common.readfortran package.
@@ -45,7 +45,8 @@ from __future__ import print_function
 import io
 import os.path
 import tempfile
-
+import six
+import re
 import pytest
 
 from fparser.common.readfortran import FortranFileReader, FortranStringReader
@@ -59,7 +60,7 @@ def test_empty_line_err():
     from fparser.common.readfortran import Line, FortranReaderError
     with pytest.raises(FortranReaderError) as err:
         _ = Line("   ", 1, "", "a_name", None)
-    assert "Got empty line: \'   \'" in str(err)
+    assert "Got empty line: \'   \'" in str(err.value)
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -137,7 +138,8 @@ def test_base_next_good_include(log):
     expected = "    1:include 'modfile.f95' " \
                + "<== including file '{path}/modfile.f95'"
     result = log.messages['info'][0].split('\n')[1]
-    assert result == expected.format(path=include_directories[0])
+    assert re.sub("u", "", result) == \
+        re.sub("u", "", expected.format(path=include_directories[0]))
 
 
 def test_fortranreaderbase_info(log):
@@ -675,7 +677,7 @@ def test_bad_file_reader():
     with pytest.raises(ValueError) as ex:
         unit_under_test = FortranFileReader(42)
     expected = 'FortranFileReader is used with a filename or file-like object.'
-    assert expected in str(ex)
+    assert expected in str(ex.value)
 
 
 ##############################################################################
@@ -806,7 +808,8 @@ end python module foo
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
-        assert str(item) == expected.pop(0)
+        # Remove 'u's to allow for py2/3 unicode differences
+        assert re.sub("u", "", str(item)) == re.sub("u", "", expected.pop(0))
 
 
 def test_fix90():
@@ -855,4 +858,19 @@ cComment
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
-        assert str(item) == expected.pop(0)
+        # Remove 'u's to allow for py2/3 unicode differences
+        assert re.sub("u", "", six.text_type(item)) == \
+            re.sub("u", "", expected.pop(0))
+
+
+def test_utf_char_in_code(log):
+    ''' Check that we cope with Fortran code that contains UTF characters. This
+    is not valid Fortran but most compilers cope with it. '''
+    log.reset()
+    fort_file = os.path.join(os.path.dirname(__file__), "utf_in_code.f90")
+    reader = FortranFileReader(fort_file,
+                               ignore_comments=True)
+    out_line = reader.get_item()
+    while out_line:
+        out_line = reader.get_item()
+    assert log.messages['critical'] == []
