@@ -1309,16 +1309,21 @@ class WORDClsBase(Base):
     '''
     @staticmethod
     def match(pattern, cls, string, check_colons=False, require_cls=False):
-        ''':param pattern: the pattern of the WORD to match. This can be a \
-        string, a list of strings or a tuple of strings.
-        :type pattern: str, tuple of str or list of str.
+        '''
+
+        :param pattern: the pattern of the WORD to match. This can be \
+            a Pattern, string, list or tuple, with a list or tuple \
+            containing one or more Pattern, string, list or tuple.
+        :type pattern: :py:class:`fparser.two.pattern_tools.Pattern`, \
+            str, tuple of str/Pattern/tuple/list or list of \
+            str/Pattern/tuple/list
         :param cls: the class to match.
         :type cls: a subclass of :py:class:`fparser.two.utils.Base`.
         :param str string: Text that we are trying to match.
         :param bool check_colons: whether '::' is allowed or not \
-        between WORD and cls.
+            between WORD and cls.
         :param bool require_cls: whether content for cls is required \
-        or not.
+            or not.
 
         '''
         if isinstance(pattern, (tuple, list)):
@@ -1332,44 +1337,32 @@ class WORDClsBase(Base):
                 if obj is not None:
                     return obj
             return
-        has_colons = False
+
         if isinstance(pattern, str):
             line = string.lstrip()
             if line[:len(pattern)].upper() != pattern.upper():
                 return
             line = line[len(pattern):]
-            if not line:
-                if require_cls:
-                    # no text found but it is required
-                    return
-                return pattern, None
-            if isalnum(line[0]):
-                return
-            line = line.lstrip()
-            if check_colons and line.startswith('::'):
-                has_colons = True
-                line = line[2:].lstrip()
-            if not line:
-                if has_colons or require_cls:
-                    # colons without following content is not allowed.
-                    return
-                return pattern, None
-            if cls is None:
-                return
-            return pattern, cls(line)
-        m = pattern.match(string)
-        if m is None:
-            return
-        line = string[len(m.group()):]
-        if pattern.value is not None:
-            pattern_value = pattern.value
+            pattern_value = pattern
         else:
-            pattern_value = m.group().upper()
+            my_match = pattern.match(string)
+            if my_match is None:
+                return
+            line = string[len(my_match.group()):]
+            if pattern.value is not None:
+                pattern_value = pattern.value
+            else:
+                pattern_value = my_match.group().upper()
+
         if not line:
+            if require_cls:
+                # no text found but it is required
+                return
             return pattern_value, None
         if isalnum(line[0]):
             return
         line = line.lstrip()
+        has_colons = False
         if check_colons and line.startswith('::'):
             has_colons = True
             line = line[2:].lstrip()
