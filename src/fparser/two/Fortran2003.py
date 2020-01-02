@@ -1768,8 +1768,31 @@ class Component_Initialization(Base):  # R444
 
 class Proc_Component_Def_Stmt(StmtBase):  # R445
     """
-    <proc-component-def-stmt> = PROCEDURE ( [ <proc-interface> ] )
+    <proc-component-def-stmt> is PROCEDURE ( [ <proc-interface> ] )
         , <proc-component-attr-spec-list> :: <proc-decl-list>
+
+    where
+
+        proc-component-attr-spec is POINTER
+                                 or PASS [ (arg-name) ]
+                                 or NOPASS
+                                 or access-spec
+
+    The standard specifies the following constraints:
+
+    "C448 The same proc-component-attr-spec shall not appear more than once
+          in a given proc-component-def-stmt." Not checked by fparser.
+
+    "C449 POINTER shall appear in each proc-component-attr-spec-list."
+
+    "C450 If the procedure pointer component has an implicit interface or has
+          no arguments, NOPASS shall be specified." Not checked by fparser.
+
+    "C451 If PASS (arg-name) appears, the interface shall have a dummy argument
+          named arg-name." Not checked by fparser.
+
+    "C452 PASS and NOPASS shall not both appear in the same
+          proc-component-attr-spec-list." Not checked by fparser.
     """
     subclass_names = []
     use_names = ['Proc_Interface', 'Proc_Component_Attr_Spec_List',
