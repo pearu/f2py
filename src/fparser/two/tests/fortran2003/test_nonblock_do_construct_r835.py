@@ -89,9 +89,13 @@ def test_outer_shared_do_construct():
 def test_nonblock_do_construct_tofortran_non_ascii():
     ''' Check that the tofortran() method works when the non-block
     do-construct contains a character string with non-ascii characters. '''
+    from fparser.common.readfortran import FortranStringReader
+    from fparser.common.sourceinfo import FortranFormat
     code = (u"      DO 50\n"
             u" 50   WRITE(*,*) ' for e1=1\xb0'\n")
-    reader = get_reader(code)
+    reader = FortranStringReader(code)
+    # Ensure reader in in 'fixed-format' mode
+    reader.set_format(FortranFormat(False, True))
     obj = Nonblock_Do_Construct(reader)
     out_str = str(obj)
     assert "for e1=1" in out_str
