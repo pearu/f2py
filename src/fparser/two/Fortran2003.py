@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -2170,7 +2170,7 @@ class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: str
         '''
         return WORDClsBase.match(
-            'FINAL', Final_Subroutine_Name_List, string, check_colons=True,
+            'FINAL', Final_Subroutine_Name_List, string, colons=True,
             require_cls=True)
 
     # String representation with optional double colons included
@@ -2290,7 +2290,7 @@ class Enumerator_Def_Stmt(StmtBase, WORDClsBase):  # R462
     def match(string):
         return WORDClsBase.match(
             'ENUMERATOR', Enumerator_List, string,
-            check_colons=True, require_cls=True)
+            colons=True, require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
 
@@ -2911,7 +2911,7 @@ class Access_Stmt(StmtBase, WORDClsBase):  # R518
     def match(string):
         return WORDClsBase.match(
             ['PUBLIC', 'PRIVATE'],
-            Access_Id_List, string, check_colons=True,
+            Access_Id_List, string, colons=True,
             require_cls=False)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
@@ -2953,7 +2953,7 @@ class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
     def match(string):
         return WORDClsBase.match(
             'ALLOCATABLE', Object_Name_Deferred_Shape_Spec_List_Item_List,
-            string, check_colons=True, require_cls=True)
+            string, colons=True, require_cls=True)
     match = staticmethod(match)
 
 
@@ -2967,7 +2967,7 @@ class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
 
     def match(string):
         return WORDClsBase.match(
-            'ASYNCHRONOUS', Object_Name_List, string, check_colons=True,
+            'ASYNCHRONOUS', Object_Name_List, string, colons=True,
             require_cls=True)
     match = staticmethod(match)
 
@@ -3291,7 +3291,7 @@ class Optional_Stmt(StmtBase, WORDClsBase):  # R537
 
     def match(string):
         return WORDClsBase.match(
-            'OPTIONAL', Dummy_Arg_Name_List, string, check_colons=True,
+            'OPTIONAL', Dummy_Arg_Name_List, string, colons=True,
             require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
@@ -3466,7 +3466,7 @@ class Pointer_Stmt(StmtBase, WORDClsBase):  # R540
 
     def match(string):
         return WORDClsBase.match('POINTER', Pointer_Decl_List, string,
-                                 check_colons=True, require_cls=True)
+                                 colons=True, require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
 
@@ -3494,7 +3494,7 @@ class Protected_Stmt(StmtBase, WORDClsBase):  # R542
 
     def match(string):
         return WORDClsBase.match(
-            'PROTECTED', Entity_Name_List, string, check_colons=True,
+            'PROTECTED', Entity_Name_List, string, colons=True,
             require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
@@ -3509,7 +3509,7 @@ class Save_Stmt(StmtBase, WORDClsBase):  # R543
 
     def match(string):
         return WORDClsBase.match(
-            'SAVE', Saved_Entity_List, string, check_colons=True,
+            'SAVE', Saved_Entity_List, string, colons=True,
             require_cls=False)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
@@ -3578,7 +3578,7 @@ class Value_Stmt(StmtBase, WORDClsBase):  # R547
     @staticmethod
     def match(string):
         return WORDClsBase.match(
-            'VALUE', Dummy_Arg_Name_List, string, check_colons=True,
+            'VALUE', Dummy_Arg_Name_List, string, colons=True,
             require_cls=True)
     tostr = WORDClsBase.tostr_a
 
@@ -3593,7 +3593,7 @@ class Volatile_Stmt(StmtBase, WORDClsBase):  # R548
     @staticmethod
     def match(string):
         return WORDClsBase.match(
-            'VOLATILE', Object_Name_List, string, check_colons=True,
+            'VOLATILE', Object_Name_List, string, colons=True,
             require_cls=True)
     tostr = WORDClsBase.tostr_a
 
@@ -9130,19 +9130,46 @@ items : (str, )
         return '%s' % (self.items[0])
 
 
-class Import_Stmt(StmtBase, WORDClsBase):  # R1209
-    """
-    <import-stmt> = IMPORT [ :: ] <import-name-list>
-    """
+class Import_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R1209
+    import-stmt is IMPORT [[ :: ] import-name-list ]
+
+    C1210 (R1209) The IMPORT statement is allowed only in an
+    interface-body. Note, this constraint is not currently enforced.
+
+    C1211 (R1209) Each import-name shall be the name of an entity in
+    the host scoping unit. This constraint is not currently enforced
+    and can not be generally enforced as the name may come from a use
+    statement without an only clause.
+
+    '''
     subclass_names = []
     use_names = ['Import_Name_List']
+    tostr = WORDClsBase.tostr_a
 
     @staticmethod
     def match(string):
+        '''
+        Implements the matching for the import-stmt rule.
+
+        Makes use of the WORDClsBase base class.
+
+        :param str string: the string to match.
+
+        :returns: None if there is no match, otherwise a tuple of size \
+            2 containing the string `IMPORT` as the first entry and \
+            an object of type `Import_Name_List` if names are \
+            specified in the string or `None` if not.
+
+        :rtype: None, or (str, \
+            :py:class:`fparser.two.Fortran2003.Import_Name_List`) or \
+            (str, None)
+
+        '''
         return WORDClsBase.match(
-            'IMPORT', Import_Name_List, string, check_colons=True,
-            require_cls=True)
-    tostr = WORDClsBase.tostr_a
+            'IMPORT', Import_Name_List, string, colons=True,
+            require_cls=False)
 
 
 class External_Stmt(StmtBase, WORDClsBase):  # R1210
@@ -9155,7 +9182,7 @@ class External_Stmt(StmtBase, WORDClsBase):  # R1210
     def match(string):
         return WORDClsBase.match(
             'EXTERNAL', External_Name_List, string,
-            check_colons=True, require_cls=True)
+            colons=True, require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
 
@@ -9300,7 +9327,7 @@ class Intrinsic_Stmt(StmtBase, WORDClsBase):  # R1216
     def match(string):
         return WORDClsBase.match(
             'INTRINSIC', Intrinsic_Procedure_Name_List,
-            string, check_colons=True, require_cls=True)
+            string, colons=True, require_cls=True)
     match = staticmethod(match)
     tostr = WORDClsBase.tostr_a
 
