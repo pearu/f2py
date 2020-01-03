@@ -286,7 +286,25 @@ class Line(object):
             line = self.line
         if apply_map:
             line = self.apply_map(line)
-        return Line(line, self.span, self.label, self.name, self.reader)
+
+        # THE HACKED FIX IS HERE
+        # REPLICATED CODE
+        label = self.label
+        # Check for a label
+        m = _LABEL_RE.match(line)
+        if m:
+            assert not label, repr(label)
+            label = int(m.group('label'))
+            line = line[m.end():]
+
+        name = self.name
+        # Check for a construct name
+        m = _CONSTRUCT_NAME_RE.match(line)
+        if m:
+            name = m.group('name')
+            line = line[m.end():].lstrip()
+
+        return Line(line, self.span, label, name, self.reader)
 
     def clone(self, line):
         '''
@@ -841,6 +859,7 @@ class FortranReaderBase(object):
                 for line in item.get_line().split(';'):
                     line = line.strip()
                     if line:
+                        # THE ERROR IS HERE
                         items.append(item.copy(line, apply_map=True))
                 items.reverse()
                 for newitem in items:
