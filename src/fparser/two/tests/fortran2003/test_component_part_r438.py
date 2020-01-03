@@ -83,12 +83,16 @@ def test_proc_component_part(interface, attributes):
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_invalid_proc_component():
+@pytest.mark.parametrize("invalid_code", ["procure(), nopass :: my_proc",
+                                          "procedure, nopass :: my_proc",
+                                          "procedure), nopass :: my_proc",
+                                          "procedure(, nopass :: my_proc",
+                                          "procedure() nopass :: my_proc",
+                                          "procedure(), nopass my_proc"])
+def test_invalid_proc_component(invalid_code):
     ''' Check that we don't get a match for an invalid procedure
     declaration. '''
-    # Missing parentheses after "procedure"
-    code = "procedure, nopass :: my_proc"
-    reader = get_reader(code)
+    reader = get_reader(invalid_code)
     with pytest.raises(NoMatchError):
         Component_Part(reader)
 
