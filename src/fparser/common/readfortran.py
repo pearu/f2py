@@ -284,27 +284,11 @@ class Line(object):
         '''
         if line is None:
             line = self.line
+
         if apply_map:
             line = self.apply_map(line)
 
-        # THE HACKED FIX IS HERE
-        # REPLICATED CODE
-        label = self.label
-        # Check for a label
-        m = _LABEL_RE.match(line)
-        if m:
-            assert not label, repr(label)
-            label = int(m.group('label'))
-            line = line[m.end():]
-
-        name = self.name
-        # Check for a construct name
-        m = _CONSTRUCT_NAME_RE.match(line)
-        if m:
-            name = m.group('name')
-            line = line[m.end():].lstrip()
-
-        return Line(line, self.span, label, name, self.reader)
+        return Line(line, self.span, self.label, self.name, self.reader)
 
     def clone(self, line):
         '''
@@ -859,8 +843,24 @@ class FortranReaderBase(object):
                 for line in item.get_line().split(';'):
                     line = line.strip()
                     if line:
-                        # THE ERROR IS HERE
-                        items.append(item.copy(line, apply_map=True))
+                        # The line might have a label and/or construct name.
+                        # Check for a label.
+                        label = None
+                        match = _LABEL_RE.match(line)
+                        if match:
+                            label = int(match.group('label'))
+                            line = line[match.end():]
+                        # Check for a construct name.
+                        name = None
+                        match = _CONSTRUCT_NAME_RE.match(line)
+                        if match:
+                            name = match.group('name')
+                            line = line[match.end():].lstrip()
+                        # Create a new line and append to items using
+                        # the existing span and reader.
+                        new_line = Line(item.apply_map(line), item.span, label,
+                                        name, item.reader)
+                        items.append(new_line)
                 items.reverse()
                 for newitem in items:
                     self.fifo_item.insert(0, newitem)
