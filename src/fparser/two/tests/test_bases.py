@@ -32,13 +32,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-''' Module containing py.test tests for fparser2 base classes '''
+''' Module containing pytest tests for fparser2 base classes '''
 
-from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2003 classes
-_ = ParserFactory().create(std="f2003")
+import pytest
 
 
+@pytest.mark.usefixtures("f2003_create")
 def test_keywordvaluebase_errors():
     ''' Unit tests for the KeywordValueBase class to check that it rejects
     invalid input '''
@@ -72,6 +71,7 @@ def test_keywordvaluebase_errors():
     assert obj is None
 
 
+@pytest.mark.usefixtures("f2003_create")
 def test_read_stmt_errors():
     ''' Unit tests for the Read class to ensure it rejects invalid
     inputs '''
@@ -97,6 +97,7 @@ def test_read_stmt_errors():
     assert obj is None
 
 
+@pytest.mark.usefixtures("f2003_create")
 def test_io_ctrl_spec_list_errors():
     ''' Unit tests for the Io_Control_Spec_List class to ensure it
     rejects invalid input '''
@@ -106,6 +107,7 @@ def test_io_ctrl_spec_list_errors():
     assert obj is None
 
 
+@pytest.mark.usefixtures("f2003_create")
 def test_io_ctrl_spec_errors():
     ''' Unit tests for the Io_Control_Spec class to ensure it
     rejects invalid input '''
@@ -116,7 +118,8 @@ def test_io_ctrl_spec_errors():
     assert obj is None
 
 
-def test_blockbase_tofortran_non_ascii(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_blockbase_tofortran_non_ascii():
     ''' Check that the tofortran() method works when we have a program
     containing non-ascii characters within a sub-class of BlockBase. We
     use a Case Construct for this purpose. '''
