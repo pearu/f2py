@@ -13,6 +13,9 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+03/01/2020 PR #206 for #144. Bug fixes to the parsing of IMPORT
+           statements.
+
 20/11/2019 PR #224 for #223. Improvements to the fparser2 script. Errors
            now output to stderr, command-line setting of Fortran flavour
            honoured and no longer aborts if a syntax error is found.
