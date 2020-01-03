@@ -324,6 +324,8 @@ class Base(ComparableMixin):
             obj = object.__new__(cls)
             obj.string = string
             obj.item = None
+            # Set-up parent information
+            obj.set_parent(result)
             if hasattr(cls, 'init'):
                 obj.init(*result)
             return obj
@@ -421,16 +423,13 @@ class Base(ComparableMixin):
 
     def init(self, *items):
         '''
-        Store the supplied list of nodes in the `items` list of this node and
-        set the parent of each of those nodes.
+        Store the supplied list of nodes in the `items` list of this node.
 
         :param items: the children of this node.
         :type items: tuple of :py:class:`fparser.two.utils.Base`
 
         '''
         self.items = items
-        # Set-up parent information for the child nodes.
-        self.set_parent(self.items)
 
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
@@ -681,15 +680,13 @@ content : tuple
 
     def init(self, content):
         '''
-        Initialise the `content` attribute with the list of child nodes. Set
-        the parent of each of the child nodes.
+        Initialise the `content` attribute with the list of child nodes.
 
         :param content: list of nodes that are children of this one.
         :type content: list of :py:class:`fparser.two.utils.Base` or NoneType
 
         '''
         self.content = content
-        self.set_parent(self.content)
 
     def get_child(self, node_type):
         '''
@@ -799,7 +796,6 @@ class SequenceBase(Base):
 
     def init(self, separator, items):
         '''Store the result of the match method if the match is successful.
-        Set-up the parent information of the child nodes.
 
         :param str separator: the separator used to split the supplied string.
         :param items: a tuple containing the matched objects.
@@ -808,7 +804,6 @@ class SequenceBase(Base):
         '''
         self.separator = separator
         self.items = items
-        self.set_parent(self.items)
 
     def tostr(self):
         '''
@@ -1366,8 +1361,6 @@ class EndStmtBase(StmtBase):
 
         '''
         self.items = [stmt_type, stmt_name]
-        # Set parent information for the children of this object.
-        self.set_parent(self.items)
 
     def get_name(self):
         return self.items[1]
