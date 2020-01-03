@@ -43,8 +43,6 @@ from fparser.two.Fortran2003 import Block_Label_Do_Construct, \
 
 
 @pytest.mark.usefixtures("f2003_create")
-
-
 def test_block_label_do_construct():
     ''' Tests that block labeled DO construct
     is parsed correctly (R826_1). '''
@@ -108,6 +106,7 @@ def test_block_label_do_construct():
         'DO 53 , WHILE (j /= n)\n  j = j + i\n53 CONTINUE')
 
 
+@pytest.mark.usefixtures("f2003_create")
 def test_block_nonlabel_do_construct():
     # pylint: disable=invalid-name
     ''' Tests that block nonlabeled DO construct is parsed
