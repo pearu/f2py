@@ -35,7 +35,7 @@
 
 ''' pytest module for the Fortran2003 Case Construct - R808.
     Does not test all aspects of R808, in particular the conditions C803-7
-    are not checked. '''
+    are not checked - #232. '''
 
 import pytest
 from fparser.api import get_reader

@@ -34,7 +34,8 @@
 
 '''Test Fortran 2003 rule R438: this module contains pytest tests for the
    support for the components of a derived type. Note that only condition
-   C449 is tested for here. The other conditions (C436-C452) are untested.
+   C449 is tested for here. The other conditions (C436-C452) are untested,
+   this is the subject of #232.
 '''
 
 import pytest
