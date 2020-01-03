@@ -42,6 +42,7 @@ from fparser.two.Fortran2003 import Import_Stmt
 from fparser.two.utils import NoMatchError
 
 
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("example,result",
                          [("IMPORT", "IMPORT"),
                           ("iMpOrT", "IMPORT"),
@@ -53,7 +54,7 @@ from fparser.two.utils import NoMatchError
                           ("IMPORT::name1,name2", "IMPORT :: name1, name2"),
                           ("  IMPORT  ::  name1  ,  name2  ",
                            "IMPORT :: name1, name2")])
-def test_match_valid(f2003_create, example, result):
+def test_match_valid(example, result):
     ''' Test that valid input is parsed correctly '''
 
     obj = Import_Stmt(example)
@@ -61,9 +62,10 @@ def test_match_valid(f2003_create, example, result):
     assert str(obj) == result
 
 
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("example", ["", "  ", "IMPOR", "IMPORT : name1",
                                      "IMPORT ::", "IMPORTname1"])
-def test_match_invalid(f2003_create, example):
+def test_match_invalid(example):
     ''' Test that invalid input raises an exception '''
 
     with pytest.raises(NoMatchError) as excinfo:

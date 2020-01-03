@@ -1308,9 +1308,9 @@ class WORDClsBase(Base):
 
     '''
     @staticmethod
-    def match(pattern, cls, string, colons=False, require_cls=False):
+    def match(keyword, cls, string, colons=False, require_cls=False):
         '''Checks whether the content in string matches the expected
-        WORDClsBase format with 'pattern' providing the keyword, 'cls'
+        WORDClsBase format with 'keyword' providing the keyword, 'cls'
         providing the following text, 'colons' specifying whether an
         optional '::' is allowed as a separator between the keyword
         and cls and 'require_cls' specifying whether cls must have
@@ -1321,17 +1321,17 @@ class WORDClsBase(Base):
         `require_cls=True` and 2) white space is not required between
         the keyword and the '::' and the '::' and cls.
 
-        The simplest form of pattern is a string. However this method
-        can also match more complex patterns as specified by the
-        Pattern class in pattern_tools.py. As patterns can be built
-        from combinations of other patterns (again see
+        The simplest form of keyword pattern is a string. However this
+        method can also match more complex patterns as specified by
+        the Pattern class in pattern_tools.py. As patterns can be
+        built from combinations of other patterns (again see
         pattern_tool.py) this method also supports a hierarchy of
         lists and/or tuples of patterns.
 
-        :param pattern: the pattern of the WORD to match. This can be \
+        :param keyword: the pattern of the WORD to match. This can be \
             a Pattern, string, list or tuple, with a list or tuple \
             containing one or more Pattern, string, list or tuple.
-        :type pattern: :py:class:`fparser.two.pattern_tools.Pattern`, \
+        :type keyword: :py:class:`fparser.two.pattern_tools.Pattern`, \
             str, tuple of str/Pattern/tuple/list or list of \
             str/Pattern/tuple/list
         :param cls: the class to match.
@@ -1349,38 +1349,38 @@ class WORDClsBase(Base):
         :rtype: (str, cls or NoneType) or NoneType
 
         '''
-        if isinstance(pattern, (tuple, list)):
-            for p in pattern:
+        if isinstance(keyword, (tuple, list)):
+            for child in keyword:
                 try:
-                    obj = WORDClsBase.match(p, cls, string,
+                    obj = WORDClsBase.match(child, cls, string,
                                             colons=colons,
                                             require_cls=require_cls)
                 except NoMatchError:
                     obj = None
                 if obj is not None:
                     return obj
-            return
+            return None
 
-        if isinstance(pattern, str):
+        if isinstance(keyword, str):
             line = string.lstrip()
-            if line[:len(pattern)].upper() != pattern.upper():
-                return
-            line = line[len(pattern):]
-            pattern_value = pattern
+            if line[:len(keyword)].upper() != keyword.upper():
+                return None
+            line = line[len(keyword):]
+            pattern_value = keyword
         else:
-            my_match = pattern.match(string)
+            my_match = keyword.match(string)
             if my_match is None:
-                return
+                return None
             line = string[len(my_match.group()):]
-            pattern_value = pattern.value
+            pattern_value = keyword.value
 
         if not line:
             if require_cls:
                 # no text found but it is required
-                return
+                return None
             return pattern_value, None
         if isalnum(line[0]):
-            return
+            return None
         line = line.lstrip()
         has_colons = False
         if colons and line.startswith('::'):
@@ -1389,10 +1389,10 @@ class WORDClsBase(Base):
         if not line:
             if has_colons or require_cls:
                 # colons without following content is not allowed.
-                return
+                return None
             return pattern_value, None
         if cls is None:
-            return
+            return None
         return pattern_value, cls(line)
 
     def tostr(self):
