@@ -284,10 +284,8 @@ class Line(object):
         '''
         if line is None:
             line = self.line
-
         if apply_map:
             line = self.apply_map(line)
-
         return Line(line, self.span, self.label, self.name, self.reader)
 
     def clone(self, line):
@@ -840,9 +838,13 @@ class FortranReaderBase(object):
                    and ';' in item.get_line():
                 # ;-separator not recognized in pyf-mode
                 items = []
+                first = True
                 for line in item.get_line().split(';'):
                     line = line.strip()
-                    if line:
+                    if first:
+                        items.append(item.copy(line, apply_map=True))
+                        first = False
+                    elif line:
                         # The line might have a label and/or construct name.
                         # Check for a label.
                         label = None

@@ -49,15 +49,16 @@ import six
 import re
 import pytest
 
-from fparser.common.readfortran import FortranFileReader, FortranStringReader
-import fparser.common.sourceinfo
+from fparser.common.readfortran import FortranFileReader, FortranStringReader, \
+    FortranReaderBase, Line
+from fparser.common.sourceinfo import FortranFormat
 import fparser.common.tests.logging_utils
 
 
 def test_empty_line_err():
     ''' Check that we raise the expected error if we try and create
     an empty Line '''
-    from fparser.common.readfortran import Line, FortranReaderError
+    from fparser.common.readfortran import FortranReaderError
     with pytest.raises(FortranReaderError) as err:
         _ = Line("   ", 1, "", "a_name", None)
     assert "Got empty line: \'   \'" in str(err.value)
@@ -90,10 +91,8 @@ def test_111fortranreaderbase(log, monkeypatch):
 
     monkeypatch.setattr('fparser.common.readfortran.FortranReaderBase.id',
                         lambda x: 'foo', raising=False)
-    mode = fparser.common.sourceinfo.FortranFormat(True, False)
-    unit_under_test = fparser.common.readfortran.FortranReaderBase(FailFile(),
-                                                                   mode,
-                                                                   True)
+    mode = FortranFormat(True, False)
+    unit_under_test = FortranReaderBase(FailFile(), mode, True)
     assert str(unit_under_test.next()) == "line #1'x=1'"
     with pytest.raises(StopIteration):
         unit_under_test.next()
@@ -198,8 +197,8 @@ def test_base_handle_multilines(log):
     '''
     code = 'character(8) :: test = \'foo"""bar'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, True)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(True, True)
     unit_under_test.set_format(mode)  # Force strict free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -212,7 +211,7 @@ def test_base_handle_multilines(log):
 
     code = 'goo """boo\n doo""" soo \'foo'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
+    unit_under_test = FortranStringReader(code)
     mode = fparser.common.sourceinfo.FortranFormat(True, True)
     unit_under_test.set_format(mode)  # Force strict free format
     unit_under_test.get_source_item()
@@ -507,6 +506,86 @@ def test_include6(tmpdir, ignore_comments):
                     "end program")
     check_include_works(fortran_filename, fortran_code, include_info,
                         expected, tmpdir, ignore_comments=ignore_comments)
+
+
+def test_multi_stmt_line1():
+    '''Check that simple statements separated by ; on a single line are correctly
+    split into multiple lines by FortranReaderBase
+
+    '''
+    code = "do i=1,10;b=20 ; c=30"
+    reader = FortranStringReader(code)
+    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    reader.set_format(mode)
+    line1 = reader.next()
+    assert isinstance(line1, Line)
+    assert line1.line == "do i=1,10"
+    assert line1.span == (1, 1)
+    assert line1.label is None
+    assert line1.name is None
+    assert line1.reader is reader
+    line2 = reader.next()
+    assert isinstance(line2, Line)
+    assert line2.line == "b=20"
+    assert line2.span is line1.span
+    assert line2.label is None
+    assert line2.name is None
+    assert line2.reader is reader
+    line3 = reader.next()
+    assert isinstance(line3, Line)
+    assert line3.line == "c=30"
+    assert line3.span is line1.span
+    assert line3.label is None
+    assert line3.name is None
+    assert line3.reader is reader
+
+
+def test_multi_stmt_line2():
+    '''Check that format statements separated by ; on a single line are correctly
+    split into multiple lines by FortranReaderBase
+
+    '''
+    code = "10 format(a); 20 format(b)"
+    reader = FortranStringReader(code)
+    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    reader.set_format(mode)
+    line1 = reader.next()
+    assert isinstance(line1, Line)
+    assert line1.line == "format(a)"
+    assert line1.span == (1, 1)
+    assert line1.label == 10
+    assert line1.name is None
+    assert line1.reader is reader
+    line2 = reader.next()
+    assert line2.line == "format(b)"
+    assert line2.span is line1.span
+    assert line2.label == 20
+    assert line2.name is None
+    assert line2.reader is reader
+
+
+def test_multi_stmt_line3():
+    '''Check that named do loops separated by ; on a single line are correctly
+    split into multiple lines by FortranReaderBase
+
+    '''
+    code = "name:do i=1,10;name2 : do j=1,10"
+    reader = FortranStringReader(code)
+    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    reader.set_format(mode)
+    line1 = reader.next()
+    assert isinstance(line1, Line)
+    assert line1.line == "do i=1,10"
+    assert line1.span == (1, 1)
+    assert line1.label is None
+    assert line1.name == "name"
+    assert line1.reader is reader
+    line2 = reader.next()
+    assert line2.line == "do j=1,10"
+    assert line2.span is line1.span
+    assert line2.label is None
+    assert line2.name == "name2"
+    assert line2.reader is reader
 
 
 def test_get_item(ignore_comments):
