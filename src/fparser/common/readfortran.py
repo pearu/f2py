@@ -838,13 +838,18 @@ class FortranReaderBase(object):
                    and ';' in item.get_line():
                 # ;-separator not recognized in pyf-mode
                 items = []
-                first = True
-                for line in item.get_line().split(';'):
+                split_line_iter = iter(item.get_line().split(';'))
+                first = split_line_iter.next()
+                # The first entry has already been processed in 'item'
+                # (and may have label and/or name properties) but
+                # currently has additional invalid content after the
+                # ';' so this additional content needs to be removed.
+                items.append(item.copy(first.strip(), apply_map=True))
+                for line in split_line_iter:
+                    # subsequent entries have not been processed
+                    # before so new Line objects need to be created.
                     line = line.strip()
-                    if first:
-                        items.append(item.copy(line, apply_map=True))
-                        first = False
-                    elif line:
+                    if line:
                         # The line might have a label and/or construct name.
                         # Check for a label.
                         label = None
