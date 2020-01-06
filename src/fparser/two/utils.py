@@ -415,11 +415,10 @@ class Base(ComparableMixin):
         :rtype: :py:class:`fparser.two.utils.Base`
 
         '''
-        for node in self.items:
+        for node in children(self):
             if isinstance(node, node_type):
                 return node
         return None
-
 
     def init(self, *items):
         '''
@@ -1553,17 +1552,17 @@ class Type_Declaration_StmtBase(StmtBase):
             return '%s, %s :: %s' % self.items
 
 
-def walk_ast(children, my_types=None, indent=0, debug=False):
+def walk(node_list, types=None, indent=0, debug=False):
     '''
     Walk down the tree produced by fparser2 where children
     are listed under 'content'.  Returns a list of all nodes with the
     specified type(s).
 
-    :param children: list of child nodes from which to walk.
-    :type children: list of :py:class:fparser.two.utils.Base.
-    :param my_types: list of types of Node to return. (Default is to \
-                     return all nodes.)
-    :type my_types: list of type
+    :param node_list: node or list of nodes from which to walk.
+    :type node_list: (list of) :py:class:fparser.two.utils.Base
+    :param types: type or tuple of types of Node to return. (Default is to \
+                  return all nodes.)
+    :type types: type or tuple of types
     :param int indent: extent to which to indent debug output.
     :param bool debug: whether or not to write textual representation of AST \
                        to stdout.
@@ -1571,22 +1570,57 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     :rtype: `list` of :py:class:`fparser.two.utils.Base`
     '''
     local_list = []
-    for child in children:
+
+    if not isinstance(node_list, (list, tuple)):
+        node_list = [node_list]
+
+    for child in node_list:
         if debug:
             if isinstance(child, str):
                 print(indent*"  " + "child type = ", type(child), repr(child))
             else:
                 print(indent*"  " + "child type = ", type(child))
-        if my_types is None or type(child) in my_types:
+        if types is None or isinstance(child, types):
             local_list.append(child)
-
-        # Depending on their level in the tree produced by fparser2003,
-        # some nodes have children listed in .content and some have them
-        # listed under .items. If a node has neither then it has no
-        # children.
-        if hasattr(child, "content"):
-            local_list += walk_ast(child.content, my_types, indent+1, debug)
-        elif hasattr(child, "items"):
-            local_list += walk_ast(child.items, my_types, indent+1, debug)
+        # Recurse down
+        local_list += walk(children(child), types, indent+1, debug)
 
     return local_list
+
+
+def children(node):
+    '''
+    Return a list containing the immediate children of the supplied node if
+    it is a sub-class of Base, otherwise return an empty list.
+
+    :param node: the node for which to return the immediate children.
+    :type node: :py:class:`fparser.two.utils.Base` or str or NoneType
+
+    :returns: if the supplied node is a subclass of Base then return the \
+              list of its immediate children, otherwise return an empty list.
+    :rtype: list of :py:class:`fparser.two.utils.Base` or str
+
+    '''
+    if not isinstance(node, Base):
+        return []
+    child_list = getattr(node, 'content', None)
+    if child_list is None:
+        child_list = getattr(node, 'items', [])
+    return child_list
+
+
+def parent(node):
+    '''
+    If the supplied node is a sub-class of Base then return its parent in
+    the parse tree, otherwise return None.
+
+    :param node: the node for which the parent is required.
+    :type node: :py:class:`fparser.two.utils.Base` or str or NoneType
+
+    :returns: the parent of the supplied node or None.
+    :rtype: :py:class:`fparser.two.utils.Base` or NoneType
+
+    '''
+    if not isinstance(node, Base):
+        return None
+    return node.parent

@@ -112,10 +112,11 @@ def test_blockbase_match_name_classes(f2003_create):
             "starting name") in str(excinfo.value)
 
 
-def test_get_child(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_get_child():
     ''' Test the get_child() method. '''
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk_ast
+    from fparser.two.utils import walk
     reader = get_reader("program hello\n"
                         "write(*,*) 'hello'\n"
                         "write(*,*) 'goodbye'\n"
@@ -131,7 +132,7 @@ def test_get_child(f2003_create):
     assert not main.get_child(Fortran2003.Io_Control_Spec)
     # Check functionality when node has children in `items` and
     # not in `content`
-    io_nodes = walk_ast(main.content, my_types=[Fortran2003.Io_Control_Spec])
+    io_nodes = walk(main.content, Fortran2003.Io_Control_Spec)
     assert not hasattr(io_nodes[0], "content")
     io_unit = io_nodes[0].get_child(Fortran2003.Io_Unit)
     assert isinstance(io_unit, Fortran2003.Io_Unit)
@@ -144,7 +145,7 @@ def test_parent_info():
     ''' Check that parent information is correctly set-up in the
     parse tree. '''
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk_ast, Base
+    from fparser.two.utils import walk, Base, children, parent
     reader = get_reader("program hello\n"
                         "  implicit none\n"
                         "  integer :: var1, ji\n"
@@ -158,14 +159,15 @@ def test_parent_info():
                         "  end if\n"
                         "end program hello\n")
     main = Fortran2003.Program(reader)
-    node_list = walk_ast([main])
+    node_list = walk(main)
 
     # Root node in the parse tree has no parent
     parent_prog = node_list[0]
-    assert parent_prog.parent is None
+    assert parent(parent_prog) is None
 
     # Check connectivity of all non-string nodes
     for node in node_list[1:]:
-        if isinstance(node, Base):
-            assert node.parent
-            assert node.get_root() is parent_prog
+        for child in children(node):
+            if isinstance(child, Base):
+                assert parent(child) is node
+                assert child.get_root() is parent_prog
