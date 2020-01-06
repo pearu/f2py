@@ -210,6 +210,24 @@ _HOLLERITH_START_SEARCH = re.compile(r'(?P<pre>\A|,\s*)'
 _IS_CALL_STMT = re.compile(r'call\b', re.I).match
 
 
+def extract_label(label, line):
+    ''' xxx '''
+    match = _LABEL_RE.match(line)
+    if match:
+        label = int(match.group('label'))
+        line = line[match.end():]
+    return label, line
+
+
+def extract_construct(name, line):
+    ''' xxx '''
+    match = _CONSTRUCT_NAME_RE.match(line)
+    if match:
+        name = match.group('name')
+        line = line[match.end():].lstrip()
+    return name, line
+
+
 class FortranReaderError(Exception):
     '''
     Thrown when there is an error reading the Fortran source file.
@@ -838,33 +856,30 @@ class FortranReaderBase(object):
                    and ';' in item.get_line():
                 # ;-separator not recognized in pyf-mode
                 items = []
+                # Deal with each Fortran statement separately.
                 split_line_iter = iter(item.get_line().split(';'))
-                first = split_line_iter.next()
-                # The first entry has already been processed in 'item'
-                # (and may have label and/or name properties) but
-                # currently has additional invalid content after the
-                # ';' so this additional content needs to be removed.
+                first = next(split_line_iter)
+                # The first statement has already been processed in
+                # 'item' (and may have label and/or name properties)
+                # but currently has additional invalid content after
+                # the ';' so this additional content needs to be
+                # removed.
                 items.append(item.copy(first.strip(), apply_map=True))
                 for line in split_line_iter:
-                    # subsequent entries have not been processed
+                    # Any subsequent entries have not been processed
                     # before so new Line objects need to be created.
                     line = line.strip()
                     if line:
                         # The line might have a label and/or construct name.
                         # Check for a label.
                         label = None
-                        match = _LABEL_RE.match(line)
-                        if match:
-                            label = int(match.group('label'))
-                            line = line[match.end():]
+                        label, line = extract_label(label, line)
                         # Check for a construct name.
                         name = None
-                        match = _CONSTRUCT_NAME_RE.match(line)
-                        if match:
-                            name = match.group('name')
-                            line = line[match.end():].lstrip()
-                        # Create a new line and append to items using
-                        # the existing span and reader.
+                        name, line = extract_construct(name, line)
+                        # Create a new Line object and append to items
+                        # using the existing span (line numbers) and
+                        # reader.
                         new_line = Line(item.apply_map(line), item.span, label,
                                         name, item.reader)
                         items.append(new_line)
@@ -1382,16 +1397,9 @@ class FortranReaderBase(object):
                         continue
                 else:
                     # first line, check for a label
-                    m = _LABEL_RE.match(line)
-                    if m:
-                        assert not label, repr(label)
-                        label = int(m.group('label'))
-                        line = line[m.end():]
+                    label, line = extract_label(label, line)
                     # check for a construct name
-                    m = _CONSTRUCT_NAME_RE.match(line)
-                    if m:
-                        name = m.group('name')
-                        line = line[m.end():].lstrip()
+                    name, line = extract_construct(name, line)
                 line, qc, had_comment = handle_inline_comment(line,
                                                               self.linecount,
                                                               qc)
