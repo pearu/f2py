@@ -35,7 +35,7 @@
 
 import pytest
 from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram
-from fparser.two.utils import walk, children
+from fparser.two.utils import walk, get_children
 from fparser.api import get_reader
 
 from fparser.two.parser import ParserFactory
@@ -202,7 +202,7 @@ def test_prog_comments():
     #   |--> Comment
     from fparser.two.Fortran2003 import Main_Program, Write_Stmt, \
         End_Program_Stmt
-    walk(children(obj), Comment, debug=True)
+    walk(get_children(obj), Comment, debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
@@ -291,7 +291,7 @@ end subroutine my_mod
     reader = get_reader(source, isfree=True, ignore_comments=False)
     fn_unit = Subroutine_Subprogram(reader)
     assert isinstance(fn_unit, Subroutine_Subprogram)
-    walk(children(fn_unit), Comment, debug=True)
+    walk(get_children(fn_unit), Comment, debug=True)
     spec_part = fn_unit.content[1]
     comment = spec_part.content[0].content[0]
     assert isinstance(comment, Comment)

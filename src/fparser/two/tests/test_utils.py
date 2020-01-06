@@ -145,7 +145,7 @@ def test_parent_info():
     ''' Check that parent information is correctly set-up in the
     parse tree. '''
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk, Base, children, parent
+    from fparser.two.utils import walk, Base, get_children, get_parent
     reader = get_reader("program hello\n"
                         "  implicit none\n"
                         "  integer :: var1, ji\n"
@@ -163,11 +163,11 @@ def test_parent_info():
 
     # Root node in the parse tree has no parent
     parent_prog = node_list[0]
-    assert parent(parent_prog) is None
+    assert get_parent(parent_prog) is None
 
     # Check connectivity of all non-string nodes
     for node in node_list[1:]:
-        for child in children(node):
+        for child in get_children(node):
             if isinstance(child, Base):
-                assert parent(child) is node
+                assert get_parent(child) is node
                 assert child.get_root() is parent_prog

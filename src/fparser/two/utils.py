@@ -346,7 +346,7 @@ class Base(ComparableMixin):
             obj = object.__new__(cls)
             obj.string = string
             obj.item = None
-            # Set-up parent information
+            # Set-up parent information for the results of the match
             _set_parent(obj, result)
             if hasattr(cls, 'init'):
                 obj.init(*result)
@@ -418,7 +418,7 @@ class Base(ComparableMixin):
         :rtype: :py:class:`fparser.two.utils.Base`
 
         '''
-        for node in children(self):
+        for node in get_children(self):
             if isinstance(node, node_type):
                 return node
         return None
@@ -1557,9 +1557,8 @@ class Type_Declaration_StmtBase(StmtBase):
 
 def walk(node_list, types=None, indent=0, debug=False):
     '''
-    Walk down the tree produced by fparser2 where children
-    are listed under 'content'.  Returns a list of all nodes with the
-    specified type(s).
+    Walk down the parse tree produced by fparser2.  Returns a list of all
+    nodes with the specified type(s).
 
     :param node_list: node or list of nodes from which to walk.
     :type node_list: (list of) :py:class:fparser.two.utils.Base
@@ -1586,12 +1585,12 @@ def walk(node_list, types=None, indent=0, debug=False):
         if types is None or isinstance(child, types):
             local_list.append(child)
         # Recurse down
-        local_list += walk(children(child), types, indent+1, debug)
+        local_list += walk(get_children(child), types, indent+1, debug)
 
     return local_list
 
 
-def children(node):
+def get_children(node):
     '''
     Return a list containing the immediate children of the supplied node if
     it is a sub-class of Base, otherwise return an empty list.
@@ -1612,7 +1611,7 @@ def children(node):
     return child_list
 
 
-def parent(node):
+def get_parent(node):
     '''
     If the supplied node is a sub-class of Base then return its parent in
     the parse tree, otherwise return None.

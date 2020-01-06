@@ -395,12 +395,12 @@ Walking the parse tree
 The ``utils`` module of fparser2 provides a utility function to
 support the traversal of the parse tree that it constructs:
 
-.. autofunction:: fparser.two.utils.walk_ast
+.. autofunction:: fparser.two.utils.walk
 
 It also provides functions for moving up and down the tree hierarchy:
 
-.. autofunction:: fparser.two.utils.parent
-.. autofunction:: fparser.two.utils.children
+.. autofunction:: fparser.two.utils.get_parent
+.. autofunction:: fparser.two.utils.get_children
 
 In addition to this, each node in the parse tree has the methods:
 
