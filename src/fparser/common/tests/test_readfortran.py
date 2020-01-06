@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2019 Science and Technology Facilities Council
+# Copyright (c) 2017-2020 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -50,7 +50,7 @@ import re
 import pytest
 
 from fparser.common.readfortran import FortranFileReader, FortranStringReader, \
-    FortranReaderBase, Line
+    FortranReaderBase, Line, extract_label, extract_construct_name
 from fparser.common.sourceinfo import FortranFormat
 import fparser.common.tests.logging_utils
 
@@ -953,3 +953,40 @@ def test_utf_char_in_code(log):
     while out_line:
         out_line = reader.get_item()
     assert log.messages['critical'] == []
+
+
+def test_extract_label():
+    ''' Test the extract label function in readfortran.py.'''
+    text_input = "no label"
+    label, text_result = extract_label(text_input)
+    assert label is None
+    assert text_result is text_input
+    
+    text_input = " 80stuff"
+    label, text_result = extract_label(text_input)
+    assert label is None
+    assert text_result is text_input
+
+    text_input = " 80 stuff"
+    label, text_result = extract_label(text_input)
+    assert label == 80
+    assert text_result == "stuff"
+
+
+def test_extract_construct_name():
+    '''Test the extract construct name function in readfortran.py.'''
+    text_input = "no construct name"
+    name, text_result = extract_construct_name(text_input)
+    assert name is None
+    assert text_result is text_input
+    
+    text_input = "name:stuff"
+    name, text_result = extract_construct_name(text_input)
+    assert name == "name"
+    assert text_result == "stuff"
+
+    text_input = " name : stuff"
+    name, text_result = extract_construct_name(text_input)
+    assert name == "name"
+    assert text_result == "stuff"
+

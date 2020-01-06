@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -211,7 +211,7 @@ _IS_CALL_STMT = re.compile(r'call\b', re.I).match
 
 
 def extract_label(line):
-    '''Look for a label at the start of 'line' and if there is one then
+    '''Look for an integer label at the start of 'line' and if there is one then
     remove it from 'line' and return it in 'label'.
 
     :param str line: a string that potentially contains a label at the \
@@ -220,14 +220,14 @@ def extract_label(line):
     :returns: a 2-tuple containing the label and updated line if a \
         label is found or None and the unchanged line if a label is \
         not found.
-    :rtype: (str or NoneType, str)
+    :rtype: (int or NoneType, str)
 
     '''
     label = None
     match = _LABEL_RE.match(line)
     if match:
         label = int(match.group('label'))
-        line = line[match.end():]
+        line = line[match.end():].lstrip()
     return label, line
 
 
@@ -244,12 +244,12 @@ def extract_construct_name(line):
     :rtype: (str or NoneType, str)
 
     '''
-    name = None
+    construct_name = None
     match = _CONSTRUCT_NAME_RE.match(line)
     if match:
-        name = match.group('name')
+        construct_name = match.group('name')
         line = line[match.end():].lstrip()
-    return name, line
+    return construct_name, line
 
 
 class FortranReaderError(Exception):
@@ -1423,7 +1423,6 @@ class FortranReaderBase(object):
                     # new one is found.
                     if new_label:
                         label = new_label
-                    # check for a construct name
                     # Extract construct name from line if there is one.
                     new_name, line = extract_construct_name(line)
                     # There may already be a construct name so only
