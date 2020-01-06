@@ -16,6 +16,9 @@ Modifications by (in alphabetical order):
 06/01/2020 PR #227 for #226. Added support for utf characters in
            Fortran block structures when using Python 2.
 
+03/01/2020 PR #206 for #144. Bug fixes to the parsing of IMPORT
+           statements.
+
 20/11/2019 PR #224 for #223. Improvements to the fparser2 script. Errors
            now output to stderr, command-line setting of Fortran flavour
            honoured and no longer aborts if a syntax error is found.
