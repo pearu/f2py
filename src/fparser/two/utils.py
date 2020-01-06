@@ -278,6 +278,28 @@ class Base(ComparableMixin):
 
     @show_result
     def __new__(cls, string, parent_cls=None, parent=None):
+
+        def _set_parent(parent_node, items):
+            ''' Recursively set the parent of all of the elements
+            in the list that are a sub-class of Base. (Recursive because
+            sometimes the list of elements itself contains a list or tuple.)
+
+            :param parent_node: the parent of the nodes listed in `items`.
+            :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
+            :param items: list or tuple of nodes for which to set the parent.
+            :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
+                         or `str` or `list` or `tuple` or NoneType.
+            '''
+            for item in items:
+                if item:
+                    if isinstance(item, Base):
+                        # We can only set the parent of `Base` objects.
+                        # Anything else (e.g. str) is passed over.
+                        item.parent = parent_node
+                    elif isinstance(item, (list, tuple)):
+                        _set_parent(parent_node, item)
+        # ------------------------------------------------------------------
+
         from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
@@ -325,7 +347,7 @@ class Base(ComparableMixin):
             obj.string = string
             obj.item = None
             # Set-up parent information
-            obj.set_parent(result)
+            _set_parent(obj, result)
             if hasattr(cls, 'init'):
                 obj.init(*result)
             return obj
@@ -370,25 +392,6 @@ class Base(ComparableMixin):
         else:
             errmsg = u"{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
-
-    def set_parent(self, items):
-        ''' Recursively set the parent of all of the elements
-        in the list that are a sub-class of Base. (Recursive because
-        sometimes the list of elements itself contains a list or tuple.)
-
-        :param items: list or tuple of nodes for which to set the parent
-                      to be `self`.
-        :type items: list or tuple of :py:class:`fparser.two.utils.Base` or \
-                     `str` or `list` or `tuple` or NoneType.
-        '''
-        for item in items:
-            if item:
-                if isinstance(item, Base):
-                    # We can only set the parent of `Base` objects. Anything
-                    # else (e.g. str) is passed over.
-                    item.parent = self
-                elif isinstance(item, (list, tuple)):
-                    self.set_parent(item)
 
     def get_root(self):
         '''
