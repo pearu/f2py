@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson.
 
@@ -200,7 +200,7 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

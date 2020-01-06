@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2020 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -392,13 +392,17 @@ file was found but would fail if the include file was not found::
 Walking the parse tree
 ----------------------
 
-fparser2 provides one utility function to support the traversal of the
-parse tree that it constructs:
+The ``utils`` module of fparser2 provides a utility function to
+support the traversal of the parse tree that it constructs:
 
-.. automethod:: fparser.two.utils.walk_ast
+.. autofunction:: fparser.two.utils.walk_ast
 
-In addition to this, each node in the parse tree has a ``parent`` property and
-the methods:
+It also provides functions for moving up and down the tree hierarchy:
+
+.. autofunction:: fparser.two.utils.parent
+.. autofunction:: fparser.two.utils.children
+
+In addition to this, each node in the parse tree has the methods:
 
 .. automethod:: fparser.two.utils.Base.get_child
 
