@@ -211,8 +211,8 @@ _IS_CALL_STMT = re.compile(r'call\b', re.I).match
 
 
 def extract_label(line):
-    '''Look for an integer label at the start of 'line' and if there is one then
-    remove it from 'line' and return it in 'label'.
+    '''Look for an integer label at the start of 'line' and if there is
+    one then remove it from 'line' and return it in 'label'.
 
     :param str line: a string that potentially contains a label at the \
         start.

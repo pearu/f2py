@@ -45,14 +45,14 @@ from __future__ import print_function
 import io
 import os.path
 import tempfile
-import six
 import re
+import six
 import pytest
 
-from fparser.common.readfortran import FortranFileReader, FortranStringReader, \
-    FortranReaderBase, Line, extract_label, extract_construct_name
+from fparser.common.readfortran import FortranFileReader, \
+    FortranStringReader, FortranReaderBase, Line, extract_label, \
+    extract_construct_name
 from fparser.common.sourceinfo import FortranFormat
-import fparser.common.tests.logging_utils
 
 
 def test_empty_line_err():
@@ -113,7 +113,7 @@ def test_include_not_found():
 
     '''
     code = "include 'nonexistant.f90'"
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
+    unit_under_test = FortranStringReader(code)
     line = unit_under_test.next()
     assert str(line.line) == code
 
@@ -125,9 +125,8 @@ def test_base_next_good_include(log):
     '''
     code = "include 'modfile.f95'\nx=2"
     include_directories = [os.path.dirname(__file__)]
-    unit_under_test = fparser.common.readfortran \
-        .FortranStringReader(code, include_dirs=include_directories,
-                             ignore_comments=False)
+    unit_under_test = FortranStringReader(
+        code, include_dirs=include_directories, ignore_comments=False)
     line = unit_under_test.next()
     assert str(line)[:19] == "Comment('! Modified"  # First line of inclusion
     assert log.messages['debug'] == []
@@ -145,7 +144,7 @@ def test_fortranreaderbase_info(log):
     '''
     Tests that FortranReaderBase.info() causes a message to be logged.
     '''
-    unit_under_test = fparser.common.readfortran.FortranStringReader('x=3')
+    unit_under_test = FortranStringReader('x=3')
     thing = unit_under_test.get_source_item()
     unit_under_test.info('Mighty Whirlitzer', thing)
     assert log.messages['debug'] == []
@@ -161,7 +160,7 @@ def test_fortranreaderbase_error(log):
     '''
     Tests that FortranReaderBase.error() causes a message to be logged.
     '''
-    unit_under_test = fparser.common.readfortran.FortranStringReader('x=2')
+    unit_under_test = FortranStringReader('x=2')
     thing = unit_under_test.get_source_item()
     with pytest.raises(SystemExit):
         unit_under_test.error('Thundering Chalmer', thing)
@@ -178,7 +177,7 @@ def test_fortranreaderbase_warning(log):
     '''
     Tests that FortranReaderBase.warning() causes a message to be logged.
     '''
-    unit_under_test = fparser.common.readfortran.FortranStringReader('x=1')
+    unit_under_test = FortranStringReader('x=1')
     thing = unit_under_test.get_source_item()
     unit_under_test.warning('Flatulent Hermit', thing)
     assert log.messages['debug'] == []
@@ -212,7 +211,7 @@ def test_base_handle_multilines(log):
     code = 'goo """boo\n doo""" soo \'foo'
     log.reset()
     unit_under_test = FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, True)
+    mode = FortranFormat(True, True)
     unit_under_test.set_format(mode)  # Force strict free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -233,8 +232,8 @@ def test_base_fixed_nonlabel(log):
     # logged.
     code = 'w    integer :: i'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(False, True)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(False, True)
     unit_under_test.set_format(mode)  # Force fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -250,8 +249,8 @@ def test_base_fixed_nonlabel(log):
     for i in range(1, 5):
         code = ' '*i + 'w' + ' '*(5-i) + 'integer :: i'
         log.reset()
-        unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-        mode = fparser.common.sourceinfo.FortranFormat(False, True)
+        unit_under_test = FortranStringReader(code)
+        mode = FortranFormat(False, True)
         unit_under_test.set_format(mode)  # Force strict fixed format
         unit_under_test.get_source_item()
         assert log.messages['debug'] == []
@@ -267,8 +266,8 @@ def test_base_fixed_nonlabel(log):
     # engaged.
     code = ' w   integer :: i'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(False, False)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(False, False)
     unit_under_test.set_format(mode)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -288,8 +287,8 @@ def test_base_fixed_continuation(log):
     '''
     code = '     character(4) :: cheese = "a & !\n     & b'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(False, False)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(False, False)
     unit_under_test.set_format(mode)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -302,8 +301,8 @@ def test_base_fixed_continuation(log):
 
     code = '     x=1 &\n     +1 &\n     -2'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(False, False)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(False, False)
     unit_under_test.set_format(mode)  # Force sloppy fixed format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -323,8 +322,8 @@ def test_base_free_continuation(log):
     '''
     code = 'character(4) :: "boo & que'
     log.reset()
-    unit_under_test = fparser.common.readfortran.FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    unit_under_test = FortranStringReader(code)
+    mode = FortranFormat(True, False)
     unit_under_test.set_format(mode)  # Force sloppy free format
     unit_under_test.get_source_item()
     assert log.messages['debug'] == []
@@ -509,13 +508,13 @@ def test_include6(tmpdir, ignore_comments):
 
 
 def test_multi_stmt_line1():
-    '''Check that simple statements separated by ; on a single line are correctly
-    split into multiple lines by FortranReaderBase
+    '''Check that simple statements separated by ; on a single line are
+    correctly split into multiple lines by FortranReaderBase
 
     '''
     code = "do i=1,10;b=20 ; c=30"
     reader = FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    mode = FortranFormat(True, False)
     reader.set_format(mode)
     line1 = reader.next()
     assert isinstance(line1, Line)
@@ -541,13 +540,13 @@ def test_multi_stmt_line1():
 
 
 def test_multi_stmt_line2():
-    '''Check that format statements separated by ; on a single line are correctly
-    split into multiple lines by FortranReaderBase
+    '''Check that format statements separated by ; on a single line are
+    correctly split into multiple lines by FortranReaderBase
 
     '''
     code = "10 format(a); 20 format(b)"
     reader = FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    mode = FortranFormat(True, False)
     reader.set_format(mode)
     line1 = reader.next()
     assert isinstance(line1, Line)
@@ -571,7 +570,7 @@ def test_multi_stmt_line3():
     '''
     code = "name:do i=1,10;name2 : do j=1,10"
     reader = FortranStringReader(code)
-    mode = fparser.common.sourceinfo.FortranFormat(True, False)
+    mode = FortranFormat(True, False)
     reader.set_format(mode)
     line1 = reader.next()
     assert isinstance(line1, Line)
@@ -711,7 +710,7 @@ def test_filename_reader():
             source_file.write(FULL_FREE_SOURCE)
 
         unit_under_test = FortranFileReader(filename)
-        expected = fparser.common.sourceinfo.FortranFormat(True, False)
+        expected = FortranFormat(True, False)
         assert unit_under_test.format == expected
         for expected in FULL_FREE_EXPECTED:
             found = unit_under_test.get_single_line(ignore_empty=True)
@@ -736,7 +735,7 @@ def test_file_reader():
         with io.open(filename, mode='r', encoding='UTF-8') as source_file:
             unit_under_test = FortranFileReader(source_file)
 
-            expected = fparser.common.sourceinfo.FortranFormat(True, False)
+            expected = FortranFormat(True, False)
             assert unit_under_test.format == expected
             for expected in FULL_FREE_EXPECTED:
                 assert unit_under_test.get_single_line(ignore_empty=True) \
@@ -754,7 +753,7 @@ def test_bad_file_reader():
     which is neither file nor filename.
     '''
     with pytest.raises(ValueError) as ex:
-        unit_under_test = FortranFileReader(42)
+        _ = FortranFileReader(42)
     expected = 'FortranFileReader is used with a filename or file-like object.'
     assert expected in str(ex.value)
 
@@ -766,7 +765,7 @@ def test_string_reader():
     Tests that Fortran source can be read from a string.
     '''
     unit_under_test = FortranStringReader(FULL_FREE_SOURCE)
-    expected = fparser.common.sourceinfo.FortranFormat(True, False)
+    expected = FortranFormat(True, False)
     assert unit_under_test.format == expected
     for expected in FULL_FREE_EXPECTED:
         assert unit_under_test.get_single_line(ignore_empty=True) == expected
@@ -799,7 +798,7 @@ cf2py call me ! hey
                 "line #10'end'"]
 
     # Reading from buffer
-    reader = fparser.common.readfortran.FortranStringReader(
+    reader = FortranStringReader(
         string_f77, ignore_comments=False)
     assert reader.format.mode == 'f77', repr(reader.format.mode)
     stack = expected[:]
@@ -812,7 +811,7 @@ cf2py call me ! hey
     with open(filename, 'w') as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = fparser.common.readfortran.FortranFileReader(
+    reader = FortranFileReader(
         filename, ignore_comments=False)
     stack = expected[:]
     for item in reader:
@@ -883,7 +882,7 @@ end python module foo
                 "line #25'end python module foo'",
                 "Comment('! end of file',(26, 26))"]
 
-    reader = fparser.common.readfortran.FortranStringReader(
+    reader = FortranStringReader(
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
@@ -933,7 +932,7 @@ cComment
                 "line #15'subroutine foo'",
                 "Comment('',(16, 16))",
                 "line #18'end'"]
-    reader = fparser.common.readfortran.FortranStringReader(
+    reader = FortranStringReader(
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
@@ -961,7 +960,7 @@ def test_extract_label():
     label, text_result = extract_label(text_input)
     assert label is None
     assert text_result is text_input
-    
+
     text_input = " 80stuff"
     label, text_result = extract_label(text_input)
     assert label is None
@@ -979,7 +978,7 @@ def test_extract_construct_name():
     name, text_result = extract_construct_name(text_input)
     assert name is None
     assert text_result is text_input
-    
+
     text_input = "name:stuff"
     name, text_result = extract_construct_name(text_input)
     assert name == "name"
@@ -989,4 +988,3 @@ def test_extract_construct_name():
     name, text_result = extract_construct_name(text_input)
     assert name == "name"
     assert text_result == "stuff"
-
