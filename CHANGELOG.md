@@ -13,6 +13,9 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+06/01/2020 PR #227 for #226. Added support for utf characters in
+           Fortran block structures when using Python 2.
+
 03/01/2020 PR #206 for #144. Bug fixes to the parsing of IMPORT
            statements.
 
