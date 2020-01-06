@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -110,6 +110,24 @@ EXTENSIONS += ["hollerith"]
 # an extension to the Fortran standard and is supported by fparser if
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
 EXTENSIONS += ["dollar-descriptor"]
+
+
+def py2_encode_list_items(mylist):
+    '''
+    If we are running under Python2 then ensure that all strings in the
+    supplied list are encoded as bytes. If we are running under Python3
+    then all strings are unicode and this routine does nothing.
+
+    :param list mylist: List of strings to modify.
+
+    '''
+    if six.PY2:
+        # If we're in Python2 then we have to take care as comments
+        # and character literals may be UTF while other elements are not.
+        for idx, item in enumerate(mylist[:]):
+            if isinstance(item, six.text_type):
+                # This item is UTF so encode it as bytes
+                mylist[idx] = item.encode('utf-8')
 
 
 class FparserException(Exception):
@@ -722,9 +740,10 @@ content : tuple
         '''
         Create a string containing the Fortran representation of this class
 
-        :param str tab: Indent to prefix to code
-        :param bool isfix: Whether or not to generate fixed-format code
-        :return: Fortran representation of this class
+        :param str tab: indent to prefix to code.
+        :param bool isfix: whether or not to generate fixed-format code.
+
+        :return: Fortran representation of this class.
         :rtype: str
         '''
         mylist = []
@@ -739,6 +758,8 @@ content : tuple
             mylist.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             mylist.append(end.tofortran(tab=tab, isfix=isfix))
+        # Ensure all strings in list are encoded consistently
+        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
     def restore_reader(self, reader):
@@ -1392,7 +1413,7 @@ def isalnum(c):
 
 
 class WORDClsBase(Base):
-    '''Base class to support situations where you have a keyword which is
+    '''Base class to support situations where there is a keyword which is
     optionally followed by further text, potentially separated by
     '::'.
 
@@ -1402,73 +1423,91 @@ class WORDClsBase(Base):
 
     '''
     @staticmethod
-    def match(pattern, cls, string, check_colons=False, require_cls=False):
-        ''':param pattern: the pattern of the WORD to match. This can be a \
-        string, a list of strings or a tuple of strings.
-        :type pattern: str, tuple of str or list of str.
+    def match(keyword, cls, string, colons=False, require_cls=False):
+        '''Checks whether the content in string matches the expected
+        WORDClsBase format with 'keyword' providing the keyword, 'cls'
+        providing the following text, 'colons' specifying whether an
+        optional '::' is allowed as a separator between the keyword
+        and cls and 'require_cls' specifying whether cls must have
+        content or not.
+
+        Note, if the optional '::' is allowed and exists in the string
+        then 1) cls must also have content i.e. it implies
+        `require_cls=True` and 2) white space is not required between
+        the keyword and the '::' and the '::' and cls.
+
+        The simplest form of keyword pattern is a string. However this
+        method can also match more complex patterns as specified by
+        the Pattern class in pattern_tools.py. As patterns can be
+        built from combinations of other patterns (again see
+        pattern_tool.py) this method also supports a hierarchy of
+        lists and/or tuples of patterns.
+
+        :param keyword: the pattern of the WORD to match. This can be \
+            a Pattern, string, list or tuple, with a list or tuple \
+            containing one or more Pattern, string, list or tuple.
+        :type keyword: :py:class:`fparser.two.pattern_tools.Pattern`, \
+            str, tuple of str/Pattern/tuple/list or list of \
+            str/Pattern/tuple/list
         :param cls: the class to match.
-        :type cls: a subclass of :py:class:`fparser.two.utils.Base`.
+        :type cls: a subclass of :py:class:`fparser.two.utils.Base`
         :param str string: Text that we are trying to match.
-        :param bool check_colons: whether '::' is allowed or not \
-        between WORD and cls.
+        :param bool colons: whether '::' is allowed as an optional \
+            separator between between WORD and cls.
         :param bool require_cls: whether content for cls is required \
-        or not.
+            or not.
+
+        :returns: None if there is no match or, if there is a match, a \
+            2-tuple containing a string matching the 'WORD' and an \
+            instance of 'cls' (or None if an instance of cls is not \
+            required and not provided).
+        :rtype: (str, cls or NoneType) or NoneType
 
         '''
-        if isinstance(pattern, (tuple, list)):
-            for p in pattern:
+        if isinstance(keyword, (tuple, list)):
+            for child in keyword:
                 try:
-                    obj = WORDClsBase.match(p, cls, string,
-                                            check_colons=check_colons,
+                    obj = WORDClsBase.match(child, cls, string,
+                                            colons=colons,
                                             require_cls=require_cls)
                 except NoMatchError:
                     obj = None
                 if obj is not None:
                     return obj
-            return
-        if isinstance(pattern, str):
+            return None
+
+        if isinstance(keyword, str):
             line = string.lstrip()
-            if line[:len(pattern)].upper() != pattern.upper():
-                return
-            line = line[len(pattern):]
-            if not line:
-                if require_cls:
-                    # no text found but it is required
-                    return
-                return pattern, None
-            if isalnum(line[0]):
-                return
-            line = line.lstrip()
-            if check_colons and line.startswith('::'):
-                line = line[2:].lstrip()
-            if not line:
-                if require_cls:
-                    return
-                return pattern, None
-            if cls is None:
-                return
-            return pattern, cls(line)
-        m = pattern.match(string)
-        if m is None:
-            return
-        line = string[len(m.group()):]
-        if pattern.value is not None:
-            pattern_value = pattern.value
+            if line[:len(keyword)].upper() != keyword.upper():
+                return None
+            line = line[len(keyword):]
+            pattern_value = keyword
         else:
-            pattern_value = m.group().upper()
-        if not line:
-            return pattern_value, None
-        if isalnum(line[0]):
-            return
-        line = line.lstrip()
-        if check_colons and line.startswith('::'):
-            line = line[2:].lstrip()
+            my_match = keyword.match(string)
+            if my_match is None:
+                return None
+            line = string[len(my_match.group()):]
+            pattern_value = keyword.value
+
         if not line:
             if require_cls:
-                return
+                # no text found but it is required
+                return None
+            return pattern_value, None
+        if isalnum(line[0]):
+            return None
+        line = line.lstrip()
+        has_colons = False
+        if colons and line.startswith('::'):
+            has_colons = True
+            line = line[2:].lstrip()
+        if not line:
+            if has_colons or require_cls:
+                # colons without following content is not allowed.
+                return None
             return pattern_value, None
         if cls is None:
-            return
+            return None
         return pattern_value, cls(line)
 
     def tostr(self):
