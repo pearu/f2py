@@ -212,7 +212,8 @@ _IS_CALL_STMT = re.compile(r'call\b', re.I).match
 
 def extract_label(line):
     '''Look for an integer label at the start of 'line' and if there is
-    one then remove it from 'line' and return it in 'label'.
+    one then remove it from 'line' and store it as an integer in
+    'label', returning both in a tuple.
 
     :param str line: a string that potentially contains a label at the \
         start.
@@ -233,7 +234,8 @@ def extract_label(line):
 
 def extract_construct_name(line):
     '''Look for a construct name at the start of 'line' and if there is
-    one then remove it from 'line' and return it in 'name'.
+    one then remove it from 'line' and return it as a string in
+    'name', returning both in a tuple.
 
     :param str line: a string that potentially contains a construct \
         name at the start.
@@ -883,18 +885,23 @@ class FortranReaderBase(object):
                 # Deal with each Fortran statement separately.
                 split_line_iter = iter(item.get_line().split(';'))
                 first = next(split_line_iter)
-                # The first statement has already been processed in
-                # 'item' (and may have label and/or name properties)
-                # but currently has additional invalid content after
-                # the ';' so this additional content needs to be
-                # removed.
+                # The full line has already been processed as a Line
+                # object in 'item' (and may therefore have label
+                # and/or construct name properties extracted from the
+                # start of the line). The simplest way to avoid losing
+                # any label or construct name properties for the first
+                # statement is to copy the 'item' object and update it
+                # so that it only includes text for the first
+                # statement (rather than the full line). Subsequent
+                # statements need to be processed into Line
+                # objects.
                 items.append(item.copy(first.strip(), apply_map=True))
                 for line in split_line_iter:
-                    # Any subsequent entries have not been processed
-                    # before so new Line objects need to be created.
+                    # Any subsequent statements have not been processed
+                    # before, so new Line objects need to be created.
                     line = line.strip()
                     if line:
-                        # The line might have a label and/or construct
+                        # The statement might have a label and/or construct
                         # name.
                         label, line = extract_label(line)
                         name, line = extract_construct_name(line)
@@ -1417,18 +1424,11 @@ class FortranReaderBase(object):
                         line = get_single_line()
                         continue
                 else:
-                    # Extract label from line if there is one.
-                    new_label, line = extract_label(line)
-                    # There may already be a label so only update if a
-                    # new one is found.
-                    if new_label:
-                        label = new_label
-                    # Extract construct name from line if there is one.
-                    new_name, line = extract_construct_name(line)
-                    # There may already be a construct name so only
-                    # update if a new one is found.
-                    if new_name:
-                        name = new_name
+                    # Extract label and/or construct name from line if
+                    # there is one.
+                    label, line = extract_label(line)
+                    name, line = extract_construct_name(line)
+
                 line, qc, had_comment = handle_inline_comment(line,
                                                               self.linecount,
                                                               qc)
