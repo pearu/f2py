@@ -81,7 +81,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk_ast
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalSyntaxError, InternalError, show_result
+    InternalSyntaxError, InternalError, show_result, py2_encode_list_items
 
 #
 # SECTION  1
@@ -1594,7 +1594,7 @@ class Type_Param_Attr_Spec(STRINGBase):  # R437
 
 class Component_Part(BlockBase):  # R438
     """
-    <component-part> = [ <component-def-stmt> ]...
+    <component-part> is [ <component-def-stmt> ]...
     """
     subclass_names = []
     use_names = ['Component_Def_Stmt']
@@ -1615,24 +1615,35 @@ class Component_Part(BlockBase):  # R438
     match = staticmethod(match)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         mylist = []
         for item in self.content:
             mylist.append(item.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
 
 class Component_Def_Stmt(Base):  # R439
     """
-    <component-def-stmt> = <data-component-def-stmt>
-                           | <proc-component-def-stmt>
+    <component-def-stmt> is <data-component-def-stmt>
+                         or <proc-component-def-stmt>
     """
     subclass_names = ['Data_Component_Def_Stmt', 'Proc_Component_Def_Stmt']
 
 
 class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
     """
-    <data-component-def-stmt> = <declaration-type-spec> [
-        [ , <component-attr-spec-list> ] :: ] <component-decl-list>
+    <data-component-def-stmt> is <declaration-type-spec> [
+             [ , <component-attr-spec-list> ] :: ] <component-decl-list>
     """
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Component_Attr_Spec_List',
@@ -1757,8 +1768,32 @@ class Component_Initialization(Base):  # R444
 
 class Proc_Component_Def_Stmt(StmtBase):  # R445
     """
-    <proc-component-def-stmt> = PROCEDURE ( [ <proc-interface> ] )
+    <proc-component-def-stmt> is PROCEDURE ( [ <proc-interface> ] )
         , <proc-component-attr-spec-list> :: <proc-decl-list>
+
+    where
+
+        proc-component-attr-spec is POINTER
+                                 or PASS [ (arg-name) ]
+                                 or NOPASS
+                                 or access-spec
+
+    The standard specifies the following constraints:
+
+    "C448 The same proc-component-attr-spec shall not appear more than once
+          in a given proc-component-def-stmt." Not checked by fparser - #232.
+
+    "C449 POINTER shall appear in each proc-component-attr-spec-list."
+
+    "C450 If the procedure pointer component has an implicit interface or
+          has no arguments, NOPASS shall be specified." Not checked by
+          fparser - #232.
+
+    "C451 If PASS (arg-name) appears, the interface shall have a dummy argument
+          named arg-name." Not checked by fparser - #232.
+
+    "C452 PASS and NOPASS shall not both appear in the same
+          proc-component-attr-spec-list." Not checked by fparser - #232.
     """
     subclass_names = []
     use_names = ['Proc_Interface', 'Proc_Component_Attr_Spec_List',
@@ -1766,27 +1801,45 @@ class Proc_Component_Def_Stmt(StmtBase):  # R445
 
     @staticmethod
     def match(string):
+        '''
+        Attempts to match the supplied string with the pattern for a
+        declaration of a procedure part of a component.
+
+        :param str string: the string to test for a match.
+
+        :returns: None (if no match) or a tuple consisting of the procedure \
+                  interface, the list of attributes and a list of procedure \
+                  names or None.
+        :rtype: NoneType or \
+           (:py:class:`fparser.two.Fortran2003.Proc_Interface`, \
+            :py:class:`fparser.two.Fortran2003.Proc_Component_Attr_Spec_List`,\
+            :py:class:`fparser.two.Fortran2003.Proc_Decl_List`)
+        '''
         if string[:9].upper() != 'PROCEDURE':
-            return
+            return None
         line, repmap = string_replace_map(string[9:].lstrip())
         if not line.startswith('('):
-            return
-        i = line.find(')')
-        if i == -1:
-            return
-        p = repmap(line[:i+1])[1:-1].strip() or None
-        if p:
-            p = Proc_Interface(p)
-        line = line[i+1:].lstrip()
+            return None
+        idx = line.find(')')
+        if idx == -1:
+            return None
+        pinterface = repmap(line[:idx+1])[1:-1].strip() or None
+        if pinterface:
+            pinterface = Proc_Interface(pinterface)
+        line = line[idx+1:].lstrip()
         if not line.startswith(','):
-            return
+            return None
         line = line[1:].strip()
-        i = line.find('::')
-        if i == -1:
-            return
-        return p, Proc_Component_Attr_Spec_List(
-            repmap(line[:i].rstrip())), Proc_Decl_List(
-                repmap(line[i+2:].lstrip()))
+        idx = line.find('::')
+        if idx == -1:
+            return None
+        attr_spec_list = Proc_Component_Attr_Spec_List(
+            repmap(line[:idx].rstrip()))
+        # C449 POINTER must be present in the attribute list
+        if Proc_Component_Attr_Spec('POINTER') not in attr_spec_list.items:
+            return None
+        return pinterface, attr_spec_list, Proc_Decl_List(
+            repmap(line[idx+2:].lstrip()))
 
     def tostr(self):
         if self.items[0] is not None:
@@ -4960,6 +5013,16 @@ class Where_Construct(BlockBase):  # R744
             enable_where_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -4970,6 +5033,7 @@ class Where_Construct(BlockBase):  # R744
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5386,6 +5450,16 @@ class If_Construct(BlockBase):  # R802
             enable_if_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -5396,6 +5470,7 @@ class If_Construct(BlockBase):  # R802
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5558,6 +5633,16 @@ class Case_Construct(BlockBase):  # R808
         )
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         tmp = []
         start = self.content[0]
         end = self.content[-1]
@@ -5568,6 +5653,8 @@ class Case_Construct(BlockBase):  # R808
             else:
                 tmp.append(item.tofortran(tab=tab + '  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
+        # Ensure all strings in list are encoded consistently
+        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5947,10 +6034,11 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
 
     def tofortran(self, tab='', isfix=None):
         '''
-        :param str tab: tab character or empty string
-        :param bool isfix: whether the reader is in fixed format
-        :return: parsed representation of the labeled "DO" construct
-        :rtype: string
+        :param str tab: tab character or empty string.
+        :param bool isfix: whether the reader is in fixed format.
+
+        :return: parsed representation of the labeled "DO" construct.
+        :rtype: str
         '''
         lblock = []
         start = self.content[0]
@@ -5961,6 +6049,7 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
             lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             lblock.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(lblock)
         return '\n'.join(lblock)
 
 
@@ -6252,6 +6341,16 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                                enable_do_label_construct_hook=True)
 
     def tofortran(self, tab='', isfix=None):
+        '''
+        Converts this node (and all children) into Fortran.
+
+        :param str tab: white space to prefix to output.
+        :param bool isfix: whether or not to generate fixed-format output.
+
+        :returns: Fortran code.
+        :rtype: str
+
+        '''
         line = []
         start = self.content[0]
         end = self.content[-1]
@@ -6263,6 +6362,7 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                 extra_tab += '  '
         if len(self.content) > 1:
             line.append(end.tofortran(tab=tab, isfix=isfix))
+        py2_encode_list_items(line)
         return '\n'.join(line)
 
 
