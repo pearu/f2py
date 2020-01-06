@@ -210,8 +210,20 @@ _HOLLERITH_START_SEARCH = re.compile(r'(?P<pre>\A|,\s*)'
 _IS_CALL_STMT = re.compile(r'call\b', re.I).match
 
 
-def extract_label(label, line):
-    ''' xxx '''
+def extract_label(line):
+    '''Look for a label at the start of 'line' and if there is one then
+    remove it from 'line' and return it in 'label'.
+
+    :param str line: a string that potentially contains a label at the \
+        start.
+
+    :returns: a 2-tuple containing the label and updated line if a \
+        label is found or None and the unchanged line if a label is \
+        not found.
+    :rtype: (str or NoneType, str)
+
+    '''
+    label = None
     match = _LABEL_RE.match(line)
     if match:
         label = int(match.group('label'))
@@ -219,8 +231,20 @@ def extract_label(label, line):
     return label, line
 
 
-def extract_construct(name, line):
-    ''' xxx '''
+def extract_construct_name(line):
+    '''Look for a construct name at the start of 'line' and if there is
+    one then remove it from 'line' and return it in 'name'.
+
+    :param str line: a string that potentially contains a construct \
+        name at the start.
+
+    :returns: a 2-tuple containing the construct name and updated line \
+        if a construct name is found or None and the unchanged line if \
+        a construct name is not found.
+    :rtype: (str or NoneType, str)
+
+    '''
+    name = None
     match = _CONSTRUCT_NAME_RE.match(line)
     if match:
         name = match.group('name')
@@ -870,13 +894,10 @@ class FortranReaderBase(object):
                     # before so new Line objects need to be created.
                     line = line.strip()
                     if line:
-                        # The line might have a label and/or construct name.
-                        # Check for a label.
-                        label = None
-                        label, line = extract_label(label, line)
-                        # Check for a construct name.
-                        name = None
-                        name, line = extract_construct(name, line)
+                        # The line might have a label and/or construct
+                        # name.
+                        label, line = extract_label(line)
+                        name, line = extract_construct_name(line)
                         # Create a new Line object and append to items
                         # using the existing span (line numbers) and
                         # reader.
@@ -1396,10 +1417,19 @@ class FortranReaderBase(object):
                         line = get_single_line()
                         continue
                 else:
-                    # first line, check for a label
-                    label, line = extract_label(label, line)
+                    # Extract label from line if there is one.
+                    new_label, line = extract_label(line)
+                    # There may already be a label so only update if a
+                    # new one is found.
+                    if new_label:
+                        label = new_label
                     # check for a construct name
-                    name, line = extract_construct(name, line)
+                    # Extract construct name from line if there is one.
+                    new_name, line = extract_construct_name(line)
+                    # There may already be a construct name so only
+                    # update if a new one is found.
+                    if new_name:
+                        name = new_name
                 line, qc, had_comment = handle_inline_comment(line,
                                                               self.linecount,
                                                               qc)
