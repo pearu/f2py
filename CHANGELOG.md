@@ -13,6 +13,10 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+07/01/2020 PR #233 for #161. Improve the reader handling of multi-statement
+           source lines. Especially those containing labels or construct
+           names.
+
 06/01/2020 PR #227 for #226. Added support for utf characters in
            Fortran block structures when using Python 2.
 
