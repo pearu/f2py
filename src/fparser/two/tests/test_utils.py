@@ -114,29 +114,29 @@ def test_blockbase_match_name_classes(f2003_create):
 
 @pytest.mark.usefixtures("f2003_create")
 def test_get_child():
-    ''' Test the get_child() method. '''
+    ''' Test the get_child() utility. '''
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk
+    from fparser.two.utils import walk, get_child
     reader = get_reader("program hello\n"
                         "write(*,*) 'hello'\n"
                         "write(*,*) 'goodbye'\n"
                         "end program hello\n")
     main = Fortran2003.Program(reader)
-    prog = main.get_child(Fortran2003.Main_Program)
-    exe = prog.get_child(Fortran2003.Execution_Part)
+    prog = get_child(main, Fortran2003.Main_Program)
+    exe = get_child(prog, Fortran2003.Execution_Part)
     assert isinstance(exe, Fortran2003.Execution_Part)
-    write_stmt = exe.get_child(Fortran2003.Write_Stmt)
+    write_stmt = get_child(exe, Fortran2003.Write_Stmt)
     # Check that we got the first write and not the second
     assert "goodbye" not in str(write_stmt)
     # The top level has no Io_Control_Spec children
-    assert not main.get_child(Fortran2003.Io_Control_Spec)
+    assert not get_child(main, Fortran2003.Io_Control_Spec)
     # Check functionality when node has children in `items` and
     # not in `content`
     io_nodes = walk(main.content, Fortran2003.Io_Control_Spec)
     assert not hasattr(io_nodes[0], "content")
-    io_unit = io_nodes[0].get_child(Fortran2003.Io_Unit)
+    io_unit = get_child(io_nodes[0], Fortran2003.Io_Unit)
     assert isinstance(io_unit, Fortran2003.Io_Unit)
-    missing = io_nodes[0].get_child(Fortran2003.Execution_Part)
+    missing = get_child(io_nodes[0], Fortran2003.Execution_Part)
     assert missing is None
 
 
@@ -145,7 +145,7 @@ def test_parent_info():
     ''' Check that parent information is correctly set-up in the
     parse tree. '''
     from fparser.two import Fortran2003
-    from fparser.two.utils import walk, Base, get_children, get_parent
+    from fparser.two.utils import walk, Base
     reader = get_reader("program hello\n"
                         "  implicit none\n"
                         "  integer :: var1, ji\n"
@@ -163,11 +163,12 @@ def test_parent_info():
 
     # Root node in the parse tree has no parent
     parent_prog = node_list[0]
-    assert get_parent(parent_prog) is None
+    assert parent_prog.parent is None
 
     # Check connectivity of all non-string nodes
     for node in node_list[1:]:
-        for child in get_children(node):
-            if isinstance(child, Base):
-                assert get_parent(child) is node
-                assert child.get_root() is parent_prog
+        if isinstance(node, Base):
+            for child in node.children:
+                if isinstance(child, Base):
+                    assert child.parent is node
+                    assert child.get_root() is parent_prog

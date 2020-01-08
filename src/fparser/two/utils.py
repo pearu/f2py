@@ -278,8 +278,6 @@ class Base(ComparableMixin):
                   :py:class:`fparser.common.readfortran.FortranReaderBase`
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
-    :param parent: the parent of this node in the parse tree.
-    :type parent: :py:class:`fparser.two.utils.Base` or NoneType
 
     '''
     # This dict of subclasses is populated dynamically by code at the end
@@ -287,15 +285,12 @@ class Base(ComparableMixin):
     # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
-    def __init__(self, string, parent_cls=None, parent=None):
+    def __init__(self, string, parent_cls=None):
         # pylint:disable=unused-argument
-        # During normal construction of the parse tree the parent information
-        # is set-up in the `init` method. However, it may also be provided
-        # to this constructor.
-        self.parent = parent
+        self.parent = None
 
     @show_result
-    def __new__(cls, string, parent_cls=None, parent=None):
+    def __new__(cls, string, parent_cls=None):
 
         def _set_parent(parent_node, items):
             ''' Recursively set the parent of all of the elements
@@ -413,33 +408,32 @@ class Base(ComparableMixin):
 
     def get_root(self):
         '''
-        Returns the root of the parse tree to which this node belongs.
+        Gets the node at the root of the parse tree to which this node belongs.
 
-        :returns: the node at the root of the tree.
+        :returns: the node at the root of the parse tree.
         :rtype: :py:class:`fparser.two.utils.Base`
 
         '''
-        parent = self
-        while parent.parent:
-            parent = parent.parent
-        return parent
+        current = self
+        while current.parent:
+            current = current.parent
+        return current
 
-    def get_child(self, node_type):
+    @property
+    def children(self):
         '''
-        Searches for the first immediate child of this node that is of the
-        specified type.
+        Return a list containing the immediate children of the supplied node if
+        it is a sub-class of Base, otherwise return an empty list.
 
-        :param type node_type: the class of child node to search for.
-
-        :returns: the first child node of type node_type that is encountered \
-                  or None.
-        :rtype: :py:class:`fparser.two.utils.Base`
+        :returns: the list of the immediate children of this node.
+        :rtype: list of :py:class:`fparser.two.utils.Base`
 
         '''
-        for node in get_children(self):
-            if isinstance(node, node_type):
-                return node
-        return None
+        child_list = getattr(self, 'content', None)
+        if child_list is None:
+            # 'items' is a tuple so convert it to a list
+            child_list = list(getattr(self, 'items', []))
+        return child_list
 
     def init(self, *items):
         '''
@@ -707,22 +701,6 @@ content : tuple
 
         '''
         self.content = content
-
-    def get_child(self, node_type):
-        '''
-        Searches for the first immediate child of this node that is of the
-        specified type.
-
-        :param type node_type: the class of child node to search for.
-
-        :returns: the first child node of type node_type that is encountered \
-                  or None.
-        :rtype: :py:class:`fparser.two.utils.Base`
-        '''
-        for node in self.content:
-            if isinstance(node, node_type):
-                return node
-        return None
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -1624,44 +1602,27 @@ def walk(node_list, types=None, indent=0, debug=False):
         if types is None or isinstance(child, types):
             local_list.append(child)
         # Recurse down
-        local_list += walk(get_children(child), types, indent+1, debug)
+        if isinstance(child, Base):
+            local_list += walk(child.children, types, indent+1, debug)
 
     return local_list
 
 
-def get_children(node):
+def get_child(node, node_type):
     '''
-    Return a list containing the immediate children of the supplied node if
-    it is a sub-class of Base, otherwise return an empty list.
+    Searches for the first, immediate child of the supplied node that is of
+    the specified type.
 
-    :param node: the node for which to return the immediate children.
-    :type node: :py:class:`fparser.two.utils.Base` or str or NoneType
+    :param node: the node whose children will be searched.
+    :type node: :py:class:`fparser.two.utils.Base`
+    :param type node_type: the class of child node to search for.
 
-    :returns: if the supplied node is a subclass of Base then return the \
-              list of its immediate children, otherwise return an empty list.
-    :rtype: list of :py:class:`fparser.two.utils.Base` or str
-
-    '''
-    if not isinstance(node, Base):
-        return []
-    child_list = getattr(node, 'content', None)
-    if child_list is None:
-        child_list = getattr(node, 'items', [])
-    return child_list
-
-
-def get_parent(node):
-    '''
-    If the supplied node is a sub-class of Base then return its parent in
-    the parse tree, otherwise return None.
-
-    :param node: the node for which the parent is required.
-    :type node: :py:class:`fparser.two.utils.Base` or str or NoneType
-
-    :returns: the parent of the supplied node or None.
-    :rtype: :py:class:`fparser.two.utils.Base` or NoneType
+    :returns: the first child node of type node_type that is encountered \
+              or None.
+    :rtype: :py:class:`fparser.two.utils.Base`
 
     '''
-    if not isinstance(node, Base):
-        return None
-    return node.parent
+    for child in node.children:
+        if isinstance(child, node_type):
+            return child
+    return None
