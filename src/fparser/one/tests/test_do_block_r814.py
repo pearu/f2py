@@ -56,7 +56,11 @@ def get_end_do(name):
     unnamed end statement.
 
     :param str name: Either None if it is an unnamed statement, or \
-        the name of the name to use in the end statement.
+        the label to use in the end statement.
+
+    :returns: either "END DO" (without space) if name is empty, or \
+        "END DO "+name.
+    :rtype: str
 
     '''
 

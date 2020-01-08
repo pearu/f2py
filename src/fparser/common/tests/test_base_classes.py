@@ -46,6 +46,7 @@ import fparser.common.base_classes
 import fparser.common.readfortran
 import fparser.common.sourceinfo
 import fparser.common.utils
+from fparser import api
 
 
 def test_statement_logging(log, monkeypatch):
@@ -165,3 +166,33 @@ def test_log_unexpected(log):
                "in 'BeginThing' block."
     result = log.messages['warning'][0].split('\n')[1]
     assert result == expected
+
+
+def test_space_after_enddo():
+    '''Make sure that there is no space after an 'END DO' without name,
+    but there is a space if there is a name after 'END DO'.
+    '''
+
+    # Unnamed loop:
+    source_str = '''\
+    subroutine foo
+    integer i, r
+    do i = 1,100
+      r = r + 1
+    end do
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert "END DO " not in tree.tofortran()
+
+    # Named loop:
+    source_str = '''\
+    subroutine foo
+    integer i, r
+    loop1: do i = 1,100
+      r = r + 1
+    end do loop1
+    end subroutine foo
+    '''
+    tree = api.parse(source_str, isfree=True, isstrict=False)
+    assert "END DO loop1" in tree.tofortran()
