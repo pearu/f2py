@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2020 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -208,6 +208,50 @@ def _is_fix_comment(line, isstrict):
 _HOLLERITH_START_SEARCH = re.compile(r'(?P<pre>\A|,\s*)'
                                      + r'(?P<num>\d+)h', re.I).search
 _IS_CALL_STMT = re.compile(r'call\b', re.I).match
+
+
+def extract_label(line):
+    '''Look for an integer label at the start of 'line' and if there is
+    one then remove it from 'line' and store it as an integer in
+    'label', returning both in a tuple.
+
+    :param str line: a string that potentially contains a label at the \
+        start.
+
+    :returns: a 2-tuple containing the label and updated line if a \
+        label is found or None and the unchanged line if a label is \
+        not found.
+    :rtype: (int or NoneType, str)
+
+    '''
+    label = None
+    match = _LABEL_RE.match(line)
+    if match:
+        label = int(match.group('label'))
+        line = line[match.end():].lstrip()
+    return label, line
+
+
+def extract_construct_name(line):
+    '''Look for a construct name at the start of 'line' and if there is
+    one then remove it from 'line' and return it as a string in
+    'name', returning both in a tuple.
+
+    :param str line: a string that potentially contains a construct \
+        name at the start.
+
+    :returns: a 2-tuple containing the construct name and updated line \
+        if a construct name is found or None and the unchanged line if \
+        a construct name is not found.
+    :rtype: (str or NoneType, str)
+
+    '''
+    construct_name = None
+    match = _CONSTRUCT_NAME_RE.match(line)
+    if match:
+        construct_name = match.group('name')
+        line = line[match.end():].lstrip()
+    return construct_name, line
 
 
 class FortranReaderError(Exception):
@@ -838,10 +882,35 @@ class FortranReaderBase(object):
                    and ';' in item.get_line():
                 # ;-separator not recognized in pyf-mode
                 items = []
-                for line in item.get_line().split(';'):
+                # Deal with each Fortran statement separately.
+                split_line_iter = iter(item.get_line().split(';'))
+                first = next(split_line_iter)
+                # The full line has already been processed as a Line
+                # object in 'item' (and may therefore have label
+                # and/or construct name properties extracted from the
+                # start of the line). The simplest way to avoid losing
+                # any label or construct name properties for the first
+                # statement is to copy the 'item' object and update it
+                # so that it only includes text for the first
+                # statement (rather than the full line). Subsequent
+                # statements need to be processed into Line
+                # objects.
+                items.append(item.copy(first.strip(), apply_map=True))
+                for line in split_line_iter:
+                    # Any subsequent statements have not been processed
+                    # before, so new Line objects need to be created.
                     line = line.strip()
                     if line:
-                        items.append(item.copy(line, apply_map=True))
+                        # The statement might have a label and/or construct
+                        # name.
+                        label, line = extract_label(line)
+                        name, line = extract_construct_name(line)
+                        # Create a new Line object and append to items
+                        # using the existing span (line numbers) and
+                        # reader.
+                        new_line = Line(item.apply_map(line), item.span, label,
+                                        name, item.reader)
+                        items.append(new_line)
                 items.reverse()
                 for newitem in items:
                     self.fifo_item.insert(0, newitem)
@@ -1355,17 +1424,11 @@ class FortranReaderBase(object):
                         line = get_single_line()
                         continue
                 else:
-                    # first line, check for a label
-                    m = _LABEL_RE.match(line)
-                    if m:
-                        assert not label, repr(label)
-                        label = int(m.group('label'))
-                        line = line[m.end():]
-                    # check for a construct name
-                    m = _CONSTRUCT_NAME_RE.match(line)
-                    if m:
-                        name = m.group('name')
-                        line = line[m.end():].lstrip()
+                    # Extract label and/or construct name from line if
+                    # there is one.
+                    label, line = extract_label(line)
+                    name, line = extract_construct_name(line)
+
                 line, qc, had_comment = handle_inline_comment(line,
                                                               self.linecount,
                                                               qc)
