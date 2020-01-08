@@ -103,7 +103,7 @@ class Comment(Base):
     subclass_names = []
 
     @show_result
-    def __new__(cls, string, parent_cls=None, parent=None):
+    def __new__(cls, string, parent_cls=None):
         """
         Create a new Comment instance.
 
@@ -112,8 +112,6 @@ class Comment(Base):
         :type string: str or :py:class:`FortranReaderBase`
         :param parent_cls: the parent class of this object.
         :type parent_cls: :py:type:`type`
-        :param parent: the parent of this Comment in the parse tree.
-        :type parent: :py:class:`fparser.two.utils.Base` or NoneType
 
         """
         from fparser.common import readfortran

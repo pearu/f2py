@@ -35,7 +35,7 @@
 
 import pytest
 from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram
-from fparser.two.utils import walk, get_children
+from fparser.two.utils import walk
 from fparser.api import get_reader
 
 from fparser.two.parser import ParserFactory
@@ -202,7 +202,7 @@ def test_prog_comments():
     #   |--> Comment
     from fparser.two.Fortran2003 import Main_Program, Write_Stmt, \
         End_Program_Stmt
-    walk(get_children(obj), Comment, debug=True)
+    walk(obj.children, Comment, debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
@@ -291,7 +291,7 @@ end subroutine my_mod
     reader = get_reader(source, isfree=True, ignore_comments=False)
     fn_unit = Subroutine_Subprogram(reader)
     assert isinstance(fn_unit, Subroutine_Subprogram)
-    walk(get_children(fn_unit), Comment, debug=True)
+    walk(fn_unit.children, Comment, debug=True)
     spec_part = fn_unit.content[1]
     comment = spec_part.content[0].content[0]
     assert isinstance(comment, Comment)
@@ -346,19 +346,11 @@ allocate(my_array(size), &
 end if
 '''
     from fparser.two.Fortran2003 import If_Construct, Allocate_Stmt
+    from fparser.two.utils import get_child
     reader = get_reader(source, isfree=True, ignore_comments=False)
     ifstmt = If_Construct(reader)
     assert isinstance(ifstmt, If_Construct)
     assert isinstance(ifstmt.content[1], Allocate_Stmt)
     assert "a big array" in str(ifstmt)
-
-
-def test_comment_parent():
-    ''' Check that we can create a new Comment object with a
-    specified parent. '''
-    from fparser.two.Fortran2003 import Specification_Part
-    declns = Specification_Part(get_reader("integer :: flag\n",
-                                           isfree=True, ignore_comments=False))
-    comment = Comment(get_reader("! This is a comment\n",isfree=True,
-                                 ignore_comments=False), parent=declns)
-    assert comment.parent is declns
+    cmt = get_child(ifstmt, Comment)
+    assert cmt.parent is ifstmt
