@@ -421,18 +421,23 @@ class Base(ComparableMixin):
 
     @property
     def children(self):
-        '''
-        Return a list containing the immediate children of the supplied node if
-        it is a sub-class of Base, otherwise return an empty list.
+        '''Return an iterable containing the immediate children of this node in
+        the parse tree.
 
-        :returns: the list of the immediate children of this node.
-        :rtype: list of :py:class:`fparser.two.utils.Base`
+        If this node represents an expression then its children are
+        contained in a tuple which is immutable. Therefore, the
+        manipulation of the children of such a node must be done by
+        replacing the `items` property of the node directly rather than via the
+        objects returned by this method.
+
+        :returns: the immediate children of this node.
+        :rtype: list or tuple containing zero or more of \
+                :py:class:`fparser.two.utils.Base` or NoneType or str
 
         '''
         child_list = getattr(self, 'content', None)
         if child_list is None:
-            # 'items' is a tuple so convert it to a list
-            child_list = list(getattr(self, 'items', []))
+            child_list = getattr(self, 'items', [])
         return child_list
 
     def init(self, *items):
