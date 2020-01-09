@@ -36,26 +36,30 @@
 
 import pytest
 from fparser.api import get_reader
+from fparser.two import Fortran2003
+from fparser.two.utils import walk
+
+
+TEST_CODE = ("program hello\n"
+             "  implicit none\n"
+             "  integer :: var1, ji\n"
+             "  real(wp), dimension(10,10) :: var2\n"
+             "  write(*,*) 'Guten Tag'\n"
+             "  do ji = 1, var1\n"
+             "    var2(ji, 5) = -1.0\n"
+             "  end do\n"
+             "  if(var1 < 3)then\n"
+             "    call a_routine(var2)\n"
+             "  end if\n"
+             "end program hello\n")
 
 
 @pytest.mark.usefixtures("f2003_create")
 def test_parent_info():
     ''' Check that parent information is correctly set-up in the
     parse tree. '''
-    from fparser.two import Fortran2003
-    from fparser.two.utils import walk, Base
-    reader = get_reader("program hello\n"
-                        "  implicit none\n"
-                        "  integer :: var1, ji\n"
-                        "  real(wp), dimension(10,10) :: var2\n"
-                        "  write(*,*) 'Guten Tag'\n"
-                        "  do ji = 1, var1\n"
-                        "    var2(ji, 5) = -1.0\n"
-                        "  end do\n"
-                        "  if(var1 < 3)then\n"
-                        "    call a_routine(var2)\n"
-                        "  end if\n"
-                        "end program hello\n")
+    from fparser.two.utils import Base
+    reader = get_reader(TEST_CODE)
     main = Fortran2003.Program(reader)
     node_list = walk(main)
 
@@ -70,3 +74,19 @@ def test_parent_info():
                 if isinstance(child, Base):
                     assert child.parent is node
                     assert child.get_root() is parent_prog
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_children_property():
+    ''' Test that the children property of Base returns the correct
+    results for both statements and expressions. '''
+    reader = get_reader(TEST_CODE)
+    main = Fortran2003.Program(reader)
+    # Check that children returns items when we have an expression
+    writes = walk(main, Fortran2003.Write_Stmt)
+    assert writes[0].children is writes[0].items
+    assert len(writes[0].children) == 2
+    # Check that it returns content when we have a statement
+    do_stmts = walk(main, Fortran2003.Block_Nonlabel_Do_Construct)
+    assert do_stmts[0].children is do_stmts[0].content
+    assert len(do_stmts[0].children) == 3
