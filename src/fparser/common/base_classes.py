@@ -1002,5 +1002,21 @@ class EndStatement(Statement):
         return Statement.get_indent_tab(self, deindent=True, isfix=isfix)
 
     def tofortran(self, isfix=None):
-        return self.get_indent_tab(isfix=isfix) + 'END %s %s'\
-               % (self.blocktype.upper(), self.name or '')
+        '''Returns a valid Fortran string for this END statement. It
+        guarantees that there is no white space after the 'END' in case
+        of an unnamed statement.
+
+        :param bool isfix: True if the code is in fixed format.
+
+        :returns: the (named or unnamed) valid Fortran END statement \
+                  as a string.
+        :rtype: str
+
+        '''
+        if self.name:
+            return self.get_indent_tab(isfix=isfix) + 'END {0} {1}'\
+                .format(self.blocktype.upper(), self.name)
+
+        # Make sure there is no space after an unnamed END:
+        return self.get_indent_tab(isfix=isfix) + 'END {0}'\
+            .format(self.blocktype.upper())

@@ -193,7 +193,7 @@ end module foo
                 ' trim(title), pcpsx_i_pel(), trim(c_flag), pc_get_lun()',
                 '      IF (.true.) THEN',
                 '        CALL smth',
-                '      END IF ',
+                '      END IF',
                 '      aaa: IF (.false.) THEN',
                 '      ELSE IF (a) THEN',
                 '      ELSE',
@@ -201,7 +201,7 @@ end module foo
                 '      hey = 1',
                 '    END SUBROUTINE bar',
                 '    ABSTRACT INTERFACE',
-                '    END INTERFACE ',
+                '    END INTERFACE',
                 '  END MODULE foo']
 
     reader = fparser.common.readfortran.FortranStringReader(string)
