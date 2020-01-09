@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -138,37 +138,3 @@ def test_get_child():
     assert isinstance(io_unit, Fortran2003.Io_Unit)
     missing = get_child(io_nodes[0], Fortran2003.Execution_Part)
     assert missing is None
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_parent_info():
-    ''' Check that parent information is correctly set-up in the
-    parse tree. '''
-    from fparser.two import Fortran2003
-    from fparser.two.utils import walk, Base
-    reader = get_reader("program hello\n"
-                        "  implicit none\n"
-                        "  integer :: var1, ji\n"
-                        "  real(wp), dimension(10,10) :: var2\n"
-                        "  write(*,*) 'Guten Tag'\n"
-                        "  do ji = 1, var1\n"
-                        "    var2(ji, 5) = -1.0\n"
-                        "  end do\n"
-                        "  if(var1 < 3)then\n"
-                        "    call a_routine(var2)\n"
-                        "  end if\n"
-                        "end program hello\n")
-    main = Fortran2003.Program(reader)
-    node_list = walk(main)
-
-    # Root node in the parse tree has no parent
-    parent_prog = node_list[0]
-    assert parent_prog.parent is None
-
-    # Check connectivity of all non-string nodes
-    for node in node_list[1:]:
-        if isinstance(node, Base):
-            for child in node.children:
-                if isinstance(child, Base):
-                    assert child.parent is node
-                    assert child.get_root() is parent_prog
