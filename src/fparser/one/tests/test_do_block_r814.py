@@ -49,6 +49,26 @@ from fparser.one.parsefortran import FortranParser
 from fparser.common.readfortran import FortranStringReader
 
 
+def get_end_do(name):
+    '''A small helper function to return either "END DO" (without space) if
+    name is empty, or "END DO "+name. This simplifies the tests now that
+    tofortran does not return an "END DO" with one space in case of an
+    unnamed end statement.
+
+    :param str name: Either None if it is an unnamed statement, or \
+        the label to use in the end statement.
+
+    :returns: either "END DO" (without space) if name is empty, or \
+        "END DO "+name.
+    :rtype: str
+
+    '''
+
+    if name:
+        return "END DO {0}".format(name)
+    return "END DO"
+
+
 @pytest.mark.parametrize('name', [None, 'loop_name'])
 @pytest.mark.parametrize('label', [None, '123'])
 @pytest.mark.parametrize('control_comma', [False, True])
@@ -73,7 +93,7 @@ def test_do(name, label, control_comma, terminal_expression,
     # TODO: Although the Fortran standard allows for "continue" to be used in
     # place of "end do" fparser does not support it.
     end_snippet = 'continue' if end_name == 'continue' \
-                  else 'end do {endname}'.format(endname=end_name or '')
+                  else get_end_do(end_name)
     do_code = '''{name}do {label}{comma}variable = 1, {term}, 1
   write (6, '(I0)') variable
 {endlabel} {end}
@@ -85,12 +105,12 @@ def test_do(name, label, control_comma, terminal_expression,
            end=end_snippet)
     do_expected = '''  {name}DO {label}variable = 1, {term}, 1
     WRITE (6, '(I0)') variable
-{endlabel} END DO {endname}
+{endlabel} {endstmt}
 '''.format(name=name_snippet or '',
            label=label_snippet or '',
            term=terminal_expression,
            endlabel=end_label or ' ',
-           endname=end_name or '')
+           endstmt=get_end_do(end_name))
     do_reader = FortranStringReader(do_code)
     do_reader.set_format(FortranFormat(True, False))
     do_parser = FortranParser(do_reader)
@@ -122,21 +142,21 @@ def test_do_while(name, label, control_comma, terminal_expression,
     comma_snippet = ', ' if control_comma else None
     code = '''{name}do {label}{comma}while ({term})
   write (6, '(I0)') variable
-{endlabel} end do {endname}
+{endlabel} {endstmt}
 '''.format(name=name_snippet or '',
            label=label_snippet or '',
            comma=comma_snippet or '',
            term=terminal_expression,
            endlabel=end_label or '',
-           endname=end_name or '')
+           endstmt=get_end_do(end_name))
     expected = '''  {name}DO {label}while ({term})
     WRITE (6, '(I0)') variable
-{endlabel} END DO {endname}
+{endlabel} {endstmt}
 '''.format(name=name_snippet or '',
            label=label_snippet or '',
            term=terminal_expression,
            endlabel=end_label or ' ',
-           endname=end_name or '')
+           endstmt=get_end_do(end_name))
     print(code)
     reader = FortranStringReader(code)
     reader.set_format(FortranFormat(True, False))
