@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2020 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -389,13 +389,31 @@ file was found but would fail if the include file was not found::
   program x
   include 'endprogram.inc'
 
-Walking the parse tree
+Walking the Parse Tree
 ----------------------
 
-fparser2 provides two functions to support the traversal of the
-parse tree that it constructs:
+Properties and Methods of Nodes
++++++++++++++++++++++++++++++++
 
-.. automethod:: fparser.two.utils.walk_ast
+The majority of the nodes in the parse tree produced by fparser2 are
+instances of (sub-classes of) the ``fparser.two.utils.Base``
+class. This class provides the ``parent`` and ``children`` properties
+which return the *immediate* parent/children of a given node.
+		
+In addition to these properties, the ``Base`` class also provides the method:
 
-.. automethod:: fparser.two.utils.get_child
+.. automethod:: fparser.two.utils.Base.get_root
 
+.. note:: The parse tree produced by fparser2 can contain some nodes that are
+	  *not* instances of ``fparser.two.utils.Base`` (e.g. ``None`` or
+	  ``str``). Obviously such nodes do not have the ``parent`` and
+	  ``children`` properties.
+
+Utilities
++++++++++
+
+The ``utils`` module of fparser2 provides two utility functions to
+support the traversal of the parse tree that it constructs:
+
+.. autofunction:: fparser.two.utils.walk
+.. autofunction:: fparser.two.utils.get_child

@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2019 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2020 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -314,10 +314,12 @@ match with optional subclasses inbetween (useful for matching rules
 such as programs, subroutines, if statements etc.).
 
 .. autoclass:: fparser.two.utils.Base
-	       :members:
+               :members:
+               :noindex:
 
 .. autoclass:: fparser.two.utils.BlockBase
-	       :members:
+               :members:
+               :noindex:
 
 .. note::
 

@@ -272,23 +272,47 @@ class Base(ComparableMixin):
                     is either str or FortranReaderBase.
       self.item   - Line instance (holds label) or None.
 
+    :param type cls: the class of object to create.
+    :param string: (source of) Fortran string to parse.
+    :type string: `str` or \
+                  :py:class:`fparser.common.readfortran.FortranReaderBase`
+    :param parent_cls: the parent class of this object.
+    :type parent_cls: `type`
+
     '''
     # This dict of subclasses is populated dynamically by code at the end
     # of this module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
     subclasses = {}
 
+    def __init__(self, string, parent_cls=None):
+        # pylint:disable=unused-argument
+        self.parent = None
+
     @show_result
     def __new__(cls, string, parent_cls=None):
-        """
-        Create a new instance of this object.
 
-        :param type cls: the class of object to create
-        :param string: (source of) Fortran string to parse
-        :type string: str or :py:class:`FortranReaderBase`
-        :param parent_cls: the parent class of this object
-        :type parent_cls: :py:type:`type`
-        """
+        def _set_parent(parent_node, items):
+            ''' Recursively set the parent of all of the elements
+            in the list that are a sub-class of Base. (Recursive because
+            sometimes the list of elements itself contains a list or tuple.)
+
+            :param parent_node: the parent of the nodes listed in `items`.
+            :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
+            :param items: list or tuple of nodes for which to set the parent.
+            :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
+                         or `str` or `list` or `tuple` or NoneType.
+            '''
+            for item in items:
+                if item:
+                    if isinstance(item, Base):
+                        # We can only set the parent of `Base` objects.
+                        # Anything else (e.g. str) is passed over.
+                        item.parent = parent_node
+                    elif isinstance(item, (list, tuple)):
+                        _set_parent(parent_node, item)
+        # ------------------------------------------------------------------
+
         from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
@@ -303,7 +327,7 @@ class Base(ComparableMixin):
             reader = string
             item = reader.get_item()
             if item is None:
-                return
+                return None
             if isinstance(item, readfortran.Comment):
                 # We got a comment but we weren't after a comment (we handle
                 # those in Comment.__new__)
@@ -316,7 +340,7 @@ class Base(ComparableMixin):
             if obj is None:
                 # No match so give the item back to the reader
                 reader.put_item(item)
-                return
+                return None
             obj.item = item
             return obj
 
@@ -335,6 +359,8 @@ class Base(ComparableMixin):
             obj = object.__new__(cls)
             obj.string = string
             obj.item = None
+            # Set-up parent information for the results of the match
+            _set_parent(obj, result)
             if hasattr(cls, 'init'):
                 obj.init(*result)
             return obj
@@ -380,9 +406,49 @@ class Base(ComparableMixin):
             errmsg = u"{0}: '{1}'".format(cls.__name__, string)
         raise NoMatchError(errmsg)
 
+    def get_root(self):
+        '''
+        Gets the node at the root of the parse tree to which this node belongs.
+
+        :returns: the node at the root of the parse tree.
+        :rtype: :py:class:`fparser.two.utils.Base`
+
+        '''
+        current = self
+        while current.parent:
+            current = current.parent
+        return current
+
+    @property
+    def children(self):
+        '''Return an iterable containing the immediate children of this node in
+        the parse tree.
+
+        If this node represents an expression then its children are
+        contained in a tuple which is immutable. Therefore, the
+        manipulation of the children of such a node must be done by
+        replacing the `items` property of the node directly rather than via the
+        objects returned by this method.
+
+        :returns: the immediate children of this node.
+        :rtype: list or tuple containing zero or more of \
+                :py:class:`fparser.two.utils.Base` or NoneType or str
+
+        '''
+        child_list = getattr(self, 'content', None)
+        if child_list is None:
+            child_list = getattr(self, 'items', [])
+        return child_list
+
     def init(self, *items):
+        '''
+        Store the supplied list of nodes in the `items` list of this node.
+
+        :param items: the children of this node.
+        :type items: tuple of :py:class:`fparser.two.utils.Base`
+
+        '''
         self.items = items
-        return
 
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr,
@@ -442,8 +508,7 @@ content : tuple
               enable_where_construct_hook=False,
               enable_select_type_construct_hook=False,
               enable_case_construct_hook=False,
-              strict_order=False,
-              ):
+              strict_order=False):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -492,6 +557,7 @@ content : tuple
             # excluding any comments)
             start_idx = len(content)
             content.append(obj)
+
             if enable_do_label_construct_hook:
                 start_label = obj.get_start_label()
             if match_names:
@@ -629,11 +695,17 @@ content : tuple
                             'expected <%s-name> is %s but got %s. Ignoring.'
                             % (end_stmt.get_type().lower(),
                                start_stmt.get_name(), end_stmt.get_name()))
-        return content,
+        return (content,)
 
     def init(self, content):
+        '''
+        Initialise the `content` attribute with the list of child nodes.
+
+        :param content: list of nodes that are children of this one.
+        :type content: list of :py:class:`fparser.two.utils.Base` or NoneType
+
+        '''
         self.content = content
-        return
 
     def _cmpkey(self):
         """ Provides a key of objects to be used for comparing.
@@ -731,11 +803,9 @@ class SequenceBase(Base):
     def init(self, separator, items):
         '''Store the result of the match method if the match is successful.
 
-        :param str separator: The separator used to split the supplied \
-        string.
-        :param items: A tuple containing the matched objects in a \
-        tuple.
-        :type items: (Subclass of :py:class:`fparser.two.utils.Base`)
+        :param str separator: the separator used to split the supplied string.
+        :param items: a tuple containing the matched objects.
+        :type items: tuple(Subclass of :py:class:`fparser.two.utils.Base`)
 
         '''
         self.separator = separator
@@ -1288,8 +1358,15 @@ class EndStmtBase(StmtBase):
         return stmt_type, None
 
     def init(self, stmt_type, stmt_name):
+        '''
+        Initialise this EndStmtBase object.
+
+        :param str stmt_type: the type of statement, e.g. 'PROGRAM'.
+        :param stmt_name: the name associated with the statement or None.
+        :type stmt_name: :py:class:`fparser.two.Fortran2003.Name`
+
+        '''
         self.items = [stmt_type, stmt_name]
-        return
 
     def get_name(self):
         return self.items[1]
@@ -1500,17 +1577,16 @@ class Type_Declaration_StmtBase(StmtBase):
             return '%s, %s :: %s' % self.items
 
 
-def walk_ast(children, my_types=None, indent=0, debug=False):
+def walk(node_list, types=None, indent=0, debug=False):
     '''
-    Walk down the tree produced by fparser2 where children
-    are listed under 'content'.  Returns a list of all nodes with the
-    specified type(s).
+    Walk down the parse tree produced by fparser2.  Returns a list of all
+    nodes with the specified type(s).
 
-    :param children: list of child nodes from which to walk.
-    :type children: list of :py:class:fparser.two.utils.Base.
-    :param my_types: list of types of Node to return. (Default is to \
-                     return all nodes.)
-    :type my_types: list of type
+    :param node_list: node or list of nodes from which to walk.
+    :type node_list: (list of) :py:class:fparser.two.utils.Base
+    :param types: type or tuple of types of Node to return. (Default is to \
+                  return all nodes.)
+    :type types: type or tuple of types
     :param int indent: extent to which to indent debug output.
     :param bool debug: whether or not to write textual representation of AST \
                        to stdout.
@@ -1518,46 +1594,40 @@ def walk_ast(children, my_types=None, indent=0, debug=False):
     :rtype: `list` of :py:class:`fparser.two.utils.Base`
     '''
     local_list = []
-    for child in children:
+
+    if not isinstance(node_list, (list, tuple)):
+        node_list = [node_list]
+
+    for child in node_list:
         if debug:
             if isinstance(child, str):
                 print(indent*"  " + "child type = ", type(child), repr(child))
             else:
                 print(indent*"  " + "child type = ", type(child))
-        if my_types is None or type(child) in my_types:
+        if types is None or isinstance(child, types):
             local_list.append(child)
-
-        # Depending on their level in the tree produced by fparser2003,
-        # some nodes have children listed in .content and some have them
-        # listed under .items. If a node has neither then it has no
-        # children.
-        if hasattr(child, "content"):
-            local_list += walk_ast(child.content, my_types, indent+1, debug)
-        elif hasattr(child, "items"):
-            local_list += walk_ast(child.items, my_types, indent+1, debug)
+        # Recurse down
+        if isinstance(child, Base):
+            local_list += walk(child.children, types, indent+1, debug)
 
     return local_list
 
 
-def get_child(root_node, node_type):
+def get_child(node, node_type):
     '''
-    Searches for the first immediate child of root_node that is of the
-    specified type.
+    Searches for the first, immediate child of the supplied node that is of
+    the specified type.
 
-    :param root_node: the parent of the child nodes we will search through.
-    :type root_node: :py:class:`fparser.two.utils.Base`
+    :param node: the node whose children will be searched.
+    :type node: :py:class:`fparser.two.utils.Base`
     :param type node_type: the class of child node to search for.
 
-    :returns: the first child node of type node_type that is encountered or \
-              None.
+    :returns: the first child node of type node_type that is encountered \
+              or None.
     :rtype: :py:class:`fparser.two.utils.Base`
+
     '''
-    children = []
-    if hasattr(root_node, "content"):
-        children = root_node.content
-    elif hasattr(root_node, "items"):
-        children = root_node.items
-    for node in children:
-        if isinstance(node, node_type):
-            return node
+    for child in node.children:
+        if isinstance(child, node_type):
+            return child
     return None

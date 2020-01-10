@@ -124,7 +124,7 @@ def test_blockbase_tofortran_non_ascii():
     containing non-ascii characters within a sub-class of BlockBase. We
     use a Case Construct for this purpose. '''
     from fparser.common.readfortran import FortranStringReader
-    from fparser.two.utils import BlockBase, walk_ast
+    from fparser.two.utils import BlockBase, walk
     from fparser.two.Fortran2003 import Program, Case_Construct
     code = (u"program my_test\n"
             u"! A comment outside the select block\n"
@@ -135,7 +135,7 @@ def test_blockbase_tofortran_non_ascii():
             u"end program\n")
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Program(reader)
-    bbase = walk_ast(obj.content, [Case_Construct])[0]
+    bbase = walk(obj.content, Case_Construct)[0]
     # Explicitly call tofortran() on the BlockBase class.
     out_str = BlockBase.tofortran(bbase)
     assert "for e1=1" in out_str

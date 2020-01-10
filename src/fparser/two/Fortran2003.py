@@ -79,7 +79,7 @@ from fparser.common.readfortran import FortranReaderBase
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
-    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk_ast
+    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
     InternalSyntaxError, InternalError, show_result, py2_encode_list_items
 
@@ -98,7 +98,7 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 
 class Comment(Base):
     '''
-    Represents a Fortran Comment
+    Represents a Fortran Comment.
     '''
     subclass_names = []
 
@@ -107,11 +107,12 @@ class Comment(Base):
         """
         Create a new Comment instance.
 
-        :param type cls: the class of object to create
-        :param string: (source of) Fortran string to parse
+        :param type cls: the class of object to create.
+        :param string: (source of) Fortran string to parse.
         :type string: str or :py:class:`FortranReaderBase`
-        :param parent_cls: the parent class of this object
+        :param parent_cls: the parent class of this object.
         :type parent_cls: :py:type:`type`
+
         """
         from fparser.common import readfortran
 
@@ -210,6 +211,7 @@ class Program(BlockBase):  # R201
         :raises FortranSyntaxError: if the code is not valid Fortran
 
         '''
+        # pylint: disable=unused-argument
         try:
             return Base.__new__(cls, string)
         except NoMatchError:
@@ -9901,7 +9903,7 @@ class Function_Stmt(StmtBase):  # R1224
             suffix = Suffix(repmap(line))
         if suffix:
             # A suffix may or may not contain a binding spec.
-            binding_spec = walk_ast([suffix], my_types=[Language_Binding_Spec])
+            binding_spec = walk(suffix, Language_Binding_Spec)
             # Check that we conform to C1242.
             if not c1242_valid(prefix, binding_spec):
                 return None
@@ -10135,8 +10137,7 @@ def c1242_valid(prefix, binding_spec):
     if binding_spec and prefix:
         # Prefix(es) may or may not be of type ELEMENTAL
         elemental = any("ELEMENTAL" in str(child)
-                        for child in walk_ast(prefix.items,
-                                              my_types=[Prefix_Spec]))
+                        for child in walk(prefix.items, Prefix_Spec))
         if elemental:
             # Constraint C1242. A prefix shall not specify ELEMENTAL if
             # proc-language-binding-spec appears in the function-stmt or

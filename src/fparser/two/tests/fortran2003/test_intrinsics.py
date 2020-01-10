@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2019, Science and Technology Facilities Council.
+# Copyright (c) 2019-2020, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,18 +38,19 @@ import pytest
 from fparser.two.Fortran2003 import Program, Intrinsic_Function_Reference, \
     Intrinsic_Name
 from fparser.two.utils import FortranSyntaxError, NoMatchError, \
-    InternalSyntaxError, walk_ast
+    InternalSyntaxError, walk
 from fparser.api import get_reader
 
 # class program
 
 
-def test_intrinsic_recognised(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_intrinsic_recognised():
     '''Test that an intrinsic is picked up when used in a program.'''
 
     reader = get_reader("subroutine sub()\na = sin(b)\nend subroutine sub\n")
     ast = Program(reader)
-    assert walk_ast([ast], [Intrinsic_Function_Reference])
+    assert walk(ast, Intrinsic_Function_Reference)
 
 
 def test_intrinsic_error(f2003_create):

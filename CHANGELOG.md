@@ -13,6 +13,10 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+10/01/2020 PR #230 for #102 and #105. Add parent and children properties
+           to nodes. Also add get_root() method and update get_child and
+           walk methods.
+
 08/01/2020 PR #234 for #228. Remove the blank space at the end of unnamed
            "END DO" statements.
 

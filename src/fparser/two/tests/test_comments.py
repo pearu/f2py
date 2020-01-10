@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2020 Science and Technology Facilities Council
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -35,7 +35,7 @@
 
 import pytest
 from fparser.two.Fortran2003 import Program, Comment, Subroutine_Subprogram
-from fparser.two.utils import walk_ast
+from fparser.two.utils import walk
 from fparser.api import get_reader
 
 from fparser.two.parser import ParserFactory
@@ -202,7 +202,7 @@ def test_prog_comments():
     #   |--> Comment
     from fparser.two.Fortran2003 import Main_Program, Write_Stmt, \
         End_Program_Stmt
-    walk_ast(obj.content, [Comment], debug=True)
+    walk(obj.children, Comment, debug=True)
     assert type(obj.content[0]) == Comment
     assert str(obj.content[0]) == "! A troublesome comment"
     assert type(obj.content[1]) == Main_Program
@@ -288,21 +288,22 @@ subroutine my_mod()
   ! Ending comment
 end subroutine my_mod
 '''
-    from fparser.two.Fortran2003 import Subroutine_Subprogram
     reader = get_reader(source, isfree=True, ignore_comments=False)
     fn_unit = Subroutine_Subprogram(reader)
     assert isinstance(fn_unit, Subroutine_Subprogram)
-    walk_ast(fn_unit.content, [Comment], debug=True)
+    walk(fn_unit.children, Comment, debug=True)
     spec_part = fn_unit.content[1]
     comment = spec_part.content[0].content[0]
     assert isinstance(comment, Comment)
     assert "! First comment" in str(comment)
     comment = spec_part.content[2].content[0]
     assert isinstance(comment, Comment)
+    assert comment.parent is spec_part.content[2]
     assert "! Body comment" in str(comment)
     exec_part = fn_unit.content[2]
     comment = exec_part.content[1]
     assert isinstance(comment, Comment)
+    assert comment.parent is exec_part
     assert "! Inline comment" in str(comment)
 
 
@@ -345,8 +346,11 @@ allocate(my_array(size), &
 end if
 '''
     from fparser.two.Fortran2003 import If_Construct, Allocate_Stmt
+    from fparser.two.utils import get_child
     reader = get_reader(source, isfree=True, ignore_comments=False)
     ifstmt = If_Construct(reader)
     assert isinstance(ifstmt, If_Construct)
     assert isinstance(ifstmt.content[1], Allocate_Stmt)
     assert "a big array" in str(ifstmt)
+    cmt = get_child(ifstmt, Comment)
+    assert cmt.parent is ifstmt
