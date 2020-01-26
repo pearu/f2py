@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2020 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
