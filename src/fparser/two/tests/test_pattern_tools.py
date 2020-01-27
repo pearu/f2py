@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2020 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -39,6 +39,7 @@
 Test battery associated with fparser.two.pattern_tools package.
 '''
 
+import pytest
 import fparser.two.pattern_tools
 
 
@@ -120,3 +121,27 @@ def test_power_op_pattern():
     assert match.rsplit('a * b ** c') == ('a * b', '**', 'c')
     assert match.lsplit('a ** b ** c') == ('a', '**', 'b ** c')
     assert match.rsplit('a ** b ** c') == ('a ** b', '**', 'c')
+
+
+@pytest.mark.parametrize("pattern",
+                         ["ALLOCATABLE", "ASYNCHRONOUS", "EXTERNAL", "INTENT",
+                          "INTRINSIC", "OPTIONAL", "PARAMETER", "POINTER",
+                          "PROTECTED", "SAVE", "TARGET", "VALUE", "VOLATILE"])
+def test_attr_spec_pattern(pattern):
+    '''Tests the attr_spec and abs_attr_spec patterns for all valid
+    matches. The difference between the two is that the former matches
+    even if there is additional content after the matching string, but
+    the latter (abs) does not.
+
+    '''
+    attr_spec = fparser.two.pattern_tools.attr_spec
+    assert attr_spec.match(pattern.upper())
+    assert attr_spec.match(pattern.lower())
+    assert not attr_spec.match("X"+pattern)
+    assert attr_spec.match(pattern+"X")
+
+    abs_attr_spec = fparser.two.pattern_tools.abs_attr_spec
+    assert abs_attr_spec.match(pattern.upper())
+    assert abs_attr_spec.match(pattern.lower())
+    assert not abs_attr_spec.match("X"+pattern)
+    assert not abs_attr_spec.match(pattern+"X")

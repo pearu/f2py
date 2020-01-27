@@ -13,6 +13,10 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+25/01/2020 PR #235 for #172. Fixes bug in absolute pattern matching that
+           meant that matches with following content were not being
+           rejected as they should.
+
 10/01/2020 PR #230 for #102 and #105. Add parent and children properties
            to nodes. Also add get_root() method and update get_child and
            walk methods.

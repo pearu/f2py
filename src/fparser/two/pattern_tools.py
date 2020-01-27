@@ -1,4 +1,5 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2020 Science and Technology
+# Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -466,8 +467,8 @@ abs_implicit_none = abs(implicit_none)
 
 attr_spec = Pattern(
     '<attr-spec>',
-    r'ALLOCATABLE|ASYNCHRONOUS|EXTERNAL|INTENT|INTRINSIC|'
-    'OPTIONAL|PARAMETER|POINTER|PROTECTED|SAVE|TARGET|VALUE|VOLATILE',
+    r'(ALLOCATABLE|ASYNCHRONOUS|EXTERNAL|INTENT|INTRINSIC|'
+    'OPTIONAL|PARAMETER|POINTER|PROTECTED|SAVE|TARGET|VALUE|VOLATILE)',
     flags=re.I)
 abs_attr_spec = abs(attr_spec)
 
