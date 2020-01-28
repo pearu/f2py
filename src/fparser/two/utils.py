@@ -921,7 +921,9 @@ class BinaryOpBase(Base):
     match = staticmethod(match)
 
     def tostr(self):
-        return '%s %s %s' % tuple(self.items)
+        # Using join and str is much more efficient than the previous
+        # '%s %s %s' % tuple(self.items)
+        return " ".join([str(self.items[0]), str(self.items[1]), str(self.items[2])])
 
 
 class SeparatorBase(Base):
