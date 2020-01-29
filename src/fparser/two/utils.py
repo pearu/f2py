@@ -905,13 +905,25 @@ class BinaryOpBase(Base):
             if exclude_op_pattern.match(op):
                 return
 
-        lhs_obj = lhs_cls(repmap(lhs))
-        rhs_obj = rhs_cls(repmap(rhs))
+        if right:
+            # The split is closest to the right so try to match the
+            # RHS first. This can be much more efficient for complex
+            # expressions.
+            rhs_obj = rhs_cls(repmap(rhs))
+            lhs_obj = lhs_cls(repmap(lhs))
+        else:
+            # The split is closest to the left so try to match the LHS
+            # first. This can be much more efficient for complex
+            # expressions.
+            lhs_obj = lhs_cls(repmap(lhs))
+            rhs_obj = rhs_cls(repmap(rhs))
         return lhs_obj, op.replace(' ', ''), rhs_obj
     match = staticmethod(match)
 
     def tostr(self):
-        return '%s %s %s' % tuple(self.items)
+        # Using join and str is much more efficient than the previous
+        # '%s %s %s' % tuple(self.items)
+        return " ".join([str(self.items[0]), str(self.items[1]), str(self.items[2])])
 
 
 class SeparatorBase(Base):
