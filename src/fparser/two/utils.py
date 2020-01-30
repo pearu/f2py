@@ -540,7 +540,7 @@ content : tuple
         content = []
 
         if startcls is not None:
-            # Deal with any preceding comments and/or includes
+            # Deal with any preceding comments and/or directives
             add_comments_directives(content, reader)
             # Now attempt to match the start of the block
             try:

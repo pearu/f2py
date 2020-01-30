@@ -501,14 +501,15 @@ class Comment(Base):
 
 
 def match_comment_or_directive(content, reader):
-    """
-    Matches a single comment or preprocessor directive, including
-    INCLUDE statements.
-    """
-    obj = Comment(reader)
-    obj = Include_Stmt(reader) if not obj else obj
-    obj = Define_Stmt(reader) if not obj else obj
-    return obj
+#    cls_list = (Comment, Include_Stmt, Cpp_Include_Stmt, Cpp_Define_Stmt,
+#                Cpp_Undef_Stmt, Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
+#                Cpp_Endif_Stmt, Cpp_Warning_Stmt, Cpp_Macro,
+#                Cpp_Macro_Parameter_List)
+    cls_list = (Comment, Include_Stmt, Cpp_Define_Stmt)
+    for cls in cls_list:
+        obj = cls(reader)
+        if obj:
+            return obj
 
 
 def add_comments_directives(content, reader):
