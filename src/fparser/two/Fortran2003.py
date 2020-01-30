@@ -500,13 +500,24 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
+def match_comment_or_directive(content, reader):
+    """
+    Matches a single comment or preprocessor directive, including
+    INCLUDE statements.
+    """
+    obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
+    obj = Define_Stmt(reader) if not obj else obj
+    return obj
+
+
 def add_comments_directives(content, reader):
-    '''Creates comment and/or include objects and adds them to the content
-    list. Comment and/or include objects are added until a line that
-    is not a comment or include is found.
+    '''Creates comment and/or directive objects and adds them to the content
+    list. Comment and/or directive objects are added until a line that
+    is not a comment or directive is found.
 
     :param content: a `list` of matched objects. Any matched comments \
-                    or includes in this routine are added to this list.
+                    or directives in this routine are added to this list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -518,17 +529,6 @@ def add_comments_directives(content, reader):
     while obj:
         content.append(obj)
         obj = match_comment_or_directive(content, reader)
-
-
-def match_comment_or_directive(content, reader):
-    """
-    Matches a single comment or preprocessor directive, indlucing
-    INCLUDE statements.
-    """
-    obj = Comment(reader)
-    obj = Include_Stmt(reader) if not obj else obj
-    obj = Define_Stmt(reader) if not obj else obj
-    return obj
 
 
 class Program(BlockBase):  # R201
