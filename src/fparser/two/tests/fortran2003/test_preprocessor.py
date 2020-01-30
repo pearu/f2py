@@ -243,7 +243,7 @@ def test_line_statement(f2003_create):
         result = Cpp_Line_Stmt(line)
         assert str(result) == ref
 
-def test_incorrect_warning_stmt(f2003_create):
+def test_incorrect_line_stmt(f2003_create):
     '''Test that incorrectly formed #line statements raise exception'''
     for line in [None, '', ' ', '#line', '#linex', '#lien']:
         with pytest.raises(NoMatchError) as excinfo:
