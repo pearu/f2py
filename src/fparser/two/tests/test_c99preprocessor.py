@@ -41,7 +41,7 @@ keep the directives in the Fortran parse tree and output it again.
 '''
 
 import pytest
-from fparser.two.C99Preprocessor import (Cpp_Include_Stmt)
+from fparser.two.C99Preprocessor import (Cpp_Include_Stmt, Cpp_Macro_Stmt)
 from fparser.two.utils import NoMatchError
 
 
@@ -64,3 +64,44 @@ def test_incorrect_include_stmt(f2003_create):
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Include_Stmt(line)
         assert "Cpp_Include_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+
+def test_macro_stmt(f2003_create):
+    '''Test that #define is recognized'''
+    # definition with value
+    ref = '#define MACRO value'
+    for line in ['#define MACRO value',
+                 '  #  define   MACRO   value  ']:
+        result = Cpp_Macro_Stmt(line)
+        assert str(result) == ref
+    # definition without value
+    ref = '#define _MACRO'
+    for line in ['#define _MACRO',
+                 '   #  define  _MACRO  ']:
+        result = Cpp_Macro_Stmt(line)
+        assert str(result) == ref
+    # more definitions with parameters and similar
+    code = ['#define MACRO(x) call func(x)',
+            '#define MACRO (x, y)',
+            '#define MACRO(x, y) (x) + (y)',
+            '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
+            '#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
+            '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
+            '#define hash_hash # ## #',
+            '#define TABSIZE 100',
+            '#define r(x,y) x ## y',
+            '#define MACRO(a, b, c) (a) * (b + c)',
+            '#define MACRO( a,b ,   c) (a )*    (   b   + c  )']
+    for ref in code:
+        result = Cpp_Macro_Stmt(ref)
+        assert str(result) == ref
+
+
+def test_incorrect_macro_stmt(f2003_create):
+    '''Test that incorrectly formed #define statements raises exception'''
+    for line in [None, '', ' ', '#def', '#defnie', '#definex',
+                 '#define fail(...,test) test']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Macro_Stmt(line)
+        assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
+

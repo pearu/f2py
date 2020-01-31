@@ -41,7 +41,8 @@
 import re
 import logging
 
-from fparser.two.utils import Base, InternalError
+from fparser.two import pattern_tools as pattern
+from fparser.two.utils import (Base, StringBase, InternalError)
 from fparser.two.Fortran2003 import Include_Filename
 
 #
@@ -67,6 +68,7 @@ def match_cpp_directive(content, reader):
 class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
     """
     C99 section 6.10.2 Source file inclusion
+
     include_stmt is # include [ <h-char-sequence>
                               | "q-char-sequence"
                               | pp-tokens ] new-line
@@ -122,3 +124,97 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
         :rtype: str
         '''
         return '#include "{}"'.format(self.items[0])
+
+
+class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
+    """
+    C99 section 6.10.3 Macro replacement
+
+    macro_stmt is # define identifier [( [identifier list] ) |(...) ]
+                  [ replacement-list ] new-line
+
+    Important: No preceding whitespace is allowed for the left parenthesis of
+    the optional identifier list.
+    """
+
+    use_names = ['Cpp_Macro_Identifier', 'Cpp_Macro_Identifier_List']
+
+    _regex = re.compile(r"#\s*define\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Macro_Stmt._regex.match(line)
+        if not found:
+            # The line does not match a define statement
+            return None
+        rhs = line[found.end():].strip()
+        found = pattern.macro_name.match(rhs)
+        if not found:
+            return None
+        name = Cpp_Macro_Identifier(found.group())
+        definition = rhs[found.end():]
+            # note no strip here, because '#define MACRO(x)' and '#define MACRO (x)'
+            # are functionally different
+        if len(definition) == 0:
+            return (name,)
+        if definition[0] == '(':
+            found = Cpp_Macro_Identifier_List._regex.match(definition)
+            if not found:
+                # The definition starts with a bracket (without preceding white space)
+                # but does not match an identifier list
+                return None
+            parameter_list = found.group()
+            definition = definition[found.end():].strip()
+            return (name, parameter_list, definition)
+        definition = definition.strip()
+            # now that we now it doesn't have a parameter list, we can strip
+        if len(definition) > 1:
+            return (name, definition)
+        else:
+            return (name,)
+
+    def tostr(self):
+        if len(self.items) > 2:
+            return ('#define {}{} {}'.format(self.items[0], self.items[1], self.items[2]))
+        elif len(self.items) > 1:
+            return ('#define {} {}'.format(self.items[0], self.items[1]))
+        else:
+            return ('#define {}'.format(self.items[0]))
+
+
+class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
+    '''Implements the matching of a macro identifier.'''
+
+    # There are no other classes. This is a simple string match.
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        return StringBase.match(pattern.abs_macro_name, string.strip())
+
+
+class Cpp_Macro_Identifier_List(Base):
+    '''Implements the matching of an identifier list in a macro definition.
+
+    identifier-list is (identifier [, identifier-list | ...])
+                       | (...)
+    '''
+
+    _regex = re.compile(r'\(\s*[A-Za-z_]\w*(\s*,\s*[A-Za-z_])*\s*\)')
+    _regex = re.compile(r'\((\s*[A-Za-z_]\w*(\s*,\s*([A-Za-z_]|\.{3}))*|\.{3})\s*\)')
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Macro_Identifier_List._regex.match(line)
+        if not found:
+            return None
+        return (found.group(),)
+
+    def tostr(self):
+        return (self.items[0])
