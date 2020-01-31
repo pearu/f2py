@@ -37,8 +37,9 @@ Designator class.
 
 Three of the rules in Designator class are currently not called as
 they are matched earlier. Some rule constraints (if implemented, which
-they are not) would improve things but not fully. Here is note 6.6
-from the F2003 specification which helps clarify for derived types:
+they are not, as #201 must be done first) would improve things but
+potentially not fully. Here is note 6.6 from the F2003 specification
+which helps clarify for derived types:
 
 The syntax rules are structured such that a data-ref that ends in a
 component name without a following subscript list is a structure
