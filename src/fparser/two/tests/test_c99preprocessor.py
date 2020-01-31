@@ -41,7 +41,10 @@ keep the directives in the Fortran parse tree and output it again.
 '''
 
 import pytest
-from fparser.two.C99Preprocessor import (Cpp_Include_Stmt, Cpp_Macro_Stmt)
+from fparser.two.C99Preprocessor import (Cpp_Include_Stmt, Cpp_Macro_Stmt,
+                                         Cpp_Macro_Identifier, Cpp_Undef_Stmt,
+                                         Cpp_Line_Stmt, Cpp_Error_Stmt,
+                                         Cpp_Warning_Stmt)
 from fparser.two.utils import NoMatchError
 
 
@@ -105,3 +108,103 @@ def test_incorrect_macro_stmt(f2003_create):
             _ = Cpp_Macro_Stmt(line)
         assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
 
+
+def test_macro_identifier(f2003_create):
+    '''Test that all allowed names can be parsed'''
+    for name in ['MACRO', 'MACRO1', 'MACRO_', 'macro', '_', '_12']:
+        result = Cpp_Macro_Identifier(name)
+        assert str(result) == name
+
+
+def test_undef_stmt(f2003_create):
+    '''Test that #undef is recognized'''
+    ref = '#undef _MACRO'
+    for line in [
+        '#undef _MACRO',
+        '   #  undef  _MACRO  ',
+    ]:
+        result = Cpp_Undef_Stmt(line)
+        assert str(result) == ref
+
+
+def test_incorrect_undef_stmt(f2003_create):
+    '''Test that incorrectly formed #undef statements raise exception'''
+    for line in [None, '', ' ', '#undef', '#unfed', '#undefx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Undef_Stmt(line)
+        assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+
+def test_line_statement(f2003_create):
+    '''Test that #line is recognized'''
+    ref = '#line CONFIG'
+    for line in [
+        '#line CONFIG',
+        '  #  line   CONFIG  ',
+    ]:
+        result = Cpp_Line_Stmt(line)
+        assert str(result) == ref
+
+
+def test_incorrect_line_stmt(f2003_create):
+    '''Test that incorrectly formed #line statements raise exception'''
+    for line in [None, '', ' ', '#line', '#linex', '#lien']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Line_Stmt(line)
+        assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+
+def test_error_statement(f2003_create):
+    '''Test that #error is recognized'''
+    # error with message
+    ref = '#error MSG'
+    for line in [
+        '#error MSG',
+        '  #  error  MSG  ',
+    ]:
+        result = Cpp_Error_Stmt(line)
+        assert str(result) == ref
+    # error without message
+    ref = '#error'
+    for line in [
+        '#error',
+        '   #  error  ',
+    ]:
+        result = Cpp_Error_Stmt(line)
+        assert str(result) == ref
+
+
+def test_incorrect_error_stmt(f2003_create):
+    '''Test that incorrectly formed #error statements raise exception'''
+    for line in [None, '', ' ', '#erorr', '#errorx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Error_Stmt(line)
+        assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
+
+
+def test_warning_statement(f2003_create):
+    '''Test that #warning is recognized (not actually part of C99)'''
+    # warning with message
+    ref = '#warning MSG'
+    for line in [
+        '#warning MSG',
+        '  #  warning  MSG  ',
+    ]:
+        result = Cpp_Warning_Stmt(line)
+        assert str(result) == ref
+    # warning without message
+    ref = '#warning'
+    for line in [
+        '#warning',
+        '   #  warning  ',
+    ]:
+        result = Cpp_Warning_Stmt(line)
+        assert str(result) == ref
+
+
+def test_incorrect_warning_stmt(f2003_create):
+    '''Test that incorrectly formed #warning statements raise exception'''
+    for line in [None, '', ' ', '#wrning', '#warningx']:
+        with pytest.raises(NoMatchError) as excinfo:
+            _ = Cpp_Warning_Stmt(line)
+        assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)

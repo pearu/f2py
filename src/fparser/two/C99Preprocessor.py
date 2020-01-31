@@ -50,7 +50,7 @@ from fparser.two.Fortran2003 import Include_Filename
 #
 
 #
-# Section 6.10 Preprocessing directives
+# §6.10 Preprocessing directives
 #
 
 def match_cpp_directive(content, reader):
@@ -62,12 +62,12 @@ def match_cpp_directive(content, reader):
     return obj
 
 
-# 6.10.1 Conditional inclusion
+# §6.10.1 Conditional inclusion
 
 
-class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
+class Cpp_Include_Stmt(Base):  # §6.10.2 Source file inclusion
     """
-    C99 section 6.10.2 Source file inclusion
+    C99 §6.10.2 Source file inclusion
 
     include_stmt is # include [ <h-char-sequence>
                               | "q-char-sequence"
@@ -126,15 +126,16 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
         return '#include "{}"'.format(self.items[0])
 
 
-class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
+class Cpp_Macro_Stmt(Base):  # §6.10.3 Macro replacement
     """
-    C99 section 6.10.3 Macro replacement
+    C99 §6.10.3 Macro replacement
 
-    macro_stmt is # define identifier [( [identifier list] ) |(...) ]
+    macro_stmt is # define identifier [( [identifier-list] ) |(...) ]
                   [ replacement-list ] new-line
 
     Important: No preceding whitespace is allowed for the left parenthesis of
-    the optional identifier list.
+    the optional identifier-list. If a preceding whitespace is encountered,
+    the bracket is considered part of the replacement-list
     """
 
     use_names = ['Cpp_Macro_Identifier', 'Cpp_Macro_Identifier_List']
@@ -218,3 +219,133 @@ class Cpp_Macro_Identifier_List(Base):
 
     def tostr(self):
         return (self.items[0])
+
+
+class Cpp_Undef_Stmt(Base):
+    '''Implements the matching of a preprocessor undef statement for a macro.
+
+    undef-stmt is # undef identifier new-line
+
+    Strictly, this is part of 6.10.3 but since it is identified by a different
+    directive keyword (undef instead of define) we treat it separately.
+    '''
+
+    # There are no other classes. This is a simple string match.
+    subclass_names = []
+
+    use_names = ['Cpp_Macro_Identifier']
+
+    _regex = re.compile(r"#\s*undef\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Undef_Stmt._regex.match(line)
+        if not found:
+            # The line does not match a define statement
+            return None
+        rhs = line[found.end():].strip()
+        found = pattern.macro_name.match(rhs)
+        if not found:
+            return None
+        return(Cpp_Macro_Identifier(found.group()),)
+
+    def tostr(self):
+        return ('#undef {}'.format(self.items[0]))
+
+
+class Cpp_Line_Stmt(Base):  # §6.10.4 Line control
+    """
+    C99 §6.10.4 Line control
+
+    line-stmt is # line digit-sequence [ "s-char-sequence" ] new-line
+                        | pp-tokens new-line
+    """
+
+    subclass_names = []
+
+    _regex = re.compile(r"#\s*line\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Line_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return None
+        return (rhs,)
+
+    def tostr(self):
+        return ('#line {}'.format(self.items[0]))
+
+
+class Cpp_Error_Stmt(Base): # §6.10.5 Error directive
+    """
+    C99 §6.10.5 Error directive
+
+    error-stmt is # error [pp-tokens] new-line
+
+    """
+
+    subclass_names = []
+
+    _regex = re.compile(r"#\s*error\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Error_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return ()
+        else:
+            return (rhs,)
+
+    def tostr(self):
+        if len(self.items) > 0:
+            return ('#error {}'.format(self.items[0]))
+        else:
+            return ('#error')
+
+
+class Cpp_Warning_Stmt(Base):
+    """
+    Not actually part of C99 but supported by most preprocessors and
+    with syntax identical to Cpp_Error_Stmt
+
+    warning-stmt is # warning [pp-tokens] new-line
+
+    """
+
+    subclass_names = []
+    _regex = re.compile(r"#\s*warning\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Warning_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return ()
+        else:
+            return (rhs,)
+
+    def tostr(self):
+        if len(self.items) > 0:
+            return ('#warning {}'.format(self.items[0]))
+        else:
+            return ('#warning')
