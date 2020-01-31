@@ -3954,18 +3954,18 @@ class Variable_Name(Base):  # R602
 
 
 class Designator(Base):  # R603
-    """
-    <designator> = <object-name>
-                   | <array-element>
-                   | <array-section>
-                   | <structure-component>
-                   | <substring>
-    <substring-range> = [ <scalar-int-expr> ] : [ <scalar-int-expr> ]
-    <structure-component> = <data-ref>
-    """
-    subclass_names = ['Object_Name', 'Array_Section', 'Array_Element',
-                      'Structure_Component', 'Substring'
-                      ]
+    '''
+    Fortran 2003 rule 603
+
+    designator is object-name
+               or array-element
+               or array-section
+               or structure-component
+               or substring
+
+    '''
+    subclass_names = ['Object_Name', 'Array_Element', 'Array_Section',
+                      'Structure_Component', 'Substring']
 
 
 class Logical_Variable(Base):  # R604
