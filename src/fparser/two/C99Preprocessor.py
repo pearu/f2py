@@ -39,12 +39,10 @@
 # First version created: Jan 2020
 
 import re
-import logging
 
 from fparser.two import pattern_tools as pattern
-from fparser.two.utils import (Base, BlockBase, StringBase, InternalError)
-from fparser.two.Fortran2003 import Include_Filename, Execution_Part_Construct
-# from fparser.two.Fortran2003 import Program as Program_2003
+from fparser.two.utils import (Base, StringBase, InternalError)
+from fparser.two.Fortran2003 import Include_Filename
 
 
 def match_cpp_directive(reader):
@@ -78,55 +76,55 @@ def match_cpp_directive(reader):
 # without being correlated to their counterparts.
 #
 
-#class Program(Program_2003):
+# class Program(Program_2003):
 #
-#    # Add Preprocess if-constructs to the Program class by extending
-#    # the specification
-#    subclass_names = Program_2003.subclass_names[:]
-#    subclass_names.append('Cpp_If_Construct')
+#     # Add Preprocess if-constructs to the Program class by extending
+#     # the specification
+#     subclass_names = Program_2003.subclass_names[:]
+#     subclass_names.append('Cpp_If_Construct')
 
 
-#class Cpp_If_Construct(BlockBase):  # §6.10.1 Conditional inclusion
-#    '''
-#    C99 §6.10.1 Conditional inclusion
+# class Cpp_If_Construct(BlockBase):  # §6.10.1 Conditional inclusion
+#     '''
+#     C99 §6.10.1 Conditional inclusion
 #
-#    <cpp-if-construct> = <cpp-if-stmt>
-#                            [ <block> ]
-#                         [ <cpp-elif-stmt>
-#                            [ <block> ]
-#                         ]...
-#                         [ <cpp-else-stmt>
-#                            [ <block> ]
-#                         ]
-#                         <cpp-endif-stmt>
-#    '''
+#     <cpp-if-construct> = <cpp-if-stmt>
+#                             [ <block> ]
+#                          [ <cpp-elif-stmt>
+#                             [ <block> ]
+#                          ]...
+#                          [ <cpp-else-stmt>
+#                             [ <block> ]
+#                          ]
+#                          <cpp-endif-stmt>
+#     '''
 #
-#    subclass_names = []
-#    use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt', 'Cpp_Else']
+#     subclass_names = []
+#     use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt', 'Cpp_Else']
 #
-#    @staticmethod
-#    def match(string):
-#        return BlockBase.match(
-#            Cpp_If_Stmt, [Execution_Part_Construct,
-#                          Cpp_Elif_Stmt,
-#                          Execution_Part_Construct,
-#                          Cpp_Else_Stmt,
-#                          Execution_Part_Construct],
-#            Cpp_Endif_Stmt, string,
-#            enable_cpp_if_construct_hook=True)
+#     @staticmethod
+#     def match(string):
+#         return BlockBase.match(
+#             Cpp_If_Stmt, [Execution_Part_Construct,
+#                           Cpp_Elif_Stmt,
+#                           Execution_Part_Construct,
+#                           Cpp_Else_Stmt,
+#                           Execution_Part_Construct],
+#             Cpp_Endif_Stmt, string,
+#             enable_cpp_if_construct_hook=True)
 #
-#    def tofortran(self, tab='', isfix=None):
-#        tmp = []
-#        start = self.content[0]
-#        end = self.content[-1]
-#        tmp.append(start.tofortran(tab='', isfix=isfix))
-#        for item in self.content[1:-1]:
-#            if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
-#                tmp.append(item.tofortran(tab='', isfix=isfix))
-#            else:
-#                tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
-#        tmp.append(end.tofortran(tab='', isfix=isfix))
-#        return '\n'.join(tmp)
+#     def tofortran(self, tab='', isfix=None):
+#         tmp = []
+#         start = self.content[0]
+#         end = self.content[-1]
+#         tmp.append(start.tofortran(tab='', isfix=isfix))
+#         for item in self.content[1:-1]:
+#             if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
+#                 tmp.append(item.tofortran(tab='', isfix=isfix))
+#             else:
+#                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
+#         tmp.append(end.tofortran(tab='', isfix=isfix))
+#         return '\n'.join(tmp)
 
 
 class Cpp_If_Stmt(Base):
@@ -142,7 +140,7 @@ class Cpp_If_Stmt(Base):
     subclass_names = []
     use_names = ['Cpp_Macro_Identifier']
 
-    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b")  # 'if' last because order matters
+    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b")  # 'if' last, order matters
 
     @staticmethod
     def match(string):
@@ -337,21 +335,21 @@ class Cpp_Macro_Stmt(Base):  # §6.10.3 Macro replacement
             return None
         name = Cpp_Macro_Identifier(found.group())
         definition = rhs[found.end():]
-            # note no strip here, because '#define MACRO(x)' and '#define MACRO (x)'
-            # are functionally different
+        # note no strip here because '#define MACRO(x)' and
+        # '#define MACRO (x)' are functionally different
         if len(definition) == 0:
             return (name,)
         if definition[0] == '(':
             found = Cpp_Macro_Identifier_List._regex.match(definition)
             if not found:
-                # The definition starts with a bracket (without preceding white space)
-                # but does not match an identifier list
+                # The definition starts with a bracket (without preceding
+                # white space) but does not match an identifier list
                 return None
             parameter_list = found.group()
             definition = definition[found.end():].strip()
             return (name, parameter_list, definition)
         definition = definition.strip()
-            # now that we now it doesn't have a parameter list, we can strip
+        # now that we now it doesn't have a parameter list, we can strip
         if len(definition) > 1:
             return (name, definition)
         else:
@@ -359,7 +357,8 @@ class Cpp_Macro_Stmt(Base):  # §6.10.3 Macro replacement
 
     def tostr(self):
         if len(self.items) > 2:
-            return ('#define {}{} {}'.format(self.items[0], self.items[1], self.items[2]))
+            return ('#define {}{} {}'.format(self.items[0], self.items[1],
+                                             self.items[2]))
         elif len(self.items) > 1:
             return ('#define {} {}'.format(self.items[0], self.items[1]))
         else:
@@ -465,7 +464,7 @@ class Cpp_Line_Stmt(Base):  # §6.10.4 Line control
         return ('#line {}'.format(self.items[0]))
 
 
-class Cpp_Error_Stmt(Base): # §6.10.5 Error directive
+class Cpp_Error_Stmt(Base):  # §6.10.5 Error directive
     """
     C99 §6.10.5 Error directive
 

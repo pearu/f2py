@@ -94,6 +94,7 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 # SECTION  2
 #
 
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
