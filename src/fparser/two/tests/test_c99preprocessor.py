@@ -79,6 +79,34 @@ def test_if_stmt(f2003_create):
     ]:
         result = Cpp_If_Stmt(line)
         assert str(result) == ref
+    ref = '#if defined(__MACRO__)'
+    for line in [
+        '#if defined(__MACRO__)',
+        '# if  defined(__MACRO__)    '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+    ref = '#if defined __MACRO__'
+    for line in [
+        '#if defined __MACRO__',
+        '# if  defined __MACRO__    '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+    ref = '#if !defined(__MACRO__)'
+    for line in [
+        '#if !defined(__MACRO__)',
+        '# if    !defined(__MACRO__)    '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
+    ref = '#if !defined __MACRO__'
+    for line in [
+        '#if !defined __MACRO__',
+        '# if  !defined __MACRO__    '
+    ]:
+        result = Cpp_If_Stmt(line)
+        assert str(result) == ref
 
 
 def test_incorrect_if_stmt(f2003_create):
