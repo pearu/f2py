@@ -94,340 +94,6 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 # SECTION  2
 #
 
-
-class Cpp_Include_Stmt(Base):
-    '''Implements the matching of a preprocessor include statement of the form
-    #include "filename"'''
-
-    _regex = re.compile(r"#\s*include\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Include_Stmt._regex.match(line)
-        if not found:
-            # The line does not match an include statement
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) < 3:
-            # There is no content after the include token
-            return None
-        if not (rhs[0] == '"' and rhs[-1] == '"'):
-            return None
-        # Remove the quotes.
-        file_name = rhs[1:-1]
-        # Pass the potential filename to the relevant class.
-        name = Include_Filename(file_name)
-        if not name:
-            raise InternalError(
-                "Fortran2003.py:Include_Stmt:match Include_Filename should "
-                "never return None or an empty name")
-        return (name,)
-
-    def tostr(self):
-        return ('#include "{}"'.format(self.items[0]))
-
-class Cpp_Define_Stmt(Base):
-    '''Implements the matching of a preprocessor define statement of the form
-    #define MACRO definition
-    #define MACRO(args) definition
-    #define MACRO'''
-
-    _regex = re.compile(r"#\s*define\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Define_Stmt._regex.match(line)
-        if not found:
-            # The line does not match a define statement
-            return None
-        rhs = line[found.end():].strip()
-        found = pattern.macro_name.match(rhs)
-        if not found:
-            return None
-        name = Cpp_Macro(found.group())
-        definition = rhs[found.end():]
-            # note no strip here, because '#define MACRO(x)' and '#define MACRO (x)'
-            # are functionally different
-        found = Cpp_Macro_Parameter_List._regex.match(definition)
-        if found:
-            parameter_list = found.group()
-            definition = definition[found.end():].strip()
-            return (name, parameter_list, definition)
-        definition = definition.strip()
-            # now that we now it doesn't have a parameter list, we can strip
-        if len(definition) > 1:
-            return (name, definition)
-        else:
-            return (name,)
-
-    def tostr(self):
-        if len(self.items) > 2:
-            return ('#define {}{} {}'.format(self.items[0], self.items[1], self.items[2]))
-        elif len(self.items) > 1:
-            return ('#define {} {}'.format(self.items[0], self.items[1]))
-        else:
-            return ('#define {}'.format(self.items[0]))
-
-class Cpp_Undef_Stmt(Base):
-    '''Implements the matching of a preprocessor undef statement'''
-
-    subclass_names = []
-    _regex = re.compile(r"#\s*undef\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Undef_Stmt._regex.match(line)
-        if not found:
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return None
-        return (Cpp_Macro(rhs),)
-
-    def tostr(self):
-        return ('#undef {}'.format(self.items[0]))
-
-class Cpp_If_Stmt(Base):
-    '''Implements the matching of a preprocessor if statement of the form
-    #if CONDITION
-    #ifdef MACRO
-    #ifndef MACRO'''
-
-    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b") # 'if' last because order matters
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_If_Stmt._regex.match(line)
-        if not found:
-            return None
-        kind = found.group()[1:].strip()
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return None
-        if kind in ['ifdef', 'ifndef']:
-            rhs = Cpp_Macro(rhs)
-        return (kind,rhs)
-
-    def tostr(self):
-        return ('#{} {}'.format(self.items[0], self.items[1]))
-
-class Cpp_Elif_Stmt(Base):
-    '''Implements the matching of a preprocessor elif statement of the form
-    #elif CONDITION'''
-
-    _regex = re.compile(r"#\s*elif\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Elif_Stmt._regex.match(line)
-        if not found:
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return None
-        return (rhs,)
-
-    def tostr(self):
-        return ('#elif {}'.format(self.items[0]))
-
-class Cpp_Else_Stmt(Base):
-    '''Implements the matching of a preprocessor endif statement'''
-
-    _regex = re.compile(r"#\s*else$")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Else_Stmt._regex.match(line)
-        if not found:
-            return None
-        return ()
-
-    def tostr(self):
-        return ('#else')
-
-class Cpp_Endif_Stmt(Base):
-    '''Implements the matching of a preprocessor endif statement'''
-
-    subclass_names = []
-    _regex = re.compile(r"#\s*endif$")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Endif_Stmt._regex.match(line)
-        if not found:
-            return None
-        return ()
-
-    def tostr(self):
-        return ('#endif')
-
-class Cpp_If_Construct(BlockBase):
-    '''
-    <cpp-if-construct> = <cpp-if-stmt>
-                            <block>
-                         [ <cpp-elif-stmt>
-                            <block>
-                         ]...
-                         [ <cpp-else-stmt>
-                            <block>
-                         ]
-                         <cpp-endif-stmt>
-    '''
-
-    subclass_names = []
-    use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt',
-                 'Cpp_Else']
-
-    @staticmethod
-    def match(string):
-        return BlockBase.match(
-            Cpp_If_Stmt, [Execution_Part_Construct,
-                          Cpp_Elif_Stmt,
-                          Execution_Part_Construct,
-                          Cpp_Else_Stmt,
-                          Execution_Part_Construct],
-            Cpp_Endif_Stmt, string,
-            enable_cpp_construct_hook = True)
-
-    def tofortran(self, tab='', isfix=None):
-        tmp = []
-        start = self.content[0]
-        end = self.content[-1]
-        tmp.append(start.tofortran(tab='', isfix=isfix))
-        for item in self.content[1:-1]:
-            if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
-                tmp.append(item.tofortran(tab='', isfix=isfix))
-            else:
-                tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
-        tmp.append(end.tofortran(tab='', isfix=isfix))
-        return '\n'.join(tmp)
-
-class Cpp_Error_Stmt(Base):
-    '''Implements the matching of a preprocessor error statement of the form
-    #error MESSAGE
-    #error'''
-
-    subclass_names = []
-    _regex = re.compile(r"#\s*error\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Error_Stmt._regex.match(line)
-        if not found:
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return ()
-        else:
-            return (rhs,)
-
-    def tostr(self):
-        if len(self.items) > 0:
-            return ('#error {}'.format(self.items[0]))
-        else:
-            return ('#error')
-
-class Cpp_Warning_Stmt(Base):
-    '''Implements the matching of a preprocessor warning statement of the form
-    #warning MESSAGE
-    #warning'''
-
-    subclass_names = []
-    _regex = re.compile(r"#\s*warning\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Warning_Stmt._regex.match(line)
-        if not found:
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return ()
-        else:
-            return (rhs,)
-
-    def tostr(self):
-        if len(self.items) > 0:
-            return ('#warning {}'.format(self.items[0]))
-        else:
-            return ('#warning')
-
-class Cpp_Line_Stmt(Base):
-    '''Implements the matching of a preprocessor line statement of the form
-    #line NUMBER FILENAME
-    #line NUMBER'''
-
-    subclass_names = []
-    _regex = re.compile(r"#\s*line\b")
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Line_Stmt._regex.match(line)
-        if not found:
-            return None
-        rhs = line[found.end():].strip()
-        if len(rhs) == 0:
-            return None
-        return (rhs,)
-
-    def tostr(self):
-        return ('#line {}'.format(self.items[0]))
-
-class Cpp_Macro(StringBase):
-    '''In addition to everything allowed in Fortran leading underscore is allowed'''
-
-    @staticmethod
-    def match(string):
-        return StringBase.match(pattern.abs_macro_name, string.strip())
-
-class Cpp_Macro_Parameter_List(Base):
-    '''Implements the parameter list of a macro definition'''
-
-    _regex = re.compile(r'\(\s*[A-Za-z_]\w*(\s*,\s*[A-Za-z_])*\s*\)')
-
-    @staticmethod
-    def match(string):
-        if not string:
-            return None
-        line = string.strip()
-        found = Cpp_Macro_Parameter_List._regex.match(line)
-        if not found:
-            return None
-        return (found.group(),)
-
-    def tostr(self):
-        return (self.items[0])
-
 class Comment(Base):
     '''
     Represents a Fortran Comment.
@@ -500,25 +166,21 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def match_comment_or_directive(content, reader):
-#    cls_list = (Comment, Include_Stmt, Cpp_Include_Stmt, Cpp_Define_Stmt,
-#                Cpp_Undef_Stmt, Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
-#                Cpp_Endif_Stmt, Cpp_Warning_Stmt, Cpp_Macro,
-#                Cpp_Macro_Parameter_List)
-    cls_list = (Comment, Include_Stmt, Cpp_Define_Stmt)
-    for cls in cls_list:
-        obj = cls(reader)
-        if obj:
-            return obj
+def match_comment_or_include(reader):
+    '''Create a comment or include object from the current line.'''
+    obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
+    return obj
 
 
-def add_comments_directives(content, reader):
-    '''Creates comment and/or directive objects and adds them to the content
-    list. Comment and/or directive objects are added until a line that
-    is not a comment or directive is found.
+def add_comments_includes_directives(content, reader):
+    '''Creates comment, include, and/or cpp directive objects and adds them to
+    the content list. Comment, include, and/or directive objects are added
+    until a line that is not a comment, include, or directive is found.
 
-    :param content: a `list` of matched objects. Any matched comments \
-                    or directives in this routine are added to this list.
+    :param content: a `list` of matched objects. Any matched comments, \
+                    includes, or directives in this routine are added to this
+                    list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -526,10 +188,13 @@ def add_comments_directives(content, reader):
                   :py:class:`fparser.common.readfortran.FortranStringReader`
 
     '''
-    obj = match_comment_or_directive(content, reader)
+    from fparser.two.C99Preprocessor import match_cpp_directive
+    obj = match_comment_or_include(reader)
+    obj = match_cpp_directive(reader) if not obj else obj
     while obj:
         content.append(obj)
-        obj = match_comment_or_directive(content, reader)
+        obj = match_comment_or_include(reader)
+        obj = match_cpp_directive(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -586,12 +251,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments_directives(content, reader)
+        add_comments_includes_directives(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments_directives(content, reader)
+                add_comments_includes_directives(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -647,8 +312,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for an include statement.
 
-        :param str string: the string to match with as an include \
-        statement.
+        :param str string: the string to match with as an include statement.
         :returns: a tuple of size 1 containing an Include_Filename \
         object with the matched filename if there is a match, or None \
         if there is not.
@@ -660,13 +324,11 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
             return None
 
         line = string.strip()
-        rhs = None
-        # Match first mention of include to allow both,
-        # ``#include 'foo.h'`` and ``include 'foo.h'``.
-        idx = line.lower().find('include')
-        if 0 <= idx <= 1 :
-            rhs = line[idx+7:].strip()
-
+        if line[:7].upper() != 'INCLUDE':
+            # The line does not start with the include token and/or the line
+            # is too short.
+            return None
+        rhs = line[7:].strip()
         if rhs is None or len(rhs) < 3:
             # Either we didn't find any includes or the content after
             # the include token is too short to be valid (it must at
@@ -683,7 +345,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         name = Include_Filename(file_name)
         if not name:
             raise InternalError(
-                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "Fortran2003.py:Include_Stmt:match Include_Filename should "
                 "never return None or an empty name")
         return (name,)
 
@@ -694,42 +356,6 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''
 
         return ("INCLUDE '{0}'".format(self.items[0]))
-
-
-class Define_Stmt(Base):  # pylint: disable=invalid-name
-    """
-    Implementes matching a `#define` preprocessor directive.
-
-    Accepting preprocessor directives is not part of the standard,
-    but often makes sense for a pure parser, as the handling is
-    left for the compiler that uses it.
-
-    Note that no syntax matching is preformed for anything after
-    the `#include` keyword. This is left for donwstream processing.
-    """
-    subclass_names = []
-
-    @staticmethod
-    def match(string):
-        """
-        Implements the matching for an `#include` statement.
-        """
-        if not string:
-            return None
-
-        line = string.strip()
-        if line.lower().startswith('#define'):
-            rhs = line[7:].strip()
-            return StringBase.match(pattern.named_constant, rhs)
-        else:
-            return None
-
-    def tostr(self):
-        """
-        :return: this define_stmt as a string
-        :rtype: str
-        """
-        return ("DEFINE {0}".format(self.items[0]))
 
 
 class Program_Unit(Base):  # R202

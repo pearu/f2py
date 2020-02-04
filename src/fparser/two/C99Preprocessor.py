@@ -34,7 +34,7 @@
 
 """C99 Preprocessor Syntax Rules.
 """
-# Original author: Balthasar Reuter <balthasar.reuter@ecmwf.int>
+# Author: Balthasar Reuter <balthasar.reuter@ecmwf.int>
 # Based on previous work by Martin Schlipf (https://github.com/martin-schlipf)
 # First version created: Jan 2020
 
@@ -42,8 +42,23 @@ import re
 import logging
 
 from fparser.two import pattern_tools as pattern
-from fparser.two.utils import (Base, StringBase, InternalError)
-from fparser.two.Fortran2003 import Include_Filename
+from fparser.two.utils import (Base, BlockBase, StringBase, InternalError)
+from fparser.two.Fortran2003 import Include_Filename, Execution_Part_Construct
+# from fparser.two.Fortran2003 import Program as Program_2003
+
+
+def match_cpp_directive(reader):
+    '''Create single-line C99 preprocessor directive object from the current
+    line. Omit if-construct and its members that are dealt with separately.'''
+    cls_list = (Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
+                Cpp_Endif_Stmt, Cpp_Include_Stmt, Cpp_Macro_Stmt,
+                Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
+                Cpp_Warning_Stmt, Cpp_Null_Stmt)
+    for cls in cls_list:
+        obj = cls(reader)
+        if obj:
+            return obj
+    return obj
 
 #
 # ISO/IEC 9899: 1999 (C99)
@@ -53,16 +68,181 @@ from fparser.two.Fortran2003 import Include_Filename
 # §6.10 Preprocessing directives
 #
 
-def match_cpp_directive(content, reader):
-    cls_list = (Cpp_Include_Stmt,)
-    for cls in cls_list:
-        obj = cls(reader)
-        if obj:
-            return obj
-    return obj
+
+#
+# Below construct for if-elif-else-endif blocks of preprocessor macros works
+# as long as they are within a common block of the Fortran code. However,
+# since preprocessor macros can potentially span, e.g., specification part and
+# execution part, this does not comply to the AST format of fparser. Hence,
+# this is commented out and if-stmts etc are treated as one-line pp macros
+# without being correlated to their counterparts.
+#
+
+#class Program(Program_2003):
+#
+#    # Add Preprocess if-constructs to the Program class by extending
+#    # the specification
+#    subclass_names = Program_2003.subclass_names[:]
+#    subclass_names.append('Cpp_If_Construct')
 
 
-# §6.10.1 Conditional inclusion
+#class Cpp_If_Construct(BlockBase):  # §6.10.1 Conditional inclusion
+#    '''
+#    C99 §6.10.1 Conditional inclusion
+#
+#    <cpp-if-construct> = <cpp-if-stmt>
+#                            [ <block> ]
+#                         [ <cpp-elif-stmt>
+#                            [ <block> ]
+#                         ]...
+#                         [ <cpp-else-stmt>
+#                            [ <block> ]
+#                         ]
+#                         <cpp-endif-stmt>
+#    '''
+#
+#    subclass_names = []
+#    use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt', 'Cpp_Else']
+#
+#    @staticmethod
+#    def match(string):
+#        return BlockBase.match(
+#            Cpp_If_Stmt, [Execution_Part_Construct,
+#                          Cpp_Elif_Stmt,
+#                          Execution_Part_Construct,
+#                          Cpp_Else_Stmt,
+#                          Execution_Part_Construct],
+#            Cpp_Endif_Stmt, string,
+#            enable_cpp_if_construct_hook=True)
+#
+#    def tofortran(self, tab='', isfix=None):
+#        tmp = []
+#        start = self.content[0]
+#        end = self.content[-1]
+#        tmp.append(start.tofortran(tab='', isfix=isfix))
+#        for item in self.content[1:-1]:
+#            if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
+#                tmp.append(item.tofortran(tab='', isfix=isfix))
+#            else:
+#                tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
+#        tmp.append(end.tofortran(tab='', isfix=isfix))
+#        return '\n'.join(tmp)
+
+
+class Cpp_If_Stmt(Base):
+    '''
+    C99 §6.10.1 Conditional inclusion
+
+    if-stmt is  # if constant-expression new-line
+                | ifdef identifier new-line
+                | ifndef identifier new-line
+
+    '''
+
+    subclass_names = []
+    use_names = ['Cpp_Macro_Identifier']
+
+    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b")  # 'if' last because order matters
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_If_Stmt._regex.match(line)
+        if not found:
+            return None
+        kind = found.group()[1:].strip()
+        rhs = line[found.end():].strip()
+        if rhs is None or len(rhs) == 0:
+            return None
+        if kind in ['ifdef', 'ifndef']:
+            rhs = Cpp_Macro_Identifier(rhs)
+        return (kind, rhs)
+
+    def tostr(self):
+        return ('#{} {}'.format(self.items[0], self.items[1]))
+
+
+class Cpp_Elif_Stmt(Base):
+    '''
+    C99 §6.10.1 Conditional inclusion
+
+    elif-stmt is  # elif constant-expression new-line
+
+    '''
+
+    subclass_names = []
+
+    _regex = re.compile(r"#\s*elif\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Elif_Stmt._regex.match(line)
+        if not found:
+            return None
+        rhs = line[found.end():].strip()
+        if len(rhs) == 0:
+            return None
+        return (rhs,)
+
+    def tostr(self):
+        return ('#elif {}'.format(self.items[0]))
+
+
+class Cpp_Else_Stmt(Base):
+    '''
+    C99 §6.10.1 Conditional inclusion
+
+    else-stmt is  # else new-line
+
+    '''
+
+    subclass_names = []
+
+    _regex = re.compile(r"#\s*else\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Else_Stmt._regex.match(line)
+        if not found:
+            return None
+        return ()
+
+    def tostr(self):
+        return ('#else')
+
+
+class Cpp_Endif_Stmt(Base):
+    '''
+    C99 §6.10.1 Conditional inclusion
+
+    endif-stmt is  # endif new-line
+
+    '''
+
+    subclass_names = []
+
+    _regex = re.compile(r"#\s*endif\b")
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        found = Cpp_Endif_Stmt._regex.match(line)
+        if not found:
+            return None
+        return ()
+
+    def tostr(self):
+        return ('#endif')
 
 
 class Cpp_Include_Stmt(Base):  # §6.10.2 Source file inclusion
@@ -349,3 +529,33 @@ class Cpp_Warning_Stmt(Base):
             return ('#warning {}'.format(self.items[0]))
         else:
             return ('#warning')
+
+
+# §6.10.6 Pragma directive
+# Pragma Preprocessor directives not implemented since Fortran has its own
+# Pragma syntax in the form of comments. For that reason, most preprocessors
+# do not support C preprocess pragmas in Fortran code either.
+
+
+class Cpp_Null_Stmt(Base):  # §6.10.7 Null directive
+    """
+    C99 §6.10.7  Null directive
+
+    null-stmt is # new-line
+
+    """
+
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        if not string:
+            return None
+        line = string.strip()
+        if not line == '#':
+            return None
+        else:
+            return ()
+
+    def tostr(self):
+        return '#'

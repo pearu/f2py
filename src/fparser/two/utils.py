@@ -527,7 +527,7 @@ content : tuple
         :param bool enable_where_construct_hook: TBD
         :param bool enable_select_type_construct_hook: TBD
         :param bool enable_case_construct_hook: TBD
-        :param bool enable_cpp_construct_hook: TBD
+        :param bool enable_cpp_if_construct_hook: TBD
         :param bool strict_order: Whether to enforce the order of the
                                   given subclasses.
 
@@ -535,13 +535,15 @@ content : tuple
         :rtype: startcls
         '''
         from fparser.two.Fortran2003 import Comment, Include_Stmt, \
-            add_comments_directives
+            add_comments_includes_directives
+        from fparser.two.parser import get_module_classes
+        from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
-            # Deal with any preceding comments and/or directives
-            add_comments_directives(content, reader)
+            # Deal with any preceding comments, includes, and/or directives
+            add_comments_includes_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -566,6 +568,10 @@ content : tuple
 
         # Comments and Include statements are always valid sub-classes
         classes = subclasses + [Comment, Include_Stmt]
+        # Preprocessor directives are always valid sub-classes
+        c99pp_classes = get_module_classes(C99Preprocessor)
+        classes += [pp_cls for pp_nam, pp_cls in c99pp_classes
+                    if pp_nam.startswith('Cpp_')]
         if endcls is not None:
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
@@ -670,16 +676,21 @@ content : tuple
                     i = 1
                 if isinstance(obj, End_Select_Stmt):
                     enable_case_construct_hook = False
-            if enable_cpp_construct_hook:
-                from fparser.two.Fortran2003 import Cpp_Elif_Stmt, Cpp_Else_Stmt, \
-                    Cpp_Endif_Stmt
-                if isinstance(obj, Cpp_Elif_Stmt):
-                    # Got an else-if so go back to start of possible
-                    # classes to match
-                    i = 0
-                if isinstance(obj, (Cpp_Else_Stmt, Cpp_Endif_Stmt)):
-                    # Found end-if
-                    enable_cpp_construct_hook = False
+            #
+            # Treating if-elif-else-endif preprocessor directives as a
+            # construct is disabled. See C99Preprocessor.py for details.
+            #
+            # if enable_cpp_if_construct_hook:
+            #     from fparser.two.C99Preprocessor import (Cpp_Elif_Stmt,
+            #                                              Cpp_Else_Stmt,
+            #                                              Cpp_Endif_Stmt)
+            #     if isinstance(obj, Cpp_Elif_Stmt):
+            #         # Got an else-if so go back to start of possible
+            #         # classes to match
+            #         i = 0
+            #     if isinstance(obj, (Cpp_Else_Stmt, Cpp_Endif_Stmt)):
+            #         # Found end-if
+            #         enable_cpp_if_construct_hook = False
             continue
 
         if not had_match or endcls and not found_end:
