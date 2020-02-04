@@ -156,6 +156,17 @@ def test_parse_define_outside_subroutine(f2003_create):
     result = f2003_parser(reader)
     assert str(result) == ref
 
+
+def test_parse_empty_ifdef(f2003_create):
+    f2003_parser = ParserFactory().create(std='f2003')
+
+    code = 'SUBROUTINE FOOBAR\n#ifdef __WHATEVER__\n#endif\nEND SUBROUTINE FOOBAR'
+    ref = 'SUBROUTINE FOOBAR\n  #ifdef __WHATEVER__\n  #endif\nEND SUBROUTINE FOOBAR'.strip()
+    reader = get_reader(ref)
+    result = f2003_parser(reader)
+    assert str(result) == ref
+
+
 def test_parse_define_end_subroutine(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
