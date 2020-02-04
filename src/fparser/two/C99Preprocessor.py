@@ -63,7 +63,7 @@ def match_cpp_directive(reader):
 #
 
 #
-# §6.10 Preprocessing directives
+# 6.10 Preprocessing directives
 #
 
 
@@ -84,9 +84,9 @@ def match_cpp_directive(reader):
 #     subclass_names.append('Cpp_If_Construct')
 
 
-# class Cpp_If_Construct(BlockBase):  # §6.10.1 Conditional inclusion
+# class Cpp_If_Construct(BlockBase):  # 6.10.1 Conditional inclusion
 #     '''
-#     C99 §6.10.1 Conditional inclusion
+#     C99 6.10.1 Conditional inclusion
 #
 #     <cpp-if-construct> = <cpp-if-stmt>
 #                             [ <block> ]
@@ -129,7 +129,7 @@ def match_cpp_directive(reader):
 
 class Cpp_If_Stmt(Base):
     '''
-    C99 §6.10.1 Conditional inclusion
+    C99 6.10.1 Conditional inclusion
 
     if-stmt is  # if constant-expression new-line
                 | ifdef identifier new-line
@@ -164,7 +164,7 @@ class Cpp_If_Stmt(Base):
 
 class Cpp_Elif_Stmt(Base):
     '''
-    C99 §6.10.1 Conditional inclusion
+    C99 6.10.1 Conditional inclusion
 
     elif-stmt is  # elif constant-expression new-line
 
@@ -193,7 +193,7 @@ class Cpp_Elif_Stmt(Base):
 
 class Cpp_Else_Stmt(Base):
     '''
-    C99 §6.10.1 Conditional inclusion
+    C99 6.10.1 Conditional inclusion
 
     else-stmt is  # else new-line
 
@@ -219,7 +219,7 @@ class Cpp_Else_Stmt(Base):
 
 class Cpp_Endif_Stmt(Base):
     '''
-    C99 §6.10.1 Conditional inclusion
+    C99 6.10.1 Conditional inclusion
 
     endif-stmt is  # endif new-line
 
@@ -243,9 +243,9 @@ class Cpp_Endif_Stmt(Base):
         return ('#endif')
 
 
-class Cpp_Include_Stmt(Base):  # §6.10.2 Source file inclusion
+class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
     """
-    C99 §6.10.2 Source file inclusion
+    C99 6.10.2 Source file inclusion
 
     include_stmt is # include [ <h-char-sequence>
                               | "q-char-sequence"
@@ -304,9 +304,9 @@ class Cpp_Include_Stmt(Base):  # §6.10.2 Source file inclusion
         return '#include "{}"'.format(self.items[0])
 
 
-class Cpp_Macro_Stmt(Base):  # §6.10.3 Macro replacement
+class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
     """
-    C99 §6.10.3 Macro replacement
+    C99 6.10.3 Macro replacement
 
     macro_stmt is # define identifier [( [identifier-list] ) |(...) ]
                   [ replacement-list ] new-line
@@ -435,9 +435,9 @@ class Cpp_Undef_Stmt(Base):
         return ('#undef {}'.format(self.items[0]))
 
 
-class Cpp_Line_Stmt(Base):  # §6.10.4 Line control
+class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
     """
-    C99 §6.10.4 Line control
+    C99 6.10.4 Line control
 
     line-stmt is # line digit-sequence [ "s-char-sequence" ] new-line
                         | pp-tokens new-line
@@ -464,9 +464,9 @@ class Cpp_Line_Stmt(Base):  # §6.10.4 Line control
         return ('#line {}'.format(self.items[0]))
 
 
-class Cpp_Error_Stmt(Base):  # §6.10.5 Error directive
+class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
     """
-    C99 §6.10.5 Error directive
+    C99 6.10.5 Error directive
 
     error-stmt is # error [pp-tokens] new-line
 
@@ -530,15 +530,15 @@ class Cpp_Warning_Stmt(Base):
             return ('#warning')
 
 
-# §6.10.6 Pragma directive
+# 6.10.6 Pragma directive
 # Pragma Preprocessor directives not implemented since Fortran has its own
 # Pragma syntax in the form of comments. For that reason, most preprocessors
 # do not support C preprocess pragmas in Fortran code either.
 
 
-class Cpp_Null_Stmt(Base):  # §6.10.7 Null directive
+class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
     """
-    C99 §6.10.7  Null directive
+    C99 6.10.7  Null directive
 
     null-stmt is # new-line
 
