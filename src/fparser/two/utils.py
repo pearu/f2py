@@ -536,8 +536,10 @@ content : tuple
         '''
         from fparser.two.Fortran2003 import Comment, Include_Stmt, \
             add_comments_includes_directives
-        from fparser.two.parser import get_module_classes
-        from fparser.two import C99Preprocessor
+        from fparser.two.C99Preprocessor import Cpp_If_Stmt, Cpp_Elif_Stmt, \
+            Cpp_Else_Stmt, Cpp_Endif_Stmt, Cpp_Include_Stmt, Cpp_Macro_Stmt, \
+            Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt, Cpp_Warning_Stmt, \
+            Cpp_Null_Stmt
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
@@ -567,11 +569,13 @@ content : tuple
                 start_name = obj.get_start_name()
 
         # Comments and Include statements are always valid sub-classes
-        classes = subclasses + [Comment, Include_Stmt]
         # Preprocessor directives are always valid sub-classes
-        c99pp_classes = get_module_classes(C99Preprocessor)
-        classes += [pp_cls for pp_nam, pp_cls in c99pp_classes
-                    if pp_nam.startswith('Cpp_')]
+        classes = subclasses + [Comment, Include_Stmt, Cpp_If_Stmt,
+                                Cpp_Elif_Stmt, Cpp_Else_Stmt,
+                                Cpp_Endif_Stmt, Cpp_Include_Stmt,
+                                Cpp_Macro_Stmt, Cpp_Undef_Stmt, Cpp_Line_Stmt,
+                                Cpp_Error_Stmt, Cpp_Warning_Stmt,
+                                Cpp_Null_Stmt]
         if endcls is not None:
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
