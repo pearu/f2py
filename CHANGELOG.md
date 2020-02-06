@@ -10,8 +10,13 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
+* B. Reuter, ECMWF, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
+
+
+06/02/2020 PR #241. Fixes a bug in the number of arguments specified for
+           the IBITS intrinsic.
 
 25/01/2020 PR #235 for #172. Fixes bug in absolute pattern matching that
            meant that matches with following content were not being
