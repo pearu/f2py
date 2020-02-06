@@ -9539,7 +9539,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "BTEST": {"min": 2, "max": 2},
         "IAND": {"min": 2, "max": 2},
         "IBCLR": {"min": 2, "max": 2},
-        "IBITS": {"min": 2, "max": 2},
+        "IBITS": {"min": 3, "max": 3},
         "IBSET": {"min": 2, "max": 2},
         "IEOR": {"min": 2, "max": 2},
         "IOR": {"min": 2, "max": 2},
