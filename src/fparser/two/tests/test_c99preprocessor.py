@@ -342,6 +342,11 @@ def test_include_stmt(f2003_create):
     for line in code:
         result = Cpp_Include_Stmt(line)
         assert str(result) == ref
+    ref = '#include "filename.inc"'
+    code = ['#include <filename.inc>', '   #   include  <filename.inc>  ']
+    for line in code:
+        result = Cpp_Include_Stmt(line)
+        assert str(result) == ref
 
 
 def test_incorrect_include_stmt(f2003_create):

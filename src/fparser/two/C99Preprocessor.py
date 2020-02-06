@@ -282,9 +282,10 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
             # the include token is too short to be valid (it must at
             # least contain quotes and one character.
             return None
-        if not (rhs[0] == '"' and rhs[-1] == '"'):
-            # The filename should be surrounded by single or double
-            # quotes but this is not the case.
+        if not (rhs[0] == '"' and rhs[-1] == '"') and \
+           not (rhs[0] == '<' and rhs[-1] == '>'):
+            # The filename should be surrounded by double
+            # quotes or '<...>' but this is not the case.
             return None
         # Remove the quotes.
         file_name = rhs[1:-1]
