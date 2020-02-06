@@ -180,7 +180,7 @@ def test_parse_define_outside_subroutine(f2003_create):
 
     code = '#define MACRO\nSUBROUTINE FOO\ncall sub()\nEND SUBROUTINE FOO\n'
     ref = '#define MACRO\nSUBROUTINE FOO\n  CALL sub\nEND SUBROUTINE FOO'
-    reader = get_reader(ref)
+    reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
 
@@ -190,7 +190,7 @@ def test_parse_empty_ifdef(f2003_create):
 
     code = 'SUBROUTINE FOOBAR\n#ifdef __WHATEVER__\n#endif\nEND SUBROUTINE FOOBAR'
     ref = 'SUBROUTINE FOOBAR\n  #ifdef __WHATEVER__\n  #endif\nEND SUBROUTINE FOOBAR'.strip()
-    reader = get_reader(ref)
+    reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
 
@@ -215,6 +215,7 @@ END SUBROUTINE FOO
     result = f2003_parser(reader)
     assert str(result) == ref
 
+
 def test_parse_define_body_subroutine(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
@@ -235,6 +236,7 @@ END SUBROUTINE FOO
     result = f2003_parser(reader)
     assert str(result) == ref
 
+
 def test_parse_define_in_specification(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
@@ -254,6 +256,7 @@ END SUBROUTINE FOO
     reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
+
 
 def test_parse_ifdef_in_body(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
@@ -283,6 +286,7 @@ END SUBROUTINE FOO
     result = f2003_parser(reader)
     assert str(result) == ref
 
+
 def test_parse_ifdef_in_subroutine(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
@@ -304,6 +308,7 @@ END SUBROUTINE FOO
     reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
+
 
 def test_parse_ifdef_elif_in_subroutine(f2003_create):
     f2003_parser = ParserFactory().create(std='f2003')
