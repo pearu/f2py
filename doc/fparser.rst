@@ -1,8 +1,7 @@
 .. -*- rest -*-
 
 ..
-    Modified work Copyright (c) 2017 Science and Technology Facilities Council
-    Original work Copyright (c) 1999-2008 Pearu Peterson
+    Copyright (c) 2017-2018 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -36,35 +35,6 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-    --------------------------------------------------------------------
-
-    The original software (in the f2py project) was distributed under
-    the following license:
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-      a. Redistributions of source code must retain the above copyright notice,
-         this list of conditions and the following disclaimer.
-      b. Redistributions in binary form must reproduce the above copyright
-         notice, this list of conditions and the following disclaimer in the
-         documentation and/or other materials provided with the distribution.
-      c. Neither the name of the F2PY project nor the names of its
-         contributors may be used to endorse or promote products derived from
-         this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-    ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-    DAMAGE.
-
 .. _fparser:
 
 fparser
@@ -80,9 +50,8 @@ order to support some of the aspects of more recent versions of
 Fortran (see :ref:`beyond_f90`). In order to use it you will need to
 have installed the fparser package which is available from the Python
 Packagage Index (pypi) or github (https://github.com/stfc/fparser). In
-turn fparser requires the numpy and nose packages. When installing
-using pip these dependencies should be installed automatically for
-you.
+turn fparser requires the "six" package. When installing using `pip`
+this dependency should be installed automatically for you.
 
 Once installed, you should be able to open the python interpreter and
 try it out, e.g.:
@@ -138,7 +107,9 @@ that reader to create the tree, e.g.:
 
 ::
 
-  >>> reader = FortranStringReader(code, False, True)
+  >>> from fparser.common.readfortran import FortranStringReader
+  >>> from fparser.one.parsefortran import FortranParser
+  >>> reader = FortranStringReader(code, FortranFormat(isfree, isstrict))
   >>> parser = FortranParser(reader)
   >>> parser.parse()
   >>> print parser.block
@@ -146,6 +117,10 @@ that reader to create the tree, e.g.:
           SUBROUTINE foo(a)
             PRINT *, "a=", a
           END SUBROUTINE foo
+
+The full interface to the `parse()` function is:
+
+.. autofunction:: fparser.api.parse
 
 The `FortranParser` class holds the parser information while
 iterating over items returned by a `FortranReaderBase` iterator.
@@ -177,7 +152,32 @@ being added on an as-required basis and currently consists of:
   ::
 
      procedure(interface_name) :: proc
-     
+
+Logging
+^^^^^^^
+
+fparser uses the standard Python logging package in order to note various
+events which occur while parsing. Following standard Python practice it uses a
+logger named after the module which raises the event. As such they all have
+their root in the name "fparser". This name may be used by the calling program
+to handle logged messages as it sees fit.
+
+For instance, to just dump them to a file the following may be used::
+
+  handler = logging.FileHandler(filename, mode='a')
+  logging.getLogger('fparser').addhandler(handler)
+
+Fparser sets a default `NullHandler`. This prevents missing handler errors but
+also eats all logged messages. You will need to add additional handlers if you
+wish to do something with these messages.
+
+If you want to intercept fparser's messages and handle them as part of your own
+logging regime you will need to write a handler which repeats them::
+
+  class MyHandler(logging.Handler):
+      def emit(self, record):
+          logging.getLogger(__name__).handle(record)
+
 Reference
 ^^^^^^^^^
 
@@ -210,7 +210,7 @@ readfortran.py
 `This file`__ contains tools for reading Fortran codes from file and
 from string objects.
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/readfortran.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/common/readfortran.py
 
 To read Fortran code from a file, use the `FortranFileReader` class.
 The `FortranFileReader` class is an iterator over Fortran code lines
@@ -222,7 +222,7 @@ For example,
 
 ::
 
-  >>> from fparser.readfortran import *
+  >>> from fparser.common.readfortran import *
   >>> import os
   >>> reader = FortranFileReader(os.path.expanduser('~/src/blas/daxpy.f'))
   >>> reader.next()
@@ -324,7 +324,7 @@ of the given `<string>` content. When `<isfree>` and `<isstrict>` are both
 
 ::
 
-  >>> code = """                       
+  >>> code = """
   ... c      comment
   ...       subroutine foo(a)
   ...       print*, "a=",a
@@ -370,10 +370,10 @@ statements and block statements. Block statements consists of start
 and end statements, and content statements in between that can be of
 both types again.
 
-__ https://github.com/stfc/fparser/blob/master/src/fparser/block_statements.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/base_classes.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/typedecl_statements.py
-__ https://github.com/stfc/fparser/blob/master/src/fparser/statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/block_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/common/base_classes.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/typedecl_statements.py
+__ https://github.com/stfc/fparser/blob/master/src/fparser/one/statements.py
 
 A `Statement` instance has the following attributes:
 

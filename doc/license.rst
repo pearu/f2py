@@ -4,10 +4,11 @@
 License
 =======
 
-| Modified work Copyright (c) 2017 Science and Technology Facilities Council
+| Modified work Copyright (c) 2017-2019 Science and Technology Facilities Council
 | Authors: **Andrew Porter** and **Rupert Ford**, STFC Daresbury Laboratory
 | Original work Copyright (c) 1999-2008 **Pearu Peterson**
 | All rights reserved.
+
 Modifications made as part of the fparser project are distributed
 under the following (3-part BSD) license:
 

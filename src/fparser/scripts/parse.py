@@ -63,35 +63,42 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-import os
-import sys
-### START UPDATE SYS.PATH ###
-### END UPDATE SYS.PATH ###
+from __future__ import print_function
+import logging
+from fparser.scripts.script_options import set_parse_options
+import fparser.common.sourceinfo
+
+logging.basicConfig()
+
+# START UPDATE SYS.PATH ###
+# END UPDATE SYS.PATH ###
 try:
     from iocbio.optparse_gui import OptionParser
 except ImportError:
     from optparse import OptionParser
-from fparser.script_options import set_parse_options
 
-def runner (parser, options, args):
-    from fparser.readfortran import  FortranFileReader
-    from fparser.parsefortran import  FortranParser
+
+def runner(parser, options, args):
+    from fparser.common.readfortran import FortranFileReader
+    from fparser.one.parsefortran import FortranParser
     for filename in args:
         reader = FortranFileReader(filename)
         if options.mode != 'auto':
-            reader.set_mode_from_str(options.mode)
+            mode = fparser.common.sourceinfo\
+                   .FortranFormat.from_mode(options.mode)
+            reader.format.set_mode(mode)
         parser = FortranParser(reader)
         parser.parse()
         parser.analyze()
-        if options.task=='show':
+        if options.task == 'show':
             print(parser.block.torepr(4))
         elif options.task == 'none':
             pass
         else:
             raise NotImplementedError(repr(options.task))
-        
 
-def main ():
+
+def main():
     parser = OptionParser()
     set_parse_options(parser)
     if hasattr(parser, 'runner'):
@@ -100,5 +107,6 @@ def main ():
     runner(parser, options, args)
     return
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
-# Original work Copyright (c) 1999-2008 Pearu Peterson
+# Modified work Copyright (c) 2017-2019 Science and Technology
+# Facilities Council.
+# Original work Copyright (c) 1999-2008 Pearu Peterson.
 
 # All rights reserved.
 
@@ -78,12 +79,12 @@ DOWNLOAD_URL = 'https://github.com/stfc/fparser'
 DESCRIPTION = 'The fparser Project'
 LONG_DESCRIPTION = '''\
 The fparser project is created to develop a parser for
-Fortran 77..2003 code. It is based on the work of Pearu Peterson in
-the F2PY project (http://www.f2py.com). 
+Fortran 77..2008 code. It is based on the work of Pearu Peterson in
+the F2PY project (http://www.f2py.com).
 
 See https://github.com/stfc/fparser for more information.
 '''
-LICENSE='OSI Approved :: BSD 3-Clause License'
+LICENSE = 'OSI Approved :: BSD 3-Clause License'
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -102,7 +103,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 5
+MICRO = 10
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
@@ -119,8 +120,12 @@ if __name__ == '__main__':
         classifiers=CLASSIFIERS,
         packages=PACKAGES,
         package_dir={"": "src"},
-        install_requires=['numpy', 'nose'],
+        install_requires=['six'],
+        entry_points={
+            'console_scripts': [
+                'fparser2=fparser.scripts.fparser2:main',
+            ],
+        },
         # We need the following line to ensure we get the fparser/log.config
         # file installed.
         include_package_data=True)
-
