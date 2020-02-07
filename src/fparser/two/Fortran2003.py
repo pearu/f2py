@@ -168,7 +168,18 @@ class Comment(Base):
 
 
 def match_comment_or_include(reader):
-    '''Create a comment or include object from the current line.'''
+    '''Creates a comment or include object from the current line.
+
+    :param reader: the fortran file reader containing the line \
+                   of code that we are trying to match
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+    :returns: A comment or include object if found, otherwise `None`.
+    :rtype: :py:class:`fparser.two.Fortran2003.Comment` or \
+            :py:class:`fparser.two.Fortran2003.Include_Stmt`
+
+    '''
     obj = Comment(reader)
     obj = Include_Stmt(reader) if not obj else obj
     return obj
@@ -180,8 +191,8 @@ def add_comments_includes_directives(content, reader):
     until a line that is not a comment, include, or directive is found.
 
     :param content: a `list` of matched objects. Any matched comments, \
-                    includes, or directives in this routine are added to this
-                    list.
+                    includes, or directives in this routine are added to \
+                    this list.
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \

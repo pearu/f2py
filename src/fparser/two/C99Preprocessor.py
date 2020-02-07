@@ -42,12 +42,20 @@ import re
 
 from fparser.two import pattern_tools as pattern
 from fparser.two.utils import (Base, StringBase, InternalError)
-from fparser.two.Fortran2003 import Include_Filename
 
 
 def match_cpp_directive(reader):
-    '''Create single-line C99 preprocessor directive object from the current
-    line. Omit if-construct and its members that are dealt with separately.'''
+    '''Creates single-line C99 preprocessor directive object from the
+    current line, if any is found.
+
+    :param reader: the fortran file reader containing the line \
+                   of code that we are trying to match.
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+    :returns: The matched preprocessor directive object or `None`.
+    :rtype: Any :py:class:`fparser.two.C99Preprocess.Cpp_*_Stmt` or `NoneType`
+    '''
     cls_list = [Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
                 Cpp_Endif_Stmt, Cpp_Include_Stmt, Cpp_Macro_Stmt,
                 Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
@@ -98,8 +106,9 @@ class Cpp_If_Stmt(Base):
         :param str string: the string to match with as an if statement.
         :returns: a tuple of size 2 containing the statement's keyword \
                   and the right hand side, or `None` if there is no match.
-        :rtype: (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
-                or `NoneType`
+        :rtype: \
+          (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`)\
+          or `NoneType`
         '''
         if not string:
             return None
@@ -116,6 +125,10 @@ class Cpp_If_Stmt(Base):
         return (kind, rhs)
 
     def tostr(self):
+        '''
+        :return: this if-stmt as a string.
+        :rtype: str
+        '''
         return ('#{0} {1}'.format(self.items[0], self.items[1]))
 
 
@@ -133,6 +146,13 @@ class Cpp_Elif_Stmt(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching for an elif preprocessor directive.
+
+        :param str string: the string to match with as an elif statement.
+        :returns: a tuple of size 1 containing the statement's right \
+                  hand side, or `None` if there is no match.
+        :rtype: (`str`) or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -145,6 +165,10 @@ class Cpp_Elif_Stmt(Base):
         return (rhs,)
 
     def tostr(self):
+        '''
+        :return: this elif-stmt as a string.
+        :rtype: str
+        '''
         return ('#elif {0}'.format(self.items[0]))
 
 
@@ -162,6 +186,12 @@ class Cpp_Else_Stmt(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching for an else preprocessor directive.
+
+        :param str string: the string to match with as an else statement.
+        :returns: an empty tuple, or `None` if there is no match.
+        :rtype: () or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -171,6 +201,10 @@ class Cpp_Else_Stmt(Base):
         return ()
 
     def tostr(self):
+        '''
+        :return: this else-stmt as a string.
+        :rtype: str
+        '''
         return ('#else')
 
 
@@ -188,6 +222,12 @@ class Cpp_Endif_Stmt(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching for an endif preprocessor directive.
+
+        :param str string: the string to match with as an endif statement.
+        :returns: an empty tuple, or `None` if there is no match.
+        :rtype: () or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -197,6 +237,10 @@ class Cpp_Endif_Stmt(Base):
         return ()
 
     def tostr(self):
+        '''
+        :return: this endif-stmt as a string.
+        :rtype: str
+        '''
         return ('#endif')
 
 
@@ -219,12 +263,12 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
 
         :param str string: the string to match with as an include statement.
         :returns: a tuple of size 1 containing a Cpp_Include_Filename \
-        object with the matched filename if there is a match, or None \
-        if there is not.
+                  object with the matched filename if there is a match, \
+                  or `None` if there is not.
         :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`) \
-        or NoneType
+                or `NoneType`
         '''
-
+        from fparser.two.Fortran2003 import Include_Filename
         if not string:
             return None
         line = string.strip()
@@ -255,7 +299,7 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
 
     def tostr(self):
         '''
-        :return: this include_stmt as a string
+        :return: this include-stmt as a string.
         :rtype: str
         '''
         return '#include "{0}"'.format(self.items[0])
@@ -270,7 +314,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
 
     Important: No preceding whitespace is allowed for the left parenthesis of
     the optional identifier-list. If a preceding whitespace is encountered,
-    the bracket is considered part of the replacement-list
+    the bracket is considered part of the replacement-list.
     """
 
     use_names = ['Cpp_Macro_Identifier', 'Cpp_Macro_Identifier_List']
@@ -279,6 +323,29 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a preprocessor macro definition. \
+        It matches define directives with macro identifier, optional \
+        identifier list, and optional replacement list. The macro \
+        identifier is matched using \
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier` \
+        and the optional argument identifier list using \
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`. \
+        \
+        Important: No preceding whitespace is allowed for the left \
+        parentheses of the dentifier-list. If a preceding  whitespace is \
+        encountered, the it is considered part of the replacement-list.
+
+        :param str string: the string to match with as an if statement.
+        :returns: a tuple of size 1, 2, or 3 containing the macro identifier, \
+                  and optionally identifier list and replacement list or \
+                  `None` if there is no match.
+        :rtype: (`str`) or \
+          (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`)\
+          or (`str`, \
+           py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`, \
+           py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
+          or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -303,6 +370,10 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
                 # white space) but does not match an identifier list
                 return None
             parameter_list = Cpp_Macro_Identifier_List(found.group())
+            # Note that the definition can potentially be an empty string
+            # which is nonetheless included explicitly to distinguish a
+            # macro definition with arguments from one without but with
+            # a definition
             definition = definition[found.end():].strip()
             return (name, parameter_list, definition)
         # now that we know it doesn't have a parameter list, we can strip
@@ -313,6 +384,10 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
             return (name,)
 
     def tostr(self):
+        '''
+        :return: this macro-stmt as a string.
+        :rtype: str
+        '''
         if len(self.items) > 2:
             return ('#define {0}{1} {2}'.format(self.items[0], self.items[1],
                                                 self.items[2]))
@@ -330,6 +405,15 @@ class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
 
     @staticmethod
     def match(string):
+        '''Match the string with the regular expression abs_macro_name \
+        in the pattern_tools file. It allows for letters and underscore.
+
+        :param str string: the string to match with the pattern rule.
+        :return: a tuple of size 1 containing a string with the \
+                 matched name if there is a match, or None if there is not.
+        :rtype: (`str`) or `NoneType`
+
+        '''
         return StringBase.match(pattern.abs_macro_name, string.strip())
 
 
@@ -345,6 +429,22 @@ class Cpp_Macro_Identifier_List(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching of a macro identifier list as part of \
+        a macro definition. It must consist of one or more macro \
+        identifier separated by comma, or "..." for a variadic argument \
+        list, and must be surrouned by parentheses. \
+        \
+        For simplicity, the matched list is kept as a single string and not \
+        matched as \
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
+
+        :param str string: the string to match with the pattern rule.
+        :return: a tuple of size 1 containing a string with the \
+                 matched identifier list if there is a match, or None if \
+                 there is not.
+        :rtype: (`str`) or `NoneType`
+
+        '''
         if not string:
             return None
         line = string.strip()
@@ -354,6 +454,10 @@ class Cpp_Macro_Identifier_List(Base):
         return (found.group(),)
 
     def tostr(self):
+        '''
+        :return: this macro-identifier-list as a string.
+        :rtype: str
+        '''
         return (self.items[0])
 
 
@@ -374,6 +478,16 @@ class Cpp_Undef_Stmt(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a preprocessor undef statement \
+        for a macro. The macro identifier is matched using \
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
+
+        :param str string: the string to match with as an if statement.
+        :returns: a tuple of size 1 containing the macro identifier, or\
+                  `None` if there is no match.
+        :rtype: (py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
+                or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -388,6 +502,10 @@ class Cpp_Undef_Stmt(Base):
         return(Cpp_Macro_Identifier(found.group()),)
 
     def tostr(self):
+        '''
+        :return: this undef-stmt as a string.
+        :rtype: str
+        '''
         return ('#undef {0}'.format(self.items[0]))
 
 
@@ -405,6 +523,15 @@ class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a line preprocessor directive. \
+        The right hand side of the directive is not matched any further \
+        but simply kept as a string.
+
+        :param str string: the string to match with as a line statement.
+        :returns: a tuple of size 1 with the right hand side as a string, \
+                  or `None` if there is no match.
+        :rtype: (`str`) or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -412,11 +539,15 @@ class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
         if not found:
             return None
         rhs = line[found.end():].strip()
-        if len(rhs) == 0:
+        if not rhs:
             return None
         return (rhs,)
 
     def tostr(self):
+        '''
+        :return: this line-stmt as a string.
+        :rtype: str
+        '''
         return ('#line {0}'.format(self.items[0]))
 
 
@@ -434,6 +565,15 @@ class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
 
     @staticmethod
     def match(string):
+        '''Implements the matching for an error preprocessor directive. \
+        The optional right hand side of the directive is not matched any \
+        further but simply kept as a string.
+
+        :param str string: the string to match with as a line statement.
+        :returns: an empty tuple or a tuple of size  1 with the right hand \
+                  side as a string, or `None` if there is no match.
+        :rtype: () or (`str`) or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -441,12 +581,16 @@ class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
         if not found:
             return None
         rhs = line[found.end():].strip()
-        if len(rhs) == 0:
+        if not rhs:
             return ()
         else:
             return (rhs,)
 
     def tostr(self):
+        '''
+        :return: this error-stmt as a string.
+        :rtype: str
+        '''
         if len(self.items) > 0:
             return ('#error {0}'.format(self.items[0]))
         else:
@@ -467,6 +611,15 @@ class Cpp_Warning_Stmt(Base):
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a warning preprocessor directive. \
+        The optional right hand side of the directive is not matched any \
+        further but simply kept as a string.
+
+        :param str string: the string to match with as a line statement.
+        :returns: an empty tuple or a tuple of size  1 with the right hand \
+                  side as a string, or `None` if there is no match.
+        :rtype: () or (`str`) or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -480,6 +633,10 @@ class Cpp_Warning_Stmt(Base):
             return (rhs,)
 
     def tostr(self):
+        '''
+        :return: this warning-stmt as a string.
+        :rtype: str
+        '''
         if len(self.items) > 0:
             return ('#warning {0}'.format(self.items[0]))
         else:
@@ -504,6 +661,12 @@ class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
 
     @staticmethod
     def match(string):
+        '''Implements the matching for a Null (empty) directive. \
+
+        :param str string: the string to match with as a line statement.
+        :returns: an empty tuple or `None` if there is no match.
+        :rtype: () or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -513,4 +676,8 @@ class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
             return ()
 
     def tostr(self):
+        '''
+        :return: this null-stmt as a string.
+        :rtype: str
+        '''
         return '#'
