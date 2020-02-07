@@ -377,7 +377,7 @@ def test_incorrect_include_stmt():
     code = [None, '', '  ', '#includ', '#includ "x"', '#include',
             '#include ""', "#include 'x'", '#include "x', '#include x"',
             '#include x', '#include x"x"', '#include "x"x', 'x #include "x"',
-            '#includex "x"', "#include 'abc'"]
+            '#includex "x"', "#include 'abc'", '#include " a.inc"']
     for line in code:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Cpp_Include_Stmt(line)
@@ -410,7 +410,8 @@ def test_macro_stmt():
             '#define TABSIZE 100',
             '#define r(x,y) x ## y',
             '#define MACRO(a, b, c) (a) * (b + c)',
-            '#define MACRO( a,b ,   c) (a )*    (   b   + c  )']
+            '#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
+            '#define MACRO x']
     for ref in code:
         result = Cpp_Macro_Stmt(ref)
         assert str(result) == ref

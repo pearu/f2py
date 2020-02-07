@@ -290,12 +290,12 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
                 # The definition starts with a bracket (without preceding
                 # white space) but does not match an identifier list
                 return None
-            parameter_list = found.group()
+            parameter_list = Cpp_Macro_Identifier_List(found.group())
             definition = definition[found.end():].strip()
             return (name, parameter_list, definition)
+        # now that we know it doesn't have a parameter list, we can strip
         definition = definition.strip()
-        # now that we now it doesn't have a parameter list, we can strip
-        if len(definition) > 1:
+        if len(definition) > 0:
             return (name, definition)
         else:
             return (name,)
