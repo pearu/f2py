@@ -85,10 +85,22 @@ class Cpp_If_Stmt(Base):
     subclass_names = []
     use_names = ['Cpp_Macro_Identifier']
 
-    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b")  # 'if' last, order matters
+    _regex = re.compile(r"#\s*(ifdef|ifndef|if)\b")
 
     @staticmethod
     def match(string):
+        '''Implements the matching for an if preprocessor directive \
+        (or its variations ifdef, ifndef). For ifdef and ifndef \
+        statements it matches the macro identifier using \
+        :py:class:`fparser.two.C99Preprocesser.Cpp_Macro_Identifier` \
+        otherwise it accepts any non-empty string as rhs.
+
+        :param str string: the string to match with as an if statement.
+        :returns: a tuple of size 2 containing the statement's keyword \
+                  and the right hand side, or `None` if there is no match.
+        :rtype: (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
+                or `NoneType`
+        '''
         if not string:
             return None
         line = string.strip()
@@ -97,7 +109,7 @@ class Cpp_If_Stmt(Base):
             return None
         kind = found.group()[1:].strip()
         rhs = line[found.end():].strip()
-        if rhs is None or len(rhs) == 0:
+        if not rhs:
             return None
         if kind in ['ifdef', 'ifndef']:
             rhs = Cpp_Macro_Identifier(rhs)
