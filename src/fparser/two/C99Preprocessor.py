@@ -66,65 +66,10 @@ def match_cpp_directive(reader):
 # 6.10 Preprocessing directives
 #
 
-
-#
-# Below construct for if-elif-else-endif blocks of preprocessor macros works
-# as long as they are within a common block of the Fortran code. However,
-# since preprocessor macros can potentially span, e.g., specification part and
-# execution part, this does not comply to the AST format of fparser. Hence,
-# this is commented out and if-stmts etc are treated as one-line pp macros
-# without being correlated to their counterparts.
-#
-
-# class Program(Program_2003):
-#
-#     # Add Preprocess if-constructs to the Program class by extending
-#     # the specification
-#     subclass_names = Program_2003.subclass_names[:]
-#     subclass_names.append('Cpp_If_Construct')
-
-
-# class Cpp_If_Construct(BlockBase):  # 6.10.1 Conditional inclusion
-#     '''
-#     C99 6.10.1 Conditional inclusion
-#
-#     <cpp-if-construct> = <cpp-if-stmt>
-#                             [ <block> ]
-#                          [ <cpp-elif-stmt>
-#                             [ <block> ]
-#                          ]...
-#                          [ <cpp-else-stmt>
-#                             [ <block> ]
-#                          ]
-#                          <cpp-endif-stmt>
-#     '''
-#
-#     subclass_names = []
-#     use_names = ['Cpp_If_Stmt', 'Block', 'Cpp_Elif_Stmt', 'Cpp_Else']
-#
-#     @staticmethod
-#     def match(string):
-#         return BlockBase.match(
-#             Cpp_If_Stmt, [Execution_Part_Construct,
-#                           Cpp_Elif_Stmt,
-#                           Execution_Part_Construct,
-#                           Cpp_Else_Stmt,
-#                           Execution_Part_Construct],
-#             Cpp_Endif_Stmt, string,
-#             enable_cpp_if_construct_hook=True)
-#
-#     def tofortran(self, tab='', isfix=None):
-#         tmp = []
-#         start = self.content[0]
-#         end = self.content[-1]
-#         tmp.append(start.tofortran(tab='', isfix=isfix))
-#         for item in self.content[1:-1]:
-#             if isinstance(item, (Cpp_Elif_Stmt, Cpp_Else_Stmt)):
-#                 tmp.append(item.tofortran(tab='', isfix=isfix))
-#             else:
-#                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
-#         tmp.append(end.tofortran(tab='', isfix=isfix))
-#         return '\n'.join(tmp)
+# 6.10.1 Conditional inclusion
+# Deviating from the standard's definition, not entire if-else-endif
+# blocks are treated as constructs but instead the relevant preprocessor
+# directives are kept as single line nodes.
 
 
 class Cpp_If_Stmt(Base):
