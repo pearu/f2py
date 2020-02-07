@@ -48,15 +48,15 @@ from fparser.two.Fortran2003 import Include_Filename
 def match_cpp_directive(reader):
     '''Create single-line C99 preprocessor directive object from the current
     line. Omit if-construct and its members that are dealt with separately.'''
-    cls_list = (Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
+    cls_list = [Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
                 Cpp_Endif_Stmt, Cpp_Include_Stmt, Cpp_Macro_Stmt,
                 Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
-                Cpp_Warning_Stmt, Cpp_Null_Stmt)
+                Cpp_Warning_Stmt, Cpp_Null_Stmt]
     for cls in cls_list:
         obj = cls(reader)
         if obj:
             return obj
-    return obj
+    return None
 
 #
 # ISO/IEC 9899: 1999 (C99)
@@ -159,7 +159,7 @@ class Cpp_If_Stmt(Base):
         return (kind, rhs)
 
     def tostr(self):
-        return ('#{} {}'.format(self.items[0], self.items[1]))
+        return ('#{0} {1}'.format(self.items[0], self.items[1]))
 
 
 class Cpp_Elif_Stmt(Base):
@@ -188,7 +188,7 @@ class Cpp_Elif_Stmt(Base):
         return (rhs,)
 
     def tostr(self):
-        return ('#elif {}'.format(self.items[0]))
+        return ('#elif {0}'.format(self.items[0]))
 
 
 class Cpp_Else_Stmt(Base):
@@ -270,7 +270,6 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
 
         if not string:
             return None
-
         line = string.strip()
         found = Cpp_Include_Stmt._regex.match(line)
         if not found:
@@ -302,7 +301,7 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
         :return: this include_stmt as a string
         :rtype: str
         '''
-        return '#include "{}"'.format(self.items[0])
+        return '#include "{0}"'.format(self.items[0])
 
 
 class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
@@ -358,12 +357,12 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
 
     def tostr(self):
         if len(self.items) > 2:
-            return ('#define {}{} {}'.format(self.items[0], self.items[1],
-                                             self.items[2]))
+            return ('#define {0}{1} {2}'.format(self.items[0], self.items[1],
+                                                self.items[2]))
         elif len(self.items) > 1:
-            return ('#define {} {}'.format(self.items[0], self.items[1]))
+            return ('#define {0} {1}'.format(self.items[0], self.items[1]))
         else:
-            return ('#define {}'.format(self.items[0]))
+            return ('#define {0}'.format(self.items[0]))
 
 
 class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
@@ -384,8 +383,8 @@ class Cpp_Macro_Identifier_List(Base):
                        | (...)
     '''
 
-    _regex = re.compile(r'\(\s*[A-Za-z_]\w*(\s*,\s*[A-Za-z_])*\s*\)')
-    _regex = re.compile(r'\((\s*[A-Za-z_]\w*(\s*,\s*([A-Za-z_]|\.{3}))*|\.{3})\s*\)')
+    _regex = re.compile(r'\((\s*[A-Za-z_]\w*'
+                        r'(\s*,\s*([A-Za-z_]|\.{3}))*|\.{3})\s*\)')
 
     @staticmethod
     def match(string):
@@ -410,7 +409,6 @@ class Cpp_Undef_Stmt(Base):
     directive keyword (undef instead of define) we treat it separately.
     '''
 
-    # There are no other classes. This is a simple string match.
     subclass_names = []
 
     use_names = ['Cpp_Macro_Identifier']
@@ -433,7 +431,7 @@ class Cpp_Undef_Stmt(Base):
         return(Cpp_Macro_Identifier(found.group()),)
 
     def tostr(self):
-        return ('#undef {}'.format(self.items[0]))
+        return ('#undef {0}'.format(self.items[0]))
 
 
 class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
@@ -462,7 +460,7 @@ class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
         return (rhs,)
 
     def tostr(self):
-        return ('#line {}'.format(self.items[0]))
+        return ('#line {0}'.format(self.items[0]))
 
 
 class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
@@ -493,7 +491,7 @@ class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
 
     def tostr(self):
         if len(self.items) > 0:
-            return ('#error {}'.format(self.items[0]))
+            return ('#error {0}'.format(self.items[0]))
         else:
             return ('#error')
 
@@ -526,7 +524,7 @@ class Cpp_Warning_Stmt(Base):
 
     def tostr(self):
         if len(self.items) > 0:
-            return ('#warning {}'.format(self.items[0]))
+            return ('#warning {0}'.format(self.items[0]))
         else:
             return ('#warning')
 

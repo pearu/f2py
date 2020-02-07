@@ -45,18 +45,17 @@ keep the directives in the Fortran parse tree and output it again.
 # First version created: Jan 2020
 
 import pytest
-from fparser.two.C99Preprocessor import (Cpp_If_Stmt, Cpp_Elif_Stmt,
-                                         Cpp_Else_Stmt, Cpp_Endif_Stmt,
-                                         Cpp_Include_Stmt, Cpp_Macro_Stmt,
-                                         Cpp_Macro_Identifier, Cpp_Undef_Stmt,
-                                         Cpp_Line_Stmt, Cpp_Error_Stmt,
-                                         Cpp_Warning_Stmt, Cpp_Null_Stmt)
+from fparser.two.C99Preprocessor import (
+    Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt,
+    Cpp_Include_Stmt, Cpp_Macro_Stmt, Cpp_Macro_Identifier, Cpp_Undef_Stmt,
+    Cpp_Line_Stmt, Cpp_Error_Stmt, Cpp_Warning_Stmt, Cpp_Null_Stmt)
 from fparser.two.parser import ParserFactory
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
 
-def test_if_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_if_stmt():
     '''Test that various forms of #if, #ifdef, #ifndef are recognized'''
     ref = '#if CONSTANT'
     for line in [
@@ -109,16 +108,18 @@ def test_if_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_if_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_if_stmt():
     '''Test that incorrectly formed #if statements raise exception'''
-    for line in [None, '', ' ', '#ifdfe', '#if', '#ifdef', '#ifdef two macros']:
+    for line in [None, '', ' ', '#ifdfe', '#if', '#ifdef',
+                 '#ifdef two macros']:
         with pytest.raises(NoMatchError) as excinfo:
-            print(line)
             _ = Cpp_If_Stmt(line)
         assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_elif_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_elif_stmt():
     '''Test that #elif is correctly recognized'''
     ref = '#elif CONDITION'
     for line in [
@@ -129,7 +130,8 @@ def test_elif_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_elif_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_elif_stmt():
     '''Test that incorrectly formed #elif statements raise exception'''
     for line in [None, '', ' ', '#elfi', '#elif']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -137,7 +139,8 @@ def test_incorrect_elif_stmt(f2003_create):
         assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_else_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_else_stmt():
     '''Test that #else is correctly recognized'''
     ref = '#else'
     for line in [
@@ -148,7 +151,8 @@ def test_else_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_else_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_else_stmt():
     '''Test that incorrectly formed #else statements raise exception'''
     for line in [None, '', ' ', '#esle', '#elseA', '#Aelse']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -156,7 +160,8 @@ def test_incorrect_else_stmt(f2003_create):
         assert "Cpp_Else_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_endif_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_endif_stmt():
     '''Test that #endif is correctly recognized'''
     ref = '#endif'
     for line in [
@@ -167,7 +172,8 @@ def test_endif_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_endif_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_endif_stmt():
     '''Test that incorrectly formed #endif statements raise exception'''
     for line in [None, '', ' ', '#ednif', '#endifA', '#Aendif']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -175,7 +181,7 @@ def test_incorrect_endif_stmt(f2003_create):
         assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_parse_define_outside_subroutine(f2003_create):
+def test_parse_define_outside_subroutine():
     f2003_parser = ParserFactory().create(std='f2003')
 
     code = '#define MACRO\nSUBROUTINE FOO\ncall sub()\nEND SUBROUTINE FOO\n'
@@ -185,17 +191,27 @@ def test_parse_define_outside_subroutine(f2003_create):
     assert str(result) == ref
 
 
-def test_parse_empty_ifdef(f2003_create):
+def test_parse_empty_ifdef():
     f2003_parser = ParserFactory().create(std='f2003')
 
-    code = 'SUBROUTINE FOOBAR\n#ifdef __WHATEVER__\n#endif\nEND SUBROUTINE FOOBAR'
-    ref = 'SUBROUTINE FOOBAR\n  #ifdef __WHATEVER__\n  #endif\nEND SUBROUTINE FOOBAR'.strip()
+    code = '''
+SUBROUTINE FOOBAR
+#ifdef __WHATEVER__
+#endif
+END SUBROUTINE FOOBAR
+    '''
+    ref = '''
+SUBROUTINE FOOBAR
+  #ifdef __WHATEVER__
+  #endif
+END SUBROUTINE FOOBAR
+    '''.strip()
     reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
 
 
-def test_parse_define_end_subroutine(f2003_create):
+def test_parse_define_end_subroutine():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 SUBROUTINE FOO(BAR)
@@ -216,7 +232,7 @@ END SUBROUTINE FOO
     assert str(result) == ref
 
 
-def test_parse_define_body_subroutine(f2003_create):
+def test_parse_define_body_subroutine():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 SUBROUTINE FOO(BAZ)
@@ -237,7 +253,7 @@ END SUBROUTINE FOO
     assert str(result) == ref
 
 
-def test_parse_define_in_specification(f2003_create):
+def test_parse_define_in_specification():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 SUBROUTINE FOO(BAZ2)
@@ -258,7 +274,7 @@ END SUBROUTINE FOO
     assert str(result) == ref
 
 
-def test_parse_ifdef_in_body(f2003_create):
+def test_parse_ifdef_in_body():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 SUBROUTINE FOO(BAR2)
@@ -287,7 +303,7 @@ END SUBROUTINE FOO
     assert str(result) == ref
 
 
-def test_parse_ifdef_in_subroutine(f2003_create):
+def test_parse_ifdef_in_subroutine():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 SUBROUTINE FOO(BAR3)
@@ -310,7 +326,7 @@ END SUBROUTINE FOO
     assert str(result) == ref
 
 
-def test_parse_ifdef_elif_in_subroutine(f2003_create):
+def test_parse_ifdef_elif_in_subroutine():
     f2003_parser = ParserFactory().create(std='f2003')
     ref = '''
 #define MACRO
@@ -340,7 +356,8 @@ END SUBROUTINE BAR
     assert str(result) == ref
 
 
-def test_include_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_include_stmt():
     '''Test that #include is recognized'''
     ref = '#include "filename.inc"'
     code = ['#include "filename.inc"', '   #   include  "filename.inc"  ']
@@ -354,7 +371,8 @@ def test_include_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_include_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_include_stmt():
     '''Test that incorrectly formed #include statements raise exception'''
     code = [None, '', '  ', '#includ', '#includ "x"', '#include',
             '#include ""', "#include 'x'", '#include "x', '#include x"',
@@ -366,7 +384,8 @@ def test_incorrect_include_stmt(f2003_create):
         assert "Cpp_Include_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_macro_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_macro_stmt():
     '''Test that #define is recognized'''
     # definition with value
     ref = '#define MACRO value'
@@ -397,7 +416,8 @@ def test_macro_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_macro_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_macro_stmt():
     '''Test that incorrectly formed #define statements raise exception'''
     for line in [None, '', ' ', '#def', '#defnie', '#definex',
                  '#define fail(...,test) test', '#define']:
@@ -406,7 +426,8 @@ def test_incorrect_macro_stmt(f2003_create):
         assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_macro_identifier(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_macro_identifier():
     '''Test that all allowed names can be parsed'''
     for name in ['MACRO', 'MACRO1', 'MACRO_', 'MACRO_NAME', 'macro',
                  '_', '_12']:
@@ -414,7 +435,8 @@ def test_macro_identifier(f2003_create):
         assert str(result) == name
 
 
-def test_undef_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_undef_stmt():
     '''Test that #undef is recognized'''
     ref = '#undef _MACRO'
     for line in [
@@ -425,7 +447,8 @@ def test_undef_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_undef_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_undef_stmt():
     '''Test that incorrectly formed #undef statements raise exception'''
     for line in [None, '', ' ', '#undef', '#unfed', '#undefx']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -433,7 +456,8 @@ def test_incorrect_undef_stmt(f2003_create):
         assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_line_statement(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_line_statement():
     '''Test that #line is recognized'''
     ref = '#line CONFIG'
     for line in [
@@ -444,7 +468,8 @@ def test_line_statement(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_line_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_line_stmt():
     '''Test that incorrectly formed #line statements raise exception'''
     for line in [None, '', ' ', '#line', '#linex', '#lien']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -452,7 +477,8 @@ def test_incorrect_line_stmt(f2003_create):
         assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_error_statement(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_error_statement():
     '''Test that #error is recognized'''
     # error with message
     ref = '#error MSG'
@@ -472,7 +498,8 @@ def test_error_statement(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_error_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_error_stmt():
     '''Test that incorrectly formed #error statements raise exception'''
     for line in [None, '', ' ', '#erorr', '#errorx']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -480,7 +507,8 @@ def test_incorrect_error_stmt(f2003_create):
         assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_warning_statement(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_warning_statement():
     '''Test that #warning is recognized (not actually part of C99)'''
     # warning with message
     ref = '#warning MSG'
@@ -500,7 +528,8 @@ def test_warning_statement(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_warning_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_warning_stmt():
     '''Test that incorrectly formed #warning statements raise exception'''
     for line in [None, '', ' ', '#wrning', '#warningx']:
         with pytest.raises(NoMatchError) as excinfo:
@@ -508,7 +537,8 @@ def test_incorrect_warning_stmt(f2003_create):
         assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_null_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_null_stmt():
     '''Test that null directives are recognized'''
     ref = '#'
     for line in ['#', '   #  ', '#   ', '   #']:
@@ -516,7 +546,8 @@ def test_null_stmt(f2003_create):
         assert str(result) == ref
 
 
-def test_incorrect_null_stmt(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_incorrect_null_stmt():
     '''Test that anything that is not a single hash sign is not recognized'''
     for line in [None, '', ' ', '#a', '##', '###', '  # #', '# a']:
         with pytest.raises(NoMatchError) as excinfo:
