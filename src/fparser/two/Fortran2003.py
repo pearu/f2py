@@ -3968,7 +3968,8 @@ class Designator(Base):  # R603
     # component and substring text will match the array-element
     # rule. This is because the associated rule constraints
     # (e.g. C617, C618 and C619) and specification text (see note 6.6)
-    # are not currently checked. This is the subject of issue #201.
+    # are not currently enforced. Note, these constraints can not be
+    # enforced until issue #201 has been addressed.
     subclass_names = ['Object_Name', 'Array_Element', 'Array_Section',
                       'Structure_Component', 'Substring']
 
