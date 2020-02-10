@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
