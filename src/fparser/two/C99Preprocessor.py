@@ -97,10 +97,10 @@ class Cpp_If_Stmt(Base):
 
     @staticmethod
     def match(string):
-        '''Implements the matching for an if preprocessor directive \
-        (or its variations ifdef, ifndef). For ifdef and ifndef \
-        statements it matches the macro identifier using \
-        :py:class:`fparser.two.C99Preprocesser.Cpp_Macro_Identifier` \
+        '''Implements the matching for an if preprocessor directive
+        (or its variations ifdef, ifndef). For ifdef and ifndef
+        statements it matches the macro identifier using
+        :py:class:`fparser.two.C99Preprocesser.Cpp_Macro_Identifier`
         otherwise it accepts any non-empty string as rhs.
 
         :param str string: the string to match with as an if statement.
@@ -261,6 +261,11 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
     def match(string):
         '''Implements the matching for an include statement.
 
+        It allows for the filename to appear in double quotes or angle
+        brackets. Only very loose restrictions are enforced for the
+        filename, which is matched by
+        py:class:`fparser.two.Fortran2003.Include_Filename`.
+
         :param str string: the string to match with as an include statement.
         :returns: a tuple of size 1 containing a Cpp_Include_Filename \
                   object with the matched filename if there is a match, \
@@ -323,16 +328,17 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a preprocessor macro definition. \
-        It matches define directives with macro identifier, optional \
-        identifier list, and optional replacement list. The macro \
-        identifier is matched using \
-        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier` \
-        and the optional argument identifier list using \
-        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`. \
-        \
-        Important: No preceding whitespace is allowed for the left \
-        parentheses of the dentifier-list. If a preceding  whitespace is \
+        '''Implements the matching for a preprocessor macro definition.
+
+        It matches define directives with macro identifier, optional
+        identifier list, and optional replacement list. The macro
+        identifier is matched using
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`
+        and the optional argument identifier list using
+        :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`.
+
+        Important: No preceding whitespace is allowed for the left
+        parentheses of the dentifier-list. If a preceding  whitespace is
         encountered, the it is considered part of the replacement-list.
 
         :param str string: the string to match with as an if statement.
@@ -405,8 +411,11 @@ class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
 
     @staticmethod
     def match(string):
-        '''Match the string with the regular expression abs_macro_name \
-        in the pattern_tools file. It allows for letters and underscore.
+        '''Implements the matching of a macro identifier.
+
+        It matches the string with the regular expression abs_macro_name
+        in the pattern_tools file. The macro identifier may contain
+        only letters and underscore.
 
         :param str string: the string to match with the pattern rule.
         :return: a tuple of size 1 containing a string with the \
@@ -429,13 +438,13 @@ class Cpp_Macro_Identifier_List(Base):
 
     @staticmethod
     def match(string):
-        '''Implements the matching of a macro identifier list as part of \
-        a macro definition. It must consist of one or more macro \
-        identifier separated by comma, or "..." for a variadic argument \
-        list, and must be surrouned by parentheses. \
-        \
-        For simplicity, the matched list is kept as a single string and not \
-        matched as \
+        '''Implements the matching of a macro identifier list as part of
+        a macro definition. It must consist of one or more macro
+        identifier separated by comma, or "..." for a variadic argument
+        list, and must be surrouned by parentheses.
+
+        For simplicity, the matched list is kept as a single string and not
+        matched as
         :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
 
         :param str string: the string to match with the pattern rule.
@@ -478,8 +487,8 @@ class Cpp_Undef_Stmt(Base):
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a preprocessor undef statement \
-        for a macro. The macro identifier is matched using \
+        '''Implements the matching for a preprocessor undef statement
+        for a macro. The macro identifier is matched using
         :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
 
         :param str string: the string to match with as an if statement.
@@ -523,8 +532,8 @@ class Cpp_Line_Stmt(Base):  # 6.10.4 Line control
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a line preprocessor directive. \
-        The right hand side of the directive is not matched any further \
+        '''Implements the matching for a line preprocessor directive.
+        The right hand side of the directive is not matched any further
         but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
@@ -565,8 +574,8 @@ class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
 
     @staticmethod
     def match(string):
-        '''Implements the matching for an error preprocessor directive. \
-        The optional right hand side of the directive is not matched any \
+        '''Implements the matching for an error preprocessor directive.
+        The optional right hand side of the directive is not matched any
         further but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
@@ -583,8 +592,7 @@ class Cpp_Error_Stmt(Base):  # 6.10.5 Error directive
         rhs = line[found.end():].strip()
         if not rhs:
             return ()
-        else:
-            return (rhs,)
+        return (rhs,)
 
     def tostr(self):
         '''
@@ -611,8 +619,8 @@ class Cpp_Warning_Stmt(Base):
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a warning preprocessor directive. \
-        The optional right hand side of the directive is not matched any \
+        '''Implements the matching for a warning preprocessor directive.
+        The optional right hand side of the directive is not matched any
         further but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
@@ -661,7 +669,7 @@ class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a Null (empty) directive. \
+        '''Implements the matching for a Null (empty) directive.
 
         :param str string: the string to match with as a line statement.
         :returns: an empty tuple or `None` if there is no match.
