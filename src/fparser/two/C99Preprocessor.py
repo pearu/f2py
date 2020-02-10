@@ -39,9 +39,19 @@
 # First version created: Jan 2020
 
 import re
+import sys
 
 from fparser.two import pattern_tools as pattern
 from fparser.two.utils import (Base, StringBase, InternalError)
+
+
+# The list of classes that implement preprocessor directives
+# This list is used in match_cpp_directive() and
+# fparser.two.utils.BlockBase.match().
+CPP_CLASS_NAMES = ['Cpp_If_Stmt', 'Cpp_Elif_Stmt', 'Cpp_Else_Stmt',
+                   'Cpp_Endif_Stmt', 'Cpp_Include_Stmt', 'Cpp_Macro_Stmt',
+                   'Cpp_Undef_Stmt', 'Cpp_Line_Stmt', 'Cpp_Error_Stmt',
+                   'Cpp_Warning_Stmt', 'Cpp_Null_Stmt']
 
 
 def match_cpp_directive(reader):
@@ -56,12 +66,8 @@ def match_cpp_directive(reader):
     :returns: The matched preprocessor directive object or `None`.
     :rtype: Any :py:class:`fparser.two.C99Preprocess.Cpp_*_Stmt` or `NoneType`
     '''
-    cls_list = [Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt,
-                Cpp_Endif_Stmt, Cpp_Include_Stmt, Cpp_Macro_Stmt,
-                Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
-                Cpp_Warning_Stmt, Cpp_Null_Stmt]
-    for cls in cls_list:
-        obj = cls(reader)
+    for cls in CPP_CLASS_NAMES:
+        obj = getattr(sys.modules[__name__], cls)(reader)
         if obj:
             return obj
     return None
