@@ -179,11 +179,56 @@ number. For example:
    fparser.two.Fortran2003.FortranSyntaxError: at line 2
    >>>en
 
-Unsupported Features
---------------------
+Matching Multiple Rules
+-----------------------
 
-Statement Functions
-+++++++++++++++++++
+There are a number of situations where more than one Fortran rule
+could match some text. For example, the following text could be an
+array section or a substring::
+
+  a(1:2)
+
+The Fortran specification deals with such ambiguities by specifying
+constraints. In this case, constraint `C608` specifies that this text
+can only a substring if the variable `a` is of type `character`.
+
+At the moment fparser2 attempts to match rules and does very little
+constraint checking. fparser2 is implemented such that when there is a
+choice of rules, the first matching rule in the associated internal
+rule-list is returned. This approach is OK for parsing and de-parsing,
+however it does means that the parse tree might not be what would be
+expected. In the above example, something that should be a substring
+(Fortran2003 rule R609) would match as an array section (Fortran2003
+rule R617). This problem is therefore passed to any tool that makes
+use of the parse tree.
+
+In many cases these ambiguities can and will be removed by adding in
+constraint checking. However, in some situations it is not possible to
+check by simply using the input text from a valid Fortran file. If we
+again take the example of `C608` where we want to check whether a
+variable is of type `character` or not, it may be that this variable
+is brought into scope via a `use` statement. Fortran compilers require
+such information to be available in module files but the parser does
+not. It has not yet been decided how to deal with this situation.
+
+Known examples where the wrong parsing rule is currently used are
+given below.
+
+Array element, array section or substring
++++++++++++++++++++++++++++++++++++++++++
+
+A substring always matches the array element rule. An array section matches the array element rule unless it also has a *****
+
+Array or function
++++++++++++++++++
+
+Returns an array unless the function is an intrinsic. If it is an
+array with the same name as an intrinsic then it will be return an
+intrinsic but will fail with a syntax error if the number of arguments
+do not match the number expected by the intrinsic.
+
+Statement Function or array assignment
+++++++++++++++++++++++++++++++++++++++
 
 Fparser2 is currently not able to distinguish between statement
 functions and array assignments when one or more array assignment
