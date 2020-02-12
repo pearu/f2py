@@ -71,7 +71,6 @@
 # First version created: Oct 2006
 
 import re
-import logging
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
@@ -263,7 +262,7 @@ class Program(BlockBase):  # R201
         except StopIteration:
             # Reader has no more lines.
             pass
-        return tuple(content)
+        return (content,)
 
 
 class Include_Filename(StringBase):  # pylint: disable=invalid-name
@@ -1612,7 +1611,7 @@ class Component_Part(BlockBase):  # R438
                 break
             content.append(obj)
         if content:
-            return tuple(content)
+            return (content,)
         return
     match = staticmethod(match)
 
@@ -2329,7 +2328,7 @@ class Enum_Def_Stmt(StmtBase):  # R461
     def match(string):
         if string.upper().replace(' ', '') != 'ENUM,BIND(C)':
             return
-        return tuple('ENUM, BIND(C)')
+        return ('ENUM, BIND(C)',)
 
     def tostr(self):
         return '%s' % (self.items[0])
@@ -2803,7 +2802,7 @@ class Language_Binding_Spec(Base):  # R509
             return
         line = line[1:].lstrip()
         if not line:
-            return tuple(None)
+            return (None,)
         if not line.startswith(','):
             return
         line = line[1:].lstrip()
@@ -2813,7 +2812,7 @@ class Language_Binding_Spec(Base):  # R509
         line = line[4:].lstrip()
         if not line.startswith('='):
             return
-        return tuple(Scalar_Char_Initialization_Expr(line[1:].lstrip()))
+        return (Scalar_Char_Initialization_Expr(line[1:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -3298,7 +3297,7 @@ class Dimension_Stmt(StmtBase):  # R535
                           Array_Spec(repmap(s[i+1:-1].strip()))))
         if not decls:
             return
-        return tuple(decls)
+        return (decls,)
     match = staticmethod(match)
 
     def tostr(self):
@@ -3617,7 +3616,7 @@ class Target_Stmt(StmtBase):  # R546
         line = string[6:].lstrip()
         if line.startswith('::'):
             line = line[2:].lstrip()
-        return tuple(Target_Entity_Decl_List(line))
+        return (Target_Entity_Decl_List(line),)
 
     def tostr(self):
         return 'TARGET :: %s' % (self.items[0])
@@ -3672,7 +3671,7 @@ items : ({'NONE', Implicit_Spec_List},)
             return
         line = string[8:].lstrip()
         if len(line) == 4 and line.upper() == 'NONE':
-            return tuple('NONE')
+            return ('NONE',)
         return tuple(Implicit_Spec_List(line))
         for w, cls in [(pattern.abs_implicit_none, None),
                        ('IMPLICIT', Implicit_Spec_List)]:
@@ -3907,7 +3906,7 @@ class Common_Stmt(StmtBase):  # R557
                 lst = Common_Block_Object_List(repmap(tmp))
                 line = line[i:].lstrip()
             items.append((name, lst))
-        return tuple(items)
+        return (items,)
     match = staticmethod(match)
 
     def tostr(self):
@@ -5058,7 +5057,7 @@ class Where_Construct_Stmt(StmtBase):  # R745
         line = line[1:-1].strip()
         if not line:
             return
-        return tuple(Mask_Expr(line))
+        return (Mask_Expr(line),)
 
     def tostr(self):
         return 'WHERE (%s)' % tuple(self.items)
@@ -5495,7 +5494,7 @@ class If_Then_Stmt(StmtBase):  # R803
             return
         if line[0] + line[-1] != '()':
             return
-        return tuple(Scalar_Logical_Expr(line[1:-1].strip()))
+        return (Scalar_Logical_Expr(line[1:-1].strip()),)
 
     def tostr(self):
         return 'IF (%s) THEN' % self.items
@@ -5558,8 +5557,8 @@ class Else_Stmt(StmtBase):  # R805
             return
         line = string[4:].lstrip()
         if line:
-            return tuple(If_Construct_Name(line))
-        return tuple(None)
+            return (If_Construct_Name(line),)
+        return (None,)
 
     def tostr(self):
         if self.items[0] is None:
@@ -5679,7 +5678,7 @@ class Select_Case_Stmt(StmtBase, CALLBase):  # R809
         if not line or line[0]+line[-1] != '()':
             return
         line = line[1:-1].strip()
-        return tuple(Case_Expr(line))
+        return (Case_Expr(line),)
 
     def tostr(self):
         return 'SELECT CASE (%s)' % (self.items[0])
@@ -5755,10 +5754,10 @@ class Case_Selector(Base):  # R813
     @staticmethod
     def match(string):
         if len(string) == 7 and string.upper() == 'DEFAULT':
-            return tuple(None)
+            return (None,)
         if not (string.startswith('(') and string.endswith(')')):
             return
-        return tuple(Case_Value_Range_List(string[1:-1].strip()))
+        return (Case_Value_Range_List(string[1:-1].strip()),)
 
     def tostr(self):
         if self.items[0] is None:
@@ -6412,7 +6411,7 @@ class Outer_Shared_Do_Construct(BlockBase):  # R839
             if obj is None:  # todo: restore reader
                 return
             content.append(obj)
-        return tuple(content)
+        return (content,)
     match = staticmethod(match)
 
 
@@ -6440,7 +6439,7 @@ class Inner_Shared_Do_Construct(BlockBase):  # R841
             if obj is None:  # todo: restore reader
                 return
             content.append(obj)
-        return tuple(content)
+        return (content,)
     match = staticmethod(match)
 
 
@@ -7840,7 +7839,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
             if strip_string[num_chars:].strip():
                 # The extra is not just white space
                 return None
-        return tuple(strip_string[len(match_str):num_chars])
+        return (strip_string[len(match_str):num_chars],)
 
     def tostr(self):
         '''
@@ -8989,7 +8988,7 @@ class Block_Data_Stmt(StmtBase):  # R1117
         line = line[4:].lstrip()
         if not line:
             return tuple(None)
-        return tuple(Block_Data_Name(line))
+        return (Block_Data_Name(line),)
 
     def tostr(self):
         if self.items[0] is None:
@@ -9062,12 +9061,12 @@ items : ({Generic_Spec, 'ABSTRACT'},)
         if string[:9].upper() == 'INTERFACE':
             line = string[9:].strip()
             if not line:
-                return tuple(None)
-            return tuple(Generic_Spec(line))
+                return (None,)
+            return (Generic_Spec(line),)
         if string[:8].upper() == 'ABSTRACT':
             line = string[8:].strip()
             if line.upper() == 'INTERFACE':
-                return tuple('ABSTRACT')
+                return ('ABSTRACT',)
 
     def tostr(self):
         if self.items[0] == 'ABSTRACT':
@@ -9164,7 +9163,7 @@ items : (Procedure_Name_List, )
         if line[:9].upper() != 'PROCEDURE':
             return
         line = line[9:].lstrip()
-        return tuple(Procedure_Name_List(line))
+        return (Procedure_Name_List(line),)
 
     def tostr(self):
         return 'MODULE PROCEDURE %s' % (self.items[0])
@@ -9226,7 +9225,7 @@ items : (str, )
                     return
                 line = line[1:-1].strip().upper()
                 if line in ['FORMATTED', 'UNFORMATTED']:
-                    return tuple('%s(%s)' % (rw, line))
+                    return ('%s(%s)' % (rw, line),)
 
     def tostr(self):
         return '%s' % (self.items[0])
@@ -9831,7 +9830,7 @@ class Alt_Return_Spec(Base):  # R1222
         line = string[1:].lstrip()
         if not line:
             return
-        return tuple(Label(line))
+        return (Label(line),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -10006,7 +10005,7 @@ class Prefix(SequenceBase):
             return None
         result_list = start_match_list + decl_spec_list + end_match_list
         if result_list:
-            return " ", tuple(result_list)
+            return " ", (result_list,)
         # A prefix must contain at least one prefix-spec.
         return None
 
@@ -10284,8 +10283,8 @@ class Return_Stmt(StmtBase):  # R1236
         if start != 'RETURN':
             return
         if len(string) == 6:
-            return tuple(None)
-        return tuple(Scalar_Int_Expr(string[6:].lstrip()))
+            return (None,)
+        return (Scalar_Int_Expr(string[6:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):
