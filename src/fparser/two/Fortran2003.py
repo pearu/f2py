@@ -3672,7 +3672,7 @@ items : ({'NONE', Implicit_Spec_List},)
         line = string[8:].lstrip()
         if len(line) == 4 and line.upper() == 'NONE':
             return ('NONE',)
-        return tuple(Implicit_Spec_List(line))
+        return (Implicit_Spec_List(line),)
         for w, cls in [(pattern.abs_implicit_none, None),
                        ('IMPLICIT', Implicit_Spec_List)]:
             try:
@@ -6488,7 +6488,7 @@ class Goto_Stmt(StmtBase):  # R845
         line = string[2:].lstrip()
         if line[:2].upper() != 'TO':
             return
-        return tuple(Label(line[2:].lstrip()))
+        return (Label(line[2:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -8987,7 +8987,7 @@ class Block_Data_Stmt(StmtBase):  # R1117
             return
         line = line[4:].lstrip()
         if not line:
-            return tuple(None)
+            return (None,)
         return (Block_Data_Name(line),)
 
     def tostr(self):
