@@ -10005,7 +10005,7 @@ class Prefix(SequenceBase):
             return None
         result_list = start_match_list + decl_spec_list + end_match_list
         if result_list:
-            return " ", (result_list,)
+            return " ", tuple(result_list)
         # A prefix must contain at least one prefix-spec.
         return None
 
