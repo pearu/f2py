@@ -14,6 +14,7 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+13/02/2020 PR #240. Improves code conformance to pylint and pycodestyle.
 
 06/02/2020 PR #241. Fixes a bug in the number of arguments specified for
            the IBITS intrinsic.
