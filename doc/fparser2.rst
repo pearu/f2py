@@ -190,7 +190,7 @@ an array section or a substring::
 
 The Fortran specifications deal with such ambiguities by specifying
 constraints. In this case, constraint `C608` in the Fortran2003
-specification states that this text can only a substring if the
+specification states that this text can only be a substring if the
 variable `a` is of type `character`.
 
 At the moment, fparser2 attempts to match rules but does very little
@@ -202,15 +202,15 @@ not be what would be expected. This problem is therefore passed on to
 any tool that makes use of the parse tree.
 
 For example, the text `a(1:2)` would always match an array section
-(Fortran2003 rule R617) and never as a substring (Fortran2003 rule
-R609) even when variable `a` is declared as type `character`. The
+(Fortran2003 rule R617) and never a substring (Fortran2003 rule
+R609), even when variable `a` is declared as type `character`. The
 reason for this is that Fortran2003 rule R603 specifies the matching
 of array section before the matching of substring which is how it is
 implemented in fparser2.
 
 In many cases any ambiguity in rule matching can and will be removed
 by adding constraint checking to fparser2 and the first step in
-supporting this is the subject is issue #201.
+supporting this is the subject of issue #201.
 
 However, in some situations it is not possible to disambiguate rules
 via constraints by simply parsing a valid Fortran file. As an
@@ -222,7 +222,7 @@ finding its declaration in another module.
 
 Fortran compilers deal with this problem by requiring code associated
 with use statements to have already been compiled creating `mod` files
-created which contain the required information. It has not yet been
+which contain the required information. It has not yet been
 decided how to deal with this problem in fparser2, but it is likely
 that some on-demand parsing of other files will be used to determine
 appropriate types.
@@ -242,10 +242,10 @@ Array or function
 +++++++++++++++++
 
 A function will always be matched as an array element unless that
-function is an intrinsic. An array access with the same name as an intrinsic
-function will be matched as an intrinsic function but will intrinsic
-but will raise an exception if the number of arguments of the array
-does not match the number of arguments expected by the intrinsic.
+function is an intrinsic. An array access with the same name as an
+intrinsic function will be matched as an intrinsic function but will
+raise an exception if the number of dimensions of the array does not
+match the number of arguments expected by the intrinsic.
 
 Statement function or array assignment
 ++++++++++++++++++++++++++++++++++++++
