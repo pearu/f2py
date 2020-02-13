@@ -183,68 +183,88 @@ Matching Multiple Rules
 -----------------------
 
 There are a number of situations where more than one Fortran rule
-could match some text. For example, the following text could be an
-array section or a substring::
+could match some input text. For example, the following text could be
+an array section or a substring::
 
   a(1:2)
 
-The Fortran specification deals with such ambiguities by specifying
-constraints. In this case, constraint `C608` specifies that this text
-can only a substring if the variable `a` is of type `character`.
+The Fortran specifications deal with such ambiguities by specifying
+constraints. In this case, constraint `C608` in the Fortran2003
+specification states that this text can only a substring if the
+variable `a` is of type `character`.
 
-At the moment fparser2 attempts to match rules and does very little
-constraint checking. fparser2 is implemented such that when there is a
+At the moment, fparser2 attempts to match rules but does very little
+constraint checking and is implemented such that when there is a
 choice of rules, the first matching rule in the associated internal
-rule-list is returned. This approach is OK for parsing and de-parsing,
-however it does means that the parse tree might not be what would be
-expected. In the above example, something that should be a substring
-(Fortran2003 rule R609) would match as an array section (Fortran2003
-rule R617). This problem is therefore passed to any tool that makes
-use of the parse tree.
+rule-list is returned. This approach is fine for parsing and
+de-parsing code, but it does means that the resultant parse tree might
+not be what would be expected. This problem is therefore passed on to
+any tool that makes use of the parse tree.
 
-In many cases these ambiguities can and will be removed by adding in
-constraint checking. However, in some situations it is not possible to
-check by simply using the input text from a valid Fortran file. If we
-again take the example of `C608` where we want to check whether a
-variable is of type `character` or not, it may be that this variable
-is brought into scope via a `use` statement. Fortran compilers require
-such information to be available in module files but the parser does
-not. It has not yet been decided how to deal with this situation.
+For example, the text `a(1:2)` would always match an array section
+(Fortran2003 rule R617) and never as a substring (Fortran2003 rule
+R609) even when variable `a` is declared as type `character`. The
+reason for this is that Fortran2003 rule R603 specifies the matching
+of array section before the matching of substring which is how it is
+implemented in fparser2.
 
-Known examples where the wrong parsing rule is currently used are
-given below.
+In many cases any ambiguity in rule matching can and will be removed
+by adding constraint checking to fparser2 and the first step in
+supporting this is the subject is issue #201.
+
+However, in some situations it is not possible to disambiguate rules
+via constraints by simply parsing a valid Fortran file. As an
+illustration, if we again take the example of the text `a(1:2)` and
+constraint `C608` where we need to determine whether the variable `a`
+is of type `character`, it may be that this variable is brought into
+scope via a `use` statement and so its datatype is unknown without
+finding its declaration in another module.
+
+Fortran compilers deal with this problem by requiring code associated
+with use statements to have already been compiled creating `mod` files
+created which contain the required information. It has not yet been
+decided how to deal with this problem in fparser2, but it is likely
+that some on-demand parsing of other files will be used to determine
+appropriate types.
+
+Situations where fparser2 is known to choose the wrong parsing rule
+are given in the following sections.
 
 Array element, array section or substring
 +++++++++++++++++++++++++++++++++++++++++
 
-A substring always matches the array element rule. An array section matches the array element rule unless it also has a *****
+A substring will always be matched as an array element. An array
+section will also be matched as an array element unless the array
+section contains an additional substring range (see Fortran 2003 rule
+R617).
 
 Array or function
 +++++++++++++++++
 
-Returns an array unless the function is an intrinsic. If it is an
-array with the same name as an intrinsic then it will be return an
-intrinsic but will fail with a syntax error if the number of arguments
-do not match the number expected by the intrinsic.
+A function will always be matched as an array element unless that
+function is an intrinsic. An array access with the same name as an intrinsic
+function will be matched as an intrinsic function but will intrinsic
+but will raise an exception if the number of arguments of the array
+does not match the number of arguments expected by the intrinsic.
 
-Statement Function or array assignment
+Statement function or array assignment
 ++++++++++++++++++++++++++++++++++++++
 
 Fparser2 is currently not able to distinguish between statement
 functions and array assignments when one or more array assignment
 statements are the first statements after a declaration section. This
-limitation leads to these particular array assignments being
+limitation would lead to these particular array assignments being
 incorrectly parsed as statement functions.
 
-To avoid this incorrect behaviour, support for statement functions has
+To avoid this behaviour, support for statement functions has
 been temporarily removed from fparser2. However, with this change,
-statement functions will be incorrectly parsed as array assignments
+statement functions will now be incorrectly parsed as array assignments
 when one or more statement function statements are the last statements
 in a declaration section.
 
 Whilst any incorrect behaviour should be avoided, the behaviour of
 this temporary change is considered preferable to the former case, as
-array assigments are more common than statement functions.
+array assignments are more common than statement functions.
 
 Extensions
 ----------
