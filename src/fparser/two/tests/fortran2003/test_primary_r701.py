@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Science and Technology Facilities Council
+# Copyright (c) 2019-2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -132,7 +132,7 @@ def test_designator(f2003_create):
     '''
     assert_subclass_parse(
         'array(1:5)', f2003.Designator,
-        actual_type=f2003.Array_Section,
+        actual_type=f2003.Part_Ref,
         expected_str='array(1 : 5)')
 
 
