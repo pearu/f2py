@@ -14,6 +14,9 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+14/02/2020 PR #246 for #245. Fixes some deprecation warnings about '\'
+           characters in strings.
+
 13/02/2020 PR #238 for #213. Re-orders the rules that are matched for
            Designators so that e.g. a(:) matches as a section-subscript-list
            rather than a substring-range.
