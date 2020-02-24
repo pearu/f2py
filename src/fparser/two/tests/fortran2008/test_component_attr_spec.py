@@ -43,8 +43,6 @@
 '''
 
 import pytest
-from fparser.two.tests.test_fortran2003 import _repr_utf
-from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Access_Spec, Dimension_Component_Attr_Spec
 from fparser.two.Fortran2008 import Component_Attr_Spec, Codimension_Attr_Spec
 
@@ -55,7 +53,6 @@ def test_pointer_attr(f2008_create):
     obj = tcls('pointer')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'POINTER'
-    assert _repr_utf(obj) == "Component_Attr_Spec('POINTER')"
 
 
 def test_allocatable_attr(f2008_create):
