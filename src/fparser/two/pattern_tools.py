@@ -474,6 +474,13 @@ attr_spec = Pattern(
     flags=re.I)
 abs_attr_spec = abs(attr_spec)
 
+attr_spec_f08 = Pattern(
+    '<attr-spec>',
+    r'(ALLOCATABLE|ASYNCHRONOUS|CONTIGUOUS|EXTERNAL|INTENT|INTRINSIC|'
+    'OPTIONAL|PARAMETER|POINTER|PROTECTED|SAVE|TARGET|VALUE|VOLATILE)',
+    flags=re.I)
+abs_attr_spec_f08 = abs(attr_spec_f08)
+
 dimension = Pattern('<dimension>', r'DIMENSION', flags=re.I)
 abs_dimension = abs(dimension)
 

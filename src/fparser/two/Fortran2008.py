@@ -73,6 +73,11 @@
 # pylint: disable=eval-used
 # pylint: disable=exec-used
 # pylint: disable=unused-import
+from fparser.common.splitline import string_replace_map
+from fparser.two import pattern_tools as pattern
+
+from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
+    SeparatorBase
 from fparser.two.Fortran2003 import Program_Unit as Program_Unit_2003
 from fparser.two.Fortran2003 import EndStmtBase, BlockBase, SequenceBase, \
     Base, Specification_Part, Module_Subprogram_Part, Implicit_Part, \
@@ -94,6 +99,241 @@ class Program_Unit(Program_Unit_2003):  # R202
     # therefore extend the Fortran2003 specification
     subclass_names = Program_Unit_2003.subclass_names[:]
     subclass_names.append("Submodule")
+
+
+class Component_Attr_Spec(STRINGBase):  # R437
+    """
+:F08R:`437`
+    <component-attr-spec> = <access-spec>
+                            | ALLOCATABLE
+                            | CODIMENSION <lbracket> <coarray-spec> <rbracket>
+                            | CONTIGUOUS
+                            | DIMENSION ( <component-array-spec> )
+                            | POINTER
+
+    This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R441.
+    """
+    subclass_names = ['Access_Spec', 'Dimension_Component_Attr_Spec',
+                      'Codimension_Attr_Spec']
+    use_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for component attribute specifications.
+
+        :param str string: the string to match as an attribute.
+        :return: None if there is no match, otherwise an object with the \
+            matched attribute.
+        :rtype: None, Component_Attr_Spec, Codimension_Attr_Spec, \
+            Access_Spec, Dimension_Component_Attr_Spec
+        '''
+        return STRINGBase.match(
+            ['ALLOCATABLE', 'CONTIGUOUS', 'POINTER'], string)
+
+
+class Codimension_Attr_Spec(WORDClsBase):  # R502.d
+    """
+    <codimension-attr-spec> = CODIMENSION <lbracket> <coarray-spec> <rbracket>
+    """
+    subclass_names = []
+    use_names = ['Coarray_Bracket_Spec']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for the CODIMENSION attribute.
+
+        :param str string: the string to match as the attribute.
+        :return: None if there is no match, otherwise the matched object.
+        :rtype: None, Codimension_Attr_Spec
+        '''
+        return WORDClsBase.match(
+            'CODIMENSION', Coarray_Bracket_Spec, string, colons=False,
+            require_cls=True)
+
+
+class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
+    """
+    <coarray-bracket-spec> = <lbracket> <coarray-spec> <rbracket>
+    """
+    subclass_names = []
+    use_names = ['Coarray_Spec']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for the coarray specification
+        including the square brackets.
+
+        :param str string: the string to match as the specification.
+        :return: None if there is no match, otherwise the matched object.
+        :rtype: None, Coarray_Bracket_Spec
+        '''
+        return BracketBase.match('[]', Coarray_Spec, string)
+
+
+class Attr_Spec(STRINGBase):  # R502
+    """
+:F08R:`502`
+    <attr-spec> = <access-spec>
+                  | ALLOCATABLE
+                  | ASYNCHRONOUS
+                  | CODIMENSION <lbracket> <coarray-spec> <rbracket>
+                  | CONTIGUOUS
+                  | DIMENSION ( <array-spec> )
+                  | EXTERNAL
+                  | INTENT ( <intent-spec> )
+                  | INTRINSIC
+                  | <language-binding-spec>
+                  | OPTIONAL
+                  | PARAMETER
+                  | POINTER
+                  | PROTECTED
+                  | SAVE
+                  | TARGET
+                  | VALUE
+                  | VOLATILE
+    """
+    subclass_names = ['Access_Spec', 'Language_Binding_Spec',
+                      'Dimension_Attr_Spec', 'Intent_Attr_Spec',
+                      'Codimension_Attr_Spec']
+    use_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a types attributes.
+
+        :param str string: the string to match as attribute.
+        :return None if there is no match, otherwise the matched object.
+        :rtype: None, Attr_Spec, Access_Spec, Language_Binding_Spec, \
+            Dimension_Attr_Spec, Intent_Attr_Spec, Codimension_Attr_Spec
+        '''
+        return STRINGBase.match(pattern.abs_attr_spec_f08, string)
+
+
+class Coarray_Spec(Base):  # R509
+    """
+:F08R:`509`
+    <coarray-spec> = <deferred-coshape-spec-list>
+                      | <explicit-coshape-spec-list>
+    """
+    subclass_names = ['Explicit_Coshape_Spec',
+                      'Deferred_Coshape_Spec_List']
+
+
+class Deferred_Coshape_Spec(SeparatorBase):  # R510
+    """
+:F08R:`510`
+    <deferred-coshape-spec> = :
+    """
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for deferred coarray shape specification.
+
+        :param str string: the string to match as deferred shape.
+        :return None if there is no match, otherwise the matched object.
+        :rtype: None, Deferred_Coshape_Spec
+        '''
+        if string == ':':
+            return None, None
+        return
+
+
+class Explicit_Coshape_Spec(SeparatorBase):  # R511
+    """
+:F08R:`511`
+    <explicit-coshape-spec> = [ <coshape-spec-list> , ]
+        [ <lower-cobound> : ] *
+    """
+    subclass_names = []
+    use_names = ['Coshape_Spec_List', 'Lower_Cobound']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for explicit coarray shape specification.
+
+        :param str string: the string to match as deferred shape.
+        :return None if there is no match, otherwise the matched object.
+        :rtype: None, Explicit_Coshape_Spec, Coshape_Spec_List
+        '''
+        if not string.endswith('*'):
+            return
+        line = string[:-1].rstrip()
+        if not line:
+            return None, None
+        if line.endswith(':'):
+            line, repmap = string_replace_map(line[:-1].rstrip())
+            i = line.rfind(',')
+            if i == -1:
+                return None, Lower_Cobound(repmap(line))
+            return Coshape_Spec_List(
+                repmap(line[:i].rstrip())), \
+                Lower_Cobound(repmap(line[i+1:].lstrip()))
+        if not line.endswith(','):
+            return
+        line = line[:-1].rstrip()
+        return Coshape_Spec_List(line), None
+
+    def tostr(self):
+        '''Converts the explicit coarray shape specification to string.'''
+        s = ''
+        if self.items[0] is not None:
+            s += str(self.items[0]) + ', '
+        if self.items[1] is not None:
+            s += str(self.items[1]) + ' : '
+        s += '*'
+        return s
+
+
+class Coshape_Spec(SeparatorBase):  # R511.a
+    """
+    <coshape-spec> = [ <lower-cobound> : ]  <upper-cobound>
+    """
+    subclass_names = []
+    use_names = ['Lower_Cobound', 'Upper_Cobound']
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a coarray shape.
+
+        :param str string: the string to match as shape.
+        :return None if there is no match, otherwise a tuple with lower \
+            bound, if given or None, and upper bound.
+        :rtype None, (None, Upper_Cobound), (Lower_Cobound, Upper_Cobound)
+        '''
+        line, repmap = string_replace_map(string)
+        if ':' not in line:
+            return None, Upper_Cobound(string)
+        lower, upper = line.split(':', 1)
+        lower = lower.rstrip()
+        upper = upper.lstrip()
+        if not upper:
+            return
+        if not lower:
+            return
+        return Lower_Cobound(repmap(lower)), Upper_Cobound(repmap(upper))
+
+    def tostr(self):
+        '''Converts the Shape specification to string.'''
+        if self.items[0] is None:
+            return str(self.items[1])
+        return SeparatorBase.tostr(self)
+
+
+class Lower_Cobound(Base):  # R512
+    """
+:F08R:`512`
+    <lower-cobound> = <specification-expr>
+    """
+    subclass_names = ['Specification_Expr']
+
+
+class Upper_Cobound(Base):  # R513
+    """
+:F08R:`513`
+    <upper-cobound> = <specification-expr>
+    """
+    subclass_names = ['Specification_Expr']
 
 
 class Specification_Part_C1112(Specification_Part):  # C1112
