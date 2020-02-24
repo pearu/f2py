@@ -55,7 +55,8 @@
 '''
 
 import pytest
-from fparser.two.Fortran2008 import Attr_Spec, Codimension_Attr_Spec
+from fparser.two.Fortran2008 import (
+    Attr_Spec, Codimension_Attr_Spec, Deferred_Coshape_Spec, Coshape_Spec)
 from fparser.two import Fortran2003
 
 
@@ -94,3 +95,21 @@ def test_codimension_attr_spec(f2008_create):
         obj = tcls(attr)
         assert isinstance(obj, tcls), repr(obj)
         assert str(obj) == ref
+
+
+def test_invalid_coshape_spec(f2008_create):
+    '''Tests invalid codimension attributes.'''
+    tcls = Codimension_Attr_Spec
+    attrs = ['codimension[1:5]', 'codimension[3:]', 'codimension[:5]',
+             'codimension[,,]', 'codimension[1, 5, 3 *]']
+    for attr in attrs:
+        with pytest.raises(Fortran2003.NoMatchError):
+            _ = tcls(attr)
+
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Deferred_Coshape_Spec('')
+
+    attrs = [':', 'a:', ':b']
+    for attr in attrs:
+        with pytest.raises(Fortran2003.NoMatchError):
+            _ = Coshape_Spec(attr)
