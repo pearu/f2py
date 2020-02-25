@@ -1047,6 +1047,28 @@ class FortranReaderBase(object):
 
     # Auxiliary methods for processing raw source lines:
 
+    def handle_cpp_directive(self, line):
+        """Determine whether the current line is likely to hold
+        C preprocessor directive.
+
+        If the first character of a line is the symbol ``#`` it is assumed
+        this is a preprocessor directive. This means any whitespace in
+        front of the directive are not recognized.
+
+        Preprocessor directives can be used only in Fortran codes.  They are
+        ignored when used inside PYF files.
+
+        The actual line content is not altered.
+
+        :param str line: the line to be tested for directives.
+        :return: A tuple containing the line and True/False depending on \
+            whether it holds a C preprocessor directive.
+        :rtype: (str, bool)
+        """
+        if not line or self._format.is_pyf:
+            return (line, False)
+        return (line, line[0] == '#')
+
     def handle_cf2py_start(self, line):
         """ Apply f2py directives to line.
 
@@ -1223,12 +1245,14 @@ class FortranReaderBase(object):
         - a list of continued fortran lines
         - a multiline - lines inside triple-qoutes, only when in ispyf mode
         - a comment line
+        - a preprocessor directive line
         """
         get_single_line = self.get_single_line
         line = get_single_line()
         if line is None:
             return
         startlineno = self.linecount
+        line, is_cpp_directive = self.handle_cpp_directive(line)
         line = self.handle_cf2py_start(line)
         is_f2py_directive = startlineno in self.f2py_comment_lines
         isstrict = self._format.is_strict
@@ -1332,9 +1356,14 @@ class FortranReaderBase(object):
 
         endlineno = self.linecount
         if self._format.is_fix and not is_f2py_directive:
-            # handle inline comment
-            newline, qc, had_comment = handle_inline_comment(line[6:],
-                                                             startlineno)
+            if is_cpp_directive:
+                # do not handle inline comments: '!' can have a meaning
+                # in CPP directives
+                newline, qc, had_comment = line, None, False
+            else:
+                # handle inline comment
+                newline, qc, had_comment = handle_inline_comment(line[6:],
+                                                                 startlineno)
             have_comment |= had_comment
             lines = [newline]
             next_line = self.get_next_line()
@@ -1402,9 +1431,14 @@ class FortranReaderBase(object):
         qc = None
         while line is not None:
             if start_index:  # fix format code
-                line, qc, had_comment \
-                    = handle_inline_comment(line[start_index:],
-                                            self.linecount, qc)
+                if is_cpp_directive:
+                    # do not handle inline comments: '!' can have a meaning
+                    # in CPP directives
+                    newline, qc, had_comment = line, None, False
+                else:
+                    line, qc, had_comment \
+                        = handle_inline_comment(line[start_index:],
+                                                self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
             else:
@@ -1429,9 +1463,13 @@ class FortranReaderBase(object):
                     label, line = extract_label(line)
                     name, line = extract_construct_name(line)
 
-                line, qc, had_comment = handle_inline_comment(line,
-                                                              self.linecount,
-                                                              qc)
+                if is_cpp_directive:
+                    # do not handle inline comments: '!' can have a meaning
+                    # in CPP directives
+                    newline, qc, had_comment = line, None, False
+                else:
+                    line, qc, had_comment \
+                        = handle_inline_comment(line, self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
 

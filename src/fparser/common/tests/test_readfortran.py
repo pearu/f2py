@@ -988,3 +988,30 @@ def test_extract_construct_name():
     name, text_result = extract_construct_name(text_input)
     assert name == "name"
     assert text_result == "stuff"
+
+
+def test_handle_cpp_directive():
+    '''Test the function that detects cpp directives in readfortran.py.'''
+    test_data = {
+            '#include "abc"': True, ' #include "abc"': False,
+            '#define ABC 1': True, '#ifdef ABC': True,
+            '#if !defined(ABC)': True, 'abc #define': False,
+            '"#"': False, '! #': False}
+    for input_text, ref in test_data.items():
+        reader = FortranStringReader(input_text)
+        output_text, result = reader.handle_cpp_directive(input_text)
+        assert result == ref
+        assert output_text is input_text
+
+
+def test_reader_cpp_directives():
+    '''Test that CPP directives are read correctly in readfortran.py.'''
+    input_text = [
+        'program test', '#define ABC 123', "character :: c = '#'",
+        '#ifdef ABC', '! Some comment that should be ignored', 'integer :: a',
+        '#endif', '#if !defined(ABC)', 'integer :: b', '#endif',
+        'end program test']
+    ref_text = '\n'.join(input_text[:4] + input_text[5:]).strip()
+    reader = FortranStringReader('\n'.join(input_text))
+    lines = '\n'.join(item.line for item in reader)
+    assert lines == ref_text
