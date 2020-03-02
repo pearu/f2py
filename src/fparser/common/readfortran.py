@@ -515,7 +515,18 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
+class CppDirective(Line):
+    '''Holds a preprocessor directive source line.
+
+    Attributes are the same as for :py:class:`Line`.
+    '''
+
+    def __init__(self, line, linenospan, reader):
+        super(CppDirective, self).__init__(
+            line, linenospan, None, None, reader)
+
 ##############################################################################
+
 
 class FortranReaderBase(object):
     """
@@ -955,6 +966,11 @@ class FortranReaderBase(object):
         """
         return Comment(comment, (startlineno, endlineno), self)
 
+    def cpp_directive_item(self, line, startlineno, endlineno,):
+        """ Construct CppDirective item.
+        """
+        return CppDirective(line, (startlineno, endlineno), self)
+
     # For handling messages:
 
     def format_message(self, kind, message, startlineno, endlineno,
@@ -1067,7 +1083,7 @@ class FortranReaderBase(object):
         """
         if not line or self._format.is_pyf:
             return (line, False)
-        return (line, line[0] == '#')
+        return (line, line.lstrip().startswith('#'))
 
     def handle_cf2py_start(self, line):
         """ Apply f2py directives to line.
@@ -1243,7 +1259,7 @@ class FortranReaderBase(object):
         A source item is ..
         - a fortran line
         - a list of continued fortran lines
-        - a multiline - lines inside triple-qoutes, only when in ispyf mode
+        - a multiline - lines inside triple-quotes, only when in ispyf mode
         - a comment line
         - a preprocessor directive line
         """
@@ -1259,6 +1275,17 @@ class FortranReaderBase(object):
         have_comment = False
         label = None
         name = None
+
+        if is_cpp_directive:
+            # CPP directive line
+            lines = []
+            while line.rstrip().endswith('\\'):
+                # Line continuation
+                lines.append(line.rstrip()[:-1])
+                line = get_single_line()
+            lines.append(line)
+            endlineno = self.linecount
+            return self.cpp_directive_item(''.join(lines), startlineno, endlineno)
 
         if self._format.is_pyf:
             # handle multilines
@@ -1356,14 +1383,9 @@ class FortranReaderBase(object):
 
         endlineno = self.linecount
         if self._format.is_fix and not is_f2py_directive:
-            if is_cpp_directive:
-                # do not handle inline comments: '!' can have a meaning
-                # in CPP directives
-                newline, qc, had_comment = line, None, False
-            else:
-                # handle inline comment
-                newline, qc, had_comment = handle_inline_comment(line[6:],
-                                                                 startlineno)
+            # handle inline comment
+            newline, qc, had_comment = handle_inline_comment(line[6:],
+                                                             startlineno)
             have_comment |= had_comment
             lines = [newline]
             next_line = self.get_next_line()
@@ -1431,14 +1453,9 @@ class FortranReaderBase(object):
         qc = None
         while line is not None:
             if start_index:  # fix format code
-                if is_cpp_directive:
-                    # do not handle inline comments: '!' can have a meaning
-                    # in CPP directives
-                    newline, qc, had_comment = line, None, False
-                else:
-                    line, qc, had_comment \
-                        = handle_inline_comment(line[start_index:],
-                                                self.linecount, qc)
+                line, qc, had_comment \
+                    = handle_inline_comment(line[start_index:],
+                                            self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
             else:
@@ -1463,13 +1480,8 @@ class FortranReaderBase(object):
                     label, line = extract_label(line)
                     name, line = extract_construct_name(line)
 
-                if is_cpp_directive:
-                    # do not handle inline comments: '!' can have a meaning
-                    # in CPP directives
-                    newline, qc, had_comment = line, None, False
-                else:
-                    line, qc, had_comment \
-                        = handle_inline_comment(line, self.linecount, qc)
+                line, qc, had_comment \
+                    = handle_inline_comment(line, self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
 

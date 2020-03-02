@@ -51,7 +51,7 @@ import pytest
 
 from fparser.common.readfortran import FortranFileReader, \
     FortranStringReader, FortranReaderBase, Line, extract_label, \
-    extract_construct_name
+    extract_construct_name, CppDirective
 from fparser.common.sourceinfo import FortranFormat
 
 
@@ -992,7 +992,8 @@ def test_extract_construct_name():
 
 @pytest.mark.parametrize('input_text, ref', [
     ('#include "abc"', True),
-    (' #include "abc"', False),
+    (' #include "abc"', True),
+    (' #  include "abc"', True),
     ('#define ABC 1', True),
     ('#ifdef ABC', True),
     ('#if !defined(ABC)', True),
@@ -1016,5 +1017,27 @@ def test_reader_cpp_directives():
         'end program test']
     ref_text = '\n'.join(input_text[:4] + input_text[5:]).strip()
     reader = FortranStringReader('\n'.join(input_text))
-    lines = '\n'.join(item.line for item in reader)
-    assert lines == ref_text
+    lines = [item for item in reader]
+
+    pp_lines = [1, 3, 5, 6, 8]
+    for i, line in enumerate(lines):
+        if i in pp_lines:
+            assert isinstance(line, CppDirective)
+        else:
+            assert isinstance(line, Line)
+
+    assert '\n'.join(item.line for item in lines) == ref_text
+
+
+def test_multiline_cpp_directives():
+    '''Test that multiline CPP directives are read correctly.'''
+    input_text = [
+        'program test', '#define ABC \\ ', '  123 ',
+        'integer a', 'end program test']
+    ref_text = 'program test\n#define ABC   123\ninteger a\nend program test'
+    reader = FortranStringReader('\n'.join(input_text))
+    lines = [item for item in reader]
+    assert len(lines) == 4
+    assert isinstance(lines[1], CppDirective)
+    assert lines[1].span == (2, 3)
+    assert '\n'.join(item.line for item in lines) == ref_text
