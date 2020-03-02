@@ -440,7 +440,7 @@ class Cpp_Macro_Identifier_List(Base):
     '''
 
     _regex = re.compile(r'\((\s*[A-Za-z_]\w*'
-                        r'(\s*,\s*([A-Za-z_]|\.{3}))*|\.{3})\s*\)')
+                        r'(?:\s*,\s*[A-Za-z_])*(?:\s*,\s*\.{3})?|\.{3})\s*\)')
 
     @staticmethod
     def match(string):

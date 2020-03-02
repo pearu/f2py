@@ -47,8 +47,9 @@ keep the directives in the Fortran parse tree and output it again.
 import pytest
 from fparser.two.C99Preprocessor import (
     Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt,
-    Cpp_Include_Stmt, Cpp_Macro_Stmt, Cpp_Macro_Identifier, Cpp_Undef_Stmt,
-    Cpp_Line_Stmt, Cpp_Error_Stmt, Cpp_Warning_Stmt, Cpp_Null_Stmt)
+    Cpp_Include_Stmt, Cpp_Macro_Stmt, Cpp_Macro_Identifier,
+    Cpp_Macro_Identifier_List, Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
+    Cpp_Warning_Stmt, Cpp_Null_Stmt)
 from fparser.two.parser import ParserFactory
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
@@ -84,7 +85,7 @@ def test_incorrect_if_stmt(line):
     '''Test that incorrectly formed #if statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_If_Stmt(line)
-        assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -102,7 +103,7 @@ def test_incorrect_elif_stmt(line):
     '''Test that incorrectly formed #elif statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Elif_Stmt(line)
-        assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -120,7 +121,7 @@ def test_incorrect_else_stmt(line):
     '''Test that incorrectly formed #else statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Else_Stmt(line)
-        assert "Cpp_Else_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Else_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -139,7 +140,7 @@ def test_incorrect_endif_stmt(line):
     '''Test that incorrectly formed #endif statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Endif_Stmt(line)
-        assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 def test_parse_define_outside_subroutine():
@@ -347,7 +348,7 @@ def test_incorrect_include_stmt(line):
     '''Test that incorrectly formed #include statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Include_Stmt(line)
-        assert "Cpp_Include_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Include_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -390,7 +391,7 @@ def test_incorrect_macro_stmt(line):
     '''Test that incorrectly formed #define statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Macro_Stmt(line)
-        assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -400,6 +401,42 @@ def test_macro_identifier(name):
     '''Test that all allowed names can be parsed'''
     result = Cpp_Macro_Identifier(name)
     assert str(result) == name
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('name',
+                         ['12MACRO', '+MACRO1', '//MACRO_', 'MAC RO', ''])
+def test_invalid_macro_identifier(name):
+    '''Test that invalid names raise exceptions'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Macro_Identifier(name)
+    assert "Cpp_Macro_Identifier: '{0}'".format(name) in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line, ref', [
+    ('(a, b, ...)', '(a, b, ...)'),
+    ('(...)', '(...)'),
+    ('(a)', '(a)'),
+    ('(a, b)', '(a, b)')])
+#    ('(a,b , c)', '(a, b, c)'),
+#    ('(a,  b, c,...)', '(a, b, c, ...)'),
+#    ('(a )', '(a)')])
+def test_macro_identifier_list(line, ref):
+    '''Test that correct lists are parsed'''
+    result = Cpp_Macro_Identifier_List(line)
+    assert str(result) == ref
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line',
+                         ['(a, ..., b)', '(..., ...)', '(..)', '(....)'])
+def test_invalid_macro_identifier_list(line):
+    '''Test that invalid lists raise exceptions'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Macro_Identifier_List(line)
+    msg = "Cpp_Macro_Identifier_List: '{0}'".format(line)
+    assert msg in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -418,7 +455,7 @@ def test_incorrect_undef_stmt(line):
     '''Test that incorrectly formed #undef statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Undef_Stmt(line)
-        assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -436,7 +473,7 @@ def test_incorrect_line_stmt(line):
     '''Test that incorrectly formed #line statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Line_Stmt(line)
-        assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -465,7 +502,7 @@ def test_incorrect_error_stmt(line):
     '''Test that incorrectly formed #error statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Error_Stmt(line)
-        assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -493,7 +530,7 @@ def test_incorrect_warning_stmt(line):
     '''Test that incorrectly formed #warning statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Warning_Stmt(line)
-        assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -512,4 +549,4 @@ def test_incorrect_null_stmt(line):
     '''Test that anything that is not a single hash sign is not recognized'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Null_Stmt(line)
-        assert "Cpp_Null_Stmt: '{0}'".format(line) in str(excinfo.value)
+    assert "Cpp_Null_Stmt: '{0}'".format(line) in str(excinfo.value)
