@@ -990,18 +990,21 @@ def test_extract_construct_name():
     assert text_result == "stuff"
 
 
-def test_handle_cpp_directive():
+@pytest.mark.parametrize('input_text, ref', [
+    ('#include "abc"', True),
+    (' #include "abc"', False),
+    ('#define ABC 1', True),
+    ('#ifdef ABC', True),
+    ('#if !defined(ABC)', True),
+    ('abc #define', False),
+    ('"#"', False),
+    ('! #', False)])
+def test_handle_cpp_directive(input_text, ref):
     '''Test the function that detects cpp directives in readfortran.py.'''
-    test_data = {
-            '#include "abc"': True, ' #include "abc"': False,
-            '#define ABC 1': True, '#ifdef ABC': True,
-            '#if !defined(ABC)': True, 'abc #define': False,
-            '"#"': False, '! #': False}
-    for input_text, ref in test_data.items():
-        reader = FortranStringReader(input_text)
-        output_text, result = reader.handle_cpp_directive(input_text)
-        assert result == ref
-        assert output_text is input_text
+    reader = FortranStringReader(input_text)
+    output_text, result = reader.handle_cpp_directive(input_text)
+    assert result == ref
+    assert output_text is input_text
 
 
 def test_reader_cpp_directives():
