@@ -55,129 +55,90 @@ from fparser.api import get_reader
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_if_stmt():
+@pytest.mark.parametrize('line, ref', [
+    ('#if CONSTANT', '#if CONSTANT'),
+    ('  #  if    CONSTANT  ', '#if CONSTANT'),
+    ('#ifdef MACRO', '#ifdef MACRO'),
+    ('  #  ifdef  MACRO  ', '#ifdef MACRO'),
+    ('#ifndef _MACRO', '#ifndef _MACRO'),
+    ('  #  ifndef  _MACRO  ', '#ifndef _MACRO'),
+    ('#if defined(__MACRO__)', '#if defined(__MACRO__)'),
+    ('# if  defined(__MACRO__)    ', '#if defined(__MACRO__)'),
+    ('#if defined __MACRO__', '#if defined __MACRO__'),
+    ('# if  defined __MACRO__    ', '#if defined __MACRO__'),
+    ('#if !defined(__MACRO__)', '#if !defined(__MACRO__)'),
+    ('# if    !defined(__MACRO__)    ', '#if !defined(__MACRO__)'),
+    ('#if !defined __MACRO__', '#if !defined __MACRO__'),
+    ('# if  !defined __MACRO__    ', '#if !defined __MACRO__')
+    ])
+def test_if_stmt(line, ref):
     '''Test that various forms of #if, #ifdef, #ifndef are recognized'''
-    ref = '#if CONSTANT'
-    for line in [
-        '#if CONSTANT',
-        '  #  if    CONSTANT  ',
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#ifdef MACRO'
-    for line in [
-        '#ifdef MACRO',
-        '  #  ifdef  MACRO  '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#ifndef _MACRO'
-    for line in [
-        '#ifndef _MACRO',
-        '  #  ifndef  _MACRO  '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#if defined(__MACRO__)'
-    for line in [
-        '#if defined(__MACRO__)',
-        '# if  defined(__MACRO__)    '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#if defined __MACRO__'
-    for line in [
-        '#if defined __MACRO__',
-        '# if  defined __MACRO__    '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#if !defined(__MACRO__)'
-    for line in [
-        '#if !defined(__MACRO__)',
-        '# if    !defined(__MACRO__)    '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
-    ref = '#if !defined __MACRO__'
-    for line in [
-        '#if !defined __MACRO__',
-        '# if  !defined __MACRO__    '
-    ]:
-        result = Cpp_If_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_If_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_if_stmt():
+@pytest.mark.parametrize('line', [
+    None, '', ' ', '#ifdfe', '#if', '#ifdef', '#ifdef two macros'])
+def test_incorrect_if_stmt(line):
     '''Test that incorrectly formed #if statements raise exception'''
-    for line in [None, '', ' ', '#ifdfe', '#if', '#ifdef',
-                 '#ifdef two macros']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_If_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_If_Stmt(line)
         assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_elif_stmt():
+@pytest.mark.parametrize('line', ['#elif CONDITION', '  #  elif   CONDITION '])
+def test_elif_stmt(line):
     '''Test that #elif is correctly recognized'''
     ref = '#elif CONDITION'
-    for line in [
-        '#elif CONDITION',
-        '  #  elif   CONDITION  ',
-    ]:
-        result = Cpp_Elif_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Elif_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_elif_stmt():
+@pytest.mark.parametrize('line', [None, '', ' ', '#elfi', '#elif'])
+def test_incorrect_elif_stmt(line):
     '''Test that incorrectly formed #elif statements raise exception'''
-    for line in [None, '', ' ', '#elfi', '#elif']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Elif_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Elif_Stmt(line)
         assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_else_stmt():
+@pytest.mark.parametrize('line', ['#else', '  # else  '])
+def test_else_stmt(line):
     '''Test that #else is correctly recognized'''
     ref = '#else'
-    for line in [
-        '#else',
-        '  # else  ',
-    ]:
-        result = Cpp_Else_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Else_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_else_stmt():
+@pytest.mark.parametrize('line', [None, '', ' ', '#esle', '#elseA', '#Aelse'])
+def test_incorrect_else_stmt(line):
     '''Test that incorrectly formed #else statements raise exception'''
-    for line in [None, '', ' ', '#esle', '#elseA', '#Aelse']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Else_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Else_Stmt(line)
         assert "Cpp_Else_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_endif_stmt():
+@pytest.mark.parametrize('line', ['#endif', '  #  endif  '])
+def test_endif_stmt(line):
     '''Test that #endif is correctly recognized'''
     ref = '#endif'
-    for line in [
-        '#endif',
-        '  #  endif  ',
-    ]:
-        result = Cpp_Endif_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Endif_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_endif_stmt():
+@pytest.mark.parametrize('line',
+                         [None, '', ' ', '#ednif', '#endifA', '#Aendif'])
+def test_incorrect_endif_stmt(line):
     '''Test that incorrectly formed #endif statements raise exception'''
-    for line in [None, '', ' ', '#ednif', '#endifA', '#Aendif']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Endif_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Endif_Stmt(line)
         assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
@@ -357,200 +318,198 @@ END SUBROUTINE BAR
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_include_stmt():
+@pytest.mark.parametrize('line', ['#include "filename.inc"',
+                                  '   #   include  "filename.inc"  '])
+def test_include_stmt_quotes(line):
     '''Test that #include is recognized'''
     ref = '#include "filename.inc"'
-    code = ['#include "filename.inc"', '   #   include  "filename.inc"  ']
-    for line in code:
-        result = Cpp_Include_Stmt(line)
-        assert str(result) == ref
-    ref = '#include "filename.inc"'
-    code = ['#include <filename.inc>', '   #   include  <filename.inc>  ']
-    for line in code:
-        result = Cpp_Include_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Include_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_include_stmt():
+@pytest.mark.parametrize('line', ['#include <filename.inc>',
+                                  '   #   include  <filename.inc>  '])
+def test_include_stmt_bracket(line):
+    '''Test that #include is recognized'''
+    ref = '#include "filename.inc"'
+    result = Cpp_Include_Stmt(line)
+    assert str(result) == ref
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', [
+    None, '', '  ', '#includ', '#includ "x"', '#include', '#include ""',
+    "#include 'x'", '#include "x', '#include x"', '#include x',
+    '#include x"x"', '#include "x"x', 'x #include "x"', '#includex "x"',
+    "#include 'abc'", '#include " a.inc"'])
+def test_incorrect_include_stmt(line):
     '''Test that incorrectly formed #include statements raise exception'''
-    code = [None, '', '  ', '#includ', '#includ "x"', '#include',
-            '#include ""', "#include 'x'", '#include "x', '#include x"',
-            '#include x', '#include x"x"', '#include "x"x', 'x #include "x"',
-            '#includex "x"', "#include 'abc'", '#include " a.inc"']
-    for line in code:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Include_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Include_Stmt(line)
         assert "Cpp_Include_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_macro_stmt():
-    '''Test that #define is recognized'''
+@pytest.mark.parametrize('line, ref', [
     # definition with value
-    ref = '#define MACRO value'
-    for line in ['#define MACRO value',
-                 '  #  define   MACRO   value  ']:
-        result = Cpp_Macro_Stmt(line)
-        assert str(result) == ref
+    ('#define MACRO value', '#define MACRO value'),
+    ('  #  define   MACRO   value  ', '#define MACRO value'),
     # definition without value
-    ref = '#define _MACRO'
-    for line in ['#define _MACRO',
-                 '   #  define  _MACRO  ']:
-        result = Cpp_Macro_Stmt(line)
-        assert str(result) == ref
+    ('#define _MACRO', '#define _MACRO'),
+    ('   #  define  _MACRO  ', '#define _MACRO'),
     # more definitions with parameters and similar
-    code = ['#define MACRO(x) call func(x)',
-            '#define MACRO (x, y)',
-            '#define MACRO(x, y) (x) + (y)',
-            '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
-            '#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
-            '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
-            '#define hash_hash # ## #',
-            '#define TABSIZE 100',
-            '#define r(x,y) x ## y',
-            '#define MACRO(a, b, c) (a) * (b + c)',
-            '#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
-            '#define MACRO x']
-    for ref in code:
-        result = Cpp_Macro_Stmt(ref)
-        assert str(result) == ref
+    ('#define MACRO(x) call func(x)', '#define MACRO(x) call func(x)'),
+    ('#define MACRO (x, y)', '#define MACRO (x, y)'),
+    ('#define MACRO(x, y) (x) + (y)', '#define MACRO(x, y) (x) + (y)'),
+    ('#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
+     '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)'),
+    ('#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
+     '#define eprintf(...) fprintf (stderr, __VA_ARGS__)'),
+    ('#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
+     '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))'),
+    ('#define hash_hash # ## #', '#define hash_hash # ## #'),
+    ('#define TABSIZE 100', '#define TABSIZE 100'),
+    ('#define r(x,y) x ## y', '#define r(x,y) x ## y'),
+    ('#define MACRO(a, b, c) (a) * (b + c)',
+     '#define MACRO(a, b, c) (a) * (b + c)'),
+    ('#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
+     '#define MACRO( a,b ,   c) (a )*    (   b   + c  )'),
+    ('#define MACRO x', '#define MACRO x')])
+def test_macro_stmt(line, ref):
+    '''Test that #define is recognized'''
+    result = Cpp_Macro_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_macro_stmt():
+@pytest.mark.parametrize('line', [
+    None, '', ' ', '#def', '#defnie', '#definex',
+    '#define fail(...,test) test', '#define', '#define fail(...,...)'])
+def test_incorrect_macro_stmt(line):
     '''Test that incorrectly formed #define statements raise exception'''
-    for line in [None, '', ' ', '#def', '#defnie', '#definex',
-                 '#define fail(...,test) test', '#define']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Macro_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Macro_Stmt(line)
         assert "Cpp_Macro_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_macro_identifier():
+@pytest.mark.parametrize('name', [
+    'MACRO', 'MACRO1', 'MACRO_', 'MACRO_NAME', 'macro', '_', '_12'])
+def test_macro_identifier(name):
     '''Test that all allowed names can be parsed'''
-    for name in ['MACRO', 'MACRO1', 'MACRO_', 'MACRO_NAME', 'macro',
-                 '_', '_12']:
-        result = Cpp_Macro_Identifier(name)
-        assert str(result) == name
+    result = Cpp_Macro_Identifier(name)
+    assert str(result) == name
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_undef_stmt():
+@pytest.mark.parametrize('line', ['#undef _MACRO', '   #  undef  _MACRO  '])
+def test_undef_stmt(line):
     '''Test that #undef is recognized'''
     ref = '#undef _MACRO'
-    for line in [
-        '#undef _MACRO',
-        '   #  undef  _MACRO  ',
-    ]:
-        result = Cpp_Undef_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Undef_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_undef_stmt():
+@pytest.mark.parametrize('line', [
+    None, '', ' ', '#undef', '#unfed', '#undefx'])
+def test_incorrect_undef_stmt(line):
     '''Test that incorrectly formed #undef statements raise exception'''
-    for line in [None, '', ' ', '#undef', '#unfed', '#undefx']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Undef_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Undef_Stmt(line)
         assert "Cpp_Undef_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_line_statement():
+@pytest.mark.parametrize('line', ['#line CONFIG', '  #  line   CONFIG  '])
+def test_line_statement(line):
     '''Test that #line is recognized'''
     ref = '#line CONFIG'
-    for line in [
-        '#line CONFIG',
-        '  #  line   CONFIG  ',
-    ]:
-        result = Cpp_Line_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Line_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_line_stmt():
+@pytest.mark.parametrize('line', [None, '', ' ', '#line', '#linex', '#lien'])
+def test_incorrect_line_stmt(line):
     '''Test that incorrectly formed #line statements raise exception'''
-    for line in [None, '', ' ', '#line', '#linex', '#lien']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Line_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Line_Stmt(line)
         assert "Cpp_Line_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_error_statement():
+@pytest.mark.parametrize('line', ['#error MSG', '  #  error  MSG  '])
+def test_error_statement_with_msg(line):
     '''Test that #error is recognized'''
     # error with message
     ref = '#error MSG'
-    for line in [
-        '#error MSG',
-        '  #  error  MSG  ',
-    ]:
-        result = Cpp_Error_Stmt(line)
-        assert str(result) == ref
-    # error without message
-    ref = '#error'
-    for line in [
-        '#error',
-        '   #  error  ',
-    ]:
-        result = Cpp_Error_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Error_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_error_stmt():
+@pytest.mark.parametrize('line', ['#error', '  #   error'])
+def test_error_statement_without_msg(line):
+    '''Test that #error is recognized'''
+    # error without message
+    ref = '#error'
+    result = Cpp_Error_Stmt(line)
+    assert str(result) == ref
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', [None, '', ' ', '#erorr', '#errorx'])
+def test_incorrect_error_stmt(line):
     '''Test that incorrectly formed #error statements raise exception'''
-    for line in [None, '', ' ', '#erorr', '#errorx']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Error_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Error_Stmt(line)
         assert "Cpp_Error_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_warning_statement():
+@pytest.mark.parametrize('line', ['#warning MSG', '  #  warning  MSG  '])
+def test_warning_statement_with_msg(line):
     '''Test that #warning is recognized (not actually part of C99)'''
     # warning with message
     ref = '#warning MSG'
-    for line in [
-        '#warning MSG',
-        '  #  warning  MSG  ',
-    ]:
-        result = Cpp_Warning_Stmt(line)
-        assert str(result) == ref
-    # warning without message
-    ref = '#warning'
-    for line in [
-        '#warning',
-        '   #  warning  ',
-    ]:
-        result = Cpp_Warning_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Warning_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_warning_stmt():
+@pytest.mark.parametrize('line', ['#warning ', '  #  warning'])
+def test_warning_statement_without_msg(line):
+    # warning without message
+    ref = '#warning'
+    result = Cpp_Warning_Stmt(line)
+    assert str(result) == ref
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', [None, '', ' ', '#wrning', '#warningx'])
+def test_incorrect_warning_stmt(line):
     '''Test that incorrectly formed #warning statements raise exception'''
-    for line in [None, '', ' ', '#wrning', '#warningx']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Warning_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Warning_Stmt(line)
         assert "Cpp_Warning_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_null_stmt():
+@pytest.mark.parametrize('line', ['#', '   #  ', '#   ', '   #'])
+def test_null_stmt(line):
     '''Test that null directives are recognized'''
     ref = '#'
-    for line in ['#', '   #  ', '#   ', '   #']:
-        result = Cpp_Null_Stmt(line)
-        assert str(result) == ref
+    result = Cpp_Null_Stmt(line)
+    assert str(result) == ref
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_incorrect_null_stmt():
+@pytest.mark.parametrize('line',
+                         [None, '', ' ', '#a', '##', '###', '  # #', '# a'])
+def test_incorrect_null_stmt(line):
     '''Test that anything that is not a single hash sign is not recognized'''
-    for line in [None, '', ' ', '#a', '##', '###', '  # #', '# a']:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Cpp_Null_Stmt(line)
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Null_Stmt(line)
         assert "Cpp_Null_Stmt: '{0}'".format(line) in str(excinfo.value)
