@@ -49,10 +49,27 @@ from fparser.two.C99Preprocessor import (
     Cpp_If_Stmt, Cpp_Elif_Stmt, Cpp_Else_Stmt, Cpp_Endif_Stmt,
     Cpp_Include_Stmt, Cpp_Macro_Stmt, Cpp_Macro_Identifier,
     Cpp_Macro_Identifier_List, Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
-    Cpp_Warning_Stmt, Cpp_Null_Stmt)
+    Cpp_Warning_Stmt, Cpp_Null_Stmt, Cpp_Pp_Tokens)
 from fparser.two.parser import ParserFactory
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', ['ABC', 'A>5', '!defined(ABC)'])
+def test_pp_tokens(line):
+    '''Test that the generic Cpp_Pp_Tokens class parses correctly'''
+    result = Cpp_Pp_Tokens(line)
+    assert str(result) == line
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', [None, '', '    '])
+def test_invalid_pp_tokens(line):
+    '''Test that the invalid Cpp_Pp_Tokens raise exception'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = Cpp_Pp_Tokens(line)
+    assert "Cpp_Pp_Tokens: '{0}'".format(line) in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -341,7 +358,7 @@ def test_include_stmt_bracket(line):
     None, '', '  ', '#includ', '#includ "x"', '#include', '#include ""',
     "#include 'x'", '#include "x', '#include x"', '#include x',
     '#include x"x"', '#include "x"x', 'x #include "x"', '#includex "x"',
-    "#include 'abc'", '#include " a.inc"'])
+    "#include 'abc'", '#include " a.inc"', '#include "      "'])
 def test_incorrect_include_stmt(line):
     '''Test that incorrectly formed #include statements raise exception'''
     with pytest.raises(NoMatchError) as excinfo:
@@ -428,7 +445,7 @@ def test_macro_identifier_list(line, ref):
 
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line',
-                         ['(a, ..., b)', '(..., ...)', '(..)', '(....)'])
+                         [None, '(a, ..., b)', '(..., ...)', '(..)', '(....)'])
 def test_invalid_macro_identifier_list(line):
     '''Test that invalid lists raise exceptions'''
     with pytest.raises(NoMatchError) as excinfo:

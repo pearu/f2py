@@ -325,12 +325,7 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
         # Remove the quotes.
         file_name = rhs[1:-1]
         # Pass the potential filename to the relevant class.
-        name = Include_Filename(file_name)
-        if not name:
-            raise InternalError(
-                "C99Preprocessor.py:Cpp_Include_Stmt:match Include_Filename "
-                "should never return None or an empty name")
-        return (name,)
+        return (Include_Filename(file_name),)
 
     def tostr(self):
         '''
