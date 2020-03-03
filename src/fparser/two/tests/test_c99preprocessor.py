@@ -110,9 +110,8 @@ def test_incorrect_elif_stmt(line):
 @pytest.mark.parametrize('line', ['#else', '  # else  '])
 def test_else_stmt(line):
     '''Test that #else is correctly recognized'''
-    ref = '#else'
     result = Cpp_Else_Stmt(line)
-    assert str(result) == ref
+    assert str(result) == line
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -128,9 +127,8 @@ def test_incorrect_else_stmt(line):
 @pytest.mark.parametrize('line', ['#endif', '  #  endif  '])
 def test_endif_stmt(line):
     '''Test that #endif is correctly recognized'''
-    ref = '#endif'
     result = Cpp_Endif_Stmt(line)
-    assert str(result) == ref
+    assert str(result) == line
 
 
 @pytest.mark.usefixtures("f2003_create")
