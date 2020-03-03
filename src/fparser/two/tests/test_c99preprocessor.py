@@ -391,7 +391,8 @@ def test_incorrect_include_stmt(line):
      '#define MACRO(a, b, c) (a) * (b + c)'),
     ('#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
      '#define MACRO( a,b ,   c) (a )*    (   b   + c  )'),
-    ('#define MACRO x', '#define MACRO x')])
+    ('#define MACRO x', '#define MACRO x'),
+    ('#define MACRO(a, b, c)', '#define MACRO(a, b, c)')])
 def test_macro_stmt(line, ref):
     '''Test that #define is recognized'''
     result = Cpp_Macro_Stmt(line)
