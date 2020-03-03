@@ -518,9 +518,16 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
 class CppDirective(Line):
     '''Holds a preprocessor directive source line.
 
-    Attributes are the same as for :py:class:`Line`.
-    '''
+    :param str line: String containing the text of a single or \
+    multi-line preprocessor directive
+    :param linenospan: A 2-tuple containing the start and end line \
+    numbers of the directive from the input source.
+    :type linenospan: (int, int)
+    :param reader: The reader object being used to read the input \
+    source.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
 
+    '''
     def __init__(self, line, linenospan, reader):
         super(CppDirective, self).__init__(
             line, linenospan, None, None, reader)
@@ -966,8 +973,15 @@ class FortranReaderBase(object):
         """
         return Comment(comment, (startlineno, endlineno), self)
 
-    def cpp_directive_item(self, line, startlineno, endlineno,):
-        """ Construct CppDirective item.
+    def cpp_directive_item(self, line, startlineno, endlineno):
+        """ Construct :py:class:`CppDirective` item.
+
+        :param str line: String containing the text of a single or \
+        multi-line preprocessor directive
+        :param int startlineno: Start line number of the directive from \
+        the input source.
+        :param int endlineno: End line number of the directive from \
+        the input source.
         """
         return CppDirective(line, (startlineno, endlineno), self)
 
@@ -1285,7 +1299,8 @@ class FortranReaderBase(object):
                 line = get_single_line()
             lines.append(line)
             endlineno = self.linecount
-            return self.cpp_directive_item(''.join(lines), startlineno, endlineno)
+            return self.cpp_directive_item(''.join(lines), startlineno,
+                                           endlineno)
 
         if self._format.is_pyf:
             # handle multilines
