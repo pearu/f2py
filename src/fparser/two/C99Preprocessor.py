@@ -347,7 +347,8 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
     the bracket is considered part of the replacement-list.
     """
 
-    use_names = ['Cpp_Macro_Identifier', 'Cpp_Macro_Identifier_List']
+    use_names = ['Cpp_Macro_Identifier', 'Cpp_Macro_Identifier_List',
+                 'Cpp_Pp_Tokens']
 
     _regex = re.compile(r"#\s*define\b")
 
@@ -367,14 +368,14 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         encountered, the it is considered part of the replacement-list.
 
         :param str string: the string to match with as an if statement.
-        :returns: a tuple of size 1, 2, or 3 containing the macro identifier, \
-                  and optionally identifier list and replacement list or \
-                  `None` if there is no match.
-        :rtype: (`str`) or \
-          (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`)\
-          or (`str`, \
-           py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`, \
-           py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
+        :returns: a tuple of size 3 containing the macro identifier, \
+                  identifier list or None, and replacement list or None, \
+                  or `None` if there is no match.
+        :rtype: \
+          (py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`, \
+           py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List` \
+           or NoneType, \
+           py:class:`fparser.two.C99Preprocessor.Cpp_Pp_Tokens` or NoneType) \
           or `NoneType`
         '''
         if not string:
@@ -393,7 +394,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         # note no strip here because '#define MACRO(x)' and
         # '#define MACRO (x)' are functionally different
         if len(definition) == 0:
-            return (name,)
+            return (name, None, None)
         if definition[0] == '(':
             found = Cpp_Macro_Identifier_List._pattern.match(definition)
             if not found:
@@ -405,27 +406,25 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
             # which is nonetheless included explicitly to distinguish a
             # macro definition with arguments from one without but with
             # a definition
-            definition = definition[found.end():].strip()
-            return (name, parameter_list, definition)
-        # now that we know it doesn't have a parameter list, we can strip
-        definition = definition.strip()
-        if len(definition) > 0:
-            return (name, definition)
+            definition = definition[found.end():]
         else:
-            return (name,)
+            parameter_list = None
+        # now that definition only holds the replacement list, we can strip
+        definition = definition.strip()
+        if definition:
+            definition = Cpp_Pp_Tokens(definition)
+        else:
+            definition = None
+        return (name, parameter_list, definition)
 
     def tostr(self):
         '''
         :return: this macro-stmt as a string.
         :rtype: str
         '''
-        if len(self.items) > 2:
-            return ('#define {0}{1} {2}'.format(self.items[0], self.items[1],
-                                                self.items[2]))
-        elif len(self.items) > 1:
-            return ('#define {0} {1}'.format(self.items[0], self.items[1]))
-        else:
-            return ('#define {0}'.format(self.items[0]))
+        return ('#define {0}{1}{2}{3}'.format(
+            self.items[0], self.items[1] or '', ' ' if self.items[2] else '',
+            self.items[2] or ''))
 
 
 class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
