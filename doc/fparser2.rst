@@ -155,6 +155,10 @@ comments found in the code. Nodes representing in-line comments will
 be added immediately following the node representing the code in which
 they were encountered.
 
+Preprocessing directives are retained as `CppDirective` objects by the
+readers and are represented by matching nodes in the parse tree created
+by fparser2. See section `Preprocessing Directives`_ for more details.
+
 Note that empty input, or input that consists of purely white space
 and/or newlines, is not treated as invalid Fortran and an empty parse
 tree is returned. Whilst this is not strictly valid, most compilers
@@ -453,6 +457,65 @@ file was found but would fail if the include file was not found::
 
   program x
   include 'endprogram.inc'
+
+Preprocessing Directives
+------------------------
+
+Preprocessing directives are language constructs that specify how a
+source file should be processed upon compilation or translation.
+They are most commonly used to conditionally include or exclude parts
+of a source file, include other source files in place, or define
+macros for expansion. As part of the compilation process these
+directives are interpreted to produce a preprocessed variant of the
+source file before translating it to the target language (e.g.,
+assembly or machine code). Most compilers have a separate program
+("preprocessor") that is invoked by the compiler to carry out
+preprocessing.
+
+While directives are not specified in any Fortran standard itself,
+Fortran compilers often support preprocessing of Fortran source files
+nonetheless. Consequently, the extent and limitations of this support
+depends on the compiler toolchain used.
+
+fparser2 does not support preprocessing of source files but it allows
+to represent preprocessor directives as dedicated nodes in the parse
+tree.
+
+.. note:: With all preprocessor directives removed the source code
+          must reduce to valid Fortran. This is due to the fact that
+          fparser2 only keeps directives but does not interpret them
+          (thus essentially treats them like comments).
+
+The support for preprocessing directives in fparser2 comprises that
+defined by the `C99 standard`__. Left out are pragma directives as
+those are typically specified in the form of comments in Fortran.
+Preprocessing directives consist of the character `#` as the first
+character in a line (optionally after white space containing no
+new-line characters) followed by the actual directive and is ended
+by a new-line character. Line continuation is specified by a single
+backslash character `\\` at the end of the line.
+
+__ http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf#page=157
+
+The implementation of directives is in the C99Preprocessor.py `file`__
+with support for the following currently::
+
+  #if ...
+  #ifdef ...
+  #ifndef ...
+  #elif ...
+  #else
+  #endif
+  #include ...
+  #define ...
+  #undef ...
+  #line ...
+  #error
+  #warning
+  #
+
+__ https://github.com/stfc/fparser/blob/master/src/fparser/two/C99Preprocessor.py
+
 
 Walking the Parse Tree
 ----------------------

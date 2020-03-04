@@ -116,7 +116,7 @@ class Cpp_Pp_Tokens(Base):
 # directives are kept as single line nodes.
 
 
-class Cpp_If_Stmt(Base):
+class Cpp_If_Stmt(WORDClsBase):
     '''
     C99 6.10.1 Conditional inclusion
 
