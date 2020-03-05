@@ -518,13 +518,13 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
 class CppDirective(Line):
     '''Holds a preprocessor directive source line.
 
-    :param str line: String containing the text of a single or \
-    multi-line preprocessor directive
-    :param linenospan: A 2-tuple containing the start and end line \
-    numbers of the directive from the input source.
+    :param str line: string containing the text of a single or \
+                     multi-line preprocessor directive.
+    :param linenospan: a 2-tuple containing the start and end line \
+                       numbers of the directive from the input source.
     :type linenospan: (int, int)
     :param reader: The reader object being used to read the input \
-    source.
+                   source.
     :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
 
     '''
@@ -974,15 +974,17 @@ class FortranReaderBase(object):
         return Comment(comment, (startlineno, endlineno), self)
 
     def cpp_directive_item(self, line, startlineno, endlineno):
-        """ Construct :py:class:`CppDirective` item.
+        '''
+        Construct :py:class:`fparser.common.readfortran.CppDirective` item.
 
-        :param str line: String containing the text of a single or \
-        multi-line preprocessor directive
-        :param int startlineno: Start line number of the directive from \
-        the input source.
-        :param int endlineno: End line number of the directive from \
-        the input source.
-        """
+        :param str line: string containing the text of a single or \
+                         multi-line preprocessor directive.
+        :param int startlineno: start line number of the directive from \
+                                the input source.
+        :param int endlineno: end line number of the directive from \
+                              the input source.
+
+        '''
         return CppDirective(line, (startlineno, endlineno), self)
 
     # For handling messages:
@@ -1078,23 +1080,25 @@ class FortranReaderBase(object):
     # Auxiliary methods for processing raw source lines:
 
     def handle_cpp_directive(self, line):
-        """Determine whether the current line is likely to hold
+        '''
+        Determine whether the current line is likely to hold
         C preprocessor directive.
 
-        If the first character of a line is the symbol ``#`` it is assumed
-        this is a preprocessor directive. This means any whitespace in
-        front of the directive are not recognized.
+        If the first non whitespace character of a line is the symbol ``#``
+        it is assumed this is a preprocessor directive.
 
-        Preprocessor directives can be used only in Fortran codes.  They are
+        Preprocessor directives can be used only in Fortran codes. They are
         ignored when used inside PYF files.
 
         The actual line content is not altered.
 
         :param str line: the line to be tested for directives.
-        :return: A tuple containing the line and True/False depending on \
-            whether it holds a C preprocessor directive.
+
+        :return: a tuple containing the line and True/False depending on \
+                 whether it holds a C preprocessor directive.
         :rtype: (str, bool)
-        """
+
+        '''
         if not line or self._format.is_pyf:
             return (line, False)
         return (line, line.lstrip().startswith('#'))
@@ -1283,13 +1287,6 @@ class FortranReaderBase(object):
             return
         startlineno = self.linecount
         line, is_cpp_directive = self.handle_cpp_directive(line)
-        line = self.handle_cf2py_start(line)
-        is_f2py_directive = startlineno in self.f2py_comment_lines
-        isstrict = self._format.is_strict
-        have_comment = False
-        label = None
-        name = None
-
         if is_cpp_directive:
             # CPP directive line
             lines = []
@@ -1301,6 +1298,13 @@ class FortranReaderBase(object):
             endlineno = self.linecount
             return self.cpp_directive_item(''.join(lines), startlineno,
                                            endlineno)
+
+        line = self.handle_cf2py_start(line)
+        is_f2py_directive = startlineno in self.f2py_comment_lines
+        isstrict = self._format.is_strict
+        have_comment = False
+        label = None
+        name = None
 
         if self._format.is_pyf:
             # handle multilines
@@ -1495,8 +1499,8 @@ class FortranReaderBase(object):
                     label, line = extract_label(line)
                     name, line = extract_construct_name(line)
 
-                line, qc, had_comment \
-                    = handle_inline_comment(line, self.linecount, qc)
+                line, qc, had_comment = \
+                    handle_inline_comment(line, self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
 
