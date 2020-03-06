@@ -78,10 +78,12 @@ from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
     SeparatorBase
-from fparser.two.Fortran2003 import Program_Unit as Program_Unit_2003
-from fparser.two.Fortran2003 import EndStmtBase, BlockBase, SequenceBase, \
-    Base, Specification_Part, Module_Subprogram_Part, Implicit_Part, \
-    Implicit_Part_Stmt, Declaration_Construct, Use_Stmt, Import_Stmt
+from fparser.two.Fortran2003 import (
+        Program_Unit as Program_Unit_2003,
+        Component_Attr_Spec as Component_Attr_Spec_2003,
+        EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
+        Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
+        Declaration_Construct, Use_Stmt, Import_Stmt)
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -101,22 +103,21 @@ class Program_Unit(Program_Unit_2003):  # R202
     subclass_names.append("Submodule")
 
 
-class Component_Attr_Spec(STRINGBase):  # R437
-    """
-:F08R:`437`
-    <component-attr-spec> = <access-spec>
-                            | ALLOCATABLE
-                            | CODIMENSION <lbracket> <coarray-spec> <rbracket>
-                            | CONTIGUOUS
-                            | DIMENSION ( <component-array-spec> )
-                            | POINTER
+class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
+    '''
+    Fortran 2008 rule R437
+    component-attr-spec is access-spec
+                           or ALLOCATABLE
+                           or CODIMENSION <lbracket> <coarray-spec> <rbracket>
+                           or CONTIGUOUS
+                           or DIMENSION ( <component-array-spec> )
+                           or POINTER
 
     This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R441.
-    """
-    subclass_names = ['Access_Spec', 'Dimension_Component_Attr_Spec',
-                      'Codimension_Attr_Spec']
-    use_names = []
 
+    '''
+    subclass_names = Component_Attr_Spec_2003.subclass_names[:]
+    subclass_names.append('Codimension_Attr_Spec')
     @staticmethod
     def match(string):
         '''Implements the matching for component attribute specifications.
@@ -132,19 +133,24 @@ class Component_Attr_Spec(STRINGBase):  # R437
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
-    """
-    <codimension-attr-spec> = CODIMENSION <lbracket> <coarray-spec> <rbracket>
-    """
+    '''
+    codimension-attr-spec is CODIMENSION <lbracket> coarray-spec <rbracket>
+    '''
     subclass_names = []
     use_names = ['Coarray_Bracket_Spec']
 
     @staticmethod
     def match(string):
-        '''Implements the matching for the CODIMENSION attribute.
+        '''
+        Implements the matching for the CODIMENSION attribute.
 
         :param str string: the string to match as the attribute.
-        :return: None if there is no match, otherwise the matched object.
-        :rtype: None, Codimension_Attr_Spec
+
+        :return: `None` if there is no match, otherwise a 1-tuple \
+                 containing the matched object.
+        :rtype: `None` or \
+            (:py:class:`fparser.two.Fortran2008.Codimension_Attr_Spec`,)
+
         '''
         return WORDClsBase.match(
             'CODIMENSION', Coarray_Bracket_Spec, string, colons=False,
@@ -152,46 +158,52 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
 
 
 class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
-    """
-    <coarray-bracket-spec> = <lbracket> <coarray-spec> <rbracket>
-    """
+    '''
+    coarray-bracket-spec is <lbracket> coarray-spec <rbracket>
+    '''
     subclass_names = []
     use_names = ['Coarray_Spec']
 
     @staticmethod
     def match(string):
-        '''Implements the matching for the coarray specification
+        '''
+        Implements the matching for the coarray specification
         including the square brackets.
 
         :param str string: the string to match as the specification.
-        :return: None if there is no match, otherwise the matched object.
-        :rtype: None, Coarray_Bracket_Spec
+
+        :return: `None` if there is no match, otherwise a 1-tuple \
+                 containing the matched object.
+        :rtype: `None` or \
+            (:py:class:`fparser.two.Fortran2008.Coarray_Bracket_Spec`,)
+
         '''
         return BracketBase.match('[]', Coarray_Spec, string)
 
 
 class Attr_Spec(STRINGBase):  # R502
-    """
-:F08R:`502`
-    <attr-spec> = <access-spec>
-                  | ALLOCATABLE
-                  | ASYNCHRONOUS
-                  | CODIMENSION <lbracket> <coarray-spec> <rbracket>
-                  | CONTIGUOUS
-                  | DIMENSION ( <array-spec> )
-                  | EXTERNAL
-                  | INTENT ( <intent-spec> )
-                  | INTRINSIC
-                  | <language-binding-spec>
-                  | OPTIONAL
-                  | PARAMETER
-                  | POINTER
-                  | PROTECTED
-                  | SAVE
-                  | TARGET
-                  | VALUE
-                  | VOLATILE
-    """
+    '''
+    Fortran 2008 rule R502
+    attr-spec is access-spec
+                 or ALLOCATABLE
+                 or ASYNCHRONOUS
+                 or CODIMENSION <lbracket> coarray-spec <rbracket>
+                 or CONTIGUOUS
+                 or DIMENSION ( array-spec )
+                 or EXTERNAL
+                 or INTENT ( intent-spec )
+                 or INTRINSIC
+                 or language-binding-spec
+                 or OPTIONAL
+                 or PARAMETER
+                 or POINTER
+                 or PROTECTED
+                 or SAVE
+                 or TARGET
+                 or VALUE
+                 or VOLATILE
+
+    '''
     subclass_names = ['Access_Spec', 'Language_Binding_Spec',
                       'Dimension_Attr_Spec', 'Intent_Attr_Spec',
                       'Codimension_Attr_Spec']
@@ -199,62 +211,84 @@ class Attr_Spec(STRINGBase):  # R502
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a types attributes.
+        '''
+        Implements the matching for a types attributes.
 
         :param str string: the string to match as attribute.
-        :return None if there is no match, otherwise the matched object.
-        :rtype: None, Attr_Spec, Access_Spec, Language_Binding_Spec, \
-            Dimension_Attr_Spec, Intent_Attr_Spec, Codimension_Attr_Spec
+
+        :return: `None` if there is no match, otherwise a 1-tuple \
+                 containing the object corresponding to the matched \
+                 attribute.
+        :rtype: `None` or \
+            (:py:class:`fparser.two.Fortran2008.Attr_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2003.Access_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2003.Language_Binding_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2003.Dimension_Attr_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2003.Intent_Attr_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2008.Codimension_Attr_Spec`,)
+
         '''
         return STRINGBase.match(pattern.abs_attr_spec_f08, string)
 
 
 class Coarray_Spec(Base):  # R509
-    """
-:F08R:`509`
-    <coarray-spec> = <deferred-coshape-spec-list>
-                      | <explicit-coshape-spec-list>
-    """
+    '''
+    Fortran 2008 rule R509
+    coarray-spec is deferred-coshape-spec-list
+                    or explicit-coshape-spec-list
+
+    '''
     subclass_names = ['Explicit_Coshape_Spec',
                       'Deferred_Coshape_Spec_List']
 
 
 class Deferred_Coshape_Spec(SeparatorBase):  # R510
-    """
-:F08R:`510`
-    <deferred-coshape-spec> = :
-    """
+    '''
+    Fortran 2008 rule R510
+    deferred-coshape-spec is :
+
+    '''
     subclass_names = []
 
     @staticmethod
     def match(string):
-        '''Implements the matching for deferred coarray shape specification.
+        '''
+        Implements the matching for deferred coarray shape specification.
 
         :param str string: the string to match as deferred shape.
-        :return None if there is no match, otherwise the matched object.
-        :rtype: None, Deferred_Coshape_Spec
+
+        :return: `None` if there is no match, otherwise a 1-tuple \
+                 containing the matched object.
+        :rtype: `None` or \
+            (:py:class:`fparser.two.Fortran2008.Deferred_Coshape_Spec`,)
+
         '''
         if string == ':':
-            return None, None
-        return
+            return (None, None)
+        return None
 
 
 class Explicit_Coshape_Spec(SeparatorBase):  # R511
-    """
-:F08R:`511`
-    <explicit-coshape-spec> = [ <coshape-spec-list> , ]
-        [ <lower-cobound> : ] *
-    """
+    '''
+    Fortran 2008 rule R511
+    explicit-coshape-spec is [ coshape-spec-list , ] [ lower-cobound : ] *
+
+    '''
     subclass_names = []
     use_names = ['Coshape_Spec_List', 'Lower_Cobound']
 
     @staticmethod
     def match(string):
-        '''Implements the matching for explicit coarray shape specification.
+        '''
+        Implements the matching for explicit coarray shape specification.
 
         :param str string: the string to match as deferred shape.
-        :return None if there is no match, otherwise the matched object.
-        :rtype: None, Explicit_Coshape_Spec, Coshape_Spec_List
+
+        :return: `None` if there is no match, otherwise a 1-tuple \
+                 containing the matched object.
+        :rtype: `None` or \
+            (:py:class:`fparser.two.Fortran2008.Explicit_Coshape_Spec`,) or \
+            (:py:class:`fparser.two.Fortran2008.Coshape_Spec_List`,)
         '''
         if not string.endswith('*'):
             return
@@ -275,7 +309,13 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
         return Coshape_Spec_List(line), None
 
     def tostr(self):
-        '''Converts the explicit coarray shape specification to string.'''
+        '''
+        Converts the explicit coarray shape specification to string.
+
+        :return: the shape specification as string.
+        :rtype: str
+
+        '''
         s = ''
         if self.items[0] is not None:
             s += str(self.items[0]) + ', '
@@ -286,20 +326,27 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
 
 
 class Coshape_Spec(SeparatorBase):  # R511.a
-    """
-    <coshape-spec> = [ <lower-cobound> : ]  <upper-cobound>
-    """
+    '''
+    coshape-spec is [ lower-cobound : ] upper-cobound
+
+    '''
     subclass_names = []
     use_names = ['Lower_Cobound', 'Upper_Cobound']
 
     @staticmethod
     def match(string):
-        '''Implements the matching for a coarray shape.
+        '''
+        Implements the matching for a coarray shape.
 
         :param str string: the string to match as shape.
-        :return None if there is no match, otherwise a tuple with lower \
-            bound, if given or None, and upper bound.
-        :rtype None, (None, Upper_Cobound), (Lower_Cobound, Upper_Cobound)
+
+        :return: `None` if there is no match, otherwise a tuple with \
+                 lower bound if given or `None`, and upper bound.
+        :rtype: `None` or \
+            (`None`, :py:class:`fparser.two.Fortran2008.Upper_Cobound`,) or \
+            (:py:class:`fparser.two.Fortran2008.Lower_Cobound`, \
+             :py:class:`fparser.two.Fortran2008.Upper_Cobound`)
+
         '''
         line, repmap = string_replace_map(string)
         if ':' not in line:
@@ -314,25 +361,33 @@ class Coshape_Spec(SeparatorBase):  # R511.a
         return Lower_Cobound(repmap(lower)), Upper_Cobound(repmap(upper))
 
     def tostr(self):
-        '''Converts the Shape specification to string.'''
+        '''
+        Converts the Shape specification to string.
+
+        :return: the shape specification as string.
+        :rtype: str
+
+        '''
         if self.items[0] is None:
             return str(self.items[1])
         return SeparatorBase.tostr(self)
 
 
 class Lower_Cobound(Base):  # R512
-    """
-:F08R:`512`
-    <lower-cobound> = <specification-expr>
-    """
+    '''
+    Fortran 2008 rule R512
+    lower-cobound is specification-expr
+
+    '''
     subclass_names = ['Specification_Expr']
 
 
 class Upper_Cobound(Base):  # R513
-    """
-:F08R:`513`
-    <upper-cobound> = <specification-expr>
-    """
+    '''
+    Fortran 2008 rule R513
+    upper-cobound is specification-expr
+
+    '''
     subclass_names = ['Specification_Expr']
 
 
