@@ -515,7 +515,25 @@ class SyntaxErrorMultiLine(MultiLine, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
+class CppDirective(Line):
+    '''Holds a preprocessor directive source line.
+
+    :param str line: string containing the text of a single or \
+                     multi-line preprocessor directive.
+    :param linenospan: a 2-tuple containing the start and end line \
+                       numbers of the directive from the input source.
+    :type linenospan: (int, int)
+    :param reader: The reader object being used to read the input \
+                   source.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
+    '''
+    def __init__(self, line, linenospan, reader):
+        super(CppDirective, self).__init__(
+            line, linenospan, None, None, reader)
+
 ##############################################################################
+
 
 class FortranReaderBase(object):
     """
@@ -955,6 +973,20 @@ class FortranReaderBase(object):
         """
         return Comment(comment, (startlineno, endlineno), self)
 
+    def cpp_directive_item(self, line, startlineno, endlineno):
+        '''
+        Construct :py:class:`fparser.common.readfortran.CppDirective` item.
+
+        :param str line: string containing the text of a single or \
+                         multi-line preprocessor directive.
+        :param int startlineno: start line number of the directive from \
+                                the input source.
+        :param int endlineno: end line number of the directive from \
+                              the input source.
+
+        '''
+        return CppDirective(line, (startlineno, endlineno), self)
+
     # For handling messages:
 
     def format_message(self, kind, message, startlineno, endlineno,
@@ -1046,6 +1078,30 @@ class FortranReaderBase(object):
         return
 
     # Auxiliary methods for processing raw source lines:
+
+    def handle_cpp_directive(self, line):
+        '''
+        Determine whether the current line is likely to hold
+        C preprocessor directive.
+
+        If the first non whitespace character of a line is the symbol ``#``
+        it is assumed this is a preprocessor directive.
+
+        Preprocessor directives can be used only in Fortran codes. They are
+        ignored when used inside PYF files.
+
+        The actual line content is not altered.
+
+        :param str line: the line to be tested for directives.
+
+        :return: a tuple containing the line and True/False depending on \
+                 whether it holds a C preprocessor directive.
+        :rtype: (str, bool)
+
+        '''
+        if not line or self._format.is_pyf:
+            return (line, False)
+        return (line, line.lstrip().startswith('#'))
 
     def handle_cf2py_start(self, line):
         """ Apply f2py directives to line.
@@ -1221,14 +1277,28 @@ class FortranReaderBase(object):
         A source item is ..
         - a fortran line
         - a list of continued fortran lines
-        - a multiline - lines inside triple-qoutes, only when in ispyf mode
+        - a multiline - lines inside triple-quotes, only when in ispyf mode
         - a comment line
+        - a preprocessor directive line
         """
         get_single_line = self.get_single_line
         line = get_single_line()
         if line is None:
             return
         startlineno = self.linecount
+        line, is_cpp_directive = self.handle_cpp_directive(line)
+        if is_cpp_directive:
+            # CPP directive line
+            lines = []
+            while line.rstrip().endswith('\\'):
+                # Line continuation
+                lines.append(line.rstrip()[:-1])
+                line = get_single_line()
+            lines.append(line)
+            endlineno = self.linecount
+            return self.cpp_directive_item(''.join(lines), startlineno,
+                                           endlineno)
+
         line = self.handle_cf2py_start(line)
         is_f2py_directive = startlineno in self.f2py_comment_lines
         isstrict = self._format.is_strict
@@ -1429,9 +1499,8 @@ class FortranReaderBase(object):
                     label, line = extract_label(line)
                     name, line = extract_construct_name(line)
 
-                line, qc, had_comment = handle_inline_comment(line,
-                                                              self.linecount,
-                                                              qc)
+                line, qc, had_comment = \
+                    handle_inline_comment(line, self.linecount, qc)
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
 
