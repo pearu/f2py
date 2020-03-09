@@ -41,8 +41,9 @@
 import re
 import sys
 
+from fparser.common.readfortran import FortranReaderBase, CppDirective
 from fparser.two import pattern_tools as pattern
-from fparser.two.utils import (Base, StringBase, InternalError, WORDClsBase)
+from fparser.two.utils import (Base, StringBase, WORDClsBase)
 
 
 # The list of classes that implement preprocessor directives
@@ -63,9 +64,17 @@ def match_cpp_directive(reader):
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
                   or \
                   :py:class:`fparser.common.readfortran.FortranStringReader`
+
     :returns: The matched preprocessor directive object or `None`.
     :rtype: Any :py:class:`fparser.two.C99Preprocess.Cpp_*_Stmt` or `NoneType`
+
     '''
+    if isinstance(reader, FortranReaderBase):
+        item = reader.get_item()
+        is_cpp_directive = isinstance(item, CppDirective)
+        reader.put_item(item)
+        if not is_cpp_directive:
+            return None
     for cls in CPP_CLASS_NAMES:
         obj = getattr(sys.modules[__name__], cls)(reader)
         if obj:
@@ -96,8 +105,10 @@ class Cpp_Pp_Tokens(Base):
         being empty.
 
         :param str string: the string to be matched as pp-tokens.
+
         :return: a 1-tuple containing the matched string or None.
         :rtype: (str,) or NoneType
+
         '''
         if not string:
             return None
@@ -107,6 +118,10 @@ class Cpp_Pp_Tokens(Base):
         return (line,)
 
     def tostr(self):
+        '''
+        :return: this pp-tokens as a string.
+        :rtype: str
+        '''
         return self.items[0]
 
 
@@ -121,8 +136,8 @@ class Cpp_If_Stmt(WORDClsBase):
     C99 6.10.1 Conditional inclusion
 
     if-stmt is  # if constant-expression new-line
-                | ifdef identifier new-line
-                | ifndef identifier new-line
+                or ifdef identifier new-line
+                or ifndef identifier new-line
 
     '''
 
@@ -146,12 +161,14 @@ class Cpp_If_Stmt(WORDClsBase):
         to accept any non-empty string as rhs.
 
         :param str string: the string to match with as an if statement.
+
         :returns: a tuple of size 2 containing the statement's keyword \
                   and the right hand side, or `None` if there is no match.
         :rtype: \
           (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`)\
           or (`str`, py:class:`fparser.two.C99Preprocessor.Cpp_Pp_Tokens`) \
           or `NoneType`
+
         '''
         if not string:
             return None
@@ -167,7 +184,7 @@ class Cpp_If_Stmt(WORDClsBase):
         :return: this if-stmt as a string.
         :rtype: str
         '''
-        return ('{0} {1}'.format(*self.items))
+        return '{0} {1}'.format(*self.items)
 
 
 class Cpp_Elif_Stmt(WORDClsBase):
@@ -188,11 +205,13 @@ class Cpp_Elif_Stmt(WORDClsBase):
         '''Implements the matching for an elif preprocessor directive.
 
         :param str string: the string to match with as an elif statement.
+
         :returns: a tuple of size 2 containing the statements keyword and \
                   right hand side, or `None` if there is no match.
         :rtype: \
             (`str`, :py:class:`fparser.two.C99_Preprocessor.Cpp_Pp_Tokens`) \
             or `NoneType`
+
         '''
         if not string:
             return None
@@ -205,7 +224,7 @@ class Cpp_Elif_Stmt(WORDClsBase):
         :return: this elif-stmt as a string.
         :rtype: str
         '''
-        return ('{0} {1}'.format(*self.items))
+        return '{0} {1}'.format(*self.items)
 
 
 class Cpp_Else_Stmt(StringBase):
@@ -225,9 +244,11 @@ class Cpp_Else_Stmt(StringBase):
         '''Implements the matching for an else preprocessor directive.
 
         :param str string: the string to match with as an else statement.
-        :returns: None if there is no match or, if there is a match, a \
-            1-tuple containing the matching string .
+
+        :returns: a 1-tuple containing the matched string or `None` if \
+                  there is no match.
         :rtype: (str,) or NoneType
+
         '''
         if not string:
             return None
@@ -258,9 +279,11 @@ class Cpp_Endif_Stmt(StringBase):
         '''Implements the matching for an endif preprocessor directive.
 
         :param str string: the string to match with as an endif statement.
-        :returns: None if there is no match or, if there is a match, a \
-            1-tuple containing the matching string .
+
+        :returns: a 1-tuple containing the matched string or `None` if \
+                  there is no match.
         :rtype: (str,) or NoneType
+
         '''
         if not string:
             return None
@@ -275,13 +298,13 @@ class Cpp_Endif_Stmt(StringBase):
 
 
 class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
-    """
+    '''
     C99 6.10.2 Source file inclusion
 
     include_stmt is # include [ <h-char-sequence>
-                              | "q-char-sequence"
-                              | pp-tokens ] new-line
-    """
+                               or "q-char-sequence"
+                               or pp-tokens ] new-line
+    '''
 
     _regex = re.compile(r"#\s*include\b")
 
@@ -297,11 +320,14 @@ class Cpp_Include_Stmt(Base):  # 6.10.2 Source file inclusion
         py:class:`fparser.two.Fortran2003.Include_Filename`.
 
         :param str string: the string to match with as an include statement.
-        :returns: a tuple of size 1 containing a Cpp_Include_Filename \
-                  object with the matched filename if there is a match, \
-                  or `None` if there is not.
-        :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`) \
+
+        :returns: a tuple of size 1 containing a \
+            py:class:`fparser.two.C99Preprocessor.Cpp_Include_Filename` \
+            object with the matched filename if there is a match, \
+            or `None` if there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Include_Filename`, ) \
                 or `NoneType`
+
         '''
         from fparser.two.Fortran2003 import Include_Filename
         if not string:
@@ -339,7 +365,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
     """
     C99 6.10.3 Macro replacement
 
-    macro_stmt is # define identifier [( [identifier-list] ) |(...) ]
+    macro_stmt is # define identifier [( [identifier-list] ) or (...) ]
                   [ replacement-list ] new-line
 
     Important: No preceding whitespace is allowed for the left parenthesis of
@@ -368,6 +394,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         encountered, the it is considered part of the replacement-list.
 
         :param str string: the string to match with as an if statement.
+        
         :returns: a tuple of size 3 containing the macro identifier, \
                   identifier list or None, and replacement list or None, \
                   or `None` if there is no match.
@@ -393,7 +420,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         definition = rhs[found.end():]
         # note no strip here because '#define MACRO(x)' and
         # '#define MACRO (x)' are functionally different
-        if len(definition) == 0:
+        if not definition:
             return (name, None, None)
         if definition[0] == '(':
             found = Cpp_Macro_Identifier_List._pattern.match(definition)
@@ -422,9 +449,9 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         :return: this macro-stmt as a string.
         :rtype: str
         '''
-        return ('#define {0}{1}{2}{3}'.format(
+        return '#define {0}{1}{2}{3}'.format(
             self.items[0], self.items[1] or '', ' ' if self.items[2] else '',
-            self.items[2] or ''))
+            self.items[2] or '')
 
 
 class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
@@ -442,6 +469,7 @@ class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
         only letters and underscore.
 
         :param str string: the string to match with the pattern rule.
+
         :return: a tuple of size 1 containing a string with the \
                  matched name if there is a match, or None if there is not.
         :rtype: (str)  or NoneType
@@ -453,8 +481,8 @@ class Cpp_Macro_Identifier(StringBase):  # pylint: disable=invalid-name
 class Cpp_Macro_Identifier_List(StringBase):
     '''Implements the matching of an identifier list in a macro definition.
 
-    identifier-list is (identifier [, identifier-list | ...])
-                       | (...)
+    identifier-list is (identifier [, identifier-list or ...])
+                       or (...)
     '''
 
     subclass_names = []
@@ -476,6 +504,7 @@ class Cpp_Macro_Identifier_List(StringBase):
         :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
 
         :param str string: the string to match with the pattern rule.
+
         :return: a tuple of size 1 containing a string with the \
                  matched identifier list if there is a match, or None if \
                  there is not.
@@ -516,10 +545,12 @@ class Cpp_Undef_Stmt(WORDClsBase):
         :py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`.
 
         :param str string: the string to match with as an if statement.
+
         :returns: a tuple of size 1 containing the macro identifier, or\
                   `None` if there is no match.
         :rtype: (py:class:`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`) \
                 or `NoneType`
+
         '''
         if not string:
             return None
@@ -532,16 +563,16 @@ class Cpp_Undef_Stmt(WORDClsBase):
         :return: this undef-stmt as a string.
         :rtype: str
         '''
-        return ('{0} {1}'.format(*self.items))
+        return '{0} {1}'.format(*self.items)
 
 
 class Cpp_Line_Stmt(WORDClsBase):  # 6.10.4 Line control
-    """
+    '''
     C99 6.10.4 Line control
 
     line-stmt is # line digit-sequence [ "s-char-sequence" ] new-line
-                        | pp-tokens new-line
-    """
+                        or pp-tokens new-line
+    '''
 
     subclass_names = []
     use_names = ['Cpp_Pp_Tokens']
@@ -555,9 +586,11 @@ class Cpp_Line_Stmt(WORDClsBase):  # 6.10.4 Line control
         but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
+
         :returns: a tuple of size 1 with the right hand side as a string, \
                   or `None` if there is no match.
         :rtype: (`str`) or `NoneType`
+
         '''
         if not string:
             return None
@@ -570,16 +603,16 @@ class Cpp_Line_Stmt(WORDClsBase):  # 6.10.4 Line control
         :return: this line-stmt as a string.
         :rtype: str
         '''
-        return ('{0} {1}'.format(*self.items))
+        return '{0} {1}'.format(*self.items)
 
 
 class Cpp_Error_Stmt(WORDClsBase):  # 6.10.5 Error directive
-    """
+    '''
     C99 6.10.5 Error directive
 
     error-stmt is # error [pp-tokens] new-line
 
-    """
+    '''
 
     subclass_names = []
     use_names = ['Cpp_Pp_Tokens']
@@ -593,9 +626,11 @@ class Cpp_Error_Stmt(WORDClsBase):  # 6.10.5 Error directive
         further but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
+
         :returns: an empty tuple or a tuple of size  1 with the right hand \
                   side as a string, or `None` if there is no match.
         :rtype: () or (`str`) or `NoneType`
+
         '''
         if not string:
             return None
@@ -609,19 +644,18 @@ class Cpp_Error_Stmt(WORDClsBase):  # 6.10.5 Error directive
         :rtype: str
         '''
         if self.items[1]:
-            return ('{0} {1}'.format(*self.items))
-        else:
-            return (self.items[0])
+            return '{0} {1}'.format(*self.items)
+        return self.items[0]
 
 
 class Cpp_Warning_Stmt(WORDClsBase):
-    """
+    '''
     Not actually part of C99 but supported by most preprocessors and
     with syntax identical to Cpp_Error_Stmt
 
     warning-stmt is # warning [pp-tokens] new-line
 
-    """
+    '''
 
     subclass_names = []
     use_names = ['Cpp_Pp_Tokens']
@@ -636,6 +670,7 @@ class Cpp_Warning_Stmt(WORDClsBase):
         further but simply kept as a string.
 
         :param str string: the string to match with as a line statement.
+
         :returns: an empty tuple or a tuple of size  1 with the right hand \
                   side as a string, or `None` if there is no match.
         :rtype: () or (`str`) or `NoneType`
@@ -652,9 +687,8 @@ class Cpp_Warning_Stmt(WORDClsBase):
         :rtype: str
         '''
         if self.items[1]:
-            return ('{0} {1}'.format(*self.items))
-        else:
-            return (self.items[0])
+            return '{0} {1}'.format(*self.items)
+        return self.items[0]
 
 
 # 6.10.6 Pragma directive
@@ -664,12 +698,12 @@ class Cpp_Warning_Stmt(WORDClsBase):
 
 
 class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
-    """
+    '''
     C99 6.10.7  Null directive
 
     null-stmt is # new-line
 
-    """
+    '''
 
     subclass_names = []
 
@@ -678,6 +712,7 @@ class Cpp_Null_Stmt(Base):  # 6.10.7 Null directive
         '''Implements the matching for a Null (empty) directive.
 
         :param str string: the string to match with as a line statement.
+
         :returns: an empty tuple or `None` if there is no match.
         :rtype: () or `NoneType`
         '''
