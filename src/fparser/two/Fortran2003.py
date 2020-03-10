@@ -4522,7 +4522,7 @@ class Level_1_Expr(UnaryOpBase):  # R702
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Unary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R703
 
@@ -4757,7 +4757,7 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Binary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Binary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R723
 
