@@ -1697,10 +1697,25 @@ class Component_Attr_Spec(STRINGBase):  # R441
     """
     subclass_names = ['Access_Spec', 'Dimension_Component_Attr_Spec']
     use_names = []
+    attributes = ['POINTER', 'ALLOCATABLE']
 
-    @staticmethod
-    def match(string):
-        return STRINGBase.match(['POINTER', 'ALLOCATABLE'], string)
+    @classmethod
+    def match(cls, string):
+        '''Implements the matching for component attribute specifications.
+
+        Note that this is implemented as a `classmethod` (not a
+        `staticmethod`), using attribute keywords from the list provided
+        as a class property. This allows expanding this list for
+        Fortran 2008 without having to reimplement the matching.
+
+        :param str string: the string to match as an attribute.
+
+        :return: None if there is no match, otherwise a 1-tuple \
+            containing the matched attribute string.
+        :rtype: `None` or (`str`,)
+
+        '''
+        return STRINGBase.match(cls.attributes, string)
 
 
 class Component_Decl(Base):  # R442

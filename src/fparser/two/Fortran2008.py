@@ -79,11 +79,11 @@ from fparser.two import pattern_tools as pattern
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
     SeparatorBase
 from fparser.two.Fortran2003 import (
-        Program_Unit as Program_Unit_2003,
-        Component_Attr_Spec as Component_Attr_Spec_2003,
-        EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
-        Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
-        Declaration_Construct, Use_Stmt, Import_Stmt)
+    Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
+    Component_Attr_Spec as Component_Attr_Spec_2003,
+    EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
+    Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
+    Declaration_Construct, Use_Stmt, Import_Stmt)
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -108,9 +108,9 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
     Fortran 2008 rule R437
     component-attr-spec is access-spec
                            or ALLOCATABLE
-                           or CODIMENSION <lbracket> <coarray-spec> <rbracket>
+                           or CODIMENSION <lbracket> coarray-spec <rbracket>
                            or CONTIGUOUS
-                           or DIMENSION ( <component-array-spec> )
+                           or DIMENSION ( component-array-spec )
                            or POINTER
 
     This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R441.
@@ -118,18 +118,8 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
     '''
     subclass_names = Component_Attr_Spec_2003.subclass_names[:]
     subclass_names.append('Codimension_Attr_Spec')
-    @staticmethod
-    def match(string):
-        '''Implements the matching for component attribute specifications.
-
-        :param str string: the string to match as an attribute.
-        :return: None if there is no match, otherwise an object with the \
-            matched attribute.
-        :rtype: None, Component_Attr_Spec, Codimension_Attr_Spec, \
-            Access_Spec, Dimension_Component_Attr_Spec
-        '''
-        return STRINGBase.match(
-            ['ALLOCATABLE', 'CONTIGUOUS', 'POINTER'], string)
+    attributes = Component_Attr_Spec_2003.attributes[:]
+    attributes.append('CONTIGUOUS')
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
@@ -146,10 +136,11 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
 
         :param str string: the string to match as the attribute.
 
-        :return: `None` if there is no match, otherwise a 1-tuple \
-                 containing the matched object.
+        :return: `None` if there is no match, otherwise a 2-tuple \
+                 containing `CODIMENSION` as a string and the matched \
+                 coarray-spec..
         :rtype: `None` or \
-            (:py:class:`fparser.two.Fortran2008.Codimension_Attr_Spec`,)
+            (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Bracket_Spec`,)
 
         '''
         return WORDClsBase.match(
@@ -172,16 +163,17 @@ class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
 
         :param str string: the string to match as the specification.
 
-        :return: `None` if there is no match, otherwise a 1-tuple \
-                 containing the matched object.
+        :return: `None` if there is no match, otherwise a 3-tuple \
+                 containing the left bracket, the matched coarray-spec, \
+                 and the right bracket.
         :rtype: `None` or \
-            (:py:class:`fparser.two.Fortran2008.Coarray_Bracket_Spec`,)
+            (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Spec`, `str`)
 
         '''
         return BracketBase.match('[]', Coarray_Spec, string)
 
 
-class Attr_Spec(STRINGBase):  # R502
+class Attr_Spec(Attr_Spec_2003):  # R502
     '''
     Fortran 2008 rule R502
     attr-spec is access-spec
@@ -212,20 +204,13 @@ class Attr_Spec(STRINGBase):  # R502
     @staticmethod
     def match(string):
         '''
-        Implements the matching for a types attributes.
+        Implements the matching for attributes of types.
 
         :param str string: the string to match as attribute.
 
         :return: `None` if there is no match, otherwise a 1-tuple \
-                 containing the object corresponding to the matched \
-                 attribute.
-        :rtype: `None` or \
-            (:py:class:`fparser.two.Fortran2008.Attr_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2003.Access_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2003.Language_Binding_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2003.Dimension_Attr_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2003.Intent_Attr_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2008.Codimension_Attr_Spec`,)
+                 containing the matched string.
+        :rtype: `None` or (`str`,)
 
         '''
         return STRINGBase.match(pattern.abs_attr_spec_f08, string)
@@ -257,10 +242,9 @@ class Deferred_Coshape_Spec(SeparatorBase):  # R510
 
         :param str string: the string to match as deferred shape.
 
-        :return: `None` if there is no match, otherwise a 1-tuple \
-                 containing the matched object.
-        :rtype: `None` or \
-            (:py:class:`fparser.two.Fortran2008.Deferred_Coshape_Spec`,)
+        :return: `None` if there is no match, otherwise a 2-tuple \
+                 containing `None`.
+        :rtype: `None` or (`None`, `None`)
 
         '''
         if string == ':':
@@ -284,29 +268,30 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
 
         :param str string: the string to match as deferred shape.
 
-        :return: `None` if there is no match, otherwise a 1-tuple \
-                 containing the matched object.
+        :return: `None` if there is no match, otherwise a 2-tuple \
+                 containing matched coshape-spec-list or `None` and \
+                 matched lower-cobound or `None`.
         :rtype: `None` or \
-            (:py:class:`fparser.two.Fortran2008.Explicit_Coshape_Spec`,) or \
-            (:py:class:`fparser.two.Fortran2008.Coshape_Spec_List`,)
+            (:py:class:`fparser.two.Fortran2008.Coshape_Spec_List` or `None`, \
+             :py:class:`fparser.two:Fortran2008.Lower_Cobound` or `None`)
+
         '''
         if not string.endswith('*'):
-            return
+            return None
         line = string[:-1].rstrip()
         if not line:
-            return None, None
+            return (None, None)
         if line.endswith(':'):
             line, repmap = string_replace_map(line[:-1].rstrip())
-            i = line.rfind(',')
-            if i == -1:
-                return None, Lower_Cobound(repmap(line))
-            return Coshape_Spec_List(
-                repmap(line[:i].rstrip())), \
-                Lower_Cobound(repmap(line[i+1:].lstrip()))
+            sep_pos = line.rfind(',')
+            if sep_pos == -1:
+                return (None, Lower_Cobound(repmap(line)))
+            return (Coshape_Spec_List(repmap(line[:sep_pos].rstrip())),
+                    Lower_Cobound(repmap(line[sep_pos+1:].lstrip())))
         if not line.endswith(','):
-            return
+            return None
         line = line[:-1].rstrip()
-        return Coshape_Spec_List(line), None
+        return (Coshape_Spec_List(line), None)
 
     def tostr(self):
         '''
@@ -340,25 +325,25 @@ class Coshape_Spec(SeparatorBase):  # R511.a
 
         :param str string: the string to match as shape.
 
-        :return: `None` if there is no match, otherwise a tuple with \
+        :return: `None` if there is no match, otherwise a 2-tuple with \
                  lower bound if given or `None`, and upper bound.
         :rtype: `None` or \
-            (`None`, :py:class:`fparser.two.Fortran2008.Upper_Cobound`,) or \
+            (`None`, :py:class:`fparser.two.Fortran2008.Upper_Cobound`) or \
             (:py:class:`fparser.two.Fortran2008.Lower_Cobound`, \
              :py:class:`fparser.two.Fortran2008.Upper_Cobound`)
 
         '''
         line, repmap = string_replace_map(string)
         if ':' not in line:
-            return None, Upper_Cobound(string)
+            return (None, Upper_Cobound(string))
         lower, upper = line.split(':', 1)
         lower = lower.rstrip()
         upper = upper.lstrip()
         if not upper:
-            return
+            return None
         if not lower:
-            return
-        return Lower_Cobound(repmap(lower)), Upper_Cobound(repmap(upper))
+            return None
+        return (Lower_Cobound(repmap(lower)), Upper_Cobound(repmap(upper)))
 
     def tostr(self):
         '''
