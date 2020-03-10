@@ -302,9 +302,9 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
 
         '''
         s = ''
-        if self.items[0] is not None:
+        if self.items[0]:
             s += str(self.items[0]) + ', '
-        if self.items[1] is not None:
+        if self.items[1]:
             s += str(self.items[1]) + ' : '
         s += '*'
         return s
