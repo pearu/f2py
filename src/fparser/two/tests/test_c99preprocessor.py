@@ -392,6 +392,7 @@ def test_incorrect_include_stmt(line):
     ('#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
      '#define MACRO( a,b ,   c) (a )*    (   b   + c  )'),
     ('#define MACRO x', '#define MACRO x'),
+    ('#define omp_get_num_threads() 1', '#define omp_get_num_threads() 1'),
     ('#define MACRO(a, b, c)', '#define MACRO(a, b, c)')])
 def test_macro_stmt(line, ref):
     '''Test that #define is recognized'''

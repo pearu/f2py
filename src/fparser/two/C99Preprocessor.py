@@ -394,7 +394,7 @@ class Cpp_Macro_Stmt(Base):  # 6.10.3 Macro replacement
         encountered, the it is considered part of the replacement-list.
 
         :param str string: the string to match with as an if statement.
-        
+
         :returns: a tuple of size 3 containing the macro identifier, \
                   identifier list or None, and replacement list or None, \
                   or `None` if there is no match.
@@ -490,7 +490,7 @@ class Cpp_Macro_Identifier_List(StringBase):
     _pattern = pattern.Pattern('<identifier-list>',
                                r'\((\s*[A-Za-z_]\w*'
                                r'(?:\s*,\s*[A-Za-z_])*'
-                               r'(?:\s*,\s*\.{3})?|\.{3})\s*\)')
+                               r'(?:\s*,\s*\.{3})?|\.{3})?\s*\)')
 
     @staticmethod
     def match(string):
