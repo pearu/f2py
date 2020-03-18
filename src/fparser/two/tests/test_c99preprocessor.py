@@ -55,6 +55,12 @@ from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
 
+@pytest.fixture(scope='module', name='f2003_parser')
+def fixture_f2003_parser():
+    '''Create a Fortran 2003 parser to be used by the tests'''
+    return ParserFactory().create(std='f2003')
+
+
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['ABC', 'A>5', '!defined(ABC)'])
 def test_pp_tokens(line):
@@ -73,24 +79,28 @@ def test_invalid_pp_tokens(line):
 
 
 @pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line', [
+    '#if CONSTANT', '#ifdef MACRO', '#ifndef _MACRO', '#if defined(__MACRO__)',
+    '#if defined __MACRO__', '#if !defined(__MACRO__)', '#if !defined MACRO'])
+def test_if_stmt(line):
+    '''Test that various forms of #if, #ifdef, #ifndef are recognized.'''
+    result = Cpp_If_Stmt(line)
+    assert str(result) == line
+
+
+@pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line, ref', [
-    ('#if CONSTANT', '#if CONSTANT'),
     ('  #  if    CONSTANT  ', '#if CONSTANT'),
-    ('#ifdef MACRO', '#ifdef MACRO'),
     ('  #  ifdef  MACRO  ', '#ifdef MACRO'),
-    ('#ifndef _MACRO', '#ifndef _MACRO'),
     ('  #  ifndef  _MACRO  ', '#ifndef _MACRO'),
-    ('#if defined(__MACRO__)', '#if defined(__MACRO__)'),
     ('# if  defined(__MACRO__)    ', '#if defined(__MACRO__)'),
-    ('#if defined __MACRO__', '#if defined __MACRO__'),
     ('# if  defined __MACRO__    ', '#if defined __MACRO__'),
-    ('#if !defined(__MACRO__)', '#if !defined(__MACRO__)'),
     ('# if    !defined(__MACRO__)    ', '#if !defined(__MACRO__)'),
-    ('#if !defined __MACRO__', '#if !defined __MACRO__'),
     ('# if  !defined __MACRO__    ', '#if !defined __MACRO__')
-    ])
-def test_if_stmt(line, ref):
-    '''Test that various forms of #if, #ifdef, #ifndef are recognized'''
+])
+def test_if_stmt_with_whitespaces(line, ref):
+    '''Test that various forms of #if, #ifdef, #ifndef are recognized when
+    whitespaces are added.'''
     result = Cpp_If_Stmt(line)
     assert str(result) == ref
 
@@ -99,7 +109,7 @@ def test_if_stmt(line, ref):
 @pytest.mark.parametrize('line', [
     None, '', ' ', '#ifdfe', '#if', '#ifdef', '#ifdef two macros'])
 def test_incorrect_if_stmt(line):
-    '''Test that incorrectly formed #if statements raise exception'''
+    '''Test that incorrectly formed #if statements raise exception.'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_If_Stmt(line)
     assert "Cpp_If_Stmt: '{0}'".format(line) in str(excinfo.value)
@@ -108,7 +118,7 @@ def test_incorrect_if_stmt(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['#elif CONDITION', '  #  elif   CONDITION '])
 def test_elif_stmt(line):
-    '''Test that #elif is correctly recognized'''
+    '''Test that #elif is correctly recognized.'''
     ref = '#elif CONDITION'
     result = Cpp_Elif_Stmt(line)
     assert str(result) == ref
@@ -117,7 +127,7 @@ def test_elif_stmt(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', [None, '', ' ', '#elfi', '#elif'])
 def test_incorrect_elif_stmt(line):
-    '''Test that incorrectly formed #elif statements raise exception'''
+    '''Test that incorrectly formed #elif statements raise exception.'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Elif_Stmt(line)
     assert "Cpp_Elif_Stmt: '{0}'".format(line) in str(excinfo.value)
@@ -134,7 +144,7 @@ def test_else_stmt(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', [None, '', ' ', '#esle', '#elseA', '#Aelse'])
 def test_incorrect_else_stmt(line):
-    '''Test that incorrectly formed #else statements raise exception'''
+    '''Test that incorrectly formed #else statements raise exception.'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Else_Stmt(line)
     assert "Cpp_Else_Stmt: '{0}'".format(line) in str(excinfo.value)
@@ -143,7 +153,7 @@ def test_incorrect_else_stmt(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['#endif', '  #  endif  '])
 def test_endif_stmt(line):
-    '''Test that #endif is correctly recognized'''
+    '''Test that #endif is correctly recognized.'''
     result = Cpp_Endif_Stmt(line)
     assert str(result) == line
 
@@ -152,182 +162,42 @@ def test_endif_stmt(line):
 @pytest.mark.parametrize('line',
                          [None, '', ' ', '#ednif', '#endifA', '#Aendif'])
 def test_incorrect_endif_stmt(line):
-    '''Test that incorrectly formed #endif statements raise exception'''
+    '''Test that incorrectly formed #endif statements raise exception.'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = Cpp_Endif_Stmt(line)
     assert "Cpp_Endif_Stmt: '{0}'".format(line) in str(excinfo.value)
 
 
-def test_parse_define_outside_subroutine():
-    f2003_parser = ParserFactory().create(std='f2003')
-
-    code = '#define MACRO\nSUBROUTINE FOO\ncall sub()\nEND SUBROUTINE FOO\n'
-    ref = '#define MACRO\nSUBROUTINE FOO\n  CALL sub\nEND SUBROUTINE FOO'
+def test_parse_define_outside_subroutine(f2003_parser):
+    '''Test parsing of #define outside of a subroutine.'''
+    code = '#define MACRO\nSUBROUTINE FOO\n  CALL sub\nEND SUBROUTINE FOO'
     reader = get_reader(code)
     result = f2003_parser(reader)
-    assert str(result) == ref
+    assert str(result) == code
 
 
-def test_parse_empty_ifdef():
-    f2003_parser = ParserFactory().create(std='f2003')
-
-    code = '''
-SUBROUTINE FOOBAR
-#ifdef __WHATEVER__
-#endif
-END SUBROUTINE FOOBAR
-    '''
-    ref = '''
-SUBROUTINE FOOBAR
-  #ifdef __WHATEVER__
-  #endif
-END SUBROUTINE FOOBAR
-    '''.strip()
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_define_end_subroutine():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-SUBROUTINE FOO(BAR)
-  INTEGER, INTENT(INOUT) :: BAR
-  CALL FOOBAR(BAR)
-  #define MACRO_NAME
-END SUBROUTINE FOO
-'''.strip()
-    code = '''
-SUBROUTINE FOO(BAR)
-  INTEGER, INTENT(INOUT) :: BAR
-  CALL FOOBAR(BAR)
-  #define MACRO_NAME
-END SUBROUTINE FOO
-'''
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_define_body_subroutine():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-SUBROUTINE FOO(BAZ)
-  INTEGER, INTENT(INOUT) :: BAZ
-  #define MACRO_NAME
-  CALL FOOBAZ(BAR)
-END SUBROUTINE FOO
-'''.strip()
-    code = '''
-SUBROUTINE FOO(BAZ)
-  INTEGER, INTENT(INOUT) :: BAZ
-  #define MACRO_NAME
-  CALL FOOBAZ(BAR)
-END SUBROUTINE FOO
-'''
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_define_in_specification():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-SUBROUTINE FOO(BAZ2)
-  #define MACRO_NAME
-  INTEGER, INTENT(INOUT) :: BAZ2
-  CALL FOOBAZ2(BAR)
-END SUBROUTINE FOO
-'''.strip()
-    code = '''
-SUBROUTINE FOO(BAZ2)
-  #define MACRO_NAME
-  INTEGER, INTENT(INOUT) :: BAZ2
-  CALL FOOBAZ2(BAR)
-END SUBROUTINE FOO
-'''
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_ifdef_in_body():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-SUBROUTINE FOO(BAR2)
-  INTEGER, INTENT(INOUT) :: BAR2
-  #ifdef MACRO_NAME
-  CALL FOOBAR2(BAR)
-  #else
-  CALL ABORT("error message")
-  #endif
-  BAR2 = BAR2 + 1
-END SUBROUTINE FOO
-'''.strip()
-    code = '''
-SUBROUTINE FOO(BAR2)
-  INTEGER, INTENT(INOUT) :: BAR2
-#ifdef MACRO_NAME
-  CALL FOOBAR2(BAR)
-#else
-  CALL ABORT("error message")
-#endif
-  BAR2 = BAR2 + 1
-END SUBROUTINE FOO
-'''
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_ifdef_in_subroutine():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-SUBROUTINE FOO(BAR3)
-  #ifdef MACRO_NAME
-  INTEGER, INTENT(INOUT) :: BAR3
-  CALL FOOBAR3(BAR)
-  #endif
-END SUBROUTINE FOO
-'''.strip()
-    code = '''
-SUBROUTINE FOO(BAR3)
-#ifdef MACRO_NAME
-  INTEGER, INTENT(INOUT) :: BAR3
-  CALL FOOBAR3(BAR)
-#endif
-END SUBROUTINE FOO
-'''
-    reader = get_reader(code)
-    result = f2003_parser(reader)
-    assert str(result) == ref
-
-
-def test_parse_ifdef_elif_in_subroutine():
-    f2003_parser = ParserFactory().create(std='f2003')
-    ref = '''
-#define MACRO
-SUBROUTINE BAR
-  #if defined(MACRO)
-  CALL sub1
-  #elif FOO
-  CALL sub2
-  #else
-  CALL sub3
-  #endif
-END SUBROUTINE BAR'''.strip()
-    code = '''
-#define MACRO
-SUBROUTINE BAR
-#if defined(MACRO)
-  call sub1()
-#elif FOO
-  call sub2()
-#else
-  call sub3()
-#endif
-END SUBROUTINE BAR
-'''
+@pytest.mark.parametrize('lines', [
+    ['SUBROUTINE FOO', '  #ifdef __BAR__', '  #endif', 'END SUBROUTINE FOO'],
+    ['SUBROUTINE FOO(BAR)', '  INTEGER, INTENT(INOUT) :: BAR',
+     '  CALL FOOBAR(BAR)', '  #define MACRO_NAME', 'END SUBROUTINE FOO'],
+    ['SUBROUTINE FOO(BAZ)', '  INTEGER, INTENT(INOUT) :: BAZ',
+     '  #define MACRO_NAME', '  CALL FOOBAZ(BAR)', 'END SUBROUTINE FOO'],
+    ['SUBROUTINE FOO(BAZ2)', '  #define MACR', '  INTEGER, INTENT(IN) :: BAZ2',
+     '  CALL FOOBAZ2(BAR)', 'END SUBROUTINE FOO'],
+    ['SUBROUTINE FOO(BAR2)', '  INTEGER, INTENT(IN) :: BAR2', '  #ifdef MACRO',
+     '  CALL FOO2(BAR)', '  #else', '  CALL ABORT("error msg")', '  #endif',
+     '  BAR2 = BAR2 + 1', 'END SUBROUTINE FOO'],
+    ['SUBROUTINE FOO(BAR3)', '  #ifdef MACRO', '  INTEGER, INTENT(IN) :: BAR3',
+     '  CALL FOOBAR3(BAR)', '  #endif', 'END SUBROUTINE FOO'],
+    ['#define MACRO', 'SUBROUTINE BAR', '  #if defined(MACRO)', '  CALL sub1',
+     '  #elif FOO', '  CALL sub2', '  #else', '  CALL sub3', '  #endif',
+     'END SUBROUTINE BAR']
+])
+def test_directive_at_different_places(f2003_parser, lines):
+    '''Test that directives are parsed correctly irrespective of where they
+    appear in the code.'''
+    code = '\n'.join(line.strip() for line in lines)
+    ref = '\n'.join(lines)
     reader = get_reader(code)
     result = f2003_parser(reader)
     assert str(result) == ref
@@ -367,35 +237,28 @@ def test_incorrect_include_stmt(line):
 
 
 @pytest.mark.usefixtures("f2003_create")
-@pytest.mark.parametrize('line, ref', [
-    # definition with value
-    ('#define MACRO value', '#define MACRO value'),
-    ('  #  define   MACRO   value  ', '#define MACRO value'),
-    # definition without value
-    ('#define _MACRO', '#define _MACRO'),
-    ('   #  define  _MACRO  ', '#define _MACRO'),
-    # more definitions with parameters and similar
-    ('#define MACRO(x) call func(x)', '#define MACRO(x) call func(x)'),
-    ('#define MACRO (x, y)', '#define MACRO (x, y)'),
-    ('#define MACRO(x, y) (x) + (y)', '#define MACRO(x, y) (x) + (y)'),
-    ('#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
-     '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)'),
-    ('#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
-     '#define eprintf(...) fprintf (stderr, __VA_ARGS__)'),
-    ('#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
-     '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))'),
-    ('#define hash_hash # ## #', '#define hash_hash # ## #'),
-    ('#define TABSIZE 100', '#define TABSIZE 100'),
-    ('#define r(x,y) x ## y', '#define r(x,y) x ## y'),
-    ('#define MACRO(a, b, c) (a) * (b + c)',
-     '#define MACRO(a, b, c) (a) * (b + c)'),
-    ('#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
-     '#define MACRO( a,b ,   c) (a )*    (   b   + c  )'),
-    ('#define MACRO x', '#define MACRO x'),
-    ('#define omp_get_num_threads() 1', '#define omp_get_num_threads() 1'),
-    ('#define MACRO(a, b, c)', '#define MACRO(a, b, c)')])
-def test_macro_stmt(line, ref):
+@pytest.mark.parametrize('line', [
+    '#define MACRO value', '#define _MACRO', '#define MACRO(x) call func(x)',
+    '#define MACRO (x, y)', '#define MACRO(x, y) (x) + (y)',
+    '#define MACRO(a, b, c, d) (a) * (b) + (c) * (d)',
+    '#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
+    '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
+    '#define hash_hash # ## #', '#define TABSIZE 100', '#define r(x,y) x ## y',
+    '#define MACRO(a, b, c) (a) * (b + c)', '#define MACRO x',
+    '#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
+    '#define omp_get_num_threads() 1', '#define MACRO(a, b, c)'])
+def test_macro_stmt(line):
     '''Test that #define is recognized'''
+    result = Cpp_Macro_Stmt(line)
+    assert str(result) == line
+
+
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize('line, ref', [
+    ('  #  define   MACRO   value  ', '#define MACRO value'),
+    ('   #  define  _MACRO  ', '#define _MACRO')])
+def test_macro_stmt_with_whitespace(line, ref):
+    '''Test that #define is recognized when white space are added.'''
     result = Cpp_Macro_Stmt(line)
     assert str(result) == ref
 
@@ -431,18 +294,11 @@ def test_invalid_macro_identifier(name):
 
 
 @pytest.mark.usefixtures("f2003_create")
-@pytest.mark.parametrize('line, ref', [
-    ('(a, b, ...)', '(a, b, ...)'),
-    ('(...)', '(...)'),
-    ('(a)', '(a)'),
-    ('(a, b)', '(a, b)')])
-#    ('(a,b , c)', '(a, b, c)'),
-#    ('(a,  b, c,...)', '(a, b, c, ...)'),
-#    ('(a )', '(a)')])
-def test_macro_identifier_list(line, ref):
+@pytest.mark.parametrize('line', ['(a, b, ...)', '(...)', '(a)', '(a, b)'])
+def test_macro_identifier_list(line):
     '''Test that correct lists are parsed'''
     result = Cpp_Macro_Identifier_List(line)
-    assert str(result) == ref
+    assert str(result) == line
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -525,8 +381,8 @@ def test_incorrect_error_stmt(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['#warning MSG', '  #  warning  MSG  '])
 def test_warning_statement_with_msg(line):
-    '''Test that #warning is recognized (not actually part of C99)'''
-    # warning with message
+    '''Test that #warning is recognized (not actually part of C99)
+    with a message.'''
     ref = '#warning MSG'
     result = Cpp_Warning_Stmt(line)
     assert str(result) == ref
@@ -535,7 +391,8 @@ def test_warning_statement_with_msg(line):
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['#warning ', '  #  warning'])
 def test_warning_statement_without_msg(line):
-    # warning without message
+    '''Test that #warning is recognized (not actually part of C99)
+    without a message.'''
     ref = '#warning'
     result = Cpp_Warning_Stmt(line)
     assert str(result) == ref
