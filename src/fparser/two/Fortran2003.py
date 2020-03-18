@@ -175,7 +175,8 @@ def match_comment_or_include(reader):
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
                   or \
                   :py:class:`fparser.common.readfortran.FortranStringReader`
-    :returns: A comment or include object if found, otherwise `None`.
+
+    :return: a comment or include object if found, otherwise `None`.
     :rtype: :py:class:`fparser.two.Fortran2003.Comment` or \
             :py:class:`fparser.two.Fortran2003.Include_Stmt`
 
@@ -193,6 +194,7 @@ def add_comments_includes_directives(content, reader):
     :param content: a `list` of matched objects. Any matched comments, \
                     includes, or directives in this routine are added to \
                     this list.
+    :type content: :obj:`list`
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
