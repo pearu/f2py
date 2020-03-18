@@ -70,16 +70,20 @@ def match_cpp_directive(reader):
             `NoneType`
 
     '''
+    # Assume we have potentially a CPP directive and only check for an
+    # instance of CppDirective if reader is a subclass of FortranReaderBase
+    is_potential_cpp_directive = True
     if isinstance(reader, FortranReaderBase):
         item = reader.get_item()
-        is_cpp_directive = isinstance(item, CppDirective)
+        is_potential_cpp_directive = isinstance(item, CppDirective)
         reader.put_item(item)
-        if not is_cpp_directive:
-            return None
-    for cls in CPP_CLASS_NAMES:
-        obj = getattr(sys.modules[__name__], cls)(reader)
-        if obj:
-            return obj
+        # Do not bail out early here to have a catch all return statement
+        # at the end (that would not be reachable by tests otherwise)
+    if is_potential_cpp_directive:
+        for cls in CPP_CLASS_NAMES:
+            obj = getattr(sys.modules[__name__], cls)(reader)
+            if obj:
+                return obj
     return None
 
 
