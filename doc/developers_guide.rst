@@ -729,18 +729,18 @@ previous paragraph.
 Preprocessing Directives
 ++++++++++++++++++++++++
 
-fparser2 retaines preprocessing directives as nodes in the parse tree
+fparser2 retains preprocessing directives as nodes in the parse tree
 but does not interpret them. This has been implemented in
 `C99Preprocessor.py` as a number of classes that have names with the
 prefix `Cpp_`. This allows fparser2 to parse code successfully that
 contains preprocessing directives but reduces to valid Fortran if the
-directives are omitted.preprocessing directives are represented by a
+directives are omitted.
 
 Similarly to comments, the readers represent preprocessing directives
 by a dedicated class `CppDirective`, which is a subclass of `Line`.
-This allows to detect directives early on and attempt to match their
-classes only for source lines of that type. Matching of directives
-is done in the same place as include statements to make sure that they
+This allows directives to be detected early and matches to be limited
+to source lines that are instances of `CppDirective`. Matching of directives
+is performed in the same place as include statements to make sure that they
 are recognized at all locations in a source file.
 
 Most directives are implemented as subclasses of `WORDClsBase` or
@@ -761,7 +761,7 @@ identifier is matched using
 and may contain only letters and underscore. In `#if` or `#elif`
 directives the constant expression is matched very loosely by
 `fparser.two.C99Preprocessor.Cpp_Pp_Tokens`
-that accepts any non-empty string.
+which accepts any non-empty string.
 
 Include directives (`#include`) are handled similarly to Fortran
 include statements with the matching of filenames being done by the
@@ -769,7 +769,7 @@ same class and therefore with the same (loose) restrictions.
 
 Directives that define macro replacements (`#define`) contain a
 macro identifier that is matched using `Cpp_Macro_Identifier`.
-It is followed by an optional identifier list in parentheses
+This is followed by an optional identifier list in parentheses
 (and without white space separating identifier and opening
 parenthesis) that defines parameters to the macro for use in the
 replacement expression. The identifier list is matched by
@@ -790,7 +790,7 @@ Directives `#line`, `#error`, and `#warning` are implemented in classes
 right hand sides matched by `Cpp_Pp_Tokens`.
 
 A single preprocessing directive token `#` without any directive is
-a null statement and matched by
+a null statement and is matched by
 `fparser.two.C99Preprocessor.Cpp_Null_Stmt`.
 
 Utils

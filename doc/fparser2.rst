@@ -498,7 +498,7 @@ backslash character `\\` at the end of the line.
 __ http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf#page=157
 
 The implementation of directives is in the C99Preprocessor.py `file`__
-with support for the following currently::
+with support for the following::
 
   #if ...
   #ifdef ...
