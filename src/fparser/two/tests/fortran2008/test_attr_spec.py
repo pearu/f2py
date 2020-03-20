@@ -184,7 +184,7 @@ def test_coshape_spec(attr):
 
 
 @pytest.mark.usefixtures("f2008_create")
-@pytest.mark.parametrize('attr', [':', 'a:', ':b', '*', ''])
+@pytest.mark.parametrize('attr', [':', 'a:', ':b', '*', '', '1::3'])
 def test_invalid_coshape_spec(attr):
     '''Test that invalid coshape_spec raise exception.'''
     with pytest.raises(Fortran2003.NoMatchError):

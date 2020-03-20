@@ -133,6 +133,7 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
     as optional parts.
+
     '''
     subclass_names = []
     use_names = ['Coarray_Bracket_Spec']
@@ -163,6 +164,7 @@ class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
     as optional parts.
+
     '''
     subclass_names = []
     use_names = ['Coarray_Spec']
