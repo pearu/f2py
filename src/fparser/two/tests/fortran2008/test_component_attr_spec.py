@@ -34,78 +34,74 @@
 
 '''Test Fortran 2008 rule R437.
 
-    <component-attr-spec> = <access-spec>
-                            | ALLOCATABLE
-                            | CODIMENSION <lbracket> <coarray-spec> <rbracket>
-                            | CONTIGUOUS
-                            | DIMENSION ( <component-array-spec> )
-                            | POINTER
+    component-attr-spec = access-spec
+                          or ALLOCATABLE
+                          or CODIMENSION lbracket coarray-spec rbracket
+                          or CONTIGUOUS
+                          or DIMENSION ( component-array-spec )
+                          or POINTER
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Access_Spec, Dimension_Component_Attr_Spec
+from fparser.two.Fortran2003 import (
+    Access_Spec, Dimension_Component_Attr_Spec, NoMatchError)
 from fparser.two.Fortran2008 import Component_Attr_Spec, Codimension_Attr_Spec
 
 
-def test_pointer_attr(f2008_create):
-    '''Tests the parsing of POINTER attribute.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('pointer')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'POINTER'
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('mixed_case_ref', ['ALlOCaTABLE', 'CONTIGUOUs',
+                                            'PoInTeR'])
+def test_component_attr_spec(mixed_case_ref):
+    '''Test the parsing of component attributes provided as mixed case, upper
+    case and lower case strings.'''
+    for manip in [str, str.upper, str.lower]:
+        obj = Component_Attr_Spec(manip(mixed_case_ref))
+        assert isinstance(obj, Component_Attr_Spec), repr(obj)
+        assert str(obj) == mixed_case_ref.upper()
 
 
-def test_allocatable_attr(f2008_create):
-    '''Tests the parsing of ALLOCATABLE attribute.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('allocatable')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'ALLOCATABLE'
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', ' ALLOCATABLE', 'POINTER ', 'POIN TER',
+                                  'CONTIGOUS', 'ALOCATABLE', 'FOO'])
+def test_invalid_component_attr_spec(attr):
+    '''Test that invalid or misspelled component attributes raise exception.'''
+    with pytest.raises(NoMatchError):
+        _ = Component_Attr_Spec(attr)
 
 
-def test_contiguous_attr(f2008_create):
-    '''Tests the parsing of CONTIGUOUS attribute.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('contiguous')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'CONTIGUOUS'
-
-
-def test_dimension_attr(f2008_create):
-    '''Tests the parsing of DIMENSION attribute.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('dimension(a)')
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, ref', [
+    ('DIMENSION   (:)', 'DIMENSION(:)'),
+    ('dimenSION(  : )', 'DIMENSION(:)'),
+    ('DIMENSION (5)', 'DIMENSION(5)'),
+    ('dimension (1:5, 2, 3:4)', 'DIMENSION(1 : 5, 2, 3 : 4)')
+])
+def test_component_attr_spec_dimension(attr, ref):
+    '''Test the parsing of dimension attribute in component_attr_spec.'''
+    obj = Component_Attr_Spec(attr)
     assert isinstance(obj, Dimension_Component_Attr_Spec), repr(obj)
-    assert str(obj) == 'DIMENSION(a)'
+    assert str(obj) == ref
 
 
-def test_deferred_codimension_attr(f2008_create):
-    '''Tests the parsing of CODIMENSION attribute with deferred shape.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('codimension [:]')
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, ref', [
+    ('codimension[*]', 'CODIMENSION [*]'),
+    ('CODIMENSION   [:]', 'CODIMENSION [:]'),
+    ('COdimenSION[  : ]', 'CODIMENSION [:]'),
+    ('coDIMENSIon [ *]', 'CODIMENSION [*]'),
+    (' CODIMENSION [1:5, *]   ', 'CODIMENSION [1 : 5, *]'),
+    ('codimension [1:5, 2, 3:*]', 'CODIMENSION [1 : 5, 2, 3 : *]')
+])
+def test_component_attr_spec_codimensions(attr, ref):
+    '''Test the parsing of codimension attribute in component_attr_spec.'''
+    obj = Component_Attr_Spec(attr)
     assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
-    assert str(obj) == 'CODIMENSION [:]'
+    assert str(obj) == ref
 
 
-def test_explicit_codimension_attr(f2008_create):
-    '''Tests the parsing of CODIMENSION attribute with explicit shape.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('codimension[2:*]')
-    assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
-    assert str(obj) == 'CODIMENSION [2 : *]'
-
-
-def test_explicit_list_codimension_attr(f2008_create):
-    '''Tests the parsing of CODIMENSION attribute with explicit shape list.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('codimension[1:a, b, *]')
-    assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
-    assert str(obj) == 'CODIMENSION [1 : a, b, *]'
-
-
-def test_private_attr(f2008_create):
+@pytest.mark.usefixtures("f2008_create")
+def test_private_attr():
     '''Tests the parsing of private attribute.'''
-    tcls = Component_Attr_Spec
-    obj = tcls('private')
+    obj = Component_Attr_Spec('private')
     assert isinstance(obj, Access_Spec), repr(obj)
     assert str(obj) == 'PRIVATE'

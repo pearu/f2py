@@ -34,24 +34,24 @@
 
 '''Test Fortran 2008 rule R502.
 
-    <attr-spec> = <access-spec>
-                  | ALLOCATABLE
-                  | ASYNCHRONOUS
-                  | CODIMENSION <lbracket> <coarray-spec> <rbracket>
-                  | CONTIGUOUS
-                  | DIMENSION ( <component-array-spec> )
-                  | EXTERNAL
-                  | INTENT (<intent-spec>)
-                  | INTRINSIC
-                  | <language-binding-spec>
-                  | OPTIONAL
-                  | PARAMETER
-                  | POINTER
-                  | PROTECTED
-                  | SAVE
-                  | TARGET
-                  | VALUE
-                  | VOLATILE
+    attr-spec is access-spec
+                 or ALLOCATABLE
+                 or ASYNCHRONOUS
+                 or CODIMENSION lbracket coarray-spec rbracket
+                 or CONTIGUOUS
+                 or DIMENSION ( component-array-spec )
+                 or EXTERNAL
+                 or INTENT ( intent-spec )
+                 or INTRINSIC
+                 or language-binding-spec
+                 or OPTIONAL
+                 or PARAMETER
+                 or POINTER
+                 or PROTECTED
+                 or SAVE
+                 or TARGET
+                 or VALUE
+                 or VOLATILE
 '''
 
 import pytest
@@ -60,56 +60,132 @@ from fparser.two.Fortran2008 import (
 from fparser.two import Fortran2003
 
 
-def test_attr_spec(f2008_create):
-    '''Tests the parsing of common attributes.'''
-    tcls = Attr_Spec
-    attrs = {
-        'allocatable': 'ALLOCATABLE', 'asynchronous': 'ASYNCHRONOUS',
-        'contiguous': 'CONTIGUOUS',
-        'external': 'EXTERNAL', 'intrinsic': 'INTRINSIC',
-        'optional': 'OPTIONAL', 'parameter': 'PARAMETER', 'pointer': 'POINTER',
-        'protected': 'PROTECTED', 'save': 'SAVE', 'target': 'TARGET',
-        'value': 'VALUE', 'volatile': 'VOLATILE'}
-    for attr, ref in attrs.items():
-        obj = tcls(attr)
-        assert isinstance(obj, tcls), repr(obj)
-        assert str(obj) == ref
-
-    obj = tcls('dimension(:)')
-    assert isinstance(obj, Fortran2003.Dimension_Attr_Spec), repr(obj)
-    assert str(obj) == 'DIMENSION(:)'
-
-    obj = tcls('codimension [*]')
-    assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
-    assert str(obj) == 'CODIMENSION [*]'
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('mixed_case_ref', [
+    'ALlOCaTABLE', 'ASYNChroNOUS', 'CONTIGUOUs', 'eXTERNAL', 'INtRINsIC',
+    'OPTIOnAL', 'PARAmeTER', 'PoInTeR', 'pROTECTEd', 'SAvE', 'TargeT',
+    'VALUE', 'VOLATILE'
+])
+def test_attr_spec(mixed_case_ref):
+    '''Test the parsing of common attributes provided as mixed case, upper
+    case and lower case strings.'''
+    for manip in [str, str.upper, str.lower]:
+        obj = Attr_Spec(manip(mixed_case_ref))
+        assert isinstance(obj, Attr_Spec), repr(obj)
+        assert str(obj) == mixed_case_ref.upper()
 
 
-def test_codimension_attr_spec(f2008_create):
-    '''Tests the parsing of codimension attributes.'''
-    tcls = Codimension_Attr_Spec
-    attrs = {
-        'codimension[*]': 'CODIMENSION [*]',
-        'codimension [:]': 'CODIMENSION [:]',
-        'codimension [1:5, 2, 3:*]': 'CODIMENSION [1 : 5, 2, 3 : *]'}
-    for attr, ref in attrs.items():
-        obj = tcls(attr)
-        assert isinstance(obj, tcls), repr(obj)
-        assert str(obj) == ref
-
-
-def test_invalid_coshape_spec(f2008_create):
-    '''Tests invalid codimension attributes.'''
-    tcls = Codimension_Attr_Spec
-    attrs = ['codimension[1:5]', 'codimension[3:]', 'codimension[:5]',
-             'codimension[,,]', 'codimension[1, 5, 3 *]']
-    for attr in attrs:
-        with pytest.raises(Fortran2003.NoMatchError):
-            _ = tcls(attr)
-
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', [
+    '', 'CONTIGUOS', ' SAVE', 'TARGET ', 'VA LUE', 'POINNTER', ' DIMENSION(:)'
+])
+def test_invalid_attr_spec(attr):
+    '''Test that invalid or misspelled attributes raise exceptions.'''
     with pytest.raises(Fortran2003.NoMatchError):
-        _ = Deferred_Coshape_Spec('')
+        _ = Attr_Spec(attr)
 
-    attrs = [':', 'a:', ':b']
-    for attr in attrs:
-        with pytest.raises(Fortran2003.NoMatchError):
-            _ = Coshape_Spec(attr)
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, ref', [
+    ('DIMENSION   (:)', 'DIMENSION(:)'),
+    ('dimenSION(  : )', 'DIMENSION(:)'),
+    ('DIMENSION (5)', 'DIMENSION(5)'),
+    ('DIMENSION (2:)', 'DIMENSION(2 :)'),
+    ('dimension (1:5, 2, 3:4)', 'DIMENSION(1 : 5, 2, 3 : 4)')
+])
+def test_attr_spec_dimension(attr, ref):
+    '''Test the parsing of dimension attribute in attr_spec.'''
+    obj = Attr_Spec(attr)
+    assert isinstance(obj, Fortran2003.Dimension_Attr_Spec), repr(obj)
+    assert str(obj) == ref
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, ref', [
+    ('codimension[*]', 'CODIMENSION [*]'),
+    ('CODIMENSION   [:]', 'CODIMENSION [:]'),
+    ('COdimenSION[  : ]', 'CODIMENSION [:]'),
+    ('coDIMENSIon [ *]', 'CODIMENSION [*]'),
+    (' CODIMENSION [1:5, *]   ', 'CODIMENSION [1 : 5, *]'),
+    ('codimension [1:5, 2, 3:*]', 'CODIMENSION [1 : 5, 2, 3 : *]')
+])
+def test_attr_spec_codimension(attr, ref):
+    '''Test the parsing of codimension attribute in attr_spec.'''
+    obj = Attr_Spec(attr)
+    assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
+    assert str(obj) == ref
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', [
+    'codimension[1:5]', 'codimension[3:]', 'codimension[:5]',
+    'codimension[,,]', 'codimension[1, 5, 3 *]', 'co dimension[*]',
+    'coodimension[*]', 'codimension[]', 'codimensions[*]', 'codimension',
+    'codimension[[*]', 'codimension[[:]]', 'codimension[][]'
+])
+def test_invalid_attr_spec_codimension(attr):
+    '''Test that invalid codimension attribute in attr_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Attr_Spec(attr)
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, ref', [
+    ('codimension[*]', 'CODIMENSION [*]'),
+    ('CODIMENSION   [:]', 'CODIMENSION [:]'),
+    ('COdimenSION[  : ]', 'CODIMENSION [:]'),
+    ('coDIMENSIon [ *]', 'CODIMENSION [*]'),
+    (' CODIMENSION [1:5, *]   ', 'CODIMENSION [1 : 5, *]'),
+    ('codimension [1:5, 2, 3:*]', 'CODIMENSION [1 : 5, 2, 3 : *]')
+])
+def test_codimension_attr_spec(attr, ref):
+    '''Test the parsing of codimension attributes.'''
+    obj = Codimension_Attr_Spec(attr)
+    assert isinstance(obj, Codimension_Attr_Spec), repr(obj)
+    assert str(obj) == ref
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', [
+    'codimension[1:5]', 'codimension[3:]', 'codimension[:5]',
+    'codimension[,,]', 'codimension[1, 5, 3 *]', 'co dimension[*]',
+    'coodimension[*]', 'codimension[]', 'codimensions[*]', 'codimension',
+    'codimension[[*]', 'codimension[[:]]', 'codimension[][]'
+])
+def test_invalid_codimension_attr_spec(attr):
+    '''Test that invalid codimension attributes raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Codimension_Attr_Spec(attr)
+
+
+@pytest.mark.usefixtures("f2008_create")
+def test_deferred_coshape_spec():
+    '''Test parsing of deferred_coshape_spec.'''
+    obj = Deferred_Coshape_Spec(':')
+    assert isinstance(obj, Deferred_Coshape_Spec), repr(obj)
+    assert str(obj) == ':'
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', ' :', ': ', '  : ', '::', '5'])
+def test_invalid_deferred_coshape_spec(attr):
+    '''Test that invalid deferred_coshape_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Deferred_Coshape_Spec(attr)
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['a', '10', '1:3', ' 5 : 123 ', '2:   b   '])
+def test_coshape_spec(attr):
+    '''Test that coshape_spec are parsed correctly.'''
+    obj = Coshape_Spec(attr)
+    assert isinstance(obj, Coshape_Spec), repr(obj)
+    assert str(obj) == attr.replace(' ', '').replace(':', ' : ')
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', [':', 'a:', ':b', '*', ''])
+def test_invalid_coshape_spec(attr):
+    '''Test that invalid coshape_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Coshape_Spec(attr)
