@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2018 Science and Technology
+# Modified work Copyright (c) 2018-2020 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -108,10 +108,14 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
     Fortran 2008 rule R437
     component-attr-spec is access-spec
                            or ALLOCATABLE
-                           or CODIMENSION <lbracket> coarray-spec <rbracket>
+                           or CODIMENSION lbracket coarray-spec rbracket
                            or CONTIGUOUS
                            or DIMENSION ( component-array-spec )
                            or POINTER
+
+    In the spec above, lbracket and rbracket are left and right square
+    brackets `[]` but not printed explicitly to avoid misinterpretation
+    as optional parts.
 
     This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R441.
 
@@ -124,7 +128,11 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
     '''
-    codimension-attr-spec is CODIMENSION <lbracket> coarray-spec <rbracket>
+    codimension-attr-spec is CODIMENSION lbracket coarray-spec rbracket
+
+    In the spec above, lbracket and rbracket are left and right square
+    brackets `[]` but not printed explicitly to avoid misinterpretation
+    as optional parts.
     '''
     subclass_names = []
     use_names = ['Coarray_Bracket_Spec']
@@ -150,7 +158,11 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
 
 class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
     '''
-    coarray-bracket-spec is <lbracket> coarray-spec <rbracket>
+    coarray-bracket-spec is lbracket coarray-spec rbracket
+
+    In the spec above, lbracket and rbracket are left and right square
+    brackets `[]` but not printed explicitly to avoid misinterpretation
+    as optional parts.
     '''
     subclass_names = []
     use_names = ['Coarray_Spec']
@@ -179,7 +191,7 @@ class Attr_Spec(Attr_Spec_2003):  # R502
     attr-spec is access-spec
                  or ALLOCATABLE
                  or ASYNCHRONOUS
-                 or CODIMENSION <lbracket> coarray-spec <rbracket>
+                 or CODIMENSION lbracket coarray-spec rbracket
                  or CONTIGUOUS
                  or DIMENSION ( array-spec )
                  or EXTERNAL
@@ -195,10 +207,15 @@ class Attr_Spec(Attr_Spec_2003):  # R502
                  or VALUE
                  or VOLATILE
 
+    In the spec above, lbracket and rbracket are left and right square
+    brackets `[]` but not printed explicitly to avoid misinterpretation
+    as optional parts.
+
+    This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R503.
+
     '''
-    subclass_names = ['Access_Spec', 'Language_Binding_Spec',
-                      'Dimension_Attr_Spec', 'Intent_Attr_Spec',
-                      'Codimension_Attr_Spec']
+    subclass_names = Attr_Spec_2003.subclass_names[:]
+    subclass_names.append('Codimension_Attr_Spec')
     use_names = []
 
     @staticmethod

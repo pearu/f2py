@@ -476,8 +476,9 @@ abs_attr_spec = abs(attr_spec)
 
 attr_spec_f08 = Pattern(
     '<attr-spec>',
-    r'(ALLOCATABLE|ASYNCHRONOUS|CONTIGUOUS|EXTERNAL|INTENT|INTRINSIC|'
-    'OPTIONAL|PARAMETER|POINTER|PROTECTED|SAVE|TARGET|VALUE|VOLATILE)',
+    r'({})'.format('|'.join(  # extend attr_spec with attribute CONTIGUOUS
+        sorted(attr_spec.pattern.strip('()').split('|') + ['CONTIGUOUS'])
+    )),
     flags=re.I)
 abs_attr_spec_f08 = abs(attr_spec_f08)
 
