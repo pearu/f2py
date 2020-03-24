@@ -55,12 +55,6 @@ from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
 
-@pytest.fixture(scope='module', name='f2003_parser')
-def fixture_f2003_parser():
-    '''Create a Fortran 2003 parser to be used by the tests'''
-    return ParserFactory().create(std='f2003')
-
-
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', ['ABC', 'A>5', '!defined(ABC)'])
 def test_pp_tokens(line):
