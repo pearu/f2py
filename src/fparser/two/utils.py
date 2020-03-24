@@ -534,13 +534,14 @@ content : tuple
         :rtype: startcls
         '''
         from fparser.two.Fortran2003 import Comment, Include_Stmt, \
-            add_comments_includes
+            add_comments_includes_directives
+        from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
-            # Deal with any preceding comments and/or includes
-            add_comments_includes(content, reader)
+            # Deal with any preceding comments, includes, and/or directives
+            add_comments_includes_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -565,6 +566,10 @@ content : tuple
 
         # Comments and Include statements are always valid sub-classes
         classes = subclasses + [Comment, Include_Stmt]
+        # Preprocessor directives are always valid sub-classes
+        cpp_classes = [getattr(C99Preprocessor, cls_name)
+                       for cls_name in C99Preprocessor.CPP_CLASS_NAMES]
+        classes += cpp_classes
         if endcls is not None:
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])

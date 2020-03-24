@@ -167,13 +167,34 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments_includes(content, reader):
-    '''Creates comment and/or include objects and adds them to the content
-    list. Comment and/or include objects are added until a line that
-    is not a comment or include is found.
+def match_comment_or_include(reader):
+    '''Creates a comment or include object from the current line.
 
-    :param content: a `list` of matched objects. Any matched comments \
-                    or includes in this routine are added to this list.
+    :param reader: the fortran file reader containing the line \
+                   of code that we are trying to match
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+
+    :return: a comment or include object if found, otherwise `None`.
+    :rtype: :py:class:`fparser.two.Fortran2003.Comment` or \
+            :py:class:`fparser.two.Fortran2003.Include_Stmt`
+
+    '''
+    obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
+    return obj
+
+
+def add_comments_includes_directives(content, reader):
+    '''Creates comment, include, and/or cpp directive objects and adds them to
+    the content list. Comment, include, and/or directive objects are added
+    until a line that is not a comment, include, or directive is found.
+
+    :param content: a `list` of matched objects. Any matched comments, \
+                    includes, or directives in this routine are added to \
+                    this list.
+    :type content: :obj:`list`
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -181,12 +202,13 @@ def add_comments_includes(content, reader):
                   :py:class:`fparser.common.readfortran.FortranStringReader`
 
     '''
-    obj = Comment(reader)
-    obj = Include_Stmt(reader) if not obj else obj
+    from fparser.two.C99Preprocessor import match_cpp_directive
+    obj = match_comment_or_include(reader)
+    obj = match_cpp_directive(reader) if not obj else obj
     while obj:
         content.append(obj)
-        obj = Comment(reader)
-        obj = Include_Stmt(reader) if not obj else obj
+        obj = match_comment_or_include(reader)
+        obj = match_cpp_directive(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -243,12 +265,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments_includes(content, reader)
+        add_comments_includes_directives(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments_includes(content, reader)
+                add_comments_includes_directives(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -304,8 +326,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for an include statement.
 
-        :param str string: the string to match with as an include \
-        statement.
+        :param str string: the string to match with as an include statement.
         :returns: a tuple of size 1 containing an Include_Filename \
         object with the matched filename if there is a match, or None \
         if there is not.
@@ -315,19 +336,17 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''
         if not string:
             return None
+
         line = string.strip()
         if line[:7].upper() != 'INCLUDE':
             # The line does not start with the include token and/or the line
             # is too short.
             return None
         rhs = line[7:].strip()
-        if not rhs:
-            # There is no content after the include token
-            return None
-        if len(rhs) < 3:
-            # The content after the include token is too short to be
-            # valid (it must at least contain quotes and one
-            # character.
+        if rhs is None or len(rhs) < 3:
+            # Either we didn't find any includes or the content after
+            # the include token is too short to be valid (it must at
+            # least contain quotes and one character.
             return None
         if not ((rhs[0] == "'" and rhs[-1] == "'") or
                 (rhs[0] == '"' and rhs[-1] == '"')):
@@ -340,7 +359,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         name = Include_Filename(file_name)
         if not name:
             raise InternalError(
-                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "Fortran2003.py:Include_Stmt:match Include_Filename should "
                 "never return None or an empty name")
         return (name,)
 
