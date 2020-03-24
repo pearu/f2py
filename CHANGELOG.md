@@ -14,6 +14,8 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+24/03/2020 PR #239. Add support for CPP directives in fparser2.
+
 07/03/2020 PR #250 for #248. Identify CPP directives in the reader.
 
 14/02/2020 PR #246 for #245. Fixes some deprecation warnings about '\'
