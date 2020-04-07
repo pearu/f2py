@@ -239,8 +239,8 @@ def test_incorrect_include_stmt(line):
     '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
     '#define hash_hash # ## #', '#define TABSIZE 100', '#define r(x,y) x ## y',
     '#define MACRO(a, bbb, c_d) (a) * (bbb + c_d)', '#define MACRO x',
-    '#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
-    '#define omp_get_num_threads() 1', '#define MACRO(aaa, b, c)'])
+    '#define MACRO( a,b2_ ,   c) (a )*    (   b2_   + c  )',
+    '#define omp_get_num_threads() 1', '#define MACRO(a2aa, b, c)'])
 def test_macro_stmt(line):
     '''Test that #define is recognized'''
     result = Cpp_Macro_Stmt(line)
@@ -259,7 +259,7 @@ def test_macro_stmt_with_whitespace(line, ref):
 
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize('line', [
-    None, '', ' ', '#def', '#defnie', '#definex',
+    None, '', ' ', '#def', '#defnie', '#definex', '#define 2a'
     '#define fail(...,test) test', '#define', '#define fail(...,...)'])
 def test_incorrect_macro_stmt(line):
     '''Test that incorrectly formed #define statements raise exception'''
