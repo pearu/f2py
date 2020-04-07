@@ -2503,16 +2503,16 @@ class Ac_Implied_Do_Control(Base):  # R471
         :rtype: NoneType or \
                 (:py:class:`fparser.two.Fortran2003.Ac_Do_Variable`, list)
         '''
-        i = string.find('=')
-        if i == -1:
-            return
-        s1 = string[:i].rstrip()
-        line, repmap = string_replace_map(string[i+1:].lstrip())
-        t = line.split(',')
-        if not (2 <= len(t) <= 3):
-            return
-        t = [Scalar_Int_Expr(repmap(s.strip())) for s in t]
-        return Ac_Do_Variable(s1), t
+        idx = string.find('=')
+        if idx == -1:
+            return None
+        do_var = string[:idx].rstrip()
+        line, repmap = string_replace_map(string[idx+1:].lstrip())
+        int_exprns = line.split(',')
+        if not (2 <= len(int_exprns) <= 3):
+            return None
+        exprn_list = [Scalar_Int_Expr(repmap(s.strip())) for s in int_exprns]
+        return Ac_Do_Variable(do_var), exprn_list
 
     def tostr(self):
         return '%s = %s' % (self.items[0], ', '.join(map(str, self.items[1])))
