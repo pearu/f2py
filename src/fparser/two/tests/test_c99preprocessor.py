@@ -238,9 +238,9 @@ def test_incorrect_include_stmt(line):
     '#define eprintf(...) fprintf (stderr, __VA_ARGS__)',
     '#define report(tst, ...) ((tst)?puts(#tst):printf(__VA_ARGS__))',
     '#define hash_hash # ## #', '#define TABSIZE 100', '#define r(x,y) x ## y',
-    '#define MACRO(a, b, c) (a) * (b + c)', '#define MACRO x',
+    '#define MACRO(a, bbb, c_d) (a) * (bbb + c_d)', '#define MACRO x',
     '#define MACRO( a,b ,   c) (a )*    (   b   + c  )',
-    '#define omp_get_num_threads() 1', '#define MACRO(a, b, c)'])
+    '#define omp_get_num_threads() 1', '#define MACRO(aaa, b, c)'])
 def test_macro_stmt(line):
     '''Test that #define is recognized'''
     result = Cpp_Macro_Stmt(line)

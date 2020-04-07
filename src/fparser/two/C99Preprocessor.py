@@ -494,8 +494,8 @@ class Cpp_Macro_Identifier_List(StringBase):
     subclass_names = []
 
     _pattern = pattern.Pattern('<identifier-list>',
-                               r'\((\s*[A-Za-z_]\w*'
-                               r'(?:\s*,\s*[A-Za-z_])*'
+                               r'\((\s*[A-Za-z_]+\w*'
+                               r'(?:\s*,\s*[A-Za-z_]+)*'
                                r'(?:\s*,\s*\.{3})?|\.{3})?\s*\)')
 
     @staticmethod
