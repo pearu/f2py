@@ -2484,13 +2484,25 @@ class Ac_Implied_Do(Base):  # R470
 
 class Ac_Implied_Do_Control(Base):  # R471
     """
-    <ac-implied-do-control> = <ac-do-variable> = <scalar-int-expr> ,
+    <ac-implied-do-control> is <ac-do-variable> = <scalar-int-expr> ,
         <scalar-int-expr> [ , <scalar-int-expr> ]
     """
     subclass_names = []
     use_names = ['Ac_Do_Variable', 'Scalar_Int_Expr']
 
+    @staticmethod
     def match(string):
+        ''' Attempts to match the supplied string with the pattern for
+        implied-do control.
+
+        :param str string: the string to test for a match.
+
+        :returns: None if there is no match or a 2-tuple containing the \
+                  do-variable name and the list of integer expressions (for \
+                  start, stop [, step]).
+        :rtype: NoneType or \
+                (:py:class:`fparser.two.Fortran2003.Ac_Do_Variable`, list)
+        '''
         i = string.find('=')
         if i == -1:
             return
@@ -2499,9 +2511,8 @@ class Ac_Implied_Do_Control(Base):  # R471
         t = line.split(',')
         if not (2 <= len(t) <= 3):
             return
-        t = [Scalar_Int_Expr(s.strip()) for s in t]
+        t = [Scalar_Int_Expr(repmap(s.strip())) for s in t]
         return Ac_Do_Variable(s1), t
-    match = staticmethod(match)
 
     def tostr(self):
         return '%s = %s' % (self.items[0], ', '.join(map(str, self.items[1])))
