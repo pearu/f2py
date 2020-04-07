@@ -32,8 +32,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R471 : This file tests the support for the
-implied-loop control in an array constructor.
+'''Test Fortran 2003 rule R465: this file tests the support for the
+various forms of array constructor.
 
 '''
 
@@ -42,9 +42,48 @@ from fparser.two.utils import walk
 from fparser.two import Fortran2003
 
 
-def test_implicit_loop(f2003_create):
-    ''' Test complex expression with superfluous parentheses
-    is parsed correctly. '''
+def test_basic_array_constructor(f2003_create):
+    ''' Test parsing of basic array constructor. '''
+    fcode = "array = (/ 1, 2, 3/)"
+    reader = FortranStringReader(fcode)
+    ast = Fortran2003.Assignment_Stmt(reader)
+    assert isinstance(ast, Fortran2003.Assignment_Stmt)
+    assert isinstance(ast.children[2], Fortran2003.Array_Constructor)
+    assert isinstance(ast.children[2].children[1], Fortran2003.Ac_Value_List)
+    assert "array = (/1, 2, 3/)" in str(ast)
+
+
+def test_zero_size_array_constructor(f2003_create):
+    ''' Test that we can parse a valid, zero-size array constructor (R466). '''
+    fcode = "array = (/ integer :: /)"
+    reader = FortranStringReader(fcode)
+    ast = Fortran2003.Assignment_Stmt(reader)
+    assert isinstance(ast, Fortran2003.Assignment_Stmt)
+    assert isinstance(ast.children[2], Fortran2003.Array_Constructor)
+    assert isinstance(ast.children[2].children[1], Fortran2003.Ac_Spec)
+    assert isinstance(ast.children[2].children[1].children[0],
+                      Fortran2003.Intrinsic_Type_Spec)
+    assert "array = (/INTEGER ::/)" in str(ast)
+
+
+def test_constructor_char_len(f2003_create):
+    ''' Test with an array constructor that specifies a length type
+        parameter. '''
+    fcode = "array = [ CHARACTER(LEN=7) :: 'Takata', 'Tanaka', 'Hayashi' ]"
+    reader = FortranStringReader(fcode)
+    ast = Fortran2003.Assignment_Stmt(reader)
+    assert isinstance(ast, Fortran2003.Assignment_Stmt)
+    assert isinstance(ast.children[2], Fortran2003.Array_Constructor)
+    assert isinstance(ast.children[2].children[1], Fortran2003.Ac_Spec)
+    assert isinstance(ast.children[2].children[1].children[0],
+                      Fortran2003.Intrinsic_Type_Spec)
+    assert ("array = [CHARACTER(LEN = 7) :: 'Takata', 'Tanaka', 'Hayashi']"
+            in str(ast))
+
+
+def test_implicit_loop_constructor(f2003_create):
+    ''' Test array constructor with implicit loop containing an intrinsic
+    call. '''
     fcode = "WHERE((/(JBODY,JBODY=1,SIZE(ARR1(:)))/)/=1) ARR1(:)=1.0"
     reader = FortranStringReader(fcode)
     ast = Fortran2003.Where_Stmt(reader)
