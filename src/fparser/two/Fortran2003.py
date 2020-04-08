@@ -2277,6 +2277,9 @@ class Type_Param_Spec(KeywordValueBase):  # R456
 class Structure_Constructor_2(KeywordValueBase):  # R457.b
     """
     <structure-constructor-2> = [ <keyword> = ] <component-data-source>
+
+    TODO #255 - should this class be deleted?
+
     """
     subclass_names = ['Component_Data_Source']
     use_names = ['Keyword']
@@ -2291,6 +2294,9 @@ class Structure_Constructor(CallBase):  # R457
     <structure-constructor> = <derived-type-spec> ( [ <component-spec-list> ] )
                             | <structure-constructor-2>
     """
+    # TODO #255 it seems likely that we should remove
+    # 'Structure_Constructor_2' from subclass_names but this requires
+    # investigation.
     subclass_names = ['Structure_Constructor_2']
     use_names = ['Derived_Type_Spec', 'Component_Spec_List']
 

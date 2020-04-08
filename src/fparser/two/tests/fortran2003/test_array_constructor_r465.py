@@ -37,12 +37,14 @@ various forms of array constructor.
 
 '''
 
+import pytest
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.utils import walk
 from fparser.two import Fortran2003
 
 
-def test_basic_array_constructor(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_basic_array_constructor():
     ''' Test parsing of basic array constructor. '''
     fcode = "array = (/ 1, 2, 3/)"
     reader = FortranStringReader(fcode)
@@ -53,7 +55,8 @@ def test_basic_array_constructor(f2003_create):
     assert "array = (/1, 2, 3/)" in str(ast)
 
 
-def test_zero_size_array_constructor(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_zero_size_array_constructor():
     ''' Test that we can parse a valid, zero-size array constructor (R466). '''
     fcode = "array = (/ integer :: /)"
     reader = FortranStringReader(fcode)
@@ -66,9 +69,10 @@ def test_zero_size_array_constructor(f2003_create):
     assert "array = (/INTEGER ::/)" in str(ast)
 
 
-def test_constructor_char_len(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_constructor_char_len():
     ''' Test with an array constructor that specifies a length type
-        parameter. '''
+        parameter and uses square brackets. '''
     fcode = "array = [ CHARACTER(LEN=7) :: 'Takata', 'Tanaka', 'Hayashi' ]"
     reader = FortranStringReader(fcode)
     ast = Fortran2003.Assignment_Stmt(reader)
@@ -81,7 +85,8 @@ def test_constructor_char_len(f2003_create):
             in str(ast))
 
 
-def test_implicit_loop_constructor(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_implicit_loop_constructor():
     ''' Test array constructor with implicit loop containing an intrinsic
     call. '''
     fcode = "WHERE((/(JBODY,JBODY=1,SIZE(ARR1(:)))/)/=1) ARR1(:)=1.0"
@@ -92,3 +97,15 @@ def test_implicit_loop_constructor(f2003_create):
     do_control = constructor.children[1].children[0].children[1]
     assert isinstance(do_control, Fortran2003.Ac_Implied_Do_Control)
     assert "(JBODY, JBODY = 1, SIZE(ARR1(:)))" in str(ast)
+
+
+@pytest.mark.xfail(reason="#255 - Structure_Constructor_2 ends up matching "
+                   "key=var pattern.")
+@pytest.mark.usefixtures("f2003_create")
+def test_implicit_loop_constructor_no_parentheses():
+    ''' Test that the parser does not match an implicit loop if the
+    surrounding parentheses are missing (R470). '''
+    fcode = "(/ival, ival=1, nval, istep/)"
+    reader = FortranStringReader(fcode)
+    ast = Fortran2003.Array_Constructor(reader)
+    assert ast is None
