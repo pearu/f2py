@@ -107,6 +107,7 @@ def test_attr_spec_dimension(attr, ref):
     ('CODIMENSION   [:]', 'CODIMENSION [:]'),
     ('COdimenSION[  : ]', 'CODIMENSION [:]'),
     ('coDIMENSIon [ *]', 'CODIMENSION [*]'),
+    ('CoDimension [1:*]', 'CODIMENSION [1 : *]'),
     (' CODIMENSION [1:5, *]   ', 'CODIMENSION [1 : 5, *]'),
     ('codimension [1:5, 2, 3:*]', 'CODIMENSION [1 : 5, 2, 3 : *]')
 ])
