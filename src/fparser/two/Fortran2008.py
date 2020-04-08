@@ -77,13 +77,18 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
-    SeparatorBase
+    SeparatorBase, Type_Declaration_StmtBase
 from fparser.two.Fortran2003 import (
-    Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
-    Component_Attr_Spec as Component_Attr_Spec_2003,
     EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
     Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
-    Declaration_Construct, Use_Stmt, Import_Stmt)
+    Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
+    Entity_Decl_List, Component_Decl_List)
+# Import of F2003 classes that are updated in this standard.
+from fparser.two.Fortran2003 import (
+    Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
+    Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
+    Component_Attr_Spec as Component_Attr_Spec_2003,
+    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003)
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -101,6 +106,41 @@ class Program_Unit(Program_Unit_2003):  # R202
     # therefore extend the Fortran2003 specification
     subclass_names = Program_Unit_2003.subclass_names[:]
     subclass_names.append("Submodule")
+
+
+class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
+    '''
+    Fortran 2008 rule 436
+    data-component-def-stmt is declaration-type-spec [
+             [ , component-attr-spec-list ] :: ] component-decl-list
+
+    The implementation of this rule does not add anything to the Fortran 2003
+    variant but reimplements the match method identical to Fortran 2003 as
+    otherwise the generated Fortran 2008 variant of `Component_Attr_Spec_List`
+    would not be used. Unfortunately, the required `attr_spec_list_cls` can not
+    simply be provided as a class property since the relevant class is only
+    generated at the end of this file using the `use_names` class property of
+    this class.
+
+    '''
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching of a data component definition statement.
+
+        :param str string: the reader or string to match as a data \
+                           component definition statement.
+
+        :return: a 3-tuple containing declaration type specification, \
+                 component attribute specification and component declaration \
+                 list if there is a match or None if there is no match.
+        :rtype: NoneType or (Declaration_Type_Spec, Component_Attr_Spec_List, \
+                Component_Decl_List)
+
+        '''
+        return Type_Declaration_StmtBase.match(
+            Declaration_Type_Spec, Component_Attr_Spec_List,
+            Component_Decl_List, string)
 
 
 class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
@@ -124,6 +164,39 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
     subclass_names.append('Codimension_Attr_Spec')
     attributes = Component_Attr_Spec_2003.attributes[:]
     attributes.append('CONTIGUOUS')
+
+
+class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+    '''
+    Fortran 2008 rule 501
+    type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
+                             entity-decl-list
+
+    The implementation of this rule does not add anything to the Fortran 2003
+    variant but reimplements the match method identical to Fortran 2003 as
+    otherwise the generated Fortran 2008 variant of `Attr_Spec_List` would not
+    be used. Unfortunately, the required `attr_spec_list_cls` can not simply be
+    provided as a class property since the relevant class is only generated
+    at the end of this file using the `use_names` class property of this class.
+
+    '''
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching of a type declaration statement.
+
+        :param str string: the reader or string to match as a type \
+                           declaration statement.
+
+        :return: a 3-tuple containing declaration type specification, \
+                 attributespecification and entity declaration list \
+                 if there is a match or None if there is no match.
+        :rtype: NoneType or \
+            (Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List)
+
+        '''
+        return Type_Declaration_StmtBase.match(
+            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d

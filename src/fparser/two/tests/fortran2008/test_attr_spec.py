@@ -58,6 +58,7 @@ import pytest
 from fparser.two.Fortran2008 import (
     Attr_Spec, Codimension_Attr_Spec, Deferred_Coshape_Spec, Coshape_Spec)
 from fparser.two import Fortran2003
+from fparser.api import get_reader
 
 
 @pytest.mark.usefixtures("f2008_create")
@@ -189,3 +190,16 @@ def test_invalid_coshape_spec(attr):
     '''Test that invalid coshape_spec raise exception.'''
     with pytest.raises(Fortran2003.NoMatchError):
         _ = Coshape_Spec(attr)
+
+
+def test_attr_spec_list_parser(f2008_parser):
+    '''Test that Attr_Spec_List is generated correctly and used by a parser.'''
+    code = '''
+SUBROUTINE FOO(i)
+  INTEGER, CONTIGUOUS, INTENT(IN) :: i(10)
+  INTEGER :: j
+END SUBROUTINE
+    '''.strip()
+    reader = get_reader(code)
+    result = f2008_parser(reader)
+    assert str(result) == code

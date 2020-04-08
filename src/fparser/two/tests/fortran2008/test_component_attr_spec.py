@@ -46,6 +46,7 @@ import pytest
 from fparser.two.Fortran2003 import (
     Access_Spec, Dimension_Component_Attr_Spec, NoMatchError)
 from fparser.two.Fortran2008 import Component_Attr_Spec, Codimension_Attr_Spec
+from fparser.api import get_reader
 
 
 @pytest.mark.usefixtures("f2008_create")
@@ -105,3 +106,19 @@ def test_private_attr():
     obj = Component_Attr_Spec('private')
     assert isinstance(obj, Access_Spec), repr(obj)
     assert str(obj) == 'PRIVATE'
+
+
+def test_component_attr_spec_list_parser(f2008_parser):
+    '''Test that Component_Attr_Spec_List is generated correctly
+    and used by the F2008 parser.'''
+    code = '''
+MODULE FOO
+  TYPE :: GRID_TYPE
+    REAL, ALLOCATABLE, CODIMENSION [:, :, :] :: GRID(:, :, :)
+    REAL :: BAR
+  END TYPE GRID_TYPE
+END MODULE FOO
+    '''.strip()
+    reader = get_reader(code)
+    result = f2008_parser(reader)
+    assert str(result) == code
