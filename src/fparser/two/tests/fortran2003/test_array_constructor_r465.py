@@ -39,7 +39,6 @@ various forms of array constructor.
 
 import pytest
 from fparser.common.readfortran import FortranStringReader
-from fparser.two.utils import walk
 from fparser.two import Fortran2003
 
 
@@ -83,43 +82,3 @@ def test_constructor_char_len():
                       Fortran2003.Intrinsic_Type_Spec)
     assert ("array = [CHARACTER(LEN = 7) :: 'Takata', 'Tanaka', 'Hayashi']"
             in str(ast))
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_implicit_loop_constructor():
-    ''' Test array constructor with implicit loop containing an intrinsic
-    call. '''
-    fcode = "WHERE((/(JBODY,JBODY=1,SIZE(ARR1(:)))/)/=1) ARR1(:)=1.0"
-    reader = FortranStringReader(fcode)
-    ast = Fortran2003.Where_Stmt(reader)
-    assert isinstance(ast, Fortran2003.Where_Stmt)
-    constructor = walk(ast, Fortran2003.Array_Constructor)[0]
-    do_control = constructor.children[1].children[0].children[1]
-    assert isinstance(do_control, Fortran2003.Ac_Implied_Do_Control)
-    assert "(JBODY, JBODY = 1, SIZE(ARR1(:)))" in str(ast)
-
-
-@pytest.mark.xfail(reason="#255 - Structure_Constructor_2 ends up matching "
-                   "key=var pattern.")
-@pytest.mark.usefixtures("f2003_create")
-def test_implicit_loop_constructor_no_parentheses():
-    ''' Test that the parser does not match an implicit loop if the
-    surrounding parentheses are missing (R470). '''
-    fcode = "(/ival, ival=1, nval, istep/)"
-    reader = FortranStringReader(fcode)
-    ast = Fortran2003.Array_Constructor(reader)
-    assert ast is None
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_implied_do_no_match():
-    ''' R471 - implied-do-control must contain an "=" and 2 or three integer
-    expressions. '''
-    # Missing '='
-    reader = FortranStringReader("[(j,1,2,1)]")
-    assert Fortran2003.Array_Constructor(reader) is None
-    # Incorrect number of integer expressions
-    reader = FortranStringReader("[(j,j=1,2,1,3)]")
-    assert Fortran2003.Array_Constructor(reader) is None
-    reader = FortranStringReader("[(j,j=1)]")
-    assert Fortran2003.Array_Constructor(reader) is None

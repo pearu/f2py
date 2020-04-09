@@ -2411,6 +2411,7 @@ class Array_Constructor(BracketBase):  # R465
     subclass_names = []
     use_names = ['Ac_Spec']
 
+    @staticmethod
     def match(string):
         try:
             obj = BracketBase.match('(//)', Ac_Spec, string)
@@ -2419,7 +2420,6 @@ class Array_Constructor(BracketBase):  # R465
         if obj is None:
             obj = BracketBase.match('[]', Ac_Spec, string)
         return obj
-    match = staticmethod(match)
 
 
 class Ac_Spec(Base):  # R466
@@ -2488,11 +2488,27 @@ class Ac_Implied_Do(Base):  # R470
         return '(%s, %s)' % tuple(self.items)
 
 
-class Ac_Implied_Do_Control(Base):  # R471
-    """
+class Ac_Implied_Do_Control(Base):
+    '''
+    Fortran2003 rule R471
+    Specifies the syntax for the control of an implicit loop within an
+    array constructor.
+
     <ac-implied-do-control> is <ac-do-variable> = <scalar-int-expr> ,
         <scalar-int-expr> [ , <scalar-int-expr> ]
-    """
+
+    where (R472) ac-do-variable is scalar int variable.
+
+    The following are associated constraints:
+
+    "C493 (R472) ac-do-variable shall be a named variable."
+    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
+          ac-implied-do shall not appear as the ac-do-variable of the
+          containing ac-implied-do."
+
+    C497 is currently not checked - issue #257.
+
+    '''
     subclass_names = []
     use_names = ['Ac_Do_Variable', 'Scalar_Int_Expr']
 
