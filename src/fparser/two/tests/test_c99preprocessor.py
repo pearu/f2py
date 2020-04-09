@@ -50,7 +50,6 @@ from fparser.two.C99Preprocessor import (
     Cpp_Include_Stmt, Cpp_Macro_Stmt, Cpp_Macro_Identifier,
     Cpp_Macro_Identifier_List, Cpp_Undef_Stmt, Cpp_Line_Stmt, Cpp_Error_Stmt,
     Cpp_Warning_Stmt, Cpp_Null_Stmt, Cpp_Pp_Tokens)
-from fparser.two.parser import ParserFactory
 from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
