@@ -109,3 +109,17 @@ def test_implicit_loop_constructor_no_parentheses():
     reader = FortranStringReader(fcode)
     ast = Fortran2003.Array_Constructor(reader)
     assert ast is None
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_implied_do_no_match():
+    ''' R471 - implied-do-control must contain an "=" and 2 or three integer
+    expressions. '''
+    # Missing '='
+    reader = FortranStringReader("[(j,1,2,1)]")
+    assert Fortran2003.Array_Constructor(reader) is None
+    # Incorrect number of integer expressions
+    reader = FortranStringReader("[(j,j=1,2,1,3)]")
+    assert Fortran2003.Array_Constructor(reader) is None
+    reader = FortranStringReader("[(j,j=1)]")
+    assert Fortran2003.Array_Constructor(reader) is None
