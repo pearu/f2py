@@ -212,6 +212,19 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
     provided as a class property since the relevant class is only generated
     at the end of this file using the `use_names` class property of this class.
 
+    Associated constraints are:
+
+    "C501 (R501)  The same attr-spec shall not appear more than once in a given
+          type-declaration-stmt."
+    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
+          the entity-decl-list shall consist of a single entity-decl."
+    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
+          shall not contain any procedure names."
+    "C505 (R501)  If initialization appears, a double-colon separator shall
+          appear before the entity-decl-list."
+
+    C501-C503, C505 are currently not checked - issue #259.
+
     '''
 
     @staticmethod
@@ -381,6 +394,14 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
     '''
     Fortran 2008 rule R511
     explicit-coshape-spec is [ coshape-spec-list , ] [ lower-cobound : ] *
+
+    Associated constraint is:
+
+    "C529 (R511)  A lower-cobound or upper-cobound that  is  not  a  constant
+          expression shall appear only in a subprogram, BLOCK construct, or
+          interface body."
+
+    C529 is currently not checked - issue #259.
 
     '''
     subclass_names = []
