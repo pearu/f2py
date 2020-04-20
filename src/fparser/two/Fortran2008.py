@@ -122,6 +122,39 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
     generated at the end of this file using the `use_names` class property of
     this class.
 
+    Associated constraints are:
+
+    "C439 (R436)  No component-attr-spec shall appear more than once in a given
+          component-def-stmt."
+    "C440 (R436)  If neither the POINTER nor the ALLOCATABLE attribute is
+          specified, the declaration-type-spec in the component-def-stmt shall
+          specify an intrinsic type or a previously defined derived type."
+    "C441 (R436)  If the POINTER or ALLOCATABLE attribute is specified, each
+          component-array-spec shall be a deferred-shape-spec-list."
+    "C442 (R436)  If a coarray-spec appears, it shall be a
+          deferred-coshape-spec-list and the component shall have the
+          ALLOCATABLE attribute."
+    "C443 (R436)  If a coarray-spec appears, the component shall not be of type
+          C_PTR or C_FUNPTR."
+    "C445 (R436)  If neither the POINTER nor the ALLOCATABLE attribute is
+          specified, each component-array-spec shall be an
+          explicit-shape-spec-list."
+    "C447 (R436)  A component shall not have both the ALLOCATABLE and POINTER
+          attributes."
+    "C448 (R436)  If the CONTIGUOUS attribute is specified, the component shall
+          be an array with the POINTER attribute."
+    "C457 (R436)  If component-initialization appears, a double-colon separator
+          shall appear before the component-decl-list."
+    "C458 (R436)  If component-initialization appears, every type parameter and
+          array bound of the component shall be a colon or constant expression.
+    "C459 (R436)  If => appears in component-initialization, POINTER shall
+          appear in the component-attr-spec-list. If = appears in
+          component-initialization, neither POINTER nor ALLOCATABLE shall
+          appear in the component-attr-spec-list."
+
+    C439-C443, C445, C447-C448, C457-C459 are currently not checked
+    - issue #258.
+
     '''
 
     @staticmethod
