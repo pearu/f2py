@@ -104,13 +104,14 @@ def _repr_utf(anobj):
     :param object anobj: the object for which the repr() is required.
 
     :returns: the repr of the supplied object with any "u'" replaced
-              with "'".
+              with "'" and '(u"' with '("'.
     :rtype: str
 
     '''
     import six
     if six.PY2:
-        return repr(anobj).replace("u'", "'")
+        new_repr = repr(anobj).replace("u'", "'")
+        return new_repr.replace('(u"', '("')
     return repr(anobj)
 
 #
