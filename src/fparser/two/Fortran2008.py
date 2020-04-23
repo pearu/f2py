@@ -167,8 +167,10 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
         :return: a 3-tuple containing declaration type specification, \
                  component attribute specification and component declaration \
                  list if there is a match or None if there is no match.
-        :rtype: NoneType or (Declaration_Type_Spec, Component_Attr_Spec_List, \
-                Component_Decl_List)
+        :rtype: `NoneType` or \
+            (:py:class:`fparser.two.Fortran2003.Declaration_Type_Spec`, \
+             :py:class:`fparser.two.Fortran2008.Component_Attr_Spec_List`, \
+             :py:class:`fparser.two.Fortran2003.Component_Decl_List`)
 
         '''
         return Type_Declaration_StmtBase.match(
@@ -237,8 +239,10 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
         :return: a 3-tuple containing declaration type specification, \
                  attributespecification and entity declaration list \
                  if there is a match or None if there is no match.
-        :rtype: NoneType or \
-            (Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List)
+        :rtype: `NoneType` or \
+            (:py:class:`fparser.two.Fortran2003.Declaration_Type_Spec`, \
+             :py:class:`fparser.two.Fortran2008.Attr_Spec_List`, \
+             :py:class:`fparser.two.Fortran2003.Entity_Decl_List`)
 
         '''
         return Type_Declaration_StmtBase.match(
@@ -267,7 +271,7 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
         :return: `None` if there is no match, otherwise a 2-tuple \
                  containing `CODIMENSION` as a string and the matched \
                  coarray-spec..
-        :rtype: `None` or \
+        :rtype: `NoneType` or \
             (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Bracket_Spec`,)
 
         '''
@@ -299,7 +303,7 @@ class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
         :return: `None` if there is no match, otherwise a 3-tuple \
                  containing the left bracket, the matched coarray-spec, \
                  and the right bracket.
-        :rtype: `None` or \
+        :rtype: `NoneType` or \
             (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Spec`, `str`)
 
         '''
@@ -348,7 +352,7 @@ class Attr_Spec(Attr_Spec_2003):  # R502
 
         :return: `None` if there is no match, otherwise a 1-tuple \
                  containing the matched string.
-        :rtype: `None` or (`str`,)
+        :rtype: `NoneType` or (`str`,)
 
         '''
         return STRINGBase.match(pattern.abs_attr_spec_f08, string)
@@ -382,7 +386,7 @@ class Deferred_Coshape_Spec(SeparatorBase):  # R510
 
         :return: `None` if there is no match, otherwise a 2-tuple \
                  containing `None`.
-        :rtype: `None` or (`None`, `None`)
+        :rtype: `NoneType` or (`None`, `None`)
 
         '''
         if string == ':':
@@ -417,7 +421,7 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
         :return: `None` if there is no match, otherwise a 2-tuple \
                  containing matched coshape-spec-list or `None` and \
                  matched lower-cobound or `None`.
-        :rtype: `None` or \
+        :rtype: `NoneType` or \
             (:py:class:`fparser.two.Fortran2008.Coshape_Spec_List` or `None`, \
              :py:class:`fparser.two:Fortran2008.Lower_Cobound` or `None`)
 
@@ -473,7 +477,7 @@ class Coshape_Spec(SeparatorBase):  # R511.a
 
         :return: `None` if there is no match, otherwise a 2-tuple with \
                  lower bound if given or `None`, and upper bound.
-        :rtype: `None` or \
+        :rtype: `NoneType` or \
             (`None`, :py:class:`fparser.two.Fortran2008.Upper_Cobound`) or \
             (:py:class:`fparser.two.Fortran2008.Lower_Cobound`, \
              :py:class:`fparser.two.Fortran2008.Upper_Cobound`)
