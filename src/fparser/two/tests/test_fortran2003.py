@@ -2463,65 +2463,6 @@ def test_read_stmt():
         "Name('a_namelist_or_format')))), None, None)")
 
 
-def test_write_stmt():
-    ''' Tests for various forms of WRITE statement (R911). '''
-    tcls = Write_Stmt
-    obj = tcls('write (123)"hey"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(123) "hey"'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
-        "(Char_Literal_Constant('\"hey\"', None),)))")
-
-    obj = tcls('WRITE (*,"(I3)") my_int')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
-        "(Name('my_int'),)))")
-
-    obj = tcls('WRITE (*,namtest)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(*, namtest)'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
-        "Name('namtest')))), None)")
-
-    # Test when format specifier contains an '=' character
-    iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
-    assert isinstance(iolist, Io_Control_Spec_List)
-    obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec(None, "
-        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
-        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
-
-    obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
-        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
-
-    # Format specifier contains an '=' and is built using concatenation
-    obj = tcls('''WRITE (6, '("write some=""'//'text'//'""")')''')
-    assert isinstance(obj, tcls)
-    assert str(obj) == '''WRITE(6, '("write some=""' // 'text' // '""")')'''
-    assert (_repr_utf(obj) == "Write_Stmt(Io_Control_Spec_List(',', "
-            "(Io_Control_Spec(None, Int_Literal_Constant('6', None)), "
-            "Io_Control_Spec(None, Level_3_Expr(Level_3_Expr("
-            "Char_Literal_Constant('\\'(\"write some=\"\"\\'', None), '//', "
-            "Char_Literal_Constant(\"'text'\", None)), '//', "
-            "Char_Literal_Constant('\\'\"\"\")\\'', None))))), None)")
-
-
 def test_print_stmt():  # R912
 
     tcls = Print_Stmt
