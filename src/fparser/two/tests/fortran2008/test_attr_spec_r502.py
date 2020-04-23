@@ -160,39 +160,6 @@ def test_invalid_codimension_attr_spec(attr):
         _ = Codimension_Attr_Spec(attr)
 
 
-@pytest.mark.usefixtures("f2008_create")
-def test_deferred_coshape_spec():
-    '''Test parsing of deferred_coshape_spec.'''
-    obj = Deferred_Coshape_Spec(':')
-    assert isinstance(obj, Deferred_Coshape_Spec), repr(obj)
-    assert str(obj) == ':'
-
-
-@pytest.mark.usefixtures("f2008_create")
-@pytest.mark.parametrize('attr', ['', ' :', ': ', '  : ', '::', '5'])
-def test_invalid_deferred_coshape_spec(attr):
-    '''Test that invalid deferred_coshape_spec raise exception.'''
-    with pytest.raises(Fortran2003.NoMatchError):
-        _ = Deferred_Coshape_Spec(attr)
-
-
-@pytest.mark.usefixtures("f2008_create")
-@pytest.mark.parametrize('attr', ['a', '10', '1:3', ' 5 : 123 ', '2:   b   '])
-def test_coshape_spec(attr):
-    '''Test that coshape_spec are parsed correctly.'''
-    obj = Coshape_Spec(attr)
-    assert isinstance(obj, Coshape_Spec), repr(obj)
-    assert str(obj) == attr.replace(' ', '').replace(':', ' : ')
-
-
-@pytest.mark.usefixtures("f2008_create")
-@pytest.mark.parametrize('attr', [':', 'a:', ':b', '*', '', '1::3'])
-def test_invalid_coshape_spec(attr):
-    '''Test that invalid coshape_spec raise exception.'''
-    with pytest.raises(Fortran2003.NoMatchError):
-        _ = Coshape_Spec(attr)
-
-
 def test_attr_spec_list_parser(f2008_parser):
     '''Test that Attr_Spec_List is generated correctly and used by a parser.'''
     code = '''
