@@ -70,7 +70,6 @@
 # First version created: Oct 2006
 
 import re
-import logging
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
@@ -980,6 +979,7 @@ class KeywordValueBase(Base):
         :return: instances of the classes representing quantities on the LHS
                  and RHS (LHS is optional) or nothing if no match is found
         :rtype: 2-tuple of objects or nothing
+
         '''
         if require_lhs and '=' not in string:
             return
@@ -996,8 +996,15 @@ class KeywordValueBase(Base):
         # an '=', e.g. FMT='("Hello = False")'
         from fparser.two.Fortran2003 import Char_Literal_Constant
         if not Char_Literal_Constant.match(string) and "=" in string:
+            # Only split on the left-most '=' character
             lhs, rhs = string.split('=', 1)
             lhs = lhs.rstrip()
+            if not pattern.name.match(lhs.lstrip()):
+                # If lhs is not a valid name (e.g. it contains
+                # quotation marks) then treat the whole expression as
+                # a RHS.
+                lhs = None
+                rhs = string.rstrip()
         else:
             lhs = None
             rhs = string.rstrip()
