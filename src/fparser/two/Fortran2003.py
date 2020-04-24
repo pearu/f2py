@@ -2463,10 +2463,22 @@ class Ac_Value(Base):  # R469
     subclass_names = ['Ac_Implied_Do', 'Expr']
 
 
-class Ac_Implied_Do(Base):  # R470
-    """
-    <ac-implied-do> = ( <ac-value-list> , <ac-implied-do-control> )
-    """
+class Ac_Implied_Do(Base):
+    '''
+    Fortran2003 rule R470.
+    Describes the form of implicit do loop used within an array constructor.
+
+    ac-implied-do is ( ac-value-list , ac-implied-do-control )
+
+    Subject to the following constraint:
+
+    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
+          ac-implied-do shall not appear as the ac-do-variable of the
+          containing ac-implied-do."
+
+    C497 is currently not checked - issue #257.
+
+    '''
     subclass_names = []
     use_names = ['Ac_Value_List', 'Ac_Implied_Do_Control']
 
@@ -2494,19 +2506,10 @@ class Ac_Implied_Do_Control(Base):
     Specifies the syntax for the control of an implicit loop within an
     array constructor.
 
-    <ac-implied-do-control> is <ac-do-variable> = <scalar-int-expr> ,
-        <scalar-int-expr> [ , <scalar-int-expr> ]
+    ac-implied-do-control is ac-do-variable = scalar-int-expr,
+        scalar-int-expr [ , scalar-int-expr ]
 
-    where (R472) ac-do-variable is scalar int variable.
-
-    The following are associated constraints:
-
-    "C493 (R472) ac-do-variable shall be a named variable."
-    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
-          ac-implied-do shall not appear as the ac-do-variable of the
-          containing ac-implied-do."
-
-    C497 is currently not checked - issue #257.
+    where (R472) ac-do-variable is scalar-int-variable
 
     '''
     subclass_names = []
@@ -2540,11 +2543,20 @@ class Ac_Implied_Do_Control(Base):
         return '%s = %s' % (self.items[0], ', '.join(map(str, self.items[1])))
 
 
-class Ac_Do_Variable(Base):  # R472
-    """
-    <ac-do-variable> = <scalar-int-variable>
-    <ac-do-variable> shall be a named variable
-    """
+class Ac_Do_Variable(Base):
+    '''
+    Fortran2003 rule R472
+    Specifies the permitted form of an implicit do-loop variable within an
+    array constructor.
+
+    ac-do-variable is scalar-int-variable
+    ac-do-variable shall be a named variable
+
+    The following are associated constraints:
+
+    "C493 (R472) ac-do-variable shall be a named variable."
+
+    '''
     subclass_names = ['Scalar_Int_Variable']
 
 #
