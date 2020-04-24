@@ -1,26 +1,26 @@
 # This Python file uses the following encoding: utf-8
 # Copyright (c) 2020 Science and Technology Facilities Council.
-
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -36,7 +36,7 @@
 ''' pytest module for the Fortran2003 Write Statement - R911. '''
 
 import pytest
-from fparser.two.Fortran2003 import Write_Stmt
+from fparser.two.Fortran2003 import Write_Stmt, Io_Control_Spec_List
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -46,7 +46,7 @@ def test_write_stmt():
     obj = tcls('write (123)"hey"')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
-    assert _repr_utf(obj) == (
+    assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
         "(Char_Literal_Constant('\"hey\"', None),)))")
@@ -54,7 +54,7 @@ def test_write_stmt():
     obj = tcls('WRITE (*,"(I3)") my_int')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
-    assert _repr_utf(obj) == (
+    assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
@@ -63,7 +63,7 @@ def test_write_stmt():
     obj = tcls('WRITE (*,namtest)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, namtest)'
-    assert _repr_utf(obj) == (
+    assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
         "Name('namtest')))), None)")
@@ -73,7 +73,7 @@ def test_write_stmt():
     assert isinstance(iolist, Io_Control_Spec_List)
     obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
+    assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec(None, "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
@@ -81,7 +81,7 @@ def test_write_stmt():
 
     obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
+    assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
@@ -91,11 +91,12 @@ def test_write_stmt():
     obj = tcls('''WRITE (6, '("write some=""'//'text'//'""")')''')
     assert isinstance(obj, tcls)
     assert str(obj) == '''WRITE(6, '("write some=""' // 'text' // '""")')'''
-    assert (_repr_utf(obj) == "Write_Stmt(Io_Control_Spec_List(',', "
-            "(Io_Control_Spec(None, Int_Literal_Constant('6', None)), "
-            "Io_Control_Spec(None, Level_3_Expr(Level_3_Expr("
-            "Char_Literal_Constant('\\'(\"write some=\"\"\\'', None), '//', "
-            "Char_Literal_Constant(\"'text'\", None)), '//', "
-            "Char_Literal_Constant('\\'\"\"\")\\'', None))))), None)")
-
-
+    obj_repr = repr(obj)
+    obj_repr = obj_repr.replace('u"', '"')
+    assert obj_repr.replace("u'", "'") == (
+        "Write_Stmt(Io_Control_Spec_List(',', "
+        "(Io_Control_Spec(None, Int_Literal_Constant('6', None)), "
+        "Io_Control_Spec(None, Level_3_Expr(Level_3_Expr("
+        "Char_Literal_Constant('\\'(\"write some=\"\"\\'', None), '//', "
+        "Char_Literal_Constant(\"'text'\", None)), '//', "
+        "Char_Literal_Constant('\\'\"\"\")\\'', None))))), None)")
