@@ -14,6 +14,8 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+## Release 0.0.11 (15/05/2020) ##
+
 09/04/2020 PR #254. Fix for >1 character pre-processor macro identifiers.
 
 24/03/2020 PR #239. Add support for CPP directives in fparser2.
