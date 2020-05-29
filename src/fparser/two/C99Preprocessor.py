@@ -76,7 +76,8 @@ def match_cpp_directive(reader):
     if isinstance(reader, FortranReaderBase):
         item = reader.get_item()
         is_potential_cpp_directive = isinstance(item, CppDirective)
-        reader.put_item(item)
+        if item:
+            reader.put_item(item)
         # Do not bail out early here to have a catch all return statement
         # at the end (that would not be reachable by tests otherwise)
     if is_potential_cpp_directive:
