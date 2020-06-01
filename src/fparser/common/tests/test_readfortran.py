@@ -751,28 +751,25 @@ def test_none_in_fifo(log):
     log.reset()
     handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
     os.close(handle)
-    try:
-        with io.open(filename, mode='w', encoding='UTF-8') as source_file:
-            source_file.write(FULL_FREE_SOURCE)
 
-        with io.open(filename, mode='r', encoding='UTF-8') as source_file:
-            unit_under_test = FortranFileReader(source_file)
-            while True:
-                try:
-                    _ = unit_under_test.next(ignore_comments=False)
-                except StopIteration:
-                    break
-            # Erroneously push a None to the FIFO buffer
-            unit_under_test.put_item(None)
-            # Attempt to read the next item
-            with pytest.raises(StopIteration):
+    with io.open(filename, mode='w', encoding='UTF-8') as source_file:
+        source_file.write(FULL_FREE_SOURCE)
+
+    with io.open(filename, mode='r', encoding='UTF-8') as source_file:
+        unit_under_test = FortranFileReader(source_file)
+        while True:
+            try:
                 _ = unit_under_test.next(ignore_comments=False)
-            # Check that nothing has been logged
-            for log_level in ["debug", "info", "warning", "error", "critical"]:
-                assert log.messages[log_level] == []
-    except Exception:
-        os.unlink(filename)
-        raise
+            except StopIteration:
+                break
+        # Erroneously push a None to the FIFO buffer
+        unit_under_test.put_item(None)
+        # Attempt to read the next item
+        with pytest.raises(StopIteration):
+            _ = unit_under_test.next(ignore_comments=False)
+        # Check that nothing has been logged
+        for log_level in ["debug", "info", "warning", "error", "critical"]:
+            assert log.messages[log_level] == []
 
 
 def test_bad_file_reader():
