@@ -1744,7 +1744,7 @@ class Component_Attr_Spec(STRINGBase):  # R441
 
         :return: None if there is no match, otherwise a 1-tuple \
             containing the matched attribute string.
-        :rtype: `None` or (`str`,)
+        :rtype: NoneType or (str,)
 
         '''
         return STRINGBase.match(cls.attributes, string)
