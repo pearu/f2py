@@ -320,7 +320,7 @@ class Base(ComparableMixin):
             parent_cls.append(cls)
 
         # Get the class' match method if it has one
-        match = cls.__dict__.get('match')
+        match = getattr(cls, 'match') if hasattr(cls, 'match') else None
 
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):

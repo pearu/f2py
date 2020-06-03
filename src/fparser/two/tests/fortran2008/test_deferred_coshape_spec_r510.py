@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,26 +32,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Module which provides pytest fixtures for use by files in this
-directory
+'''Test Fortran 2008 rule R510
+
+    deferred-coshape-spec is :
 
 '''
+
 import pytest
-from fparser.two.parser import ParserFactory
+from fparser.two.Fortran2008 import Deferred_Coshape_Spec
+from fparser.two import Fortran2003
 
 
-@pytest.fixture
-def f2008_create():
-    '''Create a fortran 2008 parser class hierarchy'''
-    _ = ParserFactory().create(std="f2008")
+@pytest.mark.usefixtures("f2008_create")
+def test_deferred_coshape_spec():
+    '''Test parsing of deferred_coshape_spec.'''
+    obj = Deferred_Coshape_Spec(':')
+    assert isinstance(obj, Deferred_Coshape_Spec), repr(obj)
+    assert str(obj) == ':'
 
 
-@pytest.fixture
-def f2008_parser():
-    '''Create a Fortran 2008 parser class hierarchy and return the parser
-    for usage in tests.
-
-    :return: a Program class (not object) for use with the Fortran reader.
-    :rtype: :py:class:`fparser.two.Fortran2003.Program`
-    '''
-    return ParserFactory().create(std='f2008')
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', ' :', ': ', '  : ', '::', '5'])
+def test_invalid_deferred_coshape_spec(attr):
+    '''Test that invalid deferred_coshape_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Deferred_Coshape_Spec(attr)

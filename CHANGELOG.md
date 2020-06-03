@@ -14,6 +14,9 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+03/06/2020 PR #249. Adds support for Fortran2008 CONTIGUOUS and
+           CODIMENSION keywords.
+
 ## Release 0.0.11 (15/05/2020) ##
 
 09/04/2020 PR #254. Fix for >1 character pre-processor macro identifiers.

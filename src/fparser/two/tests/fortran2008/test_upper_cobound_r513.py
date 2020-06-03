@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,26 +32,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Module which provides pytest fixtures for use by files in this
-directory
+'''Test Fortran 2008 rule R513
+
+    upper-cobound is specification-expr
 
 '''
+
 import pytest
-from fparser.two.parser import ParserFactory
+from fparser.two.Fortran2008 import Upper_Cobound
+from fparser.two import Fortran2003
 
 
-@pytest.fixture
-def f2008_create():
-    '''Create a fortran 2008 parser class hierarchy'''
-    _ = ParserFactory().create(std="f2008")
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, _type', [
+    ('aaa', Fortran2003.Name),
+    ('aAa', Fortran2003.Name),
+    ('1', Fortran2003.Int_Literal_Constant),
+    ('5  + 7', Fortran2003.Level_2_Expr),
+    ('3-9', Fortran2003.Level_2_Expr)
+])
+def test_upper_cobound(attr, _type):
+    '''Test that upper_cobound is parsed correctly.'''
+    obj = Upper_Cobound(attr)
+    assert isinstance(obj, _type), repr(obj)
+    ref = attr.replace(' ', '').replace('+', ' + ').replace('-', ' - ')
+    assert str(obj) == ref
 
 
-@pytest.fixture
-def f2008_parser():
-    '''Create a Fortran 2008 parser class hierarchy and return the parser
-    for usage in tests.
-
-    :return: a Program class (not object) for use with the Fortran reader.
-    :rtype: :py:class:`fparser.two.Fortran2003.Program`
-    '''
-    return ParserFactory().create(std='f2008')
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', '*'])
+def test_invalid_upper_cobound(attr):
+    '''Test that invalid upper_cobound raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Upper_Cobound(attr)
