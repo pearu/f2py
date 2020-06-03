@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,26 +32,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Module which provides pytest fixtures for use by files in this
-directory
+'''Test Fortran 2008 rule 436
+
+  data-component-def-stmt is declaration-type-spec [
+           [ , component-attr-spec-list ] :: ] component-decl-list
+
+R436 (and its Fortran 2003 counterpart R440) are currently untested (see #465).
 
 '''
-import pytest
-from fparser.two.parser import ParserFactory
-
-
-@pytest.fixture
-def f2008_create():
-    '''Create a fortran 2008 parser class hierarchy'''
-    _ = ParserFactory().create(std="f2008")
-
-
-@pytest.fixture
-def f2008_parser():
-    '''Create a Fortran 2008 parser class hierarchy and return the parser
-    for usage in tests.
-
-    :return: a Program class (not object) for use with the Fortran reader.
-    :rtype: :py:class:`fparser.two.Fortran2003.Program`
-    '''
-    return ParserFactory().create(std='f2008')
