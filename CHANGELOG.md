@@ -14,6 +14,16 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+03/06/2020 PR #263 for #262. Fixes bug in fparser2 logging a 'critical'
+           error when it reaches the end of a file.
+
+03/06/2020 PR #249. Adds support for Fortran2008 CONTIGUOUS and
+           CODIMENSION keywords.
+
+## Release 0.0.11 (15/05/2020) ##
+
+09/04/2020 PR #254. Fix for >1 character pre-processor macro identifiers.
+
 24/03/2020 PR #239. Add support for CPP directives in fparser2.
 
 07/03/2020 PR #250 for #248. Identify CPP directives in the reader.

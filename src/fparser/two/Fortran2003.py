@@ -1661,10 +1661,42 @@ class Component_Def_Stmt(Base):  # R439
 
 
 class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
-    """
+    '''
+    Fortran 2003 rule 440
     <data-component-def-stmt> is <declaration-type-spec> [
              [ , <component-attr-spec-list> ] :: ] <component-decl-list>
-    """
+
+    Associated constraints are:
+
+    "C436 (R440)  No component-attr-spec shall appear more than once in a given
+          component-def-stmt."
+    "C437 (R440)  A component declared with the CLASS keyword shall have the
+          ALLOCATABLE or POINTER attribute."
+    "C438 (R440)  If the POINTER attribute is not specified for a component,
+          the declaration-type-spec in the component-def-stmt shall be CLASS(*)
+          or shall specify an intrinsic type or a previously defined derived
+          type."
+    "C439 (R440)  If the POINTER attribute is specified for a component, the
+          declaration-type-spec in the component-def-stmt shall be CLASS(*) or
+          shall specify an intrinsic type or any accessible derived type
+          including the type being defined."
+    "C440 (R440)  If the POINTER or ALLOCATABLE attribute is specified, each
+          component-array-spec shall be a deferred-shape-spec-list."
+    "C441 (R440)  If neither the POINTER attribute nor the ALLOCATABLE
+          attribute is specified, each component-array-spec shall be an
+          explicit-shape-spec-list."
+    "C443 (R440)  A component shall not have both the ALLOCATABLE and the
+          POINTER attribute."
+    "C446 (R440)  If component-initialization appears, a double-colon separator
+          shall appear before the component-decl-list."
+    "C447 (R440)  If => appears in component-initialization, POINTER shall
+          appear in the component-attr-spec-list. If = appears in
+          component-initialization, POINTER or ALLOCATABLE shall not appear in
+          the component-attr-spec-list."
+
+    C436-C441, C443, C446-C447 are currently not checked - issue #258.
+
+   '''
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Component_Attr_Spec_List',
                  'Component_Decl_List']
@@ -1697,10 +1729,25 @@ class Component_Attr_Spec(STRINGBase):  # R441
     """
     subclass_names = ['Access_Spec', 'Dimension_Component_Attr_Spec']
     use_names = []
+    attributes = ['POINTER', 'ALLOCATABLE']
 
-    @staticmethod
-    def match(string):
-        return STRINGBase.match(['POINTER', 'ALLOCATABLE'], string)
+    @classmethod
+    def match(cls, string):
+        '''Implements the matching for component attribute specifications.
+
+        Note that this is implemented as a `classmethod` (not a
+        `staticmethod`), using attribute keywords from the list provided
+        as a class property. This allows expanding this list for
+        Fortran 2008 without having to reimplement the matching.
+
+        :param str string: the string to match as an attribute.
+
+        :return: None if there is no match, otherwise a 1-tuple \
+            containing the matched attribute string.
+        :rtype: NoneType or (str,)
+
+        '''
+        return STRINGBase.match(cls.attributes, string)
 
 
 class Component_Decl(Base):  # R442
@@ -2565,10 +2612,71 @@ class Ac_Do_Variable(Base):
 
 
 class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
-    """
+    '''
+    Fortran 2003 rule 501
     <type-declaration-stmt> = <declaration-type-spec> [
         [ , <attr-spec> ]... :: ] <entity-decl-list>
-    """
+
+    Associated constraints are:
+
+    "C507 (R501)  The same attr-spec shall not appear more than once in a given
+          type-declaration-stmt."
+    "C509 (R501)  An entity declared with the CLASS keyword shall be a dummy
+          argument or have the ALLOCATABLE or POINTER attribute."
+    "C510 (R501)  An array that has the POINTER or ALLOCATABLE attribute shall
+          be specified with an array-spec that is a deferred-shape-spec-list."
+    "C511 (R501)  An array-spec for an object-name that is a function result
+          that does not have the ALLOCATABLE or POINTER attribute shall be an
+          explicit-shape-spec-list."
+    "C512 (R501)  If the POINTER attribute is specified, the ALLOCATABLE,
+          TARGET, EXTERNAL, or INTRINSIC attribute shall not be specified."
+    "C513 (R501)  If the TARGET attribute is specified, the POINTER, EXTERNAL,
+          INTRINSIC, or PARAMETER attribute shall not be specified."
+    "C514 (R501)  The PARAMETER attribute shall not be specified for a dummy
+          argument, a pointer, an allocatable entity, a function, or an object
+          in a common block."
+    "C515 (R501)  The INTENT, VALUE, and OPTIONAL attributes may be specified
+          only for dummy arguments."
+    "C516 (R501)  The INTENT attribute shall not be specified for a dummy
+          procedure without the POINTER attribute."
+    "C517 (R501)  The SAVE attribute shall not be specified for an object that
+          is in a common block, a dummy argument, a procedure, a function
+          result, an automatic data object, or an object with the PARAMETER
+          attribute."
+    "C519 (R501)  An entity in an entity-decl-list shall not have the EXTERNAL
+          or INTRINSIC attribute specified unless it is a function."
+    "C522 (R501)  The initialization shall appear if the statement contains a
+          PARAMETER attribute."
+    "C523 (R501)  If initialization appears, a double-colon separator shall
+          appear before the entity-decl-list."
+    "C526 (R501)  If the VOLATILE attribute is specified, the PARAMETER,
+          INTRINSIC, EXTERNAL, or INTENT(IN) attribute shall not be specified."
+    "C527 (R501)  If the VALUE attribute is specified, the PARAMETER, EXTERNAL,
+          POINTER, ALLOCATABLE, DIMENSION, VOLATILE, INTENT(INOUT), or
+          INTENT(OUT) attribute shall not be specified."
+    "C528 (R501)  If the VALUE attribute is specified, the length type
+          parameter values shall be omitted or specified by initialization
+          expressions."
+    "C529 (R501)  The VALUE attribute shall not be specified for a dummy
+          procedure."
+    "C530 (R501)  The ALLOCATABLE, POINTER, or OPTIONAL attribute shall not be
+          specified for adummy argument of a procedure that has
+          aproc-language-binding-spec."
+    "C532 (R501)  If a language-binding-spec is specified, the entity declared
+          shall be an interoperable variable."
+    "C533 (R501)  If a language-binding-spec with a NAME= specifier appears,
+          the entity-decl-list shall consist of a single entity-decl."
+    "C534 (R503)  The PROTECTED attribute is permitted only in the
+          specification part of a module."
+    "C535 (R501)  The PROTECTED attribute is permitted only for a procedure
+          pointer or named variable that is not in a common block."
+    "C536 (R501)  If the PROTECTED attribute is specified, the EXTERNAL,
+          INTRINSIC, or PARAMETER attribute shall not be specified."
+
+    C507, C509-C517, C519, C522-C523, C526-C530, C532-C533, C535-C536 are
+    currently not checked - issue #259.
+
+    '''
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
@@ -4567,7 +4675,7 @@ class Level_1_Expr(UnaryOpBase):  # R702
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Unary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R703
 
@@ -4802,7 +4910,7 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Binary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Binary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R723
 

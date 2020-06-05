@@ -870,12 +870,18 @@ class FortranReaderBase(object):
 
         Resolves ``;`` statement terminations.
 
-        :param bool ignore_comments: Whether or not to ignore comments
-                                     (overrides self._ignore_comments)
-
         See also
         --------
         next, get_source_item
+
+        :param bool ignore_comments: Whether or not to ignore comments \
+                                     (overrides self._ignore_comments)
+
+        :returns: the next line of Fortran.
+        :rtype: :py:class:`fparser.common.readfortran.Line`
+
+        :raises StopIteration: if no new items are found.
+
         """
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
@@ -887,9 +893,9 @@ class FortranReaderBase(object):
             except IndexError:
                 # construct a new item from source
                 item = self.get_source_item()
-                if item is None:
-                    raise StopIteration
-            if not (item.isempty(ignore_comments)):
+            if item is None:
+                raise StopIteration
+            if not item.isempty(ignore_comments):
                 break
             # else ignore empty lines and comments by getting next line
 

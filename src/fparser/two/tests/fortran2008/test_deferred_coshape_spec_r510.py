@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -31,30 +31,29 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-language: python
-python:
-  - 2.7
-  - 3.6
-# command to install dependencies
-before_install:
-  - pip install codecov
-install:
-  - "pip install ."
-script:
-  # fparser should work even under limited terminal conditions
-  # (this is only relevant for versions before Python 3.7).
-  - export LC_ALL=POSIX
-  - coverage run --source=fparser -m py.test
-  - coverage report -m
-after_success:
-  - codecov
-# Configure travis to deploy to the pypi server when a new
-# version is tagged on master
-deploy:
-  provider: pypi
-  user: "__token__"
-  password:
-    secure: "BgJwNpWTZdUkczQ7CVoynjisxuTm5bqfTt1CyNYS891vQ99ne40p8po8MujHvM2cU8lq9UegvZj3K+SITEZ2CkD5ceQ1mmBowc9OTahBdwMkRHMKC24dxs9wsg4zIdzli8SCwxeqFodfCQX6tfr3E77nEWBd+3ktgQlh11/Xan9g304NqldA4f53OZz7NWLX0F3KXpZ2BSYf/IyJbek1MFQ6d+D7XKeVvM2tVle/FuIv4/1kbVKMzB0BfdWPFJoqz8nMZ5H5VajVgSkwTB0NlPZpyWlz0ZIYNDIQCtY0Q7ELND4t+Ts1TOGW30j4c7LqqySAVHcSBRU4NJz0oY3TQjGwC8dkjC1+X/zUMgZ1K3jKLZm0WqURMTEXlq2ewfSFgngvj+q9Zt4IlSxsZmiXHkLSi5zv2M/FIMSZrMrAZccr/Utv29+eHnCLoxsqSuCUnIw4pnacRmkwRbVnd2mmmbdW2d9hlAkL7W1+14hpgssGYfC0pTcQCZEdFfbpzJUjssRCEIi9ahqjwX+mvBVKQxDt95EcEGx7nouCYmySwkhtIkuKyBCrdyb7LdRn4xdmCPLKzgGeQAzbuHdentZogQ/yxgTexIfoWwDboSDs4n64/ZeMAIuE8XqxqEhHiiCoY+hxEKLf45E3XClbY1f0hVRG1ZBHnK1qPKPEKk36Nr4="
-  on:
-    tags: true
 
+'''Test Fortran 2008 rule R510
+
+    deferred-coshape-spec is :
+
+'''
+
+import pytest
+from fparser.two.Fortran2008 import Deferred_Coshape_Spec
+from fparser.two import Fortran2003
+
+
+@pytest.mark.usefixtures("f2008_create")
+def test_deferred_coshape_spec():
+    '''Test parsing of deferred_coshape_spec.'''
+    obj = Deferred_Coshape_Spec(':')
+    assert isinstance(obj, Deferred_Coshape_Spec), repr(obj)
+    assert str(obj) == ':'
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', ' :', ': ', '  : ', '::', '5'])
+def test_invalid_deferred_coshape_spec(attr):
+    '''Test that invalid deferred_coshape_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Deferred_Coshape_Spec(attr)
