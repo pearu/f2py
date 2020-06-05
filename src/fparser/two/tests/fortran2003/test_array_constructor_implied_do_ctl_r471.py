@@ -66,9 +66,10 @@ def test_implied_do_no_match():
     # Missing '='
     reader = FortranStringReader("j+1,2,1")
     assert Fortran2003.Ac_Implied_Do_Control(reader) is None
-    # Incorrect number of integer expressions
+    # Incorrect number of integer expressions (too many)
     reader = FortranStringReader("j=1,2,1,3")
     assert Fortran2003.Ac_Implied_Do_Control(reader) is None
+    # Incorrect number of integer expressions (too few)
     reader = FortranStringReader("j=1")
     assert Fortran2003.Ac_Implied_Do_Control(reader) is None
     # C493 ac-do-variable shall be a named variable

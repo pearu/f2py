@@ -36,7 +36,9 @@
 Test Fortran 2003 rule R470: this file tests the support for the
 various forms of implicit loop within an array constructor.
 
-TODO #255 and #257 - these tests need expanding to fully cover the rule.
+TODO #255 and #257 - these tests need expanding.
+
+Further tests are required here to fully cover the rule.
 
 '''
 
