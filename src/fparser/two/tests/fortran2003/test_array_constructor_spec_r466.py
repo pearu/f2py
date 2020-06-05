@@ -32,35 +32,55 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R465: this file tests that both (/.../) and
-[...] are supported when specifying an array constructor.
+'''Test Fortran 2003 rule R466: this file tests the support for the
+various forms of array constructor specifier.
 
 '''
 
 import pytest
-from fparser.common.readfortran import FortranStringReader
+from fparser.two.utils import NoMatchError
 from fparser.two import Fortran2003
 
 
 @pytest.mark.usefixtures("f2003_create")
-@pytest.mark.parametrize("left, right", [("(/", "/)"), ("[", "]")])
-def test_brackets_array_constructor(left, right):
-    ''' Test parsing of array constructor specified with both valid types of
-    bracket. '''
-    fcode = "array = {0} 1, 2, 3{1}".format(left, right)
-    reader = FortranStringReader(fcode)
-    ast = Fortran2003.Assignment_Stmt(reader)
-    assert isinstance(ast, Fortran2003.Assignment_Stmt)
-    assert isinstance(ast.children[2], Fortran2003.Array_Constructor)
-    assert isinstance(ast.children[2].children[1], Fortran2003.Ac_Value_List)
-    assert "array = {0}1, 2, 3{1}".format(left, right) in str(ast)
+def test_zero_size_array_constructor():
+    ''' Test that we can parse a valid, zero-size array constructor. '''
+    fcode = "integer ::"
+    ast = Fortran2003.Ac_Spec(fcode)
+    assert isinstance(ast, Fortran2003.Ac_Spec)
+    assert isinstance(ast.children[0],
+                      Fortran2003.Intrinsic_Type_Spec)
+
+
+def test_int_literals_array_constructor():
+    ''' Test when a simple list of integer literals is provided as the
+    content of the constructor. '''
+    fcode = "1, 2, 3"
+    ast = Fortran2003.Ac_Spec(fcode)
+    assert isinstance(ast, Fortran2003.Ac_Value_List)
+
+
+def test_expr_list_array_constructor():
+    ''' Test when the provided content consists of expressions. '''
+    fcode = "ACOS(-1.0), SIN(1.0), 1.0+3.0"
+    ast = Fortran2003.Ac_Spec(fcode)
+    assert isinstance(ast, Fortran2003.Ac_Value_List)
 
 
 @pytest.mark.usefixtures("f2003_create")
-@pytest.mark.parametrize("example", ["[1,2/)", "[1,2[]", "(/1,3]", "(/1,3)"])
-def test_array_constructor_no_match(example):
-    ''' Check that incorrect constructors are not matched. '''
-    fcode = "array = " + example
-    reader = FortranStringReader(fcode)
-    ast = Fortran2003.Assignment_Stmt(reader)
-    assert ast is None
+def test_array_spec_char_len():
+    ''' Test with a specifier that specifies a length type parameter. '''
+    fcode = "CHARACTER(LEN=7) :: 'Takata', 'Tanaka', 'Hayashi'"
+    ast = Fortran2003.Ac_Spec(fcode)
+    assert isinstance(ast, Fortran2003.Ac_Spec)
+    assert isinstance(ast.children[0],
+                      Fortran2003.Intrinsic_Type_Spec)
+    assert "CHARACTER(LEN = 7) :: 'Takata', 'Tanaka', 'Hayashi'" in str(ast)
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_array_spec_no_match():
+    ''' Check that incorrect content is not matched. '''
+    fcode = "call hello()"
+    with pytest.raises(NoMatchError):
+        Fortran2003.Ac_Spec(fcode)
