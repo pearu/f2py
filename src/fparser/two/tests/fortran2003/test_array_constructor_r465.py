@@ -54,6 +54,11 @@ def test_brackets_array_constructor(left, right):
     assert isinstance(ast.children[2], Fortran2003.Array_Constructor)
     assert isinstance(ast.children[2].children[1], Fortran2003.Ac_Value_List)
     assert "array = {0}1, 2, 3{1}".format(left, right) in str(ast)
+    # Invalid content between valid brackets
+    fcode = "array = {0}call hello(){1}".format(left, right)
+    reader = FortranStringReader(fcode)
+    ast = Fortran2003.Assignment_Stmt(reader)
+    assert ast is None
 
 
 @pytest.mark.usefixtures("f2003_create")

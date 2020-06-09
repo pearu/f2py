@@ -35,6 +35,8 @@
 '''Test Fortran 2003 rule R466: this file tests the support for the
 various forms of array constructor specifier.
 
+Note that the tostr method is not yet tested.
+
 '''
 
 import pytest

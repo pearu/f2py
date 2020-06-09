@@ -2603,6 +2603,8 @@ class Ac_Do_Variable(Base):
 
     "C493 (R472) ac-do-variable shall be a named variable."
 
+    C493 is currently not checked - issue #257.
+
     '''
     subclass_names = ['Scalar_Int_Variable']
 
