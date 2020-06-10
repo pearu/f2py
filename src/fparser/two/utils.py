@@ -958,10 +958,11 @@ class SeparatorBase(Base):
 
 
 class KeywordValueBase(Base):
-    """
-::
-    <keyword-value-base> = [ <lhs> = ] <rhs>
-    """
+    '''
+
+    <keyword-value-base> is [ <lhs> = ] <rhs>
+
+    '''
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
         '''
@@ -984,8 +985,8 @@ class KeywordValueBase(Base):
         if require_lhs and '=' not in string:
             return
         if isinstance(lhs_cls, (list, tuple)):
-            for s in lhs_cls:
-                obj = KeywordValueBase.match(s, rhs_cls, string,
+            for cls in lhs_cls:
+                obj = KeywordValueBase.match(cls, rhs_cls, string,
                                              require_lhs=require_lhs,
                                              upper_lhs=upper_lhs)
                 if obj:
@@ -994,34 +995,42 @@ class KeywordValueBase(Base):
         # We can't just blindly check whether 'string' contains an '='
         # character as it could itself hold a string constant containing
         # an '=', e.g. FMT='("Hello = False")'
-        from fparser.two.Fortran2003 import Char_Literal_Constant
-        if not Char_Literal_Constant.match(string) and "=" in string:
-            # Only split on the left-most '=' character
-            lhs, rhs = string.split('=', 1)
-            lhs = lhs.rstrip()
-            if not pattern.name.match(lhs.lstrip()):
-                # If lhs is not a valid name (e.g. it contains
-                # quotation marks) then treat the whole expression as
-                # a RHS.
-                lhs = None
-                rhs = string.rstrip()
-        else:
+        # Therefore we only split on the left-most '=' character
+        pieces = string.split('=', 1)
+        if len(pieces) != 2:
+            # The string did not contain any '=' characters
             lhs = None
-            rhs = string.rstrip()
-        rhs = rhs.lstrip()
-        if not rhs:
-            return
+        else:
+            # It does contain at least one '='. Is the content on the LHS
+            # a valid Fortran name?
+            lhs = pieces[0].strip()
+            if pattern.name.match(lhs):
+                # Attempt to match the content before the '='
+                if isinstance(lhs_cls, str):
+                    # lhs_cls is a keyword
+                    lhs = pieces[0]
+                    if upper_lhs:
+                        lhs = lhs.upper()
+                    if lhs != lhs_cls:
+                        # The content to the left of the '=' does not match
+                        # the supplied keyword
+                        return None
+                else:
+                    lhs = lhs_cls(pieces[0])
+            else:
+                # The content on the LHS of the '=' is not a valid Fortran name
+                lhs = None
         if not lhs:
+            # We haven't matched the LHS and therefore proceed to treat the
+            # whole string as a RHS if the LHS is not strictly required.
             if require_lhs:
-                return
-            return None, rhs_cls(rhs)
-        if isinstance(lhs_cls, str):
-            if upper_lhs:
-                lhs = lhs.upper()
-            if lhs_cls != lhs:
-                return
-            return lhs, rhs_cls(rhs)
-        return lhs_cls(lhs), rhs_cls(rhs)
+                return None
+            rhs = string.strip()
+        else:
+            rhs = pieces[-1].strip()
+        if not rhs:
+            return None
+        return lhs, rhs_cls(rhs)
 
     def tostr(self):
         if self.items[0] is None:

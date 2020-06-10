@@ -6957,21 +6957,25 @@ class Io_Control_Spec_List(SequenceBase):  # R913-list
                 # (and therefore either a Format or Namelist spec).
                 lst.append(Io_Control_Spec(spec))
                 unit_is_positional = True
-            elif idx == 1 and "=" not in spec:
-                if not unit_is_positional:
-                    # Cannot have a positional argument following a
-                    # named argument
-                    return
-                # Without knowing the type of the variable named in spec
-                # we have no way of knowing whether this is a format or
-                # a namelist specifier. However, if it is a character
-                # constant or "*" then it must be a Format spec and we can
-                # prepend "FMT=" to it.
-                spec = spec.lstrip().rstrip()
+            elif idx == 1:
+                spec = spec.strip()
                 if Char_Literal_Constant.match(spec) or \
                    StringBase.match("*", spec):
+                    # If it is a character constant or "*" then it must be a
+                    # Format spec and we can prepend "FMT=" to it.
+                    if not unit_is_positional:
+                        # Cannot have a positional argument following a
+                        # named argument
+                        return
                     spec = "FMT={0}".format(spec)
-                lst.append(Io_Control_Spec(spec))
+                    lst.append(Io_Control_Spec(spec))
+                else:
+                    # We know that spec is not a character literal. If the
+                    # UNIT field was named then this argument too must be named
+                    # and therefore spec must contain an '='.
+                    if "=" not in spec and not unit_is_positional:
+                        return
+                    lst.append(Io_Control_Spec(spec))
             else:
                 lst.append(Io_Control_Spec(spec))
         return ',', tuple(lst)
