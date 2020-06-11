@@ -6996,6 +6996,21 @@ class Io_Control_Spec_List(SequenceBase):
 
     @staticmethod
     def match(string):
+        '''
+        Attempts to match the supplied string with a list of Io_Control_Spec
+        items. We have to override the base implementation because the first
+        two items in the list have specific meanings if they are not explictly
+        named: the first must be the unit number and the second may be either
+        a format specifier *or* a namelist-group-name.
+
+        :param str string: the string that is checked for a match.
+
+        :returns: a tuple of Io_Control_Spec objects if the match is \
+                  successful, None otherwise.
+        :rtype: tuple of :py:class:`fparser.two.Fortran2003.Io_Control_Spec` \
+                objects or NoneType
+
+        '''
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
         lst = []
@@ -7016,7 +7031,7 @@ class Io_Control_Spec_List(SequenceBase):
                    StringBase.match("*", spec):
                     # This second argument is a character constant or "*". It
                     # is therefore not a named argument and thus, the first
-                    # argument must not have been named either.
+                    # (unit number) argument must not have been named either.
                     if not unit_is_positional:
                         # Cannot have a positional argument following a
                         # named argument

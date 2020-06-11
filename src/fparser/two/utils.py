@@ -962,24 +962,35 @@ class KeywordValueBase(Base):
 
     <keyword-value-base> is [ <lhs> = ] <rhs>
 
+    where:
+
+    R215 keyword is name.
+
     '''
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
         '''
-        :param lhs_cls: list, tuple or single value of classes to attempt to
-                        match LHS against (in order), or string containing
-                        keyword to match
+        Attempts to match the supplied `string` with `lhs_cls` = `rhs_cls`.
+        If `lhs_cls` is a str then it is compared with the content to the
+        left of the first '=' character in `string`. If that content is a
+        valid Fortran name but does *not* match `lhs_cls` then the match
+        fails, irrespective of the setting of `require_lhs`.
+
+        :param lhs_cls: list, tuple or single value of classes to attempt to \
+                        match LHS against (in order), or string containing \
+                        keyword to match.
         :type lhs_cls: names of classes deriving from `:py:class:Base` or str
-        :param rhs_cls: name of class to match RHS against
+        :param rhs_cls: name of class to match RHS against.
         :type rhs_cls: name of a class deriving from `:py:class:Base`
-        :param str string: text to be matched
-        :param bool require_lhs: whether the expression to be matched must
-                                 contain a LHS that is assigned to
-        :param bool upper_lhs: whether or not to convert the LHS of the
-                               matched expression to upper case
-        :return: instances of the classes representing quantities on the LHS
-                 and RHS (LHS is optional) or nothing if no match is found
-        :rtype: 2-tuple of objects or nothing
+        :param str string: text to be matched.
+        :param bool require_lhs: whether the expression to be matched must \
+                                 contain a LHS that is assigned to.
+        :param bool upper_lhs: whether or not to convert the LHS of the \
+                               matched expression to upper case.
+
+        :return: instances of the classes representing quantities on the LHS \
+                 and RHS (LHS is optional) or None if no match is found.
+        :rtype: 2-tuple of objects or NoneType
 
         '''
         if require_lhs and '=' not in string:
