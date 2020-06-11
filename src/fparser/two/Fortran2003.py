@@ -6943,15 +6943,15 @@ class Io_Control_Spec_List(SequenceBase):
 
     Subject to the following constraints:
 
-    C909 No speciﬁer shall appear more than once in a given
+    C909 No specifier shall appear more than once in a given
          io-control-spec-list.
-    C910 An io-unit shall be speciﬁed; if the optional characters UNIT= are
-         omitted, the io-unit shall be the ﬁrst item in the
+    C910 An io-unit shall be specified; if the optional characters UNIT= are
+         omitted, the io-unit shall be the first item in the
          io-control-spec-list.
-    C911 A DELIM= or SIGN= speciﬁer shall not appear in a read-stmt.
-    C912 A BLANK=, PAD=, END=, EOR=, or SIZE=speciﬁer shall not appear in a
+    C911 A DELIM= or SIGN= specifier shall not appear in a read-stmt.
+    C912 A BLANK=, PAD=, END=, EOR=, or SIZE=specifier shall not appear in a
          write-stmt.
-    C913 The label in the ERR=, EOR=, or END= speciﬁer shall be the statement
+    C913 The label in the ERR=, EOR=, or END= specifier shall be the statement
          label of a branch target statement that appears in the same scoping
          unit as the data transfer statement.
     C914 A namelist-group-name shall be the name of a namelist group.
@@ -6960,32 +6960,32 @@ class Io_Control_Spec_List(SequenceBase):
     C916 An io-control-spec-list shall not contain both a format and a
          namelist-group-name.
     C917 If format appears without a preceding FMT=, it shall be the second
-         item in the iocontrol-spec-list and the ﬁrst item shall be io-unit.
+         item in the iocontrol-spec-list and the first item shall be io-unit.
     C918 If namelist-group-name appears without a preceding NML=, it shall be
-         the second item in the io-control-spec-list and the ﬁrst item shall
+         the second item in the io-control-spec-list and the first item shall
          be io-unit.
-    C919 If io-unit is not a ﬁle-unit-number, the io-control-spec-list shall
-         not contain a REC= speciﬁer or a POS= speciﬁer.
-    C920 If the REC= speciﬁer appears, an END= speciﬁer shall not appear, a
+    C919 If io-unit is not a file-unit-number, the io-control-spec-list shall
+         not contain a REC= specifier or a POS= specifier.
+    C920 If the REC= specifier appears, an END= specifier shall not appear, a
          namelist-groupname shall not appear, and the format, if any, shall not
          be an asterisk.
-    C921 An ADVANCE= speciﬁer may appear only in a formatted sequential or
-         stream input/output statement with explicit format speciﬁcation (10.1)
-         whose control information list does not contain an internal-ﬁle-
-         variable as the io-unit.
-    C922 If an EOR= speciﬁer appears, an ADVANCE= speciﬁer also shall appear.
-    C923 If a SIZE= speciﬁer appears, an ADVANCE= speciﬁer also shall appear.
-    C924 The scalar-char-initialization-expr in an ASYNCHRONOUS= speciﬁer shall
-         be of type default character and shall have the value YES or NO.
-    C925 An ASYNCHRONOUS= speciﬁer with a value YES shall not appear unless
-         io-unit is a ﬁle-unit-number.
-    C926 If an ID= speciﬁer appears, an ASYNCHRONOUS= speciﬁer with the value
+    C921 An ADVANCE= specifier may appear only in a formatted sequential or
+         stream input/output statement with explicit format specification
+         (10.1) whose control information list does not contain an
+         internal-file-variable as the io-unit.
+    C922 If an EOR= specifier appears, an ADVANCE= specifier also shall appear.
+    C923 If a SIZE= specifier appears, an ADVANCE= specifier also shall appear.
+    C924 The scalar-char-initialization-expr in an ASYNCHRONOUS= specifier
+         shall be of type default character and shall have the value YES or NO.
+    C925 An ASYNCHRONOUS= specifier with a value YES shall not appear unless
+         io-unit is a file-unit-number.
+    C926 If an ID= specifier appears, an ASYNCHRONOUS= specifier with the value
          YES shall also appear.
-    C927 If a POS= speciﬁer appears, the io-control-spec-list shall not contain
-         a REC= speciﬁer.
-    C928 If a DECIMAL=, BLANK=, PAD=, SIGN=, or ROUND= speciﬁer appears, a
+    C927 If a POS= specifier appears, the io-control-spec-list shall not
+         contain a REC= specifier.
+    C928 If a DECIMAL=, BLANK=, PAD=, SIGN=, or ROUND= specifier appears, a
          format or namelist-group-name shall also appear.
-    C929 If a DELIM= speciﬁer appears, either format shall be an asterisk or
+    C929 If a DELIM= specifier appears, either format shall be an asterisk or
          namelist-group-name shall appear.
 
     TODO #267. Of these constraints, only C917 and C918 are currently enforced.
