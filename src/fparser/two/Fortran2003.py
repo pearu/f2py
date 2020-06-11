@@ -6935,10 +6935,62 @@ items : (Format, Output_Item_List)
         return 'PRINT %s, %s' % tuple(self.items)
 
 
-class Io_Control_Spec_List(SequenceBase):  # R913-list
-    """
-    <io-control-spec-list> is a list taking into account C910, C917, C918
-    """
+class Io_Control_Spec_List(SequenceBase):
+    '''
+    Rule 913 - Control information list.
+
+    <io-control-spec-list> is a list of io-control-spec items.
+
+    Subject to the following constraints:
+
+    C909 No speciﬁer shall appear more than once in a given
+         io-control-spec-list.
+    C910 An io-unit shall be speciﬁed; if the optional characters UNIT= are
+         omitted, the io-unit shall be the ﬁrst item in the
+         io-control-spec-list.
+    C911 A DELIM= or SIGN= speciﬁer shall not appear in a read-stmt.
+    C912 A BLANK=, PAD=, END=, EOR=, or SIZE=speciﬁer shall not appear in a
+         write-stmt.
+    C913 The label in the ERR=, EOR=, or END= speciﬁer shall be the statement
+         label of a branch target statement that appears in the same scoping
+         unit as the data transfer statement.
+    C914 A namelist-group-name shall be the name of a namelist group.
+    C915 A namelist-group-name shall not appear if an input-item-list or an
+         output-item-list appears in the data transfer statement.
+    C916 An io-control-spec-list shall not contain both a format and a
+         namelist-group-name.
+    C917 If format appears without a preceding FMT=, it shall be the second
+         item in the iocontrol-spec-list and the ﬁrst item shall be io-unit.
+    C918 If namelist-group-name appears without a preceding NML=, it shall be
+         the second item in the io-control-spec-list and the ﬁrst item shall
+         be io-unit.
+    C919 If io-unit is not a ﬁle-unit-number, the io-control-spec-list shall
+         not contain a REC= speciﬁer or a POS= speciﬁer.
+    C920 If the REC= speciﬁer appears, an END= speciﬁer shall not appear, a
+         namelist-groupname shall not appear, and the format, if any, shall not
+         be an asterisk.
+    C921 An ADVANCE= speciﬁer may appear only in a formatted sequential or
+         stream input/output statement with explicit format speciﬁcation (10.1)
+         whose control information list does not contain an internal-ﬁle-
+         variable as the io-unit.
+    C922 If an EOR= speciﬁer appears, an ADVANCE= speciﬁer also shall appear.
+    C923 If a SIZE= speciﬁer appears, an ADVANCE= speciﬁer also shall appear.
+    C924 The scalar-char-initialization-expr in an ASYNCHRONOUS= speciﬁer shall
+         be of type default character and shall have the value YES or NO.
+    C925 An ASYNCHRONOUS= speciﬁer with a value YES shall not appear unless
+         io-unit is a ﬁle-unit-number.
+    C926 If an ID= speciﬁer appears, an ASYNCHRONOUS= speciﬁer with the value
+         YES shall also appear.
+    C927 If a POS= speciﬁer appears, the io-control-spec-list shall not contain
+         a REC= speciﬁer.
+    C928 If a DECIMAL=, BLANK=, PAD=, SIGN=, or ROUND= speciﬁer appears, a
+         format or namelist-group-name shall also appear.
+    C929 If a DELIM= speciﬁer appears, either format shall be an asterisk or
+         namelist-group-name shall appear.
+
+    TODO #267. Of these constraints, only C917 and C918 are currently enforced.
+
+    '''
     subclass_names = []
     use_names = ['Io_Control_Spec']
 
@@ -6952,30 +7004,39 @@ class Io_Control_Spec_List(SequenceBase):  # R913-list
             spec = splitted[idx].strip()
             spec = repmap(spec)
             if idx == 0 and "=" not in spec:
-                # Must be a unit number. However, we do not prepend "UNIT="
-                # to it in case the following Io_Control_Spec is positional
-                # (and therefore either a Format or Namelist spec).
+                # Must be a unit number (C910). However, we do not prepend
+                # "UNIT=" to it in case the following Io_Control_Spec is
+                # positional (and therefore either a Format (C917) or Namelist
+                # spec (C918)).
                 lst.append(Io_Control_Spec(spec))
                 unit_is_positional = True
             elif idx == 1:
                 spec = spec.strip()
                 if Char_Literal_Constant.match(spec) or \
                    StringBase.match("*", spec):
-                    # If it is a character constant or "*" then it must be a
-                    # Format spec and we can prepend "FMT=" to it.
+                    # This second argument is a character constant or "*". It
+                    # is therefore not a named argument and thus, the first
+                    # argument must not have been named either.
                     if not unit_is_positional:
                         # Cannot have a positional argument following a
                         # named argument
-                        return
+                        return None
+                    # This argument is a character constant or "*", it
+                    # must therefore be a Format spec (as opposed to a
+                    # namelist-group-name) and we can prepend "FMT=" to it.
                     spec = "FMT={0}".format(spec)
                     lst.append(Io_Control_Spec(spec))
                 else:
-                    # We know that spec is not a character literal. If the
-                    # UNIT field was named then this argument too must be named
-                    # and therefore spec must contain an '='.
-                    if "=" not in spec and not unit_is_positional:
-                        return
-                    lst.append(Io_Control_Spec(spec))
+                    # We know that spec is not a character literal and that
+                    # means it can either be a format or a namelist-group-name.
+                    io_spec = Io_Control_Spec(spec)
+                    # If the UNIT field was named then this argument too must
+                    # be named. Therefore the first child of io_spec (which
+                    # represents the name associated with the argument) must
+                    # not be None.
+                    if io_spec.children[0] is None and not unit_is_positional:
+                        return None
+                    lst.append(io_spec)
             else:
                 lst.append(Io_Control_Spec(spec))
         return ',', tuple(lst)

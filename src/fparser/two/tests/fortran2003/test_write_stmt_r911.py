@@ -36,6 +36,7 @@
 ''' pytest module for the Fortran2003 Write Statement - R911. '''
 
 import pytest
+from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2003 import Write_Stmt, Io_Control_Spec_List
 
 
@@ -88,15 +89,29 @@ def test_write_stmt():
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
 
     # Format specifier contains an '=' and is built using concatenation
-    obj = tcls('''WRITE (6, '("write some=""'//'text'//'""")')''')
+    obj = tcls('''WRITE (6, '("write = some=""'//'text'//'""")')''')
     assert isinstance(obj, tcls)
-    assert str(obj) == '''WRITE(6, '("write some=""' // 'text' // '""")')'''
+    assert str(obj) == '''WRITE(6, '("write = some=""' // 'text' // '""")')'''
     obj_repr = repr(obj)
     obj_repr = obj_repr.replace('u"', '"')
     assert obj_repr.replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec(None, Int_Literal_Constant('6', None)), "
         "Io_Control_Spec(None, Level_3_Expr(Level_3_Expr("
-        "Char_Literal_Constant('\\'(\"write some=\"\"\\'', None), '//', "
+        "Char_Literal_Constant('\\'(\"write = some=\"\"\\'', None), '//', "
         "Char_Literal_Constant(\"'text'\", None)), '//', "
         "Char_Literal_Constant('\\'\"\"\")\\'', None))))), None)")
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_named_unit_before_fmt_error():
+    ''' Check that we reject a WRITE that names the io-unit argument but
+    still has a positional format argument (containing an '=').
+    TODO #267. This test needs expanding and probably moving to a file
+    dedicated to R913 and its (many) constraints.
+
+    '''
+    tcls = Write_Stmt
+    # Cannot have an un-named (positional) argument after a named argument
+    with pytest.raises(NoMatchError):
+        tcls('''WRITE (UNIT=6, '("write some=""'//'text'//'""")')''')

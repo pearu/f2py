@@ -997,29 +997,26 @@ class KeywordValueBase(Base):
         # an '=', e.g. FMT='("Hello = False")'
         # Therefore we only split on the left-most '=' character
         pieces = string.split('=', 1)
-        if len(pieces) != 2:
-            # The string did not contain any '=' characters
-            lhs = None
-        else:
-            # It does contain at least one '='. Is the content on the LHS
-            # a valid Fortran name?
+        lhs = None
+        if len(pieces) == 2:
+            # It does contain at least one '='. Is the content before that
+            # char a valid Fortran name?
             lhs = pieces[0].strip()
-            if pattern.name.match(lhs):
+            if not pattern.name.match(lhs):
+                # It's not a valid name and therefore we don't have a lhs
+                lhs = None
+            else:
                 # Attempt to match the content before the '='
                 if isinstance(lhs_cls, str):
                     # lhs_cls is a keyword
-                    lhs = pieces[0]
                     if upper_lhs:
                         lhs = lhs.upper()
                     if lhs != lhs_cls:
-                        # The content to the left of the '=' does not match
-                        # the supplied keyword
+                        # The content to the left of the '=' is a valid Fortran
+                        # name and does not match the supplied keyword
                         return None
                 else:
-                    lhs = lhs_cls(pieces[0])
-            else:
-                # The content on the LHS of the '=' is not a valid Fortran name
-                lhs = None
+                    lhs = lhs_cls(lhs)
         if not lhs:
             # We haven't matched the LHS and therefore proceed to treat the
             # whole string as a RHS if the LHS is not strictly required.
@@ -1028,9 +1025,11 @@ class KeywordValueBase(Base):
             rhs = string.strip()
         else:
             rhs = pieces[-1].strip()
+        if rhs:
+            rhs = rhs_cls(rhs)
         if not rhs:
             return None
-        return lhs, rhs_cls(rhs)
+        return lhs, rhs
 
     def tostr(self):
         if self.items[0] is None:
