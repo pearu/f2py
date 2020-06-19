@@ -85,15 +85,13 @@ class FortranFormat(object):
     "not strict" although it's not entirely clear what that means. It may
     refer to the strictness of adherance to fixed format although what that
     means in the context of free format I don't know.
-    '''
-    def __init__(self, is_free, is_strict):
-        '''
-        Constructs a FortranFormat object from the describing parameters.
 
-        Arguments:
-            is_free   - (Boolean) True for free format, False for fixed.
-            is_strict - (Boolean) Some amount of strictness.
-        '''
+    :param bool is_free: True for free format, False for fixed.
+    :param bool is_strict: Some amount of strictness.
+    :param bool enable_f2py: Whether f2py directives are enabled or treated \
+                             as comments (the default).
+    '''
+    def __init__(self, is_free, is_strict, enable_f2py=False):
         if is_free is None:
             raise Exception('FortranFormat does not accept a None is_free')
         if is_strict is None:
@@ -101,6 +99,7 @@ class FortranFormat(object):
 
         self._is_free = is_free
         self._is_strict = is_strict
+        self._f2py_enabled = enable_f2py
 
     @classmethod
     def from_mode(cls, mode):
@@ -125,7 +124,8 @@ class FortranFormat(object):
     def __eq__(self, other):
         if isinstance(other, FortranFormat):
             return self.is_free == other.is_free \
-                   and self.is_strict == other.is_strict
+                   and self.is_strict == other.is_strict \
+                   and self.f2py_enabled == other.f2py_enabled
         raise NotImplementedError
 
     def __str__(self):
@@ -182,6 +182,14 @@ class FortranFormat(object):
         Returns true for strict free format.
         '''
         return self._is_free and self._is_strict
+
+    @property
+    def f2py_enabled(self):
+        '''
+        :returns: whether or not f2py directives are enabled.
+        :rtype: bool
+        '''
+        return self._f2py_enabled
 
     @property
     def mode(self):

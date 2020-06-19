@@ -1129,7 +1129,7 @@ class FortranReaderBase(object):
             return line
         if self._format.is_fixed:
             if line[0] in '*cC!#':
-                if line[1:5].lower() == 'f2py':
+                if self._format.f2py_enabled and line[1:5].lower() == 'f2py':
                     line = 5*' ' + line[5:]
                     self.f2py_comment_lines.append(self.linecount)
             if self._format.is_f77:
@@ -1190,7 +1190,7 @@ class FortranReaderBase(object):
             commentline = ''.join(items[k:])
             break
         if commentline is not None:
-            if commentline.startswith('!f2py'):
+            if self._format.f2py_enabled and commentline.startswith('!f2py'):
                 # go to next iteration:
                 newline = ''.join(noncomment_items) + commentline[5:]
                 self.f2py_comment_lines.append(lineno)
@@ -1306,7 +1306,8 @@ class FortranReaderBase(object):
                                            endlineno)
 
         line = self.handle_cf2py_start(line)
-        is_f2py_directive = startlineno in self.f2py_comment_lines
+        is_f2py_directive = (self._format.f2py_enabled and
+                             startlineno in self.f2py_comment_lines)
         isstrict = self._format.is_strict
         have_comment = False
         label = None
