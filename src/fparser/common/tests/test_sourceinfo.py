@@ -99,18 +99,18 @@ def test_fortranformat_constructor(pretty):
 
 ##############################################################################
 @pytest.fixture(scope="module",
+                name="permutations",
                 params=[(False, False, True),
                         (False, True, False),
                         (True, False, True),
                         (True, True, False)])
-def permutations(request):
+def permutations_fixture(request):
     '''
-    Returns a subset of the possible permutations of the input arguments.
+    :returns: a subset of the possible permutations of the input arguments.
+    :rtype: 2-tuple of bools
     '''
     return request.param
 
-
-##############################################################################
 
 def test_fortranformat_equality(permutations, pretty):
     #pylint: disable=redefined-outer-name
@@ -169,8 +169,6 @@ def test_fortranformat_from_mode(mode):
     assert str(unit_under_test.mode) == mode[0]
     assert not unit_under_test.f2py_enabled
 
-
-##############################################################################
 
 def test_format_from_mode_bad():
     '''
