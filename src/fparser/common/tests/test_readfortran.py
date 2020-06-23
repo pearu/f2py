@@ -976,6 +976,7 @@ def test_f2py_directive_fixf90(f2py_enabled):
     string_fix90 = """c -*- fix -*-
       subroutine foo
       a = 3!f2py.14 ! pi!
+!f2py a = 0.0
       end subroutine foo"""
     reader = FortranStringReader(string_fix90, ignore_comments=False)
     reader.set_format(FortranFormat(False, False, f2py_enabled))
@@ -983,10 +984,37 @@ def test_f2py_directive_fixf90(f2py_enabled):
                 "line #2'subroutine foo'"]
     if f2py_enabled:
         expected.extend(["line #3'a = 3.14'",
-                         "Comment('! pi!',(3, 3))"])
+                         "Comment('! pi!',(3, 3))",
+                         "line #4'a = 0.0'"])
     else:
         expected.extend(["line #3'a = 3'",
-                         "Comment('!f2py.14 ! pi!',(3, 3))"])
+                         "Comment('!f2py.14 ! pi!',(3, 3))",
+                         "Comment('!f2py a = 0.0',(4, 4))"])
+    expected.append("line #5'end subroutine foo'")
+    for item in reader:
+        # Remove 'u's to allow for py2/3 unicode differences
+        assert re.sub("u", "", six.text_type(item)) == \
+            re.sub("u", "", expected.pop(0))
+
+
+def test_f2py_freef90(f2py_enabled):
+    ''' Test the handling of f2py directives in free-format f90, in both
+    in-line and full-line comments. '''
+    lines = ["subroutine foo",
+             "   a = 3!f2py.14 ! pi!",
+             "!f2py a = 0.0",
+             "end subroutine foo"]
+    reader = FortranStringReader("\n".join(lines), ignore_comments=False)
+    reader.set_format(FortranFormat(True, False, f2py_enabled))
+    expected = ["line #1'subroutine foo'"]
+    if f2py_enabled:
+        expected.extend(["line #2'a = 3.14'",
+                         "Comment('! pi!',(2, 2))",
+                         "line #3'a = 0.0'"])
+    else:
+        expected.extend(["line #2'a = 3'",
+                         "Comment('!f2py.14 ! pi!',(2, 2))",
+                         "Comment('!f2py a = 0.0',(3, 3))"])
     expected.append("line #4'end subroutine foo'")
     for item in reader:
         # Remove 'u's to allow for py2/3 unicode differences
