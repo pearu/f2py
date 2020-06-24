@@ -173,19 +173,26 @@ def _is_fix_cont(line):
     return line and len(line) > 5 and line[5] != ' ' and line[:5] == 5 * ' '
 
 
-def _is_fix_comment(line, isstrict):
-    """
+def _is_fix_comment(line, isstrict, f2py_enabled):
+    '''
     Check whether line is a comment line in fixed format Fortran source.
-
-    :param str line: Line of code to check
-    :param bool isstrict: Whether we are strictly enforcing fixed/free fmt
 
     References
     ----------
     :f2008:`3.3.3`
-    """
+
+    :param str line: line of code to check.
+    :param bool isstrict: whether we are strictly enforcing fixed/free fmt.
+    :param bool f2py_enabled: whether support for f2py directives is enabled.
+
+    :returns: whether or not the supplied line is a fixed-format comment.
+    :rtype: bool
+
+    '''
     if line:
         if line[0] in '*cC!':
+            if f2py_enabled and line[1:5].lower() == "f2py":
+                return False
             return True
         if not isstrict:
             i = line.find('!')
@@ -722,7 +729,8 @@ class FortranReaderBase(object):
             # Check for a fixed-format comment. If the current line *is*
             # a comment and we are ignoring them, then recursively call this
             # routine again to get the next source line.
-            if _is_fix_comment(line, isstrict=self.format.is_strict):
+            if _is_fix_comment(line, isstrict=self.format.is_strict,
+                               f2py_enabled=self.format.f2py_enabled):
                 return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
@@ -1110,26 +1118,28 @@ class FortranReaderBase(object):
         return (line, line.lstrip().startswith('#'))
 
     def handle_cf2py_start(self, line):
-        """ Apply f2py directives to line.
+        '''
+        Process any f2py directives contained in the supplied line. If
+        support for such directives has been disabled then the line is
+        returned unchanged.
 
         F2py directives are specified in the beginning of the line.
 
         f2py directives can be used only in Fortran codes.  They are
         ignored when used inside PYF files.
 
-        Parameters
-        ----------
-        line : str
+        :param str line: the line to check for f2py directives.
 
-        Returns
-        -------
-        line : str
-        """
-        if not line or self._format.is_pyf:
+        :returns: the line with any f2py directives applied (if they are \
+                  enabled in the reader).
+        :rtype: str
+
+        '''
+        if not line or self._format.is_pyf or not self._format.f2py_enabled:
             return line
         if self._format.is_fixed:
             if line[0] in '*cC!#':
-                if self._format.f2py_enabled and line[1:5].lower() == 'f2py':
+                if line[1:5].lower() == 'f2py':
                     line = 5*' ' + line[5:]
                     self.f2py_comment_lines.append(self.linecount)
             if self._format.is_f77:
@@ -1320,7 +1330,7 @@ class FortranReaderBase(object):
                 if r:
                     return r
         if self._format.is_fixed:
-            if _is_fix_comment(line, isstrict):
+            if _is_fix_comment(line, isstrict, self._format.f2py_enabled):
                 # comment line:
                 return self.comment_item(line, startlineno, startlineno)
 
@@ -1416,14 +1426,15 @@ class FortranReaderBase(object):
             lines = [newline]
             next_line = self.get_next_line()
 
-            while _is_fix_cont(next_line) or _is_fix_comment(next_line,
-                                                             isstrict):
+            while (_is_fix_cont(next_line) or
+                   _is_fix_comment(next_line, isstrict,
+                                   self._format.f2py_enabled)):
                 # handle fix format line continuations for F90 or
                 # newer code.  Mixing fix format and free format line
                 # continuations is not allowed nor detected, just
                 # eject warnings.
                 line2 = get_single_line()  # consume next_line as line2
-                if _is_fix_comment(line2, isstrict):
+                if _is_fix_comment(line2, isstrict, self._format.f2py_enabled):
                     # handle fix format comments inside line continuations
                     # after the line construction
                     citem = self.comment_item(line2,
