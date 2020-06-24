@@ -1022,7 +1022,8 @@ def test_f2py_freef90(f2py_enabled):
             re.sub("u", "", expected.pop(0))
 
 
-@pytest.mark.xfail(reason="f2py directives not working in F77 code.")
+@pytest.mark.xfail(reason="Issue #270: f2py directives not working in F77 "
+                   "code.")
 def test_f2py_directive_f77(f2py_enabled):
     ''' Test the handling of the f2py directive in fixed-format f77. '''
     string_f77 = """c -*- f77 -*-
@@ -1030,9 +1031,12 @@ def test_f2py_directive_f77(f2py_enabled):
 cf2py call me ! hey
       end"""
     expected = ["Comment('c -*- f77 -*-',(1, 1))",
-                "line #2'subroutine foo'",
-                "line #3'call me ! hey'",
-                "line #10'end'"]
+                "line #2'subroutine foo'"]
+    if f2py_enabled:
+        expected.append("line #3'call me ! hey'")
+    else:
+        expected.append("Comment('cf2py call me ! hey',(3, 3))")
+    expected.append("line #4'end'")
 
     # Reading from buffer
     reader = FortranStringReader(
