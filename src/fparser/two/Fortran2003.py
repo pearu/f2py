@@ -2324,6 +2324,9 @@ class Type_Param_Spec(KeywordValueBase):  # R456
 class Structure_Constructor_2(KeywordValueBase):  # R457.b
     """
     <structure-constructor-2> = [ <keyword> = ] <component-data-source>
+
+    TODO #255 - should this class be deleted?
+
     """
     subclass_names = ['Component_Data_Source']
     use_names = ['Keyword']
@@ -2338,6 +2341,9 @@ class Structure_Constructor(CallBase):  # R457
     <structure-constructor> = <derived-type-spec> ( [ <component-spec-list> ] )
                             | <structure-constructor-2>
     """
+    # TODO #255 it seems likely that we should remove
+    # 'Structure_Constructor_2' from subclass_names but this requires
+    # investigation.
     subclass_names = ['Structure_Constructor_2']
     use_names = ['Derived_Type_Spec', 'Component_Spec_List']
 
@@ -2452,6 +2458,7 @@ class Array_Constructor(BracketBase):  # R465
     subclass_names = []
     use_names = ['Ac_Spec']
 
+    @staticmethod
     def match(string):
         try:
             obj = BracketBase.match('(//)', Ac_Spec, string)
@@ -2460,7 +2467,6 @@ class Array_Constructor(BracketBase):  # R465
         if obj is None:
             obj = BracketBase.match('[]', Ac_Spec, string)
         return obj
-    match = staticmethod(match)
 
 
 class Ac_Spec(Base):  # R466
@@ -2504,10 +2510,22 @@ class Ac_Value(Base):  # R469
     subclass_names = ['Ac_Implied_Do', 'Expr']
 
 
-class Ac_Implied_Do(Base):  # R470
-    """
-    <ac-implied-do> = ( <ac-value-list> , <ac-implied-do-control> )
-    """
+class Ac_Implied_Do(Base):
+    '''
+    Fortran2003 rule R470.
+    Describes the form of implicit do loop used within an array constructor.
+
+    ac-implied-do is ( ac-value-list , ac-implied-do-control )
+
+    Subject to the following constraint:
+
+    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
+          ac-implied-do shall not appear as the ac-do-variable of the
+          containing ac-implied-do."
+
+    C497 is currently not checked - issue #257.
+
+    '''
     subclass_names = []
     use_names = ['Ac_Value_List', 'Ac_Implied_Do_Control']
 
@@ -2529,36 +2547,65 @@ class Ac_Implied_Do(Base):  # R470
         return '(%s, %s)' % tuple(self.items)
 
 
-class Ac_Implied_Do_Control(Base):  # R471
-    """
-    <ac-implied-do-control> = <ac-do-variable> = <scalar-int-expr> ,
-        <scalar-int-expr> [ , <scalar-int-expr> ]
-    """
+class Ac_Implied_Do_Control(Base):
+    '''
+    Fortran2003 rule R471.
+    Specifies the syntax for the control of an implicit loop within an
+    array constructor.
+
+    ac-implied-do-control is ac-do-variable = scalar-int-expr,
+                                    scalar-int-expr [ , scalar-int-expr ]
+
+    where (R472) ac-do-variable is scalar-int-variable
+
+    '''
     subclass_names = []
     use_names = ['Ac_Do_Variable', 'Scalar_Int_Expr']
 
+    @staticmethod
     def match(string):
-        i = string.find('=')
-        if i == -1:
-            return
-        s1 = string[:i].rstrip()
-        line, repmap = string_replace_map(string[i+1:].lstrip())
-        t = line.split(',')
-        if not (2 <= len(t) <= 3):
-            return
-        t = [Scalar_Int_Expr(s.strip()) for s in t]
-        return Ac_Do_Variable(s1), t
-    match = staticmethod(match)
+        ''' Attempts to match the supplied string with the pattern for
+        implied-do control.
+
+        :param str string: the string to test for a match.
+
+        :returns: None if there is no match or a 2-tuple containing the \
+                  do-variable name and the list of integer expressions (for \
+                  start, stop [, step]).
+        :rtype: NoneType or \
+                (:py:class:`fparser.two.Fortran2003.Ac_Do_Variable`, list)
+        '''
+        idx = string.find('=')
+        if idx == -1:
+            return None
+        do_var = string[:idx].rstrip()
+        line, repmap = string_replace_map(string[idx+1:].lstrip())
+        int_exprns = line.split(',')
+        if not (2 <= len(int_exprns) <= 3):
+            return None
+        exprn_list = [Scalar_Int_Expr(repmap(s.strip())) for s in int_exprns]
+        return Ac_Do_Variable(do_var), exprn_list
 
     def tostr(self):
         return '%s = %s' % (self.items[0], ', '.join(map(str, self.items[1])))
 
 
-class Ac_Do_Variable(Base):  # R472
-    """
-    <ac-do-variable> = <scalar-int-variable>
-    <ac-do-variable> shall be a named variable
-    """
+class Ac_Do_Variable(Base):
+    '''
+    Fortran2003 rule R472.
+    Specifies the permitted form of an implicit do-loop variable within an
+    array constructor.
+
+    ac-do-variable is scalar-int-variable
+    ac-do-variable shall be a named variable
+
+    Subject to the following constraint:
+
+    "C493 (R472) ac-do-variable shall be a named variable."
+
+    C493 is currently not checked - issue #257.
+
+    '''
     subclass_names = ['Scalar_Int_Variable']
 
 #

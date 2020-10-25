@@ -14,6 +14,8 @@ Modifications by (in alphabetical order):
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 
+25/10/2020 PR #256 for #252. Fixes a bug in the parsing of an array constructor.
+
 03/06/2020 PR #263 for #262. Fixes bug in fparser2 logging a 'critical'
            error when it reaches the end of a file.
 
