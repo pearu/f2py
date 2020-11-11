@@ -2501,10 +2501,10 @@ def test_io_control_spec_list():
 
     obj = tcls('123,*')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, FMT = *'
+    assert str(obj) == '123, *'
     assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
-                         "Io_Control_Spec('FMT', Format('*'))))")
+                         "Io_Control_Spec(None, Format('*'))))")
 
     obj = tcls('123,fmt=a')
     assert isinstance(obj, tcls), repr(obj)
@@ -2520,6 +2520,10 @@ def test_io_control_spec_list():
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('NML', Name('a'))))")
 
+    # C916 - cannot have both a namelist and a format
+    obj = tcls('123,nml=a,fmt=b')
+    assert obj is None
+
     obj = tcls('123, "(I3)"')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = "(I3)"'
@@ -2527,6 +2531,11 @@ def test_io_control_spec_list():
     obj = tcls('123,a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, a'
+
+    # Unit named and not the first argument
+    obj = tcls('fmt=b, unit=123')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'FMT = b, UNIT = 123'
 
 
 def test_format():  # R914

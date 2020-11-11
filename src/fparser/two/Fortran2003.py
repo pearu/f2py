@@ -4789,9 +4789,16 @@ class Char_Expr(Base):  # R725
 
 class Default_Char_Expr(Base):  # R726
     """
-    <default-char-expr> = <expr>
+    Rule 726 - default character expression.
+
+    <default-char-expr> is <expr>
+
+    C707 default-char-expr shall be of type default character.
+
+    Note 9.27: "A default-char-expr includes a character constant."
+
     """
-    subclass_names = ['Expr']
+    subclass_names = ['Expr', 'Char_Literal_Constant']
 
 
 class Int_Expr(Base):  # R727
@@ -7014,46 +7021,72 @@ class Io_Control_Spec_List(SequenceBase):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
         lst = []
-        unit_is_positional = False
+        unit_arg_not_named = False
+        # If the first entry in the list is not named then it must be a
+        # unit number (C910)
+        spec = splitted.pop(0).strip()
+        io_spec = Io_Control_Spec_Unit(spec)
+        #io_spec = KeywordValueBase.match('UNIT', Io_Unit, spec,
+        #                                 require_lhs=False,
+        #                                 upper_lhs=True)
+        if not io_spec:
+            # Either the first argument is named and is not UNIT or we
+            # failed to match Io_Unit.
+            io_spec = Io_Control_Spec(spec)
+            if not io_spec or io_spec.children[0] is None:
+                # Failed to match an Io_Control_Spec or we did but it
+                # is not named and is not a valid Io_unit
+                return None
+        elif io_spec.children[0] is None:
+            # The first entry was not named but is a valid unit number
+            unit_arg_not_named = True
+        lst.append(io_spec)
+
+        # Check whether the list has more than one entry
+        if not splitted:
+            if not isinstance(lst[0], Io_Unit):
+                # We only have one entry and it's not an Io_Unit
+                return None
+            else:
+                return ',', tuple(lst)
+
+        # The second argument only requires special attention if the first
+        # one was un-named
+        if unit_arg_not_named:
+            spec = splitted.pop(0).strip()
+            spec = repmap(spec)
+            # The first argument was un-named and a valid unit number.
+            # Therefore, the second argument may also be un-named and if so,
+            # can be either a format specifier (C917) or namelist group
+            # name (C918).
+            io_spec = KeywordValueBase.match('FMT', Format, spec,
+                                             require_lhs=False,
+                                             upper_lhs=True)
+            if not io_spec:
+                # TODO if the FMT or NML argument is un-named then it currently
+                # is not possible to dissambiguate which it is if it takes the
+                # form of a simple variable name.
+                io_spec = KeywordValueBase.match('NML', Namelist_Group_Name,
+                                                 spec,
+                                                 require_lhs=False,
+                                                 upper_lhs=True)
+            if not io_spec:
+                return None
+            lst.append(io_spec)
+
+        # Deal with the remainder of the list entries
         for idx in range(len(splitted)):
             spec = splitted[idx].strip()
             spec = repmap(spec)
-            if idx == 0 and "=" not in spec:
-                # Must be a unit number (C910). However, we do not prepend
-                # "UNIT=" to it in case the following Io_Control_Spec is
-                # positional (and therefore either a Format (C917) or Namelist
-                # spec (C918)).
-                lst.append(Io_Control_Spec(spec))
-                unit_is_positional = True
-            elif idx == 1:
-                spec = spec.strip()
-                if Char_Literal_Constant.match(spec) or \
-                   StringBase.match("*", spec):
-                    # This second argument is a character constant or "*". It
-                    # is therefore not a named argument and thus, the first
-                    # (unit number) argument must not have been named either.
-                    if not unit_is_positional:
-                        # Cannot have a positional argument following a
-                        # named argument
-                        return None
-                    # This argument is a character constant or "*", it
-                    # must therefore be a Format spec (as opposed to a
-                    # namelist-group-name) and we can prepend "FMT=" to it.
-                    spec = "FMT={0}".format(spec)
-                    lst.append(Io_Control_Spec(spec))
-                else:
-                    # We know that spec is not a character literal and that
-                    # means it can either be a format or a namelist-group-name.
-                    io_spec = Io_Control_Spec(spec)
-                    # If the UNIT field was named then this argument too must
-                    # be named. Therefore the first child of io_spec (which
-                    # represents the name associated with the argument) must
-                    # not be None.
-                    if io_spec.children[0] is None and not unit_is_positional:
-                        return None
-                    lst.append(io_spec)
-            else:
-                lst.append(Io_Control_Spec(spec))
+            io_spec = Io_Control_Spec(spec)
+            # If the previous argument in the list was named then this
+            # argument must also be named
+            if lst[-1].children[0] and not io_spec.children[0]:
+                return None
+            lst.append(Io_Control_Spec(spec))
+
+        # At this point we need to check the list and apply constraints
+
         return ',', tuple(lst)
 
 
@@ -7109,6 +7142,18 @@ class Io_Control_Spec(KeywordValueBase):  # R913
             if obj:
                 return obj
         return
+
+
+class Io_Control_Spec_Unit(Io_Control_Spec):
+    subclass_names = []
+    use_names = ['Io_Unit']
+
+    @staticmethod
+    def match(string):
+        obj = KeywordValueBase.match('UNIT', Io_Unit, string,
+                                     require_lhs=False,
+                                     upper_lhs=True)
+        return obj
 
 
 class Format(StringBase):  # R914
