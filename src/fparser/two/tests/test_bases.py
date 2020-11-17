@@ -35,6 +35,7 @@
 ''' Module containing pytest tests for fparser2 base classes '''
 
 import pytest
+from fparser.two.Fortran2003 import NoMatchError
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -103,8 +104,9 @@ def test_io_ctrl_spec_list_errors():
     rejects invalid input '''
     from fparser.two.Fortran2003 import Io_Control_Spec_List
     # Positional arg following named arg
-    obj = Io_Control_Spec_List.match("unit=23, namvar")
-    assert obj is None
+    with pytest.raises(NoMatchError) as err:
+        Io_Control_Spec_List.match("unit=23, namvar")
+    assert "namvar" in str(err.value)
 
 
 @pytest.mark.usefixtures("f2003_create")

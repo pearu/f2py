@@ -48,7 +48,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
         "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
         "(Char_Literal_Constant('\"hey\"', None),)))")
 
@@ -56,7 +56,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, "(I3)") my_int'
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
         "Io_Unit('*')), Io_Control_Spec(None, "
         "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
         "(Name('my_int'),)))")

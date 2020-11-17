@@ -7026,9 +7026,6 @@ class Io_Control_Spec_List(SequenceBase):
         # unit number (C910)
         spec = splitted.pop(0).strip()
         io_spec = Io_Control_Spec_Unit(spec)
-        #io_spec = KeywordValueBase.match('UNIT', Io_Unit, spec,
-        #                                 require_lhs=False,
-        #                                 upper_lhs=True)
         if not io_spec:
             # Either the first argument is named and is not UNIT or we
             # failed to match Io_Unit.
@@ -7044,34 +7041,40 @@ class Io_Control_Spec_List(SequenceBase):
 
         # Check whether the list has more than one entry
         if not splitted:
-            if not isinstance(lst[0], Io_Unit):
-                # We only have one entry and it's not an Io_Unit
+            if not isinstance(lst[0], Io_Control_Spec_Unit):
+                # We only have one entry and it's not an IO Unit
                 return None
             else:
                 return ',', tuple(lst)
 
         # The second argument only requires special attention if the first
-        # one was un-named
-        if unit_arg_not_named:
+        # one was un-named (since, in this case, it may also be un-named).
+        if False: #unit_arg_not_named:
             spec = splitted.pop(0).strip()
             spec = repmap(spec)
             # The first argument was un-named and a valid unit number.
-            # Therefore, the second argument may also be un-named and if so,
-            # can be either a format specifier (C917) or namelist group
-            # name (C918).
-            io_spec = KeywordValueBase.match('FMT', Format, spec,
-                                             require_lhs=False,
-                                             upper_lhs=True)
-            if not io_spec:
-                # TODO if the FMT or NML argument is un-named then it currently
-                # is not possible to dissambiguate which it is if it takes the
-                # form of a simple variable name.
-                io_spec = KeywordValueBase.match('NML', Namelist_Group_Name,
-                                                 spec,
-                                                 require_lhs=False,
-                                                 upper_lhs=True)
-            if not io_spec:
-                return None
+            # Therefore, the second argument may also be un-named. Check
+            # first for a named argument as that's easier.
+            try:
+                io_spec = Io_Control_Spec(spec)
+            except NoMatchError:
+                # This second argument isn't named either so can be either
+                # a format specifier (C917) or namelist group name (C918).
+                try:
+                    nml = Namelist_Group_Name(spec)
+                    # Unfortunately, a valid namelist group name could equally
+                    # well be the name of a variable containing a format
+                    # specifier and we currently have no way to disambiguate.
+                    io_spec = Io_Control_Spec_Fmt_Or_Nml(spec)
+                except NoMatchError:
+                    # It's definitely not a namelist group name so it must
+                    # be a Format.
+                    fmt = Format(spec)
+                    io_spec = Io_Control_Spec(fmt)
+                if not io_spec:
+                    # We haven't matched an unnamed Format or
+                    # namelist-group-name therefore we fail to match.
+                    return None
             lst.append(io_spec)
 
         # Deal with the remainder of the list entries
@@ -7083,10 +7086,12 @@ class Io_Control_Spec_List(SequenceBase):
             # argument must also be named
             if lst[-1].children[0] and not io_spec.children[0]:
                 return None
-            lst.append(Io_Control_Spec(spec))
+            lst.append(io_spec)
 
         # At this point we need to check the list and apply constraints
-
+        # TODO
+        #for spec in lst:
+            
         return ',', tuple(lst)
 
 
@@ -7122,16 +7127,26 @@ class Io_Control_Spec(KeywordValueBase):  # R913
 
     @staticmethod
     def match(string):
+        # First we look at possible unnamed arguments - there is only
+        # FMT and NML (UNIT is dealt with in Io_Control_Spec_Unit).
+        # We try to match namelist first as if that fails then we must
+        # have a format.
+        for (k, v) in [('NML', Namelist_Group_Name),
+                       ('FMT', Format)]:
+            try:
+                obj = KeywordValueBase.match(k, v, string,
+                                             require_lhs=False,
+                                             upper_lhs=True)
+            except NoMatchError:
+                continue
+            else:
+                if obj:
+                    return obj
+
         for (k, v) in [('UNIT', Io_Unit),
                        ('FMT', Format),
-                       ('NML', Namelist_Group_Name)]:
-            obj = KeywordValueBase.match(k, v, string,
-                                         require_lhs=False,
-                                         upper_lhs=True)
-            if obj:
-                return obj
-
-        for (k, v) in [(['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
+                       ('NML', Namelist_Group_Name),
+                       (['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
                          'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
                        ('ASYNCHRONOUS', Scalar_Char_Initialization_Expr),
                        (['END', 'EOR', 'ERR'], Label),
@@ -7154,6 +7169,23 @@ class Io_Control_Spec_Unit(Io_Control_Spec):
                                      require_lhs=False,
                                      upper_lhs=True)
         return obj
+
+
+class Io_Control_Spec_Fmt_Or_Nml(Io_Control_Spec):
+    subclass_names = []
+    use_names = ['Format', 'Namelist_Group_Name']
+
+    @staticmethod
+    def match(string):
+        for (key, cls) in [('FMT', Format),
+                           ('NML', Namelist_Group_Name)]:
+            import pdb; pdb.set_trace()
+            obj = KeywordValueBase.match(key, cls, string,
+                                         require_lhs=False,
+                                         upper_lhs=True)
+            if obj:
+                return obj
+        return None
 
 
 class Format(StringBase):  # R914
