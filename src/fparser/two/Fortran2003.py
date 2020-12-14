@@ -7029,8 +7029,6 @@ class Io_Control_Spec_List(SequenceBase):
         try:
             io_spec = Io_Control_Spec_Unit(spec)
         except NoMatchError:
-            io_spec = None
-        if not io_spec:
             # Either the first argument is named and is not UNIT or we
             # failed to match Io_Unit.
             io_spec = Io_Control_Spec(spec)

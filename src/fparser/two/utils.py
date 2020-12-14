@@ -1017,7 +1017,8 @@ class KeywordValueBase(Base):
                 # It's not a valid name and therefore we don't have a lhs
                 lhs = None
             else:
-                # Attempt to match the content before the '='
+                # It is a valid name, therefore we proceed to attempt to
+                # match it.
                 if isinstance(lhs_cls, str):
                     # lhs_cls is a keyword
                     if upper_lhs:
