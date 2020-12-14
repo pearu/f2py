@@ -69,6 +69,7 @@ Module containing py.test tests for Fortran 2003 language constructs
 
 from __future__ import print_function
 import pytest
+from fparser.two import Fortran2003
 from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
 from fparser.two.parser import ParserFactory
@@ -2459,7 +2460,7 @@ def test_read_stmt():
     assert _repr_utf(obj) == (
         "Read_Stmt(Io_Control_Spec_List(',', "
         "(Io_Control_Spec_Unit(None, Int_Literal_Constant('123', "
-        "None)), Io_Control_Spec_Fmt_Or_Nml(None, "
+        "None)), Io_Control_Spec(None, "
         "Name('a_namelist_or_format')))), None, None)")
 
 
@@ -2477,18 +2478,43 @@ def test_print_stmt():  # R912
 
 
 def test_io_control_spec():  # R913
-
-    tcls = Io_Control_Spec
+    ''' Test that we can construct an io-control-spec and that its str
+    and repr properties are correct. '''
+    tcls = Fortran2003.Io_Control_Spec
     obj = tcls('end=123')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END = 123'
     assert repr(obj) == "Io_Control_Spec('END', Label('123'))"
+    # An io-unit is matched by IO-Control_Spec_Unit, *not* this class
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        _ = tcls('unit=6')
+    assert "unit=6" in str(err.value)
+
+
+def test_io_control_spec_unit():
+    ''' Check that the Io_Control_Spec_Unit only matches a unit specifier. '''
+    tcls = Fortran2003.Io_Control_Spec_Unit
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls('end=122')
+    assert "end=122" in str(err.value)
+    obj = tcls('some_var')
+    assert isinstance(obj, tcls)
+    assert str(obj) == "some_var"
+    obj = tcls('unit=some_var')
+    assert isinstance(obj, tcls)
+    assert str(obj) == "UNIT = some_var"
+    obj = tcls("66")
+    assert isinstance(obj, tcls)
+    assert str(obj) == "66"
+    obj = tcls("unit = 66")
+    assert isinstance(obj, tcls)
+    assert str(obj) == "UNIT = 66"
 
 
 def test_io_control_spec_list():
     ''' Test that we correctly parse and then generate various
     forms of IO-control specification lists (R913-list). '''
-    tcls = Io_Control_Spec_List
+    tcls = Fortran2003.Io_Control_Spec_List
     obj = tcls('23, end=123')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '23, END = 123'
@@ -2510,21 +2536,28 @@ def test_io_control_spec_list():
     obj = tcls('123,fmt=a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = a'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+    assert repr(obj) == ("Io_Control_Spec_List(',', "
+                         "(Io_Control_Spec_Unit(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('FMT', Name('a'))))")
 
     obj = tcls('123,nml=a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, NML = a'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+    assert repr(obj) == ("Io_Control_Spec_List(',', "
+                         "(Io_Control_Spec_Unit(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('NML', Name('a'))))")
 
+    # C910 - must have a unit number
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        obj = tcls('fmt="some-fmt", end=10')
+    assert "Io_Control_Spec_List: 'fmt=\"some-fmt\", end=10'" in str(err.value)
+
     # C916 - cannot have both a namelist and a format
-    # TODO
-    #obj = tcls('123,nml=a,fmt=b')
-    #assert obj is None
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls('123,nml=a,fmt=b')
+    assert "Io_Control_Spec_List: '123,nml=a,fmt=b'" in str(err.value)
 
     obj = tcls('123, "(I3)"')
     assert isinstance(obj, tcls), repr(obj)

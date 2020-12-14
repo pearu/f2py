@@ -6995,11 +6995,12 @@ class Io_Control_Spec_List(SequenceBase):
     C929 If a DELIM= specifier appears, either format shall be an asterisk or
          namelist-group-name shall appear.
 
-    TODO #267. Of these constraints, only C917 and C918 are currently enforced.
+    TODO #267. Of these constraints, only C910 & C916-918 are currently
+    enforced.
 
     '''
     subclass_names = []
-    use_names = ['Io_Control_Spec']
+    use_names = ['Io_Control_Spec', 'Namelist_Group_Name', 'Format']
 
     @staticmethod
     def match(string):
@@ -7021,11 +7022,14 @@ class Io_Control_Spec_List(SequenceBase):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
         lst = []
-        unit_arg_not_named = False
         # If the first entry in the list is not named then it must be a
         # unit number (C910)
         spec = splitted.pop(0).strip()
-        io_spec = Io_Control_Spec_Unit(spec)
+        spec = repmap(spec)
+        try:
+            io_spec = Io_Control_Spec_Unit(spec)
+        except NoMatchError:
+            io_spec = None
         if not io_spec:
             # Either the first argument is named and is not UNIT or we
             # failed to match Io_Unit.
@@ -7034,9 +7038,6 @@ class Io_Control_Spec_List(SequenceBase):
                 # Failed to match an Io_Control_Spec or we did but it
                 # is not named and is not a valid Io_unit
                 return None
-        elif io_spec.children[0] is None:
-            # The first entry was not named but is a valid unit number
-            unit_arg_not_named = True
         lst.append(io_spec)
 
         # Check whether the list has more than one entry
@@ -7047,57 +7048,51 @@ class Io_Control_Spec_List(SequenceBase):
             else:
                 return ',', tuple(lst)
 
-        # The second argument only requires special attention if the first
-        # one was un-named (since, in this case, it may also be un-named).
-        if False: #unit_arg_not_named:
-            spec = splitted.pop(0).strip()
-            spec = repmap(spec)
-            # The first argument was un-named and a valid unit number.
-            # Therefore, the second argument may also be un-named. Check
-            # first for a named argument as that's easier.
-            try:
-                io_spec = Io_Control_Spec(spec)
-            except NoMatchError:
-                # This second argument isn't named either so can be either
-                # a format specifier (C917) or namelist group name (C918).
-                try:
-                    nml = Namelist_Group_Name(spec)
-                    # Unfortunately, a valid namelist group name could equally
-                    # well be the name of a variable containing a format
-                    # specifier and we currently have no way to disambiguate.
-                    io_spec = Io_Control_Spec_Fmt_Or_Nml(spec)
-                except NoMatchError:
-                    # It's definitely not a namelist group name so it must
-                    # be a Format.
-                    fmt = Format(spec)
-                    io_spec = Io_Control_Spec(fmt)
-                if not io_spec:
-                    # We haven't matched an unnamed Format or
-                    # namelist-group-name therefore we fail to match.
-                    return None
-            lst.append(io_spec)
-
         # Deal with the remainder of the list entries
         for idx in range(len(splitted)):
             spec = splitted[idx].strip()
             spec = repmap(spec)
-            io_spec = Io_Control_Spec(spec)
+            try:
+                io_spec = Io_Control_Spec(spec)
+            except NoMatchError:
+                io_spec = None
+            if not io_spec:
+                # We may have a named UNIT= specifier
+                io_spec = Io_Control_Spec_Unit(spec)
             # If the previous argument in the list was named then this
             # argument must also be named
             if lst[-1].children[0] and not io_spec.children[0]:
                 return None
             lst.append(io_spec)
 
-        # At this point we need to check the list and apply constraints
-        # TODO
-        #for spec in lst:
-            
+        # At this point we need to check the list and apply constraints.
+        # TODO #267 enforce remaining constraints.
+        have_unit = False
+        have_nml = False
+        have_fmt = False
+        for spec in lst:
+            if isinstance(spec, Io_Control_Spec_Unit):
+                have_unit = True
+            elif spec.children[0] == 'NML':
+                have_nml = True
+            elif spec.children[0] == 'FMT':
+                have_fmt = True
+        if not have_unit:
+            # C910: An io-unit shall be specified
+            return None
+        if have_nml and have_fmt:
+            # C916: an io-control-spec-list shall not contain both a format
+            # and a namelist-group-name
+            return None
+
         return ',', tuple(lst)
 
 
-class Io_Control_Spec(KeywordValueBase):  # R913
+class Io_Control_Spec(KeywordValueBase):
     """
-    <io-control-spec> = [ UNIT = ] <io-unit>
+    This class implements *partial* support for Rule 913:
+
+    <io-control-spec> is  UNIT =  <io-unit>
                         | [ FMT = ] <format>
                         | [ NML = ] <namelist-group-name>
                         | ADVANCE = <scalar-default-char-expr>
@@ -7117,9 +7112,13 @@ class Io_Control_Spec(KeywordValueBase):  # R913
                         | ROUND = <scalar-default-char-expr>
                         | SIGN = <scalar-default-char-expr>
                         | SIZE = <scalar-int-variable>
+
+    The support is partial because io-unit is handled by a bespoke class and
+    therefore will not be matched by this one.
+
     """
     subclass_names = []
-    use_names = ['Io_Unit', 'Format', 'Namelist_Group_Name',
+    use_names = ['Format', 'Namelist_Group_Name',
                  'Scalar_Default_Char_Expr',
                  'Scalar_Char_Initialization_Expr', 'Label',
                  'Scalar_Int_Variable',
@@ -7127,7 +7126,7 @@ class Io_Control_Spec(KeywordValueBase):  # R913
 
     @staticmethod
     def match(string):
-        # First we look at possible unnamed arguments - there is only
+        # First we look at possible unnamed arguments - there are only
         # FMT and NML (UNIT is dealt with in Io_Control_Spec_Unit).
         # We try to match namelist first as if that fails then we must
         # have a format.
@@ -7143,8 +7142,7 @@ class Io_Control_Spec(KeywordValueBase):  # R913
                 if obj:
                     return obj
 
-        for (k, v) in [('UNIT', Io_Unit),
-                       ('FMT', Format),
+        for (k, v) in [('FMT', Format),
                        ('NML', Namelist_Group_Name),
                        (['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
                          'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
@@ -7160,6 +7158,18 @@ class Io_Control_Spec(KeywordValueBase):  # R913
 
 
 class Io_Control_Spec_Unit(Io_Control_Spec):
+    '''
+    Represents a Unit io-control-spec. This has its own subclass because it
+    is distinct from other io-control-spec members in that it may or may not
+    be named and if it is not named then it must be first in the
+    io-control-spec-list. (This ordering is enforced in the
+    Io_Control_Spec_List.match() method.)
+
+    The valid format for this io-control-spec is:
+
+        [UNIT =] <io-unit>
+
+    '''
     subclass_names = []
     use_names = ['Io_Unit']
 
@@ -7169,23 +7179,6 @@ class Io_Control_Spec_Unit(Io_Control_Spec):
                                      require_lhs=False,
                                      upper_lhs=True)
         return obj
-
-
-class Io_Control_Spec_Fmt_Or_Nml(Io_Control_Spec):
-    subclass_names = []
-    use_names = ['Format', 'Namelist_Group_Name']
-
-    @staticmethod
-    def match(string):
-        for (key, cls) in [('FMT', Format),
-                           ('NML', Namelist_Group_Name)]:
-            import pdb; pdb.set_trace()
-            obj = KeywordValueBase.match(key, cls, string,
-                                         require_lhs=False,
-                                         upper_lhs=True)
-            if obj:
-                return obj
-        return None
 
 
 class Format(StringBase):  # R914
