@@ -7152,7 +7152,7 @@ class Io_Control_Spec(KeywordValueBase):
             obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
             if obj:
                 return obj
-        return
+        return None
 
 
 class Io_Control_Spec_Unit(Io_Control_Spec):
