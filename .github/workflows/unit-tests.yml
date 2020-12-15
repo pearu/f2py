@@ -72,13 +72,13 @@ jobs:
         # TODO cannot do this while we still support Python 2
         # flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings.
-	# The GitHub editor is 127 chars wide.
+        # The GitHub editor is 127 chars wide.
         # Explicitly name the required directories.
         flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics src/fparser
     - name: Test with pytest
       run: |
         # fparser should work even under limited terminal conditions so set
-	# LC_ALL (this is only relevant for versions before Python 3.7).
+        # LC_ALL (this is only relevant for versions before Python 3.7).
         LC_ALL=POSIX pytest --cov=fparser --cov-report=xml src/fparser
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
