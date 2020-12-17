@@ -25,7 +25,7 @@ in a format suitable to be used in a Makefile. Usage:
   or modify the first line of the script to use ``python3`` instead of
   ``python``.
 - The script will only detect dependencies from the files specified on the
-  command line to files in the current directory. It assume that the name in
+  command line to files in the current directory. It assumes that the name in
   the ``use`` statement is the same as the file name that stores the module.
   For example, if your code has:
 
