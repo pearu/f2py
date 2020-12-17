@@ -36,7 +36,7 @@
 # Author: Joerg Henrichs, Bureau of Meteorology
 
 '''This file contains an fparser script that parses Fortran files
-and output the dependencies between these files suiteable for a Makefile.
+and output the dependencies between these files suitable for a Makefile.
 
 It assumes that the module name in the use statement corresponds to the
 name of the file (adding one of .F90/.f90/.x90). Only files in the current
