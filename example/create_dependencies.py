@@ -59,7 +59,7 @@ from fparser.two.utils import walk
 # -----------------------------------------------------------------------------
 def usage():
     '''This function prints the usage information and exits. It is called if
-    incorrect input parameers are supplied.
+    incorrect input parameters are supplied.
     '''
     print("{0} file1 [file2...]".format(sys.argv[0]))
     sys.exit(-1)
