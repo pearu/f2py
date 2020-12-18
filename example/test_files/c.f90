@@ -1,4 +1,4 @@
-subroutine a
+subroutine c
    use a
    use b
-end subroutine a
+end subroutine c
