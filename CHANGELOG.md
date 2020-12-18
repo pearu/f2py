@@ -15,6 +15,10 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+18/12/2020 PR #275 for #274. Adds an example script that uses fparser2 to
+           generate Makefile dependency rules for a set of Fortran source
+           files.
+
 30/11/2020 PR #272 for #271. Bug fix to module_in_file() to ensure that the
            encoding is always set to UTF-8 when reading a file. 
 
