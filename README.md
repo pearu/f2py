@@ -33,9 +33,8 @@ The documentation for fparser is hosted on [ReadTheDocs](http://fparser.readthed
 
 # Code Metrics #
 
-[![Build Status](https://travis-ci.org/stfc/fparser.svg?branch=master)](https://travis-ci.org/stfc/fparser)
-[![Coverage Status](https://coveralls.io/repos/github/stfc/fparser/badge.svg?branch=master)](https://coveralls.io/github/stfc/fparser?branch=master)
-[![Code Health](https://landscape.io/github/stfc/fparser/master/landscape.svg?style=flat)](https://landscape.io/github/stfc/fparser/master)
+![fparser unit tests](https://github.com/stfc/fparser/workflows/fparser%20unit%20tests/badge.svg)
+[![codecov](https://codecov.io/gh/stfc/fparser/branch/master/graph/badge.svg?token=x0abs66TST)](https://codecov.io/gh/stfc/fparser)
 [![Documentation Status](https://readthedocs.org/projects/fparser/badge/?version=stable)](http://fparser.readthedocs.io/en/stable/?badge=stable)
 
 # See also #

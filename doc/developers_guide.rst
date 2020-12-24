@@ -817,3 +817,11 @@ a valid Fortran program.
    # Comment Class
    # +++++++++++++
    # TBD
+
+Continuous Integration
+----------------------
+
+GitHub Actions are used to run the test suite for a number of different
+Python versions and the coverage reports are uploaded automatically to CodeCov
+(https://codecov.io/gh/stfc/fparser). The configuration for this is in the
+`.github/workflows/unit-tests.yml` file.
