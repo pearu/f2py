@@ -943,7 +943,7 @@ class BinaryOpBase(Base):
             else:
                 text_split = line.split(op_pattern, 1)
             if len(text_split) != 2:
-                return False
+                return None
             lhs, rhs = text_split[0].rstrip(), text_split[1].lstrip()
             oper = op_pattern
         else:
@@ -952,15 +952,15 @@ class BinaryOpBase(Base):
             else:
                 text_split = op_pattern.lsplit(line)
             if not text_split or len(text_split) != 3:
-                return False
+                return None
             lhs, oper, rhs = text_split
             lhs = lhs.rstrip()
             rhs = rhs.lstrip()
             oper = oper.upper()
         if not lhs or not rhs:
-            return False
+            return None
         if exclude_op_pattern and exclude_op_pattern.match(oper):
-            return False
+            return None
 
         # Matching the shorter text first can be much more efficient
         # for complex expressions.
