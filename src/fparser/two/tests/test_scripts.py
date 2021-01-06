@@ -275,10 +275,11 @@ def test_runner_multi_output_except(tmpdir, capsys):
 # fparser2.py script function main()
 
 
-def test_main_output_task_default(tmpdir, capsys, monkeypatch):
+def test_main_output_task_default(tmpdir, capsys, monkeypatch, log):
     '''Test that the script main() function outputs the code it has parsed
-    by default.'''
+    by default and that no errors are logged.'''
     import sys
+    log.reset()
     # Create a temporary file containing Fortran code to pass into runner()
     my_file = tmpdir.mkdir("sub").join("hello.f90")
     my_file.write("program hello\nend program hello\n")
@@ -290,6 +291,9 @@ def test_main_output_task_default(tmpdir, capsys, monkeypatch):
     stdout, stderr = capsys.readouterr()
     assert stdout == "PROGRAM hello\nEND PROGRAM hello\n"
     assert "File: '" in stderr and "hello.f90'" in stderr
+    # Check that nothing has been logged (apart from some 'debug' msgs)
+    for log_level in ["info", "warning", "error", "critical"]:
+        assert log.messages[log_level] == []
 
 
 def test_main_output_task_show(tmpdir, capsys, monkeypatch):

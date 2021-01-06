@@ -51,7 +51,7 @@ import pytest
 
 from fparser.common.readfortran import FortranFileReader, \
     FortranStringReader, FortranReaderBase, Line, extract_label, \
-    extract_construct_name
+    extract_construct_name, CppDirective
 from fparser.common.sourceinfo import FortranFormat
 
 
@@ -745,7 +745,32 @@ def test_file_reader():
         raise
 
 
-##############################################################################
+def test_none_in_fifo(log):
+    ''' Check that a None entry in the reader FIFO buffer is handled
+    correctly. '''
+    log.reset()
+    handle, filename = tempfile.mkstemp(suffix='.f90', text=True)
+    os.close(handle)
+
+    with io.open(filename, mode='w', encoding='UTF-8') as source_file:
+        source_file.write(FULL_FREE_SOURCE)
+
+    with io.open(filename, mode='r', encoding='UTF-8') as source_file:
+        unit_under_test = FortranFileReader(source_file)
+        while True:
+            try:
+                _ = unit_under_test.next(ignore_comments=False)
+            except StopIteration:
+                break
+        # Erroneously push a None to the FIFO buffer
+        unit_under_test.put_item(None)
+        # Attempt to read the next item
+        with pytest.raises(StopIteration):
+            _ = unit_under_test.next(ignore_comments=False)
+        # Check that nothing has been logged
+        for log_level in ["debug", "info", "warning", "error", "critical"]:
+            assert log.messages[log_level] == []
+
 
 def test_bad_file_reader():
     '''
@@ -988,3 +1013,56 @@ def test_extract_construct_name():
     name, text_result = extract_construct_name(text_input)
     assert name == "name"
     assert text_result == "stuff"
+
+
+@pytest.mark.parametrize('input_text, ref', [
+    ('#include "abc"', True),
+    (' #include "abc"', True),
+    (' #  include "abc"', True),
+    ('#define ABC 1', True),
+    ('#ifdef ABC', True),
+    ('#if !defined(ABC)', True),
+    ('abc #define', False),
+    ('"#"', False),
+    ('! #', False)])
+def test_handle_cpp_directive(input_text, ref):
+    '''Test the function that detects cpp directives in readfortran.py.'''
+    reader = FortranStringReader(input_text)
+    output_text, result = reader.handle_cpp_directive(input_text)
+    assert result == ref
+    assert output_text is input_text
+
+
+def test_reader_cpp_directives():
+    '''Test that CPP directives are read correctly in readfortran.py.'''
+    input_text = [
+        'program test', '#define ABC 123', "character :: c = '#'",
+        '#ifdef ABC', '! Some comment that should be ignored', 'integer :: a',
+        '#endif', '#if !defined(ABC)', 'integer :: b', '#endif',
+        'end program test']
+    ref_text = '\n'.join(input_text[:4] + input_text[5:]).strip()
+    reader = FortranStringReader('\n'.join(input_text))
+    lines = [item for item in reader]
+
+    pp_lines = [1, 3, 5, 6, 8]
+    for i, line in enumerate(lines):
+        if i in pp_lines:
+            assert isinstance(line, CppDirective)
+        else:
+            assert isinstance(line, Line)
+
+    assert '\n'.join(item.line for item in lines) == ref_text
+
+
+def test_multiline_cpp_directives():
+    '''Test that multiline CPP directives are read correctly.'''
+    input_text = [
+        'program test', '#define ABC \\ ', '  123 ',
+        'integer a', 'end program test']
+    ref_text = 'program test\n#define ABC   123\ninteger a\nend program test'
+    reader = FortranStringReader('\n'.join(input_text))
+    lines = [item for item in reader]
+    assert len(lines) == 4
+    assert isinstance(lines[1], CppDirective)
+    assert lines[1].span == (2, 3)
+    assert '\n'.join(item.line for item in lines) == ref_text

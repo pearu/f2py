@@ -107,8 +107,8 @@ class Pattern(object):
                            '^': '[^]',
                            '$': '[$]',
                            '?': '[?]',
-                           '{': '\{',
-                           '}': '\}',
+                           '{': r'\{',
+                           '}': r'\}',
                            '>': '[>]',
                            '<': '[<]',
                            '=': '[=]'
@@ -292,7 +292,9 @@ else:
 # match a single character that is not space '\S', or '|' a single
 # character that is not space at the start '\S' and end '\S' of the
 # match with anything '.*' inbetween.
-file_name = Pattern('<file_name>', '^(\S|\S.*\S)$', flags=re.I)
+file_name = Pattern('<file_name>', r'^(\S|\S.*\S)$', flags=re.I)
+macro_name = Pattern('<macro_name>', r'[A-Z_]\w*', flags=re.I)
+abs_macro_name = abs(macro_name)
 digit = Pattern('<digit>', r'\d')
 underscore = Pattern('<underscore>', '_')
 binary_digit = Pattern('<binary-digit>', r'[01]')
@@ -390,13 +392,13 @@ add_op = Pattern('<add-op>', r'[+-]')
 concat_op = Pattern('<concat-op>', r'(?<![/])[/]\s*[/](?![/])')
 rel_op = Pattern(
     '<rel-op>',
-    '[.]\s*EQ\s*[.]|[.]\s*NE\s*[.]|[.]\s*LT\s*[.]|[.]\s*LE\s*[.]|'
-    '[.]\s*GT\s*[.]|[.]\s*GE\s*[.]|[=]{2}|/[=]|[<][=]|[<]|[>][=]|[>]',
+    r'[.]\s*EQ\s*[.]|[.]\s*NE\s*[.]|[.]\s*LT\s*[.]|[.]\s*LE\s*[.]|'
+    r'[.]\s*GT\s*[.]|[.]\s*GE\s*[.]|[=]{2}|/[=]|[<][=]|[<]|[>][=]|[>]',
     flags=re.I)
-not_op = Pattern('<not-op>', '[.]\s*NOT\s*[.]', flags=re.I)
-and_op = Pattern('<and-op>', '[.]\s*AND\s*[.]', flags=re.I)
-or_op = Pattern('<or-op>', '[.]\s*OR\s*[.]', flags=re.I)
-equiv_op = Pattern('<equiv-op>', '[.]\s*EQV\s*[.]|[.]\s*NEQV\s*[.]',
+not_op = Pattern('<not-op>', r'[.]\s*NOT\s*[.]', flags=re.I)
+and_op = Pattern('<and-op>', r'[.]\s*AND\s*[.]', flags=re.I)
+or_op = Pattern('<or-op>', r'[.]\s*OR\s*[.]', flags=re.I)
+equiv_op = Pattern('<equiv-op>', r'[.]\s*EQV\s*[.]|[.]\s*NEQV\s*[.]',
                    flags=re.I)
 percent_op = Pattern('<percent-op>', r'%', flags=re.I)
 intrinsic_operator = power_op | mult_op | add_op | concat_op | \
@@ -404,9 +406,9 @@ intrinsic_operator = power_op | mult_op | add_op | concat_op | \
 extended_intrinsic_operator = intrinsic_operator
 
 defined_unary_op = Pattern(
-    '<defined-unary-op>', '[.]\s*[A-Z]+\s*[.]', flags=re.I)
+    '<defined-unary-op>', r'[.]\s*[A-Z]+\s*[.]', flags=re.I)
 defined_binary_op = Pattern(
-    '<defined-binary-op>', '[.]\s*[A-Z]+\s*[.]', flags=re.I)
+    '<defined-binary-op>', r'[.]\s*[A-Z]+\s*[.]', flags=re.I)
 defined_operator = defined_unary_op | defined_binary_op | \
                    extended_intrinsic_operator
 abs_defined_operator = abs(defined_operator)
@@ -415,7 +417,7 @@ abs_defined_op = abs(defined_op)
 
 non_defined_binary_op = intrinsic_operator | logical_literal_constant
 
-label = Pattern('<label>', '\d{1,5}')
+label = Pattern('<label>', r'\d{1,5}')
 abs_label = abs(label)
 
 keyword = name
@@ -447,13 +449,13 @@ abs_hex_constant = abs(hex_constant)
 intrinsic_type_name = Pattern(
     '<intrinsic-type-name>',
     r'(INTEGER|REAL|COMPLEX|LOGICAL|CHARACTER|DOUBLE\s*COMPLEX|'
-    'DOUBLE\s*PRECISION|BYTE)', flags=re.I)
+    r'DOUBLE\s*PRECISION|BYTE)', flags=re.I)
 abs_intrinsic_type_name = abs(intrinsic_type_name)
 double_complex_name = Pattern(
-    '<double-complex-name>', 'DOUBLE\s*COMPLEX', flags=re.I,
+    '<double-complex-name>', r'DOUBLE\s*COMPLEX', flags=re.I,
     value='DOUBLE COMPLEX')
 double_precision_name = Pattern(
-    '<double-precision-name>', 'DOUBLE\s*PRECISION',
+    '<double-precision-name>', r'DOUBLE\s*PRECISION',
     flags=re.I, value='DOUBLE PRECISION')
 abs_double_complex_name = abs(double_complex_name)
 abs_double_precision_name = abs(double_precision_name)
@@ -471,6 +473,14 @@ attr_spec = Pattern(
     'OPTIONAL|PARAMETER|POINTER|PROTECTED|SAVE|TARGET|VALUE|VOLATILE)',
     flags=re.I)
 abs_attr_spec = abs(attr_spec)
+
+attr_spec_f08 = Pattern(
+    '<attr-spec>',
+    r'({})'.format('|'.join(  # extend attr_spec with attribute CONTIGUOUS
+        sorted(attr_spec.pattern.strip('()').split('|') + ['CONTIGUOUS'])
+    )),
+    flags=re.I)
+abs_attr_spec_f08 = abs(attr_spec_f08)
 
 dimension = Pattern('<dimension>', r'DIMENSION', flags=re.I)
 abs_dimension = abs(dimension)

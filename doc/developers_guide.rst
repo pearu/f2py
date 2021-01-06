@@ -726,6 +726,73 @@ any 'program units'. This completes all valid locations for include
 statements, including the missing last statement mentioned in the
 previous paragraph.
 
+Preprocessing Directives
+++++++++++++++++++++++++
+
+fparser2 retains preprocessing directives as nodes in the parse tree
+but does not interpret them. This has been implemented in
+`C99Preprocessor.py` as a number of classes that have names with the
+prefix `Cpp_`. This allows fparser2 to parse code successfully that
+contains preprocessing directives but reduces to valid Fortran if the
+directives are omitted.
+
+Similarly to comments, the readers represent preprocessing directives
+by a dedicated class `CppDirective`, which is a subclass of `Line`.
+This allows directives to be detected early and matches to be limited
+to source lines that are instances of `CppDirective`. Matching of directives
+is performed in the same place as include statements to make sure that they
+are recognized at all locations in a source file.
+
+Most directives are implemented as subclasses of `WORDClsBase` or
+`StringBase` (with the only exceptions being macro definition and
+null directive).
+
+Conditional inclusion directives (`#if...[#elif...]...#endif` or their
+variants `#ifdef`/`#ifndef`) are represented as individual nodes by
+classes `fparser.two.C99Preprocessor.Cpp_If_Stmt`,
+`fparser.two.C99Preprocessor.Cpp_Elif_Stmt`,
+`fparser.two.C99Preprocessor.Cpp_Else_Stmt`, and
+`fparser.two.C99Preprocessor.Cpp_Endif_Stmt` but
+currently not grouped together in any way since directives can appear
+at any point in a file and thus the span of conditional inclusions may
+be orthogonal to a Fortran block. In `#if(n)def` directives the
+identifier is matched using
+`fparser.two.C99Preprocessor.Cpp_Macro_Identifier`
+and may contain only letters and underscore. In `#if` or `#elif`
+directives the constant expression is matched very loosely by
+`fparser.two.C99Preprocessor.Cpp_Pp_Tokens`
+which accepts any non-empty string.
+
+Include directives (`#include`) are handled similarly to Fortran
+include statements with the matching of filenames being done by the
+same class and therefore with the same (loose) restrictions.
+
+Directives that define macro replacements (`#define`) contain a
+macro identifier that is matched using `Cpp_Macro_Identifier`.
+This is followed by an optional identifier list in parentheses
+(and without white space separating identifier and opening
+parenthesis) that defines parameters to the macro for use in the
+replacement expression. The identifier list is matched by
+`fparser.two.C99Preprocessor.Cpp_Macro_Identifier_List`
+which, however, does not treat individual identifiers as separate
+names but matches the entire list as a single string.
+The replacement expression is matched and represented as
+`Cpp_Pp_Tokens`.
+
+The matching of `#undef` statements is implemented in class
+`fparser.two.C99Preprocessor.Cpp_Undef_Stmt` with the identifier again
+matched by `Cpp_Macro_Identifier`.
+
+Directives `#line`, `#error`, and `#warning` are implemented in classes
+`fparser.two.C99Preprocessor.Cpp_Line_Stmt`,
+`fparser.two.C99Preprocessor.Cpp_Error_Stmt`, and
+`fparser.two.C99Preprocessor.Cpp_Warning_Stmt` with the corresponding
+right hand sides matched by `Cpp_Pp_Tokens`.
+
+A single preprocessing directive token `#` without any directive is
+a null statement and is matched by
+`fparser.two.C99Preprocessor.Cpp_Null_Stmt`.
+
 Utils
 +++++
 
@@ -750,3 +817,11 @@ a valid Fortran program.
    # Comment Class
    # +++++++++++++
    # TBD
+
+Continuous Integration
+----------------------
+
+GitHub Actions are used to run the test suite for a number of different
+Python versions and the coverage reports are uploaded automatically to CodeCov
+(https://codecov.io/gh/stfc/fparser). The configuration for this is in the
+`.github/workflows/unit-tests.yml` file.

@@ -44,3 +44,14 @@ from fparser.two.parser import ParserFactory
 def f2008_create():
     '''Create a fortran 2008 parser class hierarchy'''
     _ = ParserFactory().create(std="f2008")
+
+
+@pytest.fixture
+def f2008_parser():
+    '''Create a Fortran 2008 parser class hierarchy and return the parser
+    for usage in tests.
+
+    :return: a Program class (not object) for use with the Fortran reader.
+    :rtype: :py:class:`fparser.two.Fortran2003.Program`
+    '''
+    return ParserFactory().create(std='f2008')

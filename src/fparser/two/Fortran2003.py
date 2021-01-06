@@ -71,7 +71,6 @@
 # First version created: Oct 2006
 
 import re
-import logging
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
@@ -168,13 +167,34 @@ class Comment(Base):
         reader.put_item(self.item)
 
 
-def add_comments_includes(content, reader):
-    '''Creates comment and/or include objects and adds them to the content
-    list. Comment and/or include objects are added until a line that
-    is not a comment or include is found.
+def match_comment_or_include(reader):
+    '''Creates a comment or include object from the current line.
 
-    :param content: a `list` of matched objects. Any matched comments \
-                    or includes in this routine are added to this list.
+    :param reader: the fortran file reader containing the line \
+                   of code that we are trying to match
+    :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+                  or \
+                  :py:class:`fparser.common.readfortran.FortranStringReader`
+
+    :return: a comment or include object if found, otherwise `None`.
+    :rtype: :py:class:`fparser.two.Fortran2003.Comment` or \
+            :py:class:`fparser.two.Fortran2003.Include_Stmt`
+
+    '''
+    obj = Comment(reader)
+    obj = Include_Stmt(reader) if not obj else obj
+    return obj
+
+
+def add_comments_includes_directives(content, reader):
+    '''Creates comment, include, and/or cpp directive objects and adds them to
+    the content list. Comment, include, and/or directive objects are added
+    until a line that is not a comment, include, or directive is found.
+
+    :param content: a `list` of matched objects. Any matched comments, \
+                    includes, or directives in this routine are added to \
+                    this list.
+    :type content: :obj:`list`
     :param reader: the fortran file reader containing the line(s) \
                    of code that we are trying to match
     :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
@@ -182,12 +202,13 @@ def add_comments_includes(content, reader):
                   :py:class:`fparser.common.readfortran.FortranStringReader`
 
     '''
-    obj = Comment(reader)
-    obj = Include_Stmt(reader) if not obj else obj
+    from fparser.two.C99Preprocessor import match_cpp_directive
+    obj = match_comment_or_include(reader)
+    obj = match_cpp_directive(reader) if not obj else obj
     while obj:
         content.append(obj)
-        obj = Comment(reader)
-        obj = Include_Stmt(reader) if not obj else obj
+        obj = match_comment_or_include(reader)
+        obj = match_cpp_directive(reader) if not obj else obj
 
 
 class Program(BlockBase):  # R201
@@ -244,12 +265,12 @@ class Program(BlockBase):  # R201
 
         '''
         content = []
-        add_comments_includes(content, reader)
+        add_comments_includes_directives(content, reader)
         try:
             while True:
                 obj = Program_Unit(reader)
                 content.append(obj)
-                add_comments_includes(content, reader)
+                add_comments_includes_directives(content, reader)
                 # cause a StopIteration exception if there are no more lines
                 next_line = reader.next()
                 # put the line back in the case where there are more lines
@@ -263,7 +284,7 @@ class Program(BlockBase):  # R201
         except StopIteration:
             # Reader has no more lines.
             pass
-        return content,
+        return (content,)
 
 
 class Include_Filename(StringBase):  # pylint: disable=invalid-name
@@ -305,8 +326,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for an include statement.
 
-        :param str string: the string to match with as an include \
-        statement.
+        :param str string: the string to match with as an include statement.
         :returns: a tuple of size 1 containing an Include_Filename \
         object with the matched filename if there is a match, or None \
         if there is not.
@@ -316,19 +336,17 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         '''
         if not string:
             return None
+
         line = string.strip()
         if line[:7].upper() != 'INCLUDE':
             # The line does not start with the include token and/or the line
             # is too short.
             return None
         rhs = line[7:].strip()
-        if not rhs:
-            # There is no content after the include token
-            return None
-        if len(rhs) < 3:
-            # The content after the include token is too short to be
-            # valid (it must at least contain quotes and one
-            # character.
+        if rhs is None or len(rhs) < 3:
+            # Either we didn't find any includes or the content after
+            # the include token is too short to be valid (it must at
+            # least contain quotes and one character.
             return None
         if not ((rhs[0] == "'" and rhs[-1] == "'") or
                 (rhs[0] == '"' and rhs[-1] == '"')):
@@ -341,7 +359,7 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
         name = Include_Filename(file_name)
         if not name:
             raise InternalError(
-                "Fotran2003.py:Include_Stmt:match Include_Filename should "
+                "Fortran2003.py:Include_Stmt:match Include_Filename should "
                 "never return None or an empty name")
         return (name,)
 
@@ -1612,7 +1630,7 @@ class Component_Part(BlockBase):  # R438
                 break
             content.append(obj)
         if content:
-            return content,
+            return (content,)
         return
     match = staticmethod(match)
 
@@ -1643,10 +1661,42 @@ class Component_Def_Stmt(Base):  # R439
 
 
 class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
-    """
+    '''
+    Fortran 2003 rule 440
     <data-component-def-stmt> is <declaration-type-spec> [
              [ , <component-attr-spec-list> ] :: ] <component-decl-list>
-    """
+
+    Associated constraints are:
+
+    "C436 (R440)  No component-attr-spec shall appear more than once in a given
+          component-def-stmt."
+    "C437 (R440)  A component declared with the CLASS keyword shall have the
+          ALLOCATABLE or POINTER attribute."
+    "C438 (R440)  If the POINTER attribute is not specified for a component,
+          the declaration-type-spec in the component-def-stmt shall be CLASS(*)
+          or shall specify an intrinsic type or a previously defined derived
+          type."
+    "C439 (R440)  If the POINTER attribute is specified for a component, the
+          declaration-type-spec in the component-def-stmt shall be CLASS(*) or
+          shall specify an intrinsic type or any accessible derived type
+          including the type being defined."
+    "C440 (R440)  If the POINTER or ALLOCATABLE attribute is specified, each
+          component-array-spec shall be a deferred-shape-spec-list."
+    "C441 (R440)  If neither the POINTER attribute nor the ALLOCATABLE
+          attribute is specified, each component-array-spec shall be an
+          explicit-shape-spec-list."
+    "C443 (R440)  A component shall not have both the ALLOCATABLE and the
+          POINTER attribute."
+    "C446 (R440)  If component-initialization appears, a double-colon separator
+          shall appear before the component-decl-list."
+    "C447 (R440)  If => appears in component-initialization, POINTER shall
+          appear in the component-attr-spec-list. If = appears in
+          component-initialization, POINTER or ALLOCATABLE shall not appear in
+          the component-attr-spec-list."
+
+    C436-C441, C443, C446-C447 are currently not checked - issue #258.
+
+   '''
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Component_Attr_Spec_List',
                  'Component_Decl_List']
@@ -1679,10 +1729,25 @@ class Component_Attr_Spec(STRINGBase):  # R441
     """
     subclass_names = ['Access_Spec', 'Dimension_Component_Attr_Spec']
     use_names = []
+    attributes = ['POINTER', 'ALLOCATABLE']
 
-    @staticmethod
-    def match(string):
-        return STRINGBase.match(['POINTER', 'ALLOCATABLE'], string)
+    @classmethod
+    def match(cls, string):
+        '''Implements the matching for component attribute specifications.
+
+        Note that this is implemented as a `classmethod` (not a
+        `staticmethod`), using attribute keywords from the list provided
+        as a class property. This allows expanding this list for
+        Fortran 2008 without having to reimplement the matching.
+
+        :param str string: the string to match as an attribute.
+
+        :return: None if there is no match, otherwise a 1-tuple \
+            containing the matched attribute string.
+        :rtype: NoneType or (str,)
+
+        '''
+        return STRINGBase.match(cls.attributes, string)
 
 
 class Component_Decl(Base):  # R442
@@ -2259,6 +2324,9 @@ class Type_Param_Spec(KeywordValueBase):  # R456
 class Structure_Constructor_2(KeywordValueBase):  # R457.b
     """
     <structure-constructor-2> = [ <keyword> = ] <component-data-source>
+
+    TODO #255 - should this class be deleted?
+
     """
     subclass_names = ['Component_Data_Source']
     use_names = ['Keyword']
@@ -2273,6 +2341,9 @@ class Structure_Constructor(CallBase):  # R457
     <structure-constructor> = <derived-type-spec> ( [ <component-spec-list> ] )
                             | <structure-constructor-2>
     """
+    # TODO #255 it seems likely that we should remove
+    # 'Structure_Constructor_2' from subclass_names but this requires
+    # investigation.
     subclass_names = ['Structure_Constructor_2']
     use_names = ['Derived_Type_Spec', 'Component_Spec_List']
 
@@ -2329,7 +2400,7 @@ class Enum_Def_Stmt(StmtBase):  # R461
     def match(string):
         if string.upper().replace(' ', '') != 'ENUM,BIND(C)':
             return
-        return 'ENUM, BIND(C)',
+        return ('ENUM, BIND(C)',)
 
     def tostr(self):
         return '%s' % (self.items[0])
@@ -2387,6 +2458,7 @@ class Array_Constructor(BracketBase):  # R465
     subclass_names = []
     use_names = ['Ac_Spec']
 
+    @staticmethod
     def match(string):
         try:
             obj = BracketBase.match('(//)', Ac_Spec, string)
@@ -2395,7 +2467,6 @@ class Array_Constructor(BracketBase):  # R465
         if obj is None:
             obj = BracketBase.match('[]', Ac_Spec, string)
         return obj
-    match = staticmethod(match)
 
 
 class Ac_Spec(Base):  # R466
@@ -2439,10 +2510,22 @@ class Ac_Value(Base):  # R469
     subclass_names = ['Ac_Implied_Do', 'Expr']
 
 
-class Ac_Implied_Do(Base):  # R470
-    """
-    <ac-implied-do> = ( <ac-value-list> , <ac-implied-do-control> )
-    """
+class Ac_Implied_Do(Base):
+    '''
+    Fortran2003 rule R470.
+    Describes the form of implicit do loop used within an array constructor.
+
+    ac-implied-do is ( ac-value-list , ac-implied-do-control )
+
+    Subject to the following constraint:
+
+    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
+          ac-implied-do shall not appear as the ac-do-variable of the
+          containing ac-implied-do."
+
+    C497 is currently not checked - issue #257.
+
+    '''
     subclass_names = []
     use_names = ['Ac_Value_List', 'Ac_Implied_Do_Control']
 
@@ -2464,36 +2547,65 @@ class Ac_Implied_Do(Base):  # R470
         return '(%s, %s)' % tuple(self.items)
 
 
-class Ac_Implied_Do_Control(Base):  # R471
-    """
-    <ac-implied-do-control> = <ac-do-variable> = <scalar-int-expr> ,
-        <scalar-int-expr> [ , <scalar-int-expr> ]
-    """
+class Ac_Implied_Do_Control(Base):
+    '''
+    Fortran2003 rule R471.
+    Specifies the syntax for the control of an implicit loop within an
+    array constructor.
+
+    ac-implied-do-control is ac-do-variable = scalar-int-expr,
+                                    scalar-int-expr [ , scalar-int-expr ]
+
+    where (R472) ac-do-variable is scalar-int-variable
+
+    '''
     subclass_names = []
     use_names = ['Ac_Do_Variable', 'Scalar_Int_Expr']
 
+    @staticmethod
     def match(string):
-        i = string.find('=')
-        if i == -1:
-            return
-        s1 = string[:i].rstrip()
-        line, repmap = string_replace_map(string[i+1:].lstrip())
-        t = line.split(',')
-        if not (2 <= len(t) <= 3):
-            return
-        t = [Scalar_Int_Expr(s.strip()) for s in t]
-        return Ac_Do_Variable(s1), t
-    match = staticmethod(match)
+        ''' Attempts to match the supplied string with the pattern for
+        implied-do control.
+
+        :param str string: the string to test for a match.
+
+        :returns: None if there is no match or a 2-tuple containing the \
+                  do-variable name and the list of integer expressions (for \
+                  start, stop [, step]).
+        :rtype: NoneType or \
+                (:py:class:`fparser.two.Fortran2003.Ac_Do_Variable`, list)
+        '''
+        idx = string.find('=')
+        if idx == -1:
+            return None
+        do_var = string[:idx].rstrip()
+        line, repmap = string_replace_map(string[idx+1:].lstrip())
+        int_exprns = line.split(',')
+        if not (2 <= len(int_exprns) <= 3):
+            return None
+        exprn_list = [Scalar_Int_Expr(repmap(s.strip())) for s in int_exprns]
+        return Ac_Do_Variable(do_var), exprn_list
 
     def tostr(self):
         return '%s = %s' % (self.items[0], ', '.join(map(str, self.items[1])))
 
 
-class Ac_Do_Variable(Base):  # R472
-    """
-    <ac-do-variable> = <scalar-int-variable>
-    <ac-do-variable> shall be a named variable
-    """
+class Ac_Do_Variable(Base):
+    '''
+    Fortran2003 rule R472.
+    Specifies the permitted form of an implicit do-loop variable within an
+    array constructor.
+
+    ac-do-variable is scalar-int-variable
+    ac-do-variable shall be a named variable
+
+    Subject to the following constraint:
+
+    "C493 (R472) ac-do-variable shall be a named variable."
+
+    C493 is currently not checked - issue #257.
+
+    '''
     subclass_names = ['Scalar_Int_Variable']
 
 #
@@ -2502,10 +2614,71 @@ class Ac_Do_Variable(Base):  # R472
 
 
 class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
-    """
+    '''
+    Fortran 2003 rule 501
     <type-declaration-stmt> = <declaration-type-spec> [
         [ , <attr-spec> ]... :: ] <entity-decl-list>
-    """
+
+    Associated constraints are:
+
+    "C507 (R501)  The same attr-spec shall not appear more than once in a given
+          type-declaration-stmt."
+    "C509 (R501)  An entity declared with the CLASS keyword shall be a dummy
+          argument or have the ALLOCATABLE or POINTER attribute."
+    "C510 (R501)  An array that has the POINTER or ALLOCATABLE attribute shall
+          be specified with an array-spec that is a deferred-shape-spec-list."
+    "C511 (R501)  An array-spec for an object-name that is a function result
+          that does not have the ALLOCATABLE or POINTER attribute shall be an
+          explicit-shape-spec-list."
+    "C512 (R501)  If the POINTER attribute is specified, the ALLOCATABLE,
+          TARGET, EXTERNAL, or INTRINSIC attribute shall not be specified."
+    "C513 (R501)  If the TARGET attribute is specified, the POINTER, EXTERNAL,
+          INTRINSIC, or PARAMETER attribute shall not be specified."
+    "C514 (R501)  The PARAMETER attribute shall not be specified for a dummy
+          argument, a pointer, an allocatable entity, a function, or an object
+          in a common block."
+    "C515 (R501)  The INTENT, VALUE, and OPTIONAL attributes may be specified
+          only for dummy arguments."
+    "C516 (R501)  The INTENT attribute shall not be specified for a dummy
+          procedure without the POINTER attribute."
+    "C517 (R501)  The SAVE attribute shall not be specified for an object that
+          is in a common block, a dummy argument, a procedure, a function
+          result, an automatic data object, or an object with the PARAMETER
+          attribute."
+    "C519 (R501)  An entity in an entity-decl-list shall not have the EXTERNAL
+          or INTRINSIC attribute specified unless it is a function."
+    "C522 (R501)  The initialization shall appear if the statement contains a
+          PARAMETER attribute."
+    "C523 (R501)  If initialization appears, a double-colon separator shall
+          appear before the entity-decl-list."
+    "C526 (R501)  If the VOLATILE attribute is specified, the PARAMETER,
+          INTRINSIC, EXTERNAL, or INTENT(IN) attribute shall not be specified."
+    "C527 (R501)  If the VALUE attribute is specified, the PARAMETER, EXTERNAL,
+          POINTER, ALLOCATABLE, DIMENSION, VOLATILE, INTENT(INOUT), or
+          INTENT(OUT) attribute shall not be specified."
+    "C528 (R501)  If the VALUE attribute is specified, the length type
+          parameter values shall be omitted or specified by initialization
+          expressions."
+    "C529 (R501)  The VALUE attribute shall not be specified for a dummy
+          procedure."
+    "C530 (R501)  The ALLOCATABLE, POINTER, or OPTIONAL attribute shall not be
+          specified for adummy argument of a procedure that has
+          aproc-language-binding-spec."
+    "C532 (R501)  If a language-binding-spec is specified, the entity declared
+          shall be an interoperable variable."
+    "C533 (R501)  If a language-binding-spec with a NAME= specifier appears,
+          the entity-decl-list shall consist of a single entity-decl."
+    "C534 (R503)  The PROTECTED attribute is permitted only in the
+          specification part of a module."
+    "C535 (R501)  The PROTECTED attribute is permitted only for a procedure
+          pointer or named variable that is not in a common block."
+    "C536 (R501)  If the PROTECTED attribute is specified, the EXTERNAL,
+          INTRINSIC, or PARAMETER attribute shall not be specified."
+
+    C507, C509-C517, C519, C522-C523, C526-C530, C532-C533, C535-C536 are
+    currently not checked - issue #259.
+
+    '''
     subclass_names = []
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
@@ -2803,7 +2976,7 @@ class Language_Binding_Spec(Base):  # R509
             return
         line = line[1:].lstrip()
         if not line:
-            return None,
+            return (None,)
         if not line.startswith(','):
             return
         line = line[1:].lstrip()
@@ -2813,7 +2986,7 @@ class Language_Binding_Spec(Base):  # R509
         line = line[4:].lstrip()
         if not line.startswith('='):
             return
-        return Scalar_Char_Initialization_Expr(line[1:].lstrip()),
+        return (Scalar_Char_Initialization_Expr(line[1:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -3298,7 +3471,7 @@ class Dimension_Stmt(StmtBase):  # R535
                           Array_Spec(repmap(s[i+1:-1].strip()))))
         if not decls:
             return
-        return decls,
+        return (decls,)
     match = staticmethod(match)
 
     def tostr(self):
@@ -3617,7 +3790,7 @@ class Target_Stmt(StmtBase):  # R546
         line = string[6:].lstrip()
         if line.startswith('::'):
             line = line[2:].lstrip()
-        return Target_Entity_Decl_List(line),
+        return (Target_Entity_Decl_List(line),)
 
     def tostr(self):
         return 'TARGET :: %s' % (self.items[0])
@@ -3672,8 +3845,8 @@ items : ({'NONE', Implicit_Spec_List},)
             return
         line = string[8:].lstrip()
         if len(line) == 4 and line.upper() == 'NONE':
-            return 'NONE',
-        return Implicit_Spec_List(line),
+            return ('NONE',)
+        return (Implicit_Spec_List(line),)
         for w, cls in [(pattern.abs_implicit_none, None),
                        ('IMPLICIT', Implicit_Spec_List)]:
             try:
@@ -3907,7 +4080,7 @@ class Common_Stmt(StmtBase):  # R557
                 lst = Common_Block_Object_List(repmap(tmp))
                 line = line[i:].lstrip()
             items.append((name, lst))
-        return items,
+        return (items,)
     match = staticmethod(match)
 
     def tostr(self):
@@ -3954,18 +4127,24 @@ class Variable_Name(Base):  # R602
 
 
 class Designator(Base):  # R603
-    """
-    <designator> = <object-name>
-                   | <array-element>
-                   | <array-section>
-                   | <structure-component>
-                   | <substring>
-    <substring-range> = [ <scalar-int-expr> ] : [ <scalar-int-expr> ]
-    <structure-component> = <data-ref>
-    """
-    subclass_names = ['Object_Name', 'Array_Section', 'Array_Element',
-                      'Structure_Component', 'Substring'
-                      ]
+    '''
+    Fortran 2003 rule 603
+
+    designator is object-name
+               or array-element
+               or array-section
+               or structure-component
+               or substring
+
+    '''
+    # At the moment some array section text, and all structure
+    # component and substring text will match the array-element
+    # rule. This is because the associated rule constraints
+    # (e.g. C617, C618 and C619) and specification text (see note 6.6)
+    # are not currently enforced. Note, these constraints can not be
+    # enforced until issue #201 has been addressed.
+    subclass_names = ['Object_Name', 'Array_Element', 'Array_Section',
+                      'Structure_Component', 'Substring']
 
 
 class Logical_Variable(Base):  # R604
@@ -4498,7 +4677,7 @@ class Level_1_Expr(UnaryOpBase):  # R702
     match = staticmethod(match)
 
 
-class Defined_Unary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Unary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R703
 
@@ -4733,7 +4912,7 @@ class Expr(BinaryOpBase):  # R722
     match = staticmethod(match)
 
 
-class Defined_Binary_Op(STRINGBase):  # pylint: disable=invalid-name
+class Defined_Binary_Op(Base):  # pylint: disable=invalid-name
     '''
     Fortran 2003 rule R723
 
@@ -5058,7 +5237,7 @@ class Where_Construct_Stmt(StmtBase):  # R745
         line = line[1:-1].strip()
         if not line:
             return
-        return Mask_Expr(line),
+        return (Mask_Expr(line),)
 
     def tostr(self):
         return 'WHERE (%s)' % tuple(self.items)
@@ -5495,7 +5674,7 @@ class If_Then_Stmt(StmtBase):  # R803
             return
         if line[0] + line[-1] != '()':
             return
-        return Scalar_Logical_Expr(line[1:-1].strip()),
+        return (Scalar_Logical_Expr(line[1:-1].strip()),)
 
     def tostr(self):
         return 'IF (%s) THEN' % self.items
@@ -5558,8 +5737,8 @@ class Else_Stmt(StmtBase):  # R805
             return
         line = string[4:].lstrip()
         if line:
-            return If_Construct_Name(line),
-        return None,
+            return (If_Construct_Name(line),)
+        return (None,)
 
     def tostr(self):
         if self.items[0] is None:
@@ -5679,7 +5858,7 @@ class Select_Case_Stmt(StmtBase, CALLBase):  # R809
         if not line or line[0]+line[-1] != '()':
             return
         line = line[1:-1].strip()
-        return Case_Expr(line),
+        return (Case_Expr(line),)
 
     def tostr(self):
         return 'SELECT CASE (%s)' % (self.items[0])
@@ -5755,10 +5934,10 @@ class Case_Selector(Base):  # R813
     @staticmethod
     def match(string):
         if len(string) == 7 and string.upper() == 'DEFAULT':
-            return None,
+            return (None,)
         if not (string.startswith('(') and string.endswith(')')):
             return
-        return Case_Value_Range_List(string[1:-1].strip()),
+        return (Case_Value_Range_List(string[1:-1].strip()),)
 
     def tostr(self):
         if self.items[0] is None:
@@ -6412,7 +6591,7 @@ class Outer_Shared_Do_Construct(BlockBase):  # R839
             if obj is None:  # todo: restore reader
                 return
             content.append(obj)
-        return content,
+        return (content,)
     match = staticmethod(match)
 
 
@@ -6440,7 +6619,7 @@ class Inner_Shared_Do_Construct(BlockBase):  # R841
             if obj is None:  # todo: restore reader
                 return
             content.append(obj)
-        return content,
+        return (content,)
     match = staticmethod(match)
 
 
@@ -6489,7 +6668,7 @@ class Goto_Stmt(StmtBase):  # R845
         line = string[2:].lstrip()
         if line[:2].upper() != 'TO':
             return
-        return Label(line[2:].lstrip()),
+        return (Label(line[2:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -7840,7 +8019,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
             if strip_string[num_chars:].strip():
                 # The extra is not just white space
                 return None
-        return strip_string[len(match_str):num_chars],
+        return (strip_string[len(match_str):num_chars],)
 
     def tostr(self):
         '''
@@ -8988,8 +9167,8 @@ class Block_Data_Stmt(StmtBase):  # R1117
             return
         line = line[4:].lstrip()
         if not line:
-            return None,
-        return Block_Data_Name(line),
+            return (None,)
+        return (Block_Data_Name(line),)
 
     def tostr(self):
         if self.items[0] is None:
@@ -9062,12 +9241,12 @@ items : ({Generic_Spec, 'ABSTRACT'},)
         if string[:9].upper() == 'INTERFACE':
             line = string[9:].strip()
             if not line:
-                return None,
-            return Generic_Spec(line),
+                return (None,)
+            return (Generic_Spec(line),)
         if string[:8].upper() == 'ABSTRACT':
             line = string[8:].strip()
             if line.upper() == 'INTERFACE':
-                return 'ABSTRACT',
+                return ('ABSTRACT',)
 
     def tostr(self):
         if self.items[0] == 'ABSTRACT':
@@ -9164,7 +9343,7 @@ items : (Procedure_Name_List, )
         if line[:9].upper() != 'PROCEDURE':
             return
         line = line[9:].lstrip()
-        return Procedure_Name_List(line),
+        return (Procedure_Name_List(line),)
 
     def tostr(self):
         return 'MODULE PROCEDURE %s' % (self.items[0])
@@ -9226,7 +9405,7 @@ items : (str, )
                     return
                 line = line[1:-1].strip().upper()
                 if line in ['FORMATTED', 'UNFORMATTED']:
-                    return '%s(%s)' % (rw, line),
+                    return ('%s(%s)' % (rw, line),)
 
     def tostr(self):
         return '%s' % (self.items[0])
@@ -9539,7 +9718,7 @@ class Intrinsic_Name(STRINGBase):  # No explicit rule
         "BTEST": {"min": 2, "max": 2},
         "IAND": {"min": 2, "max": 2},
         "IBCLR": {"min": 2, "max": 2},
-        "IBITS": {"min": 2, "max": 2},
+        "IBITS": {"min": 3, "max": 3},
         "IBSET": {"min": 2, "max": 2},
         "IEOR": {"min": 2, "max": 2},
         "IOR": {"min": 2, "max": 2},
@@ -9831,7 +10010,7 @@ class Alt_Return_Spec(Base):  # R1222
         line = string[1:].lstrip()
         if not line:
             return
-        return Label(line),
+        return (Label(line),)
     match = staticmethod(match)
 
     def tostr(self):
@@ -10284,8 +10463,8 @@ class Return_Stmt(StmtBase):  # R1236
         if start != 'RETURN':
             return
         if len(string) == 6:
-            return None,
-        return Scalar_Int_Expr(string[6:].lstrip()),
+            return (None,)
+        return (Scalar_Int_Expr(string[6:].lstrip()),)
     match = staticmethod(match)
 
     def tostr(self):

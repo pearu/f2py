@@ -10,8 +10,47 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australia Bureau of Meteorology
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
+* B. Reuter, ECMWF, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
+* A. Voysey, UK Met Office
+
+23/12/2020 PR #278 for #277. Added github actions CI file, badges and documentation.
+
+18/12/2020 PR #275 for #274. Adds an example script that uses fparser2 to
+           generate Makefile dependency rules for a set of Fortran source
+           files.
+
+30/11/2020 PR #272 for #271. Bug fix to module_in_file() to ensure that the
+           encoding is always set to UTF-8 when reading a file.
+
+25/10/2020 PR #256 for #252. Fixes a bug in the parsing of an array constructor.
+
+03/06/2020 PR #263 for #262. Fixes bug in fparser2 logging a 'critical'
+           error when it reaches the end of a file.
+
+03/06/2020 PR #249. Adds support for Fortran2008 CONTIGUOUS and
+           CODIMENSION keywords.
+
+## Release 0.0.11 (15/05/2020) ##
+
+09/04/2020 PR #254. Fix for >1 character pre-processor macro identifiers.
+
+24/03/2020 PR #239. Add support for CPP directives in fparser2.
+
+07/03/2020 PR #250 for #248. Identify CPP directives in the reader.
+
+14/02/2020 PR #246 for #245. Fixes some deprecation warnings about '\'
+           characters in strings.
+
+13/02/2020 PR #238 for #213. Re-orders the rules that are matched for
+           Designators so that e.g. a(:) matches as a section-subscript-list
+           rather than a substring-range.
+
+13/02/2020 PR #240. Improves code conformance to pylint and pycodestyle.
+
+06/02/2020 PR #241. Fixes a bug in the number of arguments specified for
+           the IBITS intrinsic.
 
 25/01/2020 PR #235 for #172. Fixes bug in absolute pattern matching that
            meant that matches with following content were not being

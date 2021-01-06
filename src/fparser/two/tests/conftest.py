@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -44,3 +44,14 @@ from fparser.two.parser import ParserFactory
 def f2003_create():
     '''Create a fortran 2003 parser class hierarchy'''
     _ = ParserFactory().create(std="f2003")
+
+
+@pytest.fixture
+def f2003_parser():
+    '''Create a Fortran 2003 parser class hierarchy and return the parser
+    for usage in tests.
+
+    :return: a Program class (not object) for use with the Fortran reader.
+    :rtype: :py:class:`fparser.two.Fortran2003.Program`
+    '''
+    return ParserFactory().create(std='f2003')
