@@ -905,15 +905,20 @@ class BinaryOpBase(Base):
         the 'op_pattern' argument also matches this pattern. The
         default (None) does nothing.
 
-        The 'is_add' optional argument should be set to true when the
-        add operand is being matched. The default is false. ****** I'm
-        not sure what this does at the moment. ***
+        When set to true the 'is_add' optional argument causes a '+'
+        in a real literal on the rhs of a match to be ignored. When
+        the add operand is being matched this has the effect of
+        correctly matching patterns like 'a+2.0e+10' i.e. the split is
+        performed between the 'a' and the '2.0e+10'. The default is
+        false. This is a special case optimisation which should
+        probably be removed, see issue #281.
 
         :param lhs_cls: an fparser2 object representing the rule that \
             should be matched to the lhs text.
         :type lhs_cls: subclass of :py:class:`fparser.two.utils.Base`
         :param op_pattern: the pattern to match.
-        :type op_pattern: `str` or an `re` expression ***** pattern?
+        :type op_pattern: `str` or \
+            :py:class:`fparser.two.pattern_tools.Pattern`
         :param rhs_cls: an fparser2 object representing the rule that \
             should be matched to the rhs text.
         :type rhs_cls: subclass of :py:class:`fparser.two.utils.Base`
@@ -927,8 +932,11 @@ class BinaryOpBase(Base):
         :param exclude_op_pattern: optional argument which specifies a \
             particular subpattern to exclude from the match. Defaults \
             to None which means there is no subpattern.
-        :type exclude_op_pattern: ***** pattern???
-        :param bool is_add: ******** optional, default to False
+        :type exclude_op_pattern: :py:class:`fparser.two.pattern_tools.Pattern`
+        :param bool is_add: optional match optimisation for the + \
+            operator when set to True (ignores matching the + in a
+            real literal). Defaults to False.
+
         :returns: a tuple containing the matched lhs, the operator and \
             the matched rhs of the input string or None is there is \
             no match.

@@ -32,7 +32,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-''' File containing unit tests for the WORDClsBase baseclass in utils.py '''
+'''File containing unit tests for the BinaryOpBase baseclass in
+utils.py
+
+'''
 
 import pytest
 from fparser.two.utils import BinaryOpBase, NoMatchError
