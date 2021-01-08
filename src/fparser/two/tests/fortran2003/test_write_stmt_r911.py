@@ -48,7 +48,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(123) "hey"'
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
         "(Char_Literal_Constant('\"hey\"', None),)))")
 
@@ -56,7 +56,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'WRITE(*, "(I3)") my_int'
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec(None, "
         "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
         "(Name('my_int'),)))")
@@ -66,7 +66,7 @@ def test_write_stmt():
     assert str(obj) == 'WRITE(*, namtest)'
     assert repr(obj).replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec_Unit(None, Io_Unit('*')), Io_Control_Spec(None, "
+        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
         "Name('namtest')))), None)")
 
     # Test when format specifier contains an '=' character
@@ -75,7 +75,7 @@ def test_write_stmt():
     obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec(None, "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
@@ -83,7 +83,7 @@ def test_write_stmt():
     obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
     assert isinstance(obj, tcls)
     assert repr(obj).replace("u'", "'") == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec_Unit(None, "
+        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
         "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
@@ -96,7 +96,7 @@ def test_write_stmt():
     obj_repr = obj_repr.replace('u"', '"')
     assert obj_repr.replace("u'", "'") == (
         "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec_Unit(None, Int_Literal_Constant('6', None)), "
+        "(Io_Control_Spec(None, Int_Literal_Constant('6', None)), "
         "Io_Control_Spec(None, Level_3_Expr(Level_3_Expr("
         "Char_Literal_Constant('\\'(\"write = some=\"\"\\'', None), '//', "
         "Char_Literal_Constant(\"'text'\", None)), '//', "

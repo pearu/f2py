@@ -7022,54 +7022,72 @@ class Io_Control_Spec_List(SequenceBase):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
         lst = []
+        have_unit = False
+
         # If the first entry in the list is not named then it must be a
         # unit number (C910)
         spec = splitted.pop(0).strip()
         spec = repmap(spec)
+
         try:
-            io_spec = Io_Control_Spec_Unit(spec)
-        except NoMatchError:
-            # Either the first argument is named and is not UNIT or we
-            # failed to match Io_Unit.
-            io_spec = Io_Control_Spec(spec)
-            if not io_spec or io_spec.children[0] is None:
-                # Failed to match an Io_Control_Spec or we did but it
-                # is not named and is not a valid Io_unit
-                return None
-        lst.append(io_spec)
 
-        # Check whether the list has more than one entry
-        if not splitted:
-            if not isinstance(lst[0], Io_Control_Spec_Unit):
-                # We only have one entry and it's not an IO Unit
-                return None
-            else:
-                return ',', tuple(lst)
-
-        # Deal with the remainder of the list entries
-        for idx in range(len(splitted)):
-            spec = splitted[idx].strip()
-            spec = repmap(spec)
             try:
-                io_spec = Io_Control_Spec(spec)
+                Io_Unit(spec)
+                # We matched an unamed unit number. We now need to construct an
+                # Io_Control_Spec for it. In order to do so we have to
+                # temporarily name it so that Io_Control_Spec matches it.
+                io_spec = Io_Control_Spec("unit="+spec)
+                # Remove the name from the new object
+                io_spec.items = (None, io_spec.items[1])
+                lst.append(io_spec)
+                have_unit = True
+
+                if not splitted:
+                    # The list only has one entry and it is an IO unit
+                    return ',', tuple(lst)
+
+                # Since the unit-number was not named, the following item may also
+                # not be named if it is a format specifier or namelist group name.
+                spec = splitted.pop(0).strip()
+                spec = repmap(spec)
+                for cls, name in [(Namelist_Group_Name, 'nml'),
+                                  (Format, 'fmt')]:
+                    try:
+                        if cls(spec):
+                            # We have a match on an un-named entry. We temporarily
+                            # add the name so that Io_Control_Spec matches the
+                            # correct one.
+                            io_spec = Io_Control_Spec(name+"="+spec)
+                            # Remove the name from the new object
+                            io_spec.items = (None, io_spec.items[1])
+                            lst.append(io_spec)
+                            break
+                    except NoMatchError:
+                        pass
+                else:
+                    # We haven't matched an un-named namelist-group-name or format
+                    # specifier so this must be a named IO-spec
+                    lst.append(Io_Control_Spec(spec))
             except NoMatchError:
-                io_spec = None
-            if not io_spec:
-                # We may have a named UNIT= specifier
-                io_spec = Io_Control_Spec_Unit(spec)
-            # If the previous argument in the list was named then this
-            # argument must also be named
-            if lst[-1].children[0] and not io_spec.children[0]:
-                return None
-            lst.append(io_spec)
+                # First item in list must be named if it is not an IO-unit.
+                lst.append(Io_Control_Spec(spec))
+
+            # Deal with the remainder of the list entries. These must all be
+            # named.
+            for idx in range(len(splitted)):
+                spec = splitted[idx].strip()
+                spec = repmap(spec)
+                lst.append(Io_Control_Spec(spec))
+
+        except NoMatchError:
+            return None
 
         # At this point we need to check the list and apply constraints.
         # TODO #267 enforce remaining constraints.
-        have_unit = False
         have_nml = False
         have_fmt = False
         for spec in lst:
-            if isinstance(spec, Io_Control_Spec_Unit):
+            if spec.children[0] == 'UNIT':
                 have_unit = True
             elif spec.children[0] == 'NML':
                 have_nml = True
@@ -7111,12 +7129,12 @@ class Io_Control_Spec(KeywordValueBase):
                         | SIGN = <scalar-default-char-expr>
                         | SIZE = <scalar-int-variable>
 
-    The support is partial because io-unit is handled by a bespoke class and
-    therefore will not be matched by this one.
+    The support is partial because this class requires that every spec be
+    named.
 
     """
     subclass_names = []
-    use_names = ['Format', 'Namelist_Group_Name',
+    use_names = ['Io_Unit', 'Format', 'Namelist_Group_Name',
                  'Scalar_Default_Char_Expr',
                  'Scalar_Char_Initialization_Expr', 'Label',
                  'Scalar_Int_Variable',
@@ -7124,23 +7142,8 @@ class Io_Control_Spec(KeywordValueBase):
 
     @staticmethod
     def match(string):
-        # First we look at possible unnamed arguments - there are only
-        # FMT and NML (UNIT is dealt with in Io_Control_Spec_Unit).
-        # We try to match namelist first as if that fails then we must
-        # have a format.
-        for (k, v) in [('NML', Namelist_Group_Name),
-                       ('FMT', Format)]:
-            try:
-                obj = KeywordValueBase.match(k, v, string,
-                                             require_lhs=False,
-                                             upper_lhs=True)
-            except NoMatchError:
-                continue
-            else:
-                if obj:
-                    return obj
-
-        for (k, v) in [('FMT', Format),
+        for (k, v) in [('UNIT', Io_Unit),
+                       ('FMT', Format),
                        ('NML', Namelist_Group_Name),
                        (['ADVANCE', 'BLANK', 'DECIMAL', 'DELIM', 'PAD',
                          'ROUND', 'SIGN'], Scalar_Default_Char_Expr),
@@ -7153,30 +7156,6 @@ class Io_Control_Spec(KeywordValueBase):
             if obj:
                 return obj
         return None
-
-
-class Io_Control_Spec_Unit(Io_Control_Spec):
-    '''
-    Represents a Unit io-control-spec. This has its own subclass because it
-    is distinct from other io-control-spec members in that it may or may not
-    be named and if it is not named then it must be first in the
-    io-control-spec-list. (This ordering is enforced in the
-    Io_Control_Spec_List.match() method.)
-
-    The valid format for this io-control-spec is:
-
-        [UNIT =] <io-unit>
-
-    '''
-    subclass_names = []
-    use_names = ['Io_Unit']
-
-    @staticmethod
-    def match(string):
-        obj = KeywordValueBase.match('UNIT', Io_Unit, string,
-                                     require_lhs=False,
-                                     upper_lhs=True)
-        return obj
 
 
 class Format(StringBase):  # R914

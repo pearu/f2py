@@ -373,7 +373,7 @@ class Base(ComparableMixin):
                     continue
                 try:
                     obj = subcls(string, parent_cls=parent_cls)
-                except NoMatchError as msg:
+                except NoMatchError:
                     obj = None
                 if obj is not None:
                     return obj
