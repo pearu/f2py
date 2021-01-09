@@ -145,16 +145,35 @@ def test_array_constructor(f2003_create):
         expected_str='[1.2, 2.3E+2, - 5.1E-3]')
 
 
+@pytest.mark.xfail(reason="Matches Designator before Structure Constructor "
+                   "(issue #284)")
 def test_structure_constructor(f2003_create):
     '''Test that Structure Constructor types are matched by Primary.
+
+    This test currently fails as PERSON(12,"JONES") is matched as an
+    array access (Designator). In general, the only way to tell the
+    difference is to know whether PERSON is the name of a structure or
+    an array. However, we don't keep this information at the moment
+    and even when we do in the future, we still might
+    not know the information before link time as declarations may be
+    in different modules (see issue #201).
+
+    However, in this particular case we should not match with
+    Designator as one of the arguments is a string and a designator
+    should only match with integer arguments. This is not checked at
+    the moment, see the implementation of R727 (class Int_Expr) and
+    look up C708 (int-expr shall be of type integer) in the spec. The
+    implementation of this class can be improved by checking for
+    obvious non-integer cases (see issue #284), but in general it may
+    be difficult to know.
+
     '''
-    # Note: The actual returned type is Data_Ref. With more context of what
-    # has already been parsed it is possible that this could change in the
-    # future. For instance, in this example "PERSON" could actually be the
-    # name of a function.
+    # This test incorrectly Matches with Designator. It would
+    # correctly match with Structure_Constructor but Designator is
+    # checked first from the Primary class.
     assert_subclass_parse(
-        'PERSON ( 12,   "Jones" )', f2003.Structure_Constructor,
-        actual_type=f2003.Part_Ref,
+        "PERSON ( 12,   \"Jones\" )", f2003.Structure_Constructor,
+        actual_type=f2003.Structure_Constructor,
         expected_str='PERSON(12, "Jones")')
 
 
