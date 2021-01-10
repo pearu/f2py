@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -938,7 +938,7 @@ class BinaryOpBase(Base):
             real literal). Defaults to False.
 
         :returns: a tuple containing the matched lhs, the operator and \
-            the matched rhs of the input string or None is there is \
+            the matched rhs of the input string or None if there is \
             no match.
         :rtype: (:py:class:`fparser.two.utils.Base`, str, \
             :py:class:`fparser.two.utils.Base`) or NoneType

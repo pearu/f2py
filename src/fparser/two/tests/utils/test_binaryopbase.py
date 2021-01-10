@@ -52,7 +52,7 @@ _ = ParserFactory().create(std="f2003")
 @pytest.mark.parametrize('right', [True, False])
 def test_binaryopbase_pattern_nomatch(pattern, right):
     '''Test the BinaryOpBase match method returns None if the pattern is
-    of type 'str' or 'pattern' and is not found in the string. Check
+    of type 'str' or 'Pattern' and is not found in the string. Check
     with the optional 'right' argument set to True and False.
 
     '''
@@ -108,7 +108,7 @@ def test_binaryopbase_right_nomatch(right, string, expected):
 def test_binaryopbase_match(pattern, string):
     '''Test the BinaryOpBase match method returns the expected results if
     there is a match for a pattern of type str and Pattern. Also check
-    that spaces no not affect matching and that they are removed in
+    that spaces do not affect matching and that they are removed in
     the results.
 
     '''
