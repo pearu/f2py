@@ -7158,17 +7158,18 @@ class Io_Control_Spec_List(SequenceBase):
         line, repmap = string_replace_map(string)
         splitted = line.split(',')
         lst = []
-        have_unit = False
 
-        # If the first entry in the list is not named then it must be a
-        # unit number (C910)
+        # Examine the first entry in the list. If it is not named then it must
+        # be a unit number (C910).
+        have_unit = False
         spec = splitted.pop(0).strip()
         spec = repmap(spec)
 
         try:
 
             try:
-                Io_Unit(spec)
+                if not Io_Unit(spec):
+                    raise NoMatchError("Not an un-named unit number")
                 # We matched an unamed unit number. We now need to construct an
                 # Io_Control_Spec for it. In order to do so we have to
                 # temporarily name it so that Io_Control_Spec matches it.
@@ -7176,6 +7177,8 @@ class Io_Control_Spec_List(SequenceBase):
                 # Remove the name from the new object
                 io_spec.items = (None, io_spec.items[1])
                 lst.append(io_spec)
+                # Record that we have found a unit number for the purpose of
+                # performing validation checks.
                 have_unit = True
 
                 if not splitted:
@@ -7202,11 +7205,11 @@ class Io_Control_Spec_List(SequenceBase):
                     except NoMatchError:
                         pass
                 else:
-                    # We haven't matched an un-named namelist-group-name or
-                    # format specifier so this must be a named IO-spec
-                    lst.append(Io_Control_Spec(spec))
+                    raise NoMatchError("Not an un-named nml-group-name or fmt")
+
             except NoMatchError:
-                # First item in list must be named if it is not an IO-unit.
+                # If we get here we failed to match an un-named spec so from
+                # here on, they must all be named.
                 lst.append(Io_Control_Spec(spec))
 
             # Deal with the remainder of the list entries. These must all be
