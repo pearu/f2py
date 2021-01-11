@@ -1073,7 +1073,7 @@ class KeywordValueBase(Base):
 
         '''
         if require_lhs and '=' not in string:
-            return
+            return None
         if isinstance(lhs_cls, (list, tuple)):
             for cls in lhs_cls:
                 obj = KeywordValueBase.match(cls, rhs_cls, string,
@@ -1084,30 +1084,24 @@ class KeywordValueBase(Base):
             return obj
         # We can't just blindly check whether 'string' contains an '='
         # character as it could itself hold a string constant containing
-        # an '=', e.g. FMT='("Hello = False")'
+        # an '=', e.g. FMT='("Hello = False")'.
         # Therefore we only split on the left-most '=' character
         pieces = string.split('=', 1)
         lhs = None
         if len(pieces) == 2:
-            # It does contain at least one '='. Is the content before that
-            # char a valid Fortran name?
+            # It does contain at least one '='. Proceed to attempt to match
+            # the content on the LHS of it.
             lhs = pieces[0].strip()
-            if not pattern.name.match(lhs):
-                # It's not a valid name and therefore we don't have a lhs
-                lhs = None
+            if isinstance(lhs_cls, str):
+                # lhs_cls is a keyword
+                if upper_lhs:
+                    lhs = lhs.upper()
+                if lhs != lhs_cls:
+                    # The content to the left of the '=' does not match the
+                    # supplied keyword
+                    lhs = None
             else:
-                # It is a valid name, therefore we proceed to attempt to
-                # match it.
-                if isinstance(lhs_cls, str):
-                    # lhs_cls is a keyword
-                    if upper_lhs:
-                        lhs = lhs.upper()
-                    if lhs != lhs_cls:
-                        # The content to the left of the '=' is a valid Fortran
-                        # name and does not match the supplied keyword
-                        return None
-                else:
-                    lhs = lhs_cls(lhs)
+                lhs = lhs_cls(lhs)
         if not lhs:
             # We haven't matched the LHS and therefore proceed to treat the
             # whole string as a RHS if the LHS is not strictly required.

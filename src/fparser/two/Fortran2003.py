@@ -7245,7 +7245,7 @@ class Io_Control_Spec(KeywordValueBase):
     """
     This class implements *partial* support for Rule 913:
 
-    <io-control-spec> is  UNIT =  <io-unit>
+    <io-control-spec> is  [UNIT = ] <io-unit>
                         | [ FMT = ] <format>
                         | [ NML = ] <namelist-group-name>
                         | ADVANCE = <scalar-default-char-expr>
@@ -7267,7 +7267,8 @@ class Io_Control_Spec(KeywordValueBase):
                         | SIZE = <scalar-int-variable>
 
     The support is partial because this class requires that every spec be
-    named.
+    named. The specs that may not be named are explicitly handled in
+    Io_Control_Spec_List.match().
 
     """
     subclass_names = []
