@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+11/01/2020 PR #237 for #237. Fix for slow parsing and printing of code.
+
 23/12/2020 PR #278 for #277. Added github actions CI file, badges and documentation.
 
 18/12/2020 PR #275 for #274. Adds an example script that uses fparser2 to
