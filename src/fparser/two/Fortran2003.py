@@ -7168,8 +7168,7 @@ class Io_Control_Spec_List(SequenceBase):
         try:
 
             try:
-                if not Io_Unit(spec):
-                    raise NoMatchError("Not an un-named unit number")
+                Io_Unit(spec)
                 # We matched an unamed unit number. We now need to construct an
                 # Io_Control_Spec for it. In order to do so we have to
                 # temporarily name it so that Io_Control_Spec matches it.
