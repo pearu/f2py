@@ -2497,7 +2497,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls)
     assert _repr_utf(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
 

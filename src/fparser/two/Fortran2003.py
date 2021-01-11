@@ -74,6 +74,7 @@ import re
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
+from fparser.two import Fortran2003
 
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
@@ -4928,11 +4929,46 @@ class Defined_Binary_Op(Base):  # pylint: disable=invalid-name
     subclass_names = ['Defined_Op']
 
 
-class Logical_Expr(Base):  # R724
-    """
-    <logical-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Logical_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R724
+
+    logical-expr is expr
+
+    C705 (R724) logical-expr shall be of type logical.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a logical expression.
+
+        :param str string: Fortran code to check for a match.
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched expression.
+        :rtype: NoneType or (???)
+
+        '''
+        excluded = (
+            Fortran2003.Signed_Int_Literal_Constant,
+            Fortran2003.Int_Literal_Constant,
+            Fortran2003.Binary_Constant,
+            Fortran2003.Octal_Constant,
+            Fortran2003.Hex_Constant,
+            Fortran2003.Signed_Real_Literal_Constant,
+            Fortran2003.Real_Literal_Constant,
+            Fortran2003.Complex_Literal_Constant,
+            Fortran2003.Char_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C705: the match should fail if the result is not a logical
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
 class Char_Expr(Base):  # R725
@@ -4949,11 +4985,45 @@ class Default_Char_Expr(Base):  # R726
     subclass_names = ['Expr']
 
 
-class Int_Expr(Base):  # R727
-    """
-    <int-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Int_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R727
+
+    int-expr is expr
+
+    C708 int-expr shall be of type integer.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for an integer expression.
+
+        :param str string: Fortran code to check for a match.
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched expression.
+        :rtype: NoneType or (???)
+
+        '''
+        excluded = (
+            Fortran2003.Binary_Constant,
+            Fortran2003.Octal_Constant,
+            Fortran2003.Hex_Constant,
+            Fortran2003.Signed_Real_Literal_Constant,
+            Fortran2003.Real_Literal_Constant,
+            Fortran2003.Complex_Literal_Constant,
+            Fortran2003.Char_Literal_Constant,
+            Fortran2003.Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C708: the match should fail if the result is not an integer
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
 class Numeric_Expr(Base):  # R728
@@ -7104,15 +7174,15 @@ class Io_Control_Spec_List(SequenceBase):  # R913-list
         lst = []
         unit_is_positional = False
         for idx in range(len(splitted)):
-            spec = splitted[idx].strip()
-            spec = repmap(spec)
-            if idx == 0 and "=" not in spec:
+            spec_orig = splitted[idx].strip()
+            spec = repmap(spec_orig)
+            if idx == 0 and "=" not in spec_orig:
                 # Must be a unit number. However, we do not prepend "UNIT="
                 # to it in case the following Io_Control_Spec is positional
                 # (and therefore either a Format or Namelist spec).
-                lst.append(Io_Control_Spec(spec))
+                lst.append(Io_Control_Spec(repmap(spec)))
                 unit_is_positional = True
-            elif idx == 1 and "=" not in spec:
+            elif idx == 1 and "=" not in spec_orig:
                 if not unit_is_positional:
                     # Cannot have a positional argument following a
                     # named argument

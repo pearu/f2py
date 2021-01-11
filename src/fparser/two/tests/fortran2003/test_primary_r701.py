@@ -148,13 +148,9 @@ def test_array_constructor(f2003_create):
 def test_structure_constructor(f2003_create):
     '''Test that Structure Constructor types are matched by Primary.
     '''
-    # Note: The actual returned type is Data_Ref. With more context of what
-    # has already been parsed it is possible that this could change in the
-    # future. For instance, in this example "PERSON" could actually be the
-    # name of a function.
     assert_subclass_parse(
         'PERSON ( 12,   "Jones" )', f2003.Structure_Constructor,
-        actual_type=f2003.Part_Ref,
+        actual_type=f2003.Structure_Constructor,
         expected_str='PERSON(12, "Jones")')
 
 
