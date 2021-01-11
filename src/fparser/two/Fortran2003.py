@@ -6775,9 +6775,9 @@ class Io_Unit(StringBase):  # R901
     """
     subclass_names = ['File_Unit_Number', 'Internal_File_Variable']
 
+    @staticmethod
     def match(string):
         return StringBase.match('*', string)
-    match = staticmethod(match)
 
 
 class File_Unit_Number(Base):  # R902

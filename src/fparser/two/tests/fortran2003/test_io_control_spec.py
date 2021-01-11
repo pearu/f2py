@@ -122,11 +122,13 @@ def test_io_control_spec_list_invalid_first_entry(monkeypatch):
     # must fail. Unfortunately, because of #276 this is currently impossible
     # and therefore we monkeypatch Io_Unit to make it appear that
     # it does not match.
+    # Python 2 requires the staticmethod decorator for this to work.
 
-    def raise_exception(_x, _y):
+    @staticmethod
+    def _raise_exception(_x, _y, _z=None):
         raise Fortran2003.NoMatchError("monkeypatched function")
     monkeypatch.setattr(Fortran2003.Io_Unit, "__new__",
-                        raise_exception)
+                        _raise_exception)
 
     with pytest.raises(Fortran2003.NoMatchError) as err:
         tcls("'name'")
