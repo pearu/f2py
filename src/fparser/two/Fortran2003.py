@@ -7182,17 +7182,18 @@ class Io_Control_Spec_List(SequenceBase):
                     # The list only has one entry and it is an IO unit
                     return ',', tuple(lst)
 
-                # Since the unit-number was not named, the following item may also
-                # not be named if it is a format specifier or namelist group name.
+                # Since the unit-number was not named, the following item may
+                # also not be named if it is a format specifier or namelist
+                # group name.
                 spec = splitted.pop(0).strip()
                 spec = repmap(spec)
                 for cls, name in [(Namelist_Group_Name, 'nml'),
                                   (Format, 'fmt')]:
                     try:
                         if cls(spec):
-                            # We have a match on an un-named entry. We temporarily
-                            # add the name so that Io_Control_Spec matches the
-                            # correct one.
+                            # We have a match on an un-named entry. We
+                            # temporarily add the name so that Io_Control_Spec
+                            # matches the correct one.
                             io_spec = Io_Control_Spec(name+"="+spec)
                             # Remove the name from the new object
                             io_spec.items = (None, io_spec.items[1])
@@ -7201,8 +7202,8 @@ class Io_Control_Spec_List(SequenceBase):
                     except NoMatchError:
                         pass
                 else:
-                    # We haven't matched an un-named namelist-group-name or format
-                    # specifier so this must be a named IO-spec
+                    # We haven't matched an un-named namelist-group-name or
+                    # format specifier so this must be a named IO-spec
                     lst.append(Io_Control_Spec(spec))
             except NoMatchError:
                 # First item in list must be named if it is not an IO-unit.

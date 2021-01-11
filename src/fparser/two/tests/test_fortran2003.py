@@ -2436,7 +2436,7 @@ def test_read_stmt():
     assert str(obj) == "READ(123, a_namelist_or_format)"
     assert _repr_utf(obj) == (
         "Read_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec_Unit(None, Int_Literal_Constant('123', "
+        "(Io_Control_Spec(None, Int_Literal_Constant('123', "
         "None)), Io_Control_Spec(None, "
         "Name('a_namelist_or_format')))), None, None)")
 

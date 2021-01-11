@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Science and Technology Facilities Council.
+# Copyright (c) 2020-2021 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -34,7 +34,7 @@
 
 '''
 Module containing py.test tests for the Io_Control_Spec class and
-the list and unit variants.
+the list variant.
 
 '''
 
@@ -55,30 +55,10 @@ def test_io_control_spec():  # R913
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END = 123'
     assert repr(obj) == "Io_Control_Spec('END', Label('123'))"
-    # An io-unit is matched by IO-Control_Spec_Unit, *not* this class
+    # io-control-spec only matches named entities
     with pytest.raises(Fortran2003.NoMatchError) as err:
-        _ = tcls('unit=6')
-    assert "unit=6" in str(err.value)
-
-
-def test_io_control_spec_unit():
-    ''' Check that the Io_Control_Spec_Unit only matches a unit specifier. '''
-    tcls = Fortran2003.Io_Control_Spec_Unit
-    with pytest.raises(Fortran2003.NoMatchError) as err:
-        tcls('end=122')
-    assert "end=122" in str(err.value)
-    obj = tcls('some_var')
-    assert isinstance(obj, tcls)
-    assert str(obj) == "some_var"
-    obj = tcls('unit=some_var')
-    assert isinstance(obj, tcls)
-    assert str(obj) == "UNIT = some_var"
-    obj = tcls("66")
-    assert isinstance(obj, tcls)
-    assert str(obj) == "66"
-    obj = tcls("unit = 66")
-    assert isinstance(obj, tcls)
-    assert str(obj) == "UNIT = 66"
+        _ = tcls('6')
+    assert "Io_Control_Spec: '6'" in str(err.value)
 
 
 def test_io_control_spec_list():
@@ -88,7 +68,7 @@ def test_io_control_spec_list():
     obj = tcls('23, end=123')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '23, END = 123'
-    assert (repr(obj) == "Io_Control_Spec_List(',', (Io_Control_Spec_Unit("
+    assert (repr(obj) == "Io_Control_Spec_List(',', (Io_Control_Spec("
             "None, Int_Literal_Constant('23', None)), Io_Control_Spec('END', "
             "Label('123'))))")
 
@@ -99,7 +79,7 @@ def test_io_control_spec_list():
     obj = tcls('123,*')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, *'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec_Unit("
+    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec("
                          "None, Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec(None, Format('*'))))")
 
@@ -107,7 +87,7 @@ def test_io_control_spec_list():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, FMT = a'
     assert repr(obj) == ("Io_Control_Spec_List(',', "
-                         "(Io_Control_Spec_Unit(None, "
+                         "(Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('FMT', Name('a'))))")
 
@@ -115,7 +95,7 @@ def test_io_control_spec_list():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '123, NML = a'
     assert repr(obj) == ("Io_Control_Spec_List(',', "
-                         "(Io_Control_Spec_Unit(None, "
+                         "(Io_Control_Spec(None, "
                          "Int_Literal_Constant('123', None)), "
                          "Io_Control_Spec('NML', Name('a'))))")
 
@@ -140,17 +120,17 @@ def test_io_control_spec_list_invalid_first_entry(monkeypatch):
     # Check the various things we should not match. To exercise some of them
     # the test for whether the first element in the list is a valid IO unit
     # must fail. Unfortunately, because of #276 this is currently impossible
-    # and therefore we monkeypatch Io_Control_Spec_Unit to make it appear that
+    # and therefore we monkeypatch Io_Unit to make it appear that
     # it does not match.
 
     def raise_exception(_x, _y):
         raise Fortran2003.NoMatchError("monkeypatched function")
-    monkeypatch.setattr(Fortran2003.Io_Control_Spec_Unit, "__init__",
+    monkeypatch.setattr(Fortran2003.Io_Unit, "__new__",
                         raise_exception)
 
     with pytest.raises(Fortran2003.NoMatchError) as err:
-        tcls("name")
-    assert "Io_Control_Spec_List: 'name'" in str(err.value)
+        tcls("'name'")
+    assert "Io_Control_Spec_List: ''name''" in str(err.value)
 
 
 def test_io_spec_list_constraints():
