@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -4935,7 +4935,7 @@ class Logical_Expr(Base):  # pylint: disable=invalid-name
 
     logical-expr is expr
 
-    C705 (R724) logical-expr shall be of type logical.
+    C705 logical-expr shall be of type logical.
 
     '''
     subclass_names = []
@@ -4971,18 +4971,88 @@ class Logical_Expr(Base):  # pylint: disable=invalid-name
         return result
 
 
-class Char_Expr(Base):  # R725
-    """
-    <char-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Char_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R725
+
+    char-expr is expr
+
+    C706 char-expr shall be of type character.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a character expression.
+
+        :param str string: Fortran code to check for a match.
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched expression.
+        :rtype: NoneType or (???)
+
+        '''
+        excluded = (
+            Fortran2003.Signed_Int_Literal_Constant,
+            Fortran2003.Int_Literal_Constant,
+            Fortran2003.Binary_Constant,
+            Fortran2003.Octal_Constant,
+            Fortran2003.Hex_Constant,
+            Fortran2003.Signed_Real_Literal_Constant,
+            Fortran2003.Real_Literal_Constant,
+            Fortran2003.Complex_Literal_Constant,
+            Fortran2003.Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C706: the match should fail if the result is not a character
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
-class Default_Char_Expr(Base):  # R726
-    """
-    <default-char-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Default_Char_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R726
+
+    default-char-expr is expr
+
+    C707 default-char-expr shall be of type default character.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a default character expression.
+
+        :param str string: Fortran code to check for a match.
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched expression.
+        :rtype: NoneType or (???)
+
+        '''
+        excluded = (
+            Fortran2003.Signed_Int_Literal_Constant,
+            Fortran2003.Int_Literal_Constant,
+            Fortran2003.Binary_Constant,
+            Fortran2003.Octal_Constant,
+            Fortran2003.Hex_Constant,
+            Fortran2003.Signed_Real_Literal_Constant,
+            Fortran2003.Real_Literal_Constant,
+            Fortran2003.Complex_Literal_Constant,
+            Fortran2003.Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C707: the match should fail if the result is not a character
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
 class Int_Expr(Base):  # pylint: disable=invalid-name
@@ -5026,11 +5096,43 @@ class Int_Expr(Base):  # pylint: disable=invalid-name
         return result
 
 
-class Numeric_Expr(Base):  # R728
-    """
-    <numeric-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Numeric_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R728
+
+    numeric-expr is expr
+
+    C709 numeric-expr shall be of type integer, real or complex.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a numeric expression.
+
+        :param str string: Fortran code to check for a match.
+        :return: `None` if there is no match, or a tuple containing \
+                 the matched expression.
+        :rtype: NoneType or (???)
+
+        '''
+        excluded = (
+            Fortran2003.Binary_Constant,
+            Fortran2003.Octal_Constant,
+            Fortran2003.Hex_Constant,
+            Fortran2003.Char_Literal_Constant,
+            Fortran2003.Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C709: the match should fail if the result is not an integer,
+        # real or complex expression. This is difficult to check in
+        # general so for the time being check that, in the case where
+        # a literal constant is returned, this is not of the wrong
+        # type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
 class Specification_Expr(Base):  # R729
