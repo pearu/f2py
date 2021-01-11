@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,23 +32,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''A simple fparser2 Fortran2008 example demonstrating support for
-submodules'''
+'''Test Fortran 2008 rule R510
 
-from fparser.two.parser import ParserFactory
-from fparser.common.readfortran import FortranStringReader
+    deferred-coshape-spec is :
 
-MYFILE = '''
-program hello
-integer a
-end program hello
-submodule (hello2) world
-end submodule world
-subroutine world2
-end subroutine world2
 '''
 
-READER = FortranStringReader(MYFILE)
-F2008_PARSER = ParserFactory().create(std="f2008")
-PROGRAM = F2008_PARSER(READER)
-print(PROGRAM)
+import pytest
+from fparser.two.Fortran2008 import Deferred_Coshape_Spec
+from fparser.two import Fortran2003
+
+
+@pytest.mark.usefixtures("f2008_create")
+def test_deferred_coshape_spec():
+    '''Test parsing of deferred_coshape_spec.'''
+    obj = Deferred_Coshape_Spec(':')
+    assert isinstance(obj, Deferred_Coshape_Spec), repr(obj)
+    assert str(obj) == ':'
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', ['', ' :', ': ', '  : ', '::', '5'])
+def test_invalid_deferred_coshape_spec(attr):
+    '''Test that invalid deferred_coshape_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Deferred_Coshape_Spec(attr)

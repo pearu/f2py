@@ -474,6 +474,14 @@ attr_spec = Pattern(
     flags=re.I)
 abs_attr_spec = abs(attr_spec)
 
+attr_spec_f08 = Pattern(
+    '<attr-spec>',
+    r'({})'.format('|'.join(  # extend attr_spec with attribute CONTIGUOUS
+        sorted(attr_spec.pattern.strip('()').split('|') + ['CONTIGUOUS'])
+    )),
+    flags=re.I)
+abs_attr_spec_f08 = abs(attr_spec_f08)
+
 dimension = Pattern('<dimension>', r'DIMENSION', flags=re.I)
 abs_dimension = abs(dimension)
 

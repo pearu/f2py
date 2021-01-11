@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -319,7 +319,7 @@ class Base(ComparableMixin):
             parent_cls.append(cls)
 
         # Get the class' match method if it has one
-        match = cls.__dict__.get('match')
+        match = getattr(cls, 'match') if hasattr(cls, 'match') else None
 
         if isinstance(string, FortranReaderBase) and \
            match and not issubclass(cls, BlockBase):
@@ -873,49 +873,128 @@ class UnaryOpBase(Base):
 
 
 class BinaryOpBase(Base):
-    """
-::
-    <binary-op-base> = <lhs> <op> <rhs>
-    <op> is searched from right by default.
-    """
+    '''binary-op-base is lhs op rhs
+
+    Splits the input text into text to the left of the matched
+    operator and text to the right of the matched operator and tries
+    to match the lhs text with the supplied lhs class rule and the rhs
+    text with the supplied rhs class rule.
+
+    '''
+    @staticmethod
     def match(lhs_cls, op_pattern, rhs_cls, string, right=True,
               exclude_op_pattern=None, is_add=False):
+        '''Matches the binary-op-base rule.
+
+        If the operator defined by argument 'op_pattern' is found in
+        the string provided in argument 'string' then the text to the
+        left-hand-side of the operator is matched with the class rule
+        provided in the 'lhs_cls' argument and the text to the
+        right-hand-side of the operator is matched with the class rule
+        provided in the 'rhs_cls' argument.
+
+        If the optional 'right' argument is set to true (the default)
+        then, in the case where the pattern matches multiple times in
+        the input string, the right-most match will be chosen. If the
+        'right' argument is set to false then the left-most match will
+        be chosen.
+
+        if a pattern is provided to the optional 'exclude_op_pattern'
+        argument then there will be no match if the pattern matched by
+        the 'op_pattern' argument also matches this pattern. The
+        default (None) does nothing.
+
+        When set to true the 'is_add' optional argument causes a '+'
+        in a real literal on the rhs of a match to be ignored. When
+        the add operand is being matched this has the effect of
+        correctly matching patterns like 'a+2.0e+10' i.e. the split is
+        performed between the 'a' and the '2.0e+10'. The default is
+        false. This is a special case optimisation which should
+        probably be removed, see issue #281.
+
+        :param lhs_cls: an fparser2 object representing the rule that \
+            should be matched to the lhs text.
+        :type lhs_cls: subclass of :py:class:`fparser.two.utils.Base`
+        :param op_pattern: the pattern to match.
+        :type op_pattern: `str` or \
+            :py:class:`fparser.two.pattern_tools.Pattern`
+        :param rhs_cls: an fparser2 object representing the rule that \
+            should be matched to the rhs text.
+        :type rhs_cls: subclass of :py:class:`fparser.two.utils.Base`
+        :param str string: the string to match with the pattern and \
+            lhs and rhs rules.
+        :param bool right: in the case where there are multiple \
+            matches to the pattern in the string this optional \
+            argument specifies whether the righmost pattern match \
+            should be chosen (True, the default) or whether the \
+            leftmost pattern should be chosen (False).
+        :param exclude_op_pattern: optional argument which specifies a \
+            particular subpattern to exclude from the match. Defaults \
+            to None which means there is no subpattern.
+        :type exclude_op_pattern: :py:class:`fparser.two.pattern_tools.Pattern`
+        :param bool is_add: optional match optimisation for the + \
+            operator when set to True (ignores matching the + in a
+            real literal). Defaults to False.
+
+        :returns: a tuple containing the matched lhs, the operator and \
+            the matched rhs of the input string or None if there is \
+            no match.
+        :rtype: (:py:class:`fparser.two.utils.Base`, str, \
+            :py:class:`fparser.two.utils.Base`) or NoneType
+
+        '''
         line, repmap = string_replace_map(string)
         if isinstance(op_pattern, str):
             if right:
-                t = line.rsplit(op_pattern, 1)
+                text_split = line.rsplit(op_pattern, 1)
             else:
-                t = line.split(op_pattern, 1)
-            if len(t) != 2:
-                return
-            lhs, rhs = t[0].rstrip(), t[1].lstrip()
-            op = op_pattern
+                text_split = line.split(op_pattern, 1)
+            if len(text_split) != 2:
+                return None
+            lhs, rhs = text_split[0].rstrip(), text_split[1].lstrip()
+            oper = op_pattern
         else:
             if right:
-                t = op_pattern.rsplit(line, is_add=is_add)
+                text_split = op_pattern.rsplit(line, is_add=is_add)
             else:
-                t = op_pattern.lsplit(line)
-            if t is None or len(t) != 3:
-                return
-            lhs, op, rhs = t
+                text_split = op_pattern.lsplit(line)
+            if not text_split or len(text_split) != 3:
+                return None
+            lhs, oper, rhs = text_split
             lhs = lhs.rstrip()
             rhs = rhs.lstrip()
-            op = op.upper()
-        if not lhs:
-            return
-        if not rhs:
-            return
-        if exclude_op_pattern is not None:
-            if exclude_op_pattern.match(op):
-                return
+            oper = oper.upper()
+        if not lhs or not rhs:
+            return None
+        if exclude_op_pattern and exclude_op_pattern.match(oper):
+            return None
 
-        lhs_obj = lhs_cls(repmap(lhs))
-        rhs_obj = rhs_cls(repmap(rhs))
-        return lhs_obj, op.replace(' ', ''), rhs_obj
-    match = staticmethod(match)
+        # Matching the shorter text first can be much more efficient
+        # for complex expressions.
+        if right:
+            # The split is closest to the right so try to match the
+            # RHS first.
+            rhs_obj = rhs_cls(repmap(rhs))
+            lhs_obj = lhs_cls(repmap(lhs))
+        else:
+            # The split is closest to the left so try to match the LHS
+            # first.
+            lhs_obj = lhs_cls(repmap(lhs))
+            rhs_obj = rhs_cls(repmap(rhs))
+
+        return (lhs_obj, oper.replace(' ', ''), rhs_obj)
 
     def tostr(self):
-        return '%s %s %s' % tuple(self.items)
+        '''Return the string representation of this object. Uses join() which
+        is efficient and can make a big performance difference for
+        complex expressions.
+
+        :returns: the string representation of this object.
+        :rtype: str
+
+        '''
+        return " ".join([str(self.items[0]), str(self.items[1]),
+                         str(self.items[2])])
 
 
 class SeparatorBase(Base):

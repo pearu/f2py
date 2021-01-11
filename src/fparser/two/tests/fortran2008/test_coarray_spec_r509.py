@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,23 +32,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''A simple fparser2 Fortran2008 example demonstrating support for
-submodules'''
+'''Test Fortran 2008 rule R509
 
-from fparser.two.parser import ParserFactory
-from fparser.common.readfortran import FortranStringReader
+    coarray-spec is deferred-coshape-spec-list
+                    or explicit-coshape-spec-list
 
-MYFILE = '''
-program hello
-integer a
-end program hello
-submodule (hello2) world
-end submodule world
-subroutine world2
-end subroutine world2
 '''
 
-READER = FortranStringReader(MYFILE)
-F2008_PARSER = ParserFactory().create(std="f2008")
-PROGRAM = F2008_PARSER(READER)
-print(PROGRAM)
+import pytest
+from fparser.two.Fortran2008 import (
+    Coarray_Spec, Deferred_Coshape_Spec_List, Explicit_Coshape_Spec)
+from fparser.two import Fortran2003
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr, _type', [
+    ('*', Explicit_Coshape_Spec),
+    ('5 :*', Explicit_Coshape_Spec),
+    ('1:  3  ,  a: *', Explicit_Coshape_Spec),
+    (' 1 ,  2,3:*', Explicit_Coshape_Spec),
+    ('1:2,3,*', Explicit_Coshape_Spec),
+    (':', Deferred_Coshape_Spec_List)
+])
+def test_coarray_spec(attr, _type):
+    '''Test that coarray_spec are parsed correctly.'''
+    obj = Coarray_Spec(attr)
+    assert isinstance(obj, _type), repr(obj)
+    ref = attr.replace(' ', '').replace(':', ' : ').replace(',', ', ').strip()
+    assert str(obj) == ref
+
+
+@pytest.mark.usefixtures("f2008_create")
+@pytest.mark.parametrize('attr', [
+    '1:3', '', ':b', 'a:', ':*', '', '1:,*', '1,,*', '::', '5'])
+def test_invalid_coarray_spec(attr):
+    '''Test that invalid coarray_spec raise exception.'''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Coarray_Spec(attr)

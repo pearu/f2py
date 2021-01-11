@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2020 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,23 +32,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''A simple fparser2 Fortran2008 example demonstrating support for
-submodules'''
+'''Test Fortran 2008 rule 436
 
-from fparser.two.parser import ParserFactory
-from fparser.common.readfortran import FortranStringReader
+  data-component-def-stmt is declaration-type-spec [
+           [ , component-attr-spec-list ] :: ] component-decl-list
 
-MYFILE = '''
-program hello
-integer a
-end program hello
-submodule (hello2) world
-end submodule world
-subroutine world2
-end subroutine world2
+R436 (and its Fortran 2003 counterpart R440) are currently untested (see #465).
+
 '''
-
-READER = FortranStringReader(MYFILE)
-F2008_PARSER = ParserFactory().create(std="f2008")
-PROGRAM = F2008_PARSER(READER)
-print(PROGRAM)

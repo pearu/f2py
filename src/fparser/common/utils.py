@@ -277,7 +277,8 @@ def get_module_file(name, directory, _cache={}):
 def module_in_file(name, filename):
     name = name.lower()
     pattern = re.compile(r'\s*module\s+(?P<name>[a-z]\w*)', re.I).match
-    f = open(filename,'r')
+    encoding = {'encoding': 'UTF-8'}
+    f = io.open(filename,'r',**encoding)
     for line in f:
         m = pattern(line)
         if m and m.group('name').lower()==name:
