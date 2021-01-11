@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020 Science and Technology Facilities Council
+# Copyright (c) 2019-2021 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -109,7 +109,8 @@ def possible_subclasses(node_type, _seen=None):
     return seen
 
 
-def test_intrinsic_function(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_intrinsic_function():
     '''Test that an intrinsic function is matched by Primary.
     '''
     assert_subclass_parse(
@@ -118,7 +119,8 @@ def test_intrinsic_function(f2003_create):
         expected_str='SIN(x)')
 
 
-def test_constant(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_constant():
     '''Test that Constant types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -127,7 +129,8 @@ def test_constant(f2003_create):
         expected_str='1.2E-03')
 
 
-def test_designator(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_designator():
     '''Test that Designator types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -136,7 +139,8 @@ def test_designator(f2003_create):
         expected_str='array(1 : 5)')
 
 
-def test_array_constructor(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_array_constructor():
     '''Test that Array Constructor types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -147,7 +151,8 @@ def test_array_constructor(f2003_create):
 
 @pytest.mark.xfail(reason="Matches Designator before Structure Constructor "
                    "(issue #284)")
-def test_structure_constructor(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_structure_constructor():
     '''Test that Structure Constructor types are matched by Primary.
 
     This test currently fails as PERSON(12,"JONES") is matched as an
@@ -178,7 +183,8 @@ def test_structure_constructor(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_function_reference(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_function_reference():
     '''This test demonstrates the inability to distinguish
     Structure_Constructor from Function_Reference without more parse context
     than is currently being provided.
@@ -206,7 +212,8 @@ def test_type_param_name():
         expected_str='INTEGER')
 
 
-def test_parenthesis(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_parenthesis():
     '''Test that Parenthesis types are matched by Primary.
     '''
     assert_subclass_parse(
@@ -214,7 +221,8 @@ def test_parenthesis(f2003_create):
         expected_str='(a + b)')
 
 
-def test_no_match(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_no_match():
     '''Test that a NoMatchError is raised if we provide code
     that isn't allowed as a Primary type (e.g. a comment).
     '''
@@ -223,7 +231,8 @@ def test_no_match(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_c701_no_assumed_size_array(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_c701_no_assumed_size_array():
     '''Test C701 (R701) The type-param-name shall be the name of a type.
     This test cannot be passed without more parse context of things like
     defined types.
@@ -234,7 +243,8 @@ def test_c701_no_assumed_size_array(f2003_create):
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
-def test_c702_no_assumed_size_array(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_c702_no_assumed_size_array():
     '''Test C702 (R701) The designator shall not be a whole assumed-size array.
     This test cannot be passed without more parse context of things like
     defined types.
