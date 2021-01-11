@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Science and Technology Facilities Council.
+# Copyright (c) 2020-2021 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -36,7 +36,7 @@
 Test Fortran 2003 rule R470: this file tests the support for the
 various forms of implicit loop within an array constructor.
 
-TODO #255 and #257 - these tests need expanding.
+TODO #257 - these tests need expanding.
 
 Further tests are required here to fully cover the rule.
 
@@ -47,8 +47,6 @@ from fparser.common.readfortran import FortranStringReader
 from fparser.two import Fortran2003
 
 
-@pytest.mark.xfail(reason="#255 - Structure_Constructor_2 ends up matching "
-                   "key=var pattern.")
 @pytest.mark.usefixtures("f2003_create")
 def test_implicit_loop_constructor_no_parentheses():
     ''' Test that the parser does not match an implicit loop if the

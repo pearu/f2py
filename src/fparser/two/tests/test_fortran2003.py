@@ -811,19 +811,6 @@ def test_type_param_spec_list():  # R456-list
     assert str(obj) == 'k = a, c, g = 1'
 
 
-def test_structure_constructor_2():  # R457.b
-
-    tcls = Structure_Constructor_2
-    obj = tcls('k=a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'k = a'
-    assert _repr_utf(obj) == "Structure_Constructor_2(Name('k'), Name('a'))"
-
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
-
-
 def test_structure_constructor():  # R457
 
     tcls = Structure_Constructor
@@ -832,18 +819,9 @@ def test_structure_constructor():  # R457
     assert str(obj) == 't()'
     assert _repr_utf(obj) == "Structure_Constructor(Type_Name('t'), None)"
 
-    obj = tcls('t(s=1, a)')
+    obj = tcls('t(s=1, a=2)')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 't(s = 1, a)'
-
-    obj = tcls('a=k')
-    assert isinstance(obj, Structure_Constructor_2), repr(obj)
-    assert str(obj) == 'a = k'
-    assert _repr_utf(obj) == "Structure_Constructor_2(Name('a'), Name('k'))"
-
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
+    assert str(obj) == 't(s = 1, a = 2)'
 
 
 def test_component_spec():  # R458
