@@ -74,7 +74,6 @@ import re
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
-from fparser.two import Fortran2003
 
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
@@ -4951,15 +4950,10 @@ class Logical_Expr(Base):  # pylint: disable=invalid-name
 
         '''
         excluded = (
-            Fortran2003.Signed_Int_Literal_Constant,
-            Fortran2003.Int_Literal_Constant,
-            Fortran2003.Binary_Constant,
-            Fortran2003.Octal_Constant,
-            Fortran2003.Hex_Constant,
-            Fortran2003.Signed_Real_Literal_Constant,
-            Fortran2003.Real_Literal_Constant,
-            Fortran2003.Complex_Literal_Constant,
-            Fortran2003.Char_Literal_Constant)
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Char_Literal_Constant)
         # Attempt to match as a general expression.
         result = Expr(string)
         # C705: the match should fail if the result is not a logical
@@ -4993,15 +4987,10 @@ class Char_Expr(Base):  # pylint: disable=invalid-name
 
         '''
         excluded = (
-            Fortran2003.Signed_Int_Literal_Constant,
-            Fortran2003.Int_Literal_Constant,
-            Fortran2003.Binary_Constant,
-            Fortran2003.Octal_Constant,
-            Fortran2003.Hex_Constant,
-            Fortran2003.Signed_Real_Literal_Constant,
-            Fortran2003.Real_Literal_Constant,
-            Fortran2003.Complex_Literal_Constant,
-            Fortran2003.Logical_Literal_Constant)
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Logical_Literal_Constant)
         # Attempt to match as a general expression.
         result = Expr(string)
         # C706: the match should fail if the result is not a character
@@ -5035,15 +5024,10 @@ class Default_Char_Expr(Base):  # pylint: disable=invalid-name
 
         '''
         excluded = (
-            Fortran2003.Signed_Int_Literal_Constant,
-            Fortran2003.Int_Literal_Constant,
-            Fortran2003.Binary_Constant,
-            Fortran2003.Octal_Constant,
-            Fortran2003.Hex_Constant,
-            Fortran2003.Signed_Real_Literal_Constant,
-            Fortran2003.Real_Literal_Constant,
-            Fortran2003.Complex_Literal_Constant,
-            Fortran2003.Logical_Literal_Constant)
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Logical_Literal_Constant)
         # Attempt to match as a general expression.
         result = Expr(string)
         # C707: the match should fail if the result is not a character
@@ -5077,14 +5061,10 @@ class Int_Expr(Base):  # pylint: disable=invalid-name
 
         '''
         excluded = (
-            Fortran2003.Binary_Constant,
-            Fortran2003.Octal_Constant,
-            Fortran2003.Hex_Constant,
-            Fortran2003.Signed_Real_Literal_Constant,
-            Fortran2003.Real_Literal_Constant,
-            Fortran2003.Complex_Literal_Constant,
-            Fortran2003.Char_Literal_Constant,
-            Fortran2003.Logical_Literal_Constant)
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Char_Literal_Constant,
+            Logical_Literal_Constant)
         # Attempt to match as a general expression.
         result = Expr(string)
         # C708: the match should fail if the result is not an integer
@@ -5118,11 +5098,8 @@ class Numeric_Expr(Base):  # pylint: disable=invalid-name
 
         '''
         excluded = (
-            Fortran2003.Binary_Constant,
-            Fortran2003.Octal_Constant,
-            Fortran2003.Hex_Constant,
-            Fortran2003.Char_Literal_Constant,
-            Fortran2003.Logical_Literal_Constant)
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Char_Literal_Constant, Logical_Literal_Constant)
         # Attempt to match as a general expression.
         result = Expr(string)
         # C709: the match should fail if the result is not an integer,
