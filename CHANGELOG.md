@@ -15,7 +15,10 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
-11/01/2020 PR #237 for #237. Fix for slow parsing and printing of code.
+11/01/2021 PR #285 for #283. Removes Structure_Constructor_2 class to fix
+           problem with Expr matching.
+
+11/01/2021 PR #237 for #236. Fix for slow parsing and printing of code.
 
 23/12/2020 PR #278 for #277. Added github actions CI file, badges and documentation.
 
