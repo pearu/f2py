@@ -81,7 +81,7 @@ def test_complicated_case_int():
     result = Numeric_Expr("a*2+array(b)-w")
     assert isinstance(result, Level_2_Expr)
     assert str(result) == ("a * 2 + array(b) - w")
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Level_2_Expr(Level_2_Expr(Add_Operand(Name('a'), '*', "
         "Int_Literal_Constant('2', None)), '+', Part_Ref(Name('array'), "
         "Section_Subscript_List(',', (Name('b'),)))), '-', Name('w'))")
@@ -96,7 +96,7 @@ def test_complicated_case_real():
     result = Numeric_Expr("a*2.0+array(b)/w")
     assert isinstance(result, Level_2_Expr)
     assert str(result) == ("a * 2.0 + array(b) / w")
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Level_2_Expr(Add_Operand(Name('a'), '*', Real_Literal_Constant("
         "'2.0', None)), '+', Add_Operand(Part_Ref(Name('array'), "
         "Section_Subscript_List(',', (Name('b'),))), '/', Name('w')))")
@@ -111,7 +111,7 @@ def test_complicated_case_complex():
     result = Numeric_Expr("a*(2.0,3.0)+array(b)/w")
     assert isinstance(result, Level_2_Expr)
     assert str(result) == ("a * (2.0, 3.0) + array(b) / w")
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Level_2_Expr(Add_Operand(Name('a'), '*', Complex_Literal_Constant("
         "Signed_Real_Literal_Constant('2.0', None), "
         "Signed_Real_Literal_Constant('3.0', None))), '+', Add_Operand("
