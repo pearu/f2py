@@ -4924,6 +4924,11 @@ class Logical_Expr(Base):  # pylint: disable=invalid-name
     def match(string):
         '''Implements the matching for a logical expression.
 
+        Note, whilst we exclude Signed_Int_Literal_Constant and
+        Signed_Real_Literal_Constant, it seems that it is not possible
+        to create these from code as a "-" sign is treated as a unary
+        operator.
+
         :param str string: Fortran code to check for a match.
         :return: `None` if there is no match, or a tuple containing \
                  the matched expression.

@@ -2049,15 +2049,6 @@ def test_expr():  # R722
     assert_raises(NoMatchError, Scalar_Int_Expr, 'a,b')
 
 
-def test_logical_expr():  # R724
-
-    tcls = Logical_Expr
-    obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
-    assert isinstance(obj, Equiv_Operand), repr(obj)
-    assert (str(obj) ==
-            '(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) .OR. .NOT. root')
-
-
 def test_logical_initialization_expr():  # R733
     # pylint: disable=invalid-name
 
