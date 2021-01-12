@@ -49,7 +49,8 @@ def test_simple_case():
     result = Default_Char_Expr("'hello'")
     assert isinstance(result, Char_Literal_Constant)
     assert str(result) == "'hello'"
-    assert repr(result) == "Char_Literal_Constant(\"'hello'\", None)"
+    assert repr(result).replace("u'", "'") == (
+        "Char_Literal_Constant(\"'hello'\", None)")
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -62,7 +63,7 @@ def test_complicated_case():
         "'he'+'ll'//'o'")
     assert isinstance(result, Level_3_Expr)
     assert str(result) == "'he' + 'll' // 'o'"
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Level_3_Expr(Level_2_Expr(Char_Literal_Constant(\"'he'\", None), "
         "'+', Char_Literal_Constant(\"'ll'\", None)), '//', "
         "Char_Literal_Constant(\"'o'\", None))")

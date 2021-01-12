@@ -61,7 +61,7 @@ def test_complicated_case():
     result = Int_Expr("a*2+array(b)-w")
     assert isinstance(result, Level_2_Expr)
     assert str(result) == ("a * 2 + array(b) - w")
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Level_2_Expr(Level_2_Expr(Add_Operand(Name('a'), '*', "
         "Int_Literal_Constant('2', None)), '+', Part_Ref(Name('array'), "
         "Section_Subscript_List(',', (Name('b'),)))), '-', Name('w'))")

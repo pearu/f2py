@@ -63,7 +63,7 @@ def test_complicated_case():
     assert isinstance(result, Equiv_Operand)
     assert str(result) == ("(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) "
                            ".OR. .NOT. root")
-    assert repr(result) == (
+    assert repr(result).replace("u'", "'") == (
         "Equiv_Operand(Or_Operand(Parenthesis('(', Level_4_Expr(Name('f0'), "
         "'.LT.', Name('f1')), ')'), '.AND.', Level_4_Expr(Intrinsic_Function"
         "_Reference(Intrinsic_Name('ABS'), Actual_Arg_Spec_List(',', (Level_"
