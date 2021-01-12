@@ -49,7 +49,7 @@ def test_simple_case():
     result = Default_Char_Expr("'hello'")
     assert isinstance(result, Char_Literal_Constant)
     assert str(result) == "'hello'"
-    assert repr(result).replace("u'", "'") == (
+    assert repr(result).replace("u\"", "\"") == (
         "Char_Literal_Constant(\"'hello'\", None)")
 
 
