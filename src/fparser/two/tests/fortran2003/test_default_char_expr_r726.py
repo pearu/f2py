@@ -63,7 +63,7 @@ def test_complicated_case():
         "'he'+'ll'//'o'")
     assert isinstance(result, Level_3_Expr)
     assert str(result) == "'he' + 'll' // 'o'"
-    assert repr(result).replace("u'", "'") == (
+    assert repr(result).replace("u'", "'").replace("u\"", "\"") == (
         "Level_3_Expr(Level_2_Expr(Char_Literal_Constant(\"'he'\", None), "
         "'+', Char_Literal_Constant(\"'ll'\", None)), '//', "
         "Char_Literal_Constant(\"'o'\", None))")
