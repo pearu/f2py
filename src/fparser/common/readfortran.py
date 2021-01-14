@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -1557,10 +1557,15 @@ class FortranReaderBase(object):
             self.warning(message)
         if name is not None:
             self.error('No construct following construct-name.')
-        if have_comment:
-            return next(self)
-        return self.comment_item('', startlineno, endlineno)
 
+        # If this point is reached, the line is a comment or is
+        # blank. If it is a comment, it has been pushed onto the
+        # fifo_item list.
+        try:
+            return self.fifo_item.pop(0)
+        except:
+            # A blank line is represented as an empty comment
+            return Comment('', startlineno, endlineno)
 
 class FortranFileReader(FortranReaderBase):
     '''
