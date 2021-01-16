@@ -1565,7 +1565,7 @@ class FortranReaderBase(object):
             return self.fifo_item.pop(0)
         except:
             # A blank line is represented as an empty comment
-            return Comment('', startlineno, endlineno)
+            return Comment('', (startlineno, endlineno), self)
 
 class FortranFileReader(FortranReaderBase):
     '''

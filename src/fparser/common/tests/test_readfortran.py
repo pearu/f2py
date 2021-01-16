@@ -51,7 +51,7 @@ import pytest
 
 from fparser.common.readfortran import FortranFileReader, \
     FortranStringReader, FortranReaderBase, Line, extract_label, \
-    extract_construct_name, CppDirective
+    extract_construct_name, CppDirective, Comment
 from fparser.common.sourceinfo import FortranFormat
 
 
@@ -1066,3 +1066,182 @@ def test_multiline_cpp_directives():
     assert isinstance(lines[1], CppDirective)
     assert lines[1].span == (2, 3)
     assert '\n'.join(item.line for item in lines) == ref_text
+
+
+# Tests for the get_source_item method in class FortranReaderBase :
+# Comments
+
+
+def test_single_comment():
+    '''Test that a free format single line comment is output as expected'''
+    input_text = "! a comment\n"
+
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+    assert len(lines) == 1
+    assert isinstance(lines[0], Comment)
+    assert lines[0].span == (1, 1)
+    assert lines[0].line + "\n" == input_text
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 0
+
+
+def test_many_comments():
+    '''Test that a large consecutive number of single line comments can be
+    successfully processed. Earlier versions of the reader used
+    recursion for multiple consecutive free format single line
+    comments which resulted in a recursion error in this case.
+
+    '''
+    number_of_comments = 100
+    input_text = ""
+    for index in range(number_of_comments):
+        input_text += "! comment{0}\n".format(index+1)
+
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+    assert len(lines) == number_of_comments
+    for index in range(number_of_comments):
+        assert isinstance(lines[index], Comment)
+        assert lines[index].span == (index+1, index+1)
+        assert lines[index].line + "\n" == "! comment{0}\n".format(index+1)
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 0
+
+
+def test_comments_within_continuation():
+    '''Test that comments and multi-line statements are processed
+    correctly.
+
+    '''
+    input_text = (
+        "  ! Comment1\n"
+        "  real :: a &\n"
+        "  ! Comment2\n"
+        "          ,b &\n"
+        "  ! Comment3\n")
+
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+    assert len(lines) == 4
+
+    assert isinstance(lines[0], Comment)
+    assert lines[0].span == (1, 1)
+    assert lines[0].line == "! Comment1"
+
+    assert lines[1].span == (2, 4)
+    assert lines[1].line == "real :: a           ,b"
+
+    assert isinstance(lines[2], Comment)
+    assert lines[2].span == (3, 3)
+    assert lines[2].line == "! Comment2"
+
+    assert isinstance(lines[3], Comment)
+    assert lines[3].span == (5, 5)
+    assert lines[3].line == "! Comment3"
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 1
+    assert lines[0].span == (2, 4)
+    assert lines[0].line == "real :: a           ,b"
+
+    
+# Tests for the get_source_item method in class FortranReaderBase :
+# Blank lines
+
+
+@pytest.mark.parametrize("input_text", ["\n", "    \n"])
+def test_single_blank_line(input_text):
+    '''Test that a single blank line with or without white space is output
+    as an empty Comment object.
+
+    '''
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+    assert len(lines) == 1
+    assert isinstance(lines[0], Comment)
+    assert lines[0].span == (1, 1)
+    assert lines[0].line == ""
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 0
+
+
+def test_multiple_blank_lines():
+    '''Test that multiple blank lines with or without white space are
+    output as an empty Comment objects.
+
+    '''
+    input_text = (
+        "   \n\n"
+        "program test\n"
+        "  \n\n"
+        "end program test\n"
+        "  \n\n")
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+    assert len(lines) == 8
+    for index in [0, 1, 3, 4, 6, 7]:
+        assert isinstance(lines[index], Comment)
+        assert lines[index].span == (index+1, index+1)
+        assert lines[index].line == ""
+    assert isinstance(lines[2], Line)
+    assert lines[2].span == (3, 3)
+    assert lines[2].line == "program test"
+    assert isinstance(lines[5], Line)
+    assert lines[5].span == (6, 6)
+    assert lines[5].line == "end program test"
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 2
+    assert isinstance(lines[0], Line)
+    assert lines[0].span == (3, 3)
+    assert lines[0].line == "program test"
+    assert isinstance(lines[1], Line)
+    assert lines[1].span == (6, 6)
+    assert lines[1].line == "end program test"
+
+
+def test_blank_lines_within_continuation():
+    '''Test that blank lines and multi-line statements are processed
+    correctly. At the moment, empty lines within a multi-line
+    statement and any subsequent empty lines are removed.
+
+    '''
+    input_text = (
+        "  \n"
+        "  real :: a &\n"
+        "  \n\n"
+        "          ,b &\n"
+        "  \n\n"
+        "  real :: b\n")
+
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = [item for item in reader]
+
+    for line in lines:
+        print (line)
+    exit(1)
+
+    
+    assert len(lines) == 3
+
+    assert isinstance(lines[0], Comment)
+    assert lines[0].span == (1, 1)
+    assert lines[0].line == ""
+
+    assert lines[1].span == (2, 5)
+    assert lines[1].line == "real :: a           ,b"
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    lines = [item for item in reader]
+    assert len(lines) == 1
+    assert lines[0].span == (2, 5)
+    assert lines[0].line == "real :: a           ,b"
