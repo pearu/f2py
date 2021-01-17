@@ -1095,22 +1095,23 @@ def test_many_comments():
     comments which resulted in a recursion error in this case.
 
     '''
-    number_of_comments = 100
-    input_text = ""
+    number_of_comments = 1000
+    input_text = "program hello\n"
     for index in range(number_of_comments):
         input_text += "! comment{0}\n".format(index+1)
+    input_text += "end program hello\n"
 
     reader = FortranStringReader(input_text, ignore_comments=False)
     lines = list(reader)
-    assert len(lines) == number_of_comments
-    for index in range(number_of_comments):
+    assert len(lines) == number_of_comments + 2
+    for index in range(1, number_of_comments):
         assert isinstance(lines[index], Comment)
         assert lines[index].span == (index+1, index+1)
-        assert lines[index].line + "\n" == "! comment{0}\n".format(index+1)
+        assert lines[index].line + "\n" == "! comment{0}\n".format(index)
 
     reader = FortranStringReader(input_text, ignore_comments=True)
     lines = list(reader)
-    assert len(lines) == 0
+    assert len(lines) == 2
 
 
 def test_comments_within_continuation():
