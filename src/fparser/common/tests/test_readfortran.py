@@ -1042,7 +1042,7 @@ def test_reader_cpp_directives():
         'end program test']
     ref_text = '\n'.join(input_text[:4] + input_text[5:]).strip()
     reader = FortranStringReader('\n'.join(input_text))
-    lines = [item for item in reader]
+    lines = list(reader)
 
     pp_lines = [1, 3, 5, 6, 8]
     for i, line in enumerate(lines):
@@ -1061,7 +1061,7 @@ def test_multiline_cpp_directives():
         'integer a', 'end program test']
     ref_text = 'program test\n#define ABC   123\ninteger a\nend program test'
     reader = FortranStringReader('\n'.join(input_text))
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 4
     assert isinstance(lines[1], CppDirective)
     assert lines[1].span == (2, 3)
@@ -1077,14 +1077,14 @@ def test_single_comment():
     input_text = "! a comment\n"
 
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 1
     assert isinstance(lines[0], Comment)
     assert lines[0].span == (1, 1)
     assert lines[0].line + "\n" == input_text
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 0
 
 
@@ -1101,7 +1101,7 @@ def test_many_comments():
         input_text += "! comment{0}\n".format(index+1)
 
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == number_of_comments
     for index in range(number_of_comments):
         assert isinstance(lines[index], Comment)
@@ -1109,7 +1109,7 @@ def test_many_comments():
         assert lines[index].line + "\n" == "! comment{0}\n".format(index+1)
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 0
 
 
@@ -1122,11 +1122,11 @@ def test_comments_within_continuation():
         "  ! Comment1\n"
         "  real :: a &\n"
         "  ! Comment2\n"
-        "          ,b &\n"
+        "          ,b\n"
         "  ! Comment3\n")
 
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 4
 
     assert isinstance(lines[0], Comment)
@@ -1145,12 +1145,12 @@ def test_comments_within_continuation():
     assert lines[3].line == "! Comment3"
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 1
     assert lines[0].span == (2, 4)
     assert lines[0].line == "real :: a           ,b"
 
-    
+
 # Tests for the get_source_item method in class FortranReaderBase :
 # Blank lines
 
@@ -1162,14 +1162,14 @@ def test_single_blank_line(input_text):
 
     '''
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 1
     assert isinstance(lines[0], Comment)
     assert lines[0].span == (1, 1)
     assert lines[0].line == ""
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 0
 
 
@@ -1185,7 +1185,7 @@ def test_multiple_blank_lines():
         "end program test\n"
         "  \n\n")
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 8
     for index in [0, 1, 3, 4, 6, 7]:
         assert isinstance(lines[index], Comment)
@@ -1199,7 +1199,7 @@ def test_multiple_blank_lines():
     assert lines[5].line == "end program test"
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
+    lines = list(reader)
     assert len(lines) == 2
     assert isinstance(lines[0], Line)
     assert lines[0].span == (3, 3)
@@ -1211,37 +1211,41 @@ def test_multiple_blank_lines():
 
 def test_blank_lines_within_continuation():
     '''Test that blank lines and multi-line statements are processed
-    correctly. At the moment, empty lines within a multi-line
-    statement and any subsequent empty lines are removed.
+    correctly. Note, empty lines within a multi-line statement are
+    removed.
 
     '''
     input_text = (
         "  \n"
         "  real :: a &\n"
         "  \n\n"
-        "          ,b &\n"
-        "  \n\n"
-        "  real :: b\n")
+        "          ,b\n"
+        "  \n"
+        "  real :: c\n")
 
     reader = FortranStringReader(input_text, ignore_comments=False)
-    lines = [item for item in reader]
-
-    for line in lines:
-        print (line)
-    exit(1)
-
-    
-    assert len(lines) == 3
+    lines = list(reader)
+    assert len(lines) == 4
 
     assert isinstance(lines[0], Comment)
     assert lines[0].span == (1, 1)
     assert lines[0].line == ""
-
+    assert isinstance(lines[1], Line)
     assert lines[1].span == (2, 5)
     assert lines[1].line == "real :: a           ,b"
+    assert isinstance(lines[2], Comment)
+    assert lines[2].span == (6, 6)
+    assert lines[2].line == ""
+    assert isinstance(lines[3], Line)
+    assert lines[3].span == (7, 7)
+    assert lines[3].line == "real :: c"
 
     reader = FortranStringReader(input_text, ignore_comments=True)
-    lines = [item for item in reader]
-    assert len(lines) == 1
+    lines = list(reader)
+    assert len(lines) == 2
+    assert isinstance(lines[0], Line)
     assert lines[0].span == (2, 5)
     assert lines[0].line == "real :: a           ,b"
+    assert isinstance(lines[1], Line)
+    assert lines[1].span == (7, 7)
+    assert lines[1].line == "real :: c"

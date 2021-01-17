@@ -1563,9 +1563,10 @@ class FortranReaderBase(object):
         # fifo_item list.
         try:
             return self.fifo_item.pop(0)
-        except:
+        except IndexError:
             # A blank line is represented as an empty comment
             return Comment('', (startlineno, endlineno), self)
+
 
 class FortranFileReader(FortranReaderBase):
     '''
