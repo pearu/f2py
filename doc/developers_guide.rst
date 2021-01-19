@@ -818,16 +818,8 @@ a valid Fortran program.
    # +++++++++++++
    # TBD
 
-Continuous Integration
-----------------------
-
-GitHub Actions are used to run the test suite for a number of different
-Python versions and the coverage reports are uploaded automatically to CodeCov
-(https://codecov.io/gh/stfc/fparser). The configuration for this is in the
-`.github/workflows/unit-tests.yml` file.
-
 Expression matching
--------------------
++++++++++++++++++++
 
 The Fortran2003 rules specify a hierarchy of expressions (specified in
 levels). In summary::
@@ -936,3 +928,12 @@ literal. This would require a robust way of determining whether the
 2: R706 could be implemented so that it tried to match a second time
 if the first match failed, using the next "+" or "-" operator found in
 the string to the left of the first one.
+
+
+Continuous Integration
+----------------------
+
+GitHub Actions are used to run the test suite for a number of different
+Python versions and the coverage reports are uploaded automatically to CodeCov
+(https://codecov.io/gh/stfc/fparser). The configuration for this is in the
+`.github/workflows/unit-tests.yml` file.
