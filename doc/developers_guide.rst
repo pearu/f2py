@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2020 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2021 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -868,16 +868,18 @@ right hand side of a string by default::
     add-operand = "1"
 
 As expected, this would fail to match, due to the level2 expression
-being invalid. However, once R706 failed to match it would not be
-called again with this string as fparser2 follows the rule hierarchy
+("a - 1.0e") being invalid. However, once R706 failed to match it
+would not be called again as fparser2 follows the rule hierarchy
 mentioned earlier. Therefore fparser2 would fail to match this string.
 
-To solve this specific problem fparser2 includes additional code when
-implementing R706. There is an optional `is_add` argument in
-`BinaryOpBase` which is set to True in the `Level_2_Expr` class. This
-argument causes the `rsplit` method in the `pattern` instance to try
-to match a real literal constant on the right hand side of the string. If
-there is a match then the correct `+` or `-` is matched successfully::
+To solve the problem for thie specific case fparser2 includes
+additional code when implementing R706. There is an optional `is_add`
+argument in `BinaryOpBase` which is set to `True` in the
+`Level_2_Expr` class. This argument causes the `rsplit` method in the
+`pattern` instance to try to match a real literal constant on the
+right hand side of the string. If a literal constant exists then the
+exponent is ignored and the correct `+` or `-` is matched
+successfully::
 
     level-2-expr = "a"
     add-op = "-"
@@ -905,11 +907,11 @@ This would attempt to match the following::
     mult-op = "*"
     mult-operand = "b"
 
-This looks good but unfortunately the `add-operand` would fail to match
-as R705 is lower in the hierarchy than R706, so R706 will not be
-called again.
+This looks good, but unfortunately the `add-operand` part of the
+string ("a - 1.0e-1") would fail to match as R705 is lower in the
+hierarchy than R706, so R706 will not be called again.
 
-To solve this problem R705 has been modified in the fparser2 implementation to::
+To solve this problem, R705 has been modified in the fparser2 implementation to::
 
     R705 add-operand is [ level-2-expr mult-op ] mult-operand
 
@@ -932,5 +934,5 @@ literal. This would require a robust way of determining whether the
 "-" or "+" was an exponent in a literal.
 
 2: R706 could be implemented so that it tried to match a second time
-if the first match failed using the next "+" or "-" operator found in
+if the first match failed, using the next "+" or "-" operator found in
 the string to the left of the first one.
