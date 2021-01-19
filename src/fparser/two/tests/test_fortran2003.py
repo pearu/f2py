@@ -1838,27 +1838,6 @@ def test_mult_operand():  # R704
     assert str(obj) == '0.0E-1'
 
 
-def test_add_operand():  # R705
-
-    tcls = Add_Operand
-    obj = tcls('a*b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a * b'
-    assert repr(obj) == "Add_Operand(Name('a'), '*', Name('b'))"
-
-    obj = tcls('a/b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a / b'
-
-    obj = tcls('a**b')
-    assert isinstance(obj, Mult_Operand), repr(obj)
-    assert str(obj) == 'a ** b'
-
-    obj = tcls('0.0E-1')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '0.0E-1'
-
-
 def test_level_2_expr():  # R706
 
     tcls = Level_2_Expr
