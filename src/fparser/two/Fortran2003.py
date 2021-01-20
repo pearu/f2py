@@ -4735,7 +4735,7 @@ class Add_Operand(BinaryOpBase):  # pylint: disable=invalid-name
 
     add-operand is [ add-operand mult-op ] mult-operand
 
-    Rule R705 in implemented in two parts, the first with the optional
+    Rule R705 is implemented in two parts, the first with the optional
     part included (in the match method for this class) and the second
     without the optional part (specified in subclass_names).
 
@@ -4761,7 +4761,21 @@ class Add_Operand(BinaryOpBase):  # pylint: disable=invalid-name
 
     @staticmethod
     def match(string):
-        return BinaryOpBase.match(
+        '''Implement the matching for the add-operand rule. Makes use of the
+        pre-defined mult_op pattern and the BinaryOpBase baseclass.
+
+        :param str string: the string to match.
+
+        :returns: a tuple of size 3 containing an fparser2 class \
+            instance matching a level-2-expr expression, a string \
+            containing the matched operator and an fparser2 class \
+            instance matching a mult-operand if there is a match, or \
+            None if there is not.
+        :rtype: (subclass of :py:class:`fparser.two.utils.Base`, str, \
+            subclass of :py:class:`fparser.two.utils.Base`) or NoneType
+
+        '''
+        return  BinaryOpBase.match(
             Level_2_Expr, pattern.mult_op.named(), Mult_Operand, string)
 
 

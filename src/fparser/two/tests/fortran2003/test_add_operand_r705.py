@@ -54,7 +54,6 @@ _ = ParserFactory().create(std="f2003")
      "Name('b')), ')')")])
 def test_mult(string, str_repr):
     '''Test for a successful match with a valid mult-operand string'''
-
     result = Add_Operand(string)
     assert str(result) == string
     assert repr(result) == str_repr
@@ -76,7 +75,6 @@ def test_mult_fail():
      "'/', Name('c'))")])
 def test_add_operand(string, str_repr):
     '''Test for a successful match with a valid add_operand'''
-
     result = Add_Operand(string)
     assert str(result) == string
     assert repr(result) == str_repr
@@ -88,7 +86,7 @@ def test_add_operand(string, str_repr):
     ("a + 1.0E-1 * c", "Add_Operand(Level_2_Expr(Name('a'), '+', "
      "Real_Literal_Constant('1.0E-1', None)), '*', Name('c'))")])
 def test_level_2_match(string, str_repr):
-    '''Test that the level_2_exp class match allows a "+" or "-" operator
+    '''Test that the level_2_expr class match allows a "+" or "-" operator
     to be matched after a "*" or "/" operator if the former is to the
     left of the latter. This would not be the case according to the
     Fortran2003 rules, however it is needed to recover from a false

@@ -842,7 +842,7 @@ a hierarchy in the order listed.
 
 Fparser2 naturally follows this hierarchy, attempting to match in the
 order specified. This works well apart from one case, which is the
-matching of a Level2 expression::
+matching of a Level-2 expression::
 
     R706 level-2-expr is [[level-2-expr] add_op ] add-operand
 
@@ -859,12 +859,12 @@ right hand side of a string by default::
     add-op = "-"
     add-operand = "1"
 
-As expected, this would fail to match, due to the level2 expression
+As expected, this would fail to match, due to the level-2 expression
 ("a - 1.0e") being invalid. However, once R706 failed to match it
 would not be called again as fparser2 follows the rule hierarchy
 mentioned earlier. Therefore fparser2 would fail to match this string.
 
-To solve the problem for thie specific case fparser2 includes
+To solve the problem for this specific case fparser2 includes
 additional code when implementing R706. There is an optional `is_add`
 argument in `BinaryOpBase` which is set to `True` in the
 `Level_2_Expr` class. This argument causes the `rsplit` method in the
