@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2020 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2021 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -817,6 +817,118 @@ a valid Fortran program.
    # Comment Class
    # +++++++++++++
    # TBD
+
+Expression matching
++++++++++++++++++++
+
+The Fortran2003 rules specify a hierarchy of expressions (specified in
+levels). In summary::
+
+    R722 expr is [ expr defined-binary-op ] level-5-expr
+    R717 level-5-expr is [ level-5-expr equiv-op ] equiv-operand
+    R716 equiv-operand is [ equiv-operand or-op ] or-operand
+    R715 or-operand is [ or-operand and-op ] and-operand
+    R714 and-operand is [ not-op ] level-4-expr
+    R712 level-4-expr is [ level-3-expr rel-op ] level-3-expr    
+    R710 level-3-expr is [ level-3-expr concat-op ] level-2-expr
+    R706 level-2-expr is [[level-2-expr] add_op ] add-operand
+    R705 add-operand is [ add-operand mult-op ] mult-operand
+    R704 mult-operand is level-1-expr [ power-op mult-operand ]
+    R702 level-1-expr is [ defined-unary-op ] primary
+
+As can hopefully be seen, the "top level" rule is `expr`, this depends
+on a `level-5_expr`, which depends on an `equiv-operand` and so on in
+a hierarchy in the order listed.
+
+Fparser2 naturally follows this hierarchy, attempting to match in the
+order specified. This works well apart from one case, which is the
+matching of a Level-2 expression::
+
+    R706 level-2-expr is [[level-2-expr] add_op ] add-operand
+
+The problem is to do with falsely matching an exponent in a
+literal. Take the following example::
+
+    a - 1.0e-1
+
+When searching for a match, the following pattern is a valid candidate
+and will be the candidate used in fparser2 as fparser2 matches from the
+right hand side of a string by default::
+
+    level-2-expr = "a - 1.0e"
+    add-op = "-"
+    add-operand = "1"
+
+As expected, this would fail to match, due to the level-2 expression
+("a - 1.0e") being invalid. However, once R706 failed to match it
+would not be called again as fparser2 follows the rule hierarchy
+mentioned earlier. Therefore fparser2 would fail to match this string.
+
+To solve the problem for this specific case fparser2 includes
+additional code when implementing R706. There is an optional `is_add`
+argument in `BinaryOpBase` which is set to `True` in the
+`Level_2_Expr` class. This argument causes the `rsplit` method in the
+`pattern` instance to try to match a real literal constant on the
+right hand side of the string. If a literal constant exists then the
+exponent is ignored and the correct `+` or `-` is matched
+successfully::
+
+    level-2-expr = "a"
+    add-op = "-"
+    add-operand = "1.0e-1"
+
+However, this aproach only works if the real literal constant is on
+the right hand side of the string. Consider::
+
+    a - 1.0e-1 * b
+
+In this case the attempted match would be::
+
+    level-2-expr = "a - 1.0e"
+    add-op = "-"
+    add-operand = "1 * b"
+
+This would fail as `level-2-expr` is not valid and fparser2 would
+proceed to try to match with::
+
+    R705 add-operand is [ add-operand mult-op ] mult-operand
+
+This would attempt to match the following::
+
+    add-operand = "a - 1.0e-1"
+    mult-op = "*"
+    mult-operand = "b"
+
+This looks good, but unfortunately the `add-operand` part of the
+string ("a - 1.0e-1") would fail to match as R705 is lower in the
+hierarchy than R706, so R706 will not be called again.
+
+To solve this problem, R705 has been modified in the fparser2 implementation to::
+
+    R705 add-operand is [ level-2-expr mult-op ] mult-operand
+
+By replacing `add-operand` with `level-2-expr` we allow the "a -
+1.0e-1" to be matched with R706, i.e. we allow fparser2 to jump back up
+the rule hierarchy to fix the fallout from missing the original match.
+
+We now end up with something that can be matched correctly due to the
+`is_add` fix in rule R706.
+
+In combination these two modifications can cope with the problem of
+falsely matching an exponent in a literal.
+
+There are at least two other potential solutions which are probably
+preferable to the current solution, with the 2nd likely to be the most
+robust.
+
+1: R706 could be implemented so that it never matched an exponent in a
+literal. This would require a robust way of determining whether the
+"-" or "+" was an exponent in a literal.
+
+2: R706 could be implemented so that it tried to match a second time
+if the first match failed, using the next "+" or "-" operator found in
+the string to the left of the first one.
+
 
 Continuous Integration
 ----------------------
