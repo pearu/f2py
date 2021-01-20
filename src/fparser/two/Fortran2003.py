@@ -4622,6 +4622,8 @@ class Primary(Base):  # R701
     that an intrinsic is not (incorrectly) matched as an array (as
     class `Base` matches rules in list order).
 
+    Note, ( expr ) is implemented in the Parenthesis subclass.
+
     '''
     subclass_names = [
         'Intrinsic_Function_Reference',
@@ -4631,16 +4633,31 @@ class Primary(Base):  # R701
     ]
 
 
-class Parenthesis(BracketBase):  # R701.h
-    """
-    <parenthesis> = ( <expr> )
-    """
+class Parenthesis(BracketBase):
+    '''
+    Part of Fortran 2003 rule R701
+
+    parenthesis = ( expr )
+
+    '''
     subclass_names = []
     use_names = ['Expr']
 
+    @staticmethod
     def match(string):
+        '''Implements the matching of round brackets surrounding an expression
+        which is specified as one of the matches in R701.
+
+        :param str string: Fortran code to check for a match.
+
+        :returns: `None` if there is no match, or a 3-tuple containing \
+            the left bracket, the matched expression and the right \
+            bracket.
+        :rtype: NoneType or (str, subclass of \
+            :py:class:`fparser.two.utils.Base`, str)
+
+        '''
         return BracketBase.match('()', Expr, string)
-    match = staticmethod(match)
 
 
 class Level_1_Expr(UnaryOpBase):  # R702
@@ -4930,9 +4947,9 @@ class Logical_Expr(Base):  # pylint: disable=invalid-name
         operator.
 
         :param str string: Fortran code to check for a match.
-        :return: `None` if there is no match, or a tuple containing \
-                 the matched expression.
-        :rtype: NoneType or (???)
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
 
         '''
         excluded = (
@@ -4967,9 +4984,9 @@ class Char_Expr(Base):  # pylint: disable=invalid-name
         '''Implements the matching for a character expression.
 
         :param str string: Fortran code to check for a match.
-        :return: `None` if there is no match, or a tuple containing \
-                 the matched expression.
-        :rtype: NoneType or (???)
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
 
         '''
         excluded = (
@@ -5004,9 +5021,9 @@ class Default_Char_Expr(Base):  # pylint: disable=invalid-name
         '''Implements the matching for a default character expression.
 
         :param str string: Fortran code to check for a match.
-        :return: `None` if there is no match, or a tuple containing \
-                 the matched expression.
-        :rtype: NoneType or (???)
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
 
         '''
         excluded = (
@@ -5041,9 +5058,9 @@ class Int_Expr(Base):  # pylint: disable=invalid-name
         '''Implements the matching for an integer expression.
 
         :param str string: Fortran code to check for a match.
-        :return: `None` if there is no match, or a tuple containing \
-                 the matched expression.
-        :rtype: NoneType or (???)
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
 
         '''
         excluded = (
@@ -5078,9 +5095,9 @@ class Numeric_Expr(Base):  # pylint: disable=invalid-name
         '''Implements the matching for a numeric expression.
 
         :param str string: Fortran code to check for a match.
-        :return: `None` if there is no match, or a tuple containing \
-                 the matched expression.
-        :rtype: NoneType or (???)
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
 
         '''
         excluded = (

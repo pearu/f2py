@@ -47,7 +47,7 @@ import sys
 import pytest
 
 import fparser.two.Fortran2003 as f2003
-import fparser.two.utils
+from fparser.two.utils import NoMatchError
 
 
 def assert_subclass_parse(source, base_type, actual_type=None,
@@ -213,13 +213,36 @@ def test_type_param_name():
         expected_str='INTEGER')
 
 
+@pytest.mark.parametrize("string", ["(a)", "(a + b)", "(a + 1)", "((a))",
+                                    "(\"a\" + \"c\")", "(\"a\" + \")\")",
+                                    "(')' + \")\")"])
 @pytest.mark.usefixtures("f2003_create")
-def test_parenthesis():
-    '''Test that Parenthesis types are matched by Primary.
+def test_parenthesis(string):
+    '''Test that Parenthesis types are matched by the Primary. As
+    fparser2 implements this match as a separate class called
+    `Parenthesis`, also check this class directly.
+
     '''
     assert_subclass_parse(
-        '(a +  b)', f2003.Parenthesis,
-        expected_str='(a + b)')
+        string, f2003.Parenthesis,
+        expected_str=string)
+
+    result = f2003.Parenthesis(string)
+    assert isinstance(result, f2003.Parenthesis)
+    assert str(result) == string
+
+
+@pytest.mark.parametrize("string", ["(a+b)*(c+d)", "()"])
+@pytest.mark.parametrize("cls", [f2003.Primary, f2003.Parenthesis])
+@pytest.mark.usefixtures("f2003_create")
+def test_parenthesis_no_match(string, cls):
+    '''Test that invalid Parenthesis input is not matched by Primary or
+    Parenthesis classes.
+
+    '''
+    with pytest.raises(NoMatchError) as error:
+        _ = cls(string)
+    assert "{0}: '{1}'".format(cls.__name__, string) in str(error.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -227,7 +250,7 @@ def test_no_match():
     '''Test that a NoMatchError is raised if we provide code
     that isn't allowed as a Primary type (e.g. a comment).
     '''
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         _ = f2003.Primary('! A comment')
 
 
@@ -239,7 +262,7 @@ def test_c701_no_assumed_size_array():
     defined types.
     '''
     context = f2003.Type_Declaration_Stmt("INTEGER :: not_a_type")
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         f2003.Primary('not_a_type',)  # context)
 
 
@@ -251,5 +274,5 @@ def test_c702_no_assumed_size_array():
     defined types.
     '''
     context = f2003.Type_Declaration_Stmt("integer(*) :: assumed_size_array")
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         f2003.Primary('assumed_size_array',)  # context)

@@ -1764,47 +1764,6 @@ def test_deallocate_stmt():  # R635
 #
 
 
-def test_parenthesis():  # R701.h
-
-    tcls = Parenthesis
-    obj = tcls('(a)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a)'
-    assert repr(obj) == "Parenthesis('(', Name('a'), ')')"
-
-    obj = tcls('(a+1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + 1)'
-
-    obj = tcls('((a))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '((a))'
-
-    obj = tcls('(a+(a+c))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + (a + c))'
-
-    obj = tcls('("a"+"c")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + "c")'
-
-    obj = tcls('("a"+")")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + ")")'
-
-    obj = tcls('''(')'+")")''')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '''(')' + ")")'''
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('(a+b)*(c+d)')
-    assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo.value)
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('''()''')
-    assert "Parenthesis: '()'" in str(excinfo.value)
-
-
 def test_level_1_expr():  # R702
 
     tcls = Level_1_Expr
