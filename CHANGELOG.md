@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+20/01/2021 PR #286 FOR #284. Adds checking for datatype of *_Expr classes.
+
 18/01/2021 PR #287 for #280. Fixes overly-deep recursion when reading
            multi-line comments.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -4622,6 +4622,8 @@ class Primary(Base):  # R701
     that an intrinsic is not (incorrectly) matched as an array (as
     class `Base` matches rules in list order).
 
+    Note, ( expr ) is implemented in the Parenthesis subclass.
+
     '''
     subclass_names = [
         'Intrinsic_Function_Reference',
@@ -4631,16 +4633,31 @@ class Primary(Base):  # R701
     ]
 
 
-class Parenthesis(BracketBase):  # R701.h
-    """
-    <parenthesis> = ( <expr> )
-    """
+class Parenthesis(BracketBase):
+    '''
+    Part of Fortran 2003 rule R701
+
+    parenthesis = ( expr )
+
+    '''
     subclass_names = []
     use_names = ['Expr']
 
+    @staticmethod
     def match(string):
+        '''Implements the matching of round brackets surrounding an expression
+        which is specified as one of the matches in R701.
+
+        :param str string: Fortran code to check for a match.
+
+        :returns: `None` if there is no match, or a 3-tuple containing \
+            the left bracket, the matched expression and the right \
+            bracket.
+        :rtype: NoneType or (str, subclass of \
+            :py:class:`fparser.two.utils.Base`, str)
+
+        '''
         return BracketBase.match('()', Expr, string)
-    match = staticmethod(match)
 
 
 class Level_1_Expr(UnaryOpBase):  # R702
@@ -4909,39 +4926,193 @@ class Defined_Binary_Op(Base):  # pylint: disable=invalid-name
     subclass_names = ['Defined_Op']
 
 
-class Logical_Expr(Base):  # R724
-    """
-    <logical-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Logical_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R724
+
+    logical-expr is expr
+
+    C705 logical-expr shall be of type logical.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a logical expression.
+
+        Note, whilst we exclude Signed_Int_Literal_Constant and
+        Signed_Real_Literal_Constant, it seems that it is not possible
+        to create these from code as a "-" sign is treated as a unary
+        operator.
+
+        :param str string: Fortran code to check for a match.
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
+
+        '''
+        excluded = (
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Char_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C705: the match should fail if the result is not a logical
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
-class Char_Expr(Base):  # R725
-    """
-    <char-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Char_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R725
+
+    char-expr is expr
+
+    C706 char-expr shall be of type character.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a character expression.
+
+        :param str string: Fortran code to check for a match.
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
+
+        '''
+        excluded = (
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C706: the match should fail if the result is not a character
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
-class Default_Char_Expr(Base):  # R726
-    """
-    <default-char-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Default_Char_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R726
+
+    default-char-expr is expr
+
+    C707 default-char-expr shall be of type default character.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a default character expression.
+
+        :param str string: Fortran code to check for a match.
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
+
+        '''
+        excluded = (
+            Signed_Int_Literal_Constant, Int_Literal_Constant,
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C707: the match should fail if the result is not a character
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
-class Int_Expr(Base):  # R727
-    """
-    <int-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Int_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R727
+
+    int-expr is expr
+
+    C708 int-expr shall be of type integer.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for an integer expression.
+
+        :param str string: Fortran code to check for a match.
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
+
+        '''
+        excluded = (
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Signed_Real_Literal_Constant, Real_Literal_Constant,
+            Complex_Literal_Constant, Char_Literal_Constant,
+            Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C708: the match should fail if the result is not an integer
+        # expression. This is difficult to check in general so for the
+        # time being check that, in the case where a literal constant
+        # is returned, this is not of the wrong type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
-class Numeric_Expr(Base):  # R728
-    """
-    <numeric-expr> = <expr>
-    """
-    subclass_names = ['Expr']
+class Numeric_Expr(Base):  # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R728
+
+    numeric-expr is expr
+
+    C709 numeric-expr shall be of type integer, real or complex.
+
+    '''
+    subclass_names = []
+
+    @staticmethod
+    def match(string):
+        '''Implements the matching for a numeric expression.
+
+        :param str string: Fortran code to check for a match.
+        :returns: `None` if there is no match, or an fparser2 class \
+                  instance containing the matched expression.
+        :rtype: NoneType or :py:class:`fparser.two.utils.Base`
+
+        '''
+        excluded = (
+            Binary_Constant, Octal_Constant, Hex_Constant,
+            Char_Literal_Constant, Logical_Literal_Constant)
+        # Attempt to match as a general expression.
+        result = Expr(string)
+        # C709: the match should fail if the result is not an integer,
+        # real or complex expression. This is difficult to check in
+        # general so for the time being check that, in the case where
+        # a literal constant is returned, this is not of the wrong
+        # type.
+        if isinstance(result, excluded):
+            return None
+        return result
 
 
 class Specification_Expr(Base):  # R729
@@ -7085,15 +7256,15 @@ class Io_Control_Spec_List(SequenceBase):  # R913-list
         lst = []
         unit_is_positional = False
         for idx in range(len(splitted)):
-            spec = splitted[idx].strip()
-            spec = repmap(spec)
-            if idx == 0 and "=" not in spec:
+            spec_orig = splitted[idx].strip()
+            spec = repmap(spec_orig)
+            if idx == 0 and "=" not in spec_orig:
                 # Must be a unit number. However, we do not prepend "UNIT="
                 # to it in case the following Io_Control_Spec is positional
                 # (and therefore either a Format or Namelist spec).
-                lst.append(Io_Control_Spec(spec))
+                lst.append(Io_Control_Spec(repmap(spec)))
                 unit_is_positional = True
-            elif idx == 1 and "=" not in spec:
+            elif idx == 1 and "=" not in spec_orig:
                 if not unit_is_positional:
                     # Cannot have a positional argument following a
                     # named argument

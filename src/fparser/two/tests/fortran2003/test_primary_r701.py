@@ -47,7 +47,7 @@ import sys
 import pytest
 
 import fparser.two.Fortran2003 as f2003
-import fparser.two.utils
+from fparser.two.utils import NoMatchError
 
 
 def assert_subclass_parse(source, base_type, actual_type=None,
@@ -149,13 +149,23 @@ def test_array_constructor():
         expected_str='[1.2, 2.3E+2, - 5.1E-3]')
 
 
-@pytest.mark.xfail(reason="Matches Designator before Structure Constructor "
-                   "(issue #284)")
 @pytest.mark.usefixtures("f2003_create")
-def test_structure_constructor():
+def test_structure_constructor_1():
     '''Test that Structure Constructor types are matched by Primary.
 
-    This test currently fails as PERSON(12,"JONES") is matched as an
+    '''
+    assert_subclass_parse(
+        "PERSON ( 12,   \"Jones\" )", f2003.Structure_Constructor,
+        actual_type=f2003.Structure_Constructor,
+        expected_str='PERSON(12, "Jones")')
+
+
+@pytest.mark.xfail(reason="Requires more parse context (#190)")
+@pytest.mark.usefixtures("f2003_create")
+def test_structure_constructor_2():
+    '''Test that Structure Constructor types are matched by Primary.
+
+    This test currently fails as PERSON( 12, 24 ) is matched as an
     array access (Designator). In general, the only way to tell the
     difference is to know whether PERSON is the name of a structure or
     an array. However, we don't keep this information at the moment
@@ -163,23 +173,14 @@ def test_structure_constructor():
     not know the information before link time as declarations may be
     in different modules (see issue #201).
 
-    However, in this particular case we should not match with
-    Designator as one of the arguments is a string and a designator
-    should only match with integer arguments. This is not checked at
-    the moment, see the implementation of R727 (class Int_Expr) and
-    look up C708 (int-expr shall be of type integer) in the spec. The
-    implementation of this class can be improved by checking for
-    obvious non-integer cases (see issue #284), but in general it may
-    be difficult to know.
-
     '''
     # This test incorrectly Matches with Designator. It would
     # correctly match with Structure_Constructor but Designator is
     # checked first from the Primary class.
     assert_subclass_parse(
-        "PERSON ( 12,   \"Jones\" )", f2003.Structure_Constructor,
+        "PERSON ( 12, 24 )", f2003.Structure_Constructor,
         actual_type=f2003.Structure_Constructor,
-        expected_str='PERSON(12, "Jones")')
+        expected_str='PERSON(12, 24)')
 
 
 @pytest.mark.xfail(reason="Requires more parse context (#190)")
@@ -212,13 +213,36 @@ def test_type_param_name():
         expected_str='INTEGER')
 
 
+@pytest.mark.parametrize("string", ["(a)", "(a + b)", "(a + 1)", "((a))",
+                                    "(\"a\" + \"c\")", "(\"a\" + \")\")",
+                                    "(')' + \")\")"])
 @pytest.mark.usefixtures("f2003_create")
-def test_parenthesis():
-    '''Test that Parenthesis types are matched by Primary.
+def test_parenthesis(string):
+    '''Test that Parenthesis types are matched by the Primary. As
+    fparser2 implements this match as a separate class called
+    `Parenthesis`, also check this class directly.
+
     '''
     assert_subclass_parse(
-        '(a +  b)', f2003.Parenthesis,
-        expected_str='(a + b)')
+        string, f2003.Parenthesis,
+        expected_str=string)
+
+    result = f2003.Parenthesis(string)
+    assert isinstance(result, f2003.Parenthesis)
+    assert str(result) == string
+
+
+@pytest.mark.parametrize("string", ["(a+b)*(c+d)", "()"])
+@pytest.mark.parametrize("cls", [f2003.Primary, f2003.Parenthesis])
+@pytest.mark.usefixtures("f2003_create")
+def test_parenthesis_no_match(string, cls):
+    '''Test that invalid Parenthesis input is not matched by Primary or
+    Parenthesis classes.
+
+    '''
+    with pytest.raises(NoMatchError) as error:
+        _ = cls(string)
+    assert "{0}: '{1}'".format(cls.__name__, string) in str(error.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -226,7 +250,7 @@ def test_no_match():
     '''Test that a NoMatchError is raised if we provide code
     that isn't allowed as a Primary type (e.g. a comment).
     '''
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         _ = f2003.Primary('! A comment')
 
 
@@ -238,7 +262,7 @@ def test_c701_no_assumed_size_array():
     defined types.
     '''
     context = f2003.Type_Declaration_Stmt("INTEGER :: not_a_type")
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         f2003.Primary('not_a_type',)  # context)
 
 
@@ -250,5 +274,5 @@ def test_c702_no_assumed_size_array():
     defined types.
     '''
     context = f2003.Type_Declaration_Stmt("integer(*) :: assumed_size_array")
-    with pytest.raises(fparser.two.utils.NoMatchError):
+    with pytest.raises(NoMatchError):
         f2003.Primary('assumed_size_array',)  # context)
