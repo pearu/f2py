@@ -1764,47 +1764,6 @@ def test_deallocate_stmt():  # R635
 #
 
 
-def test_parenthesis():  # R701.h
-
-    tcls = Parenthesis
-    obj = tcls('(a)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a)'
-    assert repr(obj) == "Parenthesis('(', Name('a'), ')')"
-
-    obj = tcls('(a+1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + 1)'
-
-    obj = tcls('((a))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '((a))'
-
-    obj = tcls('(a+(a+c))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + (a + c))'
-
-    obj = tcls('("a"+"c")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + "c")'
-
-    obj = tcls('("a"+")")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + ")")'
-
-    obj = tcls('''(')'+")")''')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '''(')' + ")")'''
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('(a+b)*(c+d)')
-    assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo.value)
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('''()''')
-    assert "Parenthesis: '()'" in str(excinfo.value)
-
-
 def test_level_1_expr():  # R702
 
     tcls = Level_1_Expr
@@ -2026,15 +1985,6 @@ def test_expr():  # R722
     assert str(obj) == '.FALSE.'
 
     assert_raises(NoMatchError, Scalar_Int_Expr, 'a,b')
-
-
-def test_logical_expr():  # R724
-
-    tcls = Logical_Expr
-    obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
-    assert isinstance(obj, Equiv_Operand), repr(obj)
-    assert (str(obj) ==
-            '(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) .OR. .NOT. root')
 
 
 def test_logical_initialization_expr():  # R733
@@ -2454,7 +2404,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls)
     assert _repr_utf(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
 
