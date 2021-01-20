@@ -15,6 +15,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+18/01/2021 PR #287 for #280. Fixes overly-deep recursion when reading
+           multi-line comments.
+
 11/01/2021 PR #285 for #283. Removes Structure_Constructor_2 class to fix
            problem with Expr matching.
 
