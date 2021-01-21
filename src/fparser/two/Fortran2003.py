@@ -7280,7 +7280,7 @@ class Io_Control_Spec_List(SequenceBase):
     '''
     Rule 913 - Control information list.
 
-    <io-control-spec-list> is a list of io-control-spec items.
+    io-control-spec-list is a list of io-control-spec items.
 
     Subject to the following constraints:
 
@@ -7360,6 +7360,7 @@ class Io_Control_Spec_List(SequenceBase):
         # Examine the first entry in the list. If it is not named then it must
         # be a unit number (C910).
         have_unit = False
+        have_unnamed_nml_or_fmt = False
         spec = splitted.pop(0).strip()
         spec = repmap(spec)
 
@@ -7398,6 +7399,7 @@ class Io_Control_Spec_List(SequenceBase):
                             # Remove the name from the new object
                             io_spec.items = (None, io_spec.items[1])
                             lst.append(io_spec)
+                            have_unnamed_nml_or_fmt = True
                             break
                     except NoMatchError:
                         pass
@@ -7430,12 +7432,14 @@ class Io_Control_Spec_List(SequenceBase):
                 have_nml = True
             elif spec.children[0] == 'FMT':
                 have_fmt = True
+        # C910: An io-unit shall be specified
         if not have_unit:
-            # C910: An io-unit shall be specified
             return None
+        # C916: an io-control-spec-list shall not contain both a format
+        # and a namelist-group-name
         if have_nml and have_fmt:
-            # C916: an io-control-spec-list shall not contain both a format
-            # and a namelist-group-name
+            return None
+        if have_unnamed_nml_or_fmt and (have_nml or have_fmt):
             return None
 
         return ',', tuple(lst)

@@ -34,7 +34,7 @@
 
 '''
 Module containing py.test tests for the Io_Control_Spec class and
-the list variant.
+the list variant - r913.
 
 '''
 
@@ -46,8 +46,10 @@ from fparser.two.parser import ParserFactory
 # this is required to setup the fortran2003 classes
 _ = ParserFactory().create(std="f2003")
 
+# Tests for the io_control_spec class.
 
-def test_io_control_spec():  # R913
+
+def test_io_control_spec():
     ''' Test that we can construct an io-control-spec and that its str
     and repr properties are correct. '''
     tcls = Fortran2003.Io_Control_Spec
@@ -55,10 +57,60 @@ def test_io_control_spec():  # R913
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'END = 123'
     assert repr(obj) == "Io_Control_Spec('END', Label('123'))"
-    # io-control-spec only matches named entities
+
+
+@pytest.mark.parametrize("string", ["6", "end 123"])
+def test_io_ctrl_spec_named_only(string):
+    ''' Check that io-control-spec only matches named entities. '''
+    tcls = Fortran2003.Io_Control_Spec
     with pytest.raises(Fortran2003.NoMatchError) as err:
-        _ = tcls('6')
-    assert "Io_Control_Spec: '6'" in str(err.value)
+        _ = tcls(string)
+    assert "Io_Control_Spec: '{0}'".format(string) in str(err.value)
+
+
+@pytest.mark.parametrize("lhs, rhs",
+                         [("unit", "num"), ("unit", "6"),
+                          ("fmt", "fmt_str"), ("fmt", "*"), ("fmt", "'(I3)'"),
+                          ("nml", "nml_name"),
+                          ("advance", "yes"), ("advance", "no"),
+                          ("asynchronous", "yes"), ("asynchronous", "no"),
+                          ("blank", "null"), ("blank", "zero"),
+                          ("decimal", "comma"), ("decimal", "point"),
+                          ("delim", "apostrophe"),
+                          ("end", "10"),
+                          ("eor", "10"),
+                          ("err", "10"),
+                          ("id", "var"),
+                          ("iomsg", "msg_var"),
+                          ("iostat", "var"),
+                          ("pad", "yes"), ("pad", "no"),
+                          ("pos", "posn"), ("pos", "10"),
+                          ("rec", "1"),
+                          ("round", "up"), ("round", "down"),
+                          ("round", "zero"), ("round", "nearest"),
+                          ("round", "compatible"),
+                          ("round", "processor_defined"),
+                          ("sign", "plus"), ("sign", "suppress"),
+                          ("sign", "processor_defined"),
+                          ("size", "var")])
+def test_io_ctrl_spec_named_entities(lhs, rhs):
+    ''' Check that all valid names are matched correctly. '''
+    obj = Fortran2003.Io_Control_Spec("=".join([lhs, rhs]))
+    assert isinstance(obj, Fortran2003.Io_Control_Spec)
+    assert obj.children[0] == lhs.upper()
+    obj = Fortran2003.Io_Control_Spec("=".join([lhs.upper(), rhs]))
+    assert isinstance(obj, Fortran2003.Io_Control_Spec)
+
+
+@pytest.mark.parametrize("lhs, rhs",
+                         [("asize", "var"), ("unit", "1.0"), ("size", "10")])
+def test_io_ctrl_spec_invalid_values(lhs, rhs):
+    ''' Check that io_ctrl_spec does not match if a keyword is unrecognised
+    or the value is invalid. '''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Fortran2003.Io_Control_Spec("=".join([lhs, rhs]))
+
+# Tests for the io_control_spec_list class.
 
 
 def test_io_control_spec_list():
@@ -113,29 +165,55 @@ def test_io_control_spec_list():
     assert str(obj) == 'FMT = b, UNIT = 123'
 
 
+def test_io_control_spec_list_3_or_more():
+    ''' Test the matching when there are more than 2 entries in list - 3rd
+    and subsequent entries must be named.
+    '''
+    tcls = Fortran2003.Io_Control_Spec_List
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        _ = tcls('123,a,b')
+    assert "Io_Control_Spec_List: '123,a,b'" in str(err.value)
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        _ = tcls('123,a,err=10,var')
+    assert "Io_Control_Spec_List: '123,a,err=10,var'" in str(err.value)
+
+    obj = tcls('123,a,err=10')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == '123, a, ERR = 10'
+
+    obj = tcls('123,a,err=10,end=12')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == '123, a, ERR = 10, END = 12'
+
+    obj = tcls('unit=123,err=10,end=12')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'UNIT = 123, ERR = 10, END = 12'
+
+
 def test_io_control_spec_list_invalid_first_entry(monkeypatch):
     ''' Test that the special handling for the first item in the list
     rejects an invalid, unnamed entry. '''
     tcls = Fortran2003.Io_Control_Spec_List
-    # Check the various things we should not match. To exercise some of them
-    # the test for whether the first element in the list is a valid IO unit
-    # must fail. Unfortunately, because of #276 this is currently impossible
-    # and therefore we monkeypatch Io_Unit to make it appear that
-    # it does not match.
-    # Python 2 requires the staticmethod decorator for this to work.
-
-    @staticmethod
-    def _raise_exception(_x, _y, _z=None):
-        raise Fortran2003.NoMatchError("monkeypatched function")
-    monkeypatch.setattr(Fortran2003.Io_Unit, "__new__",
-                        _raise_exception)
-
     with pytest.raises(Fortran2003.NoMatchError) as err:
         tcls("'name'")
     assert "Io_Control_Spec_List: ''name''" in str(err.value)
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls("1.0")
+    assert "Io_Control_Spec_List: '1.0'" in str(err.value)
 
 
-def test_io_spec_list_constraints():
+def test_io_control_spec_list_invalid_2nd_entry(monkeypatch):
+    ''' Test that the special handling for the first two unnamed items in
+    the list rejects an invalid, unnamed second entry. '''
+    tcls = Fortran2003.Io_Control_Spec_List
+    # The second entry must be either a format specifier or a namelist-group-
+    # name. We therefore supply a real literal as that doesn't match either.
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls("unit_no, 1.0")
+    assert "Io_Control_Spec_List: 'unit_no, 1.0'" in str(err.value)
+
+
+def test_io_spec_list_c910():
     ''' Check that various constraints are applied in the matching. Currently
     only C910, C916-918 are implemented (#267). '''
     tcls = Fortran2003.Io_Control_Spec_List
@@ -148,18 +226,36 @@ def test_io_spec_list_constraints():
         tcls('fmt="some-fmt"')
     assert "Io_Control_Spec_List: 'fmt=\"some-fmt\"'" in str(err.value)
 
-    # C917, if format is second item and is unamed then first item must be
-    # unnamed unit number.
+
+def test_io_spec_list_c916():
+    ''' C916 - cannot have both a namelist and a format. '''
+    tcls = Fortran2003.Io_Control_Spec_List
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls('123,nml=a,fmt=b')
+    assert "Io_Control_Spec_List: '123,nml=a,fmt=b'" in str(err.value)
+    # Check when we have an un-named second entry
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls('123, "(I3)", fmt=var')
+    assert "Io_Control_Spec_List: '123, \"(I3)\", fmt=var'" in str(err.value)
+    with pytest.raises(Fortran2003.NoMatchError) as err:
+        tcls('123, nml_grp_name, fmt=var')
+    assert ("Io_Control_Spec_List: '123, nml_grp_name, fmt=var'" in
+            str(err.value))
+
+
+def test_io_spec_list_c917():
+    ''' C917, if format is second item and is un-named then first item must be
+    un-named unit number. '''
+    tcls = Fortran2003.Io_Control_Spec_List
     with pytest.raises(Fortran2003.NoMatchError) as err:
         tcls('unit=10, "(\'a format\')"')
     assert "Io_Control_Spec_List: 'unit=10" in str(err.value)
 
-    # C918, as for 917 but for a namelist group name
+
+def test_io_spec_list_c918():
+    ''' C918, if namelist group name is second item and is un-named then first
+    item must be un-named unit number. '''
+    tcls = Fortran2003.Io_Control_Spec_List
     with pytest.raises(Fortran2003.NoMatchError) as err:
         tcls('unit=10, nml_grp_name')
     assert "Io_Control_Spec_List: 'unit=10" in str(err.value)
-
-    # C916 - cannot have both a namelist and a format
-    with pytest.raises(Fortran2003.NoMatchError) as err:
-        tcls('123,nml=a,fmt=b')
-    assert "Io_Control_Spec_List: '123,nml=a,fmt=b'" in str(err.value)
