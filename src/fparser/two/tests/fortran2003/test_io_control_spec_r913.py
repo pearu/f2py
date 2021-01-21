@@ -190,7 +190,7 @@ def test_io_control_spec_list_3_or_more():
     assert str(obj) == 'UNIT = 123, ERR = 10, END = 12'
 
 
-def test_io_control_spec_list_invalid_first_entry(monkeypatch):
+def test_io_control_spec_list_invalid_first_entry():
     ''' Test that the special handling for the first item in the list
     rejects an invalid, unnamed entry. '''
     tcls = Fortran2003.Io_Control_Spec_List
@@ -202,7 +202,7 @@ def test_io_control_spec_list_invalid_first_entry(monkeypatch):
     assert "Io_Control_Spec_List: '1.0'" in str(err.value)
 
 
-def test_io_control_spec_list_invalid_2nd_entry(monkeypatch):
+def test_io_control_spec_list_invalid_2nd_entry():
     ''' Test that the special handling for the first two unnamed items in
     the list rejects an invalid, unnamed second entry. '''
     tcls = Fortran2003.Io_Control_Spec_List
