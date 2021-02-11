@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -551,14 +551,14 @@ class FortranReaderBase(object):
     code, free format Fortran code, or PYF signatures (with extended
     free format Fortran syntax).
 
-    :param source: A file-like object with .next() method used to
+    :param source: a file-like object with .next() method used to \
                    retrive a line.
-    :type source: either :py:class:`six.StringIO` or a file handle
-    :param mode: A FortranFormat object as returned by
+    :type source: :py:class:`six.StringIO` or a file handle
+    :param mode: a FortranFormat object as returned by \
                  `sourceinfo.get_source_info()`
     :type mode: :py:class:`fparser.common.sourceinfo.Format`
-    :param bool isstrict: Whether we are strictly enforcing fixed format
-    :param bool ignore_comments: Whether or not to discard comments
+    :param bool isstrict: whether we are strictly enforcing fixed format.
+    :param bool ignore_comments: whether or not to discard comments.
 
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
@@ -677,8 +677,8 @@ class FortranReaderBase(object):
         In both situations ``linecount`` will be incremented, that is,
         the line will be consumed.
 
-        :param bool ignore_empty: If True then ignore empty lines.
-        :param bool ignore_comments: If True then ignore comments (overrides
+        :param bool ignore_empty: if True then ignore empty lines.
+        :param bool ignore_comments: if True then ignore comments (overrides \
                                      self._ignore_comments)
 
         See also
@@ -725,12 +725,12 @@ class FortranReaderBase(object):
 
         self.source_lines.append(line)
 
-        if ignore_comments and (self.format.is_fixed or self.format.is_f77):
+        if ignore_comments and (self._format.is_fixed or self._format.is_f77):
             # Check for a fixed-format comment. If the current line *is*
             # a comment and we are ignoring them, then recursively call this
             # routine again to get the next source line.
-            if _is_fix_comment(line, isstrict=self.format.is_strict,
-                               f2py_enabled=self.format.f2py_enabled):
+            if _is_fix_comment(line, isstrict=self._format.is_strict,
+                               f2py_enabled=self._format.f2py_enabled):
                 return self.get_single_line(ignore_empty, ignore_comments)
 
         if ignore_empty and not line:
@@ -1288,7 +1288,8 @@ class FortranReaderBase(object):
     # the following contexts: f77, fixed, free, pyf.
 
     def get_source_item(self):
-        """ Return next source item.
+        '''
+        Return the next source item.
 
         A source item is ..
         - a fortran line
@@ -1296,11 +1297,20 @@ class FortranReaderBase(object):
         - a multiline - lines inside triple-quotes, only when in ispyf mode
         - a comment line
         - a preprocessor directive line
-        """
+
+        :returns: the next source item.
+        :rtype: :py:class:`fparser.common.readfortran.Line` or \
+            :py:class:`fparser.common.readfortran.MultiLine` or \
+            :py:class:`fparser.common.readfortran.Comment` or \
+            :py:class:`fparser.common.readfortran.CppDirective` or \
+            :py:class:`fparser.common.readfortran.SyntaxErrorLine` or \
+            :py:class:`fparser.common.readfortran.SyntaxErrorMultiLine`
+
+        '''
         get_single_line = self.get_single_line
         line = get_single_line()
         if line is None:
-            return
+            return None
         startlineno = self.linecount
         line, is_cpp_directive = self.handle_cpp_directive(line)
         if is_cpp_directive:
@@ -1326,9 +1336,9 @@ class FortranReaderBase(object):
         if self._format.is_pyf:
             # handle multilines
             for mlstr in ['"""', "'''"]:
-                r = self.handle_multilines(line, startlineno, mlstr)
-                if r:
-                    return r
+                multiline = self.handle_multilines(line, startlineno, mlstr)
+                if multiline:
+                    return multiline
         if self._format.is_fixed:
             if _is_fix_comment(line, isstrict, self._format.f2py_enabled):
                 # comment line:

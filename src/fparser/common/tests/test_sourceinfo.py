@@ -97,23 +97,12 @@ def test_fortranformat_constructor(pretty):
     assert not unit_under_test.f2py_enabled
 
 
-##############################################################################
-@pytest.fixture(scope="module",
-                name="permutations",
-                params=[(False, False, True),
-                        (False, True, False),
-                        (True, False, True),
-                        (True, True, False)])
-def permutations_fixture(request):
-    '''
-    :returns: a subset of the possible permutations of the input arguments.
-    :rtype: 2-tuple of bools
-    '''
-    return request.param
-
-
+@pytest.mark.parametrize("permutations", [(False, False, True),
+                                          (False, True, False),
+                                          (True, False, True),
+                                          (True, True, False)])
 def test_fortranformat_equality(permutations, pretty):
-    #pylint: disable=redefined-outer-name
+    # pylint: disable=redefined-outer-name
     '''
     Tests that the equality operator works as expected.
     '''

@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -87,8 +87,8 @@ class FortranFormat(object):
     means in the context of free format I don't know.
 
     :param bool is_free: True for free format, False for fixed.
-    :param bool is_strict: Some amount of strictness.
-    :param bool enable_f2py: Whether f2py directives are enabled or treated \
+    :param bool is_strict: some amount of strictness.
+    :param bool enable_f2py: whether f2py directives are enabled or treated \
                              as comments (the default).
     '''
     def __init__(self, is_free, is_strict, enable_f2py=False):

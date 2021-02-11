@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2020 Science and Technology Facilities Council
+# Copyright (c) 2017-2021 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -1042,7 +1042,8 @@ cf2py call me ! hey
     reader = FortranStringReader(
         string_f77, ignore_comments=False)
     for item in reader:
-        assert str(item) == expected.pop(0)
+        assert (re.sub("u", "", six.text_type(item)) ==
+                re.sub("u", "", expected.pop(0)))
 
 
 def test_utf_char_in_code(log):
