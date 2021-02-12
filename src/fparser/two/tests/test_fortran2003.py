@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2020 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 #
@@ -811,19 +811,6 @@ def test_type_param_spec_list():  # R456-list
     assert str(obj) == 'k = a, c, g = 1'
 
 
-def test_structure_constructor_2():  # R457.b
-
-    tcls = Structure_Constructor_2
-    obj = tcls('k=a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'k = a'
-    assert _repr_utf(obj) == "Structure_Constructor_2(Name('k'), Name('a'))"
-
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
-
-
 def test_structure_constructor():  # R457
 
     tcls = Structure_Constructor
@@ -832,18 +819,9 @@ def test_structure_constructor():  # R457
     assert str(obj) == 't()'
     assert _repr_utf(obj) == "Structure_Constructor(Type_Name('t'), None)"
 
-    obj = tcls('t(s=1, a)')
+    obj = tcls('t(s=1, a=2)')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 't(s = 1, a)'
-
-    obj = tcls('a=k')
-    assert isinstance(obj, Structure_Constructor_2), repr(obj)
-    assert str(obj) == 'a = k'
-    assert _repr_utf(obj) == "Structure_Constructor_2(Name('a'), Name('k'))"
-
-    obj = tcls('a')
-    assert isinstance(obj, Name), repr(obj)
-    assert str(obj) == 'a'
+    assert str(obj) == 't(s = 1, a = 2)'
 
 
 def test_component_spec():  # R458
@@ -1786,47 +1764,6 @@ def test_deallocate_stmt():  # R635
 #
 
 
-def test_parenthesis():  # R701.h
-
-    tcls = Parenthesis
-    obj = tcls('(a)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a)'
-    assert repr(obj) == "Parenthesis('(', Name('a'), ')')"
-
-    obj = tcls('(a+1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + 1)'
-
-    obj = tcls('((a))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '((a))'
-
-    obj = tcls('(a+(a+c))')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '(a + (a + c))'
-
-    obj = tcls('("a"+"c")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + "c")'
-
-    obj = tcls('("a"+")")')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '("a" + ")")'
-
-    obj = tcls('''(')'+")")''')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '''(')' + ")")'''
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('(a+b)*(c+d)')
-    assert "Parenthesis: '(a+b)*(c+d)'" in str(excinfo.value)
-
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls('''()''')
-    assert "Parenthesis: '()'" in str(excinfo.value)
-
-
 def test_level_1_expr():  # R702
 
     tcls = Level_1_Expr
@@ -1854,27 +1791,6 @@ def test_mult_operand():  # R704
     obj = tcls('(a+b)**2')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == '(a + b) ** 2'
-
-    obj = tcls('0.0E-1')
-    assert isinstance(obj, Real_Literal_Constant), repr(obj)
-    assert str(obj) == '0.0E-1'
-
-
-def test_add_operand():  # R705
-
-    tcls = Add_Operand
-    obj = tcls('a*b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a * b'
-    assert repr(obj) == "Add_Operand(Name('a'), '*', Name('b'))"
-
-    obj = tcls('a/b')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a / b'
-
-    obj = tcls('a**b')
-    assert isinstance(obj, Mult_Operand), repr(obj)
-    assert str(obj) == 'a ** b'
 
     obj = tcls('0.0E-1')
     assert isinstance(obj, Real_Literal_Constant), repr(obj)
@@ -2069,15 +1985,6 @@ def test_expr():  # R722
     assert str(obj) == '.FALSE.'
 
     assert_raises(NoMatchError, Scalar_Int_Expr, 'a,b')
-
-
-def test_logical_expr():  # R724
-
-    tcls = Logical_Expr
-    obj = tcls('(f0 .lt. f1) .and. abs(x1-x0) .gt. abs(x2) .or.  .not. root')
-    assert isinstance(obj, Equiv_Operand), repr(obj)
-    assert (str(obj) ==
-            '(f0 .LT. f1) .AND. ABS(x1 - x0) .GT. ABS(x2) .OR. .NOT. root')
 
 
 def test_logical_initialization_expr():  # R733
@@ -2497,7 +2404,7 @@ def test_write_stmt():
     assert isinstance(obj, tcls)
     assert _repr_utf(obj) == (
         "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec(None, "
+        "Io_Unit('*')), Io_Control_Spec('FMT', "
         "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
         "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
 

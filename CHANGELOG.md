@@ -15,6 +15,20 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+20/01/2021 PR #289 for #288. Bug fix for matching expressions containing
+           real literals with signed exponents. This bug was introduced
+           by #285.
+
+20/01/2021 PR #286 for #284. Adds checking for datatype of *_Expr classes.
+
+18/01/2021 PR #287 for #280. Fixes overly-deep recursion when reading
+           multi-line comments.
+
+11/01/2021 PR #285 for #283. Removes Structure_Constructor_2 class to fix
+           problem with Expr matching.
+
+11/01/2021 PR #237 for #236. Fix for slow parsing and printing of code.
+
 23/12/2020 PR #278 for #277. Added github actions CI file, badges and documentation.
 
 18/12/2020 PR #275 for #274. Adds an example script that uses fparser2 to

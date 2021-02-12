@@ -1579,9 +1579,15 @@ class FortranReaderBase(object):
             self.warning(message)
         if name is not None:
             self.error('No construct following construct-name.')
-        if have_comment:
-            return next(self)
-        return self.comment_item('', startlineno, endlineno)
+
+        # If this point is reached, the line is a comment or is
+        # blank. If it is a comment, it has been pushed onto the
+        # fifo_item list.
+        try:
+            return self.fifo_item.pop(0)
+        except IndexError:
+            # A blank line is represented as an empty comment
+            return Comment('', (startlineno, endlineno), self)
 
 
 class FortranFileReader(FortranReaderBase):
