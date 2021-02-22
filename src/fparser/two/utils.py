@@ -74,6 +74,7 @@ import logging
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
+from fparser.two.symbol_table import SymbolTables, SymbolTable
 from fparser.common.readfortran import FortranReaderBase
 
 
@@ -538,6 +539,7 @@ content : tuple
         from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
+        tables = SymbolTables.get()
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
@@ -554,6 +556,11 @@ content : tuple
                 for obj in reversed(content):
                     obj.restore_reader(reader)
                 return
+            if startcls in tables.scoping_unit_classes:
+                # We are entering a new scoping unit so create a new
+                # symbol table
+                name = str(obj.children[1])
+                tables.enter_scope(name)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
             start_idx = len(content)
@@ -675,6 +682,9 @@ content : tuple
                 if isinstance(obj, End_Select_Stmt):
                     enable_case_construct_hook = False
             continue
+
+        if startcls in tables.scoping_unit_classes:
+            tables.exit_scope()
 
         if not had_match or endcls and not found_end:
             # We did not get a match from any of the subclasses or

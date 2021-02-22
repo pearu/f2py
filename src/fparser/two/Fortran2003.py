@@ -74,7 +74,7 @@ import re
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
-
+from fparser.two.symbol_table import SymbolTables
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
@@ -2706,6 +2706,11 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
         entity_decls = Entity_Decl_List(repmap(line))
         if entity_decls is None:
             return
+        # Create an entry in the symbol table for each entity being declared
+        sym_tables = SymbolTables.get()
+        sym_table = sym_tables.get_current_scope()
+        for entity in entity_decls:
+            sym_table.new_symbol(xxx)
         return type_spec, attr_specs, entity_decls
 
     def tostr(self):
@@ -9161,13 +9166,18 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if nature is not None:
                 return
 
+        symbol_tables = SymbolTables.get()
+        table = symbol_tables.current_scope
+
         position = line.find(',')
         if position == -1:
+            table.new_module(line)
             return nature, dcolon, Module_Name(line), '', None
         name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
             return
+        mod_name = name
         name = Module_Name(name)
         line = line[position+1:].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
@@ -9186,8 +9196,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             line = line[1:].lstrip()
             if not line:
                 # Missing Only_List after 'USE Module_Name, ONLY:'
+                table.new_module(mod_name)
                 return nature, dcolon, name, ', ONLY:', None
+            table.new_module(mod_name, line)
             return nature, dcolon, name, ', ONLY:', Only_List(line)
+        table.new_module(mod_name, line)
         return nature, dcolon, name, ',', Rename_List(line)
 
     def tostr(self):
@@ -10752,5 +10765,8 @@ class %s_Name(Base):
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
+
+# Classes that correspond to new scoping units
+SCOPING_UNIT_CLASSES = [Module]
 
 # EOF

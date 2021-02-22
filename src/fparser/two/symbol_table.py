@@ -55,7 +55,7 @@ class SymbolTables(object):
     Class encapsulating functionality for the global symbol-tables object.
 
     '''
-    # Class variable to store the singleton instance
+    #: Class variable to store the singleton instance
     _instance = None
 
     @staticmethod
@@ -86,6 +86,11 @@ class SymbolTables(object):
                                    " SymbolTables can be created")
 
         self._symbol_tables = {}
+        # Those classes that correspond to a new scoping unit
+        self._scoping_unit_classes = []
+        # Reference to the symbol table of the current scope
+        self._current_scope = None
+        self._scope_stack = []
 
     def add(self, name, table):
         '''
@@ -95,6 +100,43 @@ class SymbolTables(object):
 
         '''
         self._symbol_tables[name] = table
+
+    def lookup(self, name):
+        return self._symbol_tables[name]
+
+    @property
+    def scoping_unit_classes(self):
+        return self._scoping_unit_classes
+
+    @scoping_unit_classes.setter
+    def scoping_unit_classes(self, value):
+        self._scoping_unit_classes = value
+
+    @property
+    def current_scope(self):
+        return self._current_scope
+
+    @current_scope.setter
+    def current_scope(self, value):
+        self._current_scope = value
+
+    def enter_scope(self, name):
+        if name not in self._symbol_tables:
+            table = SymbolTable(name)
+            self.add(name, table)
+        else:
+            table = self.lookup(name)
+        self._scope_stack.append(table)
+        self._current_scope = table
+
+    def exit_scope(self):
+        print(self.current_scope)
+        self._scope_stack.pop(-1)
+        if self._scope_stack:
+            self._current_scope = self._scope_stack[-1]
+        else:
+            self._current_scope = None
+
 
 
 class SymbolVisibility(Enum):
@@ -123,6 +165,11 @@ class SymbolTable(object):
         self._symbols = {}
         # Modules imported into this scope.
         self._modules = {}
+
+    def __str__(self):
+        symbols = "Symbols:\n" + "\n".join(list(self._symbols.keys()))
+        uses = "Used modules:\n" + "\n".join(list(self._modules.keys()))
+        return "Table {0}\n".format(self._name) + symbols + uses
 
     def new_symbol(self, name, primitive_type, kind=None, shape=None,
                    visibility=SymbolVisibility.PUBLIC):

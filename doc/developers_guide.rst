@@ -249,6 +249,37 @@ that classes `subclass_names` list (see :ref:`program-unit-class`)::
     >>> parser_f2003.subclasses['Program_Unit']
     [<class 'fparser.two.Fortran2003.Main_Program'>, <class 'fparser.two.Fortran2003.Function_Subprogram'>, <class 'fparser.two.Fortran2003.Subroutine_Subprogram'>, <class 'fparser.two.Fortran2003.Module'>, <class 'fparser.two.Fortran2003.Block_Data'>]
 
+Symbol Table
+++++++++++++
+
+There are many situations when it is not possible to disambiguate the precise
+form of the Fortran being parsed without additional type information (e.g.
+whether code of the form `a(i,j)` is an array access or a function call).
+Therefore fparser2 contains a single, global instance of a `SymbolTables`
+class. As its name implies, this holds a collection of symbol tables, one
+for each scoping unit (file, module, program unit). This is implemented
+as a dictionary where the keys are the names of the scoping units. The
+name of a scoping unit is constructed as
+`<file_name>:<module_name>:<program_unit_name>`. The corresponding
+dictionary entries are instances of the `SymbolTable` class:
+
+.. autoclass:: fparser.two.symbol_table.SymbolTable
+
+The entries in these tables are instances of the named tuple,
+`SymbolTable.Symbol` which has the properties:
+
+ * primitive_type
+ * kind
+ * shape
+ * visibility
+
+Since fparser2 relies heavily upon recursion, it is important that the
+current scoping unit always be available from any point in the code.
+Therefore, the `SymbolTables` class has the `current_scope` property
+which contains a reference to the current `SymbolTable`. Obviously, this
+property must be updated as the parser enters and leaves scoping units.
+This is therefore handled within the appropriate classes, e.g. `Module`.
+
 Class Generation
 ++++++++++++++++
 

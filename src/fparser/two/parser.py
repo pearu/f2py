@@ -69,6 +69,7 @@ for a particular standard.'''
 
 import inspect
 import sys
+from fparser.two.symbol_table import SymbolTables
 
 
 def get_module_classes(input_module):
@@ -124,6 +125,13 @@ class ParserFactory(object):
         if not std:
             # default to f2003.
             std = "f2003"
+
+        symbol_tables = SymbolTables.get()
+        symbol_tables.scoping_unit_classes = [Fortran2003.Module_Stmt,
+                                              Fortran2003.Subroutine_Stmt,
+                                              Fortran2003.Program_Stmt,
+                                              Fortran2003.Function_Stmt]
+            
         if std == "f2003":
             # we already have our required list of classes so call _setup
             # to setup our class hierarchy.
