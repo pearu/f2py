@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -64,6 +64,7 @@ def test_submodule(f2008_create):
         "END" in str(ast)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_submodule_sp(f2008_create):
     '''Test the parsing of a minimal submodule with a specification
     part.
@@ -100,6 +101,7 @@ def test_submodule_msp(f2008_create):
         "END" in str(ast)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_submodule_both(f2008_create):
     '''Test the parsing of a minimal submodule with a specification part
     and a module subprogram part.

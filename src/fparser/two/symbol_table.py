@@ -83,26 +83,42 @@ class SymbolTables(object):
 
         if SymbolTables._instance is not None:
             raise SymbolTableError("Only one instance of "
-                                   " SymbolTables can be created")
+                                   "SymbolTables can be created")
 
         self._symbol_tables = {}
         # Those classes that correspond to a new scoping unit
         self._scoping_unit_classes = []
         # Reference to the symbol table of the current scope
         self._current_scope = None
+        # The stack of symbol tables accessible in the current scope
         self._scope_stack = []
 
-    def add(self, name, table):
+    def clear(self):
+        '''
+        Deletes any stored SymbolTables but retains the stored list of
+        classes that define scoping units.
+
+        '''
+        self._symbol_tables = {}
+        self._current_scope = None
+        self._scope_stack = []
+
+    def add(self, name):
         '''
         :param str name: the scope name for the new table.
-        :param table: the symbol table associated with the named scope.
-        :type table: :py:class:`fparser.two.symbol_table.SymbolTable`
+
+        :returns: the new symbol table.
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable`
 
         '''
-        self._symbol_tables[name] = table
+        full_name = ":".join([table.name for table in self._scope_stack] +
+                             [name.lower()])
+        table = SymbolTable(full_name)
+        self._symbol_tables[full_name] = table
+        return table
 
     def lookup(self, name):
-        return self._symbol_tables[name]
+        return self._symbol_tables[name.lower()]
 
     @property
     def scoping_unit_classes(self):
@@ -122,21 +138,24 @@ class SymbolTables(object):
 
     def enter_scope(self, name):
         if name not in self._symbol_tables:
-            table = SymbolTable(name)
-            self.add(name, table)
+            table = self.add(name)
+            if self._scope_stack:
+                table.parent = self._scope_stack[-1]
         else:
             table = self.lookup(name)
         self._scope_stack.append(table)
         self._current_scope = table
 
     def exit_scope(self):
-        print(self.current_scope)
+        '''
+        Marks the end of the processing of the current scoping unit.
+
+        '''
         self._scope_stack.pop(-1)
         if self._scope_stack:
             self._current_scope = self._scope_stack[-1]
         else:
             self._current_scope = None
-
 
 
 class SymbolVisibility(Enum):
@@ -153,9 +172,9 @@ class SymbolTable(object):
     Class implementing a single symbol table.
 
     '''
-    Symbol = namedtuple("Symbol", "primitive_type kind shape visibility")
+    Symbol = namedtuple("Symbol", "name primitive_type kind shape visibility")
 
-    def __init__(self, name):
+    def __init__(self, name, parent=None):
         '''
         :param str name: the name of this scope. Will be the name of the \
                          associated module or routine.
@@ -165,20 +184,65 @@ class SymbolTable(object):
         self._symbols = {}
         # Modules imported into this scope.
         self._modules = {}
+        # Reference to a SymbolTable that contains this one (if any). Actual
+        # value (if any) is set via setter method.
+        self._parent = None
+        self.parent = parent
 
     def __str__(self):
         symbols = "Symbols:\n" + "\n".join(list(self._symbols.keys()))
-        uses = "Used modules:\n" + "\n".join(list(self._modules.keys()))
-        return "Table {0}\n".format(self._name) + symbols + uses
+        uses = "\nUsed modules:\n" + "\n".join(list(self._modules.keys()))
+        return "===========\nTable {0}\n".format(self._name) + symbols + uses
 
     def new_symbol(self, name, primitive_type, kind=None, shape=None,
                    visibility=SymbolVisibility.PUBLIC):
         '''
         '''
-        self._symbols[name] = SymbolTable.Symbol(primitive_type, kind, shape,
-                                                 visibility)
+        lname = name.lower()
+        self._symbols[lname] = SymbolTable.Symbol(lname, primitive_type, kind,
+                                                  shape, visibility)
 
     def new_module(self, name, only_list=None):
         '''
         '''
-        self._modules[name] = only_list
+        lname = name.lower()
+        self._modules[lname] = only_list
+
+    def lookup(self, name):
+        '''
+        :param str name: the name of the symbol to lookup.
+
+        :returns: the named symbol.
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
+
+        :raises KeyError: if the named symbol cannot be found in this or any \
+                          parent scope.
+        '''
+        # Fortran not case sensitive so convert input to lowercase.
+        lname = name.lower()
+        if lname in self._symbols:
+            return self._symbols[lname]
+        # No match in this scope - search in parent scope (if any)
+        if self.parent:
+            return self.parent.lookup(lname)
+        raise KeyError("Failed to find symbol named '{0}'".format(lname))
+
+    @property
+    def name(self):
+        '''
+        :returns: the name of this symbol table (scoping region).
+        :rtype: str
+        '''
+        return self._name
+
+    @property
+    def parent(self):
+        '''
+        '''
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        '''
+        '''
+        self._parent = value

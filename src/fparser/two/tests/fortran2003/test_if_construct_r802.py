@@ -43,7 +43,7 @@ from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import If_Construct
 
 
-@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_if_construct():
     ''' Basic tests for the if construct. '''
     tcls = If_Construct

@@ -112,6 +112,7 @@ def test_nokind_short(f2003_create):
     assert "(KIND = a)" in str(ast)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_nokind_kind_function(f2003_create):
     '''Test that a kind selector with 'kind=' not present and a kind
     function can be parsed successfully. This is a test as there is a

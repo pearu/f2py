@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Science and Technology Facilities Council
+# Copyright (c) 2019-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -148,6 +148,7 @@ def test_specification_stmt(f2003_create):
     assert "Access_Stmt" in repr(result)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_type_declaration_stmt(f2003_create):
     '''Test a type declaration statement is supported by the declaration
     construct class.

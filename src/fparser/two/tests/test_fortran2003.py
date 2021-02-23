@@ -71,9 +71,12 @@ from __future__ import print_function
 import pytest
 from fparser.two.Fortran2003 import *
 from fparser.api import get_reader
-from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2003 classes
-_ = ParserFactory().create(std="f2003")
+
+
+@pytest.fixture(autouse=True)
+def auto_f2003_create(f2003_create):
+    ''' Since all of the tests in this file need the `f2003_create` fixture,
+    this fixture simply adds 'autouse=True' to it. '''
 
 
 def assert_raises(exc, fcls, string):
@@ -118,6 +121,7 @@ def _repr_utf(anobj):
 #
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_specification_part():
     ''' Tests for parsing specification-part (R204). '''
     reader = get_reader('''\
@@ -973,6 +977,7 @@ def test_ac_implied_do_control():  # R471
 #
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_type_declaration_stmt():  # R501
 
     tcls = Type_Declaration_Stmt
@@ -2031,6 +2036,7 @@ def test_assignment_stmt():  # R734
     assert str(obj) == 'b = a + 1D-8 + 1.1E+3'
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_pointer_assignment_stmt():  # R735
 
     tcls = Pointer_Assignment_Stmt
@@ -2087,6 +2093,7 @@ def test_where_construct_stmt():  # R745
     assert repr(obj) == "Where_Construct_Stmt(Name('a'))"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_forall_construct():  # R752
 
     tcls = Forall_Construct
@@ -2178,6 +2185,7 @@ def test_case_selector():  # R813
     assert str(obj) == '(2 : 3, c + 2 :, : - a)'
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_associate_construct():  # R816
 
     tcls = Associate_Construct

@@ -268,17 +268,30 @@ dictionary entries are instances of the `SymbolTable` class:
 The entries in these tables are instances of the named tuple,
 `SymbolTable.Symbol` which has the properties:
 
+ * name
  * primitive_type
  * kind
  * shape
  * visibility
 
+Fortran has support for nested scopes - e.g. variables declared within
+a module are in scope within any routines defined within that
+module. Therefore, when searching for the definition a symbol, we
+require the ability to search up through all symbol tables accessible
+from the current scope. In order to support this functionality, each
+`SymbolTable` instance therefore has a `parent` property. This holds a
+reference to the table that contains the current table (if any).
+
 Since fparser2 relies heavily upon recursion, it is important that the
 current scoping unit always be available from any point in the code.
 Therefore, the `SymbolTables` class has the `current_scope` property
-which contains a reference to the current `SymbolTable`. Obviously, this
-property must be updated as the parser enters and leaves scoping units.
-This is therefore handled within the appropriate classes, e.g. `Module`.
+which contains a reference to the current `SymbolTable`. Obviously,
+this property must be updated as the parser enters and leaves scoping
+units.  This is therefore handled within the `BlockBase` base
+class. Which classes are taken to define scoping regions is stored as
+a list within the `SymbolTables` instance. This list is populated
+after the class hierarchy has been constructed for the parser (since
+this depends on which Fortran standard has been chose).
 
 Class Generation
 ++++++++++++++++
@@ -968,3 +981,25 @@ GitHub Actions are used to run the test suite for a number of different
 Python versions and the coverage reports are uploaded automatically to CodeCov
 (https://codecov.io/gh/stfc/fparser). The configuration for this is in the
 `.github/workflows/unit-tests.yml` file.
+
+
+Test Fixtures
+-------------
+
+Various pytest fixtures
+(https://docs.pytest.org/en/stable/fixture.html) are provided so as to
+aid in the mock-up of a suitable environment in which to run
+tests. These are defined in `two/tests/conftest.py`:
+
+=================== ======================= ===================================
+Name                Returns                 Purpose
+=================== ======================= ===================================
+f2003_create        --                      Sets-up the class hierarchy for the
+                                            Fortran2003 parser.
+f2003_parser        `Fortran2003.Program`   Sets-up the class hierarchy for the
+                                            Fortran2003 parser and returns the
+					    top-level Program object.
+clear_symbol_table  --                      Removes all stored symbol tables.
+fake_symbol_table   --                      Creates a fake scoping region and
+                                            associated symbol table.
+=================== ======================= ===================================

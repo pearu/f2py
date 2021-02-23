@@ -95,6 +95,34 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 #
 
 
+def capture_matched_symbol(func):
+    '''
+    Functor that captures a symbol that has been successfully matched.
+
+    :param func: the function to wrap.
+    :type func: TODO
+
+    :returns: a new function that wraps the supplied one.
+    :rtype: TODO
+
+    '''
+
+    def new_func(string, **kws):
+        result = func(string, **kws)
+        if result:
+            # The match was successful so store the symbol
+            table = SymbolTables.get().current_scope
+            if isinstance(result[0], Intrinsic_Type_Spec):
+                # We have a definition of symbol(s) of intrinsic type
+                decl_list = walk(result, Entity_Decl)
+                for decl in decl_list:
+                    table.new_symbol(decl.items[0].string, str(result[0]))
+            # TODO support symbols that are not of intrinsic type
+        return result
+
+    return new_func
+
+
 class Comment(Base):
     '''
     Represents a Fortran Comment.
@@ -2664,6 +2692,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
     @staticmethod
+    @capture_matched_symbol
     def match(string):
         return Type_Declaration_StmtBase.match(
             Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
@@ -10077,6 +10106,17 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             # matches the number of args expected by the intrinsic.
             function_name = str(result[0])
             function_args = result[1]
+
+            # Check that that this name is not being shadowed (i.e. overridden)
+            # by a symbol in scope at this point.
+            table = SymbolTables.get().current_scope
+            try:
+                table.lookup(function_name)
+                # We found a matching name so refuse to match this intrinsic.
+                return None
+            except KeyError:
+                pass
+
             # This if/else will not be needed once issue #170 has been
             # addressed.
             if isinstance(function_args, Actual_Arg_Spec_List):

@@ -127,11 +127,12 @@ class ParserFactory(object):
             std = "f2003"
 
         symbol_tables = SymbolTables.get()
+        # TODO does this list need to change if the 2008 std is requested?
         symbol_tables.scoping_unit_classes = [Fortran2003.Module_Stmt,
                                               Fortran2003.Subroutine_Stmt,
                                               Fortran2003.Program_Stmt,
                                               Fortran2003.Function_Stmt]
-            
+
         if std == "f2003":
             # we already have our required list of classes so call _setup
             # to setup our class hierarchy.

@@ -104,6 +104,7 @@ def test_intrinsic_name_case_insensitive(f2003_create):
 # class intrinsic_function_reference
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_generic(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic with a valid number of arguments.
@@ -114,6 +115,7 @@ def test_intrinsic_function_reference_generic(f2003_create):
     assert str(result) == "SIN(A)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     specific intrinsic with a valid number of arguments.
@@ -124,6 +126,7 @@ def test_intrinsic_function_reference(f2003_create):
     assert str(result) == "DSIN(A)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_nomatch(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception if there is no match.
@@ -133,6 +136,7 @@ def test_intrinsic_function_nomatch(f2003_create):
         _ = Intrinsic_Function_Reference("NO_MATCH(A)")
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_multi_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts more than one argument (two in
@@ -144,6 +148,7 @@ def test_intrinsic_function_reference_multi_args(f2003_create):
     assert str(result) == "MATMUL(A, B)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_zero_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts zero arguments.
@@ -154,6 +159,7 @@ def test_intrinsic_function_reference_zero_args(f2003_create):
     assert str(result) == "COMMAND_ARGUMENT_COUNT()"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_range_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts a range of number of arguments.
@@ -165,6 +171,7 @@ def test_intrinsic_function_reference_range_args(f2003_create):
         assert str(result) == "SYSTEM_CLOCK({0})".format(args)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_unlimited_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts an unlimitednumber of arguments.
@@ -176,6 +183,7 @@ def test_intrinsic_function_reference_unlimited_args(f2003_create):
         assert str(result) == "MAX({0})".format(args)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error1(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the valid min and max args are equal (2 in this case)
@@ -193,6 +201,7 @@ def test_intrinsic_function_reference_error1(f2003_create):
             "" in str(excinfo.value))
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error2(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the valid min args is less than the valid max args
@@ -210,6 +219,7 @@ def test_intrinsic_function_reference_error2(f2003_create):
             "" in str(excinfo.value))
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error3(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the number of arguments is unlimited.

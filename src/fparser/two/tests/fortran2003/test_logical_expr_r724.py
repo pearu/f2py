@@ -52,7 +52,7 @@ def test_simple_case():
     assert repr(result) == "Logical_Literal_Constant('.TRUE.', None)"
 
 
-@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_complicated_case():
     '''Test that a more complicated expression gives the expected
     result.

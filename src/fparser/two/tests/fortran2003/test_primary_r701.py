@@ -109,7 +109,7 @@ def possible_subclasses(node_type, _seen=None):
     return seen
 
 
-@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_intrinsic_function():
     '''Test that an intrinsic function is matched by Primary.
     '''
