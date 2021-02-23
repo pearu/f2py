@@ -97,7 +97,8 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 
 def capture_matched_symbol(func):
     '''
-    Functor that captures a symbol that has been successfully matched.
+    Functor that captures a symbol or use statement that has been successfully
+    matched.
 
     :param func: the function to wrap.
     :type func: TODO
@@ -110,13 +111,16 @@ def capture_matched_symbol(func):
     def new_func(string, **kws):
         result = func(string, **kws)
         if result:
-            # The match was successful so store the symbol
+            # The match was successful so store the symbol or module use
             table = SymbolTables.get().current_scope
             if isinstance(result[0], Intrinsic_Type_Spec):
                 # We have a definition of symbol(s) of intrinsic type
                 decl_list = walk(result, Entity_Decl)
                 for decl in decl_list:
                     table.new_symbol(decl.items[0].string, str(result[0]))
+            elif len(result) == 5 and isinstance(result[2], Name):
+                # We have a module use statement
+                table.new_module(str(result[2]))
             # TODO support symbols that are not of intrinsic type
         return result
 
@@ -2735,11 +2739,6 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
         entity_decls = Entity_Decl_List(repmap(line))
         if entity_decls is None:
             return
-        # Create an entry in the symbol table for each entity being declared
-        sym_tables = SymbolTables.get()
-        sym_table = sym_tables.get_current_scope()
-        for entity in entity_decls:
-            sym_table.new_symbol(xxx)
         return type_spec, attr_specs, entity_decls
 
     def tostr(self):
@@ -9145,6 +9144,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
     @staticmethod
+    @capture_matched_symbol
     def match(string):
         '''
         :param str string: Fortran code to check for a match
@@ -9195,18 +9195,13 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if nature is not None:
                 return
 
-        symbol_tables = SymbolTables.get()
-        table = symbol_tables.current_scope
-
         position = line.find(',')
         if position == -1:
-            table.new_module(line)
             return nature, dcolon, Module_Name(line), '', None
         name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
             return
-        mod_name = name
         name = Module_Name(name)
         line = line[position+1:].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
@@ -9225,11 +9220,8 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             line = line[1:].lstrip()
             if not line:
                 # Missing Only_List after 'USE Module_Name, ONLY:'
-                table.new_module(mod_name)
                 return nature, dcolon, name, ', ONLY:', None
-            table.new_module(mod_name, line)
             return nature, dcolon, name, ', ONLY:', Only_List(line)
-        table.new_module(mod_name, line)
         return nature, dcolon, name, ',', Rename_List(line)
 
     def tostr(self):
@@ -10805,8 +10797,5 @@ class %s_Name(Base):
 class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
-
-# Classes that correspond to new scoping units
-SCOPING_UNIT_CLASSES = [Module]
 
 # EOF
