@@ -38,7 +38,7 @@ directory
 '''
 import pytest
 from fparser.two.parser import ParserFactory
-from fparser.two.symbol_table import SymbolTables
+from fparser.two.symbol_table import SYMBOL_TABLES
 
 
 @pytest.fixture
@@ -61,15 +61,13 @@ def f2003_parser():
 @pytest.fixture(name="clear_symbol_table", autouse=True)
 def clear_symbol_tables_fixture():
     ''' Clear-up any existing symbol-table hierarchy. '''
-    tables = SymbolTables.get()
-    tables.clear()
+    SYMBOL_TABLES.clear()
 
 
 @pytest.fixture(name="fake_symbol_table")
 def setup_symbol_table_fixture():
     ''' Creates a current scope for those tests that would otherwise
     not have one. '''
-    tables = SymbolTables.get()
-    tables.enter_scope("fixture_scope")
+    SYMBOL_TABLES.enter_scope("fixture_scope")
     yield
-    tables.exit_scope()
+    SYMBOL_TABLES.exit_scope()

@@ -69,7 +69,7 @@ for a particular standard.'''
 
 import inspect
 import sys
-from fparser.two.symbol_table import SymbolTables
+from fparser.two.symbol_table import SYMBOL_TABLES
 
 
 def get_module_classes(input_module):
@@ -126,9 +126,8 @@ class ParserFactory(object):
             # default to f2003.
             std = "f2003"
 
-        symbol_tables = SymbolTables.get()
         # TODO does this list need to change if the 2008 std is requested?
-        symbol_tables.scoping_unit_classes = [Fortran2003.Module_Stmt,
+        SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
                                               Fortran2003.Subroutine_Stmt,
                                               Fortran2003.Program_Stmt,
                                               Fortran2003.Function_Stmt]

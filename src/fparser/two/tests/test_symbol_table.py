@@ -37,7 +37,7 @@
 import pytest
 from fparser.two import Fortran2003
 from fparser.two.utils import walk
-from fparser.two.symbol_table import SymbolTables, SymbolTable
+from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES
 from fparser.api import get_reader
 
 
@@ -62,7 +62,7 @@ PROGRAM a_prog
   use some_mod
 END PROGRAM a_prog
     '''))
-    tables = SymbolTables.get()
+    tables = SYMBOL_TABLES
     table = tables.lookup("a_prog")
     assert isinstance(table, SymbolTable)
     assert table.parent is None
@@ -78,7 +78,7 @@ module my_mod
   real :: a
 end module my_mod
     '''))
-    tables = SymbolTables.get()
+    tables = SYMBOL_TABLES
     assert list(tables._symbol_tables.keys()) == ["my_mod"]
     table = tables.lookup("my_mod")
     assert isinstance(table, SymbolTable)
@@ -101,12 +101,14 @@ contains
   end subroutine my_sub
 end module my_mod
     '''))
-    tables = SymbolTables.get()
-    assert sorted(tables._symbol_tables.keys()) == ["my_mod", "my_mod:my_sub"]
-    table = tables.lookup("my_mod:my_sub")
-    assert table.parent is tables.lookup("my_mod")
+    tables = SYMBOL_TABLES
+    assert sorted(tables._symbol_tables.keys()) == ["my_mod"]
+    table = tables.lookup("my_mod")
+    assert len(table.children) == 1
+    assert table.children[0].name == "my_sub"
+    assert table.children[0].parent is table
     # Check that the search for a symbol moves up to the parent scope
-    sym = table.lookup("a")
+    sym = table.children[0].lookup("a")
     assert sym.name == "a"
     assert sym.primitive_type == "REAL"
 
@@ -125,9 +127,9 @@ contains
   end subroutine my_sub
 end module my_mod
     '''))
-    tables = SymbolTables.get()
+    tables = SYMBOL_TABLES
     # We should not have an intrinsic-function reference in the parse tree
     assert not walk(tree, Fortran2003.Intrinsic_Function_Reference)
-    table = tables.lookup("my_mod:my_sub")
-    sym = table.lookup("dot_product")
+    table = tables.lookup("my_mod")
+    sym = table.children[0].lookup("dot_product")
     assert sym.primitive_type == "REAL"

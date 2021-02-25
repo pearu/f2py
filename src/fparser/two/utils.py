@@ -74,7 +74,7 @@ import logging
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
-from fparser.two.symbol_table import SymbolTables, SymbolTable
+from fparser.two.symbol_table import SYMBOL_TABLES, SymbolTable
 from fparser.common.readfortran import FortranReaderBase
 
 
@@ -539,7 +539,7 @@ content : tuple
         from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
-        tables = SymbolTables.get()
+        tables = SYMBOL_TABLES
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives

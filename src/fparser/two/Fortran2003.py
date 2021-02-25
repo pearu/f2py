@@ -74,7 +74,7 @@ import re
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
-from fparser.two.symbol_table import SymbolTables
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
@@ -112,7 +112,7 @@ def capture_matched_symbol(func):
         result = func(string, **kws)
         if result:
             # The match was successful so store the symbol or module use
-            table = SymbolTables.get().current_scope
+            table = SYMBOL_TABLES.current_scope
             if isinstance(result[0], Intrinsic_Type_Spec):
                 # We have a definition of symbol(s) of intrinsic type
                 decl_list = walk(result, Entity_Decl)
@@ -10101,7 +10101,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
             # Check that that this name is not being shadowed (i.e. overridden)
             # by a symbol in scope at this point.
-            table = SymbolTables.get().current_scope
+            table = SYMBOL_TABLES.current_scope
             try:
                 table.lookup(function_name)
                 # We found a matching name so refuse to match this intrinsic.
