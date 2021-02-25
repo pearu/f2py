@@ -43,16 +43,43 @@ from fparser.api import get_reader
 
 def test_basic_table():
     ''' Check the basic functionality of a symbol table. '''
-    table = SymbolTable("basic")
+    table = SymbolTable("BAsic")
+    # Name of table is not case sensitive
     assert table.name == "basic"
     assert table.parent is None
+    assert table.children == []
     with pytest.raises(KeyError) as err:
         table.lookup("missing")
     assert "Failed to find symbol named 'missing'" in str(err.value)
-    table.new_symbol("var", "integer")
+    # Add a symbol and check that its naming is not case sensitive
+    table.new_symbol("Var", "integer")
     sym = table.lookup("var")
     assert sym.name == "var"
     assert sym.primitive_type == "integer"
+    assert table.lookup("VAR") is sym
+
+
+def test_str_method():
+    ''' Test the str property of the SymbolTable class. '''
+    table = SymbolTable("basic")
+    assert "Symbol Table 'basic'\nSymbols:\nUsed modules:\n" in str(table)
+    table.new_symbol("var", "integer")
+    assert "Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\n" in str(table)
+    table.new_module("some_mod")
+    assert ("Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\nsome_mod\n"
+            in str(table))
+
+
+def test_parent_child():
+    ''' Test the parent/child-related properties. '''
+    table = SymbolTable("BASIC")
+    with pytest.raises(TypeError) as err:
+        table.add_child("wrong")
+    assert "Expected a SymbolTable instance but got 'str'" in str(err.value)
+    inner_table = SymbolTable("func1", parent=table)
+    table.add_child(inner_table)
+    assert table.children == [inner_table]
+    assert inner_table.parent is table
 
 
 def test_module_use(f2003_parser):

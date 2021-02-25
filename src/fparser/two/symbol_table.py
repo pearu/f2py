@@ -34,7 +34,9 @@
 # Author: A. R. Porter, STFC Daresbury Lab
 
 '''
-fparser2 symbol-table module.
+The fparser2 symbol-table module. Defines various classes as well as
+the single, global SYMBOL_TABLES instance. The latter is a container
+for all of the top-level scoping units encountered during parsing.
 
 '''
 
@@ -48,7 +50,6 @@ class SymbolTableError(Exception):
 
 
 class SymbolTables(object):
-    # pylint: disable=too-many-instance-attributes
     '''
     Class encapsulating functionality for the global symbol-tables object.
     This is a container for all symbol tables constructed while parsing
@@ -64,9 +65,10 @@ class SymbolTables(object):
         self._scope_stack = []
 
     def __str__(self):
-        result = "SymbolTables contains {0} symbol tables:\n".format(
-            len(self._symbol_tables))
-        return result
+        result = ("SymbolTables: {0} tables\n"
+                  "========================\n".format(
+                      len(self._symbol_tables)))
+        return result + "\n".join(sorted(self._symbol_tables.keys()))
 
     def clear(self):
         '''
@@ -82,16 +84,21 @@ class SymbolTables(object):
         Add a new symbol table with the supplied name. The name will be
         converted to lower case if necessary.
 
-        :param str name: the scope name for the new table.
+        :param str name: the name for the new table.
 
         :returns: the new symbol table.
         :rtype: :py:class:`fparser.two.symbol_table.SymbolTable`
 
+        :raises SymbolTableError: if there is already an entry with the \
+                                  supplied name.
         '''
-        full_name = ":".join([table.name for table in self._scope_stack] +
-                             [name.lower()])
-        table = SymbolTable(full_name)
-        self._symbol_tables[full_name] = table
+        lower_name = name.lower()
+        if lower_name in self._symbol_tables:
+            raise SymbolTableError(
+                "The table of top-level (un-nested) symbol tables already "
+                "contains an entry for '{0}'".format(lower_name))
+        table = SymbolTable(lower_name)
+        self._symbol_tables[lower_name] = table
         return table
 
     def lookup(self, name):
@@ -145,25 +152,28 @@ class SymbolTables(object):
         encounters one of the classes listed in `_scoping_unit_classes`).
         Sets the 'current scope' to be the symbol table with the supplied name.
         If there is no existing stack of (nested) scoping regions then a
-        new entry is created in the internal dict of symbol tables.
-
-        the supplied name is not in the stored list of symbol tables then
-        a new SymbolTable is created and added to the list.
+        new entry is created in the internal dict of symbol tables. If there
+        is an existing stack then a new table is created and added to the
+        bottom.
 
         :param str name: name of the scoping region.
 
         :raises SymbolTableError: if the current scope is already within the \
                                   named scope.
         '''
+        lname = name.lower()
+
         if not self._scope_stack:
-            # We're not already inside a nested scope
+            # We're not already inside a nested scope.
             try:
-                table = self.lookup(name)
+                table = self.lookup(lname)
             except KeyError:
-                table = self.add(name)
+                # Create a new, top-level symbol table with the supplied name.
+                table = self.add(lname)
         else:
-            # We are already inside a scoping region
-            table = SymbolTable(name, parent=self._scope_stack[-1])
+            # We are already inside a scoping region so create a new table
+            # and setup its parent/child connections.
+            table = SymbolTable(lname, parent=self._scope_stack[-1])
             self._scope_stack[-1].add_child(table)
 
         # Finally, put the table on the stack of nested regions
@@ -190,15 +200,16 @@ class SymbolTable(object):
     '''
     Class implementing a single symbol table.
 
+    :param str name: the name of this scope. Will be the name of the \
+                     associated module or routine.
+    :param parent: the symbol table within which this one is nested (if any).
+    :type parent: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
+
     '''
     Symbol = namedtuple("Symbol", "name primitive_type kind shape visibility")
 
     def __init__(self, name, parent=None):
-        '''
-        :param str name: the name of this scope. Will be the name of the \
-                         associated module or routine.
-        '''
-        self._name = name
+        self._name = name.lower()
         # Symbols defined in this scope.
         self._symbols = {}
         # Modules imported into this scope.
@@ -211,13 +222,27 @@ class SymbolTable(object):
         self._children = []
 
     def __str__(self):
-        symbols = "Symbols:\n" + "\n".join(list(self._symbols.keys()))
-        uses = "\nUsed modules:\n" + "\n".join(list(self._modules.keys()))
-        return "===========\nTable {0}\n".format(self._name) + symbols + uses
+        header = "===========\n"
+        symbols = "Symbols:\n"
+        if self._symbols:
+            symbols += "\n".join(list(self._symbols.keys())) + "\n"
+        uses = "Used modules:\n"
+        if self._modules:
+            uses += "\n".join(list(self._modules.keys())) + "\n"
+        return ("{0}Symbol Table '{1}'\n".format(header, self._name) +
+                symbols + uses + header)
 
     def new_symbol(self, name, primitive_type, kind=None, shape=None,
                    visibility=SymbolVisibility.PUBLIC):
         '''
+        Creates a new Symbol with the specified properties and adds it to
+        the symbol table. The supplied name is converted to lower case.
+
+        :param str name: the name of the symbol.
+        :param primitive_type:
+        :param kind:
+        :param shape:
+        :param visibility:
         '''
         lname = name.lower()
         self._symbols[lname] = SymbolTable.Symbol(lname, primitive_type, kind,
@@ -259,23 +284,43 @@ class SymbolTable(object):
     @property
     def parent(self):
         '''
+        :returns: the parent symbol table (scoping region) that contains \
+                  this one (if any).
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable` or NoneType
         '''
         return self._parent
 
     @parent.setter
     def parent(self, value):
         '''
+        Set the parent scope for this symbol table.
+
+        :param value: the parent symbol table.
+        :type value: :py:class:`fparser.two.symbol_table.SymbolTable`
+
         '''
         self._parent = value
 
     def add_child(self, child):
         '''
+        Adds a child symbol table (scoping region nested within this one).
+
+        :param child: the nested symbol table.
+        :type child: :py:class:`fparser.two.symbol_table.SymbolTable`
+
+        :raises TypeError: if the supplied child is not a SymbolTable.
+
         '''
+        if not isinstance(child, SymbolTable):
+            raise TypeError("Expected a SymbolTable instance but got '{0}'".
+                            format(type(child).__name__))
         self._children.append(child)
 
     @property
     def children(self):
         '''
+        :returns: the child (nested) symbol tables, if any.
+        :rtype: list of :py:class:`fparser.two.symbol_table.SymbolTable`
         '''
         return self._children
 
@@ -285,4 +330,4 @@ class SymbolTable(object):
 SYMBOL_TABLES = SymbolTables()
 
 
-__all__ = ["SymbolTables", "SymbolTable", "SYMBOL_TABLES"]
+__all__ = ["SymbolTableError", "SymbolTables", "SymbolTable", "SYMBOL_TABLES"]

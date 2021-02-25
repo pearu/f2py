@@ -35,7 +35,8 @@
  of fparser2. '''
 
 import pytest
-from fparser.two.symbol_table import SymbolTables, SymbolTable
+from fparser.two.symbol_table import SymbolTables, SymbolTable, \
+    SymbolTableError
 
 
 def test_construction():
@@ -51,10 +52,31 @@ def test_construction():
     table1 = tables.add("table1")
     assert isinstance(table1, SymbolTable)
     assert tables.lookup("table1") is table1
+    # We should not be able to add another table with the same name
+    with pytest.raises(SymbolTableError) as err:
+        tables.add("table1")
+    assert ("table of top-level (un-nested) symbol tables already contains "
+            "an entry for 'table1'" in str(err.value))
     # Clear the stored symbol tables
     tables.clear()
     assert tables._scope_stack == []
     assert tables._symbol_tables == {}
+
+
+def test_str_method():
+    ''' Tests for the str() method. '''
+    tables = SymbolTables()
+    text = str(tables)
+    assert "SymbolTables: 0 tables" in text
+    tables.enter_scope("some_mod")
+    tables.exit_scope()
+    tables.enter_scope("other_mod")
+    text = str(tables)
+    assert ("SymbolTables: 2 tables\n"
+            "========================\n"
+            "other_mod\nsome_mod" in text)
+    tables.clear()
+    assert "SymbolTables: 0 tables" in str(tables)
 
 
 def test_scoping_stack():
