@@ -95,38 +95,6 @@ from fparser.two.utils import NoMatchError, FortranSyntaxError, \
 #
 
 
-def capture_matched_symbol(func):
-    '''
-    Functor that captures a symbol or use statement that has been successfully
-    matched.
-
-    :param func: the function to wrap.
-    :type func: TODO
-
-    :returns: a new function that wraps the supplied one.
-    :rtype: TODO
-
-    '''
-
-    def new_func(string, **kws):
-        result = func(string, **kws)
-        if result:
-            # The match was successful so store the symbol or module use
-            table = SYMBOL_TABLES.current_scope
-            if isinstance(result[0], Intrinsic_Type_Spec):
-                # We have a definition of symbol(s) of intrinsic type
-                decl_list = walk(result, Entity_Decl)
-                for decl in decl_list:
-                    table.new_symbol(decl.items[0].string, str(result[0]))
-            elif len(result) == 5 and isinstance(result[2], Name):
-                # We have a module use statement
-                table.new_module(str(result[2]))
-            # TODO support symbols that are not of intrinsic type
-        return result
-
-    return new_func
-
-
 class Comment(Base):
     '''
     Represents a Fortran Comment.
@@ -2696,10 +2664,33 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
     @staticmethod
-    @capture_matched_symbol
     def match(string):
-        return Type_Declaration_StmtBase.match(
+        '''
+        Attempts to match the supplied string as a type declaration. If the
+        match is successful the declared symbols are added to the symbol table
+        of the current scope.
+
+        :param str string: the string to match.
+
+        :returns: 3-tuple containing the matched declaration.
+        :rtype: (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
+                 Entity_Decl_List)
+
+        '''
+        result = Type_Declaration_StmtBase.match(
             Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
+        if result:
+            # We matched a declaration - capture the declared symbols in the
+            # symbol table of the current scoping region.
+            table = SYMBOL_TABLES.current_scope
+
+            if isinstance(result[0], Intrinsic_Type_Spec):
+                # We have a definition of symbol(s) of intrinsic type
+                decl_list = walk(result, Entity_Decl)
+                for decl in decl_list:
+                    table.new_symbol(decl.items[0].string, str(result[0]))
+            # TODO #201 support symbols that are not of intrinsic type
+        return result
 
     @staticmethod
     def match2(string):
@@ -9144,15 +9135,42 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     use_names = ['Module_Nature', 'Module_Name', 'Rename_List', 'Only_List']
 
     @staticmethod
-    @capture_matched_symbol
     def match(string):
         '''
-        :param str string: Fortran code to check for a match
+        Wrapper for the match method that captures any successfully-matched
+        use statements in the symbol table associated with the current scope.
+
+        :param str string: Fortran code to check for a match.
+
         :return: 5-tuple containing strings and instances of the classes
                  describing a module (optional module nature, optional
                  double colon delimiter, mandatory module name, optional
-                 "ONLY" specification and optional "Rename" or "Only" list)
+                 "ONLY" specification and optional "Rename" or "Only" list).
         :rtype: 5-tuple of objects (module name and 4 optional)
+
+        '''
+        result = Use_Stmt._match(string)
+        if result:
+            table = SYMBOL_TABLES.current_scope
+            only_list = None
+            if isinstance(result[4], Only_List):
+                names = walk(result[4], Name)
+                only_list = [name.string for name in names]
+            table.new_module(str(result[2]), only_list)
+
+        return result
+
+    @staticmethod
+    def _match(string):
+        '''
+        :param str string: Fortran code to check for a match.
+
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a module (optional module nature, optional
+                 double colon delimiter, mandatory module name, optional
+                 "ONLY" specification and optional "Rename" or "Only" list).
+        :rtype: 5-tuple of objects (module name and 4 optional)
+
         '''
         line = string.strip()
         # Incorrect 'USE' statement or line too short
