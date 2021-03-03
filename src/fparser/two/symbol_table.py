@@ -41,6 +41,7 @@ for all of the top-level scoping units encountered during parsing.
 '''
 
 from __future__ import absolute_import, print_function
+import six
 from collections import namedtuple
 
 
@@ -253,11 +254,11 @@ class SymbolTable(object):
         :raises SymbolTableError: if the symbol table already contains an
                                   entry with the supplied name.
         '''
-        if not isinstance(name, str):
+        if not isinstance(name, six.string_types):
             raise TypeError("The name of the symbol must be a str but got "
                             "'{0}'".format(type(name).__name__))
         # TODO #201 use an enumeration for the primitive type
-        if not isinstance(primitive_type, str):
+        if not isinstance(primitive_type, six.string_types):
             raise TypeError(
                 "The primitive type of the symbol must be specified as a str "
                 "but got '{0}'".format(type(primitive_type).__name__))
@@ -285,14 +286,14 @@ class SymbolTable(object):
         :raises TypeError: if either of the supplied parameters are of the \
                            wrong type.
         '''
-        if not isinstance(name, str):
+        if not isinstance(name, six.string_types):
             raise TypeError("The name of the module must be a str but got "
                             "'{0}'".format(type(name).__name__))
         if only_list and not isinstance(only_list, list):
             raise TypeError("If present, the only_list must be a list but got "
                             "'{0}'".format(type(only_list).__name__))
         if only_list and not all(
-                [isinstance(item, str) for item in only_list]):
+                [isinstance(item, six.string_types) for item in only_list]):
             raise TypeError("If present, the only_list must be a list of str "
                             "but got: {0}".format(
                                 [type(item).__name__ for item in only_list]))
