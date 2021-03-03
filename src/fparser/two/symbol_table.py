@@ -133,7 +133,15 @@ class SymbolTables(object):
         :param value: the list of fparser2 classes.
         :type value: list of types
 
+        :raises TypeError: if the supplied value is not a list of types.
+
         '''
+        if not isinstance(value, list):
+            raise TypeError("Supplied value must be a list but got '{0}'".
+                            format(type(value).__name__))
+        if not all([isinstance(item, type) for item in value]):
+            raise TypeError("Supplied list must contain only classes but "
+                            "got: {0}".format(value))
         self._scoping_unit_classes = value
 
     @property
@@ -158,8 +166,6 @@ class SymbolTables(object):
 
         :param str name: name of the scoping region.
 
-        :raises SymbolTableError: if the current scope is already within the \
-                                  named scope.
         '''
         lname = name.lower()
 
@@ -181,9 +187,15 @@ class SymbolTables(object):
 
     def exit_scope(self):
         '''
-        Marks the end of the processing of the current scoping unit.
+        Marks the end of the processing of the current scoping unit. Removes
+        the current symbol table from the stack.
 
+        :raises SymbolTableError: if there is no current scope from which to \
+                                  exit.
         '''
+        if not self._scope_stack:
+            raise SymbolTableError("exit_scope() called but no current scope "
+                                   "exists.")
         self._scope_stack.pop(-1)
 
 
@@ -248,10 +260,13 @@ class SymbolTable(object):
         self._symbols[lname] = SymbolTable.Symbol(lname, primitive_type, kind,
                                                   shape, visibility)
 
-    def new_module(self, name, only_list=None):
+    def add_use(self, name, only_list=None):
         '''
         Creates an entry in the table for the USE of a module with the supplied
-        name.
+        name. If no `only_list` is supplied then this USE represents a wildcard
+        import of all public symbols in the named module. If the USE statement
+        has an ONLY clause but without any named symbols then `only_list`
+        should be an empty list.
 
         :param str name: the name of the module being imported via a USE. Not \
             case sensitive.
@@ -259,9 +274,37 @@ class SymbolTable(object):
             USE statement and, if so, the names of the symbols being imported.
         :type only_list: NoneType or list of str
 
+        :raises TypeError: if either of the supplied parameters are of the \
+                           wrong type.
         '''
+        if not isinstance(name, str):
+            raise TypeError("The name of the module must be a str but got "
+                            "'{0}'".format(type(name).__name__))
+        if only_list and not isinstance(only_list, list):
+            raise TypeError("If present, the only_list must be a list but got "
+                            "'{0}'".format(type(only_list).__name__))
+        if only_list and not all(
+                [isinstance(item, str) for item in only_list]):
+            raise TypeError("If present, the only_list must be a list of str "
+                            "but got: {0}".format(
+                                [type(item).__name__ for item in only_list]))
         lname = name.lower()
-        self._modules[lname] = only_list
+        if lname in self._modules:
+            # The same module can appear in more than one use statement
+            # in Fortran.
+            if only_list:
+                if self._modules[lname] is None:
+                    # We already have a wildcard import for this module but
+                    # now we also know the names of some specific symbols that
+                    # are imported.
+                    # TODO #294 improve the data structures used to hold
+                    # information on use statements so that we can capture
+                    # this.
+                    pass
+                else:
+                    self._modules[lname].extend(only_list)
+        else:
+            self._modules[lname] = only_list
 
     def lookup(self, name):
         '''
@@ -309,7 +352,13 @@ class SymbolTable(object):
         :param value: the parent symbol table.
         :type value: :py:class:`fparser.two.symbol_table.SymbolTable`
 
+        :raises TypeError: if the supplied value is not None or a SymbolTable.
+
         '''
+        if value is not None and not isinstance(value, SymbolTable):
+            raise TypeError(
+                "Unless it is None, the parent of a SymbolTable must also be "
+                "a SymbolTable but got '{0}'".format(type(value).__name__))
         self._parent = value
 
     def add_child(self, child):

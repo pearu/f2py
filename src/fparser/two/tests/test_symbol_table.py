@@ -59,13 +59,44 @@ def test_basic_table():
     assert table.lookup("VAR") is sym
 
 
+def test_add_use():
+    ''' Test that the add_use() method behaves as expected. '''
+    table = SymbolTable("basic")
+    # A use without an 'only' clause
+    table.add_use("mod1")
+    assert table._modules["mod1"] is None
+    # Fortran permits other use statements for the same module
+    table.add_use("mod1", ["var"])
+    # Since we already have a wildcard import and don't yet capture any
+    # additional, specific imports (TODO #294) the list of associated symbols
+    # should still be None.
+    assert table._modules["mod1"] is None
+    table.add_use("mod2", ["ivar"])
+    assert table._modules["mod2"] == ["ivar"]
+    table.add_use("mod2", ["jvar"])
+    assert table._modules["mod2"] == ["ivar", "jvar"]
+    # Test the various checks on the supplied parameters
+    with pytest.raises(TypeError) as err:
+        table.add_use(table)
+    assert ("name of the module must be a str but got 'SymbolTable'" in
+            str(err.value))
+    with pytest.raises(TypeError) as err:
+        table.add_use("mod3", only_list="hello")
+    assert ("If present, the only_list must be a list but got 'str'" in
+            str(err.value))
+    with pytest.raises(TypeError) as err:
+        table.add_use("mod3", only_list=["hello", table])
+    assert ("If present, the only_list must be a list of str but got: ['str', "
+            "'SymbolTable']" in str(err.value))
+
+
 def test_str_method():
     ''' Test the str property of the SymbolTable class. '''
     table = SymbolTable("basic")
     assert "Symbol Table 'basic'\nSymbols:\nUsed modules:\n" in str(table)
     table.new_symbol("var", "integer")
     assert "Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\n" in str(table)
-    table.new_module("some_mod")
+    table.add_use("some_mod")
     assert ("Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\nsome_mod\n"
             in str(table))
 
@@ -80,6 +111,10 @@ def test_parent_child():
     table.add_child(inner_table)
     assert table.children == [inner_table]
     assert inner_table.parent is table
+    with pytest.raises(TypeError) as err:
+        inner_table.parent = "wrong"
+    assert ("Unless it is None, the parent of a SymbolTable must also be a "
+            "SymbolTable but got 'str'" in str(err.value))
 
 
 def test_module_use(f2003_parser):

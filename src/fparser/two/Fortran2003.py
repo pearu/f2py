@@ -9156,7 +9156,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if isinstance(result[4], Only_List):
                 names = walk(result[4], Name)
                 only_list = [name.string for name in names]
-            table.new_module(str(result[2]), only_list)
+            table.add_use(str(result[2]), only_list)
 
         return result
 
