@@ -96,6 +96,25 @@ END PROGRAM a_prog
     assert "some_mod" in table._modules
 
 
+def test_module_use_with_only(f2003_parser):
+    ''' Check that USE statements with an ONLY: clause are correctly captured
+    in the symbol table. '''
+    _ = f2003_parser(get_reader('''\
+PROGRAM a_prog
+  use some_mod, only:
+  use mod2, only: this_one, that_one
+END PROGRAM a_prog
+    '''))
+    tables = SYMBOL_TABLES
+    table = tables.lookup("a_prog")
+    assert isinstance(table, SymbolTable)
+    assert table.parent is None
+    assert "some_mod" in table._modules
+    assert table._modules["some_mod"] is None
+    assert "mod2" in table._modules
+    assert sorted(table._modules["mod2"]) == ["that_one", "this_one"]
+
+
 def test_module_definition(f2003_parser):
     ''' Check that a SymbolTable is created for a module and populated with
     the symbols it defines. '''
@@ -129,7 +148,7 @@ contains
 end module my_mod
     '''))
     tables = SYMBOL_TABLES
-    assert sorted(tables._symbol_tables.keys()) == ["my_mod"]
+    assert list(tables._symbol_tables.keys()) == ["my_mod"]
     table = tables.lookup("my_mod")
     assert len(table.children) == 1
     assert table.children[0].name == "my_sub"
@@ -138,6 +157,28 @@ end module my_mod
     sym = table.children[0].lookup("a")
     assert sym.name == "a"
     assert sym.primitive_type == "REAL"
+
+
+def test_routine_in_prog(f2003_parser):
+    ''' Check that we get two, nested symbol tables when a program contains
+    a subroutine. '''
+    _ = f2003_parser(get_reader('''\
+program my_prog
+  use some_mod
+  real :: a
+contains
+  subroutine my_sub()
+    real :: b
+  end subroutine my_sub
+end program my_prog
+    '''))
+    tables = SYMBOL_TABLES
+    assert list(tables._symbol_tables.keys()) == ["my_prog"]
+    table = SYMBOL_TABLES.lookup("my_prog")
+    assert len(table.children) == 1
+    assert table.children[0].name == "my_sub"
+    assert table.children[0]._symbols["b"].name == "b"
+    assert table.children[0].parent is table
 
 
 def test_shadowed_intrinsic(f2003_parser):

@@ -250,12 +250,23 @@ class SymbolTable(object):
 
     def new_module(self, name, only_list=None):
         '''
+        Creates an entry in the table for the USE of a module with the supplied
+        name.
+
+        :param str name: the name of the module being imported via a USE. Not \
+            case sensitive.
+        :param only_list: Whether or not there is an 'only:' clause on the \
+            USE statement and, if so, the names of the symbols being imported.
+        :type only_list: NoneType or list of str
+
         '''
         lname = name.lower()
         self._modules[lname] = only_list
 
     def lookup(self, name):
         '''
+        Lookup the symbol with the supplied name.
+
         :param str name: the name of the symbol to lookup (not case sensitive).
 
         :returns: the named symbol.
