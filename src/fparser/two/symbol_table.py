@@ -41,7 +41,6 @@ for all of the top-level scoping units encountered during parsing.
 '''
 
 from __future__ import absolute_import, print_function
-from enum import Enum
 from collections import namedtuple
 
 
@@ -199,15 +198,6 @@ class SymbolTables(object):
         self._scope_stack.pop(-1)
 
 
-class SymbolVisibility(Enum):
-    '''
-    Enumeration for the visibility of a symbol within a particular scope.
-
-    '''
-    PUBLIC = 1
-    PRIVATE = 2
-
-
 class SymbolTable(object):
     '''
     Class implementing a single symbol table.
@@ -218,7 +208,10 @@ class SymbolTable(object):
     :type parent: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
 
     '''
-    Symbol = namedtuple("Symbol", "name primitive_type kind shape visibility")
+    # TODO #201 add support for other symbol properties (kind, shape
+    # and visibility). We may need a distinct Symbol class so as to provide
+    # type checking for the various properties.
+    Symbol = namedtuple("Symbol", "name primitive_type")
 
     def __init__(self, name, parent=None):
         self._name = name.lower()
@@ -244,21 +237,36 @@ class SymbolTable(object):
         return ("{0}Symbol Table '{1}'\n".format(header, self._name) +
                 symbols + uses + header)
 
-    def new_symbol(self, name, primitive_type, kind=None, shape=None,
-                   visibility=SymbolVisibility.PUBLIC):
+    def add_symbol(self, name, primitive_type):
         '''
         Creates a new Symbol with the specified properties and adds it to
         the symbol table. The supplied name is converted to lower case.
 
+        TODO #201 add support for other symbol properties (kind, shape
+        and visibility).
+
         :param str name: the name of the symbol.
-        :param primitive_type:
-        :param kind:
-        :param shape:
-        :param visibility:
+        :param str primitive_type: the primitive type of the symbol.
+
+        :raises TypeError: if any of the supplied parameters are of the \
+                           wrong type.
+        :raises SymbolTableError: if the symbol table already contains an
+                                  entry with the supplied name.
         '''
+        if not isinstance(name, str):
+            raise TypeError("The name of the symbol must be a str but got "
+                            "'{0}'".format(type(name).__name__))
+        # TODO #201 use an enumeration for the primitive type
+        if not isinstance(primitive_type, str):
+            raise TypeError(
+                "The primitive type of the symbol must be specified as a str "
+                "but got '{0}'".format(type(primitive_type).__name__))
         lname = name.lower()
-        self._symbols[lname] = SymbolTable.Symbol(lname, primitive_type, kind,
-                                                  shape, visibility)
+        if lname in self._symbols:
+            raise SymbolTableError("Symbol table already contains an entry "
+                                   "with name '{0}'".format(name))
+        self._symbols[lname] = SymbolTable.Symbol(lname,
+                                                  primitive_type.lower())
 
     def add_use(self, name, only_list=None):
         '''

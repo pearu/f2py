@@ -2688,8 +2688,10 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
                 # We have a definition of symbol(s) of intrinsic type
                 decl_list = walk(result, Entity_Decl)
                 for decl in decl_list:
-                    table.new_symbol(decl.items[0].string, str(result[0]))
-            # TODO #201 support symbols that are not of intrinsic type
+                    # TODO #201 use an enumeration to specify the primitive
+                    # type rather than a string.
+                    table.add_symbol(decl.items[0].string, str(result[0]))
+            # TODO #201 support symbols that are not of intrinsic type.
         return result
 
     @staticmethod

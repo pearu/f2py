@@ -37,7 +37,8 @@
 import pytest
 from fparser.two import Fortran2003
 from fparser.two.utils import walk
-from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES
+from fparser.two.symbol_table import (SymbolTable, SYMBOL_TABLES,
+                                      SymbolTableError)
 from fparser.api import get_reader
 
 
@@ -52,11 +53,30 @@ def test_basic_table():
         table.lookup("missing")
     assert "Failed to find symbol named 'missing'" in str(err.value)
     # Add a symbol and check that its naming is not case sensitive
-    table.new_symbol("Var", "integer")
+    table.add_symbol("Var", "integer")
     sym = table.lookup("var")
     assert sym.name == "var"
-    assert sym.primitive_type == "integer"
     assert table.lookup("VAR") is sym
+
+
+def test_add_symbol():
+    ''' Test that the add_symbol() method behaves as expected. '''
+    table = SymbolTable("basic")
+    table.add_symbol("var", "integer")
+    sym = table.lookup("var")
+    assert sym.primitive_type == "integer"
+    with pytest.raises(SymbolTableError) as err:
+        table.add_symbol("var", "real")
+    assert ("Symbol table already contains an entry with name 'var'" in
+            str(err.value))
+    with pytest.raises(TypeError) as err:
+        table.add_symbol(table, "real")
+    assert ("name of the symbol must be a str but got 'SymbolTable'" in
+            str(err.value))
+    with pytest.raises(TypeError) as err:
+        table.add_symbol("var2", table)
+    assert ("primitive type of the symbol must be specified as a str but got "
+            "'SymbolTable'" in str(err.value))
 
 
 def test_add_use():
@@ -94,7 +114,7 @@ def test_str_method():
     ''' Test the str property of the SymbolTable class. '''
     table = SymbolTable("basic")
     assert "Symbol Table 'basic'\nSymbols:\nUsed modules:\n" in str(table)
-    table.new_symbol("var", "integer")
+    table.add_symbol("var", "integer")
     assert "Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\n" in str(table)
     table.add_use("some_mod")
     assert ("Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\nsome_mod\n"
@@ -167,7 +187,7 @@ end module my_mod
     assert "a" in table._symbols
     sym = table.lookup("a")
     assert sym.name == "a"
-    assert sym.primitive_type == "REAL"
+    assert sym.primitive_type == "real"
 
 
 def test_routine_in_module(f2003_parser):
@@ -191,7 +211,7 @@ end module my_mod
     # Check that the search for a symbol moves up to the parent scope
     sym = table.children[0].lookup("a")
     assert sym.name == "a"
-    assert sym.primitive_type == "REAL"
+    assert sym.primitive_type == "real"
 
 
 def test_routine_in_prog(f2003_parser):
@@ -235,4 +255,4 @@ end module my_mod
     assert not walk(tree, Fortran2003.Intrinsic_Function_Reference)
     table = tables.lookup("my_mod")
     sym = table.children[0].lookup("dot_product")
-    assert sym.primitive_type == "REAL"
+    assert sym.primitive_type == "real"
