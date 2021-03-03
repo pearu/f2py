@@ -1,5 +1,5 @@
-# Modified work Copyright (c) 2018 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2018-2021 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -98,7 +98,8 @@ class ParserFactory(object):
 
     def create(self, std=None):
         '''Creates a class hierarchy suitable for the specified Fortran
-        standard.
+        standard. Also sets-up the list of classes that define scoping
+        regions in the global SymbolTables object.
 
         :param str std: the Fortran standard. Choices are 'f2003' or \
                         'f2008'. 'f2003' is the default.
@@ -126,16 +127,16 @@ class ParserFactory(object):
             # default to f2003.
             std = "f2003"
 
-        # TODO does this list need to change if the 2008 std is requested?
-        SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
-                                              Fortran2003.Subroutine_Stmt,
-                                              Fortran2003.Program_Stmt,
-                                              Fortran2003.Function_Stmt]
-
         if std == "f2003":
             # we already have our required list of classes so call _setup
             # to setup our class hierarchy.
             self._setup(f2003_cls_members)
+            # We can now specify which classes are taken as defining new
+            # scoping regions.
+            SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
+                                                  Fortran2003.Subroutine_Stmt,
+                                                  Fortran2003.Program_Stmt,
+                                                  Fortran2003.Function_Stmt]
             # the class hierarchy has been set up so return the top
             # level class that we start from when parsing Fortran code.
             return Fortran2003.Program
@@ -157,6 +158,13 @@ class ParserFactory(object):
             # we now have our required list of classes so call _setup
             # to setup our class hierarchy.
             self._setup(f2008_cls_members)
+            # We can now specify which classes are taken as defining new
+            # scoping regions.
+            SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
+                                                  Fortran2003.Subroutine_Stmt,
+                                                  Fortran2003.Program_Stmt,
+                                                  Fortran2003.Function_Stmt,
+                                                  Fortran2008.Submodule_Stmt]
             # the class hierarchy has been set up so return the top
             # level class that we start from when parsing Fortran
             # code. Fortran2008 does not extend the top level class so

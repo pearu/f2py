@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -37,12 +37,15 @@ import pytest
 from fparser.two.parser import ParserFactory
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.utils import FortranSyntaxError
+from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two import Fortran2003, Fortran2008
 
 
 def test_parserfactory_std():
     '''Test ParserFactory std argument options [none, f2003, f2008 and
-    invalid]. Also test that previous calls to the create method in
-    the ParserFactory class do not affect current calls.
+    invalid]. Also tests that the SYMBOL_TABLES instance has been initialised
+    correctly and that previous calls to the create method in the ParserFactory
+    class do not affect current calls.
 
     '''
     fstring = (
@@ -53,6 +56,12 @@ def test_parserfactory_std():
     with pytest.raises(FortranSyntaxError) as excinfo:
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
+    # Check that the list of classes used to define scoping regions is
+    # correctly set.
+    assert SYMBOL_TABLES.scoping_unit_classes == [Fortran2003.Module_Stmt,
+                                                  Fortran2003.Subroutine_Stmt,
+                                                  Fortran2003.Program_Stmt,
+                                                  Fortran2003.Function_Stmt]
 
     parser = ParserFactory().create(std="f2003")
     reader = FortranStringReader(fstring)
@@ -65,6 +74,9 @@ def test_parserfactory_std():
     ast = parser(reader)
     code = str(ast)
     assert "SUBMODULE (x) y\nEND" in code
+    # Submodule_Stmt should now be included in the list of classes that define
+    # scoping regions.
+    assert Fortran2008.Submodule_Stmt in SYMBOL_TABLES.scoping_unit_classes
 
     # Repeat f2003 example to make sure that a previously valid (f2008)
     # match does not affect the current (f2003) invalid match.
@@ -73,6 +85,7 @@ def test_parserfactory_std():
     with pytest.raises(FortranSyntaxError) as excinfo:
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
+    assert Fortran2008.Submodule_Stmt not in SYMBOL_TABLES.scoping_unit_classes
 
     with pytest.raises(ValueError) as excinfo:
         parser = ParserFactory().create(std="invalid")
