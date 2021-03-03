@@ -978,8 +978,8 @@ def test_ac_implied_do_control():  # R471
 
 
 @pytest.mark.usefixtures("fake_symbol_table")
-def test_type_declaration_stmt():  # R501
-
+def test_type_declaration_stmt():
+    ''' Various tests for the type declaration statement (R501). '''
     tcls = Type_Declaration_Stmt
     obj = tcls('integer a')
     assert isinstance(obj, tcls), repr(obj)
@@ -989,21 +989,21 @@ def test_type_declaration_stmt():  # R501
             "None), None, Entity_Decl_List(',', (Entity_Decl(Name('a'), None, "
             "None, None),)))")
 
-    obj = tcls('integer ,dimension(2):: a*3')
+    obj = tcls('integer ,dimension(2):: b*3')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'INTEGER, DIMENSION(2) :: a*3'
+    assert str(obj) == 'INTEGER, DIMENSION(2) :: b*3'
 
-    obj = tcls('real a')
+    obj = tcls('real c')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'REAL :: a'
+    assert str(obj) == 'REAL :: c'
     assert (_repr_utf(obj) ==
             "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), None, "
-            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, "
+            "Entity_Decl_List(',', (Entity_Decl(Name('c'), None, None, "
             "None),)))")
 
-    obj = tcls('REAL A( LDA, * ), B( LDB, * )')
+    obj = tcls('REAL D( LDA, * ), E( LDB, * )')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'REAL :: A(LDA, *), B(LDB, *)'
+    assert str(obj) == 'REAL :: D(LDA, *), E(LDB, *)'
 
     obj = tcls('DOUBLE PRECISION   ALPHA, BETA')
     assert isinstance(obj, tcls), repr(obj)
@@ -1017,9 +1017,9 @@ def test_type_declaration_stmt():  # R501
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER(LEN = n), PRIVATE :: x(n)'
 
-    obj = tcls('character(lenmax),private:: x(n)')
+    obj = tcls('character(lenmax),private:: y(n)')
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'CHARACTER(LEN = lenmax), PRIVATE :: x(n)'
+    assert str(obj) == 'CHARACTER(LEN = lenmax), PRIVATE :: y(n)'
 
 
 def test_declaration_type_spec():  # R502

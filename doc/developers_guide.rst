@@ -252,27 +252,30 @@ that classes `subclass_names` list (see :ref:`program-unit-class`)::
 Symbol Table
 ++++++++++++
 
-There are many situations when it is not possible to disambiguate the precise
-form of the Fortran being parsed without additional type information (e.g.
-whether code of the form `a(i,j)` is an array access or a function call).
-Therefore fparser2 contains a single, global instance of a `SymbolTables`
-class. As its name implies, this holds a collection of symbol tables, one
-for each scoping unit (file, module, program unit). This is implemented
-as a dictionary where the keys are the names of the scoping units. The
-name of a scoping unit is constructed as
-`<file_name>:<module_name>:<program_unit_name>`. The corresponding
-dictionary entries are instances of the `SymbolTable` class:
+There are many situations when it is not possible to disambiguate the
+precise form of the Fortran being parsed without additional type
+information (e.g.  whether code of the form `a(i,j)` is an array
+access or a function call).  Therefore fparser2 contains a single,
+global instance of a `SymbolTables` class, accessed as
+`fparser.two.symbol_table.SYMBOL_TABLES`. As its name implies, this
+holds a collection of symbol tables, one for each top-level scoping
+unit (e.g. module or program unit). This is implemented as a
+dictionary where the keys are the names of the scoping units i.e. the
+name of the associated module, program, subroutine or function. The
+corresponding dictionary entries are instances of the `SymbolTable`
+class:
 
 .. autoclass:: fparser.two.symbol_table.SymbolTable
 
 The entries in these tables are instances of the named tuple,
-`SymbolTable.Symbol` which has the properties:
+`SymbolTable.Symbol` which currently has the properties:
 
  * name
  * primitive_type
- * kind
- * shape
- * visibility
+
+Both of these are stored as strings. In future, support for more
+properties (e.g. kind, shape, visibility) will be added and strings
+replaced with enumerations where it makes sense.
 
 Fortran has support for nested scopes - e.g. variables declared within
 a module are in scope within any routines defined within that

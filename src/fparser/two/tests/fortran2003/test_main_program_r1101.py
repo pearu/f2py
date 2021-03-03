@@ -50,6 +50,7 @@ import pytest
 from fparser.two.utils import FortranSyntaxError, NoMatchError
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Main_Program
+from fparser.two.symbol_table import SYMBOL_TABLES
 
 
 def test_valid(f2003_create):
@@ -77,10 +78,12 @@ def test_valid(f2003_create):
     # specification-part
     obj = Main_Program(get_reader("program a\ninteger i\nend program a"))
     assert str(obj) == 'PROGRAM a\n  INTEGER :: i\nEND PROGRAM a'
+    SYMBOL_TABLES.clear()
 
     # execution-part
     obj = Main_Program(get_reader("program a\ni=10\nend program a"))
     assert str(obj) == 'PROGRAM a\n  i = 10\nEND PROGRAM a'
+    SYMBOL_TABLES.clear()
 
     # internal-subprogram-part
     obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
@@ -91,12 +94,14 @@ def test_valid(f2003_create):
     # specification-part + execution-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\nend program a"))
     assert str(obj) == 'PROGRAM a\n  INTEGER :: i\n  i = 10\nEND PROGRAM a'
+    SYMBOL_TABLES.clear()
 
     # execution-part + internal-subprogram-part
     obj = Main_Program(get_reader("program a\ni=10\ncontains\nsubroutine foo\n"
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  i = 10\n  CONTAINS\n  SUBROUTINE foo\n"
                         "  END\nEND PROGRAM a")
+    SYMBOL_TABLES.clear()
 
     # specification-part + execution-part + internal-subprogram-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\ncontains\n"
