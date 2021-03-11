@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2018 Science and Technology Facilities Council
+# Copyright (c) 2017-2021 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -94,25 +94,15 @@ def test_fortranformat_constructor(pretty):
     assert unit_under_test.is_fix == (not pretty[0] and not pretty[1])
     assert unit_under_test.is_pyf == (pretty[0] and pretty[1])
     assert unit_under_test.mode == pretty[2]
+    assert not unit_under_test.f2py_enabled
 
 
-##############################################################################
-@pytest.fixture(scope="module",
-                params=[(False, False),
-                        (False, True),
-                        (True, False),
-                        (True, True)])
-def permutations(request):
-    '''
-    Returns all possible permutations of the input arguments.
-    '''
-    return request.param
-
-
-##############################################################################
-
+@pytest.mark.parametrize("permutations", [(False, False),
+                                          (False, True),
+                                          (True, False),
+                                          (True, True)])
 def test_fortranformat_equality(permutations, pretty):
-    #pylint: disable=redefined-outer-name
+    # pylint: disable=redefined-outer-name
     '''
     Tests that the equality operator works as expected.
     '''
@@ -166,9 +156,8 @@ def test_fortranformat_from_mode(mode):
     assert unit_under_test.is_fix == (not mode[1] and not mode[2])
     assert unit_under_test.is_pyf == (mode[1] and mode[2])
     assert str(unit_under_test.mode) == mode[0]
+    assert not unit_under_test.f2py_enabled
 
-
-##############################################################################
 
 def test_format_from_mode_bad():
     '''

@@ -49,6 +49,15 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 
 Note that the setting for `ignore_comments` provided here can be overridden
 on a per-call basis by methods such as `get_single_line`.
+The 'mode' of the reader is controlled by passing in a suitable instance of
+the `FortranFormat` class:
+
+.. autoclass:: fparser.common.sourceinfo.FortranFormat
+
+Due to its origins in the f2py project, the reader contains support
+for recognising `f2py` directives
+(https://numpy.org/devdocs/f2py/signature-file.html). However, this
+functionality is disabled by default.
 
 A convenience script called read.py is provided in the scripts
 directory which takes a filename as input and returns the file
