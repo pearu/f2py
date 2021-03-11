@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2020 Science and Technology Facilities Council
+# Copyright (c) 2017-2021 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -97,10 +97,10 @@ def test_fortranformat_constructor(pretty):
     assert not unit_under_test.f2py_enabled
 
 
-@pytest.mark.parametrize("permutations", [(False, False, True),
-                                          (False, True, False),
-                                          (True, False, True),
-                                          (True, True, False)])
+@pytest.mark.parametrize("permutations", [(False, False),
+                                          (False, True),
+                                          (True, False),
+                                          (True, True)])
 def test_fortranformat_equality(permutations, pretty):
     # pylint: disable=redefined-outer-name
     '''
