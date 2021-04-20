@@ -9188,6 +9188,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         if result:
             table = SYMBOL_TABLES.current_scope
             only_list = None
+            # TODO #201 we currently ignore any symbol renaming here
             if isinstance(result[4], Only_List):
                 names = walk(result[4], Name)
                 only_list = [name.string for name in names]

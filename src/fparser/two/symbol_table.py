@@ -223,8 +223,8 @@ class SymbolTable(object):
 
     def __init__(self, name, parent=None):
         self._name = name.lower()
-        # Symbols defined in this scope.
-        self._symbols = {}
+        # Symbols defined in this scope that represent data.
+        self._data_symbols = {}
         # Modules imported into this scope.
         self._modules = {}
         # Reference to a SymbolTable that contains this one (if any). Actual
@@ -237,8 +237,8 @@ class SymbolTable(object):
     def __str__(self):
         header = "===========\n"
         symbols = "Symbols:\n"
-        if self._symbols:
-            symbols += "\n".join(list(self._symbols.keys())) + "\n"
+        if self._data_symbols:
+            symbols += "\n".join(list(self._data_symbols.keys())) + "\n"
         uses = "Used modules:\n"
         if self._modules:
             uses += "\n".join(list(self._modules.keys())) + "\n"
@@ -270,11 +270,11 @@ class SymbolTable(object):
                 "The primitive type of the symbol must be specified as a str "
                 "but got '{0}'".format(type(primitive_type).__name__))
         lname = name.lower()
-        if lname in self._symbols:
+        if lname in self._data_symbols:
             raise SymbolTableError("Symbol table already contains an entry "
                                    "with name '{0}'".format(name))
-        self._symbols[lname] = SymbolTable.Symbol(lname,
-                                                  primitive_type.lower())
+        self._data_symbols[lname] = SymbolTable.Symbol(lname,
+                                                       primitive_type.lower())
 
     def add_use(self, name, only_list=None):
         '''
@@ -344,8 +344,8 @@ class SymbolTable(object):
         '''
         # Fortran is not case sensitive so convert input to lowercase.
         lname = name.lower()
-        if lname in self._symbols:
-            return self._symbols[lname]
+        if lname in self._data_symbols:
+            return self._data_symbols[lname]
         # No match in this scope - search in parent scope (if any)
         if self.parent:
             return self.parent.lookup(lname)

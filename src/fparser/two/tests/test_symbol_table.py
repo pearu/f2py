@@ -186,7 +186,7 @@ end module my_mod
     table = tables.lookup("my_mod")
     assert isinstance(table, SymbolTable)
     assert "some_mod" in table._modules
-    assert "a" in table._symbols
+    assert "a" in table._data_symbols
     sym = table.lookup("a")
     assert sym.name == "a"
     assert sym.primitive_type == "real"
@@ -234,7 +234,7 @@ end program my_prog
     table = SYMBOL_TABLES.lookup("my_prog")
     assert len(table.children) == 1
     assert table.children[0].name == "my_sub"
-    assert table.children[0]._symbols["b"].name == "b"
+    assert table.children[0]._data_symbols["b"].name == "b"
     assert table.children[0].parent is table
 
 
