@@ -70,6 +70,8 @@ Module containing py.test tests for Fortran 2003 language constructs
 from __future__ import print_function
 import pytest
 from fparser.two.Fortran2003 import *
+from fparser.two import Fortran2003
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.api import get_reader
 
 
@@ -2966,25 +2968,48 @@ def test_format_item_list():  # R1002, R1003
 #
 
 
-def test_main_program0():  # R1101 helper
+def test_main_program0():
     '''Test for R1101 when the program statement is not supplied. This
-    case matches with the Main_Program0 class
+    case matches with the Main_Program0 class.
 
     '''
-    obj0 = Main_Program0(get_reader('''\
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
 end
     '''))
-    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
     assert str(obj0) == 'END'
 
-    obj0 = Main_Program0(get_reader('''\
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
 contains
   function foo()
   end
 end
     '''))
-    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
     assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND\nEND'
+
+    # Check that the expected symbol table is created and populated
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
+integer :: i
+i = 9
+end
+    '''))
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
+    assert str(obj0) == 'INTEGER :: i\n  i = 9\nEND'
+    table = SYMBOL_TABLES.lookup("fparser2:main_program")
+    assert table.lookup("i")
+
+
+def test_invalid_main_program0():
+    ''' Test for when the Main_Program0 class fails to match. We should
+    get a NoMatchError and no symbol table. '''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Fortran2003.Main_Program0(get_reader(
+            "integer :: i\n"
+            "i = 9\n"
+            "en\n"))
+    # Ensure that no symbol table has been created
+    assert SYMBOL_TABLES._symbol_tables == {}
 
 
 def test_module():  # R1104

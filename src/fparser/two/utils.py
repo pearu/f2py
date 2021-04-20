@@ -73,8 +73,8 @@ import re
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two import Fortran2003
 from fparser.common.readfortran import FortranReaderBase
-
 
 # A list of supported extensions to the standard(s)
 
@@ -531,16 +531,17 @@ content : tuple
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls
+
         '''
-        from fparser.two.Fortran2003 import Comment, Include_Stmt, \
-            add_comments_includes_directives
+        # Have to import C99Preprocessor here to avoid circular import.
+        # pylint: disable=import-outside-toplevel
         from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
-            add_comments_includes_directives(content, reader)
+            Fortran2003.add_comments_includes_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -555,9 +556,11 @@ content : tuple
                 return
             if startcls in SYMBOL_TABLES.scoping_unit_classes:
                 # We are entering a new scoping unit so create a new
-                # symbol table
-                name = str(obj.children[1])
-                SYMBOL_TABLES.enter_scope(name)
+                # symbol table.
+                # NOTE: if the match subsequently fails then we must
+                #       delete this symbol table.
+                table_name = str(obj.children[1])
+                SYMBOL_TABLES.enter_scope(table_name)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
             start_idx = len(content)
@@ -569,7 +572,7 @@ content : tuple
                 start_name = obj.get_start_name()
 
         # Comments and Include statements are always valid sub-classes
-        classes = subclasses + [Comment, Include_Stmt]
+        classes = subclasses + [Fortran2003.Comment, Fortran2003.Include_Stmt]
         # Preprocessor directives are always valid sub-classes
         cpp_classes = [getattr(C99Preprocessor, cls_name)
                        for cls_name in C99Preprocessor.CPP_CLASS_NAMES]
@@ -578,107 +581,112 @@ content : tuple
             classes += [endcls]
             endcls_all = tuple([endcls]+endcls.subclasses[endcls.__name__])
 
-        # Start trying to match the various subclasses, starting from
-        # the beginning of the list (where else?)
-        i = 0
-        had_match = False
-        found_end = False
-        while i < len(classes):
-            if enable_do_label_construct_hook:
+        try:
+            # Start trying to match the various subclasses, starting from
+            # the beginning of the list (where else?)
+            i = 0
+            had_match = False
+            found_end = False
+            while i < len(classes):
+                if enable_do_label_construct_hook:
+                    try:
+                        obj = startcls(reader)
+                    except NoMatchError:
+                        obj = None
+                    if obj is not None:
+                        if start_label == obj.get_start_label():
+                            content.append(obj)
+                            continue
+                        else:
+                            obj.restore_reader(reader)
+                # Attempt to match the i'th subclass
+                cls = classes[i]
                 try:
-                    obj = startcls(reader)
+                    obj = cls(reader)
                 except NoMatchError:
                     obj = None
-                if obj is not None:
-                    if start_label == obj.get_start_label():
-                        content.append(obj)
-                        continue
-                    else:
-                        obj.restore_reader(reader)
-            # Attempt to match the i'th subclass
-            cls = classes[i]
-            try:
-                obj = cls(reader)
-            except NoMatchError:
-                obj = None
-            if obj is None:
-                # No match for this class, continue checking the list
-                # starting from the i+1'th...
-                i += 1
-                continue
+                if obj is None:
+                    # No match for this class, continue checking the list
+                    # starting from the i+1'th...
+                    i += 1
+                    continue
 
-            # We got a match for this class
-            had_match = True
-            content.append(obj)
+                # We got a match for this class
+                had_match = True
+                content.append(obj)
 
-            if match_names and isinstance(obj, match_name_classes):
-                end_name = obj.get_end_name()
-                if end_name and not start_name:
-                    raise FortranSyntaxError(
-                        reader, "Name '{0}' has no corresponding starting "
-                        "name".format(end_name))
-                if end_name and start_name and \
-                   end_name.lower() != start_name.lower():
-                    raise FortranSyntaxError(
-                        reader, "Expecting name '{0}'".format(start_name))
-
-            if endcls is not None and isinstance(obj, endcls_all):
-                if match_labels:
-                    start_label, end_label = content[start_idx].\
-                                             get_start_label(),\
-                                             content[-1].get_end_label()
-                    if start_label != end_label:
-                        continue
-                if match_names:
-                    start_name, end_name = content[start_idx].\
-                                           get_start_name(), \
-                                           content[-1].get_end_name()
+                if match_names and isinstance(obj, match_name_classes):
+                    end_name = obj.get_end_name()
                     if end_name and not start_name:
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
-                    elif start_name and end_name and (start_name.lower() !=
-                                                      end_name.lower()):
+                    if end_name and start_name and \
+                       end_name.lower() != start_name.lower():
                         raise FortranSyntaxError(
                             reader, "Expecting name '{0}'".format(start_name))
-                # We've found the enclosing end statement so break out
-                found_end = True
-                break
-            if not strict_order:
-                # Return to start of classes list now that we've matched.
-                i = 0
-            if enable_if_construct_hook:
-                from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
-                    End_If_Stmt
-                if isinstance(obj, Else_If_Stmt):
-                    # Got an else-if so go back to start of possible
-                    # classes to match
+
+                if endcls is not None and isinstance(obj, endcls_all):
+                    if match_labels:
+                        start_label, end_label = content[start_idx].\
+                                                 get_start_label(),\
+                                                 content[-1].get_end_label()
+                        if start_label != end_label:
+                            continue
+                    if match_names:
+                        start_name, end_name = (content[start_idx].
+                                                get_start_name(),
+                                                content[-1].get_end_name())
+                        if end_name and not start_name:
+                            raise FortranSyntaxError(
+                                reader,
+                                "Name '{0}' has no corresponding starting "
+                                "name".format(end_name))
+                        elif start_name and end_name and (start_name.lower() !=
+                                                          end_name.lower()):
+                            raise FortranSyntaxError(
+                                reader, "Expecting name '{0}'".format(
+                                    start_name))
+                    # We've found the enclosing end statement so break out
+                    found_end = True
+                    break
+                if not strict_order:
+                    # Return to start of classes list now that we've matched.
                     i = 0
-                if isinstance(obj, (Else_Stmt, End_If_Stmt)):
-                    # Found end-if
-                    enable_if_construct_hook = False
-            if enable_where_construct_hook:
-                from fparser.two.Fortran2003 import Masked_Elsewhere_Stmt, \
-                    Elsewhere_Stmt, End_Where_Stmt
-                if isinstance(obj, Masked_Elsewhere_Stmt):
-                    i = 0
-                if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
-                    enable_where_construct_hook = False
-            if enable_select_type_construct_hook:
-                from fparser.two.Fortran2003 import Type_Guard_Stmt, \
-                    End_Select_Type_Stmt
-                if isinstance(obj, Type_Guard_Stmt):
-                    i = 1
-                if isinstance(obj, End_Select_Type_Stmt):
-                    enable_select_type_construct_hook = False
-            if enable_case_construct_hook:
-                from fparser.two.Fortran2003 import Case_Stmt, \
-                    End_Select_Stmt
-                if isinstance(obj, Case_Stmt):
-                    i = 1
-                if isinstance(obj, End_Select_Stmt):
-                    enable_case_construct_hook = False
-            continue
+                if enable_if_construct_hook:
+                    if isinstance(obj, Fortran2003.Else_If_Stmt):
+                        # Got an else-if so go back to start of possible
+                        # classes to match
+                        i = 0
+                    if isinstance(obj, (Fortran2003.Else_Stmt,
+                                        Fortran2003.End_If_Stmt)):
+                        # Found end-if
+                        enable_if_construct_hook = False
+                if enable_where_construct_hook:
+                    if isinstance(obj, Fortran2003.Masked_Elsewhere_Stmt):
+                        i = 0
+                    if isinstance(obj, (Fortran2003.Elsewhere_Stmt,
+                                        Fortran2003.End_Where_Stmt)):
+                        enable_where_construct_hook = False
+                if enable_select_type_construct_hook:
+                    if isinstance(obj, Fortran2003.Type_Guard_Stmt):
+                        i = 1
+                    if isinstance(obj, Fortran2003.End_Select_Type_Stmt):
+                        enable_select_type_construct_hook = False
+                if enable_case_construct_hook:
+                    if isinstance(obj, Fortran2003.Case_Stmt):
+                        i = 1
+                    if isinstance(obj, Fortran2003.End_Select_Stmt):
+                        enable_case_construct_hook = False
+                continue
+
+        except FortranSyntaxError as err:
+            # We hit trouble so clean up the symbol table
+            if startcls in SYMBOL_TABLES.scoping_unit_classes:
+                SYMBOL_TABLES.exit_scope()
+                # Remove any symbol table that we created
+                SYMBOL_TABLES.remove(table_name)
+            raise err
 
         if startcls in SYMBOL_TABLES.scoping_unit_classes:
             SYMBOL_TABLES.exit_scope()
@@ -687,12 +695,21 @@ content : tuple
             # We did not get a match from any of the subclasses or
             # failed to find the endcls
             if endcls is not None:
+                if startcls in SYMBOL_TABLES.scoping_unit_classes:
+                    # Remove any symbol table that we created
+                    SYMBOL_TABLES.remove(table_name)
                 for obj in reversed(content):
                     obj.restore_reader(reader)
-                return
+                return None
 
         if not content:
-            return
+            # We can only get to here if startcls is None - if startcls is not
+            # None and fails to match then we will already have returned. If
+            # it is not None and matches then content will not be empty.
+            # Since startcls must be None, we won't have created a symbol
+            # table so we don't have to clean up.
+            return None
+
         if startcls is not None and endcls is not None:
             # check names of start and end statements:
             start_stmt = content[start_idx]

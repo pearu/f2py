@@ -112,22 +112,27 @@ def test_valid(f2003_create):
 
 def test_invalid1(f2003_create):
     ''' Test that exceptions are raised for invalid code '''
-
     # no end
     with pytest.raises(NoMatchError) as excinfo:
         _ = Main_Program(get_reader("program a\n"))
     assert "at line 1\n>>>program a" in str(excinfo.value)
+    # Check that we have no symbol table
+    assert "a" not in SYMBOL_TABLES._symbol_tables
 
     # no start
     with pytest.raises(NoMatchError) as excinfo:
         _ = Main_Program(get_reader("end program a\n"))
     assert "at line 1\n>>>end program a" in str(excinfo.value)
+    # Check that we have no symbol table
+    assert "a" not in SYMBOL_TABLES._symbol_tables
 
     # name mismatch
     with pytest.raises(FortranSyntaxError) as excinfo:
         _ = Main_Program(get_reader("program a\nend program b"))
     assert "at line 2\n>>>end program b\nExpecting name 'a'" \
         in str(excinfo.value)
+    # Check that we have no symbol table
+    assert "a" not in SYMBOL_TABLES._symbol_tables
 
 
 def test_invalid2(f2003_create):
@@ -139,6 +144,7 @@ def test_invalid2(f2003_create):
         _ = Main_Program(get_reader("program a\ni=10\ninteger i\n"
                                     "end program a"))
     assert "at line 3\n>>>integer i\n" in str(excinfo.value)
+    assert "a" not in SYMBOL_TABLES._symbol_tables
 
 
 def test_invalid3(f2003_create):
@@ -150,3 +156,4 @@ def test_invalid3(f2003_create):
         _ = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
                                     "end\ni=10\nend program a"))
     assert "at line 5\n>>>i=10\n" in str(excinfo.value)
+    assert "a" not in SYMBOL_TABLES._symbol_tables

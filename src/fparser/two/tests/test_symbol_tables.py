@@ -41,8 +41,8 @@ from fparser.two.symbol_table import SymbolTables, SymbolTable, \
 
 
 def test_construction():
-    ''' Check that we can create a SymbolTables instance, add a table to it
-    and query it. '''
+    ''' Check that we can create a SymbolTables instance, add a table to it,
+    remove a table from it and query it. '''
     tables = SymbolTables()
     assert tables._scope_stack == []
     assert tables._symbol_tables == {}
@@ -52,12 +52,18 @@ def test_construction():
     # Add a symbol table
     table1 = tables.add("table1")
     assert isinstance(table1, SymbolTable)
-    assert tables.lookup("table1") is table1
+    assert tables.lookup("taBLe1") is table1
     # We should not be able to add another table with the same name
     with pytest.raises(SymbolTableError) as err:
         tables.add("table1")
     assert ("table of top-level (un-nested) symbol tables already contains "
             "an entry for 'table1'" in str(err.value))
+    # Add a second table and then remove it
+    table2 = tables.add("taBLe2")
+    assert tables.lookup("table2") is table2
+    tables.remove("table2")
+    with pytest.raises(KeyError) as err:
+        tables.lookup("table2")
     # Clear the stored symbol tables
     tables.clear()
     assert tables._scope_stack == []

@@ -132,7 +132,8 @@ class ParserFactory(object):
             # to setup our class hierarchy.
             self._setup(f2003_cls_members)
             # We can now specify which classes are taken as defining new
-            # scoping regions.
+            # scoping regions. Programs without the optional program-stmt
+            # are handled separately in the Fortran2003.Main_Program0 class.
             SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
                                                   Fortran2003.Subroutine_Stmt,
                                                   Fortran2003.Program_Stmt,
@@ -159,7 +160,8 @@ class ParserFactory(object):
             # to setup our class hierarchy.
             self._setup(f2008_cls_members)
             # We can now specify which classes are taken as defining new
-            # scoping regions.
+            # scoping regions. Programs without the optional program-stmt
+            # are handled separately in the Fortran2003.Main_Program0 class.
             SYMBOL_TABLES.scoping_unit_classes = [Fortran2003.Module_Stmt,
                                                   Fortran2003.Subroutine_Stmt,
                                                   Fortran2003.Program_Stmt,

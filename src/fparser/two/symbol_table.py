@@ -198,6 +198,16 @@ class SymbolTables(object):
                                    "exists.")
         self._scope_stack.pop(-1)
 
+    def remove(self, name):
+        '''
+        Removes the named symbol table.
+
+        :param str name: the name of the symbol table to remove (not case \
+                         sensitive).
+
+        '''
+        del self._symbol_tables[name.lower()]
+
 
 class SymbolTable(object):
     '''
