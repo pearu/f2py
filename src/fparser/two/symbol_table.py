@@ -271,8 +271,17 @@ class SymbolTable(object):
                 "but got '{0}'".format(type(primitive_type).__name__))
         lname = name.lower()
         if lname in self._data_symbols:
-            raise SymbolTableError("Symbol table already contains an entry "
-                                   "with name '{0}'".format(name))
+            raise SymbolTableError("Symbol table already contains a symbol for"
+                                   " a variable with name '{0}'".format(name))
+        if lname in self._modules:
+            raise SymbolTableError("Symbol table already contains a use of a "
+                                   "module with name '{0}'".format(name))
+        for mod_name in self._modules:
+            if self._modules[mod_name] and lname in self._modules[mod_name]:
+                raise SymbolTableError(
+                    "Symbol table already contains a use of a symbol named "
+                    "'{0}' from module '{1}'".format(name, mod_name))
+
         self._data_symbols[lname] = SymbolTable.Symbol(lname,
                                                        primitive_type.lower())
 

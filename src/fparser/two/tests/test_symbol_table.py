@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2021 Science and Technology Facilities Council
 # All rights reserved.
 #
@@ -31,7 +31,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ''' Module containing tests for the symbol-table functionality
  of fparser2. '''
@@ -69,8 +69,8 @@ def test_add_symbol():
     assert sym.primitive_type == "integer"
     with pytest.raises(SymbolTableError) as err:
         table.add_symbol("var", "real")
-    assert ("Symbol table already contains an entry with name 'var'" in
-            str(err.value))
+    assert ("Symbol table already contains a symbol for a variable with name "
+            "'var'" in str(err.value))
     with pytest.raises(TypeError) as err:
         table.add_symbol(table, "real")
     assert ("name of the symbol must be a str but got 'SymbolTable'" in
@@ -79,6 +79,17 @@ def test_add_symbol():
         table.add_symbol("var2", table)
     assert ("primitive type of the symbol must be specified as a str but got "
             "'SymbolTable'" in str(err.value))
+    # Check a clash with a USE statement - both the module name and the
+    # name of imported variables
+    table.add_use("mod1", ["var3"])
+    with pytest.raises(SymbolTableError) as err:
+        table.add_symbol("mod1", "real")
+    assert ("table already contains a use of a module with name 'mod1'" in
+            str(err.value))
+    with pytest.raises(SymbolTableError) as err:
+        table.add_symbol("var3", "real")
+    assert ("table already contains a use of a symbol named 'var3' from "
+            "module 'mod1'" in str(err.value))
 
 
 def test_add_use():
@@ -97,7 +108,11 @@ def test_add_use():
     assert table._modules["mod2"] == ["ivar"]
     table.add_use("mod2", ["jvar"])
     assert table._modules["mod2"] == ["ivar", "jvar"]
-    # Test the various checks on the supplied parameters
+
+
+def test_add_use_errors():
+    ''' Test the various checks on the supplied parameters to add_use(). '''
+    table = SymbolTable("basic")
     with pytest.raises(TypeError) as err:
         table.add_use(table)
     assert ("name of the module must be a str but got 'SymbolTable'" in
