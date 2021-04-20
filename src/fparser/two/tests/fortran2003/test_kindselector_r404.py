@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 

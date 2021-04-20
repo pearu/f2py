@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -54,8 +54,11 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 
 
 def test_valid(f2003_create):
-    ''' Test that valid code is parsed correctly. '''
+    '''
+    Test that valid code is parsed correctly and associated symbol tables
+    created.
 
+    '''
     # basic
     obj = Main_Program(get_reader("program a\nend"))
     assert isinstance(obj, Main_Program)
@@ -78,12 +81,14 @@ def test_valid(f2003_create):
     # specification-part
     obj = Main_Program(get_reader("program a\ninteger i\nend program a"))
     assert str(obj) == 'PROGRAM a\n  INTEGER :: i\nEND PROGRAM a'
+    table = SYMBOL_TABLES.lookup("a")
+    assert table.lookup("i")
+    # Clear existing symbol tables before next part of this test
     SYMBOL_TABLES.clear()
 
     # execution-part
     obj = Main_Program(get_reader("program a\ni=10\nend program a"))
     assert str(obj) == 'PROGRAM a\n  i = 10\nEND PROGRAM a'
-    SYMBOL_TABLES.clear()
 
     # internal-subprogram-part
     obj = Main_Program(get_reader("program a\ncontains\nsubroutine foo\n"
@@ -94,6 +99,7 @@ def test_valid(f2003_create):
     # specification-part + execution-part
     obj = Main_Program(get_reader("program a\ninteger i\ni=10\nend program a"))
     assert str(obj) == 'PROGRAM a\n  INTEGER :: i\n  i = 10\nEND PROGRAM a'
+    # Clear existing symbol tables before next part of this test
     SYMBOL_TABLES.clear()
 
     # execution-part + internal-subprogram-part
@@ -101,6 +107,7 @@ def test_valid(f2003_create):
                                   "end\nend program a"))
     assert str(obj) == ("PROGRAM a\n  i = 10\n  CONTAINS\n  SUBROUTINE foo\n"
                         "  END\nEND PROGRAM a")
+    # Clear existing symbol tables before next part of this test
     SYMBOL_TABLES.clear()
 
     # specification-part + execution-part + internal-subprogram-part
@@ -108,6 +115,9 @@ def test_valid(f2003_create):
                                   "subroutine foo\nend\nend program a"))
     assert str(obj) == ("PROGRAM a\n  INTEGER :: i\n  i = 10\n  CONTAINS\n  "
                         "SUBROUTINE foo\n  END\nEND PROGRAM a")
+    table = SYMBOL_TABLES.lookup("a")
+    assert table.lookup("i")
+    assert table.children[0].name == "foo"
 
 
 def test_invalid1(f2003_create):
