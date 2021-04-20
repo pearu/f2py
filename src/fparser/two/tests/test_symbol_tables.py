@@ -46,7 +46,7 @@ def test_construction():
     ''' Check that we can create a SymbolTables instance, add a table to it,
     remove a table from it and query it. '''
     tables = SymbolTables()
-    assert tables._scope_stack == []
+    assert tables._current_scope is None
     assert tables._symbol_tables == {}
     with pytest.raises(KeyError) as err:
         tables.lookup("missing")
@@ -68,7 +68,7 @@ def test_construction():
         tables.lookup("table2")
     # Clear the stored symbol tables
     tables.clear()
-    assert tables._scope_stack == []
+    assert tables._current_scope is None
     assert tables._symbol_tables == {}
 
 
@@ -104,7 +104,7 @@ def test_str_method():
     assert "SymbolTables: 0 tables" in str(tables)
 
 
-def test_scoping_stack():
+def test_nested_scoping():
     ''' Test the functionality related to moving into and out of scoping
     regions. '''
     tables = SymbolTables()

@@ -38,7 +38,6 @@ the single, global SYMBOL_TABLES instance. The latter is a container
 for all of the top-level scoping units encountered during parsing.
 
 '''
-
 from __future__ import absolute_import, print_function
 import six
 from collections import namedtuple
@@ -60,8 +59,8 @@ class SymbolTables(object):
         self._symbol_tables = {}
         # Those classes that correspond to a new scoping unit
         self._scoping_unit_classes = []
-        # The stack of symbol tables accessible in the current scope
-        self._scope_stack = []
+        # The symbol table of the current scope
+        self._current_scope = None
 
     def __str__(self):
         result = ("SymbolTables: {0} tables\n"
@@ -76,7 +75,7 @@ class SymbolTables(object):
 
         '''
         self._symbol_tables = {}
-        self._scope_stack = []
+        self._current_scope = None
 
     def add(self, name):
         '''
@@ -149,18 +148,16 @@ class SymbolTables(object):
         :returns: the symbol table for the current scoping unit or None.
         :rtype: :py:class:`fparser.two.symbol_table.SymbolTable` or NoneType
         '''
-        if self._scope_stack:
-            return self._scope_stack[-1]
-        return None
+        return self._current_scope
 
     def enter_scope(self, name):
         '''
         Called when the parser enters a new scoping region (i.e. when it
         encounters one of the classes listed in `_scoping_unit_classes`).
         Sets the 'current scope' to be the symbol table with the supplied name.
-        If there is no existing stack of (nested) scoping regions then a
+        If we are not currently within a tree of scoping regions then a
         new entry is created in the internal dict of symbol tables. If there
-        is an existing stack then a new table is created and added to the
+        is an existing tree then a new table is created and added to the
         bottom.
 
         :param str name: name of the scoping region.
@@ -168,7 +165,7 @@ class SymbolTables(object):
         '''
         lname = name.lower()
 
-        if not self._scope_stack:
+        if not self._current_scope:
             # We're not already inside a nested scope.
             try:
                 table = self.lookup(lname)
@@ -178,28 +175,29 @@ class SymbolTables(object):
         else:
             # We are already inside a scoping region so create a new table
             # and setup its parent/child connections.
-            table = SymbolTable(lname, parent=self._scope_stack[-1])
-            self._scope_stack[-1].add_child(table)
+            table = SymbolTable(lname, parent=self._current_scope)
+            self._current_scope.add_child(table)
 
-        # Finally, put the table on the stack of nested regions
-        self._scope_stack.append(table)
+        # Finally, make this new table the current scope
+        self._current_scope = table
 
     def exit_scope(self):
         '''
-        Marks the end of the processing of the current scoping unit. Removes
-        the current symbol table from the stack.
+        Marks the end of the processing of the current scoping unit. Since
+        we are exiting the current scoping region, the new 'current scoping
+        region' will be its parent.
 
         :raises SymbolTableError: if there is no current scope from which to \
                                   exit.
         '''
-        if not self._scope_stack:
+        if not self._current_scope:
             raise SymbolTableError("exit_scope() called but no current scope "
                                    "exists.")
-        self._scope_stack.pop(-1)
+        self._current_scope = self._current_scope.parent
 
     def remove(self, name):
         '''
-        Removes the named symbol table.
+        Removes the named symbol table and any descendants it may have.
 
         :param str name: the name of the symbol table to remove (not case \
                          sensitive).
