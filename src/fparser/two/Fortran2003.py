@@ -9179,8 +9179,9 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         :return: 5-tuple containing strings and instances of the classes
                  describing a module (optional module nature, optional
                  double colon delimiter, mandatory module name, optional
-                 "ONLY" specification and optional "Rename" or "Only" list).
-        :rtype: 5-tuple of objects (module name and 4 optional)
+                 "ONLY" specification and optional "Rename" or "Only" list)
+                 or None if the match fails.
+        :rtype: 5-tuple of objects (module name and 4 optional) or NoneType
 
         '''
         result = Use_Stmt._match(string)

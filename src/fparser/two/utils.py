@@ -73,7 +73,6 @@ import re
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two import Fortran2003
 from fparser.common.readfortran import FortranReaderBase
 
 # A list of supported extensions to the standard(s)
@@ -533,9 +532,11 @@ content : tuple
         :rtype: startcls
 
         '''
-        # Have to import C99Preprocessor here to avoid circular import.
+        # Have to import C99Preprocessor & Fortran2003 here to avoid circular
+        # import.
         # pylint: disable=import-outside-toplevel
         from fparser.two import C99Preprocessor
+        from fparser.two import Fortran2003
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
