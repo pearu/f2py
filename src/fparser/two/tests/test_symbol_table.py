@@ -55,74 +55,75 @@ def test_basic_table():
         table.lookup("missing")
     assert "Failed to find symbol named 'missing'" in str(err.value)
     # Add a symbol and check that its naming is not case sensitive
-    table.add_symbol("Var", "integer")
+    table.add_data_symbol("Var", "integer")
     sym = table.lookup("var")
     assert sym.name == "var"
     assert table.lookup("VAR") is sym
 
 
-def test_add_symbol():
-    ''' Test that the add_symbol() method behaves as expected. '''
+def test_add_data_symbol():
+    ''' Test that the add_data_symbol() method behaves as expected. '''
     table = SymbolTable("basic")
-    table.add_symbol("var", "integer")
+    table.add_data_symbol("var", "integer")
     sym = table.lookup("var")
     assert sym.primitive_type == "integer"
     with pytest.raises(SymbolTableError) as err:
-        table.add_symbol("var", "real")
+        table.add_data_symbol("var", "real")
     assert ("Symbol table already contains a symbol for a variable with name "
             "'var'" in str(err.value))
     with pytest.raises(TypeError) as err:
-        table.add_symbol(table, "real")
+        table.add_data_symbol(table, "real")
     assert ("name of the symbol must be a str but got 'SymbolTable'" in
             str(err.value))
     with pytest.raises(TypeError) as err:
-        table.add_symbol("var2", table)
+        table.add_data_symbol("var2", table)
     assert ("primitive type of the symbol must be specified as a str but got "
             "'SymbolTable'" in str(err.value))
     # Check a clash with a USE statement - both the module name and the
     # name of imported variables
-    table.add_use("mod1", ["var3"])
+    table.add_use_symbols("mod1", ["var3"])
     with pytest.raises(SymbolTableError) as err:
-        table.add_symbol("mod1", "real")
+        table.add_data_symbol("mod1", "real")
     assert ("table already contains a use of a module with name 'mod1'" in
             str(err.value))
     with pytest.raises(SymbolTableError) as err:
-        table.add_symbol("var3", "real")
+        table.add_data_symbol("var3", "real")
     assert ("table already contains a use of a symbol named 'var3' from "
             "module 'mod1'" in str(err.value))
 
 
-def test_add_use():
-    ''' Test that the add_use() method behaves as expected. '''
+def test_add_use_symbols():
+    ''' Test that the add_use_symbols() method behaves as expected. '''
     table = SymbolTable("basic")
     # A use without an 'only' clause
-    table.add_use("mod1")
+    table.add_use_symbols("mod1")
     assert table._modules["mod1"] is None
     # Fortran permits other use statements for the same module
-    table.add_use("mod1", ["var"])
+    table.add_use_symbols("mod1", ["var"])
     # Since we already have a wildcard import and don't yet capture any
     # additional, specific imports (TODO #294) the list of associated symbols
     # should still be None.
     assert table._modules["mod1"] is None
-    table.add_use("mod2", ["iVar"])
+    table.add_use_symbols("mod2", ["iVar"])
     assert table._modules["mod2"] == ["ivar"]
-    table.add_use("mod2", ["jvar"])
+    table.add_use_symbols("mod2", ["jvar"])
     assert table._modules["mod2"] == ["ivar", "jvar"]
 
 
-def test_add_use_errors():
-    ''' Test the various checks on the supplied parameters to add_use(). '''
+def test_add_use_symbols_errors():
+    ''' Test the various checks on the supplied parameters to
+    add_use_symbols(). '''
     table = SymbolTable("basic")
     with pytest.raises(TypeError) as err:
-        table.add_use(table)
+        table.add_use_symbols(table)
     assert ("name of the module must be a str but got 'SymbolTable'" in
             str(err.value))
     with pytest.raises(TypeError) as err:
-        table.add_use("mod3", only_list="hello")
+        table.add_use_symbols("mod3", only_list="hello")
     assert ("If present, the only_list must be a list but got 'str'" in
             str(err.value))
     with pytest.raises(TypeError) as err:
-        table.add_use("mod3", only_list=["hello", table])
+        table.add_use_symbols("mod3", only_list=["hello", table])
     assert ("If present, the only_list must be a list of str but got: ['str', "
             "'SymbolTable']" in str(err.value))
 
@@ -131,9 +132,9 @@ def test_str_method():
     ''' Test the str property of the SymbolTable class. '''
     table = SymbolTable("basic")
     assert "Symbol Table 'basic'\nSymbols:\nUsed modules:\n" in str(table)
-    table.add_symbol("var", "integer")
+    table.add_data_symbol("var", "integer")
     assert "Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\n" in str(table)
-    table.add_use("some_mod")
+    table.add_use_symbols("some_mod")
     assert ("Symbol Table 'basic'\nSymbols:\nvar\nUsed modules:\nsome_mod\n"
             in str(table))
 

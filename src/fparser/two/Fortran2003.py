@@ -2690,7 +2690,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
                 for decl in decl_list:
                     # TODO #201 use an enumeration to specify the primitive
                     # type rather than a string.
-                    table.add_symbol(decl.items[0].string, str(result[0]))
+                    table.add_data_symbol(decl.items[0].string, str(result[0]))
             # TODO #201 support symbols that are not of intrinsic type.
         return result
 
@@ -9192,7 +9192,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             if isinstance(result[4], Only_List):
                 names = walk(result[4], Name)
                 only_list = [name.string for name in names]
-            table.add_use(str(result[2]), only_list)
+            table.add_use_symbols(str(result[2]), only_list)
 
         return result
 

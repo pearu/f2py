@@ -245,7 +245,7 @@ class SymbolTable(object):
         return ("{0}Symbol Table '{1}'\n".format(header, self._name) +
                 symbols + uses + header)
 
-    def add_symbol(self, name, primitive_type):
+    def add_data_symbol(self, name, primitive_type):
         '''
         Creates a new Symbol with the specified properties and adds it to
         the symbol table. The supplied name is converted to lower case.
@@ -285,7 +285,7 @@ class SymbolTable(object):
         self._data_symbols[lname] = SymbolTable.Symbol(lname,
                                                        primitive_type.lower())
 
-    def add_use(self, name, only_list=None):
+    def add_use_symbols(self, name, only_list=None):
         '''
         Creates an entry in the table for the USE of a module with the supplied
         name. If no `only_list` is supplied then this USE represents a wildcard
