@@ -289,7 +289,8 @@ class SymbolTable(object):
         :param str name: the name of the module being imported via a USE. Not \
             case sensitive.
         :param only_list: Whether or not there is an 'only:' clause on the \
-            USE statement and, if so, the names of the symbols being imported.
+            USE statement and, if so, the names of the symbols being imported \
+            (not case sensitive).
         :type only_list: NoneType or list of str
 
         :raises TypeError: if either of the supplied parameters are of the \
@@ -306,11 +307,18 @@ class SymbolTable(object):
             raise TypeError("If present, the only_list must be a list of str "
                             "but got: {0}".format(
                                 [type(item).__name__ for item in only_list]))
+
+        # Convert the list of names to lower case
+        if only_list is not None:
+            lowered_list = [var_name.lower() for var_name in only_list]
+        else:
+            lowered_list = None
+
         lname = name.lower()
         if lname in self._modules:
             # The same module can appear in more than one use statement
             # in Fortran.
-            if only_list:
+            if lowered_list:
                 if self._modules[lname] is None:
                     # We already have a wildcard import for this module but
                     # now we also know the names of some specific symbols that
@@ -320,9 +328,9 @@ class SymbolTable(object):
                     # this.
                     pass
                 else:
-                    self._modules[lname].extend(only_list)
+                    self._modules[lname].extend(lowered_list)
         else:
-            self._modules[lname] = only_list
+            self._modules[lname] = lowered_list
 
     def lookup(self, name):
         '''

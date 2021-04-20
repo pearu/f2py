@@ -1,3 +1,4 @@
+#------------------------------------------------------------------------------
 # Copyright (c) 2021 Science and Technology Facilities Council
 # All rights reserved.
 #
@@ -30,6 +31,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#------------------------------------------------------------------------------
 
 ''' Module containing tests for the symbol-table functionality
  of fparser2. '''
@@ -91,7 +93,7 @@ def test_add_use():
     # additional, specific imports (TODO #294) the list of associated symbols
     # should still be None.
     assert table._modules["mod1"] is None
-    table.add_use("mod2", ["ivar"])
+    table.add_use("mod2", ["iVar"])
     assert table._modules["mod2"] == ["ivar"]
     table.add_use("mod2", ["jvar"])
     assert table._modules["mod2"] == ["ivar", "jvar"]
