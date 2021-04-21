@@ -15,9 +15,12 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+21/04/2021 PR #260 for #253. Bug fix to improve Io_Control_Spec and
+	   Io_Control_Spec_List matching.
+
 11/03/2021 PR #269 for #268. Removed recognition of f2py directives in
-	   the reader. The original code is still there if needed in
-	   the future.
+	   the reader. The original code is still there if needed in the
+	   future.
 
 20/01/2021 PR #289 for #288. Bug fix for matching expressions containing
            real literals with signed exponents. This bug was introduced
