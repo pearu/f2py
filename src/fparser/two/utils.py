@@ -70,7 +70,6 @@
 # First version created: Oct 2006
 
 import re
-import logging
 import six
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
@@ -374,7 +373,7 @@ class Base(ComparableMixin):
                     continue
                 try:
                     obj = subcls(string, parent_cls=parent_cls)
-                except NoMatchError as msg:
+                except NoMatchError:
                     obj = None
                 if obj is not None:
                     return obj
@@ -1038,33 +1037,46 @@ class SeparatorBase(Base):
 
 
 class KeywordValueBase(Base):
-    """
-::
-    <keyword-value-base> = [ <lhs> = ] <rhs>
-    """
+    '''
+
+    keyword-value-base is [ lhs = ] rhs
+
+    where:
+
+    R215 keyword is name.
+
+    '''
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
         '''
-        :param lhs_cls: list, tuple or single value of classes to attempt to
-                        match LHS against (in order), or string containing
-                        keyword to match
+        Attempts to match the supplied `string` with `lhs_cls` = `rhs_cls`.
+        If `lhs_cls` is a str then it is compared with the content to the
+        left of the first '=' character in `string`. If that content is a
+        valid Fortran name but does *not* match `lhs_cls` then the match
+        fails, irrespective of the setting of `require_lhs`.
+
+        :param lhs_cls: list, tuple or single value of classes to attempt to \
+                        match LHS against (in order), or string containing \
+                        keyword to match.
         :type lhs_cls: names of classes deriving from `:py:class:Base` or str
-        :param rhs_cls: name of class to match RHS against
+        :param rhs_cls: name of class to match RHS against.
         :type rhs_cls: name of a class deriving from `:py:class:Base`
-        :param str string: text to be matched
-        :param bool require_lhs: whether the expression to be matched must
-                                 contain a LHS that is assigned to
-        :param bool upper_lhs: whether or not to convert the LHS of the
-                               matched expression to upper case
-        :return: instances of the classes representing quantities on the LHS
-                 and RHS (LHS is optional) or nothing if no match is found
-        :rtype: 2-tuple of objects or nothing
+        :param str string: text to be matched.
+        :param bool require_lhs: whether the expression to be matched must \
+                                 contain a LHS that is assigned to.
+        :param bool upper_lhs: whether or not to convert the LHS of the \
+                               matched expression to upper case.
+
+        :return: instances of the classes representing quantities on the LHS \
+                 and RHS (LHS is optional) or None if no match is found.
+        :rtype: 2-tuple of objects or NoneType
+
         '''
         if require_lhs and '=' not in string:
-            return
+            return None
         if isinstance(lhs_cls, (list, tuple)):
-            for s in lhs_cls:
-                obj = KeywordValueBase.match(s, rhs_cls, string,
+            for cls in lhs_cls:
+                obj = KeywordValueBase.match(cls, rhs_cls, string,
                                              require_lhs=require_lhs,
                                              upper_lhs=upper_lhs)
                 if obj:
@@ -1072,28 +1084,37 @@ class KeywordValueBase(Base):
             return obj
         # We can't just blindly check whether 'string' contains an '='
         # character as it could itself hold a string constant containing
-        # an '=', e.g. FMT='("Hello = False")'
-        from fparser.two.Fortran2003 import Char_Literal_Constant
-        if not Char_Literal_Constant.match(string) and "=" in string:
-            lhs, rhs = string.split('=', 1)
-            lhs = lhs.rstrip()
-        else:
-            lhs = None
-            rhs = string.rstrip()
-        rhs = rhs.lstrip()
-        if not rhs:
-            return
+        # an '=', e.g. FMT='("Hello = False")'.
+        # Therefore we only split on the left-most '=' character
+        pieces = string.split('=', 1)
+        lhs = None
+        if len(pieces) == 2:
+            # It does contain at least one '='. Proceed to attempt to match
+            # the content on the LHS of it.
+            lhs = pieces[0].strip()
+            if isinstance(lhs_cls, str):
+                # lhs_cls is a keyword
+                if upper_lhs:
+                    lhs = lhs.upper()
+                if lhs != lhs_cls:
+                    # The content to the left of the '=' does not match the
+                    # supplied keyword
+                    lhs = None
+            else:
+                lhs = lhs_cls(lhs)
         if not lhs:
+            # We haven't matched the LHS and therefore proceed to treat the
+            # whole string as a RHS if the LHS is not strictly required.
             if require_lhs:
-                return
-            return None, rhs_cls(rhs)
-        if isinstance(lhs_cls, str):
-            if upper_lhs:
-                lhs = lhs.upper()
-            if lhs_cls != lhs:
-                return
-            return lhs, rhs_cls(rhs)
-        return lhs_cls(lhs), rhs_cls(rhs)
+                return None
+            rhs = string.strip()
+        else:
+            rhs = pieces[-1].strip()
+        if rhs:
+            rhs = rhs_cls(rhs)
+        if not rhs:
+            return None
+        return lhs, rhs
 
     def tostr(self):
         if self.items[0] is None:
