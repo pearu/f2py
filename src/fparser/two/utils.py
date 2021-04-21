@@ -1039,7 +1039,7 @@ class SeparatorBase(Base):
 class KeywordValueBase(Base):
     '''
 
-    keyword-value-base is [ <lhs> = ] <rhs>
+    keyword-value-base is [ lhs = ] rhs
 
     where:
 

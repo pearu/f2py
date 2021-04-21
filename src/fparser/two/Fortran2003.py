@@ -7413,10 +7413,9 @@ class Io_Control_Spec_List(SequenceBase):
 
             # Deal with the remainder of the list entries. These must all be
             # named.
-            for idx in range(len(splitted)):
-                spec = splitted[idx].strip()
-                spec = repmap(spec)
-                lst.append(Io_Control_Spec(spec))
+            for spec in splitted:
+                mapped_spec = repmap(spec.strip())
+                lst.append(Io_Control_Spec(mapped_spec))
 
         except NoMatchError:
             return None
