@@ -98,6 +98,7 @@ def test_log_cache(log):
                             'warning':  [],
                             'error':    [],
                             'critical': []}
+    _.cache.clear()
 
 
 def test_log_failure(log, monkeypatch):
