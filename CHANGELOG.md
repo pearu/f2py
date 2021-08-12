@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+12/08/2021 #299. Fix to logging test in fparser1 tests.
+
 26/04/2021 #296. Create release 0.0.12.
 
 21/04/2021 PR #260 for #253. Bug fix to improve Io_Control_Spec and
