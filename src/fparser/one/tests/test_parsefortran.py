@@ -62,7 +62,8 @@ def test_log_empty(log):
                             'warning':  [],
                             'error':    [],
                             'critical': []}
-
+    log.reset()
+    unit_under_test.cache.clear()
 
 def test_log_cache(log):
     '''
