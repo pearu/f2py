@@ -796,12 +796,15 @@ class SequenceBase(Base):
             raise InternalError(
                 "SequenceBase class match method argument separator cannot "
                 "be white space.")
+
         line, repmap = string_replace_map(string)
         splitted = line.split(separator)
         if not splitted:
             # There should be at least one entry.
             return None
+
         lst = [subcls(repmap(entry.strip())) for entry in splitted]
+
         return separator, tuple(lst)
 
     def init(self, separator, items):
@@ -883,7 +886,7 @@ class BinaryOpBase(Base):
     '''
     @staticmethod
     def match(lhs_cls, op_pattern, rhs_cls, string, right=True,
-              exclude_op_pattern=None, is_add=False):
+              exclude_op_pattern=None):
         '''Matches the binary-op-base rule.
 
         If the operator defined by argument 'op_pattern' is found in
@@ -903,14 +906,6 @@ class BinaryOpBase(Base):
         argument then there will be no match if the pattern matched by
         the 'op_pattern' argument also matches this pattern. The
         default (None) does nothing.
-
-        When set to true the 'is_add' optional argument causes a '+'
-        in a real literal on the rhs of a match to be ignored. When
-        the add operand is being matched this has the effect of
-        correctly matching patterns like 'a+2.0e+10' i.e. the split is
-        performed between the 'a' and the '2.0e+10'. The default is
-        false. This is a special case optimisation which should
-        probably be removed, see issue #281.
 
         :param lhs_cls: an fparser2 object representing the rule that \
             should be matched to the lhs text.
@@ -944,6 +939,7 @@ class BinaryOpBase(Base):
 
         '''
         line, repmap = string_replace_map(string)
+
         if isinstance(op_pattern, str):
             if right:
                 text_split = line.rsplit(op_pattern, 1)
@@ -955,7 +951,7 @@ class BinaryOpBase(Base):
             oper = op_pattern
         else:
             if right:
-                text_split = op_pattern.rsplit(line, is_add=is_add)
+                text_split = op_pattern.rsplit(line)
             else:
                 text_split = op_pattern.lsplit(line)
             if not text_split or len(text_split) != 3:

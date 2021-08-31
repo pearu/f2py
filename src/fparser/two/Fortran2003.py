@@ -4792,7 +4792,7 @@ class Add_Operand(BinaryOpBase):  # pylint: disable=invalid-name
             subclass of :py:class:`fparser.two.utils.Base`) or NoneType
 
         '''
-        return  BinaryOpBase.match(
+        return BinaryOpBase.match(
             Level_2_Expr, pattern.mult_op.named(), Mult_Operand, string)
 
 
@@ -4809,8 +4809,7 @@ class Level_2_Expr(BinaryOpBase):  # R706
 
     def match(string):
         return BinaryOpBase.match(
-            Level_2_Expr, pattern.add_op.named(), Add_Operand,
-            string, is_add=True)
+            Level_2_Expr, pattern.add_op.named(), Add_Operand, string)
     match = staticmethod(match)
 
 
