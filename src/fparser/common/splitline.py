@@ -78,6 +78,7 @@ First version created: May 2006
 import re
 import six
 
+
 class String(six.text_type):
     ''' Dummy string class. '''
 
@@ -92,7 +93,8 @@ _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
 _is_name = re.compile(r'\w*\Z', re.I).match
 _is_simple_str = re.compile(r'\w*\Z', re.I).match
 _f2py_findall = re.compile(
-    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
+    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_REAL_CONSTANT_\d+_|'
+    r'F2PY_EXPR_TUPLE_\d+)').findall
 
 
 class string_replace_dict(dict):
@@ -106,13 +108,25 @@ class string_replace_dict(dict):
         return line
 
 
-def string_replace_map(line, lower=False,
-                       _cache={'index': 0, 'pindex': 0}):
+def string_replace_map(line, lower=False, _cache=None):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
     2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
-    Returns a new line and the replacement map.
+    3) Replaces real numerical constants with symbol
+       `'F2PY_REAL_CONSTANT_<index>_'`
+
+    :returns: a new line and the replacement map.
+    :rtype: 2-tuple consisting of a str and dict
+
     """
+    # A valid exponential constant must begin with a digit (and be preceeded
+    # by a non-'word' character).
+    exponential_constant = re.compile(
+        r"(?:[^\w])(\d*[.])?(\d+)\s*([ed])\s*([+-])?\s*(\d+)(_\w*)?", re.I)
+
+    if _cache is None:
+        _cache = {'index': 0, 'const_index': 0, 'pindex': 0}
+
     items = []
     string_map = string_replace_dict()
     rev_string_map = {}
@@ -130,6 +144,25 @@ def string_replace_map(line, lower=False,
         else:
             items.append(item)
     newline = ''.join(items)
+
+    const_keys = []
+    for item in exponential_constant.finditer(newline):
+        # Since the regex contains groups, we need to use `group()` to get
+        # the whole match. We don't want the first character of the match
+        # as that is the 'non-word' character that must preceed a valid
+        # constant.
+        found = item.group()[1:]
+
+        key = rev_string_map.get(found)
+        if key is None:
+            _cache["const_index"] += 1
+            index = _cache["const_index"]
+            key = "F2PY_REAL_CONSTANT_{0}_".format(index)
+            string_map[key] = found
+            rev_string_map[found] = key
+            const_keys.append(key)
+        newline = newline.replace(found, key)
+
     items = []
     expr_keys = []
     for item in splitparen(newline):
@@ -146,17 +179,21 @@ def string_replace_map(line, lower=False,
             items.append(item[0]+key+item[-1])
         else:
             items.append(item)
+
+    # Ensure that any entries in the map do not themselves contain
+    # substitutions
     found_keys = set()
-    for k in expr_keys:
-        v = string_map[k]
-        l = _f2py_str_findall(v)
-        if l:
-            found_keys = found_keys.union(l)
-            for k1 in l:
-                v = v.replace(k1, string_map[k1])
-            string_map[k] = v
-    for k in found_keys:
-        del string_map[k]
+    for key in expr_keys + const_keys:
+        entry = string_map[key]
+        # Find any keys within this map entry
+        included_keys = _f2py_findall(entry)
+        if included_keys:
+            found_keys = found_keys.union(included_keys)
+            for k1 in included_keys:
+                entry = entry.replace(k1, string_map[k1])
+            string_map[key] = entry
+    for key in found_keys:
+        del string_map[key]
     return ''.join(items), string_map
 
 

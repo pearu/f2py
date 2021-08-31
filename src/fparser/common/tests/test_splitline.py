@@ -71,6 +71,8 @@ Test parsing single Fortran lines.
 
 """
 
+import pytest
+
 from fparser.common.splitline import splitparen, splitquote, string_replace_map
 
 
@@ -82,7 +84,7 @@ def test_splitparen():
     assert splitparen('a(b) = b(x,y(1)) b((a))') == \
         ['a', '(b)', ' = b', '(x,y(1))', ' b', '((a))']
     # pylint: disable=anomalous-backslash-in-string
-    assert splitparen('a(b) = b(x,y(1)) b\((a)\)') == \
+    assert splitparen(r'a(b) = b(x,y(1)) b\((a)\)') == \
         ['a', '(b)', ' = b', '(x,y(1))', ' b\\(', '(a)', '\\)']
     # pylint: enable=anomalous-backslash-in-string
     assert splitparen('abc[1]') == ['abc', '[1]']
@@ -90,7 +92,7 @@ def test_splitparen():
     assert splitparen('a[b] = b[x,y(1)] b((a))') == \
         ['a', '[b]', ' = b', '[x,y(1)]', ' b', '((a))']
     # pylint: disable=anomalous-backslash-in-string
-    assert splitparen('a[b] = b[x,y(1)] b\((a)\)') == \
+    assert splitparen(r'a[b] = b[x,y(1)] b\((a)\)') == \
         ['a', '[b]', ' = b', '[x,y(1)]', ' b\\(', '(a)', '\\)']
     # pylint: enable=anomalous-backslash-in-string
     assert splitparen('integer a(3) = (/"a", "b", "c"/)') == \
@@ -133,8 +135,25 @@ def test_splitquote():
     assert stopchar == '\''
 
 
-def test_string_replace_map():
-    '''Tests string_replace_map function.'''
-    result, string_map = string_replace_map('a()')
-    assert result == 'a()'
-    assert string_map == {}
+@pytest.mark.parametrize(
+    "test_str, result, result_map",
+    [("a()", "a()", {}),
+     ("a(b + c)", "a(F2PY_EXPR_TUPLE_1)", {"F2PY_EXPR_TUPLE_1": "b + c"}),
+     ("a + 1.0e-10*c", "a + F2PY_REAL_CONSTANT_1_*c",
+      {"F2PY_REAL_CONSTANT_1_": "1.0e-10"}),
+     ("a + 1.0e-10*c + 1.0e-10*d",
+      "a + F2PY_REAL_CONSTANT_1_*c + F2PY_REAL_CONSTANT_1_*d",
+      {"F2PY_REAL_CONSTANT_1_": "1.0e-10"}),
+     ("a + 1.0E-10*c + 1.0e-11*d", "a + F2PY_REAL_CONSTANT_1_*c + "
+      "F2PY_REAL_CONSTANT_2_*d", {"F2PY_REAL_CONSTANT_1_": "1.0E-10",
+                                   "F2PY_REAL_CONSTANT_2_": "1.0e-11"}),
+     ("a1e-3", "a1e-3", {}),
+     ("3.0 - .32D+3", "3.0 - F2PY_REAL_CONSTANT_1_",
+      {"F2PY_REAL_CONSTANT_1_": ".32D+3"}),
+     ("var=1.0d-3", "var=F2PY_REAL_CONSTANT_1_",
+      {"F2PY_REAL_CONSTANT_1_": "1.0d-3"})])
+def test_string_replace_map(test_str, result, result_map):
+    '''Tests string_replace_map function for various expressions.'''
+    string, string_map = string_replace_map(test_str)
+    assert string == result
+    assert string_map == result_map
