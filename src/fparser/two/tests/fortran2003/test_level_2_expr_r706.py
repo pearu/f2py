@@ -38,8 +38,7 @@ Level_2_Expr class.
 '''
 
 import pytest
-from fparser.two.utils import NoMatchError
-from fparser.two.Fortran2003 import Add_Operand, Level_2_Expr
+from fparser.two.Fortran2003 import Level_2_Expr
 from fparser.two.parser import ParserFactory
 # This is required to setup the fortran2003 classes (when matching
 # with Level_2_Expr directly)
@@ -52,9 +51,14 @@ _ = ParserFactory().create(std="f2003")
     ("a + c * b", "Level_2_Expr(Name('a'), '+', Add_Operand(Name('c'), '*',"
      " Name('b')))"),
     ("a + 1.0E-10 * b", "Level_2_Expr(Name('a'), '+', Add_Operand("
-     "Real_Literal_Constant('1.0E-10', None), '*', Name('b')))")])
+     "Real_Literal_Constant('1.0E-10', None), '*', Name('b')))"),
+    ("a + 1.0d+10 * b", "Level_2_Expr(Name('a'), '+', Add_Operand("
+     "Real_Literal_Constant('1.0D+10', None), '*', Name('b')))"),
+    ("- .0E-10 * b - a", "Level_2_Expr(Level_2_Unary_Expr('-', Add_Operand("
+     "Real_Literal_Constant('.0E-10', None), '*', Name('b'))), '-', "
+     "Name('a'))")])
 def test_mult(string, str_repr):
     ''' Test for a successful match with a valid level-2 expression. '''
     result = Level_2_Expr(string)
-    assert str(result) == string
+    assert str(result).lower() == string.lower()
     assert repr(result) == str_repr
