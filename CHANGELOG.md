@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+01/09/2021 #300. Further fixes to logging tests in fparser1.
+
 12/08/2021 #299. Fix to logging test in fparser1 tests.
 
 26/04/2021 #296. Create release 0.0.12.
