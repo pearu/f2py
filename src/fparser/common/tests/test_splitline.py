@@ -150,13 +150,16 @@ def test_splitquote():
      ("a + 1.0E-10*c + 1.0e-11*d", "a + F2PY_REAL_CONSTANT_1_*c + "
       "F2PY_REAL_CONSTANT_2_*d", {"F2PY_REAL_CONSTANT_1_": "1.0E-10",
                                    "F2PY_REAL_CONSTANT_2_": "1.0e-11"}),
-     ("a1e-3", "a1e-3", {}),
+     ("a1e-3*1e3", "a1e-3*F2PY_REAL_CONSTANT_1_", {"F2PY_REAL_CONSTANT_1_":
+                                                   "1e3"}),
      ("3.0 - .32D+3", "3.0 - F2PY_REAL_CONSTANT_1_",
       {"F2PY_REAL_CONSTANT_1_": ".32D+3"}),
      ("var=1.0d-3", "var=F2PY_REAL_CONSTANT_1_",
       {"F2PY_REAL_CONSTANT_1_": "1.0d-3"}),
      (".5e3_wp*a", "F2PY_REAL_CONSTANT_1_*a",
-      {"F2PY_REAL_CONSTANT_1_": ".5e3_wp"})])
+      {"F2PY_REAL_CONSTANT_1_": ".5e3_wp"}),
+     ("5.e+3_wp*a", "F2PY_REAL_CONSTANT_1_*a",
+      {"F2PY_REAL_CONSTANT_1_": "5.e+3_wp"})])
 def test_string_replace_map(test_str, result, result_map):
     '''Tests string_replace_map function for various expressions.'''
     string, string_map = string_replace_map(test_str)

@@ -98,7 +98,7 @@ _f2py_findall = re.compile(
     r'F2PY_EXPR_TUPLE_\d+)').findall
 
 
-class string_replace_dict(dict):
+class StringReplaceDict(dict):
     """
     Dictionary object that is callable for applying map returned
     by string_replace_map() function.
@@ -114,23 +114,25 @@ def string_replace_map(line, lower=False, _cache=None):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
     2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
-    3) Replaces real numerical constants with symbol
+    3) Replaces real numerical constants containing an exponent with symbol
        `'F2PY_REAL_CONSTANT_<index>_'`
 
     :returns: a new line and the replacement map.
-    :rtype: 2-tuple consisting of a str and dict
+    :rtype: 2-tuple of str and \
+            :py:class:`fparser.common.splitline.StringReplaceDict`
 
     """
-    # A valid exponential constant must begin with a digit (and be preceeded
-    # by a non-'word' character or the start of the string).
+    # A valid exponential constant must begin with a digit or a '.' (and be
+    # preceeded by a non-'word' character or the start of the string).
     exponential_constant = re.compile(
-        r"(?:[^\w]|^)(\d*[.])?(\d+)\s*([ed])\s*[+-]?\s*(\d+)(_\w*)?", re.I)
+        r"(?:[^\w]|^)(\d+[.]\d*|\d*[.]\d+|\d+)\s*[ed]\s*[+-]?\s*\d+(_\w*)?",
+        re.I)
 
     if _cache is None:
         _cache = {'index': 0, 'const_index': 0, 'pindex': 0}
 
     items = []
-    string_map = string_replace_dict()
+    string_map = StringReplaceDict()
     rev_string_map = {}
     for item in splitquote(line, lower=lower)[0]:
         if isinstance(item, String) and not _is_simple_str(item[1:-1]):
@@ -139,9 +141,9 @@ def string_replace_map(line, lower=False, _cache=None):
                 _cache['index'] += 1
                 index = _cache['index']
                 key = "_F2PY_STRING_CONSTANT_%s_" % (index)
-                it = item[1:-1]
-                string_map[key] = it
-                rev_string_map[it] = key
+                trimmed = item[1:-1]
+                string_map[key] = trimmed
+                rev_string_map[trimmed] = key
             items.append(item[0]+key+item[-1])
         else:
             items.append(item)
@@ -178,9 +180,9 @@ def string_replace_map(line, lower=False, _cache=None):
                 _cache['pindex'] += 1
                 index = _cache['pindex']
                 key = 'F2PY_EXPR_TUPLE_%s' % (index)
-                it = item[1:-1].strip()
-                string_map[key] = it
-                rev_string_map[it] = key
+                trimmed = item[1:-1].strip()
+                string_map[key] = trimmed
+                rev_string_map[trimmed] = key
                 expr_keys.append(key)
             items.append(item[0]+key+item[-1])
         else:
@@ -195,8 +197,8 @@ def string_replace_map(line, lower=False, _cache=None):
         included_keys = _f2py_findall(entry)
         if included_keys:
             found_keys = found_keys.union(included_keys)
-            for k1 in included_keys:
-                entry = entry.replace(k1, string_map[k1])
+            for inc_key in included_keys:
+                entry = entry.replace(inc_key, string_map[inc_key])
             string_map[key] = entry
     for key in found_keys:
         del string_map[key]
