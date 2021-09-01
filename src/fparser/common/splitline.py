@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2021 Science and Technology
+# Facilities Council.
 # Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -104,7 +105,8 @@ class string_replace_dict(dict):
     """
     def __call__(self, line):
         for k in _f2py_findall(line):
-            line = line.replace(k, self[k])
+            if k in self:
+                line = line.replace(k, self[k])
         return line
 
 
@@ -120,9 +122,9 @@ def string_replace_map(line, lower=False, _cache=None):
 
     """
     # A valid exponential constant must begin with a digit (and be preceeded
-    # by a non-'word' character).
+    # by a non-'word' character or the start of the string).
     exponential_constant = re.compile(
-        r"(?:[^\w])(\d*[.])?(\d+)\s*([ed])\s*([+-])?\s*(\d+)(_\w*)?", re.I)
+        r"(?:[^\w]|^)(\d*[.])?(\d+)\s*([ed])\s*[+-]?\s*(\d+)(_\w*)?", re.I)
 
     if _cache is None:
         _cache = {'index': 0, 'const_index': 0, 'pindex': 0}
@@ -148,10 +150,14 @@ def string_replace_map(line, lower=False, _cache=None):
     const_keys = []
     for item in exponential_constant.finditer(newline):
         # Since the regex contains groups, we need to use `group()` to get
-        # the whole match. We don't want the first character of the match
-        # as that is the 'non-word' character that must preceed a valid
-        # constant.
-        found = item.group()[1:]
+        # the whole match.
+        if item.start() == 0:
+            found = item.group()
+        else:
+            # If the match is not at the beginning of the string then we don't
+            # want the first character as that is the 'non-word' character
+            # that must preceed a valid constant.
+            found = item.group()[1:]
 
         key = rev_string_map.get(found)
         if key is None:
@@ -194,6 +200,7 @@ def string_replace_map(line, lower=False, _cache=None):
             string_map[key] = entry
     for key in found_keys:
         del string_map[key]
+
     return ''.join(items), string_map
 
 

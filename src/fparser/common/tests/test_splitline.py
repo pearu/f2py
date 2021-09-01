@@ -139,6 +139,9 @@ def test_splitquote():
     "test_str, result, result_map",
     [("a()", "a()", {}),
      ("a(b + c)", "a(F2PY_EXPR_TUPLE_1)", {"F2PY_EXPR_TUPLE_1": "b + c"}),
+     ("0.5d0*a", "F2PY_REAL_CONSTANT_1_*a",
+      {"F2PY_REAL_CONSTANT_1_": "0.5d0"}),
+     (".5d0*a", "F2PY_REAL_CONSTANT_1_*a", {"F2PY_REAL_CONSTANT_1_": ".5d0"}),
      ("a + 1.0e-10*c", "a + F2PY_REAL_CONSTANT_1_*c",
       {"F2PY_REAL_CONSTANT_1_": "1.0e-10"}),
      ("a + 1.0e-10*c + 1.0e-10*d",
@@ -151,9 +154,12 @@ def test_splitquote():
      ("3.0 - .32D+3", "3.0 - F2PY_REAL_CONSTANT_1_",
       {"F2PY_REAL_CONSTANT_1_": ".32D+3"}),
      ("var=1.0d-3", "var=F2PY_REAL_CONSTANT_1_",
-      {"F2PY_REAL_CONSTANT_1_": "1.0d-3"})])
+      {"F2PY_REAL_CONSTANT_1_": "1.0d-3"}),
+     (".5e3_wp*a", "F2PY_REAL_CONSTANT_1_*a",
+      {"F2PY_REAL_CONSTANT_1_": ".5e3_wp"})])
 def test_string_replace_map(test_str, result, result_map):
     '''Tests string_replace_map function for various expressions.'''
     string, string_map = string_replace_map(test_str)
     assert string == result
     assert string_map == result_map
+    assert string_map(string) == test_str
