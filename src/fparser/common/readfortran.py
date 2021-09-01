@@ -288,7 +288,8 @@ class Line(object):
     """
 
     f2py_strmap_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_'
-                                     + r'|F2PY_EXPR_TUPLE_\d+)').findall
+                                     r'|F2PY_REAL_CONSTANT_\d+_'
+                                     r'|F2PY_EXPR_TUPLE_\d+)').findall
 
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
