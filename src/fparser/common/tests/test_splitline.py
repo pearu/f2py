@@ -159,7 +159,22 @@ def test_splitquote():
      (".5e3_wp*a", "F2PY_REAL_CONSTANT_1_*a",
       {"F2PY_REAL_CONSTANT_1_": ".5e3_wp"}),
      ("5.e+3_wp*a", "F2PY_REAL_CONSTANT_1_*a",
-      {"F2PY_REAL_CONSTANT_1_": "5.e+3_wp"})])
+      {"F2PY_REAL_CONSTANT_1_": "5.e+3_wp"}),
+     ("IF(ABS( zds) <= 1.e-20_wp)   zds = 1.e-20_wp",
+      "IF(F2PY_EXPR_TUPLE_1)   zds = F2PY_REAL_CONSTANT_1_",
+      {"F2PY_EXPR_TUPLE_1": "ABS( zds) <= 1.e-20_wp",
+       "F2PY_REAL_CONSTANT_1_": "1.e-20_wp"}),
+     ("1.e-1+2.e-1+3.e-1+4.e-1+5.e-1+6.e-1+7.e-1+8.e-1+9.e-1+1.1e-1+1.2e-2",
+      "F2PY_REAL_CONSTANT_1_+F2PY_REAL_CONSTANT_2_+F2PY_REAL_CONSTANT_3_+"
+      "F2PY_REAL_CONSTANT_4_+F2PY_REAL_CONSTANT_5_+F2PY_REAL_CONSTANT_6_+"
+      "F2PY_REAL_CONSTANT_7_+F2PY_REAL_CONSTANT_8_+F2PY_REAL_CONSTANT_9_+"
+      "F2PY_REAL_CONSTANT_10_+F2PY_REAL_CONSTANT_11_",
+      {"F2PY_REAL_CONSTANT_1_": "1.e-1", "F2PY_REAL_CONSTANT_2_": "2.e-1",
+       "F2PY_REAL_CONSTANT_3_": "3.e-1", "F2PY_REAL_CONSTANT_4_": "4.e-1",
+       "F2PY_REAL_CONSTANT_5_": "5.e-1", "F2PY_REAL_CONSTANT_6_": "6.e-1",
+       "F2PY_REAL_CONSTANT_7_": "7.e-1", "F2PY_REAL_CONSTANT_8_": "8.e-1",
+       "F2PY_REAL_CONSTANT_9_": "9.e-1", "F2PY_REAL_CONSTANT_10_": "1.1e-1",
+       "F2PY_REAL_CONSTANT_11_": "1.2e-2"})])
 def test_string_replace_map(test_str, result, result_map):
     '''Tests string_replace_map function for various expressions.'''
     string, string_map = string_replace_map(test_str)

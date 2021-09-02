@@ -106,7 +106,12 @@ class StringReplaceDict(dict):
     def __call__(self, line):
         for k in _f2py_findall(line):
             if k in self:
-                line = line.replace(k, self[k])
+                # We only replace the occurrence of 'k' corresponding to
+                # the current result of the findall. This prevents the
+                # 'replace' also affecting subsequent matches that may
+                # have 'k' as a substring (e.g. F2PY_EXPR_TUPLE_10 has
+                # F2PY_EXPR_TUPLE_1 as a substring).
+                line = line.replace(k, self[k], 1)
         return line
 
 
@@ -198,10 +203,8 @@ def string_replace_map(line, lower=False, _cache=None):
         if included_keys:
             found_keys = found_keys.union(included_keys)
             for inc_key in included_keys:
-                entry = entry.replace(inc_key, string_map[inc_key])
+                entry = entry.replace(inc_key, string_map[inc_key], 1)
             string_map[key] = entry
-    for key in found_keys:
-        del string_map[key]
 
     return ''.join(items), string_map
 
