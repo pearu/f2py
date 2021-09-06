@@ -104,23 +104,27 @@ class StringReplaceDict(dict):
     by string_replace_map() function.
     """
     def __call__(self, line):
-        for k in _f2py_findall(line):
-            if k in self:
-                # We only replace the occurrence of 'k' corresponding to
+        for key in _f2py_findall(line):
+            if key in self:
+                # We only replace the occurrence of `key` corresponding to
                 # the current result of the findall. This prevents the
                 # 'replace' also affecting subsequent matches that may
-                # have 'k' as a substring (e.g. F2PY_EXPR_TUPLE_10 has
-                # F2PY_EXPR_TUPLE_1 as a substring).
-                line = line.replace(k, self[k], 1)
+                # have key as a substring (e.g. 'F2PY_EXPR_TUPLE_10'
+                # contains 'F2PY_EXPR_TUPLE_1').
+                line = line.replace(key, self[key], 1)
         return line
 
 
-def string_replace_map(line, lower=False, _cache=None):
+def string_replace_map(line, lower=False):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
     2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
     3) Replaces real numerical constants containing an exponent with symbol
        `'F2PY_REAL_CONSTANT_<index>_'`
+
+    :param str line: the line of text in which to perform substitutions.
+    :param bool lower: whether or not the call to splitquote() should return \
+        items as lowercase (default is to leave the case unchanged).
 
     :returns: a new line and the replacement map.
     :rtype: 2-tuple of str and \
@@ -133,8 +137,9 @@ def string_replace_map(line, lower=False, _cache=None):
         r"(?:[^\w]|^)(\d+[.]\d*|\d*[.]\d+|\d+)\s*[ed]\s*[+-]?\s*\d+(_\w*)?",
         re.I)
 
-    if _cache is None:
-        _cache = {'index': 0, 'const_index': 0, 'pindex': 0}
+    str_idx = 0
+    const_idx = 0
+    parens_idx = 0
 
     items = []
     string_map = StringReplaceDict()
@@ -143,9 +148,8 @@ def string_replace_map(line, lower=False, _cache=None):
         if isinstance(item, String) and not _is_simple_str(item[1:-1]):
             key = rev_string_map.get(item)
             if key is None:
-                _cache['index'] += 1
-                index = _cache['index']
-                key = "_F2PY_STRING_CONSTANT_%s_" % (index)
+                str_idx += 1
+                key = "_F2PY_STRING_CONSTANT_{0}_".format(str_idx)
                 trimmed = item[1:-1]
                 string_map[key] = trimmed
                 rev_string_map[trimmed] = key
@@ -168,9 +172,8 @@ def string_replace_map(line, lower=False, _cache=None):
 
         key = rev_string_map.get(found)
         if key is None:
-            _cache["const_index"] += 1
-            index = _cache["const_index"]
-            key = "F2PY_REAL_CONSTANT_{0}_".format(index)
+            const_idx += 1
+            key = "F2PY_REAL_CONSTANT_{0}_".format(const_idx)
             string_map[key] = found
             rev_string_map[found] = key
             const_keys.append(key)
@@ -182,9 +185,8 @@ def string_replace_map(line, lower=False, _cache=None):
         if isinstance(item, ParenString) and not _is_name(item[1:-1].strip()):
             key = rev_string_map.get(item)
             if key is None:
-                _cache['pindex'] += 1
-                index = _cache['pindex']
-                key = 'F2PY_EXPR_TUPLE_%s' % (index)
+                parens_idx += 1
+                key = 'F2PY_EXPR_TUPLE_{0}'.format(parens_idx)
                 trimmed = item[1:-1].strip()
                 string_map[key] = trimmed
                 rev_string_map[trimmed] = key
