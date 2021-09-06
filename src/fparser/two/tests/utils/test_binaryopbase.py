@@ -125,13 +125,8 @@ def test_binaryopbase_match(pattern, string):
 
 
 def test_binaryopbase_addition():
-    '''Test the optional is_add argument to the BinaryOpBase match
-    method. This argument makes the associated pattern ignore the '+'
-    in a Real_Literal_Constant on the RHS of an expression. This
-    allows the expression to match the actual '+' operator for an
-    'add_op' pattern, e.g. 'a+3.0e+10' will match on the earlier '+'
-    rather than returning no-match. This option is a special case and
-    should probably be removed, see issue #281.
+    '''Test that an addition involving a numerical constant with an
+    exponent containing '+' is parsed correctly.
 
     '''
     string = "a+3.0e+10"

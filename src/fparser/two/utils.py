@@ -927,9 +927,6 @@ class BinaryOpBase(Base):
             particular subpattern to exclude from the match. Defaults \
             to None which means there is no subpattern.
         :type exclude_op_pattern: :py:class:`fparser.two.pattern_tools.Pattern`
-        :param bool is_add: optional match optimisation for the + \
-            operator when set to True (ignores matching the + in a
-            real literal). Defaults to False.
 
         :returns: a tuple containing the matched lhs, the operator and \
             the matched rhs of the input string or None if there is \

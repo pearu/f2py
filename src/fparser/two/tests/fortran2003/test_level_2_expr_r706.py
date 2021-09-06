@@ -57,7 +57,7 @@ _ = ParserFactory().create(std="f2003")
     ("- .0E-10 * b - a", "Level_2_Expr(Level_2_Unary_Expr('-', Add_Operand("
      "Real_Literal_Constant('.0E-10', None), '*', Name('b'))), '-', "
      "Name('a'))")])
-def test_mult(string, str_repr):
+def test_level2_exprn(string, str_repr):
     ''' Test for a successful match with a valid level-2 expression. '''
     result = Level_2_Expr(string)
     assert str(result).lower() == string.lower()
