@@ -118,9 +118,9 @@ class StringReplaceDict(dict):
 def string_replace_map(line, lower=False):
     """
     1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
-    2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
+    2) Replaces (`expression`) with symbol `(F2PY_EXPR_TUPLE_<index>)`
     3) Replaces real numerical constants containing an exponent with symbol
-       `'F2PY_REAL_CONSTANT_<index>_'`
+       `F2PY_REAL_CONSTANT_<index>_`
 
     :param str line: the line of text in which to perform substitutions.
     :param bool lower: whether or not the call to splitquote() should return \
