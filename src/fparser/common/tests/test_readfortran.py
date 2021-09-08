@@ -73,6 +73,32 @@ def test_empty_line_err():
     assert "Got empty line: \'   \'" in str(err.value)
 
 
+def test_line_map():
+    ''' Check the application and reversal of tokenisation of a Line for
+    strings, expressions in parentheses and literal constants with an
+    exponent.
+
+    '''
+    my_code = ("program test\n"
+               " real :: var\n"
+               " var = 1.0e-3\n"
+               " var = var * (var + 1.0d-4)\n"
+               " write(*,*) 'var = ', var\n"
+               "end program test\n")
+    reader = FortranStringReader(my_code, ignore_comments=True)
+    for _ in range(3):
+        line = reader.next()
+    assert line.get_line() == "var = F2PY_REAL_CONSTANT_1_"
+    assert line.get_line(apply_map=True) == "var = 1.0e-3"
+    line = reader.next()
+    assert line.get_line() == "var = var * (F2PY_EXPR_TUPLE_1)"
+    assert line.get_line(apply_map=True) == "var = var * (var + 1.0d-4)"
+    line = reader.next()
+    assert line.get_line() == ("write(F2PY_EXPR_TUPLE_1) "
+                               "'_F2PY_STRING_CONSTANT_1_', var")
+    assert line.get_line(apply_map=True) == "write(*,*) 'var = ', var"
+
+
 def test_111fortranreaderbase(log, monkeypatch):
     '''
     Tests the FortranReaderBase class.
