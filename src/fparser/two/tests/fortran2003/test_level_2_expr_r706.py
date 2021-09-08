@@ -52,6 +52,8 @@ _ = ParserFactory().create(std="f2003")
      " Name('b')))"),
     ("a + 1.0E-10 * b", "Level_2_Expr(Name('a'), '+', Add_Operand("
      "Real_Literal_Constant('1.0E-10', None), '*', Name('b')))"),
+    ("a + b * 1.0E-10", "Level_2_Expr(Name('a'), '+', Add_Operand("
+     "Name('b'), '*', Real_Literal_Constant('1.0E-10', None)))"),
     ("a + 1.0d+10 * b", "Level_2_Expr(Name('a'), '+', Add_Operand("
      "Real_Literal_Constant('1.0D+10', None), '*', Name('b')))"),
     ("- .0E-10 * b - a", "Level_2_Expr(Level_2_Unary_Expr('-', Add_Operand("

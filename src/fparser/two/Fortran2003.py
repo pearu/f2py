@@ -4759,22 +4759,19 @@ class Add_Operand(BinaryOpBase):  # pylint: disable=invalid-name
     Note rule R708 (mult-op is * or /) is implemented directly here as
     the mult_op pattern.
 
-    Rule R705 specifies matching using 'add-operand', however this
-    implementation uses Level_2_Expr instead. The reason for this is
-    due to the potential to accidentally match a negative exponent as
-    the minus sign in a level-2-expr. If this happens then it is
+    There is potential to accidentally match a sign in an exponent as the
+    plus/minus sign in a level-2-expr. If this were to happen then it is
     possible to end up matching a * or / (a level 1 expression) before
     matching a valid + or - which would normally result in no match
-    overall as * or / are matched after + or -. By matching with
-    Level_2_Expr, this allows us to match with a * or / and then a +
-    or - afterwards. A particular example is "a + 1.0e-1 * c", where
-    (rightly) failing to match on the "-" leads us to try to match on
-    the "*" which then fails to match on the + (as + and - have
-    already been tested).
+    overall as * or / are matched after + or -. This situation is
+    avoided by tokenising the string before performing the match so
+    that any numerical constants involving exponents are replaced by
+    simple symbols. (The tokenisation is performed by
+    `fparser.common.splitline.string_replace_map`.)
 
     '''
     subclass_names = ['Mult_Operand']
-    use_names = ['Level_2_Expr', 'Mult_Operand']
+    use_names = ['Mult_Operand']
 
     @staticmethod
     def match(string):
@@ -4793,7 +4790,7 @@ class Add_Operand(BinaryOpBase):  # pylint: disable=invalid-name
 
         '''
         return BinaryOpBase.match(
-            Level_2_Expr, pattern.mult_op.named(), Mult_Operand, string)
+            Add_Operand, pattern.mult_op.named(), Mult_Operand, string)
 
 
 class Level_2_Expr(BinaryOpBase):  # R706

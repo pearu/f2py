@@ -39,7 +39,7 @@ Add_Operand class.
 
 import pytest
 from fparser.two.utils import NoMatchError
-from fparser.two.Fortran2003 import Add_Operand
+from fparser.two.Fortran2003 import Add_Operand, Level_2_Expr
 from fparser.two.parser import ParserFactory
 # This is required to setup the fortran2003 classes (when matching
 # with Add_Operand)
@@ -68,6 +68,8 @@ def test_mult_fail():
 
 @pytest.mark.parametrize("string,str_repr", [
     ("a * b", "Add_Operand(Name('a'), '*', Name('b'))"),
+    ("a * 1.0E-3", "Add_Operand(Name('a'), '*', "
+     "Real_Literal_Constant('1.0E-3', None))"),
     ("a / b", "Add_Operand(Name('a'), '/', Name('b'))"),
     ("a * b * c", "Add_Operand(Add_Operand(Name('a'), '*', Name('b')), "
      "'*', Name('c'))"),
@@ -75,24 +77,6 @@ def test_mult_fail():
      "'/', Name('c'))")])
 def test_add_operand(string, str_repr):
     '''Test for a successful match with a valid add_operand'''
-    result = Add_Operand(string)
-    assert str(result) == string
-    assert repr(result) == str_repr
-
-
-@pytest.mark.parametrize("string,str_repr", [
-    ("a + b * c", "Add_Operand(Level_2_Expr(Name('a'), '+', Name('b')), "
-     "'*', Name('c'))"),
-    ("a + 1.0E-1 * c", "Add_Operand(Level_2_Expr(Name('a'), '+', "
-     "Real_Literal_Constant('1.0E-1', None)), '*', Name('c'))")])
-def test_level_2_match(string, str_repr):
-    '''Test that the level_2_expr class match allows a "+" or "-" operator
-    to be matched after a "*" or "/" operator if the former is to the
-    left of the latter. This would not be the case according to the
-    Fortran2003 rules, however it is needed to recover from a false
-    match on the '-' of an exponent.
-
-    '''
     result = Add_Operand(string)
     assert str(result) == string
     assert repr(result) == str_repr
