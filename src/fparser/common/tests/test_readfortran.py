@@ -87,20 +87,16 @@ def test_line_map():
                "end program test\n")
     reader = FortranStringReader(my_code, ignore_comments=True)
     for _ in range(3):
-        item = reader.next()
-    assert item.strline == "var = F2PY_REAL_CONSTANT_1_"
-    assert item.strlinemap == {"F2PY_REAL_CONSTANT_1_": "1.0e-3"}
-    assert item.get_line(apply_map=True) == "var = 1.0e-3"
-    item = reader.next()
-    assert item.strline == "var = var * (F2PY_EXPR_TUPLE_1)"
-    assert item.strlinemap["F2PY_EXPR_TUPLE_1"] == "var + 1.0d-4"
-    assert item.get_line(apply_map=True) == "var = var * (var + 1.0d-4)"
-    item = reader.next()
-    assert item.strline == ("write(F2PY_EXPR_TUPLE_1) "
-                            "'_F2PY_STRING_CONSTANT_1_', var")
-    assert item.strlinemap["F2PY_EXPR_TUPLE_1"] == "*,*"
-    assert item.strlinemap["_F2PY_STRING_CONSTANT_1_"] == "var = "
-    assert item.get_line(apply_map=True) == "write(*,*) 'var = ', var"
+        line = reader.next()
+    assert line.get_line() == "var = F2PY_REAL_CONSTANT_1_"
+    assert line.get_line(apply_map=True) == "var = 1.0e-3"
+    line = reader.next()
+    assert line.get_line() == "var = var * (F2PY_EXPR_TUPLE_1)"
+    assert line.get_line(apply_map=True) == "var = var * (var + 1.0d-4)"
+    line = reader.next()
+    assert line.get_line() == ("write(F2PY_EXPR_TUPLE_1) "
+                               "'_F2PY_STRING_CONSTANT_1_', var")
+    assert line.get_line(apply_map=True) == "write(*,*) 'var = ', var"
 
 
 def test_111fortranreaderbase(log, monkeypatch):
