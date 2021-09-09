@@ -286,11 +286,6 @@ class Line(object):
     is_f2py_directive : bool
       the line contains f2py directive
     """
-
-    f2py_strmap_findall = re.compile(r'(_F2PY_STRING_CONSTANT_\d+_'
-                                     r'|F2PY_REAL_CONSTANT_\d+_'
-                                     r'|F2PY_EXPR_TUPLE_\d+)').findall
-
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
         if not self.line:
@@ -319,12 +314,7 @@ class Line(object):
         '''
         if not hasattr(self, 'strlinemap') or not self.strlinemap:
             return line
-        findall = self.f2py_strmap_findall
-        str_map = self.strlinemap
-        keys = findall(line)
-        for k in keys:
-            line = line.replace(k, str_map[k])
-        return line
+        return self.strlinemap(line)
 
     def copy(self, line=None, apply_map=False):
         '''
