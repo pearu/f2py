@@ -134,8 +134,7 @@ def string_replace_map(line, lower=False):
     # A valid exponential constant must begin with a digit or a '.' (and be
     # preceeded by a non-'word' character or the start of the string).
     exponential_constant = re.compile(
-        r"(?:[^\w]|^)(\d+[.]\d*|\d*[.]\d+|\d+)\s*[ed]\s*[+-]?\s*\d+(_\w*)?",
-        re.I)
+        r"(?:[^\w]|^)(\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?")
 
     str_idx = 0
     const_idx = 0
