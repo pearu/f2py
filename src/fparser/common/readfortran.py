@@ -67,7 +67,7 @@
 #
 # Author: Pearu Peterson <pearu@cens.ioc.ee>
 # Created: May 2006
-# Modified by R. W. Ford, STFC Daresbury Lab
+# Modified by R. W. Ford and A. R. Porter, STFC Daresbury Lab
 # Modified by P. Elson, Met Office
 
 """Provides Fortran reader classes.
