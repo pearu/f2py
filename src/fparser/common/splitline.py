@@ -133,8 +133,12 @@ def string_replace_map(line, lower=False):
     """
     # A valid exponential constant must begin with a digit or a '.' (and be
     # preceeded by a non-'word' character or the start of the string).
+    # We have to exclude '.' from the match for a non-word character as
+    # otherwise, in a string such as ".5d0", it would be matched by the
+    # non-capturing group. Since the first group is non-capturing (?:),
+    # the matched literal is in group 1.
     exponential_constant = re.compile(
-        r"(?:[^\w]|^)(\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?")
+        r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
 
     str_idx = 0
     const_idx = 0
@@ -159,15 +163,9 @@ def string_replace_map(line, lower=False):
 
     const_keys = []
     for item in exponential_constant.finditer(newline):
-        # Since the regex contains groups, we need to use `group()` to get
-        # the whole match.
-        if item.start() == 0:
-            found = item.group()
-        else:
-            # If the match is not at the beginning of the string then we don't
-            # want the first character as that is the 'non-word' character
-            # that must preceed a valid constant.
-            found = item.group()[1:]
+        # Get the first captured group as that corresponds to the literal
+        # *without* any preceding non-word character.
+        found = item.group(1)
 
         key = rev_string_map.get(found)
         if key is None:
