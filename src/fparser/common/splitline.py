@@ -137,6 +137,7 @@ def string_replace_map(line, lower=False):
     # otherwise, in a string such as ".5d0", it would be matched by the
     # non-capturing group. Since the first group is non-capturing (?:),
     # the matched literal is in group 1.
+    # R417 for real-literal-constant does not permit whitespace.
     exponential_constant = re.compile(
         r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
 
