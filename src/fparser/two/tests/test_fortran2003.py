@@ -1997,8 +1997,8 @@ def test_logical_initialization_expr():  # R733
     assert str(obj) == '.FALSE.'
 
 
-def test_assignment_stmt():  # R734
-
+def test_assignment_stmt():
+    ''' Tests for the Assignment_Stmt class (R734). '''
     tcls = Assignment_Stmt
     obj = tcls('a = b')
     assert isinstance(obj, tcls), repr(obj)
@@ -2023,11 +2023,11 @@ def test_assignment_stmt():  # R734
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(n)(k : m) = 5'
 
-    obj = tcls('b = a + 1  d - 8')
+    obj = tcls('b = a + 1d-8')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8'
 
-    obj = tcls('b = a + 1  d - 8 + 1.1e+3')
+    obj = tcls('b = a + 1d-8 + 1.1e+3')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8 + 1.1E+3'
 

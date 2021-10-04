@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2021 Science and Technology
+# Facilities Council.
 # Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -78,6 +79,7 @@ First version created: May 2006
 import re
 import six
 
+
 class String(six.text_type):
     ''' Dummy string class. '''
 
@@ -92,71 +94,118 @@ _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
 _is_name = re.compile(r'\w*\Z', re.I).match
 _is_simple_str = re.compile(r'\w*\Z', re.I).match
 _f2py_findall = re.compile(
-    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_EXPR_TUPLE_\d+)').findall
+    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_REAL_CONSTANT_\d+_|'
+    r'F2PY_EXPR_TUPLE_\d+)').findall
 
 
-class string_replace_dict(dict):
+class StringReplaceDict(dict):
     """
     Dictionary object that is callable for applying map returned
     by string_replace_map() function.
     """
     def __call__(self, line):
-        for k in _f2py_findall(line):
-            line = line.replace(k, self[k])
+        for key in _f2py_findall(line):
+            if key in self:
+                # We only replace the occurrence of `key` corresponding to
+                # the current result of the findall. This prevents the
+                # 'replace' also affecting subsequent matches that may
+                # have key as a substring (e.g. 'F2PY_EXPR_TUPLE_10'
+                # contains 'F2PY_EXPR_TUPLE_1').
+                line = line.replace(key, self[key], 1)
         return line
 
 
-def string_replace_map(line, lower=False,
-                       _cache={'index': 0, 'pindex': 0}):
+def string_replace_map(line, lower=False):
     """
-    1) Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
-    2) Replaces (expression) with symbol `(F2PY_EXPR_TUPLE_<index>)`
-    Returns a new line and the replacement map.
+    #. Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
+    #. Replaces (`expression`) with symbol `(F2PY_EXPR_TUPLE_<index>)`
+    #. Replaces real numerical constants containing an exponent with symbol
+       `F2PY_REAL_CONSTANT_<index>_`
+
+    :param str line: the line of text in which to perform substitutions.
+    :param bool lower: whether or not the call to splitquote() should return \
+        items as lowercase (default is to leave the case unchanged).
+
+    :returns: a new line and the replacement map.
+    :rtype: 2-tuple of str and \
+            :py:class:`fparser.common.splitline.StringReplaceDict`
+
     """
+    # A valid exponential constant must begin with a digit or a '.' (and be
+    # preceeded by a non-'word' character or the start of the string).
+    # We have to exclude '.' from the match for a non-word character as
+    # otherwise, in a string such as ".5d0", it would be matched by the
+    # non-capturing group. Since the first group is non-capturing (?:),
+    # the matched literal is in group 1.
+    # R417 for real-literal-constant does not permit whitespace.
+    exponential_constant = re.compile(
+        r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
+
+    str_idx = 0
+    const_idx = 0
+    parens_idx = 0
+
     items = []
-    string_map = string_replace_dict()
+    string_map = StringReplaceDict()
     rev_string_map = {}
     for item in splitquote(line, lower=lower)[0]:
         if isinstance(item, String) and not _is_simple_str(item[1:-1]):
             key = rev_string_map.get(item)
             if key is None:
-                _cache['index'] += 1
-                index = _cache['index']
-                key = "_F2PY_STRING_CONSTANT_%s_" % (index)
-                it = item[1:-1]
-                string_map[key] = it
-                rev_string_map[it] = key
+                str_idx += 1
+                key = "_F2PY_STRING_CONSTANT_{0}_".format(str_idx)
+                trimmed = item[1:-1]
+                string_map[key] = trimmed
+                rev_string_map[trimmed] = key
             items.append(item[0]+key+item[-1])
         else:
             items.append(item)
     newline = ''.join(items)
+
+    const_keys = []
+    for item in exponential_constant.finditer(newline):
+        # Get the first captured group as that corresponds to the literal
+        # *without* any preceding non-word character.
+        found = item.group(1)
+
+        key = rev_string_map.get(found)
+        if key is None:
+            const_idx += 1
+            key = "F2PY_REAL_CONSTANT_{0}_".format(const_idx)
+            string_map[key] = found
+            rev_string_map[found] = key
+            const_keys.append(key)
+        newline = newline.replace(found, key)
+
     items = []
     expr_keys = []
     for item in splitparen(newline):
         if isinstance(item, ParenString) and not _is_name(item[1:-1].strip()):
             key = rev_string_map.get(item)
             if key is None:
-                _cache['pindex'] += 1
-                index = _cache['pindex']
-                key = 'F2PY_EXPR_TUPLE_%s' % (index)
-                it = item[1:-1].strip()
-                string_map[key] = it
-                rev_string_map[it] = key
+                parens_idx += 1
+                key = 'F2PY_EXPR_TUPLE_{0}'.format(parens_idx)
+                trimmed = item[1:-1].strip()
+                string_map[key] = trimmed
+                rev_string_map[trimmed] = key
                 expr_keys.append(key)
             items.append(item[0]+key+item[-1])
         else:
             items.append(item)
+
+    # Ensure that any entries in the map do not themselves contain
+    # substitutions
     found_keys = set()
-    for k in expr_keys:
-        v = string_map[k]
-        l = _f2py_str_findall(v)
-        if l:
-            found_keys = found_keys.union(l)
-            for k1 in l:
-                v = v.replace(k1, string_map[k1])
-            string_map[k] = v
-    for k in found_keys:
-        del string_map[k]
+    for key in expr_keys + const_keys:
+        entry = string_map[key]
+        # Find any keys within this map entry
+        included_keys = _f2py_findall(entry)
+        if included_keys:
+            found_keys = found_keys.union(included_keys)
+            for inc_key in included_keys:
+                entry = entry.replace(inc_key, string_map[inc_key], 1)
+            string_map[key] = entry
+
     return ''.join(items), string_map
 
 
