@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+04/10/2021 PR #302 for #301. Improved handling of constants with exponents.
+
 01/09/2021 #300. Further fixes to logging tests in fparser1.
 
 12/08/2021 #299. Fix to logging test in fparser1 tests.
