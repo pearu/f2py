@@ -49,6 +49,15 @@ provided as a string. Both of these classes sub-class `FortranReaderBase`:
 
 Note that the setting for `ignore_comments` provided here can be overridden
 on a per-call basis by methods such as `get_single_line`.
+The 'mode' of the reader is controlled by passing in a suitable instance of
+the `FortranFormat` class:
+
+.. autoclass:: fparser.common.sourceinfo.FortranFormat
+
+Due to its origins in the f2py project, the reader contains support
+for recognising `f2py` directives
+(https://numpy.org/devdocs/f2py/signature-file.html). However, this
+functionality is disabled by default.
 
 A convenience script called read.py is provided in the scripts
 directory which takes a filename as input and returns the file
@@ -878,6 +887,44 @@ a valid Fortran program.
    # +++++++++++++
    # TBD
 
+.. _tokenisation:
+
+Tokenisation
+++++++++++++
+
+In order to simplify the problem of parsing code containing
+potentially complex expressions, fparser2 performs some limited
+tokenisation of a string before proceeding to attempt to match it.
+Currently, this tokenisation replaces three different types of quantity with
+simple names:
+
+ 1. the content of strings;
+ 2. expressions in parentheses;
+ 3. literal constants involving exponents (e.g. ``1.0d-3``)
+
+This tokenisation is performed by the `string_replace_map` function:
+
+.. autofunction:: fparser.common.splitline.string_replace_map
+
+In turn, this function uses `splitquote` and `splitparen` (in the same
+module) to split a supplied string into quanties within quotes or
+parentheses, respectively. The matching for literal constants involving
+exponents is implemented using a regular expression.
+
+`string_replace_map` is used in the `match()` method of many of the classes
+that implement the various language rules. Note that the tokenisation must
+be undone before passing a given string on to a child class (or returning
+it). This is performed using the reverse-map that `string_replace_map`
+returns, e.g.::
+
+    line, repmap = string_replace_map(string)
+    ...
+    type_spec = Declaration_Type_Spec(repmap(line[:i].rstrip()))
+
+(The reverse map is an instance of `fparser.common.splitline.StringReplaceDict`
+which subclasses`dict` and makes it callable.)
+
+   
 Expression matching
 +++++++++++++++++++
 
@@ -924,71 +971,15 @@ As expected, this would fail to match, due to the level-2 expression
 would not be called again as fparser2 follows the rule hierarchy
 mentioned earlier. Therefore fparser2 would fail to match this string.
 
-To solve the problem for this specific case fparser2 includes
-additional code when implementing R706. There is an optional `is_add`
-argument in `BinaryOpBase` which is set to `True` in the
-`Level_2_Expr` class. This argument causes the `rsplit` method in the
-`pattern` instance to try to match a real literal constant on the
-right hand side of the string. If a literal constant exists then the
-exponent is ignored and the correct `+` or `-` is matched
-successfully::
+To solve this problem, fparser2 performs limited tokenisation of a string
+before attempting to perform a match. Amongst other things, this tokenisation
+replaces any numerical constants containing exponents with simple symbols
+(see :ref:`tokenisation` for more details). For the example above this means
+that the code being matched would now look like::
 
-    level-2-expr = "a"
-    add-op = "-"
-    add-operand = "1.0e-1"
+    a - F2PY_REAL_CONSTANT_1_
 
-However, this aproach only works if the real literal constant is on
-the right hand side of the string. Consider::
-
-    a - 1.0e-1 * b
-
-In this case the attempted match would be::
-
-    level-2-expr = "a - 1.0e"
-    add-op = "-"
-    add-operand = "1 * b"
-
-This would fail as `level-2-expr` is not valid and fparser2 would
-proceed to try to match with::
-
-    R705 add-operand is [ add-operand mult-op ] mult-operand
-
-This would attempt to match the following::
-
-    add-operand = "a - 1.0e-1"
-    mult-op = "*"
-    mult-operand = "b"
-
-This looks good, but unfortunately the `add-operand` part of the
-string ("a - 1.0e-1") would fail to match as R705 is lower in the
-hierarchy than R706, so R706 will not be called again.
-
-To solve this problem, R705 has been modified in the fparser2 implementation to::
-
-    R705 add-operand is [ level-2-expr mult-op ] mult-operand
-
-By replacing `add-operand` with `level-2-expr` we allow the "a -
-1.0e-1" to be matched with R706, i.e. we allow fparser2 to jump back up
-the rule hierarchy to fix the fallout from missing the original match.
-
-We now end up with something that can be matched correctly due to the
-`is_add` fix in rule R706.
-
-In combination these two modifications can cope with the problem of
-falsely matching an exponent in a literal.
-
-There are at least two other potential solutions which are probably
-preferable to the current solution, with the 2nd likely to be the most
-robust.
-
-1: R706 could be implemented so that it never matched an exponent in a
-literal. This would require a robust way of determining whether the
-"-" or "+" was an exponent in a literal.
-
-2: R706 could be implemented so that it tried to match a second time
-if the first match failed, using the next "+" or "-" operator found in
-the string to the left of the first one.
-
+which is readily matched as a level-2 expression.
 
 Continuous Integration
 ----------------------

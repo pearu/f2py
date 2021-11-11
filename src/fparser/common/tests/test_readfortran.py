@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2020 Science and Technology Facilities Council
+# Copyright (c) 2017-2021 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -55,6 +55,15 @@ from fparser.common.readfortran import FortranFileReader, \
 from fparser.common.sourceinfo import FortranFormat
 
 
+@pytest.fixture(scope="module",
+                name="f2py_enabled",
+                params=[True, False])
+def f2py_enabled_fixture(request):
+    ''' Fixture that returns whether or not to enable reader support for
+    f2py directives. '''
+    return request.param
+
+
 def test_empty_line_err():
     ''' Check that we raise the expected error if we try and create
     an empty Line '''
@@ -62,6 +71,32 @@ def test_empty_line_err():
     with pytest.raises(FortranReaderError) as err:
         _ = Line("   ", 1, "", "a_name", None)
     assert "Got empty line: \'   \'" in str(err.value)
+
+
+def test_line_map():
+    ''' Check the application and reversal of tokenisation of a Line for
+    strings, expressions in parentheses and literal constants with an
+    exponent.
+
+    '''
+    my_code = ("program test\n"
+               " real :: var\n"
+               " var = 1.0e-3\n"
+               " var = var * (var + 1.0d-4)\n"
+               " write(*,*) 'var = ', var\n"
+               "end program test\n")
+    reader = FortranStringReader(my_code, ignore_comments=True)
+    for _ in range(3):
+        line = reader.next()
+    assert line.get_line() == "var = F2PY_REAL_CONSTANT_1_"
+    assert line.get_line(apply_map=True) == "var = 1.0e-3"
+    line = reader.next()
+    assert line.get_line() == "var = var * (F2PY_EXPR_TUPLE_1)"
+    assert line.get_line(apply_map=True) == "var = var * (var + 1.0d-4)"
+    line = reader.next()
+    assert line.get_line() == ("write(F2PY_EXPR_TUPLE_1) "
+                               "'_F2PY_STRING_CONSTANT_1_', var")
+    assert line.get_line(apply_map=True) == "write(*,*) 'var = ', var"
 
 
 def test_111fortranreaderbase(log, monkeypatch):
@@ -809,7 +844,6 @@ c12346 comment
      'bar
 a    'g
       abc=2
-cf2py call me ! hey
       call you ! hi
       end
      '"""
@@ -819,8 +853,8 @@ cf2py call me ! hey
                 "line #4'call foobar'",
                 'Comment("a    \'g",(6, 6))',
                 "line #7'abc=2'",
-                "line #9'call you ! hi'",
-                "line #10'end'"]
+                "line #8'call you ! hi'",
+                "line #9'end'"]
 
     # Reading from buffer
     reader = FortranStringReader(
@@ -927,7 +961,6 @@ cComment
 !
      !4!line cont. with comment symbol
      &5
-      a = 3!f2py.14 ! pi!
 !   KDMO
       write (obj%print_lun, *) ' KDMO : '
       write (obj%print_lun, *) '  COORD = ',coord, '  BIN_WID = ',             &
@@ -946,17 +979,15 @@ cComment
                 "line #5'b = 345'",
                 "Comment('!',(6, 6))",
                 "Comment('!line cont. with comment symbol',(7, 7))",
-                "line #9'a = 3.14'",
-                "Comment('! pi!',(9, 9))",
-                "Comment('!   KDMO',(10, 10))",
-                'line #11"write (obj%print_lun, *) \' KDMO : \'"',
-                'line #12"write (obj%print_lun, *) \'  COORD = \',coord,'
+                "Comment('!   KDMO',(9, 9))",
+                'line #10"write (obj%print_lun, *) \' KDMO : \'"',
+                'line #11"write (obj%print_lun, *) \'  COORD = \',coord,'
                 + ' \'  BIN_WID = \',             &"',
-                'line #13"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
-                "line #14'end subroutine foo'",
-                "line #15'subroutine foo'",
-                "Comment('',(16, 16))",
-                "line #18'end'"]
+                'line #12"obj%bin_wid,\'  VEL_DMO = \', obj%vel_dmo"',
+                "line #13'end subroutine foo'",
+                "line #14'subroutine foo'",
+                "Comment('',(15, 15))",
+                "line #17'end'"]
     reader = FortranStringReader(
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
@@ -964,6 +995,81 @@ cComment
         # Remove 'u's to allow for py2/3 unicode differences
         assert re.sub("u", "", six.text_type(item)) == \
             re.sub("u", "", expected.pop(0))
+
+
+def test_f2py_directive_fixf90(f2py_enabled):
+    ''' Test the handling of the f2py directive in fixed-format f90. '''
+    string_fix90 = """c -*- fix -*-
+      subroutine foo
+      a = 3!f2py.14 ! pi!
+!f2py a = 0.0
+      end subroutine foo"""
+    reader = FortranStringReader(string_fix90, ignore_comments=False)
+    reader.set_format(FortranFormat(False, False, f2py_enabled))
+    expected = ["Comment('c -*- fix -*-',(1, 1))",
+                "line #2'subroutine foo'"]
+    if f2py_enabled:
+        expected.extend(["line #3'a = 3.14'",
+                         "Comment('! pi!',(3, 3))",
+                         "line #4'a = 0.0'"])
+    else:
+        expected.extend(["line #3'a = 3'",
+                         "Comment('!f2py.14 ! pi!',(3, 3))",
+                         "Comment('!f2py a = 0.0',(4, 4))"])
+    expected.append("line #5'end subroutine foo'")
+    for item in reader:
+        # Remove 'u's to allow for py2/3 unicode differences
+        assert re.sub("u", "", six.text_type(item)) == \
+            re.sub("u", "", expected.pop(0))
+
+
+def test_f2py_freef90(f2py_enabled):
+    ''' Test the handling of f2py directives in free-format f90, in both
+    in-line and full-line comments. '''
+    lines = ["subroutine foo",
+             "   a = 3!f2py.14 ! pi!",
+             "!f2py a = 0.0",
+             "end subroutine foo"]
+    reader = FortranStringReader("\n".join(lines), ignore_comments=False)
+    reader.set_format(FortranFormat(True, False, f2py_enabled))
+    expected = ["line #1'subroutine foo'"]
+    if f2py_enabled:
+        expected.extend(["line #2'a = 3.14'",
+                         "Comment('! pi!',(2, 2))",
+                         "line #3'a = 0.0'"])
+    else:
+        expected.extend(["line #2'a = 3'",
+                         "Comment('!f2py.14 ! pi!',(2, 2))",
+                         "Comment('!f2py a = 0.0',(3, 3))"])
+    expected.append("line #4'end subroutine foo'")
+    for item in reader:
+        # Remove 'u's to allow for py2/3 unicode differences
+        assert re.sub("u", "", six.text_type(item)) == \
+            re.sub("u", "", expected.pop(0))
+
+
+@pytest.mark.xfail(reason="Issue #270: f2py directives not working in F77 "
+                   "code.")
+def test_f2py_directive_f77(f2py_enabled):
+    ''' Test the handling of the f2py directive in fixed-format f77. '''
+    string_f77 = """c -*- f77 -*-
+      subroutine foo
+cf2py call me ! hey
+      end"""
+    expected = ["Comment('c -*- f77 -*-',(1, 1))",
+                "line #2'subroutine foo'"]
+    if f2py_enabled:
+        expected.append("line #3'call me ! hey'")
+    else:
+        expected.append("Comment('cf2py call me ! hey',(3, 3))")
+    expected.append("line #4'end'")
+
+    # Reading from buffer
+    reader = FortranStringReader(
+        string_f77, ignore_comments=False)
+    for item in reader:
+        assert (re.sub("u", "", six.text_type(item)) ==
+                re.sub("u", "", expected.pop(0)))
 
 
 def test_utf_char_in_code(log):

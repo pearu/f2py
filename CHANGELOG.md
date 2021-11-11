@@ -15,6 +15,23 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+02/11/2021 #303: create release 0.0.13.
+
+04/10/2021 PR #302 for #301. Improved handling of constants with exponents.
+
+01/09/2021 #300. Further fixes to logging tests in fparser1.
+
+12/08/2021 #299. Fix to logging test in fparser1 tests.
+
+26/04/2021 #296. Create release 0.0.12.
+
+21/04/2021 PR #260 for #253. Bug fix to improve Io_Control_Spec and
+	   Io_Control_Spec_List matching.
+
+11/03/2021 PR #269 for #268. Removed recognition of f2py directives in
+	   the reader. The original code is still there if needed in the
+	   future.
+
 20/01/2021 PR #289 for #288. Bug fix for matching expressions containing
            real literals with signed exponents. This bug was introduced
            by #285.

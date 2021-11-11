@@ -372,7 +372,7 @@ class Base(ComparableMixin):
                     continue
                 try:
                     obj = subcls(string, parent_cls=parent_cls)
-                except NoMatchError as msg:
+                except NoMatchError:
                     obj = None
                 if obj is not None:
                     return obj
@@ -822,12 +822,15 @@ class SequenceBase(Base):
             raise InternalError(
                 "SequenceBase class match method argument separator cannot "
                 "be white space.")
+
         line, repmap = string_replace_map(string)
         splitted = line.split(separator)
         if not splitted:
             # There should be at least one entry.
             return None
+
         lst = [subcls(repmap(entry.strip())) for entry in splitted]
+
         return separator, tuple(lst)
 
     def init(self, separator, items):
@@ -909,7 +912,7 @@ class BinaryOpBase(Base):
     '''
     @staticmethod
     def match(lhs_cls, op_pattern, rhs_cls, string, right=True,
-              exclude_op_pattern=None, is_add=False):
+              exclude_op_pattern=None):
         '''Matches the binary-op-base rule.
 
         If the operator defined by argument 'op_pattern' is found in
@@ -929,14 +932,6 @@ class BinaryOpBase(Base):
         argument then there will be no match if the pattern matched by
         the 'op_pattern' argument also matches this pattern. The
         default (None) does nothing.
-
-        When set to true the 'is_add' optional argument causes a '+'
-        in a real literal on the rhs of a match to be ignored. When
-        the add operand is being matched this has the effect of
-        correctly matching patterns like 'a+2.0e+10' i.e. the split is
-        performed between the 'a' and the '2.0e+10'. The default is
-        false. This is a special case optimisation which should
-        probably be removed, see issue #281.
 
         :param lhs_cls: an fparser2 object representing the rule that \
             should be matched to the lhs text.
@@ -958,9 +953,6 @@ class BinaryOpBase(Base):
             particular subpattern to exclude from the match. Defaults \
             to None which means there is no subpattern.
         :type exclude_op_pattern: :py:class:`fparser.two.pattern_tools.Pattern`
-        :param bool is_add: optional match optimisation for the + \
-            operator when set to True (ignores matching the + in a
-            real literal). Defaults to False.
 
         :returns: a tuple containing the matched lhs, the operator and \
             the matched rhs of the input string or None if there is \
@@ -970,6 +962,7 @@ class BinaryOpBase(Base):
 
         '''
         line, repmap = string_replace_map(string)
+
         if isinstance(op_pattern, str):
             if right:
                 text_split = line.rsplit(op_pattern, 1)
@@ -981,7 +974,7 @@ class BinaryOpBase(Base):
             oper = op_pattern
         else:
             if right:
-                text_split = op_pattern.rsplit(line, is_add=is_add)
+                text_split = op_pattern.rsplit(line)
             else:
                 text_split = op_pattern.lsplit(line)
             if not text_split or len(text_split) != 3:
@@ -1063,33 +1056,46 @@ class SeparatorBase(Base):
 
 
 class KeywordValueBase(Base):
-    """
-::
-    <keyword-value-base> = [ <lhs> = ] <rhs>
-    """
+    '''
+
+    keyword-value-base is [ lhs = ] rhs
+
+    where:
+
+    R215 keyword is name.
+
+    '''
     @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=True, upper_lhs=False):
         '''
-        :param lhs_cls: list, tuple or single value of classes to attempt to
-                        match LHS against (in order), or string containing
-                        keyword to match
+        Attempts to match the supplied `string` with `lhs_cls` = `rhs_cls`.
+        If `lhs_cls` is a str then it is compared with the content to the
+        left of the first '=' character in `string`. If that content is a
+        valid Fortran name but does *not* match `lhs_cls` then the match
+        fails, irrespective of the setting of `require_lhs`.
+
+        :param lhs_cls: list, tuple or single value of classes to attempt to \
+                        match LHS against (in order), or string containing \
+                        keyword to match.
         :type lhs_cls: names of classes deriving from `:py:class:Base` or str
-        :param rhs_cls: name of class to match RHS against
+        :param rhs_cls: name of class to match RHS against.
         :type rhs_cls: name of a class deriving from `:py:class:Base`
-        :param str string: text to be matched
-        :param bool require_lhs: whether the expression to be matched must
-                                 contain a LHS that is assigned to
-        :param bool upper_lhs: whether or not to convert the LHS of the
-                               matched expression to upper case
-        :return: instances of the classes representing quantities on the LHS
-                 and RHS (LHS is optional) or nothing if no match is found
-        :rtype: 2-tuple of objects or nothing
+        :param str string: text to be matched.
+        :param bool require_lhs: whether the expression to be matched must \
+                                 contain a LHS that is assigned to.
+        :param bool upper_lhs: whether or not to convert the LHS of the \
+                               matched expression to upper case.
+
+        :return: instances of the classes representing quantities on the LHS \
+                 and RHS (LHS is optional) or None if no match is found.
+        :rtype: 2-tuple of objects or NoneType
+
         '''
         if require_lhs and '=' not in string:
-            return
+            return None
         if isinstance(lhs_cls, (list, tuple)):
-            for s in lhs_cls:
-                obj = KeywordValueBase.match(s, rhs_cls, string,
+            for cls in lhs_cls:
+                obj = KeywordValueBase.match(cls, rhs_cls, string,
                                              require_lhs=require_lhs,
                                              upper_lhs=upper_lhs)
                 if obj:
@@ -1097,28 +1103,37 @@ class KeywordValueBase(Base):
             return obj
         # We can't just blindly check whether 'string' contains an '='
         # character as it could itself hold a string constant containing
-        # an '=', e.g. FMT='("Hello = False")'
-        from fparser.two.Fortran2003 import Char_Literal_Constant
-        if not Char_Literal_Constant.match(string) and "=" in string:
-            lhs, rhs = string.split('=', 1)
-            lhs = lhs.rstrip()
-        else:
-            lhs = None
-            rhs = string.rstrip()
-        rhs = rhs.lstrip()
-        if not rhs:
-            return
+        # an '=', e.g. FMT='("Hello = False")'.
+        # Therefore we only split on the left-most '=' character
+        pieces = string.split('=', 1)
+        lhs = None
+        if len(pieces) == 2:
+            # It does contain at least one '='. Proceed to attempt to match
+            # the content on the LHS of it.
+            lhs = pieces[0].strip()
+            if isinstance(lhs_cls, str):
+                # lhs_cls is a keyword
+                if upper_lhs:
+                    lhs = lhs.upper()
+                if lhs != lhs_cls:
+                    # The content to the left of the '=' does not match the
+                    # supplied keyword
+                    lhs = None
+            else:
+                lhs = lhs_cls(lhs)
         if not lhs:
+            # We haven't matched the LHS and therefore proceed to treat the
+            # whole string as a RHS if the LHS is not strictly required.
             if require_lhs:
-                return
-            return None, rhs_cls(rhs)
-        if isinstance(lhs_cls, str):
-            if upper_lhs:
-                lhs = lhs.upper()
-            if lhs_cls != lhs:
-                return
-            return lhs, rhs_cls(rhs)
-        return lhs_cls(lhs), rhs_cls(rhs)
+                return None
+            rhs = string.strip()
+        else:
+            rhs = pieces[-1].strip()
+        if rhs:
+            rhs = rhs_cls(rhs)
+        if not rhs:
+            return None
+        return lhs, rhs
 
     def tostr(self):
         if self.items[0] is None:

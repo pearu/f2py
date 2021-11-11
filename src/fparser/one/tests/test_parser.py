@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2021 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -127,10 +127,13 @@ def parse(cls, line, label='', isfree=True, isstrict=False):
 
 
 def test_assignment():
+    ''' Test that assignment statements are parsed correctly. '''
     assert parse(Assignment, 'a=b') == 'a = b'
     assert parse(PointerAssignment, 'a=>b') == 'a => b'
     assert parse(Assignment, 'a (2)=b(n,m)') == 'a(2) = b(n,m)'
     assert parse(Assignment, 'a % 2(2,4)=b(a(i))') == 'a%2(2,4) = b(a(i))'
+    assert (parse(Assignment, 'cu(i,j) = .5d0*(cu(i+1,j) + cu(i-1,j))') ==
+            'cu(i,j) = .5d0*(cu(i+1,j) + cu(i-1,j))')
 
 
 def test_assign():

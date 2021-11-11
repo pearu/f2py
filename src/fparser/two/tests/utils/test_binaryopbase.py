@@ -124,14 +124,9 @@ def test_binaryopbase_match(pattern, string):
     assert result[2].string == "b"
 
 
-def test_binaryopbase_isadd():
-    '''Test the optional is_add argument to the BinaryOpBase match
-    method. This argument makes the associated pattern ignore the '+'
-    in a Real_Literal_Constant on the RHS of an expression. This
-    allows the expression to match the actual '+' operator for an
-    'add_op' pattern, e.g. 'a+3.0e+10' will match on the earlier '+'
-    rather than returning no-match. This option is a special case and
-    should probably be removed, see issue #281.
+def test_binaryopbase_addition():
+    '''Test that an addition involving a numerical constant with an
+    exponent containing '+' is parsed correctly.
 
     '''
     string = "a+3.0e+10"
@@ -139,11 +134,8 @@ def test_binaryopbase_isadd():
     lhs = Name
     rhs = Real_Literal_Constant
 
-    with pytest.raises(NoMatchError) as info:
-        _ = BinaryOpBase.match(lhs, pattern, rhs, string)
-    assert "Real_Literal_Constant: '10'" in str(info.value)
+    result = BinaryOpBase.match(lhs, pattern, rhs, string)
 
-    result = BinaryOpBase.match(lhs, pattern, rhs, string, is_add=True)
     assert len(result) == 3
     assert isinstance(result[0], Name)
     assert result[0].string == "a"

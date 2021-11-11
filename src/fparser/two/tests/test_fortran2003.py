@@ -109,13 +109,14 @@ def _repr_utf(anobj):
     :param object anobj: the object for which the repr() is required.
 
     :returns: the repr of the supplied object with any "u'" replaced
-              with "'".
+              with "'" and '(u"' with '("'.
     :rtype: str
 
     '''
     import six
     if six.PY2:
-        return repr(anobj).replace("u'", "'")
+        new_repr = repr(anobj).replace("u'", "'")
+        return new_repr.replace('(u"', '("')
     return repr(anobj)
 
 #
@@ -2003,8 +2004,8 @@ def test_logical_initialization_expr():  # R733
     assert str(obj) == '.FALSE.'
 
 
-def test_assignment_stmt():  # R734
-
+def test_assignment_stmt():
+    ''' Tests for the Assignment_Stmt class (R734). '''
     tcls = Assignment_Stmt
     obj = tcls('a = b')
     assert isinstance(obj, tcls), repr(obj)
@@ -2029,11 +2030,11 @@ def test_assignment_stmt():  # R734
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'a(n)(k : m) = 5'
 
-    obj = tcls('b = a + 1  d - 8')
+    obj = tcls('b = a + 1d-8')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8'
 
-    obj = tcls('b = a + 1  d - 8 + 1.1e+3')
+    obj = tcls('b = a + 1d-8 + 1.1e+3')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'b = a + 1D-8 + 1.1E+3'
 
@@ -2379,54 +2380,6 @@ def test_read_stmt():
         "Name('a_namelist_or_format')))), None, None)")
 
 
-def test_write_stmt():
-    ''' Tests for various forms of WRITE statement (R911). '''
-    tcls = Write_Stmt
-    obj = tcls('write (123)"hey"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(123) "hey"'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Int_Literal_Constant('123', None)),)), Output_Item_List(',', "
-        "(Char_Literal_Constant('\"hey\"', None),)))")
-
-    obj = tcls('WRITE (*,"(I3)") my_int')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(*, FMT = "(I3)") my_int'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\"(I3)\"', None)))), Output_Item_List(',', "
-        "(Name('my_int'),)))")
-
-    obj = tcls('WRITE (*,namtest)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'WRITE(*, namtest)'
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', "
-        "(Io_Control_Spec(None, Io_Unit('*')), Io_Control_Spec(None, "
-        "Name('namtest')))), None)")
-
-    # Test when format specifier contains an '=' character
-    iolist = Io_Control_Spec_List("*,'(5X,\"q_mesh =\",4F12.8)'")
-    assert isinstance(iolist, Io_Control_Spec_List)
-    obj = tcls("WRITE(*,'(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
-        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
-
-    obj = tcls("WRITE(*,FMT='(5X,\"q_mesh =\",1F12.8)') 1.d0")
-    assert isinstance(obj, tcls)
-    assert _repr_utf(obj) == (
-        "Write_Stmt(Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-        "Io_Unit('*')), Io_Control_Spec('FMT', "
-        "Char_Literal_Constant('\\'(5X,\"q_mesh =\",1F12.8)\\'', None)))), "
-        "Output_Item_List(',', (Real_Literal_Constant('1.D0', None),)))")
-
-
 def test_print_stmt():  # R912
 
     tcls = Print_Stmt
@@ -2438,59 +2391,6 @@ def test_print_stmt():  # R912
     obj = tcls('print *,"a=",a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'PRINT *, "a=", a'
-
-
-def test_io_control_spec():  # R913
-
-    tcls = Io_Control_Spec
-    obj = tcls('end=123')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END = 123'
-    assert repr(obj) == "Io_Control_Spec('END', Label('123'))"
-
-
-def test_io_control_spec_list():
-    ''' Test that we correctly parse and then generate various
-    forms of IO-control specification lists (R913-list). '''
-    tcls = Io_Control_Spec_List
-    obj = tcls('end=123')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'END = 123'
-    assert repr(obj) == \
-        "Io_Control_Spec_List(',', (Io_Control_Spec('END', Label('123')),))"
-
-    obj = tcls('123')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123'
-
-    obj = tcls('123,*')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, FMT = *'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-                         "Int_Literal_Constant('123', None)), "
-                         "Io_Control_Spec('FMT', Format('*'))))")
-
-    obj = tcls('123,fmt=a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, FMT = a'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-                         "Int_Literal_Constant('123', None)), "
-                         "Io_Control_Spec('FMT', Name('a'))))")
-
-    obj = tcls('123,nml=a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, NML = a'
-    assert repr(obj) == ("Io_Control_Spec_List(',', (Io_Control_Spec(None, "
-                         "Int_Literal_Constant('123', None)), "
-                         "Io_Control_Spec('NML', Name('a'))))")
-
-    obj = tcls('123, "(I3)"')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, FMT = "(I3)"'
-
-    obj = tcls('123,a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == '123, a'
 
 
 def test_format():  # R914

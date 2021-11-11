@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 Science and Technology Facilities Council.
+# Copyright (c) 2017-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -35,6 +35,7 @@
 ''' Module containing pytest tests for fparser2 base classes '''
 
 import pytest
+from fparser.two.utils import NoMatchError
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -69,6 +70,12 @@ def test_keywordvaluebase_errors():
                                  "'(\"my_var =  \", (A))'",
                                  require_lhs=True)
     assert obj is None
+    # Check with a valid Fortran name on the lhs but not what the match
+    # is requesting.
+    with pytest.raises(NoMatchError) as err:
+        _ = KeywordValueBase.match("FERMAT", Format, "FMT='(A)'",
+                                   require_lhs=False)
+    assert "FMT='(A)'" in str(err.value)
 
 
 @pytest.mark.usefixtures("f2003_create")
