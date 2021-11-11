@@ -37,6 +37,7 @@
 import pytest
 from fparser.two.Fortran2003 import Program, Intrinsic_Function_Reference, \
     Intrinsic_Name
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import FortranSyntaxError, NoMatchError, \
     InternalSyntaxError, walk
 from fparser.api import get_reader
@@ -242,3 +243,25 @@ def test_intrinsic_inside_intrinsic(f2003_create):
     rep = repr(ast).replace("u'", "'")
     assert "Intrinsic_Name('SIN')" in rep
     assert "Intrinsic_Name('COS')" in rep
+
+
+def test_shadowed_intrinsic(f2003_parser):
+    ''' Check that a locally-defined symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified. '''
+    tree = f2003_parser(get_reader('''\
+module my_mod
+  use some_mod
+  real :: dot_product(2,2)
+contains
+  subroutine my_sub()
+    real :: result
+    result = dot_product(1,1)
+  end subroutine my_sub
+end module my_mod
+    '''))
+    tables = SYMBOL_TABLES
+    # We should not have an intrinsic-function reference in the parse tree
+    assert not walk(tree, Intrinsic_Function_Reference)
+    table = tables.lookup("my_mod")
+    sym = table.children[0].lookup("dot_product")
+    assert sym.primitive_type == "real"

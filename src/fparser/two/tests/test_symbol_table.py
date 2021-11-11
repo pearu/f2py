@@ -252,25 +252,3 @@ end program my_prog
     assert table.children[0].name == "my_sub"
     assert table.children[0]._data_symbols["b"].name == "b"
     assert table.children[0].parent is table
-
-
-def test_shadowed_intrinsic(f2003_parser):
-    ''' Check that a locally-defined symbol that shadows (overwrites) a
-    Fortran intrinsic is correctly identified. '''
-    tree = f2003_parser(get_reader('''\
-module my_mod
-  use some_mod
-  real :: dot_product(2,2)
-contains
-  subroutine my_sub()
-    real :: result
-    result = dot_product(1,1)
-  end subroutine my_sub
-end module my_mod
-    '''))
-    tables = SYMBOL_TABLES
-    # We should not have an intrinsic-function reference in the parse tree
-    assert not walk(tree, Fortran2003.Intrinsic_Function_Reference)
-    table = tables.lookup("my_mod")
-    sym = table.children[0].lookup("dot_product")
-    assert sym.primitive_type == "real"
