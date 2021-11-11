@@ -37,9 +37,9 @@ are still in test_fortran2003.py and need to be moved here TODO #306.
 
 '''
 
-import pytest
+import six
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Function_Subprogram, Function_Stmt
+from fparser.two.Fortran2003 import Function_Subprogram
 from fparser.two.symbol_table import SYMBOL_TABLES
 
 
@@ -52,7 +52,12 @@ def test_function_new_symbol_table(f2003_create):
     obj = Function_Subprogram(get_reader("function a()\nend function a"))
     assert isinstance(obj, Function_Subprogram)
     assert str(obj) == 'FUNCTION a()\nEND FUNCTION a'
-    assert repr(obj) == ("Function_Subprogram(Function_Stmt(None, Name('a'), "
+    repr_text = repr(obj)
+    if six.PY2:
+        # TODO #307 remove this once we drop Python 2
+        repr_text = repr_text.replace("u'", "'")
+
+    assert repr_text == ("Function_Subprogram(Function_Stmt(None, Name('a'), "
                          "None, None), End_Function_Stmt('FUNCTION', "
                          "Name('a')))")
     assert "a" in SYMBOL_TABLES._symbol_tables

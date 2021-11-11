@@ -113,6 +113,7 @@ def _repr_utf(anobj):
     :rtype: str
 
     '''
+    # TODO #307 this can be removed once we drop Python 2 support.
     import six
     if six.PY2:
         new_repr = repr(anobj).replace("u'", "'")
