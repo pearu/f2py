@@ -121,6 +121,9 @@ if __name__ == '__main__':
         packages=PACKAGES,
         package_dir={"": "src"},
         install_requires=['six'],
+        extras_require={
+            'doc': ["sphinx", "sphinx_rtd_theme"]
+        },
         entry_points={
             'console_scripts': [
                 'fparser2=fparser.scripts.fparser2:main',
