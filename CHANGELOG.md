@@ -15,6 +15,10 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+02/12/2021 PR #305 for #304. Fix failing build of documentation on RTD.
+
+## Release 0.0.13 (02/11/2021) ##
+
 02/11/2021 #303: create release 0.0.13.
 
 04/10/2021 PR #302 for #301. Improved handling of constants with exponents.
@@ -22,6 +26,8 @@ Modifications by (in alphabetical order):
 01/09/2021 #300. Further fixes to logging tests in fparser1.
 
 12/08/2021 #299. Fix to logging test in fparser1 tests.
+
+## Release 0.0.12 (26/04/2021) ##
 
 26/04/2021 #296. Create release 0.0.12.
 
