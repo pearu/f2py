@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Science and Technology Facilities Council
+# Copyright (c) 2019-2021, Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -168,6 +168,47 @@ def test_strict_order_valid_code(f2003_create):
         strict_order=True)
 
     assert str(result) == expected
+
+
+def test_label_do_match(f2003_create):
+    '''Check that ARPDBG
+    '''
+    subclasses = [F2003.Assignment_Stmt, F2003.Continue_Stmt]
+    reader = get_reader("""
+        do 100 i = 1,10
+          j = 10
+          do 100 j 1,10
+            k = 5
+        100 continue
+        """)
+    #import pdb; pdb.set_trace()
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True, enable_do_label_construct_hook=True)
+    assert result
+    #assert 0
+
+
+def test_select_case_match(f2003_create):
+    '''Check that ARPDBG
+    '''
+    reader = get_reader("""
+        select case(boselecta)
+        case(1)
+          j = 10
+        case(2)
+          k = 5
+        case default
+          k = 6
+        end select
+        """)
+    result = BlockBase.match(
+        F2003.Select_Case_Stmt, [F2003.Case_Stmt,
+                                 F2003.Execution_Part_Construct,
+                                 F2003.Case_Stmt],
+        F2003.End_Select_Stmt, reader,
+        enable_case_construct_hook=True)
+    assert result
 
 
 def remove_indentation(string):

@@ -487,14 +487,14 @@ class Base(ComparableMixin):
 
 class BlockBase(Base):
     """
-::
+    Base class for matching all block constructs.
+
     <block-base> = [ <startcls> ]
                      [ <subcls> ]...
                      ...
                      [ <subcls> ]...
                      [ <endcls> ]
 
-content : tuple
     """
     @staticmethod
     def match(startcls, subclasses, endcls, reader,
@@ -511,13 +511,15 @@ content : tuple
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
 
-        :param type startcls: The class marking the beginning of the block
-        :param list subclasses: List of classes that can be children of
-                                the block
-        :param type endcls: The class marking the end of the block
-        :param reader: Content to check for match
+        :param type startcls: the class marking the beginning of the block
+        :param list subclasses: list of classes that can be children of \
+                                the block.
+        :param type endcls: the class marking the end of the block.
+        :param reader: content to check for match.
         :type reader: str or instance of :py:class:`FortranReaderBase`
-        :param bool match_labels: TBD
+        :param bool match_labels: whether or not the statement terminating \
+            the block must have a label that matches the opening statement. \
+            Default is False.
         :param bool match_names: TBD
         :param tuple match_name_classes: TBD
         :param bool enable_do_label_construct_hook: TBD
@@ -567,7 +569,8 @@ content : tuple
             start_idx = len(content)
             content.append(obj)
 
-            if enable_do_label_construct_hook:
+            if (hasattr(obj, "get_start_label") and
+                    enable_do_label_construct_hook):
                 start_label = obj.get_start_label()
             if match_names:
                 start_name = obj.get_start_name()
@@ -590,11 +593,13 @@ content : tuple
             found_end = False
             while i < len(classes):
                 if enable_do_label_construct_hook:
+                    # Multiple, labelled DO statements can reference the
+                    # same label.
                     try:
                         obj = startcls(reader)
                     except NoMatchError:
                         obj = None
-                    if obj is not None:
+                    if obj is not None and hasattr(obj, "get_start_label"):
                         if start_label == obj.get_start_label():
                             content.append(obj)
                             continue
@@ -674,11 +679,6 @@ content : tuple
                         i = 1
                     if isinstance(obj, Fortran2003.End_Select_Type_Stmt):
                         enable_select_type_construct_hook = False
-                if enable_case_construct_hook:
-                    if isinstance(obj, Fortran2003.Case_Stmt):
-                        i = 1
-                    if isinstance(obj, Fortran2003.End_Select_Stmt):
-                        enable_case_construct_hook = False
                 continue
 
         except FortranSyntaxError as err:
