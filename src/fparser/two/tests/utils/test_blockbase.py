@@ -171,63 +171,48 @@ def test_strict_order_valid_code(f2003_create):
     assert str(result) == expected
 
 
-def test_label_do_match(f2003_create):
-    '''Check that ARPDBG
+def test_label_do_construct_hook_match(f2003_create):
+    '''Check that specifying the enable_do_label_construct_hook to the match
+    method allows multiple loops sharing the same label to be matched.
+    '''
+    subclasses = [F2003.Assignment_Stmt, F2003.Continue_Stmt]
+    code = """
+        do 100 i = 1,10
+          j = 10
+          do 100 j = 1,10
+            k = 5
+        100 continue
+        """
+    reader = get_reader(code)
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True, enable_do_label_construct_hook=True)
+    assert isinstance(result[0][0], F2003.Label_Do_Stmt)
+    assert isinstance(result[0][2], F2003.Label_Do_Stmt)
+    # Without the `enable_do_label_construct_hook` set, we only match
+    # the first loop.
+    reader = get_reader(code)
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True)
+    assert len(result[0]) == 2
+
+
+def test_label_do_nomatch(f2003_create):
+    '''
+    Check that the match() method returns None for an invalid do
+    statement.
     '''
     subclasses = [F2003.Assignment_Stmt, F2003.Continue_Stmt]
     reader = get_reader("""
-        do 100 i = 1,10
+        do 100 i-10
           j = 10
-          do 100 j 1,10
-            k = 5
         100 continue
         """)
     result = BlockBase.match(
         F2003.Label_Do_Stmt, subclasses, None, reader,
         match_labels=True, enable_do_label_construct_hook=True)
-    assert isinstance(result[0][0], F2003.Label_Do_Stmt)
-
-
-def test_select_case_match(f2003_create):
-    '''Check that ARPDBG
-    '''
-    reader = get_reader("""
-        select case(boselecta)
-        case(1)
-          j = 10
-        case(2)
-          k = 5
-        case default
-          k = 6
-        end select
-        """)
-    result = BlockBase.match(
-        F2003.Select_Case_Stmt, [F2003.Case_Stmt,
-                                 F2003.Execution_Part_Construct,
-                                 F2003.Case_Stmt],
-        F2003.End_Select_Stmt, reader)
-    assert isinstance(result[0][0], F2003.Select_Case_Stmt)
-
-
-def test_select_type_match(f2003_create):
-    '''Check that ARPDBG
-    '''
-    reader = get_reader("""
-        select type(boselecta)
-        type is(my_type)
-          j = 10
-        type is(other_type)
-          k = 5
-        class default
-          k = 6
-        end select
-        """)
-    result = BlockBase.match(
-        F2003.Select_Type_Stmt, [F2003.Type_Guard_Stmt,
-                                 F2003.Execution_Part_Construct,
-                                 F2003.Type_Guard_Stmt],
-        F2003.End_Select_Type_Stmt, reader)
-    assert isinstance(result[0][0], F2003.Select_Type_Stmt)
+    assert result is None
 
 
 def remove_indentation(string):

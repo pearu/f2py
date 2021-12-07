@@ -504,7 +504,6 @@ class BlockBase(Base):
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
-              enable_select_type_construct_hook=False,
               strict_order=False):
         '''
         Checks whether the content in reader matches the given
@@ -592,10 +591,7 @@ class BlockBase(Base):
                 if enable_do_label_construct_hook:
                     # Multiple, labelled DO statements can reference the
                     # same label.
-                    try:
-                        obj = startcls(reader)
-                    except NoMatchError:
-                        obj = None
+                    obj = startcls(reader)
                     if obj is not None and hasattr(obj, "get_start_label"):
                         if start_label == obj.get_start_label():
                             content.append(obj)
