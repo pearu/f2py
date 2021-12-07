@@ -39,8 +39,8 @@ for all of the top-level scoping units encountered during parsing.
 
 '''
 from __future__ import absolute_import, print_function
-import six
 from collections import namedtuple
+import six
 
 
 class SymbolTableError(Exception):
@@ -198,12 +198,46 @@ class SymbolTables(object):
     def remove(self, name):
         '''
         Removes the named symbol table and any descendants it may have.
+        When searching for the named table, the current scope takes priority
+        followed by the list of top-level symbol tables.
 
         :param str name: the name of the symbol table to remove (not case \
                          sensitive).
+        :raises SymbolTableError: if the named symbol table is not in the \
+            current scope or in the list of top-level symbol tables.
 
         '''
-        del self._symbol_tables[name.lower()]
+        lname = name.lower()
+        if self._current_scope:
+            try:
+                self._current_scope.del_child(lname)
+                # We succeeded in removing it from the current scope so we
+                # are done.
+                return
+            except KeyError:
+                pass
+
+        if lname not in self._symbol_tables:
+            msg = "Failed to find a table named '{0}' in ".format(name)
+            if self._current_scope:
+                msg += ("either the current scope (which contains {0}) or ".
+                        format([child.name for child in
+                                self._current_scope.children]))
+            msg += "the list of top-level symbol tables ({0}).".format(
+                list(self._symbol_tables.keys()))
+            raise SymbolTableError(msg)
+
+        # Check that we're not currently somewhere inside the scope of the
+        # named table.
+        top_table = self._symbol_tables[lname]
+        if self._current_scope:
+            if self._current_scope.root is top_table:
+                raise SymbolTableError(
+                    "Cannot remove top-level symbol table '{0}' because the "
+                    "current scope '{1}' has it as an ancestor.".format(
+                        name, self._current_scope.name))
+
+        del self._symbol_tables[lname]
 
 
 class SymbolTable(object):
@@ -409,6 +443,25 @@ class SymbolTable(object):
                             format(type(child).__name__))
         self._children.append(child)
 
+    def del_child(self, name):
+        '''
+        Removes the named symbol table.
+
+        :param str name: the name of the child symbol table to delete (not \
+                         case sensitive).
+
+        :raises KeyError: if the named table is not a child of this one.
+
+        '''
+        lname = name.lower()
+        for child in self._children:
+            if child.name == lname:
+                self._children.remove(child)
+                break
+        else:
+            raise KeyError("Symbol table '{0}' does not contain a table named "
+                           "'{1}'".format(self.name, name))
+
     @property
     def children(self):
         '''
@@ -417,6 +470,18 @@ class SymbolTable(object):
         '''
         return self._children
 
+    @property
+    def root(self):
+        '''
+        :returns: the top-level symbol table that contains the current \
+                  scoping region (symbol table).
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable`
+
+        '''
+        current = self
+        while current.parent:
+            current = current.parent
+        return current
 
 #: The single, global container for all symbol tables constructed while
 #: parsing.

@@ -37,8 +37,6 @@
  of fparser2. '''
 
 import pytest
-from fparser.two import Fortran2003
-from fparser.two.utils import walk
 from fparser.two.symbol_table import (SymbolTable, SYMBOL_TABLES,
                                       SymbolTableError)
 from fparser.api import get_reader
@@ -139,6 +137,19 @@ def test_str_method():
             in str(table))
 
 
+def test_del_child():
+    ''' Checks for the del_child method. '''
+    table = SymbolTable("BASIC")
+    inner_table = SymbolTable("func1", parent=table)
+    table.add_child(inner_table)
+    with pytest.raises(KeyError) as err:
+        table.del_child("missing")
+    assert ("Symbol table 'basic' does not contain a table named 'missing'"
+            in str(err.value))
+    table.del_child("func1")
+    assert table.children == []
+
+
 def test_parent_child():
     ''' Test the parent/child-related properties. '''
     table = SymbolTable("BASIC")
@@ -153,6 +164,17 @@ def test_parent_child():
         inner_table.parent = "wrong"
     assert ("Unless it is None, the parent of a SymbolTable must also be a "
             "SymbolTable but got 'str'" in str(err.value))
+
+
+def test_root_property():
+    ''' Test the `root` property of the SymbolTable. '''
+    table = SymbolTable("BASIC")
+    inner_table = SymbolTable("func1", parent=table)
+    table.add_child(inner_table)
+    inner_inner_table = SymbolTable("func2", parent=inner_table)
+    assert inner_inner_table.root is table
+    assert inner_table.root is table
+    assert table.root is table
 
 
 def test_module_use(f2003_parser):

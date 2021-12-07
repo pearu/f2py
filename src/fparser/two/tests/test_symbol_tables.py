@@ -42,7 +42,7 @@ from fparser.two.symbol_table import SymbolTables, SymbolTable, \
     SymbolTableError
 
 
-def test_construction():
+def test_construction_addition_removal():
     ''' Check that we can create a SymbolTables instance, add a table to it,
     remove a table from it and query it. '''
     tables = SymbolTables()
@@ -134,3 +134,36 @@ def test_nested_scoping():
     with pytest.raises(SymbolTableError) as err:
         tables.exit_scope()
     assert "exit_scope() called but no current scope exists" in str(err.value)
+
+
+def test_nested_removal():
+    ''' Tests the removal of symbol tables when we have nested scopes. '''
+    tables = SymbolTables()
+    tables.enter_scope("some_mod")
+    tables.enter_scope("some_func")
+    # Cannot find a symbol table if we are currently inside it
+    with pytest.raises(SymbolTableError) as err:
+        tables.remove("some_func")
+    assert ("Failed to find a table named 'some_func' in either the current "
+            "scope (which contains []) or the list of top-level symbol tables "
+            "(['some_mod'])." in str(err.value))
+    tables.exit_scope()
+    tables.remove("some_func")
+    assert tables.current_scope.children == []
+    tables.enter_scope("another_func")
+    # We should not be able to remove a symbol table that is a parent of the
+    # current scope.
+    with pytest.raises(SymbolTableError) as err:
+        tables.remove("some_mod")
+    assert ("Cannot remove top-level symbol table 'some_mod' because the "
+            "current scope 'another_func' has it as an ancestor" in
+            str(err.value))
+    # Create a 2nd, top-level symbol table.
+    tables.exit_scope()
+    tables.exit_scope()
+    assert tables.current_scope is None
+    tables.enter_scope("another_mod")
+    # Should be able to remove the other, top-level symbol table
+    tables.remove("some_mod")
+    assert "some_mod" not in tables._symbol_tables
+    assert "another_mod" in tables._symbol_tables
