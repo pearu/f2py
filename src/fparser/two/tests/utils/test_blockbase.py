@@ -37,6 +37,7 @@
 import pytest
 
 from fparser.api import get_reader
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import BlockBase
 import fparser.two.Fortran2003 as F2003
 
@@ -251,3 +252,28 @@ def remove_indentation(string):
             result += ' ' + line
         block_indent = this_indent
     return result.strip()
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_syntax_error_nested_symbol_table():
+    '''
+    Test that a syntax error within a nested scoping region is handled
+    correctly. We use some code that has a mis-spelt attribute on a
+    declaration to trigger a syntax error.
+
+    '''
+    reader = get_reader('''
+module my_mod
+contains
+FUNCTION dot_v_mod_2d( )
+  REAL ::  dot_v_mod_2d
+  REAL, DIMENSION(:,:), POINTER, CONTIOUS :: z_msk_i
+  dot_v_mod_2d = 0.0_wp
+END FUNCTION dot_v_mod_2d
+end module my_mod
+''')
+    result = F2003.Module.match(reader)
+    # There should be no match and, as a result, there should be no
+    # symbol-table entries.
+    assert result is None
+    assert SYMBOL_TABLES._symbol_tables == {}
