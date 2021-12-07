@@ -505,7 +505,6 @@ class BlockBase(Base):
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
               enable_select_type_construct_hook=False,
-              enable_case_construct_hook=False,
               strict_order=False):
         '''
         Checks whether the content in reader matches the given
@@ -525,9 +524,7 @@ class BlockBase(Base):
         :param bool enable_do_label_construct_hook: TBD
         :param bool enable_if_construct_hook: TBD
         :param bool enable_where_construct_hook: TBD
-        :param bool enable_select_type_construct_hook: TBD
-        :param bool enable_case_construct_hook: TBD
-        :param bool strict_order: Whether to enforce the order of the
+        :param bool strict_order: whether to enforce the order of the \
                                   given subclasses.
 
         :return: instance of startcls or None if no match is found
@@ -674,11 +671,6 @@ class BlockBase(Base):
                     if isinstance(obj, (Fortran2003.Elsewhere_Stmt,
                                         Fortran2003.End_Where_Stmt)):
                         enable_where_construct_hook = False
-                if enable_select_type_construct_hook:
-                    if isinstance(obj, Fortran2003.Type_Guard_Stmt):
-                        i = 1
-                    if isinstance(obj, Fortran2003.End_Select_Type_Stmt):
-                        enable_select_type_construct_hook = False
                 continue
 
         except FortranSyntaxError as err:

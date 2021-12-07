@@ -6017,8 +6017,7 @@ class Case_Construct(BlockBase):  # R808
                                Execution_Part_Construct,
                                Case_Stmt],
             End_Select_Stmt, reader,
-            match_names=True,  # C803
-            enable_case_construct_hook=True  # C803
+            match_names=True  # C803
         )
 
     def tofortran(self, tab='', isfix=None):
@@ -6264,8 +6263,7 @@ class Select_Type_Construct(BlockBase):  # R821
         return BlockBase.match(
             Select_Type_Stmt, [Type_Guard_Stmt, Execution_Part_Construct,
                                Type_Guard_Stmt], End_Select_Type_Stmt, reader,
-            match_names=True,  # C819
-            enable_select_type_construct_hook=True)
+            match_names=True)  # C819
 
 
 class Select_Type_Stmt(StmtBase):  # R822

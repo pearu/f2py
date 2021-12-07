@@ -181,12 +181,10 @@ def test_label_do_match(f2003_create):
             k = 5
         100 continue
         """)
-    #import pdb; pdb.set_trace()
     result = BlockBase.match(
         F2003.Label_Do_Stmt, subclasses, None, reader,
         match_labels=True, enable_do_label_construct_hook=True)
-    assert result
-    #assert 0
+    assert isinstance(result[0][0], F2003.Label_Do_Stmt)
 
 
 def test_select_case_match(f2003_create):
@@ -206,9 +204,29 @@ def test_select_case_match(f2003_create):
         F2003.Select_Case_Stmt, [F2003.Case_Stmt,
                                  F2003.Execution_Part_Construct,
                                  F2003.Case_Stmt],
-        F2003.End_Select_Stmt, reader,
-        enable_case_construct_hook=True)
-    assert result
+        F2003.End_Select_Stmt, reader)
+    assert isinstance(result[0][0], F2003.Select_Case_Stmt)
+
+
+def test_select_type_match(f2003_create):
+    '''Check that ARPDBG
+    '''
+    reader = get_reader("""
+        select type(boselecta)
+        type is(my_type)
+          j = 10
+        type is(other_type)
+          k = 5
+        class default
+          k = 6
+        end select
+        """)
+    result = BlockBase.match(
+        F2003.Select_Type_Stmt, [F2003.Type_Guard_Stmt,
+                                 F2003.Execution_Part_Construct,
+                                 F2003.Type_Guard_Stmt],
+        F2003.End_Select_Type_Stmt, reader)
+    assert isinstance(result[0][0], F2003.Select_Type_Stmt)
 
 
 def remove_indentation(string):
