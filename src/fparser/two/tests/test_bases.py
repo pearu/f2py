@@ -154,7 +154,7 @@ def test_blockbase_symbol_table(monkeypatch):
     ''' Check that the BlockBase.match method creates symbol-tables
     for those classes that correspond to a scoping unit and not
     otherwise. '''
-    # Monkeypath the list of classes that are recognised as
+    # Monkeypatch the list of classes that are recognised as
     # defining scoping regions.
     monkeypatch.setattr(SYMBOL_TABLES, "_scoping_unit_classes",
                         [Fortran2003.Program_Stmt])
