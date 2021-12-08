@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Science and Technology Facilities Council
+# Copyright (c) 2019-2021, Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -37,6 +37,7 @@
 import pytest
 
 from fparser.api import get_reader
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import BlockBase
 import fparser.two.Fortran2003 as F2003
 
@@ -170,6 +171,50 @@ def test_strict_order_valid_code(f2003_create):
     assert str(result) == expected
 
 
+def test_label_do_construct_hook_match(f2003_create):
+    '''Check that specifying the enable_do_label_construct_hook to the match
+    method allows multiple loops sharing the same label to be matched.
+    '''
+    subclasses = [F2003.Assignment_Stmt, F2003.Continue_Stmt]
+    code = """
+        do 100 i = 1,10
+          j = 10
+          do 100 j = 1,10
+            k = 5
+        100 continue
+        """
+    reader = get_reader(code)
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True, enable_do_label_construct_hook=True)
+    assert isinstance(result[0][0], F2003.Label_Do_Stmt)
+    assert isinstance(result[0][2], F2003.Label_Do_Stmt)
+    # Without the `enable_do_label_construct_hook` set, we only match
+    # the first loop.
+    reader = get_reader(code)
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True)
+    assert len(result[0]) == 2
+
+
+def test_label_do_nomatch(f2003_create):
+    '''
+    Check that the match() method returns None for an invalid do
+    statement.
+    '''
+    subclasses = [F2003.Assignment_Stmt, F2003.Continue_Stmt]
+    reader = get_reader("""
+        do 100 i-10
+          j = 10
+        100 continue
+        """)
+    result = BlockBase.match(
+        F2003.Label_Do_Stmt, subclasses, None, reader,
+        match_labels=True, enable_do_label_construct_hook=True)
+    assert result is None
+
+
 def remove_indentation(string):
     '''
     A utility function that removes indented multiline strings of reprs.
@@ -192,3 +237,28 @@ def remove_indentation(string):
             result += ' ' + line
         block_indent = this_indent
     return result.strip()
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_syntax_error_nested_symbol_table():
+    '''
+    Test that a syntax error within a nested scoping region is handled
+    correctly. We use some code that has a mis-spelt attribute on a
+    declaration to trigger a syntax error.
+
+    '''
+    reader = get_reader('''
+module my_mod
+contains
+FUNCTION dot_v_mod_2d( )
+  REAL ::  dot_v_mod_2d
+  REAL, DIMENSION(:,:), POINTER, CONTIOUS :: z_msk_i
+  dot_v_mod_2d = 0.0_wp
+END FUNCTION dot_v_mod_2d
+end module my_mod
+''')
+    result = F2003.Module.match(reader)
+    # There should be no match and, as a result, there should be no
+    # symbol-table entries.
+    assert result is None
+    assert SYMBOL_TABLES._symbol_tables == {}

@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2019-2020, Science and Technology Facilities Council.
+# Copyright (c) 2019-2021, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 import pytest
 from fparser.two.Fortran2003 import Program, Intrinsic_Function_Reference, \
     Intrinsic_Name
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import FortranSyntaxError, NoMatchError, \
     InternalSyntaxError, walk
 from fparser.api import get_reader
@@ -104,6 +105,7 @@ def test_intrinsic_name_case_insensitive(f2003_create):
 # class intrinsic_function_reference
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_generic(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic with a valid number of arguments.
@@ -114,6 +116,7 @@ def test_intrinsic_function_reference_generic(f2003_create):
     assert str(result) == "SIN(A)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     specific intrinsic with a valid number of arguments.
@@ -124,6 +127,7 @@ def test_intrinsic_function_reference(f2003_create):
     assert str(result) == "DSIN(A)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_nomatch(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception if there is no match.
@@ -133,6 +137,7 @@ def test_intrinsic_function_nomatch(f2003_create):
         _ = Intrinsic_Function_Reference("NO_MATCH(A)")
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_multi_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts more than one argument (two in
@@ -144,6 +149,7 @@ def test_intrinsic_function_reference_multi_args(f2003_create):
     assert str(result) == "MATMUL(A, B)"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_zero_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts zero arguments.
@@ -154,6 +160,7 @@ def test_intrinsic_function_reference_zero_args(f2003_create):
     assert str(result) == "COMMAND_ARGUMENT_COUNT()"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_range_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts a range of number of arguments.
@@ -165,6 +172,7 @@ def test_intrinsic_function_reference_range_args(f2003_create):
         assert str(result) == "SYSTEM_CLOCK({0})".format(args)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_unlimited_args(f2003_create):
     '''Test that class Intrinsic_Function_Reference correctly matches a
     generic intrinsic which accepts an unlimitednumber of arguments.
@@ -176,6 +184,7 @@ def test_intrinsic_function_reference_unlimited_args(f2003_create):
         assert str(result) == "MAX({0})".format(args)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error1(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the valid min and max args are equal (2 in this case)
@@ -193,6 +202,7 @@ def test_intrinsic_function_reference_error1(f2003_create):
             "" in str(excinfo.value))
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error2(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the valid min args is less than the valid max args
@@ -210,6 +220,7 @@ def test_intrinsic_function_reference_error2(f2003_create):
             "" in str(excinfo.value))
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_intrinsic_function_reference_error3(f2003_create):
     '''Test that class Intrinsic_Function_Reference raises the expected
     exception when the number of arguments is unlimited.
@@ -232,3 +243,25 @@ def test_intrinsic_inside_intrinsic(f2003_create):
     rep = repr(ast).replace("u'", "'")
     assert "Intrinsic_Name('SIN')" in rep
     assert "Intrinsic_Name('COS')" in rep
+
+
+def test_shadowed_intrinsic(f2003_parser):
+    ''' Check that a locally-defined symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified. '''
+    tree = f2003_parser(get_reader('''\
+module my_mod
+  use some_mod
+  real :: dot_product(2,2)
+contains
+  subroutine my_sub()
+    real :: result
+    result = dot_product(1,1)
+  end subroutine my_sub
+end module my_mod
+    '''))
+    tables = SYMBOL_TABLES
+    # We should not have an intrinsic-function reference in the parse tree
+    assert not walk(tree, Intrinsic_Function_Reference)
+    table = tables.lookup("my_mod")
+    sym = table.children[0].lookup("dot_product")
+    assert sym.primitive_type == "real"

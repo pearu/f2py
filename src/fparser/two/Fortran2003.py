@@ -74,7 +74,7 @@ import re
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
-
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
@@ -2665,8 +2665,34 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
 
     @staticmethod
     def match(string):
-        return Type_Declaration_StmtBase.match(
+        '''
+        Attempts to match the supplied string as a type declaration. If the
+        match is successful the declared symbols are added to the symbol table
+        of the current scope.
+
+        :param str string: the string to match.
+
+        :returns: 3-tuple containing the matched declaration.
+        :rtype: (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
+                 Entity_Decl_List)
+
+        '''
+        result = Type_Declaration_StmtBase.match(
             Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
+        if result:
+            # We matched a declaration - capture the declared symbols in the
+            # symbol table of the current scoping region.
+            table = SYMBOL_TABLES.current_scope
+
+            if isinstance(result[0], Intrinsic_Type_Spec):
+                # We have a definition of symbol(s) of intrinsic type
+                decl_list = walk(result, Entity_Decl)
+                for decl in decl_list:
+                    # TODO #201 use an enumeration to specify the primitive
+                    # type rather than a string.
+                    table.add_data_symbol(decl.items[0].string, str(result[0]))
+            # TODO #201 support symbols that are not of intrinsic type.
+        return result
 
     @staticmethod
     def match2(string):
@@ -5991,8 +6017,7 @@ class Case_Construct(BlockBase):  # R808
                                Execution_Part_Construct,
                                Case_Stmt],
             End_Select_Stmt, reader,
-            match_names=True,  # C803
-            enable_case_construct_hook=True  # C803
+            match_names=True  # C803
         )
 
     def tofortran(self, tab='', isfix=None):
@@ -6238,8 +6263,7 @@ class Select_Type_Construct(BlockBase):  # R821
         return BlockBase.match(
             Select_Type_Stmt, [Type_Guard_Stmt, Execution_Part_Construct,
                                Type_Guard_Stmt], End_Select_Type_Stmt, reader,
-            match_names=True,  # C819
-            enable_select_type_construct_hook=True)
+            match_names=True)  # C819
 
 
 class Select_Type_Stmt(StmtBase):  # R822
@@ -9065,7 +9089,12 @@ class Main_Program(BlockBase):  # R1101 [C1101, C1102, C1103]
 
 
 class Main_Program0(BlockBase):
-    """<main-program> =
+    """
+    Rule 1101 specifies that the opening 'program-stmt' is optional. This
+    class handles the special case when it is not supplied and thus
+    matches on:
+
+        <main-program> =
                          [ <specification-part> ]
                          [ <execution-part> ]
                          [ <internal-subprogram-part> ]
@@ -9086,10 +9115,37 @@ class Main_Program0(BlockBase):
 
     @staticmethod
     def match(reader):
-        return BlockBase.match(None,
-                               [Specification_Part, Execution_Part,
-                                Internal_Subprogram_Part],
-                               End_Program_Stmt, reader)
+        '''
+        Attempts to match the content in the reader with a program that is
+        missing the optional opening program-stmt (R1101). If the match
+        is successful, a symbol table named "fparser2:main_program" is
+        also created.
+
+        :param reader: Content to check for match
+        :type reader: str or instance of :py:class:`FortranReaderBase`
+
+        :return: 2-tuple of (list of matched classes,  None) or None \
+                 if no match is found.
+        :rtype: (list of matched classes, None) or NoneType
+
+        '''
+        # For this special case we have to supply a name for the top-level
+        # symbol table. We include a ':' so that it is not a valid Fortran
+        # name and therefore cannot clash with any routine names.
+        table_name = "fparser2:main_program"
+        SYMBOL_TABLES.enter_scope(table_name)
+
+        result = BlockBase.match(None,
+                                 [Specification_Part, Execution_Part,
+                                  Internal_Subprogram_Part],
+                                 End_Program_Stmt, reader)
+
+        SYMBOL_TABLES.exit_scope()
+        if not result:
+            # The match failed so remove the associated symbol table
+            SYMBOL_TABLES.remove(table_name)
+
+        return result
 
 
 class Program_Stmt(StmtBase, WORDClsBase):  # R1102
@@ -9236,12 +9292,42 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     @staticmethod
     def match(string):
         '''
-        :param str string: Fortran code to check for a match
+        Wrapper for the match method that captures any successfully-matched
+        use statements in the symbol table associated with the current scope.
+
+        :param str string: Fortran code to check for a match.
+
         :return: 5-tuple containing strings and instances of the classes
                  describing a module (optional module nature, optional
                  double colon delimiter, mandatory module name, optional
                  "ONLY" specification and optional "Rename" or "Only" list)
+                 or None if the match fails.
+        :rtype: 5-tuple of objects (module name and 4 optional) or NoneType
+
+        '''
+        result = Use_Stmt._match(string)
+        if result:
+            table = SYMBOL_TABLES.current_scope
+            only_list = None
+            # TODO #201 we currently ignore any symbol renaming here
+            if isinstance(result[4], Only_List):
+                names = walk(result[4], Name)
+                only_list = [name.string for name in names]
+            table.add_use_symbols(str(result[2]), only_list)
+
+        return result
+
+    @staticmethod
+    def _match(string):
+        '''
+        :param str string: Fortran code to check for a match.
+
+        :return: 5-tuple containing strings and instances of the classes
+                 describing a module (optional module nature, optional
+                 double colon delimiter, mandatory module name, optional
+                 "ONLY" specification and optional "Rename" or "Only" list).
         :rtype: 5-tuple of objects (module name and 4 optional)
+
         '''
         line = string.strip()
         # Incorrect 'USE' statement or line too short
@@ -10187,6 +10273,17 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             # matches the number of args expected by the intrinsic.
             function_name = str(result[0])
             function_args = result[1]
+
+            # Check that that this name is not being shadowed (i.e. overridden)
+            # by a symbol in scope at this point.
+            table = SYMBOL_TABLES.current_scope
+            try:
+                table.lookup(function_name)
+                # We found a matching name so refuse to match this intrinsic.
+                return None
+            except KeyError:
+                pass
+
             # This if/else will not be needed once issue #170 has been
             # addressed.
             if isinstance(function_args, Actual_Arg_Spec_List):

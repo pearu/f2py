@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council
+# Copyright (c) 2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,46 +32,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1102 : This file tests the support for the
-program statement.
+'''Test Fortran 2003 rule R1104 : the majority of the tests for this
+are still in test_fortran2003.py and need to be moved here TODO #306.
 
 '''
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Module
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.Fortran2003 import Program_Stmt, Program
 
 
-@pytest.mark.usefixtures("f2003_create")
-def test_valid():
-    ''' Test that valid code is parsed correctly. '''
+def test_module_new_symbol_table(f2003_create):
+    '''
+    Test that valid code is parsed correctly and an associated symbol table
+    created.
 
-    obj = Program_Stmt("program a")
-    assert isinstance(obj, Program_Stmt)
-    assert str(obj) == 'PROGRAM a'
-    assert repr(obj) == "Program_Stmt('PROGRAM', Name('a'))"
-    # Check that the parent of the Name is correctly set
-    assert obj.items[1].parent is obj
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_invalid():
-    ''' Test that exceptions are raised for invalid code. '''
-
-    for string in ["", "  ", "prog", "program", "programa", "a program",
-                   "a program a", "program a a"]:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Program_Stmt(string)
-        assert "Program_Stmt: '{0}'".format(string) in str(excinfo.value)
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_prog_symbol_table():
-    ''' Check that an associated symbol table is created when parsing a
-    program unit. '''
-    reader = get_reader("program my_prog\n"
-                        "end program my_prog\n")
-    prog = Program(reader)
-    assert "my_prog" in SYMBOL_TABLES._symbol_tables
+    '''
+    # basic
+    obj = Module(get_reader("module a\nend module"))
+    assert isinstance(obj, Module)
+    assert str(obj) == 'MODULE a\nEND MODULE'
+    assert repr(obj) == ("Module(Module_Stmt('MODULE', Name('a')), "
+                         "End_Module_Stmt('MODULE', None))")
+    assert "a" in SYMBOL_TABLES._symbol_tables

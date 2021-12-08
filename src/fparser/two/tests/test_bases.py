@@ -35,7 +35,10 @@
 ''' Module containing pytest tests for fparser2 base classes '''
 
 import pytest
-from fparser.two.utils import NoMatchError
+from fparser.common.readfortran import FortranStringReader
+from fparser.two import Fortran2003
+from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two.utils import NoMatchError, BlockBase, walk
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -130,8 +133,6 @@ def test_blockbase_tofortran_non_ascii():
     ''' Check that the tofortran() method works when we have a program
     containing non-ascii characters within a sub-class of BlockBase. We
     use a Case Construct for this purpose. '''
-    from fparser.common.readfortran import FortranStringReader
-    from fparser.two.utils import BlockBase, walk
     from fparser.two.Fortran2003 import Program, Case_Construct
     code = (u"program my_test\n"
             u"! A comment outside the select block\n"
@@ -146,3 +147,28 @@ def test_blockbase_tofortran_non_ascii():
     # Explicitly call tofortran() on the BlockBase class.
     out_str = BlockBase.tofortran(bbase)
     assert "for e1=1" in out_str
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_blockbase_symbol_table(monkeypatch):
+    ''' Check that the BlockBase.match method creates symbol-tables
+    for those classes that correspond to a scoping unit and not
+    otherwise. '''
+    # Monkeypatch the list of classes that are recognised as
+    # defining scoping regions.
+    monkeypatch.setattr(SYMBOL_TABLES, "_scoping_unit_classes",
+                        [Fortran2003.Program_Stmt])
+    code = (u"program my_test\n"
+            u"end program\n")
+    reader = FortranStringReader(code, ignore_comments=False)
+    obj = BlockBase.match(Fortran2003.Program_Stmt, [],
+                          Fortran2003.End_Program_Stmt, reader)
+    # We should have a new symbol table named "my_test"
+    assert SYMBOL_TABLES.lookup("my_test")
+    code = (u"subroutine my_sub\n"
+            u"end subroutine\n")
+    reader = FortranStringReader(code, ignore_comments=False)
+    obj = BlockBase.match(Fortran2003.Subroutine_Stmt, [],
+                          Fortran2003.End_Subroutine_Stmt, reader)
+    # There should be no new symbol table
+    assert "my_sub" not in SYMBOL_TABLES._symbol_tables
