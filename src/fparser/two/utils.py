@@ -72,9 +72,8 @@
 import re
 import six
 from fparser.common.splitline import string_replace_map
-from fparser.two import pattern_tools as pattern
 from fparser.common.readfortran import FortranReaderBase
-
+from fparser.common import readfortran
 
 # A list of supported extensions to the standard(s)
 
@@ -263,6 +262,70 @@ class ComparableMixin(object):
         return self._compare(other, lambda s, o: s != o)
 
 
+class DynamicImport():
+    ''' This class import a set of fparser.two dependencies that can not
+    be imported during the Python Import time because they have a circular
+    dependency with this file.
+
+    They are imported once when the Fotran2003 is already processed by calling
+    the import_now() method.
+
+    The alternative is to have the equivalent top-level imports in the
+    Base.__new__ method, but this method is in the parser critical path and
+    is best to keep expensive operations out of it.
+    '''
+
+    @staticmethod
+    def import_now():
+        ''' Execute the Import of Fortran2003 dependencies. '''
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
+            End_If_Stmt, Masked_Elsewhere_Stmt, Elsewhere_Stmt, \
+            End_Where_Stmt, Type_Guard_Stmt, End_Select_Type_Stmt, \
+            Case_Stmt, End_Select_Stmt, Comment, Include_Stmt, \
+            add_comments_includes_directives
+        from fparser.two import C99Preprocessor
+        DynamicImport.Else_If_Stmt = Else_If_Stmt
+        DynamicImport.Else_Stmt = Else_Stmt
+        DynamicImport.End_If_Stmt = End_If_Stmt
+        DynamicImport.Masked_Elsewhere_Stmt = Masked_Elsewhere_Stmt
+        DynamicImport.Elsewhere_Stmt = Elsewhere_Stmt
+        DynamicImport.End_Where_Stmt = End_Where_Stmt
+        DynamicImport.Type_Guard_Stmt = Type_Guard_Stmt
+        DynamicImport.End_Select_Type_Stmt = End_Select_Type_Stmt
+        DynamicImport.Case_Stmt = Case_Stmt
+        DynamicImport.End_Select_Stmt = End_Select_Stmt
+        DynamicImport.Comment = Comment
+        DynamicImport.Include_Stmt = Include_Stmt
+        DynamicImport.C99Preprocessor = C99Preprocessor
+        DynamicImport.add_comments_includes_directives = \
+            add_comments_includes_directives
+
+
+di = DynamicImport()
+
+
+def _set_parent(parent_node, items):
+    ''' Recursively set the parent of all of the elements
+    in the list that are a sub-class of Base. (Recursive because
+    sometimes the list of elements itself contains a list or tuple.)
+
+    :param parent_node: the parent of the nodes listed in `items`.
+    :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
+    :param items: list or tuple of nodes for which to set the parent.
+    :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
+                 or `str` or `list` or `tuple` or NoneType.
+    '''
+    for item in items:
+        if item:
+            if isinstance(item, Base):
+                # We can only set the parent of `Base` objects.
+                # Anything else (e.g. str) is passed over.
+                item.parent = parent_node
+            elif isinstance(item, (list, tuple)):
+                _set_parent(parent_node, item)
+
+
 class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
@@ -291,28 +354,6 @@ class Base(ComparableMixin):
     @show_result
     def __new__(cls, string, parent_cls=None):
 
-        def _set_parent(parent_node, items):
-            ''' Recursively set the parent of all of the elements
-            in the list that are a sub-class of Base. (Recursive because
-            sometimes the list of elements itself contains a list or tuple.)
-
-            :param parent_node: the parent of the nodes listed in `items`.
-            :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
-            :param items: list or tuple of nodes for which to set the parent.
-            :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
-                         or `str` or `list` or `tuple` or NoneType.
-            '''
-            for item in items:
-                if item:
-                    if isinstance(item, Base):
-                        # We can only set the parent of `Base` objects.
-                        # Anything else (e.g. str) is passed over.
-                        item.parent = parent_node
-                    elif isinstance(item, (list, tuple)):
-                        _set_parent(parent_node, item)
-        # ------------------------------------------------------------------
-
-        from fparser.common import readfortran
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:
@@ -347,12 +388,13 @@ class Base(ComparableMixin):
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
-            try:
-                result = cls.match(string)
-            except NoMatchError as msg:
-                if str(msg) == '%s: %r' % (cls.__name__, string):
+            #try:
+            result = cls.match(string)
+            #except NoMatchError as msg:
+            #    if str(msg) == '%s: %r' % (cls.__name__, string):
                     # avoid recursion 1.
-                    raise
+            #        pass
+                    # raise
 
         if isinstance(result, tuple):
             obj = object.__new__(cls)
@@ -532,15 +574,12 @@ content : tuple
         :return: instance of startcls or None if no match is found
         :rtype: startcls
         '''
-        from fparser.two.Fortran2003 import Comment, Include_Stmt, \
-            add_comments_includes_directives
-        from fparser.two import C99Preprocessor
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
-            add_comments_includes_directives(content, reader)
+            DynamicImport.add_comments_includes_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -564,10 +603,10 @@ content : tuple
                 start_name = obj.get_start_name()
 
         # Comments and Include statements are always valid sub-classes
-        classes = subclasses + [Comment, Include_Stmt]
+        classes = subclasses + [di.Comment, di.Include_Stmt]
         # Preprocessor directives are always valid sub-classes
-        cpp_classes = [getattr(C99Preprocessor, cls_name)
-                       for cls_name in C99Preprocessor.CPP_CLASS_NAMES]
+        cpp_classes = [getattr(di.C99Preprocessor, cls_name)
+                       for cls_name in di.C99Preprocessor.CPP_CLASS_NAMES]
         classes += cpp_classes
         if endcls is not None:
             classes += [endcls]
@@ -643,35 +682,27 @@ content : tuple
                 # Return to start of classes list now that we've matched.
                 i = 0
             if enable_if_construct_hook:
-                from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
-                    End_If_Stmt
-                if isinstance(obj, Else_If_Stmt):
+                if isinstance(obj, di.Else_If_Stmt):
                     # Got an else-if so go back to start of possible
                     # classes to match
                     i = 0
-                if isinstance(obj, (Else_Stmt, End_If_Stmt)):
+                if isinstance(obj, (di.Else_Stmt, di.End_If_Stmt)):
                     # Found end-if
                     enable_if_construct_hook = False
             if enable_where_construct_hook:
-                from fparser.two.Fortran2003 import Masked_Elsewhere_Stmt, \
-                    Elsewhere_Stmt, End_Where_Stmt
-                if isinstance(obj, Masked_Elsewhere_Stmt):
+                if isinstance(obj, di.Masked_Elsewhere_Stmt):
                     i = 0
-                if isinstance(obj, (Elsewhere_Stmt, End_Where_Stmt)):
+                if isinstance(obj, (di.Elsewhere_Stmt, di.End_Where_Stmt)):
                     enable_where_construct_hook = False
             if enable_select_type_construct_hook:
-                from fparser.two.Fortran2003 import Type_Guard_Stmt, \
-                    End_Select_Type_Stmt
-                if isinstance(obj, Type_Guard_Stmt):
+                if isinstance(obj, di.Type_Guard_Stmt):
                     i = 1
-                if isinstance(obj, End_Select_Type_Stmt):
+                if isinstance(obj, di.End_Select_Type_Stmt):
                     enable_select_type_construct_hook = False
             if enable_case_construct_hook:
-                from fparser.two.Fortran2003 import Case_Stmt, \
-                    End_Select_Stmt
-                if isinstance(obj, Case_Stmt):
+                if isinstance(obj, di.Case_Stmt):
                     i = 1
-                if isinstance(obj, End_Select_Stmt):
+                if isinstance(obj, di.End_Select_Stmt):
                     enable_case_construct_hook = False
             continue
 
