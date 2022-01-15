@@ -96,6 +96,15 @@ _is_simple_str = re.compile(r'\w*\Z', re.I).match
 _f2py_findall = re.compile(
     r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_REAL_CONSTANT_\d+_|'
     r'F2PY_EXPR_TUPLE_\d+)').findall
+# A valid exponential constant must begin with a digit or a '.' (and be
+# preceeded by a non-'word' character or the start of the string).
+# We have to exclude '.' from the match for a non-word character as
+# otherwise, in a string such as ".5d0", it would be matched by the
+# non-capturing group. Since the first group is non-capturing (?:),
+# the matched literal is in group 1.
+# R417 for real-literal-constant does not permit whitespace.
+exponential_constant = re.compile(
+    r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
 
 
 class StringReplaceDict(dict):
@@ -115,6 +124,32 @@ class StringReplaceDict(dict):
         return line
 
 
+def memoize(function):
+    ''' Simple memoization decorator.
+
+    Note: Python 3.9 comes with a thread-safe and more efficient cache as it
+    can be bounded and we are interested in lines that have temporal locality.
+    It's the: @functools.lru_cache(maxsize=8)
+
+    '''
+    memo = {}
+
+    def wrapper(*args, **kwargs):
+        key = args
+        if kwargs:
+            for item in kwargs.items():
+                key += item
+        result = memo.get(key, None)
+        if result is not None:
+            return result
+        result = function(*args, **kwargs)
+        memo[key] = result
+        return result
+
+    return wrapper
+
+
+@memoize
 def string_replace_map(line, lower=False):
     """
     #. Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
@@ -131,15 +166,6 @@ def string_replace_map(line, lower=False):
             :py:class:`fparser.common.splitline.StringReplaceDict`
 
     """
-    # A valid exponential constant must begin with a digit or a '.' (and be
-    # preceeded by a non-'word' character or the start of the string).
-    # We have to exclude '.' from the match for a non-word character as
-    # otherwise, in a string such as ".5d0", it would be matched by the
-    # non-capturing group. Since the first group is non-capturing (?:),
-    # the matched literal is in group 1.
-    # R417 for real-literal-constant does not permit whitespace.
-    exponential_constant = re.compile(
-        r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
 
     str_idx = 0
     const_idx = 0
