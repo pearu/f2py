@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 #
@@ -125,7 +125,6 @@ def _repr_utf(anobj):
 #
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_specification_part():
     ''' Tests for parsing specification-part (R204). '''
     reader = get_reader('''\

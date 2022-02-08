@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -2668,7 +2668,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
         '''
         Attempts to match the supplied string as a type declaration. If the
         match is successful the declared symbols are added to the symbol table
-        of the current scope.
+        of the current scope (if there is one).
 
         :param str string: the string to match.
 
@@ -2684,7 +2684,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
             # symbol table of the current scoping region.
             table = SYMBOL_TABLES.current_scope
 
-            if isinstance(result[0], Intrinsic_Type_Spec):
+            if table and isinstance(result[0], Intrinsic_Type_Spec):
                 # We have a definition of symbol(s) of intrinsic type
                 decl_list = walk(result, Entity_Decl)
                 for decl in decl_list:
@@ -9293,7 +9293,8 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     def match(string):
         '''
         Wrapper for the match method that captures any successfully-matched
-        use statements in the symbol table associated with the current scope.
+        use statements in the symbol table associated with the current scope
+        (if there is one).
 
         :param str string: Fortran code to check for a match.
 
@@ -9308,12 +9309,13 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         result = Use_Stmt._match(string)
         if result:
             table = SYMBOL_TABLES.current_scope
-            only_list = None
-            # TODO #201 we currently ignore any symbol renaming here
-            if isinstance(result[4], Only_List):
-                names = walk(result[4], Name)
-                only_list = [name.string for name in names]
-            table.add_use_symbols(str(result[2]), only_list)
+            if table:
+                only_list = None
+                # TODO #201 we currently ignore any symbol renaming here
+                if isinstance(result[4], Only_List):
+                    names = walk(result[4], Name)
+                    only_list = [name.string for name in names]
+                table.add_use_symbols(str(result[2]), only_list)
 
         return result
 
@@ -10281,7 +10283,9 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 table.lookup(function_name)
                 # We found a matching name so refuse to match this intrinsic.
                 return None
-            except KeyError:
+            except (KeyError, AttributeError):
+                # There is either no matching name in the table or we have
+                # no current scoping region.
                 pass
 
             # This if/else will not be needed once issue #170 has been
