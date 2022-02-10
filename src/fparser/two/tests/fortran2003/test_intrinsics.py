@@ -105,14 +105,24 @@ def test_intrinsic_name_case_insensitive(f2003_create):
 # class intrinsic_function_reference
 
 
-def test_intrinsic_function_reference_generic(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_intrinsic_function_reference_generic():
     '''Test that class Intrinsic_Function_Reference correctly matches a
-    generic intrinsic with a valid number of arguments.
+    generic intrinsic with a valid number of arguments. We test both
+    with and without the existance of a symbol table.
 
     '''
     result = Intrinsic_Function_Reference("SIN(A)")
     assert isinstance(result, Intrinsic_Function_Reference)
     assert str(result) == "SIN(A)"
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    result = Intrinsic_Function_Reference("SIN(A)")
+    assert isinstance(result, Intrinsic_Function_Reference)
+    assert str(result) == "SIN(A)"
+    table = SYMBOL_TABLES.current_scope
+    assert "sin" not in table._data_symbols
+    SYMBOL_TABLES.exit_scope()
 
 
 def test_intrinsic_function_reference(f2003_create):
