@@ -10306,6 +10306,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
             if max_nargs is None:
                 if nargs < min_nargs:
+                    return None # ARPDBG
                     # None indicates an unlimited number of arguments
                     raise InternalSyntaxError(
                         "Intrinsic '{0}' expects at least {1} args but found "
@@ -10315,11 +10316,13 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 # None.
                 return result
             if min_nargs == max_nargs and nargs != min_nargs:
+                return None # ARPDBG
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
                     "".format(function_name, min_nargs, nargs))
             if min_nargs < max_nargs and (nargs < min_nargs or
                                           nargs > max_nargs):
+                return None # ARPDBG
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects between {1} and {2} args but "
                     "found {3}.".format(function_name, min_nargs, max_nargs,
