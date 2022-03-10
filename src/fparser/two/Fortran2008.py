@@ -77,12 +77,12 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
-    SeparatorBase, Type_Declaration_StmtBase
+    SeparatorBase, Type_Declaration_StmtBase, StmtBase
 from fparser.two.Fortran2003 import (
     EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
     Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
     Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
-    Entity_Decl_List, Component_Decl_List)
+    Entity_Decl_List, Component_Decl_List, Stop_Code)
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
     Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
@@ -524,6 +524,20 @@ class Upper_Cobound(Base):  # R513
 
     '''
     subclass_names = ['Specification_Expr']
+
+
+class Error_Stop_Stmt(StmtBase, WORDClsBase):  # R856
+    '''
+    Fortran 2008 rule R856
+    error-stop-stmt is ERROR STOP [ stop-code ]
+
+    '''
+    subclass_names = []
+    use_names = ['Stop_Code']
+
+    def match(string):
+        return WORDClsBase.match('ERROR STOP', Stop_Code, string)
+    match = staticmethod(match)
 
 
 class Specification_Part_C1112(Specification_Part):  # C1112
