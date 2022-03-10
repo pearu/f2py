@@ -2664,21 +2664,30 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
     @staticmethod
-    def match(string):
+    def get_attribute_spec_list_cls():
+        '''Return the type used to match the attr-spec-list
+
+        This method allows to overwrite the type used in :py:meth:`match`
+        in derived classes
+        (e.g., :py:class:`fparser.two.Fortran2008.Type_Declaration_Stmt`).
+
+        This cannot be implemented as an attribute because the relevant type
+        :class:`Attr_Spec_List` is auto-generated at the end of the file
+        using the :attr:`use_names` property of the class.
+
         '''
-        Attempts to match the supplied string as a type declaration. If the
-        match is successful the declared symbols are added to the symbol table
-        of the current scope (if there is one).
+        return Attr_Spec_List
 
-        :param str string: the string to match.
+    @staticmethod
+    def add_to_symbol_table(result):
+        '''Capture the declared symbols in the symbol table of the current
+        scoping region
 
-        :returns: 3-tuple containing the matched declaration.
-        :rtype: (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
+        :param result: the declared type, attributes and entities or None
+        :type result: `NoneType` or \
+                (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
                  Entity_Decl_List)
-
         '''
-        result = Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
         if result:
             # We matched a declaration - capture the declared symbols in the
             # symbol table of the current scoping region.
@@ -2692,6 +2701,28 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
                     # type rather than a string.
                     table.add_data_symbol(decl.items[0].string, str(result[0]))
             # TODO #201 support symbols that are not of intrinsic type.
+
+    @classmethod
+    def match(cls, string):
+        '''
+        Attempts to match the supplied string as a type declaration. If the
+        match is successful the declared symbols are added to the symbol table
+        of the current scope (if there is one).
+
+        Note that this is implemented as a class method to allow parameterizing
+        the type used to match attr-spec-list via :py:attr:`get_attr_spec_list_cls`.
+
+        :param str string: the string to match.
+
+        :returns: 3-tuple containing the matched declaration.
+        :rtype: (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
+                 Entity_Decl_List)
+
+        '''
+        result = Type_Declaration_StmtBase.match(
+            Declaration_Type_Spec, cls.get_attr_spec_list_cls(), Entity_Decl_List,
+            string)
+        cls.add_to_symbol_table(result)
         return result
 
     @staticmethod

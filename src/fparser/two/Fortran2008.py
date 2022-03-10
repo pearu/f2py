@@ -356,11 +356,8 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
                              entity-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
-    variant but reimplements the match method identical to Fortran 2003 as
-    otherwise the generated Fortran 2008 variant of `Attr_Spec_List` would not
-    be used. Unfortunately, the required `attr_spec_list_cls` can not simply be
-    provided as a class property since the relevant class is only generated
-    at the end of this file using the `use_names` class property of this class.
+    variant but updates the attribute :py:attr:`attribute_spec_list_cls` to use
+    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
 
     Associated constraints are:
 
@@ -378,23 +375,13 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
     '''
 
     @staticmethod
-    def match(string):
-        '''Implements the matching of a type declaration statement.
+    def get_attribute_spec_list_cls():
+        '''Return the type used to match the attr-spec-list
 
-        :param str string: the reader or string to match as a type \
-                           declaration statement.
-
-        :return: a 3-tuple containing declaration type specification, \
-                 attributespecification and entity declaration list \
-                 if there is a match or None if there is no match.
-        :rtype: `NoneType` or \
-            (:py:class:`fparser.two.Fortran2003.Declaration_Type_Spec`, \
-             :py:class:`fparser.two.Fortran2008.Attr_Spec_List`, \
-             :py:class:`fparser.two.Fortran2003.Entity_Decl_List`)
+        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
 
         '''
-        return Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
+        return Attr_Spec_List
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
