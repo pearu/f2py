@@ -356,7 +356,7 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
                              entity-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
-    variant but updates the attribute :py:attr:`attribute_spec_list_cls` to use
+    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
     the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
 
     Associated constraints are:
@@ -375,7 +375,7 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
     '''
 
     @staticmethod
-    def get_attribute_spec_list_cls():
+    def get_attr_spec_list_cls():
         '''Return the type used to match the attr-spec-list
 
         This overwrites the Fortran 2003 type with the Fortran 2008 variant.

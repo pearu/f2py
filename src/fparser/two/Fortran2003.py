@@ -2664,7 +2664,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
     @staticmethod
-    def get_attribute_spec_list_cls():
+    def get_attr_spec_list_cls():
         '''Return the type used to match the attr-spec-list
 
         This method allows to overwrite the type used in :py:meth:`match`
@@ -2710,7 +2710,7 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
         of the current scope (if there is one).
 
         Note that this is implemented as a class method to allow parameterizing
-        the type used to match attr-spec-list via :py:attr:`get_attr_spec_list_cls`.
+        the type used to match attr-spec-list via :py:meth:`get_attr_spec_list_cls`.
 
         :param str string: the string to match.
 
