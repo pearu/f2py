@@ -55,8 +55,8 @@ def test_simple(string):
 @pytest.mark.parametrize('stop_code', ['1', 'A', 'err_code'])
 def test_stop_code(stop_code):
     '''Test that error-stop-stmt with stop-code matches.'''
-    result = Error_Stop_Stmt(f'ERROR STOP {stop_code}')
-    assert str(result) == f'ERROR STOP {stop_code}'
+    result = Error_Stop_Stmt('ERROR STOP {}'.format(stop_code))
+    assert str(result) == 'ERROR STOP {}'.format(stop_code)
 
 
 @pytest.mark.usefixtures("f2008_create")
