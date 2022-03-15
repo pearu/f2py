@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+15/03/2022 PR #311 for #310. Allows symbol table scope to be None.
+
 08/12/2021 PR #293 towards #201. Initial symbol-table support added.
 
 02/12/2021 PR #305 for #304. Fix failing build of documentation on RTD.
