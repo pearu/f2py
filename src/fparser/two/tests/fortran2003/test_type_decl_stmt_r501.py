@@ -32,7 +32,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''pytest tests for Fortran2003 rule R501 - Type Declaration Statement.
+'''
+pytest tests for Fortran2003 rule R501 - Type Declaration Statement.
+
+TODO #318 - these tests need extending to fully cover the
+Fortran2003.Type_Declaration_Stmtclass. They will also need to be
+extended as part of #259 as that will add support for the various
+constraints that apply to R501.
 
 '''
 
