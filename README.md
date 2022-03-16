@@ -1,5 +1,7 @@
 # News #
 
+  * 10/03/2022 Version 0.0.14 released. See the [CHANGELOG](CHANGELOG.md)
+    for details.
   * 02/11/2021 Version 0.0.13 released. See the [CHANGELOG](CHANGELOG.md)
     for details.
   * 26/04/2021 Version 0.0.12 released. See the [CHANGELOG](CHANGELOG.md)
@@ -23,7 +25,8 @@
 
 This project is based upon the Fortran (77..2003) parser originally
 developed by Pearu Peterson for the F2PY project,
-[www.f2py.com](http://www.f2py.com).
+[www.f2py.com](http://www.f2py.com). It provides a parser for Fortran
+source code implemented purely in Python.
 
 # Obtaining #
 
