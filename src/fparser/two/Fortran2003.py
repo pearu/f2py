@@ -5978,9 +5978,10 @@ class If_Stmt(StmtBase):  # R807
     """
     subclass_names = []
     use_names = ['Scalar_Logical_Expr', 'Action_Stmt_C802']
+    action_stmt_cls = Action_Stmt_C802
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def match(cls, string):
         if string[:2].upper() != 'IF':
             return
         line, repmap = string_replace_map(string)
@@ -5992,7 +5993,7 @@ class If_Stmt(StmtBase):  # R807
             return
         expr = repmap(line[1:i].strip())
         stmt = repmap(line[i+1:].lstrip())
-        return Scalar_Logical_Expr(expr), Action_Stmt_C802(stmt)
+        return Scalar_Logical_Expr(expr), cls.action_stmt_cls(stmt)
 
     def tostr(self):
         return 'IF (%s) %s' % self.items

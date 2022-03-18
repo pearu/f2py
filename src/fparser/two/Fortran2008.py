@@ -694,10 +694,10 @@ class If_Stmt(If_Stmt_2003):  # R837
     Fortran 2008 rule R837
     if-stmt is IF ( scalar-logical-expr ) action-stmt
 
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but reimplements the match method identical to Fortran 2003 as
-    otherwise the updated Fortran 2008 variant of `Action_Stmt_C828` (C802 in F2003)
-    would not be used.
+    The implementation of this rule only replaces the :py:attr:`use_names` and
+    :py:attr:`action_stmt_class` attributes to use the Fortran 2008 variant
+    :py:class:`Action_Stmt_C828` instead of
+    :py:class:`fparser.two.Fortran2003.Action_Stmt_C802`.
 
     Associated constraints are:
 
@@ -706,21 +706,7 @@ class If_Stmt(If_Stmt_2003):  # R837
 
     '''
     use_names = ['Scalar_Logical_Expr', 'Action_Stmt_C828']
-
-    @staticmethod
-    def match(string):
-        if string[:2].upper() != 'IF':
-            return None
-        line, repmap = string_replace_map(string)
-        line = line[2:].lstrip()
-        if not line.startswith('('):
-            return None
-        i = line.find(')')
-        if i == -1:
-            return None
-        expr = repmap(line[1:i].strip())
-        stmt = repmap(line[i+1:].lstrip())
-        return Scalar_Logical_Expr(expr), Action_Stmt_C828(stmt)
+    action_stmt_cls = Action_Stmt_C828
 
 
 class Error_Stop_Stmt(StmtBase, WORDClsBase):  # R856
