@@ -138,6 +138,7 @@ class Executable_Construct(Executable_Construct_2003):  # R213
           end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
 
     NB: The new block-construct and critical-construct are not yet implemented.
+    TODO: Implement missing F2008 executable-construct (#320)
 
     '''
     subclass_names = [
@@ -224,8 +225,6 @@ class Action_Stmt_C201(Action_Stmt_C201_2003):
     subclass_names = Action_Stmt.subclass_names[:]
     subclass_names.remove('End_Function_Stmt')
     subclass_names.remove('End_Subroutine_Stmt')
-    # subclass_names.remove('End_Program_Stmt')
-    # subclass_names.remove('End_Mp_Subprogram_Stmt')
 
 
 class Action_Stmt_C816(Action_Stmt_C824_2003):
@@ -238,8 +237,6 @@ class Action_Stmt_C816(Action_Stmt_C824_2003):
     subclass_names.remove('Continue_Stmt')
     subclass_names.remove('Cycle_Stmt')
     subclass_names.remove('End_Function_Stmt')
-    # subclass_names.remove('End_Mp_Subprogram_Stmt')
-    # subclass_names.remove('End_Program_Stmt')
     subclass_names.remove('End_Subroutine_Stmt')
     subclass_names.remove('Error_Stop_Stmt')
     subclass_names.remove('Exit_Stmt')
@@ -257,8 +254,6 @@ class Action_Stmt_C828(Action_Stmt_C802_2003):
     subclass_names.remove('End_Function_Stmt')
     subclass_names.remove('End_Subroutine_Stmt')
     subclass_names.remove('If_Stmt')
-    # subclass_names.remove('End_Program_Stmt')
-    # subclass_names.remove('End_Mp_Subprogram_Stmt')
 
 
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
