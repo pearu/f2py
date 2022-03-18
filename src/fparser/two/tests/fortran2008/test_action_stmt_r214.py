@@ -77,18 +77,56 @@
 
     "C201 (R208) An execution-part shall not contain an end-function-stmt,
           end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
+
+    TODO: Implement and test lock-stmt, sync-all-stmt, sync-images-stmt,
+          sync-memory-stmt, unlock-stmt (#321)
 '''
 
 import pytest
 from fparser.api import get_reader, walk
-from fparser.two.Fortran2003 import Stop_Stmt
+from fparser.two.Fortran2003 import (
+    Allocate_Stmt, Arithmetic_If_Stmt, Backspace_Stmt, Call_Stmt, Close_Stmt,
+    Computed_Goto_Stmt, Continue_Stmt, Cycle_Stmt, Deallocate_Stmt,
+    End_Function_Stmt, End_Subroutine_Stmt, Endfile_Stmt, Exit_Stmt, Flush_Stmt,
+    Forall_Stmt, Goto_Stmt, If_Stmt, Inquire_Stmt, Nullify_Stmt, Open_Stmt,
+    Pointer_Assignment_Stmt, Print_Stmt, Read_Stmt, Return_Stmt, Rewind_Stmt,
+    Stop_Stmt, Wait_Stmt, Where_Stmt, Write_Stmt
+)
 from fparser.two.Fortran2008 import Action_Stmt, Error_Stop_Stmt
 from fparser.two.utils import NoMatchError
 
 
-@pytest.mark.usefixtures('f2008_create')
+@pytest.mark.usefixtures('f2008_create', 'fake_symbol_table')
 @pytest.mark.parametrize('string, cls', [
-    ('STOP', Stop_Stmt)
+    ('ALLOCATE(A(10))', Allocate_Stmt),
+    ('BACKSPACE 42', Backspace_Stmt),
+    ('CALL SOME_ROUTINE()', Call_Stmt),
+    ('CLOSE(23)', Close_Stmt),
+    ('CONTINUE', Continue_Stmt),
+    ('CYCLE', Cycle_Stmt),
+    ('DEALLOCATE(A)', Deallocate_Stmt),
+    ('END FUNCTION FUNC', End_Function_Stmt),
+    ('END SUBROUTINE MYSUB', End_Subroutine_Stmt),
+    ('ENDFILE 42', Endfile_Stmt),
+    ('EXIT', Exit_Stmt),
+    ('FLUSH 23', Flush_Stmt),
+    ('FORALL (I=1:N) A(I,I) = X(I)', Forall_Stmt),
+    ('GO TO 915', Goto_Stmt),
+    ('IF (A > B) A = B', If_Stmt),
+    ('INQUIRE (IOLENGTH=N) M', Inquire_Stmt),
+    ('NULLIFY(P)', Nullify_Stmt),
+    ("OPEN (10, FILE = 'employee.names', ACTION = 'READ', PAD = 'YES')", Open_Stmt),
+    ('P => NULL()', Pointer_Assignment_Stmt),
+    ("PRINT *, 'HELLO WORLD'", Print_Stmt),
+    ('READ (6, *) VAR', Read_Stmt),
+    ('RETURN', Return_Stmt),
+    ('REWIND 23', Rewind_Stmt),
+    ('STOP', Stop_Stmt),
+    ('WAIT(23)', Wait_Stmt),
+    ('WHERE (TEMP > 100.0) TEMP = TEMP - REDUCE_TEMP', Where_Stmt),
+    ('WRITE(10, *) A', Write_Stmt),
+    ('IF (A - B) 1, 2, 3', Arithmetic_If_Stmt),
+    ('GO TO (1, 2, 3) 2-1', Computed_Goto_Stmt)
 ])
 def test_other(string, cls):
     '''Test that previous subclasses are still matched correctly.'''
