@@ -38,17 +38,27 @@
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Stop_Stmt
+from fparser.two.Fortran2003 import Stop_Stmt, Assignment_Stmt
 from fparser.two.Fortran2008 import If_Stmt
 from fparser.two.utils import walk, NoMatchError
 
 
 @pytest.mark.usefixtures("f2008_create")
-def test_simple():
+def test_simple_stop():
     '''Test matching of a valid string.'''
     result = If_Stmt('IF (5 > 3) STOP')
     assert isinstance(result, If_Stmt)
     assert walk(result, Stop_Stmt)
+
+
+@pytest.mark.usefixtures("f2008_create")
+def test_simple_assignment():
+    '''Test matching of a valid string.'''
+    result = If_Stmt('IF (A < B) A = B')
+    assert isinstance(result, If_Stmt)
+    assignments = walk(result, Assignment_Stmt)
+    assert len(assignments) == 1
+    assert str(assignments[0]) == 'A = B'
 
 
 @pytest.mark.usefixtures("f2008_create")
@@ -68,8 +78,16 @@ def test_error2():
 
 
 @pytest.mark.usefixtures("f2008_create")
-def test_error2():
+def test_error3():
     '''Test invalid syntax doesn't match.'''
     with pytest.raises(NoMatchError) as excinfo:
         _ = If_Stmt('IF (5 > 3] STOP')
     assert "If_Stmt: 'IF (5 > 3] STOP'" in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("f2008_create")
+def test_error4():
+    '''Test invalid syntax doesn't match.'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = If_Stmt('IF (A = B) A = 0')
+    assert "If_Stmt: 'IF (A = B) A = 0'" in str(excinfo.value)
