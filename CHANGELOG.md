@@ -15,6 +15,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+21/03/2022 PR #315 for #314. Adds support for the F2008 Error_Stop_Stmt.
+
 ## Release 0.0.14 (16/03/2022) ##
 
 15/03/2022 PR #311 for #310. Allows symbol table scope to be None.
