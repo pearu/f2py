@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -67,9 +67,8 @@
 Provides functions to determine whether a piece of Fortran source is free or
 fixed format. It also tries to differentiate between strict and "pyf" although
 I'm not sure what that is.
-'''
 
-import io
+'''
 import os
 import re
 import six
@@ -322,11 +321,12 @@ def get_source_info(file_candidate):
         # It is closed on completion so as to return it to the state it was
         # found in.
         #
-        from fparser.common.utils import make_clean_tmpfile
-        tmpfile = make_clean_tmpfile(file_candidate)
-        with io.open(tmpfile, 'r', encoding='utf8') as file_object:
+        # The 'fparser-logging' handler is setup in fparser/__init__.py and
+        # ensures any occurrences of invalid characters are skipped and
+        # logged.
+        with open(file_candidate, "r", encoding="utf-8",
+                  errors='fparser-logging') as file_object:
             string = get_source_info_str(file_object.read())
-        os.remove(tmpfile)
         return string
 
 ##############################################################################

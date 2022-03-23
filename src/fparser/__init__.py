@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Science and Technology Facilities Council
+# Copyright (c) 2017-2022 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -66,6 +66,25 @@
 # First created: Oct 2006
 
 import logging
-
+import codecs
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+def log_decode_error_handler(err):
+    '''
+    A custom error handler for use when reading files. Removes any
+    characters that cause decoding errors and logs the error.
+
+    :returns: 2-tuple containing replacement for bad chars (an empty string \
+              and the position from where encoding should continue.
+    :rtype: (str, int)
+
+    '''
+    message = f"character in input file. Error returned was {str(err)}."
+    # Log the fact that this character will be removed from the input file
+    logging.getLogger(__name__).warning("Skipped bad %s", message)
+    return ("", err.end)
+
+
+codecs.register_error("fparser-logging", log_decode_error_handler)
