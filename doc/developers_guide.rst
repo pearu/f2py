@@ -67,14 +67,16 @@ debugging purposes.
 Invalid input
 -------------
 
-The file reader uses :py:meth:`open` to open a Fortran file. If invalid input
-is found then Python raises a `UnicodeDecodeError` exception by
-default. Since we typically wish to skip invalid characters while
-logging their presence, a bespoke error handler named "fparser-logging"
-is implemented in `fparser/__init__.py` and registered using 
-:py:meth:`codecs.register_error`.
-This handler may be specified when using :py:meth:`open` to open a file by
-supplying the `errors='fparser-logging'` argument.
+The file reader uses :py:func:`open` to open a Fortran file. If
+invalid input is found then Python raises a `UnicodeDecodeError`
+exception by default. Since we typically wish to skip invalid
+characters (on the principle that, for valid Fortran, they can only
+occur in comments) while logging their presence, a bespoke error
+handler named "fparser-logging" is implemented in
+``fparser/__init__.py`` and registered using
+:py:func:`codecs.register_error`.  This handler may be specified when
+using :py:func:`open` to open a file by supplying the
+``errors='fparser-logging'`` argument.
 
 Fparser2
 --------
