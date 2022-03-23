@@ -15,6 +15,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+23/03/2022 PR #317 for #316. Fixes the creation of symbol table entries
+           in the F2008 parser.
+
 21/03/2022 PR #315 for #314. Adds support for the F2008 Error_Stop_Stmt.
 
 ## Release 0.0.14 (16/03/2022) ##
