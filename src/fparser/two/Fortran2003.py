@@ -80,7 +80,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalSyntaxError, InternalError, show_result, py2_encode_list_items
+    InternalSyntaxError, InternalError, show_result
 
 #
 # SECTION  1
@@ -1648,7 +1648,6 @@ class Component_Part(BlockBase):  # R438
         mylist = []
         for item in self.content:
             mylist.append(item.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
 
@@ -5453,7 +5452,6 @@ class Where_Construct(BlockBase):  # R744
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5890,7 +5888,6 @@ class If_Construct(BlockBase):  # R802
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -6099,8 +6096,6 @@ class Case_Construct(BlockBase):  # R808
             else:
                 tmp.append(item.tofortran(tab=tab + '  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        # Ensure all strings in list are encoded consistently
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -6494,7 +6489,6 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
             lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             lblock.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(lblock)
         return '\n'.join(lblock)
 
 
@@ -6807,7 +6801,6 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                 extra_tab += '  '
         if len(self.content) > 1:
             line.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(line)
         return '\n'.join(line)
 
 

@@ -46,7 +46,6 @@ import io
 import os.path
 import tempfile
 import re
-import six
 import pytest
 
 from fparser.common.readfortran import FortranFileReader, \
@@ -112,15 +111,10 @@ def test_111fortranreaderbase(log, monkeypatch):
         '''
         _stuff = ['x=1']
 
-        def next(self):
-            '''
-            Used by Python 2.7.
-            '''
-            return self.__next__()
-
         def __next__(self):
             '''
-            Used by Python 3.
+            :returns: the next line of source.
+            :rtype: str
             '''
             return self._stuff.pop()
 
@@ -992,9 +986,7 @@ cComment
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_f2py_directive_fixf90(f2py_enabled):
@@ -1018,9 +1010,7 @@ def test_f2py_directive_fixf90(f2py_enabled):
                          "Comment('!f2py a = 0.0',(4, 4))"])
     expected.append("line #5'end subroutine foo'")
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_f2py_freef90(f2py_enabled):
@@ -1043,9 +1033,7 @@ def test_f2py_freef90(f2py_enabled):
                          "Comment('!f2py a = 0.0',(3, 3))"])
     expected.append("line #4'end subroutine foo'")
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 @pytest.mark.xfail(reason="Issue #270: f2py directives not working in F77 "
@@ -1068,8 +1056,7 @@ cf2py call me ! hey
     reader = FortranStringReader(
         string_f77, ignore_comments=False)
     for item in reader:
-        assert (re.sub("u", "", six.text_type(item)) ==
-                re.sub("u", "", expected.pop(0)))
+        assert str(item) == expected.pop(0)
 
 
 def test_utf_char_in_code(log):
