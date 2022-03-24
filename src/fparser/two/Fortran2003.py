@@ -1143,6 +1143,7 @@ class Char_Selector(Base):  # R424
     subclass_names = ['Length_Selector']
     use_names = ['Type_Param_Value', 'Scalar_Int_Initialization_Expr']
 
+    @staticmethod
     def match(string):
         if string[0] + string[-1] != '()':
             return
@@ -1191,7 +1192,6 @@ class Char_Selector(Base):  # R424
                 line = line[1:].lstrip()
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
         return
-    match = staticmethod(match)
 
     def tostr(self):
         if self.items[0] is None:
@@ -1207,6 +1207,7 @@ class Length_Selector(Base):  # R425
     subclass_names = []
     use_names = ['Type_Param_Value', 'Char_Length']
 
+    @staticmethod
     def match(string):
         if string[0]+string[-1] == '()':
             line = string[1:-1].strip()
@@ -1220,7 +1221,6 @@ class Length_Selector(Base):  # R425
         if string[-1] == ',':
             line = line[:-1].rstrip()
         return '*', Char_Length(line)
-    match = staticmethod(match)
 
     def tostr(self):
         if len(self.items) == 2:
@@ -1303,8 +1303,6 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
         :raises InternalError: if the first element of the internal \
                 items list is None or is an empty string.
         '''
-        import six
-
         if len(self.items) != 2:
             raise InternalError(
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
@@ -1316,20 +1314,12 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
             raise InternalError(
                 "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
                 "should not be empty")
-        if six.PY2:
-            # In Python2 we must return a byte str and the contents of this
-            # string may include non-ASCII characters
-            char_str = self.items[0].encode('utf-8')
-        else:
-            char_str = str(self.items[0])
+        char_str = str(self.items[0])
         if not self.items[1]:
             return char_str
         # The character constant has a kind specifier
-        if six.PY2:
-            kind_str = self.items[1].encode('utf-8')
-            return kind_str + "_".encode('utf-8') + char_str
         kind_str = str(self.items[1])
-        return "{0}_{1}".format(kind_str, char_str)
+        return f"{kind_str}_{char_str}"
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
@@ -1820,13 +1810,13 @@ class Component_Initialization(Base):  # R444
     subclass_names = []
     use_names = ['Initialization_Expr', 'Null_Init']
 
+    @staticmethod
     def match(string):
         if string.startswith('=>'):
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
         return
-    match = staticmethod(match)
 
     def tostr(self):
         return '%s %s' % tuple(self.items)
