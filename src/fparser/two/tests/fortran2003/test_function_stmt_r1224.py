@@ -61,3 +61,4 @@ def test_function_new_symbol_table(f2003_create):
                          "None, None), End_Function_Stmt('FUNCTION', "
                          "Name('a')))")
     assert "a" in SYMBOL_TABLES._symbol_tables
+    assert str(obj.children[0].get_name()) == "a"
