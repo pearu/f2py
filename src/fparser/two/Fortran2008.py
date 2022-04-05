@@ -75,14 +75,14 @@
 # pylint: disable=unused-import
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
-
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
     SeparatorBase, Type_Declaration_StmtBase, StmtBase
 from fparser.two.Fortran2003 import (
     EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
     Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
     Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
-    Entity_Decl_List, Component_Decl_List, Stop_Code)
+    Entity_Decl_List, Component_Decl_List, Stop_Code, Execution_Part_Construct)
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
     Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
@@ -116,7 +116,6 @@ class Program_Unit(Program_Unit_2003):  # R202
     subclass_names.append("Submodule")
 
 
-
 class Executable_Construct(Executable_Construct_2003):  # R213
     # pylint: disable=invalid-name
     '''
@@ -137,13 +136,10 @@ class Executable_Construct(Executable_Construct_2003):  # R213
     "C201 (R208) An execution-part shall not contain an end-function-stmt,
           end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
 
-    NB: The new block-construct and critical-construct are not yet implemented.
-    TODO: Implement missing F2008 executable-construct (#320)
-
     '''
     subclass_names = [
-        'Action_Stmt', 'Associate_Construct', 'Case_Construct',
-        'Do_Construct', 'Forall_Construct', 'If_Construct',
+        'Action_Stmt', 'Associate_Construct', 'Block_Construct', 'Case_Construct',
+        'Critical_Construct', 'Do_Construct', 'Forall_Construct', 'If_Construct',
         'Select_Type_Construct', 'Where_Construct']
 
 
@@ -1021,6 +1017,137 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         if self.items[1]:
             return "{0}:{1}".format(self.items[0], self.items[1])
         return str(self.items[0])
+
+
+class Block_Construct(BlockBase):  # R807
+    """
+    <block-construct> = <block-stmt>
+                            [ <specification-part> ]
+                            <block> == [ <execution-part-construct> ]...
+                            <end-block-stmt>
+
+    TODO: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
+    NAMELIST, OPTIONAL, VALUE, and statement functions (C806)
+    """
+    subclass_names = []
+    use_names = ["Block_Stmt", "Specification_Part", "Execution_Part_Construct",
+                 "End_Block_Stmt"]
+
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(
+            Block_Stmt, [Specification_Part, Execution_Part_Construct],
+            End_Block_Stmt, reader,
+            match_names=True,  # C810
+            strict_match_names=True,  # C810
+            )
+
+
+class Block_Stmt(StmtBase, WORDClsBase):  # R808
+    """
+    <block-stmt> = [ <block-construct-name> : ] BLOCK
+    """
+    subclass_names = []
+    use_names = ['Block_Construct_Name']
+
+    class Counter:
+        """Global counter so that each block-stmt introduces a new scope
+        """
+        counter = 0
+
+        def __init__(self):
+            self.counter = Block_Stmt.Counter.counter
+            Block_Stmt.Counter.counter += 1
+
+        def __repr__(self):
+            return "block_{0}".format(self.counter)
+
+    @staticmethod
+    def match(string):
+        found = WORDClsBase.match("BLOCK", None, string)
+        if not found:
+            return None
+        block, _ = found
+        return block, Block_Stmt.Counter()
+
+    def get_start_name(self):
+        return self.item.name
+
+    def tostr(self):
+        return "BLOCK"
+
+
+class End_Block_Stmt(EndStmtBase):          # R809
+    """<end-block-stmt> = END BLOCK [ <block-construct-name> ]"""
+    subclass_names = []
+    use_names = ["Block_Construct_Name"]
+
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: code line matching the "END DO" statement
+        :rtype: string
+        '''
+        return EndStmtBase.match('BLOCK', Block_Construct_Name, string,
+                                 require_stmt_type=True)
+    
+
+class Critical_Construct(BlockBase):  # R807
+    """
+    <critical-construct> = <critical-stmt>
+                            <block> == [ <execution-part-construct> ]...
+                            <end-critical-stmt>
+
+    TODO: Should disallow RETURN (C809) and CYCLE or EXIT to outside block (C811)
+    """
+    subclass_names = []
+    use_names = ["Critical_Stmt", "Execution_Part_Construct",
+                 "End_Critical_Stmt"]
+
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(
+            Critical_Stmt, [Execution_Part_Construct],
+            End_Critical_Stmt, reader,
+            match_names=True,  # C810
+            strict_match_names=True,  # C810
+            )
+
+
+class Critical_Stmt(StmtBase, WORDClsBase):  # R808
+    """
+    <critical-stmt> = [ <critical-construct-name> : ] CRITICAL
+    """
+    subclass_names = []
+    use_names = ['Critical_Construct_Name']
+
+    @staticmethod
+    def match(string):
+        return WORDClsBase.match("CRITICAL", None, string)
+
+    def get_start_name(self):
+        return self.item.name
+
+    def tostr(self):
+        return "CRITICAL"
+
+
+class End_Critical_Stmt(EndStmtBase):          # R809
+    """<end-critical-stmt> = END CRITICAL [ <critical-construct-name> ]"""
+    subclass_names = []
+    use_names = ["Critical_Construct_Name"]
+
+    @staticmethod
+    def match(string):
+        '''
+        :param str string: Fortran code to check for a match
+        :return: code line matching the "END DO" statement
+        :rtype: string
+        '''
+        return EndStmtBase.match('CRITICAL', Critical_Construct_Name, string,
+                                 require_stmt_type=True)
+
 
 #
 # GENERATE Scalar_, _List, _Name CLASSES

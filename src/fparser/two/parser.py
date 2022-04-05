@@ -166,7 +166,8 @@ class ParserFactory(object):
                                                   Fortran2003.Subroutine_Stmt,
                                                   Fortran2003.Program_Stmt,
                                                   Fortran2003.Function_Stmt,
-                                                  Fortran2008.Submodule_Stmt]
+                                                  Fortran2008.Submodule_Stmt,
+                                                  Fortran2008.Block_Stmt]
             # the class hierarchy has been set up so return the top
             # level class that we start from when parsing Fortran
             # code. Fortran2008 does not extend the top level class so
