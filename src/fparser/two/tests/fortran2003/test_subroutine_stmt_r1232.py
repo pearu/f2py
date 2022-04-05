@@ -39,7 +39,7 @@ are still in test_fortran2003.py and need to be moved here TODO #306.
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Subroutine_Subprogram
+from fparser.two.Fortran2003 import Subroutine_Subprogram, Subroutine_Stmt, Name
 from fparser.two.symbol_table import SYMBOL_TABLES
 
 
@@ -56,3 +56,8 @@ def test_sub_stmt_new_symbol_table(f2003_create):
                          "Name('a'), None, None), End_Subroutine_Stmt('"
                          "SUBROUTINE', None))")
     assert "a" in SYMBOL_TABLES._symbol_tables
+
+
+def test_subroutine_get_name():
+    obj = Subroutine_Stmt("subroutine foo")
+    assert obj.get_name() == Name("foo")

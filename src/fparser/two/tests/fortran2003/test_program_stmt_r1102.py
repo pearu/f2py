@@ -41,7 +41,7 @@ import pytest
 from fparser.api import get_reader
 from fparser.two.utils import NoMatchError
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.Fortran2003 import Program_Stmt, Program
+from fparser.two.Fortran2003 import Program_Stmt, Program, Name
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -75,3 +75,13 @@ def test_prog_symbol_table():
                         "end program my_prog\n")
     prog = Program(reader)
     assert "my_prog" in SYMBOL_TABLES._symbol_tables
+
+
+def test_get_name():
+    obj = Program_Stmt("program foo")
+    assert obj.get_name() == Name("foo")
+
+
+def test_get_start_name():
+    obj = Program_Stmt("program foo")
+    assert obj.get_start_name() == "foo"

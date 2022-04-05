@@ -1,25 +1,26 @@
-# Copyright (c) 2021 Science and Technology Facilities Council.
-
+# Modified work Copyright (c) 2017-2022 Science and Technology
+# Facilities Council.
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,37 +33,51 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1224 : the majority of the tests for this
-are still in test_fortran2003.py and need to be moved here TODO #306.
+"""Test Fortran 2003 rule R504: entity-decl
 
-'''
+"""
 
+from fparser.two.Fortran2003 import Entity_Decl, Name
+
+import pytest
+# TODO #307 remove this once we drop Python 2
 import six
-from fparser.api import get_reader
-from fparser.two.Fortran2003 import Function_Subprogram, Function_Stmt, Name
-from fparser.two.symbol_table import SYMBOL_TABLES
 
 
-def test_function_new_symbol_table(f2003_create):
-    '''
-    Test that valid code is parsed correctly and an associated symbol table
-    created.
-
-    '''
-    obj = Function_Subprogram(get_reader("function a()\nend function a"))
-    assert isinstance(obj, Function_Subprogram)
-    assert str(obj) == 'FUNCTION a()\nEND FUNCTION a'
+def test_entity_decl_repr():
+    tcls = Entity_Decl
+    obj = tcls("a(1)")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "a(1)"
     repr_text = repr(obj)
     if six.PY2:
         # TODO #307 remove this once we drop Python 2
         repr_text = repr_text.replace("u'", "'")
 
-    assert repr_text == ("Function_Subprogram(Function_Stmt(None, Name('a'), "
-                         "None, None), End_Function_Stmt('FUNCTION', "
-                         "Name('a')))")
-    assert "a" in SYMBOL_TABLES._symbol_tables
+    assert (
+        repr_text == "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+        "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
+        "None, None)"
+    )
 
 
-def test_function_get_name():
-    obj = Function_Stmt("function foo()")
-    assert obj.get_name() == Name("foo")
+@pytest.mark.parametrize(
+    ("declaration, expected_str"),
+    [
+        ("a(1)*(3)", "a(1)*(3)"),
+        ("a(1)*(3) = 2", "a(1)*(3) = 2"),
+        ("a = 2", "a = 2"),
+        ("a=2", "a = 2"),
+        ('a = "abc "', 'a = "abc "'),
+        ("a = .true.", "a = .TRUE."),
+    ],
+)
+def test_entity_decl_str(declaration, expected_str):
+    obj = Entity_Decl(declaration)
+    assert isinstance(obj, Entity_Decl), repr(obj)
+    assert str(obj) == expected_str
+
+
+def test_entity_decl_name():  # 504
+    obj = Entity_Decl("a(1) = 2")
+    assert obj.get_name() == Name("a")
