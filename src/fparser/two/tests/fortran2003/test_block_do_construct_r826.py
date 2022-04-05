@@ -38,6 +38,7 @@
 import pytest
 from fparser.api import get_reader
 from fparser.common.readfortran import FortranStringReader
+from fparser.two.utils import FortranSyntaxError
 from fparser.two.Fortran2003 import Block_Label_Do_Construct, \
     Block_Nonlabel_Do_Construct
 
@@ -208,3 +209,30 @@ def test_doconstruct_tofortran_non_ascii():
     obj = Block_Nonlabel_Do_Construct(reader)
     out_str = str(obj)
     assert "for e1=1" in out_str
+
+
+def test_do_construct_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Block_Nonlabel_Do_Construct(
+            get_reader("""\
+            name: do
+                a = 1
+            end do wrong"""))
+
+
+def test_do_construct_missing_start_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Block_Nonlabel_Do_Construct(
+            get_reader("""\
+            do
+                a = 1
+            end do name"""))
+
+
+def test_do_construct_missing_end_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Block_Nonlabel_Do_Construct(
+            get_reader("""\
+            name: do
+                a = 1
+            end do"""))

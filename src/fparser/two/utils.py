@@ -504,7 +504,8 @@ class BlockBase(Base):
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
-              strict_order=False):
+              strict_order=False,
+              strict_match_names=False):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -525,6 +526,8 @@ class BlockBase(Base):
         :param bool enable_where_construct_hook: TBD
         :param bool strict_order: whether to enforce the order of the \
                                   given subclasses.
+        :param bool strict_match_names: if start name present, end name \
+                                        must exist and match
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls
@@ -620,10 +623,14 @@ class BlockBase(Base):
                         raise FortranSyntaxError(
                             reader, "Name '{0}' has no corresponding starting "
                             "name".format(end_name))
+                    elif strict_match_names and start_name and not end_name:
+                        raise FortranSyntaxError(
+                            reader, "Expecting name '{0}' but none given".format(
+                                start_name))
                     if end_name and start_name and \
                        end_name.lower() != start_name.lower():
                         raise FortranSyntaxError(
-                            reader, "Expecting name '{0}'".format(start_name))
+                            reader, "Expecting name '{0}', got '{1}'".format(start_name, end_name))
 
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
@@ -636,16 +643,21 @@ class BlockBase(Base):
                         start_name, end_name = (content[start_idx].
                                                 get_start_name(),
                                                 content[-1].get_end_name())
+
                         if end_name and not start_name:
                             raise FortranSyntaxError(
                                 reader,
                                 "Name '{0}' has no corresponding starting "
                                 "name".format(end_name))
+                        elif strict_match_names and start_name and not end_name:
+                            raise FortranSyntaxError(
+                                reader, "Expecting name '{0}' but none given".format(
+                                    start_name))
                         elif start_name and end_name and (start_name.lower() !=
                                                           end_name.lower()):
                             raise FortranSyntaxError(
-                                reader, "Expecting name '{0}'".format(
-                                    start_name))
+                                reader, "Expecting name '{0}', got '{1}'".format(
+                                    start_name, end_name))
                     # We've found the enclosing end statement so break out
                     found_end = True
                     break

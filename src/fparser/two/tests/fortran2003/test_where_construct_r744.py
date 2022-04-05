@@ -41,6 +41,7 @@ import pytest
 from fparser.api import get_reader
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import Where_Construct
+from fparser.two.utils import FortranSyntaxError
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -113,3 +114,53 @@ def test_where_tofortran_non_ascii():
     obj = Where_Construct(reader)
     out_str = str(obj)
     assert "for e1=1" in out_str
+
+
+def test_where_construct_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Where_Construct(
+            get_reader("""\
+            name: where (expr)
+                a = 1
+            end where wrong"""))
+
+
+def test_where_construct_missing_start_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Where_Construct(
+            get_reader("""\
+            where (expr)
+                a = 1
+            end where name"""))
+
+
+def test_where_construct_missing_end_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Where_Construct(
+            get_reader("""\
+            name: where (expr)
+                a = 1
+            end where"""))
+
+
+def test_where_construct_else_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Where_Construct(
+            get_reader("""\
+            name: where (expr)
+                a = 1
+            elsewhere wrong
+                a = 2
+            end where name"""))
+
+
+def test_where_construct_else_where_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        Where_Construct(
+            get_reader("""\
+            name: where (expr)
+                a = 1
+            elsewhere (other_expr) wrong
+                a = 2
+            end where name"""))
+    

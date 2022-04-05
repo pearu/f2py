@@ -41,6 +41,7 @@ import pytest
 from fparser.api import get_reader
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import If_Construct
+from fparser.two.utils import FortranSyntaxError
 
 
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
@@ -176,3 +177,52 @@ def test_ifconstruct_tofortran_non_ascii():
     obj = If_Construct(reader)
     out_str = str(obj)
     assert "for e1=1" in out_str
+
+
+def test_if_construct_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        If_Construct(
+            get_reader("""\
+            name: if (expr) then
+                a = 1
+            end if wrong"""))
+
+
+def test_if_construct_missing_start_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        If_Construct(
+            get_reader("""\
+            if (expr) then
+                a = 1
+            end if name"""))
+
+
+def test_if_construct_missing_end_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        If_Construct(
+            get_reader("""\
+            name: if (expr) then
+                a = 1
+            end if"""))
+
+
+def test_if_construct_else_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        If_Construct(
+            get_reader("""\
+            name: if (expr) then
+                a = 1
+            else wrong
+                a = 2
+            end if name"""))
+
+
+def test_if_construct_else_if_wrong_name(f2003_create, fake_symbol_table):
+    with pytest.raises(FortranSyntaxError):
+        If_Construct(
+            get_reader("""\
+            name: if (expr) then
+                a = 1
+            else if (other_expr) then wrong
+                a = 2
+            end if name"""))
