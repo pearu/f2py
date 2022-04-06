@@ -265,7 +265,7 @@ class FortranReaderError(Exception):
     pass
 
 
-class Line(object):
+class Line():
     """ Holds a Fortran source line.
 
     Attributes
@@ -422,7 +422,7 @@ class SyntaxErrorLine(Line, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
-class Comment(object):
+class Comment():
     '''Holds a Fortran comment.
 
     :param str comment: String containing the text of a single or \
@@ -462,7 +462,7 @@ class Comment(object):
         return ignore_comments
 
 
-class MultiLine(object):
+class MultiLine():
     """ Holds PYF file multiline.
 
     PYF file multiline is represented as follows::
@@ -530,7 +530,7 @@ class CppDirective(Line):
 ##############################################################################
 
 
-class FortranReaderBase(object):
+class FortranReaderBase():
     """
     Base class for reading Fortran sources.
 

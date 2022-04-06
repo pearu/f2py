@@ -47,7 +47,7 @@ from fparser.scripts import fparser2, read
 # into runner() as an argument options class in subsequent tests
 
 
-class DummyArgs(object):
+class DummyArgs():
     ''' dummy object pretending to be the argument options '''
     mode = "auto"
     task = "show"
@@ -108,7 +108,7 @@ def test_runner_set_mode(tmpdir, capsys):
     # Create a dummy class with the required attribute to pass into
     # runner() as an argument options class
 
-    class DummyArgsFree(object):
+    class DummyArgsFree():
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "show"
@@ -167,7 +167,7 @@ def test_runner_output_task_show(tmpdir, capsys):
     'task' option set to "show".
 
     '''
-    class DummyArgsTask(object):
+    class DummyArgsTask():
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "show"
@@ -190,7 +190,7 @@ def test_runner_output_task_repr(tmpdir, capsys):
     has parsed with the 'task' option set to "repr".
 
     '''
-    class DummyArgsTask(object):
+    class DummyArgsTask():
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "repr"
@@ -215,7 +215,7 @@ def test_runner_output_task_none(tmpdir, capsys):
     to "none".
 
     '''
-    class DummyArgsTask(object):
+    class DummyArgsTask():
         ''' dummy object pretending to be the argument options '''
         mode = "free"
         task = "none"
@@ -456,7 +456,7 @@ def test_main_output_std_invalid(capsys, monkeypatch):
 # into runner() as an argument options class in subsequent tests
 
 
-class DummyReadArgs(object):
+class DummyReadArgs():
     '''dummy object pretending to be the argument options for the read
     module in scripts.
 

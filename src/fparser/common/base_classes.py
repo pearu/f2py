@@ -74,7 +74,6 @@ __all__ = ['Statement', 'BeginStatement', 'EndStatement', 'Variable',
 import copy
 import logging
 
-from six import with_metaclass
 from fparser.common.readfortran import Line, Comment
 from fparser.common.utils import split_comma,       \
                                  specs_split_comma, \
@@ -82,7 +81,7 @@ from fparser.common.utils import split_comma,       \
 from fparser.common.utils import classes, AnalyzeError
 
 
-class AttributeHolder(object):
+class AttributeHolder():
     # copied from symbolic.base module
     """
     Defines a object with predefined attributes. Only those attributes
@@ -171,7 +170,7 @@ def get_base_classes(cls):
     return bases + cls.__bases__ + (cls, )
 
 
-class Variable(object, with_metaclass(classes)):
+class Variable(metaclass=classes):
     """
     Variable instance has attributes:
       name
@@ -553,11 +552,11 @@ class Variable(object, with_metaclass(classes)):
         return self.parent.info(message)
 
 
-class ProgramBlock(object, with_metaclass(classes)):
+class ProgramBlock(metaclass=classes):
     pass
 
 
-class Statement(object, with_metaclass(classes)):
+class Statement(metaclass=classes):
     """
     Statement instance has attributes:
       parent  - Parent BeginStatement or FortranParser instance

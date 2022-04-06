@@ -103,7 +103,7 @@ def test_111fortranreaderbase(log, monkeypatch):
 
     Currently only tests logging functionality.
     '''
-    class FailFile(object):
+    class FailFile():
         '''
         A "file-like" object which returns a line of Fortran source followed
         by raising a StopIteration exception.

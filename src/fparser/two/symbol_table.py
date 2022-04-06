@@ -45,7 +45,7 @@ class SymbolTableError(Exception):
     ''' Base class exception for symbol-table related errors. '''
 
 
-class SymbolTables(object):
+class SymbolTables():
     '''
     Class encapsulating functionality for the global symbol-tables object.
     This is a container for all symbol tables constructed while parsing
@@ -238,7 +238,7 @@ class SymbolTables(object):
         del self._symbol_tables[lname]
 
 
-class SymbolTable(object):
+class SymbolTable():
     '''
     Class implementing a single symbol table.
 

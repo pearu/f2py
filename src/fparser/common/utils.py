@@ -88,8 +88,6 @@ import os
 import re
 import traceback
 
-import six
-
 
 class ParseError(Exception):
     pass
@@ -334,12 +332,12 @@ class meta_classes(type):
         return cls
 
 
-class classes(six.with_metaclass(meta_classes, type)):
+class classes(type, metaclass=meta_classes):
     """Make classes available as attributes of this class.
 
     To add a class to the attributes list, one must use::
 
-      __metaclass__ = classes
+      class Name(metaclass=classes):
 
     in the definition of the class.
 

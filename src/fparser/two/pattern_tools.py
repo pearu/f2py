@@ -80,7 +80,7 @@ import re
 dollar_ok = True
 
 
-class Pattern(object):
+class Pattern():
     """
     p1 | p2    -> <p1> | <p2>
     p1 + p2    -> <p1> <p2>
