@@ -65,7 +65,7 @@
 # DAMAGE.
 
 ''' Example script to parse a Fortran program using fparser '''
-from __future__ import print_function
+
 import logging
 import sys
 from fparser.scripts.script_options import set_fparser_options

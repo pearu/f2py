@@ -139,8 +139,6 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 
 """
 
-from __future__ import print_function
-
 import logging
 import os
 import re

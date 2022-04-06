@@ -38,9 +38,7 @@ the single, global SYMBOL_TABLES instance. The latter is a container
 for all of the top-level scoping units encountered during parsing.
 
 '''
-from __future__ import absolute_import, print_function
 from collections import namedtuple
-import six
 
 
 class SymbolTableError(Exception):

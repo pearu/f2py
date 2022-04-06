@@ -36,7 +36,6 @@
 '''
 File containing tests for the one.block_statements module.
 '''
-from __future__ import absolute_import, print_function
 
 import pytest
 
