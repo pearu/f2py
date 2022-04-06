@@ -109,11 +109,9 @@ def runner(_, options, args):
             if options.task == "repr":
                 print(repr(program))
         except FortranSyntaxError as msg:
-            print("Syntax error: {0}".format(str(msg)),
-                  file=sys.stderr)
+            print(f"Syntax error: {msg}", file=sys.stderr)
         except InternalError as msg:
-            print("Internal error in fparser: {0}".format(str(msg)),
-                  file=sys.stderr)
+            print(f"Internal error in fparser: {msg}", file=sys.stderr)
 
 
 def main():
