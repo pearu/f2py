@@ -146,7 +146,7 @@ import os
 import re
 import sys
 import traceback
-import six
+from io import StringIO
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
 
@@ -543,7 +543,7 @@ class FortranReaderBase(object):
 
     :param source: a file-like object with .next() method used to \
                    retrive a line.
-    :type source: :py:class:`six.StringIO` or a file handle
+    :type source: :py:class:`StringIO` or a file handle
     :param mode: a FortranFormat object as returned by \
                  `sourceinfo.get_source_info()`
     :type mode: :py:class:`fparser.common.sourceinfo.Format`
@@ -1658,7 +1658,7 @@ class FortranStringReader(FortranReaderBase):
         # anyway.
         #
         self.id = 'string-' + str(hash(string))
-        source = six.StringIO(string)
+        source = StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,
                                    ignore_comments)
