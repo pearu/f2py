@@ -151,10 +151,9 @@ class Comment(Base):
     def tostr(self):
         '''
         :returns: this comment as a string.
-        :rtype: :py:class:`six.text_type`
+        :rtype: :py:class:`str`
         '''
-        import six
-        return six.text_type(self.items[0])
+        return str(self.items[0])
 
     def restore_reader(self, reader):
         '''

@@ -71,7 +71,6 @@ I'm not sure what that is.
 '''
 import os
 import re
-import six
 
 
 ##############################################################################
@@ -280,7 +279,7 @@ def get_source_info(file_candidate):
         if isinstance(filename, int):
             filename = None
 
-    elif isinstance(file_candidate, six.string_types):
+    elif isinstance(file_candidate, str):
         # The preferred method for identifying strings changed between Python2
         # and Python3.
         filename = file_candidate

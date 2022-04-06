@@ -841,7 +841,7 @@ class FortranReaderBase(object):
             logging.getLogger(__name__).critical(message)
             message = 'Traceback\n' + ''.join(traceback.format_stack())
             logging.getLogger(__name__).debug(message)
-            logging.getLogger(__name__).debug(six.text_type(err))
+            logging.getLogger(__name__).debug(str(err))
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
@@ -1588,7 +1588,7 @@ class FortranFileReader(FortranReaderBase):
         # filename, problems will ensue.
         #
         self._close_on_destruction = False
-        if isinstance(file_candidate, six.string_types):
+        if isinstance(file_candidate, str):
             self.id = file_candidate
             # The 'fparser-logging' handler for errors ensures that any invalid
             # characters in the input are skipped but logged.

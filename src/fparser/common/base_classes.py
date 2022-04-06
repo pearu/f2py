@@ -243,9 +243,8 @@ class Variable(object, with_metaclass(classes)):
         return
 
     def set_dimension(self, dims):
-        import six
         dims = [tuple(dim.split(':')) for dim in dims]
-        dims = [tuple(map(six.text_type.strip, dim)) for dim in dims]
+        dims = [tuple(map(str.strip, dim)) for dim in dims]
         if self.dimension is not None:
             if not self.dimension == dims:
                 self.parent.warning(

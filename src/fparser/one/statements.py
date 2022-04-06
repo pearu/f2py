@@ -687,10 +687,9 @@ class Allocate(Statement):
         :return: Fortran code
         :rtype: str
         '''
-        import six
         type_spec = ''
         if self.spec:
-            if isinstance(self.spec, six.text_type):
+            if isinstance(self.spec, str):
                 type_spec = self.spec
             else:
                 type_spec = self.spec.tostr()

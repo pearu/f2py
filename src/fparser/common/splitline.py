@@ -77,14 +77,13 @@ First version created: May 2006
 
 
 import re
-import six
 
 
-class String(six.text_type):
+class String(str):
     ''' Dummy string class. '''
 
 
-class ParenString(six.text_type):
+class ParenString(str):
     ''' Class representing a parenthesis string. '''
 
 
