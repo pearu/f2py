@@ -78,10 +78,15 @@ def test_prog_symbol_table():
 
 
 def test_get_name():
+    """Test we can get the name of the program
+    """
     obj = Program_Stmt("program foo")
     assert obj.get_name() == Name("foo")
 
 
 def test_get_start_name():
+    """Test we can get the name of the function as a string
+    """
+
     obj = Program_Stmt("program foo")
     assert obj.get_start_name() == "foo"

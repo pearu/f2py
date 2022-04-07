@@ -59,5 +59,7 @@ def test_sub_stmt_new_symbol_table(f2003_create):
 
 
 def test_subroutine_get_name():
+    """Test we can get the name of the subroutine
+    """
     obj = Subroutine_Stmt("subroutine foo")
     assert obj.get_name() == Name("foo")

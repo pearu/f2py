@@ -64,5 +64,7 @@ def test_function_new_symbol_table(f2003_create):
 
 
 def test_function_get_name():
+    """Test we can get the name of the function
+    """
     obj = Function_Stmt("function foo()")
     assert obj.get_name() == Name("foo")
