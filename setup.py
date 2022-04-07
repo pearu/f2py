@@ -69,9 +69,4 @@
 
 from setuptools import setup
 
-MAJOR = 0
-MINOR = 0
-MICRO = 14
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-
 setup()
