@@ -41,7 +41,7 @@ from fparser.two.parser import ParserFactory
 from fparser.two.Fortran2003 import Defined_Unary_Op, Defined_Binary_Op
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def f2003_create():
     '''Create a fortran 2003 parser class hierarchy'''
     _ = ParserFactory().create(std="f2003")
