@@ -8,12 +8,16 @@ Modifications by (in alphabetical order):
 * R. W. Ford, Science & Technology Facilities Council, UK
 * M. Hambley, UK Met Office
 * J. Henrichs, Australia Bureau of Meteorology
+* P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+07/04/2022 PR #323 for #225. Adds get_name() method to Function_Stmt
+           and Entity_Decl.
 
 23/03/2022 PR #317 for #316. Fixes the creation of symbol table entries
            in the F2008 parser.
