@@ -389,13 +389,12 @@ class Base(ComparableMixin):
         if match:
             # IMPORTANT: if string is FortranReaderBase then cls must
             # restore readers content when no match is found.
-            #try:
-            result = cls.match(string)
-            #except NoMatchError as msg:
-            #    if str(msg) == '%s: %r' % (cls.__name__, string):
+            try:
+                result = cls.match(string)
+            except NoMatchError as msg:
+                if str(msg) == '%s: %r' % (cls.__name__, string):
                     # avoid recursion 1.
-            #        pass
-                    # raise
+                    raise
 
         if isinstance(result, tuple):
             obj = object.__new__(cls)

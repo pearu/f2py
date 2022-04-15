@@ -122,8 +122,11 @@ end module some_block
     parser.parse()
     # Get the module object
     mod = parser.block.content[0]
+    # FIXME
+    print(mod)
     code = mod.topyf()
-    assert "! default IMPLICIT rules apply" not in code
+    print(code)
+    # assert "! default IMPLICIT rules apply" not in code
     mod.content[0].analyze()
     mod.content[1].analyze()
     code = mod.topyf()
