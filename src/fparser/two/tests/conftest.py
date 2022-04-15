@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2020 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -38,6 +38,7 @@ directory
 '''
 import pytest
 from fparser.two.parser import ParserFactory
+from fparser.two.symbol_table import SYMBOL_TABLES
 
 
 @pytest.fixture
@@ -55,3 +56,18 @@ def f2003_parser():
     :rtype: :py:class:`fparser.two.Fortran2003.Program`
     '''
     return ParserFactory().create(std='f2003')
+
+
+@pytest.fixture(name="clear_symbol_table", autouse=True)
+def clear_symbol_tables_fixture():
+    ''' Clear-up any existing symbol-table hierarchy. '''
+    SYMBOL_TABLES.clear()
+
+
+@pytest.fixture(name="fake_symbol_table")
+def setup_symbol_table_fixture():
+    ''' Creates a current scope for those tests that would otherwise
+    not have one. '''
+    SYMBOL_TABLES.enter_scope("fixture_scope")
+    yield
+    SYMBOL_TABLES.exit_scope()

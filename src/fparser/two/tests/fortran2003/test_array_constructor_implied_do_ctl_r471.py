@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Science and Technology Facilities Council.
+# Copyright (c) 2020-2021 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -43,7 +43,7 @@ from fparser.two.utils import walk
 from fparser.two import Fortran2003
 
 
-@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_implicit_loop_constructor():
     ''' Test array constructor with implicit loop containing an intrinsic
     call. '''

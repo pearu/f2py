@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Science and Technology Facilities Council.
+# Copyright (c) 2020-2021 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -62,6 +62,7 @@ def test_int_literals_array_constructor():
     assert isinstance(ast, Fortran2003.Ac_Value_List)
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_expr_list_array_constructor():
     ''' Test when the provided content consists of expressions. '''
     fcode = "ACOS(-1.0), SIN(1.0), 1.0+3.0"

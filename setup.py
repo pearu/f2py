@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson.
 
@@ -103,7 +103,7 @@ CLASSIFIERS = [
 
 MAJOR = 0
 MINOR = 0
-MICRO = 13
+MICRO = 14
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 if __name__ == '__main__':
@@ -121,6 +121,9 @@ if __name__ == '__main__':
         packages=PACKAGES,
         package_dir={"": "src"},
         install_requires=['six'],
+        extras_require={
+            'doc': ["sphinx", "sphinx_rtd_theme"]
+        },
         entry_points={
             'console_scripts': [
                 'fparser2=fparser.scripts.fparser2:main',

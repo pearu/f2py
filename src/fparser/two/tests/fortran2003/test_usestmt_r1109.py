@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 Science and Technology Facilities Council
+# Copyright (c) 2018-2022 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -40,6 +40,7 @@ Use statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Use_Stmt
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import NoMatchError, InternalError
 
 # match() use ...
@@ -99,7 +100,7 @@ def test_use_rename(f2003_create):
 # match() 'use x, only: y'
 def test_use_only(f2003_create):
     '''Check that a use statement is parsed correctly when there is an
-    only clause.
+    only clause. Test both with and without a scoping region.
 
     '''
     line = "use my_model, only: name"
@@ -108,6 +109,13 @@ def test_use_only(f2003_create):
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Only_List(',', "
         "(Name('name'),)))")
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    assert "my_model" in table._modules
+    assert table._modules["my_model"] == ["name"]
+    SYMBOL_TABLES.exit_scope()
 
 
 # match() 'use x, only:'

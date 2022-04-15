@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2018-2020 Science and Technology
+# Modified work Copyright (c) 2018-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -77,18 +77,26 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
-    SeparatorBase, Type_Declaration_StmtBase
+    SeparatorBase, Type_Declaration_StmtBase, StmtBase
 from fparser.two.Fortran2003 import (
     EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
     Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
     Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
-    Entity_Decl_List, Component_Decl_List)
+    Entity_Decl_List, Component_Decl_List, Stop_Code)
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
     Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
     Component_Attr_Spec as Component_Attr_Spec_2003,
-    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003)
+    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
+    Action_Stmt as Action_Stmt_2003,
+    Action_Stmt_C201 as Action_Stmt_C201_2003,
+    Action_Stmt_C802 as Action_Stmt_C802_2003,
+    Action_Stmt_C824 as Action_Stmt_C824_2003,
+    If_Stmt as If_Stmt_2003,
+    Do_Term_Action_Stmt as Do_Term_Action_Stmt_2003,
+    Executable_Construct as Executable_Construct_2003,
+    Executable_Construct_C201 as Executable_Construct_C201_2003)
 
 
 class Program_Unit(Program_Unit_2003):  # R202
@@ -106,6 +114,146 @@ class Program_Unit(Program_Unit_2003):  # R202
     # therefore extend the Fortran2003 specification
     subclass_names = Program_Unit_2003.subclass_names[:]
     subclass_names.append("Submodule")
+
+
+
+class Executable_Construct(Executable_Construct_2003):  # R213
+    # pylint: disable=invalid-name
+    '''
+    Fortran 2003 rule R213
+    executable-construct is action-stmt
+                         or associate-construct
+                         or block-construct
+                         or case-construct
+                         or critical-construct
+                         or do-construct
+                         or forall-construct
+                         or if-construct
+                         or select-type-construct
+                         or where-construct
+
+    Associated constraints are:
+
+    "C201 (R208) An execution-part shall not contain an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
+
+    NB: The new block-construct and critical-construct are not yet implemented.
+    TODO: Implement missing F2008 executable-construct (#320)
+
+    '''
+    subclass_names = [
+        'Action_Stmt', 'Associate_Construct', 'Case_Construct',
+        'Do_Construct', 'Forall_Construct', 'If_Construct',
+        'Select_Type_Construct', 'Where_Construct']
+
+
+class Executable_Construct_C201(Executable_Construct_C201_2003):
+    '''
+    executable-construct-c201 is executable construct.
+    This applies C201.
+    '''
+    subclass_names = Executable_Construct.subclass_names[:]
+    subclass_names[subclass_names.index('Action_Stmt')] = 'Action_Stmt_C201'
+
+
+class Action_Stmt(Action_Stmt_2003):  # R214
+    '''
+    Fortran 2008 rule R214
+    action-stmt is allocate-stmt
+                    or assignment-stmt
+                    or backspace-stmt
+                    or call-stmt
+                    or close-stmt
+                    or continue-stmt
+                    or cycle-stmt
+                    or deallocate-stmt
+                    or end-function-stmt
+                    or end-mp-subprogram-stmt
+                    or end-program-stmt
+                    or end-subroutine-stmt
+                    or endfile-stmt
+                    or error-stop-stmt
+                    or exit-stmt
+                    or flush-stmt
+                    or forall-stmt
+                    or goto-stmt
+                    or if-stmt
+                    or inquire-stmt
+                    or lock-stmt
+                    or nullify-stmt
+                    or open-stmt
+                    or pointer-assignment-stmt
+                    or print-stmt
+                    or read-stmt
+                    or return-stmt
+                    or rewind-stmt
+                    or stop-stmt
+                    or sync-all-stmt
+                    or sync-images-stmt
+                    or sync-memory-stmt
+                    or unlock-stmt
+                    or wait-stmt
+                    or where-stmt
+                    or write-stmt
+                    or arithmetic-if-stmt
+                    or computed-goto-stmt
+
+    The implementation of this rule adds the relevant subclass names
+    for new statements added in Fortran 2008.
+
+    Associated constraints are:
+
+    "C201 (R208) An execution-part shall not contain an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
+
+    NB: The following statements are not yet implemented:
+    end-mp-subprogram-stmt, endfile-stmt, lock-stmt, sync-all-stmt,
+    sync-images-stmt, sync-memory-stmt, unlock-stmt.
+
+    '''
+    # Fortran 2008 adds a few additional action-stmt. We therefore
+    # extend the Fortran 2003 specification
+    subclass_names = Action_Stmt_2003.subclass_names[:]
+    subclass_names.append("Error_Stop_Stmt")
+
+
+class Action_Stmt_C201(Action_Stmt_C201_2003):
+    """
+    action-stmt-c201 is action-stmt
+    C201 is applied.
+    """
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove('End_Function_Stmt')
+    subclass_names.remove('End_Subroutine_Stmt')
+
+
+class Action_Stmt_C816(Action_Stmt_C824_2003):
+    """
+    action-stmt-c816 is action-stmt
+    C816 is applied.
+    """
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove('Arithmetic_If_Stmt')
+    subclass_names.remove('Continue_Stmt')
+    subclass_names.remove('Cycle_Stmt')
+    subclass_names.remove('End_Function_Stmt')
+    subclass_names.remove('End_Subroutine_Stmt')
+    subclass_names.remove('Error_Stop_Stmt')
+    subclass_names.remove('Exit_Stmt')
+    subclass_names.remove('Goto_Stmt')
+    subclass_names.remove('Return_Stmt')
+    subclass_names.remove('Stop_Stmt')
+
+
+class Action_Stmt_C828(Action_Stmt_C802_2003):
+    """
+    action-stmt-c828 is action-stmt
+    C828 is applied.
+    """
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove('End_Function_Stmt')
+    subclass_names.remove('End_Subroutine_Stmt')
+    subclass_names.remove('If_Stmt')
 
 
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
@@ -208,11 +356,8 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
                              entity-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
-    variant but reimplements the match method identical to Fortran 2003 as
-    otherwise the generated Fortran 2008 variant of `Attr_Spec_List` would not
-    be used. Unfortunately, the required `attr_spec_list_cls` can not simply be
-    provided as a class property since the relevant class is only generated
-    at the end of this file using the `use_names` class property of this class.
+    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
+    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
 
     Associated constraints are:
 
@@ -230,23 +375,13 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
     '''
 
     @staticmethod
-    def match(string):
-        '''Implements the matching of a type declaration statement.
+    def get_attr_spec_list_cls():
+        '''Return the type used to match the attr-spec-list
 
-        :param str string: the reader or string to match as a type \
-                           declaration statement.
-
-        :return: a 3-tuple containing declaration type specification, \
-                 attributespecification and entity declaration list \
-                 if there is a match or None if there is no match.
-        :rtype: `NoneType` or \
-            (:py:class:`fparser.two.Fortran2003.Declaration_Type_Spec`, \
-             :py:class:`fparser.two.Fortran2008.Attr_Spec_List`, \
-             :py:class:`fparser.two.Fortran2003.Entity_Decl_List`)
+        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
 
         '''
-        return Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
+        return Attr_Spec_List
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
@@ -524,6 +659,68 @@ class Upper_Cobound(Base):  # R513
 
     '''
     subclass_names = ['Specification_Expr']
+
+
+class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
+    """
+    Fortran 2008 rule R826
+    do-term-action-stmt is action-stmt
+
+    Associated constraints are:
+
+    "C816 (R826) A do-term-action-stmt shall not be an arithmetic-if-stmt,
+          continue-stmt, cycle-stmt, end-function-stmt, end-mp-subprogram-stmt,
+          end-program-stmt, end-subroutine-stmt, error-stop-stmt, exit-stmt,
+          goto-stmt, return-stmt, or stop-stmt."
+    """
+    subclass_names = ['Action_Stmt_C816']
+
+
+class If_Stmt(If_Stmt_2003):  # R837
+    '''
+    Fortran 2008 rule R837
+    if-stmt is IF ( scalar-logical-expr ) action-stmt
+
+    The implementation of this rule only replaces the :py:attr:`use_names` and
+    :py:attr:`action_stmt_class` attributes to use the Fortran 2008 variant
+    :py:class:`Action_Stmt_C828` instead of
+    :py:class:`fparser.two.Fortran2003.Action_Stmt_C802`.
+
+    Associated constraints are:
+
+    C828 (R837) The action-stmt in the if-stmt shall not be an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, end-subroutine-stmt, or if-stmt.
+
+    '''
+    use_names = ['Scalar_Logical_Expr', 'Action_Stmt_C828']
+    action_stmt_cls = Action_Stmt_C828
+
+
+class Error_Stop_Stmt(StmtBase, WORDClsBase):  # R856
+    '''
+    Fortran 2008 rule R856
+    error-stop-stmt is ERROR STOP [ stop-code ]
+
+    '''
+    subclass_names = []
+    use_names = ['Stop_Code']
+
+    @staticmethod
+    def match(string):
+        '''Check whether the input matches the rule
+
+        :param str string: Text that we are trying to match.
+
+        :returns: None if there is no match or, if there is a match, a \
+            2-tuple containing a string matching 'ERROR STOP' and an \
+            instance of :py:class:`fparser.two.Fortran2003.Stop_Code` \
+            (or None if an instance of 'Stop_Code' is not required and \
+            not provided).
+        :rtype: (str, :py:class:`fparser.two.Fortran2003.Stop_Code` or None) \
+            or NoneType
+
+        '''
+        return WORDClsBase.match('ERROR STOP', Stop_Code, string)
 
 
 class Specification_Part_C1112(Specification_Part):  # C1112
@@ -860,11 +1057,10 @@ class %s_List(SequenceBase):
 class %s_Name(Base):
     subclass_names = [\'Name\']
 ''' % (n))
-# Currently there are no examples using scalar_* as a class name.
-#         elif n.startswith('Scalar_'):
-#             _names.append(n)
-#             n = n[7:]
-#             exec('''\
-# class Scalar_%s(Base):
-#     subclass_names = [\'%s\']
-# ''' % (n, n))
+        elif n.startswith('Scalar_'):
+            _names.append(n)
+            n = n[7:]
+            exec('''\
+class Scalar_%s(Base):
+    subclass_names = [\'%s\']
+''' % (n, n))

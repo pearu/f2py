@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 #
@@ -70,10 +70,15 @@ Module containing py.test tests for Fortran 2003 language constructs
 from __future__ import print_function
 import pytest
 from fparser.two.Fortran2003 import *
+from fparser.two import Fortran2003
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.api import get_reader
-from fparser.two.parser import ParserFactory
-# this is required to setup the fortran2003 classes
-_ = ParserFactory().create(std="f2003")
+
+
+@pytest.fixture(autouse=True)
+def auto_f2003_create(f2003_create):
+    ''' Since all of the tests in this file need the `f2003_create` fixture,
+    this fixture simply adds 'autouse=True' to it. '''
 
 
 def assert_raises(exc, fcls, string):
@@ -108,6 +113,7 @@ def _repr_utf(anobj):
     :rtype: str
 
     '''
+    # TODO #307 this can be removed once we drop Python 2 support.
     import six
     if six.PY2:
         new_repr = repr(anobj).replace("u'", "'")
@@ -974,50 +980,6 @@ def test_ac_implied_do_control():  # R471
 #
 
 
-def test_type_declaration_stmt():  # R501
-
-    tcls = Type_Declaration_Stmt
-    obj = tcls('integer a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'INTEGER :: a'
-    assert (_repr_utf(obj) ==
-            "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', "
-            "None), None, Entity_Decl_List(',', (Entity_Decl(Name('a'), None, "
-            "None, None),)))")
-
-    obj = tcls('integer ,dimension(2):: a*3')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'INTEGER, DIMENSION(2) :: a*3'
-
-    obj = tcls('real a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'REAL :: a'
-    assert (_repr_utf(obj) ==
-            "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), None, "
-            "Entity_Decl_List(',', (Entity_Decl(Name('a'), None, None, "
-            "None),)))")
-
-    obj = tcls('REAL A( LDA, * ), B( LDB, * )')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'REAL :: A(LDA, *), B(LDB, *)'
-
-    obj = tcls('DOUBLE PRECISION   ALPHA, BETA')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'DOUBLE PRECISION :: ALPHA, BETA'
-
-    obj = tcls('logical,parameter:: T=.true.')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'LOGICAL, PARAMETER :: T = .TRUE.'
-
-    obj = tcls('character(n),private:: x(n)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'CHARACTER(LEN = n), PRIVATE :: x(n)'
-
-    obj = tcls('character(lenmax),private:: x(n)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'CHARACTER(LEN = lenmax), PRIVATE :: x(n)'
-
-
 def test_declaration_type_spec():  # R502
 
     tcls = Declaration_Type_Spec
@@ -1065,42 +1027,6 @@ def test_intent_attr_spec():  # R503.f
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTENT(IN)'
     assert _repr_utf(obj) == "Intent_Attr_Spec('INTENT', Intent_Spec('IN'))"
-
-
-def test_entity_decl():  # 504
-
-    tcls = Entity_Decl
-    obj = tcls('a(1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)'
-    assert (_repr_utf(obj) ==
-            "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
-            "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
-            "None, None)")
-
-    obj = tcls('a(1)*(3)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)*(3)'
-
-    obj = tcls('a(1)*(3) = 2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)*(3) = 2'
-
-    obj = tcls('a = 2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = 2'
-
-    obj = tcls('a=2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = 2'
-
-    obj = tcls('a = "abc "')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = "abc "'
-
-    obj = tcls('a = .true.')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = .TRUE.'
 
 
 def test_target_entity_decl():
@@ -2032,6 +1958,7 @@ def test_assignment_stmt():
     assert str(obj) == 'b = a + 1D-8 + 1.1E+3'
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_pointer_assignment_stmt():  # R735
 
     tcls = Pointer_Assignment_Stmt
@@ -2088,6 +2015,7 @@ def test_where_construct_stmt():  # R745
     assert repr(obj) == "Where_Construct_Stmt(Name('a'))"
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_forall_construct():  # R752
 
     tcls = Forall_Construct
@@ -2179,6 +2107,7 @@ def test_case_selector():  # R813
     assert str(obj) == '(2 : 3, c + 2 :, : - a)'
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_associate_construct():  # R816
 
     tcls = Associate_Construct
@@ -2858,25 +2787,48 @@ def test_format_item_list():  # R1002, R1003
 #
 
 
-def test_main_program0():  # R1101 helper
+def test_main_program0():
     '''Test for R1101 when the program statement is not supplied. This
-    case matches with the Main_Program0 class
+    case matches with the Main_Program0 class.
 
     '''
-    obj0 = Main_Program0(get_reader('''\
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
 end
     '''))
-    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
     assert str(obj0) == 'END'
 
-    obj0 = Main_Program0(get_reader('''\
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
 contains
   function foo()
   end
 end
     '''))
-    assert isinstance(obj0, Main_Program0), repr(obj0)
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
     assert str(obj0) == 'CONTAINS\nFUNCTION foo()\nEND\nEND'
+
+    # Check that the expected symbol table is created and populated
+    obj0 = Fortran2003.Main_Program0(get_reader('''\
+integer :: i
+i = 9
+end
+    '''))
+    assert isinstance(obj0, Fortran2003.Main_Program0), repr(obj0)
+    assert str(obj0) == 'INTEGER :: i\n  i = 9\nEND'
+    table = SYMBOL_TABLES.lookup("fparser2:main_program")
+    assert table.lookup("i")
+
+
+def test_invalid_main_program0():
+    ''' Test for when the Main_Program0 class fails to match. We should
+    get a NoMatchError and no symbol table. '''
+    with pytest.raises(Fortran2003.NoMatchError):
+        _ = Fortran2003.Main_Program0(get_reader(
+            "integer :: i\n"
+            "i = 9\n"
+            "en\n"))
+    # Ensure that no symbol table has been created
+    assert SYMBOL_TABLES._symbol_tables == {}
 
 
 def test_module():  # R1104

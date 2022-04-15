@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022 Science and Technology Facilities Council.
+# Copyright (c) 2022 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,28 +32,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R501.
+'''
+pytest tests for Fortran2003 rule R501 - Type Declaration Statement.
 
-    type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                             entity-decl-list
+TODO #318 - these tests need extending to fully cover the
+Fortran2003.Type_Declaration_Stmtclass. They will also need to be
+extended as part of #259 as that will add support for the various
+constraints that apply to R501.
 
 '''
 
 import pytest
-from fparser.two.Fortran2003 import Intrinsic_Function_Reference
-from fparser.two.Fortran2008 import Type_Declaration_Stmt
+from fparser.two import Fortran2003
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.utils import walk
-from fparser.api import get_reader
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
-def test_type_declaration_stmt():  # R501
-    '''
-    Tests copied from Fortran 2003.
+@pytest.mark.usefixtures("f2003_create")
+@pytest.mark.parametrize("table_name", ["", "test_mod"])
+def test_type_declaration_stmt(table_name):
+    ''' Various tests for the type declaration statement (R501). We test both
+    with and without an existing scoping region. '''
+    if table_name:
+        SYMBOL_TABLES.enter_scope(table_name)
+    table = SYMBOL_TABLES.current_scope
 
-    '''
-    tcls = Type_Declaration_Stmt
+    tcls = Fortran2003.Type_Declaration_Stmt
     obj = tcls('integer a')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER :: a'
@@ -61,10 +64,14 @@ def test_type_declaration_stmt():  # R501
             "Type_Declaration_Stmt(Intrinsic_Type_Spec('INTEGER', "
             "None), None, Entity_Decl_List(',', (Entity_Decl(Name('a'), None, "
             "None, None),)))")
+    if table:
+        assert "a" in table._data_symbols
 
     obj = tcls('integer ,dimension(2):: b*3')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'INTEGER, DIMENSION(2) :: b*3'
+    if table:
+        assert "b" in table._data_symbols
 
     obj = tcls('real c')
     assert isinstance(obj, tcls), repr(obj)
@@ -73,45 +80,37 @@ def test_type_declaration_stmt():  # R501
             "Type_Declaration_Stmt(Intrinsic_Type_Spec('REAL', None), None, "
             "Entity_Decl_List(',', (Entity_Decl(Name('c'), None, None, "
             "None),)))")
+    if table:
+        assert "c" in table._data_symbols
 
     obj = tcls('REAL D( LDA, * ), E( LDB, * )')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'REAL :: D(LDA, *), E(LDB, *)'
+    if table:
+        assert "d" in table._data_symbols
+        assert "e" in table._data_symbols
 
     obj = tcls('DOUBLE PRECISION   ALPHA, BETA')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'DOUBLE PRECISION :: ALPHA, BETA'
+    if table:
+        assert "alpha" in table._data_symbols
+        assert "beta" in table._data_symbols
 
     obj = tcls('logical,parameter:: T=.true.')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'LOGICAL, PARAMETER :: T = .TRUE.'
+    if table:
+        assert "t" in table._data_symbols
 
     obj = tcls('character(n),private:: x(n)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER(LEN = n), PRIVATE :: x(n)'
+    if table:
+        assert "x" in table._data_symbols
 
     obj = tcls('character(lenmax),private:: y(n)')
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == 'CHARACTER(LEN = lenmax), PRIVATE :: y(n)'
-
-
-def test_shadowed_intrinsic(f2008_parser):
-    ''' Check that a locally-defined symbol that shadows (overwrites) a
-    Fortran intrinsic is correctly identified. '''
-    tree = f2008_parser(get_reader('''\
-module my_mod
-  use some_mod
-  real :: dot_product(2,2)
-contains
-  subroutine my_sub()
-    real :: result
-    result = dot_product(1,1)
-  end subroutine my_sub
-end module my_mod
-    '''))
-    tables = SYMBOL_TABLES
-    # We should not have an intrinsic-function reference in the parse tree
-    assert not walk(tree, Intrinsic_Function_Reference)
-    table = tables.lookup("my_mod")
-    sym = table.children[0].lookup("dot_product")
-    assert sym.primitive_type == "real"
+    if table:
+        assert "y" in table._data_symbols

@@ -34,8 +34,8 @@
 
 .. _developers:
 
-Developers' Guide
-=================
+Developer Guide
+===============
 
 Reading Fortran
 ---------------
@@ -85,8 +85,8 @@ The utility makes use of the `codec.open(errors="ignore")`
 function. Whilst it would have been easier in theory to replace the
 existing `open` calls with `codec.open` this led to many Python2
 problems due to `codec.open` returning `unicode` for both Python 2 and
-3 (whereas open returns `str`). The changes that would need to be made
-to make Python2 and the Python2 tests, work were significant.
+3 (whereas `open` returns `str`). The changes that would need to be made
+to make Python2 and the Python2 tests work were significant.
 
 Therefore it was decided to use `codec.open` to check for errors and
 to strip out any errors if requested. Once checked and stripped, the
@@ -257,6 +257,66 @@ that classes `subclass_names` list (see :ref:`program-unit-class`)::
     []
     >>> parser_f2003.subclasses['Program_Unit']
     [<class 'fparser.two.Fortran2003.Main_Program'>, <class 'fparser.two.Fortran2003.Function_Subprogram'>, <class 'fparser.two.Fortran2003.Subroutine_Subprogram'>, <class 'fparser.two.Fortran2003.Module'>, <class 'fparser.two.Fortran2003.Block_Data'>]
+
+Symbol Table
+++++++++++++
+
+There are many situations when it is not possible to disambiguate the
+precise form of the Fortran being parsed without additional type
+information (e.g. whether code of the form `a(i,j)` is an array
+access or a function call).  Therefore fparser2 contains a single,
+global instance of a `SymbolTables` class, accessed as
+`fparser.two.symbol_table.SYMBOL_TABLES`. As its name implies, this
+holds a collection of symbol tables, one for each top-level scoping
+unit (e.g. module or program unit). This is implemented as a
+dictionary where the keys are the names of the scoping units e.g. the
+name of the associated module, program, subroutine or function. The
+corresponding dictionary entries are instances of the `SymbolTable`
+class:
+
+.. autoclass:: fparser.two.symbol_table.SymbolTable
+
+The entries in these tables are instances of the named tuple,
+`SymbolTable.Symbol` which currently has the properties:
+
+ * name
+ * primitive_type
+
+Both of these are stored as strings. In future, support for more
+properties (e.g. kind, shape, visibility) will be added and strings
+replaced with enumerations where it makes sense. Similarly, support
+will be added for other types of symbols (e.g. those representing
+program/subroutine names or reserved Fortran keywords).
+
+Fortran has support for nested scopes - e.g. variables declared within
+a module are in scope within any routines defined within that
+module. Therefore, when searching for the definition a symbol, we
+require the ability to search up through all symbol tables accessible
+from the current scope. In order to support this functionality, each
+`SymbolTable` instance therefore has a `parent` property. This holds a
+reference to the table that contains the current table (if any).
+
+Since fparser2 relies heavily upon recursion, it is important that the
+current scoping unit always be available from any point in the code.
+Therefore, the `SymbolTables` class has the `current_scope` property
+which contains a reference to the current `SymbolTable`. Obviously,
+this property must be updated as the parser enters and leaves scoping
+units.  This is handled for all cases bar one within the `BlockBase`
+base class since this is sub-classed by all classes which represent a
+block of code and that therefore includes all those which define a
+scoping region. The exception is the helper class
+`Fortran2003.Main_Program0` which represents Program units that do not
+include the (optional) program-stmt (see R1101 in the Fortran
+standard).  The creation of a scoping unit for such a program is
+handled within the `Fortran2003.Main_Program0.match()` method. Since
+there is no name associated with such a program, the corresponding
+symbol table is given the name "fparser2:main_program", chosen so as
+to prevent any clashes with other Fortran names.
+
+Those classes taken to define scoping regions are stored as
+a list within the `SymbolTables` instance. This list is populated
+after the class hierarchy has been constructed for the parser (since
+this depends on which Fortran standard has been chosen).
 
 Class Generation
 ++++++++++++++++
@@ -928,3 +988,25 @@ GitHub Actions are used to run the test suite for a number of different
 Python versions and the coverage reports are uploaded automatically to CodeCov
 (https://codecov.io/gh/stfc/fparser). The configuration for this is in the
 `.github/workflows/unit-tests.yml` file.
+
+
+Test Fixtures
+-------------
+
+Various pytest fixtures
+(https://docs.pytest.org/en/stable/fixture.html) are provided so as to
+aid in the mock-up of a suitable environment in which to run
+tests. These are defined in `two/tests/conftest.py`:
+
+=================== ======================= ===================================
+Name                Returns                 Purpose
+=================== ======================= ===================================
+f2003_create        --                      Sets-up the class hierarchy for the
+                                            Fortran2003 parser.
+f2003_parser        `Fortran2003.Program`   Sets-up the class hierarchy for the
+                                            Fortran2003 parser and returns the
+					    top-level Program object.
+clear_symbol_table  --                      Removes all stored symbol tables.
+fake_symbol_table   --                      Creates a fake scoping region and
+                                            associated symbol table.
+=================== ======================= ===================================

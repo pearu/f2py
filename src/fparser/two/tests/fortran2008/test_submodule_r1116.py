@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Science and Technology Facilities Council
+# Copyright (c) 2018-2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -49,8 +49,9 @@
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2008 import Submodule
+from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two.utils import NoMatchError
 
 
 def test_submodule(f2008_create):
@@ -62,8 +63,11 @@ def test_submodule(f2008_create):
     ast = Submodule(reader)
     assert "SUBMODULE (foobar) bar\n" \
         "END" in str(ast)
+    # A new symbol table should have been created
+    assert "bar" in SYMBOL_TABLES._symbol_tables
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_submodule_sp(f2008_create):
     '''Test the parsing of a minimal submodule with a specification
     part.
@@ -98,8 +102,12 @@ def test_submodule_msp(f2008_create):
         "  SUBROUTINE info\n" \
         "  END SUBROUTINE info\n" \
         "END" in str(ast)
+    # A new symbol table should have been created
+    assert "bar" in SYMBOL_TABLES._symbol_tables
+    assert "info" == SYMBOL_TABLES.lookup("bar").children[0].name
 
 
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_submodule_both(f2008_create):
     '''Test the parsing of a minimal submodule with a specification part
     and a module subprogram part.

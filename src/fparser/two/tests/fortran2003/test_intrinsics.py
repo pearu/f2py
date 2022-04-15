@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2019-2020, Science and Technology Facilities Council.
+# Copyright (c) 2019-2022, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 import pytest
 from fparser.two.Fortran2003 import Program, Intrinsic_Function_Reference, \
     Intrinsic_Name
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import FortranSyntaxError, NoMatchError, \
     InternalSyntaxError, walk
 from fparser.api import get_reader
@@ -104,14 +105,24 @@ def test_intrinsic_name_case_insensitive(f2003_create):
 # class intrinsic_function_reference
 
 
-def test_intrinsic_function_reference_generic(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_intrinsic_function_reference_generic():
     '''Test that class Intrinsic_Function_Reference correctly matches a
-    generic intrinsic with a valid number of arguments.
+    generic intrinsic with a valid number of arguments. We test both
+    with and without the existance of a symbol table.
 
     '''
     result = Intrinsic_Function_Reference("SIN(A)")
     assert isinstance(result, Intrinsic_Function_Reference)
     assert str(result) == "SIN(A)"
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    result = Intrinsic_Function_Reference("SIN(A)")
+    assert isinstance(result, Intrinsic_Function_Reference)
+    assert str(result) == "SIN(A)"
+    table = SYMBOL_TABLES.current_scope
+    assert "sin" not in table._data_symbols
+    SYMBOL_TABLES.exit_scope()
 
 
 def test_intrinsic_function_reference(f2003_create):
@@ -232,3 +243,25 @@ def test_intrinsic_inside_intrinsic(f2003_create):
     rep = repr(ast).replace("u'", "'")
     assert "Intrinsic_Name('SIN')" in rep
     assert "Intrinsic_Name('COS')" in rep
+
+
+def test_shadowed_intrinsic(f2003_parser):
+    ''' Check that a locally-defined symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified. '''
+    tree = f2003_parser(get_reader('''\
+module my_mod
+  use some_mod
+  real :: dot_product(2,2)
+contains
+  subroutine my_sub()
+    real :: result
+    result = dot_product(1,1)
+  end subroutine my_sub
+end module my_mod
+    '''))
+    tables = SYMBOL_TABLES
+    # We should not have an intrinsic-function reference in the parse tree
+    assert not walk(tree, Intrinsic_Function_Reference)
+    table = tables.lookup("my_mod")
+    sym = table.children[0].lookup("dot_product")
+    assert sym.primitive_type == "real"

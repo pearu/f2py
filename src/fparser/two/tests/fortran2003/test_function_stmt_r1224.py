@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council
+# Copyright (c) 2021 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,61 +32,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1102 : This file tests the support for the
-program statement.
+'''Test Fortran 2003 rule R1224 : the majority of the tests for this
+are still in test_fortran2003.py and need to be moved here TODO #306.
 
 '''
 
-import pytest
+import six
 from fparser.api import get_reader
-from fparser.two.utils import NoMatchError
+from fparser.two.Fortran2003 import Function_Subprogram, Function_Stmt, Name
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.Fortran2003 import Program_Stmt, Program, Name
 
 
-@pytest.mark.usefixtures("f2003_create")
-def test_valid():
-    ''' Test that valid code is parsed correctly. '''
+def test_function_new_symbol_table(f2003_create):
+    '''
+    Test that valid code is parsed correctly and an associated symbol table
+    created.
 
-    obj = Program_Stmt("program a")
-    assert isinstance(obj, Program_Stmt)
-    assert str(obj) == 'PROGRAM a'
-    assert repr(obj) == "Program_Stmt('PROGRAM', Name('a'))"
-    # Check that the parent of the Name is correctly set
-    assert obj.items[1].parent is obj
+    '''
+    obj = Function_Subprogram(get_reader("function a()\nend function a"))
+    assert isinstance(obj, Function_Subprogram)
+    assert str(obj) == 'FUNCTION a()\nEND FUNCTION a'
+    repr_text = repr(obj)
+    if six.PY2:
+        # TODO #307 remove this once we drop Python 2
+        repr_text = repr_text.replace("u'", "'")
 
-
-@pytest.mark.usefixtures("f2003_create")
-def test_invalid():
-    ''' Test that exceptions are raised for invalid code. '''
-
-    for string in ["", "  ", "prog", "program", "programa", "a program",
-                   "a program a", "program a a"]:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Program_Stmt(string)
-        assert "Program_Stmt: '{0}'".format(string) in str(excinfo.value)
+    assert repr_text == ("Function_Subprogram(Function_Stmt(None, Name('a'), "
+                         "None, None), End_Function_Stmt('FUNCTION', "
+                         "Name('a')))")
+    assert "a" in SYMBOL_TABLES._symbol_tables
 
 
-@pytest.mark.usefixtures("f2003_create")
-def test_prog_symbol_table():
-    ''' Check that an associated symbol table is created when parsing a
-    program unit. '''
-    reader = get_reader("program my_prog\n"
-                        "end program my_prog\n")
-    prog = Program(reader)
-    assert "my_prog" in SYMBOL_TABLES._symbol_tables
-
-
-def test_get_name():
-    """Test we can get the name of the program
+def test_function_get_name():
+    """Test we can get the name of the function
     """
-    obj = Program_Stmt("program foo")
+    obj = Function_Stmt("function foo()")
     assert obj.get_name() == Name("foo")
-
-
-def test_get_start_name():
-    """Test we can get the name of the function as a string
-    """
-
-    obj = Program_Stmt("program foo")
-    assert obj.get_start_name() == "foo"

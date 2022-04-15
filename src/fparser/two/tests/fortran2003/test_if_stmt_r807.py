@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council
+# Copyright (c) 2022 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -32,61 +32,61 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1102 : This file tests the support for the
-program statement.
+'''Test Fortran 2003 rule R807
 
+    if-stmt is IF ( scalar-logical-expr ) action-stmt
 '''
 
 import pytest
-from fparser.api import get_reader
-from fparser.two.utils import NoMatchError
-from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.Fortran2003 import Program_Stmt, Program, Name
+from fparser.two.Fortran2003 import Stop_Stmt, If_Stmt, Assignment_Stmt
+from fparser.two.utils import walk, NoMatchError
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_valid():
-    ''' Test that valid code is parsed correctly. '''
-
-    obj = Program_Stmt("program a")
-    assert isinstance(obj, Program_Stmt)
-    assert str(obj) == 'PROGRAM a'
-    assert repr(obj) == "Program_Stmt('PROGRAM', Name('a'))"
-    # Check that the parent of the Name is correctly set
-    assert obj.items[1].parent is obj
+def test_simple_stop():
+    '''Test matching of a valid string.'''
+    result = If_Stmt('IF (5 > 3) STOP')
+    assert isinstance(result, If_Stmt)
+    assert walk(result, Stop_Stmt)
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_invalid():
-    ''' Test that exceptions are raised for invalid code. '''
-
-    for string in ["", "  ", "prog", "program", "programa", "a program",
-                   "a program a", "program a a"]:
-        with pytest.raises(NoMatchError) as excinfo:
-            _ = Program_Stmt(string)
-        assert "Program_Stmt: '{0}'".format(string) in str(excinfo.value)
+def test_simple_assignment():
+    '''Test matching of a valid string.'''
+    result = If_Stmt('IF (A < B) A = B')
+    assert isinstance(result, If_Stmt)
+    assignments = walk(result, Assignment_Stmt)
+    assert len(assignments) == 1
+    assert str(assignments[0]) == 'A = B'
 
 
 @pytest.mark.usefixtures("f2003_create")
-def test_prog_symbol_table():
-    ''' Check that an associated symbol table is created when parsing a
-    program unit. '''
-    reader = get_reader("program my_prog\n"
-                        "end program my_prog\n")
-    prog = Program(reader)
-    assert "my_prog" in SYMBOL_TABLES._symbol_tables
+def test_error1():
+    '''Test invalid syntax doesn't match.'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = If_Stmt('IFF (5 > 3) STOP')
+    assert "If_Stmt: 'IFF (5 > 3) STOP'" in str(excinfo.value)
 
 
-def test_get_name():
-    """Test we can get the name of the program
-    """
-    obj = Program_Stmt("program foo")
-    assert obj.get_name() == Name("foo")
+@pytest.mark.usefixtures("f2003_create")
+def test_error2():
+    '''Test invalid syntax doesn't match.'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = If_Stmt('IF 5 > 3 STOP')
+    assert "If_Stmt: 'IF 5 > 3 STOP'" in str(excinfo.value)
 
 
-def test_get_start_name():
-    """Test we can get the name of the function as a string
-    """
+@pytest.mark.usefixtures("f2003_create")
+def test_error3():
+    '''Test invalid syntax doesn't match.'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = If_Stmt('IF (5 > 3] STOP')
+    assert "If_Stmt: 'IF (5 > 3] STOP'" in str(excinfo.value)
 
-    obj = Program_Stmt("program foo")
-    assert obj.get_start_name() == "foo"
+
+@pytest.mark.usefixtures("f2003_create")
+def test_error4():
+    '''Test invalid syntax doesn't match.'''
+    with pytest.raises(NoMatchError) as excinfo:
+        _ = If_Stmt('IF (A = B) A = 0')
+    assert "If_Stmt: 'IF (A = B) A = 0'" in str(excinfo.value)
