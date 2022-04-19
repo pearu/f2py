@@ -40,7 +40,7 @@ import pytest
 from fparser.two.parser import ParserFactory
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def f2008_create():
     '''Create a fortran 2008 parser class hierarchy'''
     _ = ParserFactory().create(std="f2008")
