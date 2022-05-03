@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
@@ -126,6 +126,9 @@ class StringReplaceDict(dict):
 
 def memoize(function):
     ''' Simple memoization decorator.
+
+    :param function: The function to memoize.
+    :type function: Callable
 
     Note: Python 3.9 comes with a thread-safe and more efficient cache as it
     can be bounded and we are interested in lines that have temporal locality.
