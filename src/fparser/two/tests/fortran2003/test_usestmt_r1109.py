@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council
+# Copyright (c) 2018-2022 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -40,6 +40,7 @@ Use statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Use_Stmt
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import NoMatchError, InternalError
 
 # match() use ...
@@ -48,7 +49,6 @@ from fparser.two.utils import NoMatchError, InternalError
 # match() 'use x'. Use both string and reader input here, but from
 # here on we will just use string input as that is what is passed to
 # the match() method
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use(f2003_create):
     '''Check that a basic use is parsed correctly. Input separately as a
     string and as a reader object
@@ -67,7 +67,6 @@ def test_use(f2003_create):
 
 
 # match() 'use :: x'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_colons(f2003_create):
     '''Check that a basic use with '::' is parsed correctly.'''
     line = "use :: my_model"
@@ -77,7 +76,6 @@ def test_use_colons(f2003_create):
 
 
 # match() 'use, nature :: x'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_nature(f2003_create):
     '''Check that a use with a 'nature' specification is parsed correctly.'''
     line = "use, intrinsic :: my_model"
@@ -89,7 +87,6 @@ def test_use_nature(f2003_create):
 
 
 # match() 'use x, rename'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_rename(f2003_create):
     '''Check that a use with a nename clause is parsed correctly.'''
     line = "use my_module, name=>new_name"
@@ -101,10 +98,9 @@ def test_use_rename(f2003_create):
 
 
 # match() 'use x, only: y'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_only(f2003_create):
     '''Check that a use statement is parsed correctly when there is an
-    only clause.
+    only clause. Test both with and without a scoping region.
 
     '''
     line = "use my_model, only: name"
@@ -113,10 +109,16 @@ def test_use_only(f2003_create):
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_model'), ', ONLY:', Only_List(',', "
         "(Name('name'),)))")
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    assert "my_model" in table._modules
+    assert table._modules["my_model"] == ["name"]
+    SYMBOL_TABLES.exit_scope()
 
 
 # match() 'use x, only:'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_only_empty(f2003_create):
     '''Check that a use statement is parsed correctly when there is an
     only clause without any content.
@@ -130,7 +132,6 @@ def test_use_only_empty(f2003_create):
 
 
 # match() '  use  ,  nature  ::  x  ,  name=>new_name'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_spaces_1(f2003_create):
     '''Check that a use statement with spaces works correctly with
     renaming.
@@ -145,7 +146,6 @@ def test_use_spaces_1(f2003_create):
 
 
 # match() '  use  ,  nature  ::  x  ,  only  :  name'
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_spaces_2(f2003_create):
     '''Check that a use statement with spaces works correctly with an only
     clause.
@@ -160,7 +160,6 @@ def test_use_spaces_2(f2003_create):
 
 
 # match() mixed case
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_mixed_case(f2003_create):
     '''Check that a use statement with mixed case keywords ('use' and
     'only') works as expected.
@@ -190,7 +189,6 @@ def test_syntaxerror(f2003_create):
 # match() Internal errors
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_internal_error1(f2003_create):
     '''Check that an internal error is raised if the length of the Items
     list is not 5 as the str() method assumes that it is.
@@ -204,7 +202,6 @@ def test_use_internal_error1(f2003_create):
     assert "should be of size 5 but found '4'" in str(excinfo.value)
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_internal_error2(f2003_create):
     '''Check that an internal error is raised if the module name (entry 2
     of Items) is empty or None as the str() method assumes that it is
@@ -221,7 +218,6 @@ def test_use_internal_error2(f2003_create):
                 "empty") in str(excinfo.value)
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_internal_error3(f2003_create):
     '''Check that an internal error is raised if entry 3 of Items is
     'None' as the str() method assumes it is a (potentially empty)

@@ -223,7 +223,7 @@ class ParserFactory(object):
                     return []
                 # remove this code when all classes are implemented.
                 cls = base_classes[clsname]
-                if 'match' in cls.__dict__:
+                if hasattr(cls, 'match'):
                     return [clsname]
                 bits = []
                 for names in getattr(cls, 'subclass_names', []):

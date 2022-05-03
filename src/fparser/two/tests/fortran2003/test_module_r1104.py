@@ -39,7 +39,7 @@ are still in test_fortran2003.py and need to be moved here TODO #306.
 
 import pytest
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Module
+from fparser.two.Fortran2003 import Module, Module_Stmt, Name
 from fparser.two.symbol_table import SYMBOL_TABLES
 
 
@@ -56,3 +56,10 @@ def test_module_new_symbol_table(f2003_create):
     assert repr(obj) == ("Module(Module_Stmt('MODULE', Name('a')), "
                          "End_Module_Stmt('MODULE', None))")
     assert "a" in SYMBOL_TABLES._symbol_tables
+
+
+def test_module_get_name():
+    """Test we can get the name of the module
+    """
+    obj = Module_Stmt("module foo")
+    assert obj.get_name() == Name("foo")

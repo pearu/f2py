@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -2664,11 +2664,53 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     use_names = ['Declaration_Type_Spec', 'Attr_Spec_List', 'Entity_Decl_List']
 
     @staticmethod
-    def match(string):
+    def get_attr_spec_list_cls():
+        '''Return the type used to match the attr-spec-list
+
+        This method allows to overwrite the type used in :py:meth:`match`
+        in derived classes
+        (e.g., :py:class:`fparser.two.Fortran2008.Type_Declaration_Stmt`).
+
+        This cannot be implemented as an attribute because the relevant type
+        :class:`Attr_Spec_List` is auto-generated at the end of the file
+        using the :attr:`use_names` property of the class.
+
+        '''
+        return Attr_Spec_List
+
+    @staticmethod
+    def add_to_symbol_table(result):
+        '''Capture the declared symbols in the symbol table of the current
+        scoping region
+
+        :param result: the declared type, attributes and entities or None
+        :type result: `NoneType` or \
+                (Declaration_Type_Spec, Attr_Spec_List or NoneType, \
+                 Entity_Decl_List)
+        '''
+        if result:
+            # We matched a declaration - capture the declared symbols in the
+            # symbol table of the current scoping region.
+            table = SYMBOL_TABLES.current_scope
+
+            if table and isinstance(result[0], Intrinsic_Type_Spec):
+                # We have a definition of symbol(s) of intrinsic type
+                decl_list = walk(result, Entity_Decl)
+                for decl in decl_list:
+                    # TODO #201 use an enumeration to specify the primitive
+                    # type rather than a string.
+                    table.add_data_symbol(decl.items[0].string, str(result[0]))
+            # TODO #201 support symbols that are not of intrinsic type.
+
+    @classmethod
+    def match(cls, string):
         '''
         Attempts to match the supplied string as a type declaration. If the
         match is successful the declared symbols are added to the symbol table
-        of the current scope.
+        of the current scope (if there is one).
+
+        Note that this is implemented as a class method to allow parameterizing
+        the type used to match attr-spec-list via :py:meth:`get_attr_spec_list_cls`.
 
         :param str string: the string to match.
 
@@ -2678,20 +2720,9 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
 
         '''
         result = Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
-        if result:
-            # We matched a declaration - capture the declared symbols in the
-            # symbol table of the current scoping region.
-            table = SYMBOL_TABLES.current_scope
-
-            if isinstance(result[0], Intrinsic_Type_Spec):
-                # We have a definition of symbol(s) of intrinsic type
-                decl_list = walk(result, Entity_Decl)
-                for decl in decl_list:
-                    # TODO #201 use an enumeration to specify the primitive
-                    # type rather than a string.
-                    table.add_data_symbol(decl.items[0].string, str(result[0]))
-            # TODO #201 support symbols that are not of intrinsic type.
+            Declaration_Type_Spec, cls.get_attr_spec_list_cls(), Entity_Decl_List,
+            string)
+        cls.add_to_symbol_table(result)
         return result
 
     @staticmethod
@@ -2903,6 +2934,13 @@ class Entity_Decl(Base):  # R504
         if self.items[3] is not None:
             s += ' ' + str(self.items[3])
         return s
+
+    def get_name(self):
+        '''Provides the entity name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[0]
 
 
 class Object_Name(Base):  # R505
@@ -5974,13 +6012,40 @@ class End_If_Stmt(EndStmtBase):  # R806
 
 class If_Stmt(StmtBase):  # R807
     """
-    <if-stmt> = IF ( <scalar-logical-expr> ) <action-stmt>
+    Fortran 2003 rule R807
+
+    if-stmt is IF ( scalar-logical-expr ) action-stmt
+
+    C802 (R807) The action-stmt in the if-stmt shall not be an if-stmt,
+    end-program-stmt, end-function-stmt, or end-subroutine-stmt.
+
     """
     subclass_names = []
     use_names = ['Scalar_Logical_Expr', 'Action_Stmt_C802']
+    action_stmt_cls = Action_Stmt_C802
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def match(cls, string):
+        '''Implements the matching for an if statement that controls a single
+        action statement
+
+        This is implemented as a class method to allow parameterizing the
+        type that is used to match the action-stmt. It is specified by the
+        attribute :py:attr:`action_stmt_cls`, which can be overwritten in
+        derived classes to specify an updated version, so done for example
+        in the Fortran 2008 version :py:class:`fparser.two.Fortran2008.If_Stmt`.
+
+        :param str string: Text that we are trying to match.
+
+        :returns: None if there is no match or, if there is a match, a \
+            2-tuple containing the logical expression as an object matched by \
+            :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr` and the \
+            action statement as an object matching ``cls.action_stmt_cls``. 
+        :rtype: (:py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`,
+            :py:class:`fparser.two.Fortran2003.Action_Stmt_C802`) \
+            or NoneType
+
+        '''
         if string[:2].upper() != 'IF':
             return
         line, repmap = string_replace_map(string)
@@ -5992,7 +6057,7 @@ class If_Stmt(StmtBase):  # R807
             return
         expr = repmap(line[1:i].strip())
         stmt = repmap(line[i+1:].lstrip())
-        return Scalar_Logical_Expr(expr), Action_Stmt_C802(stmt)
+        return Scalar_Logical_Expr(expr), cls.action_stmt_cls(stmt)
 
     def tostr(self):
         return 'IF (%s) %s' % self.items
@@ -9179,8 +9244,8 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
     def get_name(self):
         '''Provides the program name as an instance of the `Name` class.
 
-        :returns: the program name as a `Name` class
-        :rtype: `Name`
+        :returns: the program name as a :py:class:`Name` class
+        :rtype: :py:class:`Name`
 
         '''
         return self.items[1]
@@ -9293,7 +9358,8 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
     def match(string):
         '''
         Wrapper for the match method that captures any successfully-matched
-        use statements in the symbol table associated with the current scope.
+        use statements in the symbol table associated with the current scope
+        (if there is one).
 
         :param str string: Fortran code to check for a match.
 
@@ -9308,12 +9374,13 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         result = Use_Stmt._match(string)
         if result:
             table = SYMBOL_TABLES.current_scope
-            only_list = None
-            # TODO #201 we currently ignore any symbol renaming here
-            if isinstance(result[4], Only_List):
-                names = walk(result[4], Name)
-                only_list = [name.string for name in names]
-            table.add_use_symbols(str(result[2]), only_list)
+            if table:
+                only_list = None
+                # TODO #201 we currently ignore any symbol renaming here
+                if isinstance(result[4], Only_List):
+                    names = walk(result[4], Name)
+                    only_list = [name.string for name in names]
+                table.add_use_symbols(str(result[2]), only_list)
 
         return result
 
@@ -10281,7 +10348,9 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 table.lookup(function_name)
                 # We found a matching name so refuse to match this intrinsic.
                 return None
-            except KeyError:
+            except (KeyError, AttributeError):
+                # There is either no matching name in the table or we have
+                # no current scoping region.
                 pass
 
             # This if/else will not be needed once issue #170 has been
@@ -10507,6 +10576,13 @@ class Function_Stmt(StmtBase):  # R1224
         if suffix is not None:
             s += ' %s' % (suffix)
         return s
+
+    def get_name(self):
+        '''Provides the function name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[1]
 
 
 class Proc_Language_Binding_Spec(Base):  # 1225
