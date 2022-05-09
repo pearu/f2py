@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2021 Science and Technology Facilities Council
+# Copyright (c) 2017-2022 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -40,7 +40,6 @@
 '''
 Test battery associated with fparser.common.readfortran package.
 '''
-from __future__ import print_function
 
 import io
 import os.path

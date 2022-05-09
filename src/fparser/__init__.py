@@ -78,7 +78,7 @@ def log_decode_error_handler(err):
 
     :returns: 2-tuple containing replacement for bad chars (an empty string \
               and the position from where encoding should continue.
-    :rtype: (str, int)
+    :rtype: Tuple[str, int]
 
     '''
     message = f"character in input file. Error returned was {str(err)}."
