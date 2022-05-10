@@ -776,7 +776,7 @@ class SequenceBase(Base):
         if not isinstance(separator, str):
             raise InternalError(
                 "SequenceBase class match method argument separator expected "
-                "to be a string but found '{0}'.".format(type(string)))
+                "to be a string but found '{0}'.".format(type(separator)))
         if not isinstance(string, str):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
