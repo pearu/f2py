@@ -42,6 +42,18 @@ from fparser.two.Fortran2003 import Entity_Decl, Name
 import pytest
 
 
+def test_entity_decl_repr():
+    tcls = Entity_Decl
+    obj = tcls("a(1)")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "a(1)"
+    assert (
+        repr(obj) == "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+        "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
+        "None, None)"
+    )
+
+
 @pytest.mark.parametrize(
     ("declaration, expected_str"),
     [
