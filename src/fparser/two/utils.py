@@ -776,11 +776,11 @@ class SequenceBase(Base):
         if not isinstance(separator, str):
             raise InternalError(
                 "SequenceBase class match method argument separator expected "
-                "to be a string but found '{0}'.".format(type(separator)))
+                f"to be a string but found '{type(separator)}'.")
         if not isinstance(string, str):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
-                "be a string but found '{0}'.".format(type(string)))
+                f"be a string but found '{type(string)}'.")
 
         if separator == ' ':
             raise InternalError(
@@ -1358,8 +1358,8 @@ class STRINGBase(StringBase):
             return None
         if not isinstance(string, str):
             raise InternalError(
-                "Supplied string should be of type str or {0}, but found "
-                "{1}".format(str, type(string)))
+                f"Supplied string should be of type str, but found {type(string)}"
+            )
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
@@ -1377,7 +1377,7 @@ class STRINGBase(StringBase):
         except AttributeError:
             raise InternalError(
                 "Supplied pattern should be a list, tuple, str or regular "
-                "expression but found {0}".format(type(my_pattern)))
+                f"expression but found {type(my_pattern)}")
         return None
 
 
