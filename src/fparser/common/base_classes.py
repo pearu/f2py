@@ -96,7 +96,6 @@ class AttributeHolder():
             self._attributes[k] = v
             if callable(v):
                 self._readonly.append(k)
-        return
 
     def __getattr__(self, name):
         if name not in self._attributes:
@@ -199,7 +198,6 @@ class Variable(metaclass=classes):
         # .is_array:
         #    rank
         #    shape
-        return
 
     def __repr__(self):
         line = []
@@ -219,7 +217,6 @@ class Variable(metaclass=classes):
         if id(parent) not in list(map(id, self.parents)):
             self.parents.append(parent)
         self.parent = parent
-        return
 
     def set_type(self, typedecl):
         if self.typedecl is not None:
@@ -230,7 +227,6 @@ class Variable(metaclass=classes):
                     % (self.name, self.typedecl.tostr(), typedecl.tostr()))
         assert typedecl is not None
         self.typedecl = typedecl
-        return
 
     def set_init(self, expr):
         if self.init is not None:
@@ -239,7 +235,6 @@ class Variable(metaclass=classes):
                     'variable %r already has initialization %r, '
                     'resetting to %r' % (self.name, self.expr, expr))
         self.init = expr
-        return
 
     def set_dimension(self, dims):
         dims = [tuple(dim.split(':')) for dim in dims]
@@ -250,7 +245,6 @@ class Variable(metaclass=classes):
                     'variable %r already has dimension %r, '
                     'resetting to %r' % (self.name, self.dimension, dims))
         self.dimension = dims
-        return
 
     def set_bounds(self, bounds):
         if self.bounds is not None:
@@ -259,7 +253,6 @@ class Variable(metaclass=classes):
                     'variable %r already has bounds %r, '
                     'resetting to %r' % (self.name, self.bounds, bounds))
         self.bounds = bounds
-        return
 
     def set_length(self, length):
         if self.length is not None:
@@ -268,7 +261,6 @@ class Variable(metaclass=classes):
                     'variable %r already has length %r, '
                     'resetting to %r' % (self.name, self.length, length))
         self.length = length
-        return
 
     known_intent_specs = ['IN', 'OUT', 'INOUT', 'CACHE', 'HIDE', 'COPY',
                           'OVERWRITE', 'CALLBACK', 'AUX', 'C', 'INPLACE',
@@ -283,7 +275,6 @@ class Variable(metaclass=classes):
                     self.parent.warning('unknown intent-spec %r for %r'
                                         % (i, self.name))
                 self.intent.append(i)
-        return
 
     known_attributes = ['PUBLIC', 'PRIVATE', 'ALLOCATABLE', 'ASYNCHRONOUS',
                         'EXTERNAL', 'INTRINSIC', 'OPTIONAL', 'PARAMETER',
@@ -438,7 +429,6 @@ class Variable(metaclass=classes):
                 if uattr not in self.known_attributes:
                     self.parent.warning('unknown attribute %r' % (attr))
                 attributes.append(uattr)
-        return
 
     def __str__(self):
         s = ''
@@ -540,7 +530,6 @@ class Variable(metaclass=classes):
                             n = '(%s)-(%s)' % (spec[1], spec[0])
                         shape.append(str(n))
                 self.shape = shape
-        return
 
     def error(self, message):
         return self.parent.error(message)
@@ -601,8 +590,6 @@ class Statement(metaclass=classes):
             assert self.a is not self.__class__.a
 
         self.process_item()
-
-        return
 
     def __repr__(self):
         return self.torepr()
@@ -694,21 +681,17 @@ class Statement(metaclass=classes):
     def error(self, message):
         message = self.format_message('ERROR', message)
         logging.getLogger(__name__).error(message)
-        return
 
     def warning(self, message):
         message = self.format_message('WARNING', message)
         logging.getLogger(__name__).warning(message)
-        return
 
     def info(self, message):
         message = self.format_message('INFO', message)
         logging.getLogger(__name__).info(message)
-        return
 
     def analyze(self):
         self.warning('nothing analyzed')
-        return
 
     def get_variable(self, name):
         """ Return Variable instance of variable name.
@@ -732,7 +715,7 @@ class Statement(metaclass=classes):
         Returns dictonary containing statements that block provides or None
         when N/A.
         """
-        return
+        pass
 
 
 class BeginStatement(Statement):
@@ -772,7 +755,6 @@ class BeginStatement(Statement):
             self.name = '__'+self.blocktype.upper()+'__'
         self.construct_name = getattr(item, 'name', None)
         Statement.__init__(self, parent, item)
-        return
 
     def tostr(self):
         return self.blocktype.upper() + ' ' + self.name
@@ -807,7 +789,6 @@ class BeginStatement(Statement):
         if item is None:
             return
         self.fill()
-        return
 
     def fill(self, end_flag=False):
         """
@@ -834,7 +815,6 @@ class BeginStatement(Statement):
 
         if not end_flag:
             self.warning('failed to find the end of block')
-        return
 
     def process_subitem(self, item):
         """
@@ -924,7 +904,6 @@ class BeginStatement(Statement):
                 return r
 
         self.handle_unknown_item(item)
-        return
 
     def handle_unknown_item(self, item):
         '''Called when process_subitem does not find a start or end of block.
@@ -945,7 +924,6 @@ class BeginStatement(Statement):
     def analyze(self):
         for stmt in self.content:
             stmt.analyze()
-        return
 
 
 class EndStatement(Statement):
@@ -994,7 +972,7 @@ class EndStatement(Statement):
         self.name = name
 
     def analyze(self):
-        return
+        pass
 
     def get_indent_tab(self, deindent=False, isfix=None):
         return Statement.get_indent_tab(self, deindent=True, isfix=isfix)

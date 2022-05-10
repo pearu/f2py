@@ -269,7 +269,6 @@ def get_module_file(name, directory, _cache={}):
         if module_in_file(name, fn):
             _cache[name] = fn
             return fn
-    return
 
 def module_in_file(name, filename):
     name = name.lower()

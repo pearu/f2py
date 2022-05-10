@@ -334,7 +334,6 @@ class Line():
         '''
         self.line = self.apply_map(line)
         self.strline = None
-        return
 
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s,%r,%r,<reader>)' \
@@ -577,7 +576,6 @@ class FortranReaderBase():
         self.exit_on_error = True
         self.restore_cache = []
 
-        return
 
     ##########################################################################
 
@@ -649,7 +647,6 @@ class FortranReaderBase():
         """
         self.filo_line.append(line)
         self.linecount -= 1
-        return
 
     def get_single_line(self, ignore_empty=False, ignore_comments=None):
         """ Return line from FILO line buffer or from source.
@@ -746,7 +743,6 @@ class FortranReaderBase():
         """ Insert item to FIFO item buffer.
         """
         self.fifo_item.insert(0, item)
-        return
 
     # Iterator methods:
 
@@ -1032,7 +1028,6 @@ class FortranReaderBase():
                                     message,
                                     item.span[0], item.span[1])
         logging.getLogger(__name__).info(m)
-        return
 
     def error(self, message, item=None):
         '''
@@ -1046,7 +1041,6 @@ class FortranReaderBase():
         logging.getLogger(__name__).error(m)
         if self.exit_on_error:
             sys.exit(1)
-        return
 
     def warning(self, message, item=None):
         '''
@@ -1061,7 +1055,6 @@ class FortranReaderBase():
                                             item.span[0],
                                             item.span[1])
         logging.getLogger(__name__).warning(m)
-        return
 
     # Auxiliary methods for processing raw source lines:
 
@@ -1612,7 +1605,6 @@ class FortranFileReader(FortranReaderBase):
             self.include_dirs = include_dirs[:]
         if source_only is not None:
             self.source_only = source_only[:]
-        return
 
     def __del__(self):
         if self._close_on_destruction:
@@ -1664,4 +1656,3 @@ class FortranStringReader(FortranReaderBase):
             self.include_dirs = include_dirs[:]
         if source_only is not None:
             self.source_only = source_only[:]
-        return

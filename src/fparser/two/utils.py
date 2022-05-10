@@ -1299,7 +1299,6 @@ string
             return
         if pattern.match(string):
             return string,
-        return
 
     def init(self, string):
         self.string = string
