@@ -255,7 +255,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                 i += 1
             except IndexError:
                 if l:
-                    item = String(u''.join(l))
+                    item = String(''.join(l))
                     items.append(item)
                 break
         # else continued string
@@ -275,7 +275,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
             except IndexError:
                 break
         if l:
-            item = String(u''.join(l))
+            item = String(''.join(l))
             items.append(item)
     return items, stopchar
 
