@@ -374,7 +374,7 @@ def check_include_works(fortran_filename, fortran_code, include_info,
     file specified by 'fortran_filename'.
     :param include_info: a list of 2-tuples each with an include \
     filename as a string followed by include code as a string.
-    :type include_info: list of str
+    :type include_info: List[str]
     :param str expected: the expected output after parsing the code.
     :param str tmpdir: the temporary directory in which to create and \
     process the Fortran files.
