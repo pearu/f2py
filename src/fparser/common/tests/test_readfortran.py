@@ -938,8 +938,7 @@ end python module foo
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", str(item)) == re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_fix90():
