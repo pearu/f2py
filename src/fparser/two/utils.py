@@ -773,11 +773,11 @@ class SequenceBase(Base):
         :raises InternalError: if the separator is white space.
 
         '''
-        if not isinstance(separator, (str, str)):
+        if not isinstance(separator, str):
             raise InternalError(
                 "SequenceBase class match method argument separator expected "
                 "to be a string but found '{0}'.".format(type(string)))
-        if not isinstance(string, (str, str)):
+        if not isinstance(string, str):
             raise InternalError(
                 "SequenceBase class match method argument string expected to "
                 "be a string but found '{0}'.".format(type(string)))
@@ -1356,7 +1356,7 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, (str, str)):
+        if not isinstance(string, str):
             raise InternalError(
                 "Supplied string should be of type str or {0}, but found "
                 "{1}".format(str, type(string)))
