@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2021 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -142,7 +142,6 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 from __future__ import print_function
 
 import logging
-import io
 import os
 import re
 import sys
@@ -695,24 +694,8 @@ class FortranReaderBase(object):
             return None
         self.linecount += 1
 
-        if six.PY2 and not isinstance(line, six.text_type):
-            # Ensure we always have a unicode object in Python 2.
-            line = unicode(line, 'UTF-8')
-
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace(u'\xa0', u' ').rstrip()
-
-        if six.PY2:
-            # Cast the unicode to str if we can do so safely. This
-            # maximises compatibility with the existing Python 2 tests
-            # and avoids the need to proliferate the use of unicode
-            # literals (e.g. u"") in the parse tree repr.
-            try:
-                line = line.encode('ascii', errors='strict')
-            except UnicodeEncodeError:
-                # Can't cast to str as there are non-ascii characters
-                # in the line.
-                pass
 
         self.source_lines.append(line)
 
@@ -1604,18 +1587,14 @@ class FortranFileReader(FortranReaderBase):
         # contents of the file. Obviously if the file changes content but not
         # filename, problems will ensue.
         #
-        self._remove_on_destruction = False
         self._close_on_destruction = False
         if isinstance(file_candidate, six.string_types):
             self.id = file_candidate
-            from fparser.common.utils import make_clean_tmpfile
-            # Handle potential invalid characters in the input. Done
-            # by creating a new file (tmpfile) with any errors removed
-            # (or raising an exception - see make_clean_tmpfile).
-            tmpfile = make_clean_tmpfile(file_candidate)
-            self.file = io.open(tmpfile, 'r', encoding='UTF-8')
+            # The 'fparser-logging' handler for errors ensures that any invalid
+            # characters in the input are skipped but logged.
+            self.file = open(file_candidate, 'r', encoding='UTF-8',
+                             errors='fparser-logging')
             self._close_on_destruction = True
-            self._remove_on_destruction = True
         elif hasattr(file_candidate,
                      'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
@@ -1640,8 +1619,6 @@ class FortranFileReader(FortranReaderBase):
     def __del__(self):
         if self._close_on_destruction:
             self.file.close()
-            if self._remove_on_destruction:
-                os.remove(self.file.name)
 
     def close_source(self):
         self.file.close()
