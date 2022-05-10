@@ -2923,6 +2923,13 @@ class Entity_Decl(Base):  # R504
             s += ' ' + str(self.items[3])
         return s
 
+    def get_name(self):
+        '''Provides the entity name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[0]
+
 
 class Object_Name(Base):  # R505
     """
@@ -9219,8 +9226,8 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
     def get_name(self):
         '''Provides the program name as an instance of the `Name` class.
 
-        :returns: the program name as a `Name` class
-        :rtype: `Name`
+        :returns: the program name as a :py:class:`Name` class
+        :rtype: :py:class:`Name`
 
         '''
         return self.items[1]
@@ -10551,6 +10558,13 @@ class Function_Stmt(StmtBase):  # R1224
         if suffix is not None:
             s += ' %s' % (suffix)
         return s
+
+    def get_name(self):
+        '''Provides the function name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[1]
 
 
 class Proc_Language_Binding_Spec(Base):  # 1225

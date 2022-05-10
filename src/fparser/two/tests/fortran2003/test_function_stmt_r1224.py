@@ -38,7 +38,7 @@ are still in test_fortran2003.py and need to be moved here TODO #306.
 '''
 
 from fparser.api import get_reader
-from fparser.two.Fortran2003 import Function_Subprogram
+from fparser.two.Fortran2003 import Function_Subprogram, Function_Stmt, Name
 from fparser.two.symbol_table import SYMBOL_TABLES
 
 
@@ -57,3 +57,10 @@ def test_function_new_symbol_table(f2003_create):
                          "None, None), End_Function_Stmt('FUNCTION', "
                          "Name('a')))")
     assert "a" in SYMBOL_TABLES._symbol_tables
+
+
+def test_function_get_name():
+    """Test we can get the name of the function
+    """
+    obj = Function_Stmt("function foo()")
+    assert obj.get_name() == Name("foo")
