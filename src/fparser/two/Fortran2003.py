@@ -882,6 +882,7 @@ class Intrinsic_Type_Spec(WORDClsBase):  # R403
                 obj = None
             if obj is not None:
                 return obj
+        return None
     match = staticmethod(match)
 
 
@@ -1189,6 +1190,7 @@ class Char_Selector(Base):  # R424
                 line = line[4:].lstrip()
                 line = line[1:].lstrip()
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
+        return None
 
     def tostr(self):
         if self.items[0] is None:
@@ -1618,6 +1620,7 @@ class Component_Part(BlockBase):  # R438
             content.append(obj)
         if content:
             return (content,)
+        return None
     match = staticmethod(match)
 
     def tofortran(self, tab='', isfix=None):
@@ -1812,6 +1815,7 @@ class Component_Initialization(Base):  # R444
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
+        return None
 
     def tostr(self):
         return '%s %s' % tuple(self.items)
@@ -2947,6 +2951,7 @@ class Initialization(Base):  # R506
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
+        return None
     match = staticmethod(match)
 
     def tostr(self):
@@ -3100,6 +3105,7 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
     def match(string):
         if string == ':':
             return None, None
+        return None
     match = staticmethod(match)
 
 
@@ -3882,6 +3888,7 @@ items : ({'NONE', Implicit_Spec_List},)
                 obj = None
             if obj is not None:
                 return obj
+        return None
 
     def tostr(self):
         return 'IMPLICIT %s' % (self.items[0])
@@ -4475,6 +4482,7 @@ class Alloc_Opt(KeywordValueBase):  # R624
                 obj = None
             if obj is not None:
                 return obj
+        return None
     match = staticmethod(match)
 
 
@@ -4635,6 +4643,7 @@ class Dealloc_Opt(KeywordValueBase):  # R636
                 obj = None
             if obj is not None:
                 return obj
+        return None
     match = staticmethod(match)
 
 
@@ -8711,6 +8720,7 @@ class Data_Edit_Desc(Base):  # R1005
             if not line:
                 return c, None, lst, None
             return c, Char_Literal_Constant(line), lst, None
+        return None
 
     def tostr(self):
         c = self.items[0]
