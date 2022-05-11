@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Science and Technology Facilities Council.
+# Copyright (c) 2022, Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,39 +32,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1224 : the majority of the tests for this
-are still in test_fortran2003.py and need to be moved here TODO #306.
+"""
+Test the setup performed for the fparser module.
 
-'''
-
-import six
-from fparser.api import get_reader
-from fparser.two.Fortran2003 import Function_Subprogram, Function_Stmt, Name
-from fparser.two.symbol_table import SYMBOL_TABLES
+"""
+import os
 
 
-def test_function_new_symbol_table(f2003_create):
-    '''
-    Test that valid code is parsed correctly and an associated symbol table
-    created.
+def test_fparser_logging_handler(tmpdir, caplog):
+    '''Test the custom error handler that is configured in the __init__.py
+    file.  Invalid characters in an input file are skipped and logging
+    messages are created.
 
     '''
-    obj = Function_Subprogram(get_reader("function a()\nend function a"))
-    assert isinstance(obj, Function_Subprogram)
-    assert str(obj) == 'FUNCTION a()\nEND FUNCTION a'
-    repr_text = repr(obj)
-    if six.PY2:
-        # TODO #307 remove this once we drop Python 2
-        repr_text = repr_text.replace("u'", "'")
-
-    assert repr_text == ("Function_Subprogram(Function_Stmt(None, Name('a'), "
-                         "None, None), End_Function_Stmt('FUNCTION', "
-                         "Name('a')))")
-    assert "a" in SYMBOL_TABLES._symbol_tables
-
-
-def test_function_get_name():
-    """Test we can get the name of the function
-    """
-    obj = Function_Stmt("function foo()")
-    assert obj.get_name() == Name("foo")
+    content = "HELLO"
+    invalid_content = u"\xca".join(content)
+    filepath = os.path.join(str(tmpdir), "tmp_in.f90")
+    # Create the input file
+    with open(filepath, "w", encoding='UTF-8') as tmp_file:
+        tmp_file.write(invalid_content)
+    # Specify encoding as 'ascii' to trigger errors for the non-ascii chars.
+    with open(filepath, "r", errors="fparser-logging",
+              encoding='ascii') as cfile:
+        output = cfile.read()
+    assert output == content
+    for record in caplog.records:
+        assert record.levelname != 'CRITICAL'
+    assert ("Skipped bad character in input file. Error returned was 'ascii' "
+            "codec can't decode byte ") in caplog.text
+    # Can't check the actual value as some versions of Python3 return
+    # a different value to the one above.
+    assert "in position 1: ordinal not in range(128)." in caplog.text

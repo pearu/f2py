@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2019 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -77,10 +77,9 @@ Created: May 2006
 """
 
 __all__ = ['split_comma', 'specs_split_comma',
-           'ParseError','AnalyzeError',
-           'get_module_file','parse_bind','parse_result','is_name','parse_array_spec',
-           'CHAR_BIT','str2stmt',
-           'classes']
+           'ParseError', 'AnalyzeError', 'get_module_file', 'parse_bind',
+           'parse_result', 'is_name', 'parse_array_spec', 'CHAR_BIT',
+           'str2stmt', 'classes']
 
 import logging
 import glob
@@ -355,71 +354,3 @@ class classes(six.with_metaclass(meta_classes, type)):
         cls = type.__new__(metacls, name, bases, dict)
         _classes_cache[name] = cls
         return cls
-
-
-def make_clean_tmpfile(filename, skip_bad_input=True, encoding="utf8"):
-    '''An input file may contain invalid characters which, in Python3
-    causes an exception when the file is read. By default, this utility
-    removes any invalid characters from the input file, writes the
-    cleaned version into a temporary file, and returns the name of the
-    newly created temporary file. It is up to the user of this
-    function to remove the temporary file once it is no longer
-    required. If the skip_bad_input optional argument is set to
-    'False' then an exception will be raised if invalid characters are
-    found in either Python2 or 3.
-
-    :param str filename: the name of the original filename
-    :param bool skip_bad_input: Optional argument specifying whether \
-    to ignore and remove invalid input ('True') or whether to raise an \
-    exception ('False'). Defaults to 'True'.
-    :param str encoding: Optional argument specifying the encoding to \
-    use when reading the input file. Defaults to 'ascii'.
-
-    :returns: the name of the temporary file created by this function.
-    :rtype: str
-
-    :raises InternalError: if the skip_bad_input argument has an \
-    invalid (not False or True)
-    :raises ParseError: if invalid input is found in the input file \
-    and the argument 'skip_bad_input' is set to 'False'.
-
-    '''
-    import tempfile
-    import codecs
-    from fparser.two.utils import InternalError
-
-    if skip_bad_input not in [False, True]:
-        raise InternalError(
-            "utils.py: make_clean_tmpfile: skip_bad_input argument should "
-            "be False or True but found '{0}'.".format(skip_bad_input))
-
-    try:
-        orig_file = codecs.open(filename, "r", encoding=encoding)
-        _ = orig_file.read()
-    except LookupError as excinfo:
-        raise InternalError(excinfo)
-    except UnicodeDecodeError as excinfo:
-        message = ("character in input file. Error returned was "
-                   "{0}.".format(str(excinfo)))
-        if not skip_bad_input:
-            raise ParseError("Bad "+message)
-        # Log the fact that this character will be removed from the input file
-        logging.getLogger(__name__).warning("Skipped bad %s", message)
-    orig_file.close()
-
-    # Tell codec to skip any errors
-    with io.open(filename, "r",
-                 encoding=encoding, errors='ignore') as orig_file:
-        file_input = orig_file.read()
-
-    if six.PY2:
-        # Unicode needs to be encoded.
-        file_input = file_input.encode('UTF-8')
-
-    encoding = {'encoding': 'UTF-8'} if six.PY3 else {}
-    # Set delete to False so file will not be deleted when closed.
-    with tempfile.NamedTemporaryFile(mode='w',
-                                     delete=False, **encoding) as temp_file:
-        temp_file.write(file_input)
-
-    return temp_file.name

@@ -1029,42 +1029,6 @@ def test_intent_attr_spec():  # R503.f
     assert _repr_utf(obj) == "Intent_Attr_Spec('INTENT', Intent_Spec('IN'))"
 
 
-def test_entity_decl():  # 504
-
-    tcls = Entity_Decl
-    obj = tcls('a(1)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)'
-    assert (_repr_utf(obj) ==
-            "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
-            "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
-            "None, None)")
-
-    obj = tcls('a(1)*(3)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)*(3)'
-
-    obj = tcls('a(1)*(3) = 2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a(1)*(3) = 2'
-
-    obj = tcls('a = 2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = 2'
-
-    obj = tcls('a=2')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = 2'
-
-    obj = tcls('a = "abc "')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = "abc "'
-
-    obj = tcls('a = .true.')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'a = .TRUE.'
-
-
 def test_target_entity_decl():
 
     tcls = Target_Entity_Decl

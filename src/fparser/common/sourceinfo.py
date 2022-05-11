@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -67,9 +67,8 @@
 Provides functions to determine whether a piece of Fortran source is free or
 fixed format. It also tries to differentiate between strict and "pyf" although
 I'm not sure what that is.
-'''
 
-import io
+'''
 import os
 import re
 import six
@@ -77,7 +76,7 @@ import six
 
 ##############################################################################
 
-class FortranFormat(object):
+class FortranFormat():
     '''
     Describes the nature of a piece of Fortran source.
 
@@ -276,16 +275,11 @@ def get_source_info(file_candidate):
     if hasattr(file_candidate, 'name') and hasattr(file_candidate, 'read'):
         filename = file_candidate.name
 
-        # The behaviour of file.name when associated with a file without a
-        # file name has changed between Python 2 and 3.
-        #
-        # Under Python 3 file.name holds an integer file handle.
+        # Under Python 3 file.name holds an integer file handle when
+        # associated with a file without a name.
         if isinstance(filename, int):
             filename = None
 
-        # Under Python 2 file.name holds a string of the form "<..>".
-        elif filename.startswith('<') and filename.endswith('>'):
-            filename = None
     elif isinstance(file_candidate, six.string_types):
         # The preferred method for identifying strings changed between Python2
         # and Python3.
@@ -312,21 +306,22 @@ def get_source_info(file_candidate):
         source_info = get_source_info_str(file_candidate.read())
         file_candidate.seek(pointer)
         return source_info
-    else:
-        # It isn't a file and it passed the type check above so it must be
-        # a string.
-        #
-        # If it's a string we assume it is a filename. In which case we need
-        # to open the named file so we can read it.
-        #
-        # It is closed on completion so as to return it to the state it was
-        # found in.
-        #
-        from fparser.common.utils import make_clean_tmpfile
-        tmpfile = make_clean_tmpfile(file_candidate)
-        with io.open(tmpfile, 'r', encoding='utf8') as file_object:
-            string = get_source_info_str(file_object.read())
-        os.remove(tmpfile)
-        return string
+
+    # It isn't a file and it passed the type check above so it must be
+    # a string.
+    #
+    # If it's a string we assume it is a filename. In which case we need
+    # to open the named file so we can read it.
+    #
+    # It is closed on completion so as to return it to the state it was
+    # found in.
+    #
+    # The 'fparser-logging' handler is setup in fparser/__init__.py and
+    # ensures any occurrences of invalid characters are skipped and
+    # logged.
+    with open(file_candidate, "r", encoding="utf-8",
+              errors='fparser-logging') as file_object:
+        string = get_source_info_str(file_object.read())
+    return string
 
 ##############################################################################
