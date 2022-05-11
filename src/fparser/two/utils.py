@@ -851,6 +851,7 @@ class UnaryOpBase(Base):
     def tostr(self):
         return '%s %s' % tuple(self.items)
 
+    @staticmethod
     def match(op_pattern, rhs_cls, string, exclude_op_pattern=None):
         m = op_pattern.match(string)
         if not m:
@@ -863,7 +864,6 @@ class UnaryOpBase(Base):
             if exclude_op_pattern.match(op):
                 return
         return op, rhs_cls(rhs)
-    match = staticmethod(match)
 
 
 class BinaryOpBase(Base):
@@ -986,6 +986,7 @@ class SeparatorBase(Base):
 ::
     <separator-base> = [ <lhs> ] : [ <rhs> ]
     """
+    @staticmethod
     def match(lhs_cls, rhs_cls, string, require_lhs=False, require_rhs=False):
         line, repmap = string_replace_map(string)
         if ':' not in line:
@@ -1007,7 +1008,6 @@ class SeparatorBase(Base):
         elif require_rhs:
             return
         return lhs_obj, rhs_obj
-    match = staticmethod(match)
 
     def tostr(self):
         s = ''
@@ -1201,13 +1201,13 @@ class NumberBase(Base):
     <number-base> = <number> [ _ <kind-param> ]
     """
 
+    @staticmethod
     def match(number_pattern, string):
         m = number_pattern.match(string.replace(' ', ''))
         if m is None:
             return
         d = m.groupdict()
         return d['value'].upper(), d.get('kind_param')
-    match = staticmethod(match)
 
     def tostr(self):
         if self.items[1] is None:
@@ -1225,6 +1225,7 @@ class CallBase(Base):
 ::
     <call-base> = <lhs> ( [ <rhs> ] )
     """
+    @staticmethod
     def match(lhs_cls, rhs_cls, string, upper_lhs=False, require_rhs=False):
         if not string.endswith(')'):
             return
@@ -1258,7 +1259,6 @@ class CallBase(Base):
         if require_rhs:
             return
         return lhs, None
-    match = staticmethod(match)
 
     def tostr(self):
         if self.items[1] is None:
@@ -1271,10 +1271,10 @@ class CALLBase(CallBase):
 ::
     <CALL-base> = <LHS> ( [ <rhs> ] )
     """
+    @staticmethod
     def match(lhs_cls, rhs_cls, string, require_rhs=False):
         return CallBase.match(lhs_cls, rhs_cls, string,
                               upper_lhs=True, require_rhs=require_rhs)
-    match = staticmethod(match)
 
 
 class StringBase(Base):

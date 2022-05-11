@@ -1047,8 +1047,8 @@ for clsname in _names:
 class %s_List(SequenceBase):
     subclass_names = [\'%s\']
     use_names = []
+    @staticmethod
     def match(string): return SequenceBase.match(r\',\', %s, string)
-    match = staticmethod(match)
 ''' % (n, n, n))
         elif n.endswith('_Name'):
             _names.append(n)
