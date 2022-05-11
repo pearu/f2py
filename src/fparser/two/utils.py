@@ -775,11 +775,11 @@ class SequenceBase(Base):
         '''
         if not isinstance(separator, str):
             raise InternalError(
-                "SequenceBase class match method argument separator expected "
+                f"SequenceBase class match method argument separator expected "
                 f"to be a string but found '{type(separator)}'.")
         if not isinstance(string, str):
             raise InternalError(
-                "SequenceBase class match method argument string expected to "
+                f"SequenceBase class match method argument string expected to "
                 f"be a string but found '{type(string)}'.")
 
         if separator == ' ':
@@ -1376,7 +1376,7 @@ class STRINGBase(StringBase):
                 return string_upper,
         except AttributeError:
             raise InternalError(
-                "Supplied pattern should be a list, tuple, str or regular "
+                f"Supplied pattern should be a list, tuple, str or regular "
                 f"expression but found {type(my_pattern)}")
         return None
 
