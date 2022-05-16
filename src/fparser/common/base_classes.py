@@ -903,9 +903,9 @@ class BeginStatement(Statement):
                     self.reader.set_mode(False, False)
                 return r
 
-        self.handle_unknown_item(item)
+        self.handle_unknown_item_and_raise(item)
 
-    def handle_unknown_item(self, item):
+    def handle_unknown_item_and_raise(self, item):
         '''Called when process_subitem does not find a start or end of block.
         It adds the item (which is an instance of Line) to the content, but
         then raises an AnalyzeError. An instance of Line in content typically
