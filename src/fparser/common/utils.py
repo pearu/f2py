@@ -66,14 +66,13 @@
 """
 Various utility functions.
 
------
 Permission to use, modify, and distribute this software is given under the
 terms of the NumPy License. See http://scipy.org.
 
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
------
+
 """
 
 __all__ = ['split_comma', 'specs_split_comma',
@@ -94,12 +93,14 @@ import six
 class ParseError(Exception):
     pass
 
+
 class AnalyzeError(Exception):
     pass
 
-is_name = re.compile(r'^[a-z_]\w*$',re.I).match
-name_re = re.compile(r'[a-z_]\w*',re.I).match
-is_entity_decl = re.compile(r'^[a-z_]\w*',re.I).match
+
+is_name = re.compile(r'^[a-z_]\w*$', re.I).match
+name_re = re.compile(r'[a-z_]\w*', re.I).match
+is_entity_decl = re.compile(r'^[a-z_]\w*', re.I).match
 is_int_literal_constant = re.compile(r'^\d+(_\w+|)$').match
 module_file_extensions = ['.f', '.f90', '.f95', '.f03', '.f08']
 

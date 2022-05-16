@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2018 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -1841,6 +1841,7 @@ class SpecificBinding(Statement):
                    | DEFERRED
                    | <access-spec>
     <access-spec> = PUBLIC | PRIVATE
+
     """
     match = re.compile(r'procedure\b', re.I).match
 
@@ -1898,6 +1899,7 @@ class SpecificBinding(Statement):
 class GenericBinding(Statement):
     """
     GENERIC [ , <access-spec> ] :: <generic-spec> => <binding-name-list>
+
     """
     match = re.compile(r'generic\b.*::.*=\>.*\Z', re.I).match
 
@@ -1925,6 +1927,7 @@ class GenericBinding(Statement):
 class FinalBinding(StatementWithNamelist):
     """
     FINAL [ :: ] <final-subroutine-name-list>
+
     """
     stmtname = 'final'
     match = re.compile(r'final\b', re.I).match
@@ -1936,6 +1939,7 @@ class Allocatable(Statement):
                                      [ , <object-name>
                                          [ ( <deferred-shape-spec-list> ) ]
                                      ]...
+
     """
     match = re.compile(r'allocatable\b', re.I).match
 
@@ -1986,6 +1990,7 @@ class Bind(Statement):
     <language-binding-spec> =
                       BIND ( C [ , NAME = <scalar-char-initialization-expr> ] )
     <bind-entity> = <entity-name> | / <common-block-name> /
+
     """
     match = re.compile(r'bind\s*\(.*\)', re.I).match
 
@@ -2078,6 +2083,7 @@ class Case(Statement):
                          | : <case-value>
                          | <case-value> : <case-value>
     <case-value> = <scalar-(int|char|logical)-initialization-expr>
+
     """
     match = re.compile(r'case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z', re.I).match
 
@@ -2459,11 +2465,12 @@ class Comment(Statement):
     """
 
     Attributes
-    ----------
+
     content : str
       Content of the comment.
     is_blank : bool
       When True then Comment represents blank line.
+
     """
     match = lambda s: True
 

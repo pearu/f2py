@@ -73,14 +73,12 @@
 """Provides Fortran reader classes.
 
 Overview
-========
 
 Provides FortranReader classes for reading Fortran codes from files and
 strings. FortranReader handles comments and line continuations of both
 fix and free format Fortran codes.
 
 Examples
-========
 
 ::
 
@@ -271,7 +269,7 @@ class Line(object):
     """ Holds a Fortran source line.
 
     Attributes
-    ----------
+
     line : str
       code line
     span : 2-tuple
@@ -284,6 +282,7 @@ class Line(object):
     strline : {None, str}
     is_f2py_directive : bool
       the line contains f2py directive
+
     """
     def __init__(self, line, linenospan, label, name, reader):
         self.line = line.strip()
@@ -470,15 +469,15 @@ class MultiLine(object):
     PYF file multiline is represented as follows::
       prefix+'''+lines+'''+suffix.
 
-    Attributes
-    ----------
-    prefix : str
-    block : list
-      list of lines
-    suffix : str
-    span : 2-tuple
-      starting and ending line numbers
-    reader : FortranReaderBase
+    :param str prefix: the prefix of the line(s)
+    :param block: list of lines
+    :type block: List[:py:class:`fparser.common.readfortran.Line`]
+    :param str suffix: the suffix of the block of lines
+    :param linenospan: starting and ending line numbers
+    :type linenospan: Tuple[int, int]
+    :param reader: the current reader instance.
+    :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
     """
     def __init__(self, prefix, block, suffix, linenospan, reader):
         self.prefix = prefix
