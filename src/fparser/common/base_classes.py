@@ -715,7 +715,7 @@ class Statement(metaclass=classes):
         Returns dictonary containing statements that block provides or None
         when N/A.
         """
-        pass
+        return None
 
 
 class BeginStatement(Statement):
