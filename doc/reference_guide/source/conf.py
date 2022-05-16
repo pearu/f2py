@@ -21,14 +21,13 @@ import subprocess
 # -- Project information -----------------------------------------------------
 
 project = 'Reference Guide'
-copyright = ('2019-2022, R. W. Ford, J. Henrichs, I. Kavcic, A. R. Porter, '
-             ' S. Siso')
-author = 'R. W. Ford, J. Henrichs, I. Kavcic, A. R. Porter, S. Siso'
+copyright = ('2019-2022, R. W. Ford, P. Peterson, A. R. Porter')
+author = 'R. W. Ford, P. Peterson, A. R. Porter'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '2.2.0'
+release = '0.0.14'
 
 
 # -- General configuration ---------------------------------------------------
@@ -142,7 +141,7 @@ latex_elements = {
 latex_documents = [
     (master_doc, 'fparserReferenceGuide.tex',
      'fparser Reference Guide',
-     'R. W. Ford, J. Henrichs, I. Kavcic, S. Siso, A. R. Porter', 'manual'),
+     'R. W. Ford, P. Peterson, A. R. Porter', 'manual'),
 ]
 
 

@@ -1,12 +1,11 @@
-.. PSyclone Reference Guide documentation master file, created by
-   sphinx-quickstart on Wed May 15 11:51:32 2019.
+.. fparser Reference Guide documentation master file.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PSyclone Reference Guide
+fparser Reference Guide
 ########################
 
-Welcome to the PSyclone Reference Guide. This consists of auto-generated
+Welcome to the fparser Reference Guide. This consists of auto-generated
 API documentation produced using both the :ref:`AutoAPI Sphinx plugin <autoapi>`
 and :ref:`Doxygen <doxygen>`.
 
