@@ -78,7 +78,7 @@ __autodoc__ = ['FortranParser']
 __all__ = ['FortranParser']
 
 
-class FortranParser(object):
+class FortranParser():
     '''
     Parser of FortranReader structure.
 

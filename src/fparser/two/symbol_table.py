@@ -38,16 +38,14 @@ the single, global SYMBOL_TABLES instance. The latter is a container
 for all of the top-level scoping units encountered during parsing.
 
 '''
-from __future__ import absolute_import, print_function
 from collections import namedtuple
-import six
 
 
 class SymbolTableError(Exception):
     ''' Base class exception for symbol-table related errors. '''
 
 
-class SymbolTables(object):
+class SymbolTables():
     '''
     Class encapsulating functionality for the global symbol-tables object.
     This is a container for all symbol tables constructed while parsing
@@ -240,7 +238,7 @@ class SymbolTables(object):
         del self._symbol_tables[lname]
 
 
-class SymbolTable(object):
+class SymbolTable():
     '''
     Class implementing a single symbol table.
 
@@ -295,11 +293,11 @@ class SymbolTable(object):
         :raises SymbolTableError: if the symbol table already contains an
                                   entry with the supplied name.
         '''
-        if not isinstance(name, six.string_types):
+        if not isinstance(name, str):
             raise TypeError("The name of the symbol must be a str but got "
                             "'{0}'".format(type(name).__name__))
         # TODO #201 use an enumeration for the primitive type
-        if not isinstance(primitive_type, six.string_types):
+        if not isinstance(primitive_type, str):
             raise TypeError(
                 "The primitive type of the symbol must be specified as a str "
                 "but got '{0}'".format(type(primitive_type).__name__))
@@ -337,14 +335,14 @@ class SymbolTable(object):
         :raises TypeError: if either of the supplied parameters are of the \
                            wrong type.
         '''
-        if not isinstance(name, six.string_types):
+        if not isinstance(name, str):
             raise TypeError("The name of the module must be a str but got "
                             "'{0}'".format(type(name).__name__))
         if only_list and not isinstance(only_list, list):
             raise TypeError("If present, the only_list must be a list but got "
                             "'{0}'".format(type(only_list).__name__))
         if only_list and not all(
-                [isinstance(item, six.string_types) for item in only_list]):
+                [isinstance(item, str) for item in only_list]):
             raise TypeError("If present, the only_list must be a list of str "
                             "but got: {0}".format(
                                 [type(item).__name__ for item in only_list]))

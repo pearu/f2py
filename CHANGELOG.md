@@ -16,6 +16,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+19/05/2022 PR #328 - removes last traces of special handling for Python 2.
+
 09/05/2022 PR #322 for #307. Drops Python2 GHA testing and removes most
            of the Python2-specfic code. Python2 will no longer be
 	   supported.

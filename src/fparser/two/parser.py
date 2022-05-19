@@ -93,7 +93,7 @@ def get_module_classes(input_module):
     return module_cls_members
 
 
-class ParserFactory(object):
+class ParserFactory():
     '''Creates a parser suitable for the specified Fortran standard.'''
 
     def create(self, std=None):
