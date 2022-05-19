@@ -80,7 +80,7 @@ import re
 dollar_ok = True
 
 
-class Pattern(object):
+class Pattern():
     """
     p1 | p2    -> <p1> | <p2>
     p1 + p2    -> <p1> <p2>
@@ -120,7 +120,6 @@ class Pattern(object):
         self.optional = optional
         self._flags = flags
         self.value = value
-        return
 
     def flags(self, *flags):
         f = self._flags

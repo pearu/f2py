@@ -70,7 +70,6 @@
 # First version created: Oct 2006
 
 import re
-import six
 from fparser.common.splitline import string_replace_map
 from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.common import readfortran
@@ -454,7 +453,7 @@ class Base(ComparableMixin):
         :returns: Fortran representation of this comment.
         :rtype: str
         '''
-        this_str = six.text_type(self)
+        this_str = str(self)
         if this_str.strip():
             return tab + this_str
         # If this_str is empty (i.e this Comment is a blank line) then
@@ -774,14 +773,14 @@ class SequenceBase(Base):
         :raises InternalError: if the separator is white space.
 
         '''
-        if not isinstance(separator, (str, six.text_type)):
+        if not isinstance(separator, str):
             raise InternalError(
-                "SequenceBase class match method argument separator expected "
-                "to be a string but found '{0}'.".format(type(string)))
-        if not isinstance(string, (str, six.text_type)):
+                f"SequenceBase class match method argument separator expected "
+                f"to be a string but found '{type(separator)}'.")
+        if not isinstance(string, str):
             raise InternalError(
-                "SequenceBase class match method argument string expected to "
-                "be a string but found '{0}'.".format(type(string)))
+                f"SequenceBase class match method argument string expected to "
+                f"be a string but found '{type(string)}'.")
 
         if separator == ' ':
             raise InternalError(
@@ -1300,7 +1299,7 @@ string
             return
         if pattern.match(string):
             return string,
-        return
+        return None
 
     def init(self, string):
         self.string = string
@@ -1357,10 +1356,10 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, (str, six.text_type)):
+        if not isinstance(string, str):
             raise InternalError(
-                "Supplied string should be of type str or {0}, but found "
-                "{1}".format(six.text_type, type(string)))
+                f"Supplied string should be of type str, but found {type(string)}"
+            )
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
@@ -1377,8 +1376,8 @@ class STRINGBase(StringBase):
                 return string_upper,
         except AttributeError:
             raise InternalError(
-                "Supplied pattern should be a list, tuple, str or regular "
-                "expression but found {0}".format(type(my_pattern)))
+                f"Supplied pattern should be a list, tuple, str or regular "
+                f"expression but found {type(my_pattern)}")
         return None
 
 

@@ -96,7 +96,7 @@ __all__.extend(statements.__all__)
 __all__.extend(typedecl_statements.__all__)
 
 
-class HasImplicitStmt(object):
+class HasImplicitStmt():
     '''
     Class encapsulating information about any Implicit statements
     contained within a scoping block.
@@ -170,7 +170,7 @@ class HasImplicitStmt(object):
         return tab + stmt + '\n'
 
 
-class HasUseStmt(object):
+class HasUseStmt():
 
     a = AttributeHolder(use={},
                         use_provides={})
@@ -187,7 +187,7 @@ class HasUseStmt(object):
         return ''
 
 
-class AccessSpecs(object):
+class AccessSpecs():
 
     a = AttributeHolder(private_id_list=[], public_id_list=[])
 
@@ -210,7 +210,7 @@ class AccessSpecs(object):
         return ''.join(lines)
 
 
-class HasVariables(object):
+class HasVariables():
 
     a = AttributeHolder(variables={},
                         variable_names=[]  # defines the order of declarations
@@ -235,7 +235,7 @@ class HasVariables(object):
         return s
 
 
-class HasTypeDecls(object):
+class HasTypeDecls():
 
     a = AttributeHolder(type_decls={})
 
@@ -253,7 +253,7 @@ class HasTypeDecls(object):
         return type_decl
 
 
-class HasAttributes(object):
+class HasAttributes():
 
     known_attributes = []
     a = AttributeHolder(attributes=[])
@@ -283,7 +283,7 @@ class HasAttributes(object):
         return
 
 
-class HasModuleProcedures(object):
+class HasModuleProcedures():
 
     a = AttributeHolder(module_procedures=[])
 
