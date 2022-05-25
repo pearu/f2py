@@ -69,7 +69,6 @@ def test_walk():
 @pytest.mark.usefixtures("f2003_create")
 def test_walk_debug(capsys):
     ''' Test the debug output of the walk() utility. '''
-    import six
     reader = get_reader("program just_a_test\n"
                         "if(.true.)then\n"
                         "  b = 1\n"
@@ -78,11 +77,7 @@ def test_walk_debug(capsys):
     main = Fortran2003.Program(reader)
     _ = walk(main, debug=True)
     stdout, _ = capsys.readouterr()
-    if six.PY2:
-        # Output of capsys under Python 2 is not the same as under 3
-        assert stdout.startswith("('child type = ")
-    else:
-        assert stdout.startswith("child type = ")
+    assert stdout.startswith("child type = ")
     assert "Main_Program" in stdout
     assert "If_Construct" in stdout
     assert "Assignment" in stdout
@@ -92,9 +87,5 @@ def test_walk_debug(capsys):
     if_constructs = walk(main, Fortran2003.If_Construct)
     _ = walk(if_constructs[0], indent=4, debug=True)
     stdout, _ = capsys.readouterr()
-    if six.PY2:
-        # Output of capsys under Python 2 is not the same as under 3
-        assert stdout.startswith("('" + 8*" " + "child type =")
-    else:
-        assert stdout.startswith(8*" "+"child type =")
+    assert stdout.startswith(8*" "+"child type =")
     assert "Program" not in stdout

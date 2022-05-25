@@ -39,7 +39,6 @@
 '''
 Test battery associated with fparser.sourceinfo package.
 '''
-from __future__ import print_function
 
 import os
 import tempfile

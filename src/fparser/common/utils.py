@@ -88,8 +88,6 @@ import os
 import re
 import traceback
 
-import six
-
 
 class ParseError(Exception):
     pass
@@ -271,7 +269,7 @@ def get_module_file(name, directory, _cache={}):
         if module_in_file(name, fn):
             _cache[name] = fn
             return fn
-    return
+    return None
 
 def module_in_file(name, filename):
     name = name.lower()
@@ -334,12 +332,12 @@ class meta_classes(type):
         return cls
 
 
-class classes(six.with_metaclass(meta_classes, type)):
+class classes(type, metaclass=meta_classes):
     """Make classes available as attributes of this class.
 
     To add a class to the attributes list, one must use::
 
-      __metaclass__ = classes
+      class Name(metaclass=classes):
 
     in the definition of the class.
 
