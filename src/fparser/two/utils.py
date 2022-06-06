@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -70,10 +70,9 @@
 # First version created: Oct 2006
 
 import re
-import six
+from fparser.common import readfortran
 from fparser.common.splitline import string_replace_map
 from fparser.common.readfortran import FortranReaderBase
-from fparser.common import readfortran
 from fparser.two.symbol_table import SYMBOL_TABLES
 
 # A list of supported extensions to the standard(s)
@@ -109,24 +108,6 @@ EXTENSIONS += ["hollerith"]
 # an extension to the Fortran standard and is supported by fparser if
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
 EXTENSIONS += ["dollar-descriptor"]
-
-
-def py2_encode_list_items(mylist):
-    '''
-    If we are running under Python2 then ensure that all strings in the
-    supplied list are encoded as bytes. If we are running under Python3
-    then all strings are unicode and this routine does nothing.
-
-    :param list mylist: List of strings to modify.
-
-    '''
-    if six.PY2:
-        # If we're in Python2 then we have to take care as comments
-        # and character literals may be UTF while other elements are not.
-        for idx, item in enumerate(mylist[:]):
-            if isinstance(item, six.text_type):
-                # This item is UTF so encode it as bytes
-                mylist[idx] = item.encode('utf-8')
 
 
 class FparserException(Exception):
@@ -209,7 +190,7 @@ def show_result(func):
 #
 
 
-class ComparableMixin(object):
+class ComparableMixin():
     """ Mixin class to provide rich comparison operators.
 
     This mixin provides a set of rich comparison operators. Each class using
@@ -405,9 +386,9 @@ class Base(ComparableMixin):
             if hasattr(cls, 'init'):
                 obj.init(*result)
             return obj
-        elif isinstance(result, Base):
+        if isinstance(result, Base):
             return result
-        elif result is None:
+        if result is None:
             # Loop over the possible sub-classes of this class and
             # check for matches
             for subcls in Base.subclasses.get(cls.__name__, []):
@@ -441,10 +422,9 @@ class Base(ComparableMixin):
                 # follow their lead and do not raise an exception.
                 return
             line = string.source_lines[string.linecount-1]
-            errmsg = u"at line {0}\n>>>{1}\n".format(
-                string.linecount, line)
+            errmsg = f"at line {string.linecount}\n>>>{line}\n"
         else:
-            errmsg = u"{0}: '{1}'".format(cls.__name__, string)
+            errmsg = f"{cls.__name__}: '{string}'"
         raise NoMatchError(errmsg)
 
     def get_root(self):
@@ -516,13 +496,12 @@ class Base(ComparableMixin):
         :returns: Fortran representation of this comment.
         :rtype: str
         '''
-        this_str = six.text_type(self)
+        this_str = str(self)
         if this_str.strip():
             return tab + this_str
-        else:
-            # If this_str is empty (i.e this Comment is a blank line) then
-            # don't prepend any spaces to it
-            return this_str
+        # If this_str is empty (i.e this Comment is a blank line) then
+        # don't prepend any spaces to it
+        return this_str
 
     def restore_reader(self, reader):
         reader.put_item(self.item)
@@ -634,8 +613,7 @@ class BlockBase(Base):
                         if start_label == obj.get_start_label():
                             content.append(obj)
                             continue
-                        else:
-                            obj.restore_reader(reader)
+                        obj.restore_reader(reader)
                 # Attempt to match the i'th subclass
                 cls = classes[i]
                 try:
@@ -679,8 +657,8 @@ class BlockBase(Base):
                                 reader,
                                 "Name '{0}' has no corresponding starting "
                                 "name".format(end_name))
-                        elif start_name and end_name and (start_name.lower() !=
-                                                          end_name.lower()):
+                        if start_name and end_name and (start_name.lower() !=
+                                                        end_name.lower()):
                             raise FortranSyntaxError(
                                 reader, "Expecting name '{0}'".format(
                                     start_name))
@@ -795,8 +773,6 @@ class BlockBase(Base):
             mylist.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             mylist.append(end.tofortran(tab=tab, isfix=isfix))
-        # Ensure all strings in list are encoded consistently
-        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
     def restore_reader(self, reader):
@@ -833,14 +809,14 @@ class SequenceBase(Base):
         :raises InternalError: if the separator is white space.
 
         '''
-        if not isinstance(separator, (str, six.text_type)):
+        if not isinstance(separator, str):
             raise InternalError(
-                "SequenceBase class match method argument separator expected "
-                "to be a string but found '{0}'.".format(type(string)))
-        if not isinstance(string, (str, six.text_type)):
+                f"SequenceBase class match method argument separator expected "
+                f"to be a string but found '{type(separator)}'.")
+        if not isinstance(string, str):
             raise InternalError(
-                "SequenceBase class match method argument string expected to "
-                "be a string but found '{0}'.".format(type(string)))
+                f"SequenceBase class match method argument string expected to "
+                f"be a string but found '{type(string)}'.")
 
         if separator == ' ':
             raise InternalError(
@@ -1314,7 +1290,7 @@ class CallBase(Base):
             else:
                 rhs = rhs_cls(rhs)
             return lhs, rhs
-        elif require_rhs:
+        if require_rhs:
             return
         return lhs, None
     match = staticmethod(match)
@@ -1345,6 +1321,7 @@ Attributes
 ----------
 string
     """
+    @staticmethod
     def match(pattern, string):
         if isinstance(pattern, (list, tuple)):
             for p in pattern:
@@ -1358,12 +1335,10 @@ string
             return
         if pattern.match(string):
             return string,
-        return
-    match = staticmethod(match)
+        return None
 
     def init(self, string):
         self.string = string
-        return
 
     def tostr(self):
         return str(self.string)
@@ -1417,10 +1392,10 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, (str, six.text_type)):
+        if not isinstance(string, str):
             raise InternalError(
-                "Supplied string should be of type str or {0}, but found "
-                "{1}".format(six.text_type, type(string)))
+                f"Supplied string should be of type str, but found {type(string)}"
+            )
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
@@ -1437,8 +1412,8 @@ class STRINGBase(StringBase):
                 return string_upper,
         except AttributeError:
             raise InternalError(
-                "Supplied pattern should be a list, tuple, str or regular "
-                "expression but found {0}".format(type(my_pattern)))
+                f"Supplied pattern should be a list, tuple, str or regular "
+                f"expression but found {type(my_pattern)}")
         return None
 
 
@@ -1719,10 +1694,13 @@ class Type_Declaration_StmtBase(StmtBase):
         return type_spec, attr_specs, entity_decls
 
     def tostr(self):
+        '''
+        :returns: the text representation of this node.
+        :rtype: str
+        '''
         if self.items[1] is None:
-            return '%s :: %s' % (self.items[0], self.items[2])
-        else:
-            return '%s, %s :: %s' % self.items
+            return f'{self.items[0]} :: {self.items[2]}'
+        return f'{self.items[0]}, {self.items[1]} :: {self.items[2]}'
 
 
 def walk(node_list, types=None, indent=0, debug=False):

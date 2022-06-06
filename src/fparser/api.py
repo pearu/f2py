@@ -72,7 +72,6 @@ Module content
 # Created: Oct 2006
 
 
-from six import string_types
 # import all Statement classes:
 from fparser.common.base_classes import classes
 from fparser.common.utils import AnalyzeError
@@ -132,7 +131,7 @@ def get_reader(source, isfree=None, isstrict=None, include_dirs=None,
         reader = FortranFileReader(source, include_dirs=include_dirs,
                                    source_only=source_only,
                                    ignore_comments=ignore_comments)
-    elif isinstance(source, string_types):
+    elif isinstance(source, str):
         reader = FortranStringReader(source, include_dirs=include_dirs,
                                      source_only=source_only,
                                      ignore_comments=ignore_comments)

@@ -39,7 +39,6 @@ This is a complicated piece of syntax with many axes of movement. A
 comprehensive testing was felt to be too onerous so this stripped down
 version checks only a subset. Hopefully it is representative.
 '''
-from __future__ import absolute_import, print_function
 
 import pytest
 

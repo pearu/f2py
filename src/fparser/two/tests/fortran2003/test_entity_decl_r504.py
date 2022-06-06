@@ -40,24 +40,15 @@
 from fparser.two.Fortran2003 import Entity_Decl, Name
 
 import pytest
-# TODO #307 remove this once we drop Python 2
-import six
 
 
 def test_entity_decl_repr():
-    """Test the `repr` of :py:class:`Entity_Decl`
-    """
     tcls = Entity_Decl
     obj = tcls("a(1)")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "a(1)"
-    repr_text = repr(obj)
-    if six.PY2:
-        # TODO #307 remove this once we drop Python 2
-        repr_text = repr_text.replace("u'", "'")
-
     assert (
-        repr_text == "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
+        repr(obj) == "Entity_Decl(Name('a'), Explicit_Shape_Spec_List(',', "
         "(Explicit_Shape_Spec(None, Int_Literal_Constant('1', None)),)), "
         "None, None)"
     )
