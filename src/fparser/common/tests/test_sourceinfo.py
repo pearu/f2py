@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2021 Science and Technology Facilities Council
+# Copyright (c) 2017-2022 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -39,12 +39,10 @@
 '''
 Test battery associated with fparser.sourceinfo package.
 '''
-from __future__ import print_function
 
 import os
 import tempfile
 import pytest
-import six
 
 from fparser.common.sourceinfo import FortranFormat, \
                                       get_source_info_str, get_source_info
@@ -348,13 +346,11 @@ def test_get_source_info_utf8():
     by the get_source_info method.
 
     '''
-    encoding = dict(encoding='UTF-8') if six.PY3 else {}
+    encoding = dict(encoding='UTF-8')
     with tempfile.NamedTemporaryFile(mode='w', **encoding) as tmp_file:
         content = u'''
             ! A fortran comment with a unicode character "{0}"
         '''.format(u"\u2014")
-        if six.PY2:
-            content = content.encode('UTF-8')
         tmp_file.write(content)
         tmp_file.flush()
 

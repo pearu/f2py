@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2021 Science and Technology Facilities Council
+# Copyright (c) 2017-2022 Science and Technology Facilities Council
 #
 # All rights reserved.
 #
@@ -40,13 +40,11 @@
 '''
 Test battery associated with fparser.common.readfortran package.
 '''
-from __future__ import print_function
 
 import io
 import os.path
 import tempfile
 import re
-import six
 import pytest
 
 from fparser.common.readfortran import FortranFileReader, \
@@ -105,22 +103,17 @@ def test_111fortranreaderbase(log, monkeypatch):
 
     Currently only tests logging functionality.
     '''
-    class FailFile(object):
+    class FailFile():
         '''
         A "file-like" object which returns a line of Fortran source followed
         by raising a StopIteration exception.
         '''
         _stuff = ['x=1']
 
-        def next(self):
-            '''
-            Used by Python 2.7.
-            '''
-            return self.__next__()
-
         def __next__(self):
             '''
-            Used by Python 3.
+            :returns: the next line of source.
+            :rtype: str
             '''
             return self._stuff.pop()
 
@@ -381,7 +374,7 @@ def check_include_works(fortran_filename, fortran_code, include_info,
     file specified by 'fortran_filename'.
     :param include_info: a list of 2-tuples each with an include \
     filename as a string followed by include code as a string.
-    :type include_info: list of (str, str)
+    :type include_info: List[str]
     :param str expected: the expected output after parsing the code.
     :param str tmpdir: the temporary directory in which to create and \
     process the Fortran files.
@@ -945,8 +938,7 @@ end python module foo
         string_pyf, ignore_comments=False)
     assert reader.format.mode == 'pyf', repr(reader.format.mode)
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", str(item)) == re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_fix90():
@@ -992,9 +984,7 @@ cComment
         string_fix90, ignore_comments=False)
     assert reader.format.mode == 'fix', repr(reader.format.mode)
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_f2py_directive_fixf90(f2py_enabled):
@@ -1018,9 +1008,7 @@ def test_f2py_directive_fixf90(f2py_enabled):
                          "Comment('!f2py a = 0.0',(4, 4))"])
     expected.append("line #5'end subroutine foo'")
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 def test_f2py_freef90(f2py_enabled):
@@ -1043,9 +1031,7 @@ def test_f2py_freef90(f2py_enabled):
                          "Comment('!f2py a = 0.0',(3, 3))"])
     expected.append("line #4'end subroutine foo'")
     for item in reader:
-        # Remove 'u's to allow for py2/3 unicode differences
-        assert re.sub("u", "", six.text_type(item)) == \
-            re.sub("u", "", expected.pop(0))
+        assert str(item) == expected.pop(0)
 
 
 @pytest.mark.xfail(reason="Issue #270: f2py directives not working in F77 "
@@ -1068,8 +1054,7 @@ cf2py call me ! hey
     reader = FortranStringReader(
         string_f77, ignore_comments=False)
     for item in reader:
-        assert (re.sub("u", "", six.text_type(item)) ==
-                re.sub("u", "", expected.pop(0)))
+        assert str(item) == expected.pop(0)
 
 
 def test_utf_char_in_code(log):

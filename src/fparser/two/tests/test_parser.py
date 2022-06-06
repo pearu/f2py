@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council.
+# Copyright (c) 2018-2022 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -77,6 +77,7 @@ def test_parserfactory_std():
     # Submodule_Stmt should now be included in the list of classes that define
     # scoping regions.
     assert Fortran2008.Submodule_Stmt in SYMBOL_TABLES.scoping_unit_classes
+    assert "y" in SYMBOL_TABLES._symbol_tables
 
     # Repeat f2003 example to make sure that a previously valid (f2008)
     # match does not affect the current (f2003) invalid match.
@@ -86,6 +87,9 @@ def test_parserfactory_std():
         _ = parser(reader)
     assert "at line 1\n>>>submodule (x) y\n" in str(excinfo.value)
     assert Fortran2008.Submodule_Stmt not in SYMBOL_TABLES.scoping_unit_classes
+    # The previous symbol table entries should have been removed when
+    # creating the new parser.
+    assert "y" not in SYMBOL_TABLES._symbol_tables
 
     with pytest.raises(ValueError) as excinfo:
         parser = ParserFactory().create(std="invalid")

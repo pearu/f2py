@@ -77,14 +77,13 @@ First version created: May 2006
 
 
 import re
-import six
 
 
-class String(six.text_type):
+class String(str):
     ''' Dummy string class. '''
 
 
-class ParenString(six.text_type):
+class ParenString(str):
     ''' Class representing a parenthesis string. '''
 
 
@@ -285,7 +284,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                 i += 1
             except IndexError:
                 if l:
-                    item = String(u''.join(l))
+                    item = String(''.join(l))
                     items.append(item)
                 break
         # else continued string
@@ -305,7 +304,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
             except IndexError:
                 break
         if l:
-            item = String(u''.join(l))
+            item = String(''.join(l))
             items.append(item)
     return items, stopchar
 

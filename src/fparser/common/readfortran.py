@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2021 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -139,15 +139,12 @@ To read a Fortran code from a string, use `FortranStringReader` class::
 
 """
 
-from __future__ import print_function
-
 import logging
-import io
 import os
 import re
 import sys
 import traceback
-import six
+from io import StringIO
 import fparser.common.sourceinfo
 from fparser.common.splitline import String, string_replace_map, splitquote
 
@@ -268,7 +265,7 @@ class FortranReaderError(Exception):
     pass
 
 
-class Line(object):
+class Line():
     """ Holds a Fortran source line.
 
     Attributes
@@ -337,7 +334,6 @@ class Line(object):
         '''
         self.line = self.apply_map(line)
         self.strline = None
-        return
 
     def __repr__(self):
         return self.__class__.__name__+'(%r,%s,%r,%r,<reader>)' \
@@ -425,7 +421,7 @@ class SyntaxErrorLine(Line, FortranReaderError):
         FortranReaderError.__init__(self, message)
 
 
-class Comment(object):
+class Comment():
     '''Holds a Fortran comment.
 
     :param str comment: String containing the text of a single or \
@@ -465,7 +461,7 @@ class Comment(object):
         return ignore_comments
 
 
-class MultiLine(object):
+class MultiLine():
     """ Holds PYF file multiline.
 
     PYF file multiline is represented as follows::
@@ -533,7 +529,7 @@ class CppDirective(Line):
 ##############################################################################
 
 
-class FortranReaderBase(object):
+class FortranReaderBase():
     """
     Base class for reading Fortran sources.
 
@@ -544,7 +540,7 @@ class FortranReaderBase(object):
 
     :param source: a file-like object with .next() method used to \
                    retrive a line.
-    :type source: :py:class:`six.StringIO` or a file handle
+    :type source: :py:class:`StringIO` or a file handle
     :param mode: a FortranFormat object as returned by \
                  `sourceinfo.get_source_info()`
     :type mode: :py:class:`fparser.common.sourceinfo.Format`
@@ -580,7 +576,6 @@ class FortranReaderBase(object):
         self.exit_on_error = True
         self.restore_cache = []
 
-        return
 
     ##########################################################################
 
@@ -652,7 +647,6 @@ class FortranReaderBase(object):
         """
         self.filo_line.append(line)
         self.linecount -= 1
-        return
 
     def get_single_line(self, ignore_empty=False, ignore_comments=None):
         """ Return line from FILO line buffer or from source.
@@ -695,24 +689,8 @@ class FortranReaderBase(object):
             return None
         self.linecount += 1
 
-        if six.PY2 and not isinstance(line, six.text_type):
-            # Ensure we always have a unicode object in Python 2.
-            line = unicode(line, 'UTF-8')
-
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace(u'\xa0', u' ').rstrip()
-
-        if six.PY2:
-            # Cast the unicode to str if we can do so safely. This
-            # maximises compatibility with the existing Python 2 tests
-            # and avoids the need to proliferate the use of unicode
-            # literals (e.g. u"") in the parse tree repr.
-            try:
-                line = line.encode('ascii', errors='strict')
-            except UnicodeEncodeError:
-                # Can't cast to str as there are non-ascii characters
-                # in the line.
-                pass
 
         self.source_lines.append(line)
 
@@ -765,7 +743,6 @@ class FortranReaderBase(object):
         """ Insert item to FIFO item buffer.
         """
         self.fifo_item.insert(0, item)
-        return
 
     # Iterator methods:
 
@@ -858,7 +835,7 @@ class FortranReaderBase(object):
             logging.getLogger(__name__).critical(message)
             message = 'Traceback\n' + ''.join(traceback.format_stack())
             logging.getLogger(__name__).debug(message)
-            logging.getLogger(__name__).debug(six.text_type(err))
+            logging.getLogger(__name__).debug(str(err))
             logging.getLogger(__name__).critical('STOPPED READING')
             raise StopIteration
 
@@ -1051,7 +1028,6 @@ class FortranReaderBase(object):
                                     message,
                                     item.span[0], item.span[1])
         logging.getLogger(__name__).info(m)
-        return
 
     def error(self, message, item=None):
         '''
@@ -1065,7 +1041,6 @@ class FortranReaderBase(object):
         logging.getLogger(__name__).error(m)
         if self.exit_on_error:
             sys.exit(1)
-        return
 
     def warning(self, message, item=None):
         '''
@@ -1080,7 +1055,6 @@ class FortranReaderBase(object):
                                             item.span[0],
                                             item.span[1])
         logging.getLogger(__name__).warning(m)
-        return
 
     # Auxiliary methods for processing raw source lines:
 
@@ -1604,18 +1578,14 @@ class FortranFileReader(FortranReaderBase):
         # contents of the file. Obviously if the file changes content but not
         # filename, problems will ensue.
         #
-        self._remove_on_destruction = False
         self._close_on_destruction = False
-        if isinstance(file_candidate, six.string_types):
+        if isinstance(file_candidate, str):
             self.id = file_candidate
-            from fparser.common.utils import make_clean_tmpfile
-            # Handle potential invalid characters in the input. Done
-            # by creating a new file (tmpfile) with any errors removed
-            # (or raising an exception - see make_clean_tmpfile).
-            tmpfile = make_clean_tmpfile(file_candidate)
-            self.file = io.open(tmpfile, 'r', encoding='UTF-8')
+            # The 'fparser-logging' handler for errors ensures that any invalid
+            # characters in the input are skipped but logged.
+            self.file = open(file_candidate, 'r', encoding='UTF-8',
+                             errors='fparser-logging')
             self._close_on_destruction = True
-            self._remove_on_destruction = True
         elif hasattr(file_candidate,
                      'read') and hasattr(file_candidate,
                                          'name'):  # Is likely a file
@@ -1635,13 +1605,10 @@ class FortranFileReader(FortranReaderBase):
             self.include_dirs = include_dirs[:]
         if source_only is not None:
             self.source_only = source_only[:]
-        return
 
     def __del__(self):
         if self._close_on_destruction:
             self.file.close()
-            if self._remove_on_destruction:
-                os.remove(self.file.name)
 
     def close_source(self):
         self.file.close()
@@ -1681,7 +1648,7 @@ class FortranStringReader(FortranReaderBase):
         # anyway.
         #
         self.id = 'string-' + str(hash(string))
-        source = six.StringIO(string)
+        source = StringIO(string)
         mode = fparser.common.sourceinfo.get_source_info_str(string)
         FortranReaderBase.__init__(self, source, mode,
                                    ignore_comments)
@@ -1689,4 +1656,3 @@ class FortranStringReader(FortranReaderBase):
             self.include_dirs = include_dirs[:]
         if source_only is not None:
             self.source_only = source_only[:]
-        return

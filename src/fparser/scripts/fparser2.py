@@ -65,7 +65,7 @@
 # DAMAGE.
 
 ''' Example script to parse a Fortran program using fparser '''
-from __future__ import print_function
+
 import logging
 import sys
 from fparser.scripts.script_options import set_fparser_options
@@ -87,7 +87,6 @@ def runner(_, options, args):
     :type args: list of str
 
     '''
-    import six
     from fparser.two.parser import ParserFactory
     from fparser.two.Fortran2003 import FortranSyntaxError, InternalError
     from fparser.common.readfortran import FortranFileReader
@@ -106,15 +105,13 @@ def runner(_, options, args):
             fparser = ParserFactory().create(std=options.std)
             program = fparser(reader)
             if options.task == "show":
-                print(six.text_type(program))
+                print(str(program))
             if options.task == "repr":
                 print(repr(program))
         except FortranSyntaxError as msg:
-            print("Syntax error: {0}".format(six.text_type(msg)),
-                  file=sys.stderr)
+            print(f"Syntax error: {msg}", file=sys.stderr)
         except InternalError as msg:
-            print("Internal error in fparser: {0}".format(six.text_type(msg)),
-                  file=sys.stderr)
+            print(f"Internal error in fparser: {msg}", file=sys.stderr)
 
 
 def main():
