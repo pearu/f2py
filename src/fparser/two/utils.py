@@ -527,7 +527,7 @@ class BlockBase(Base):
         :param bool strict_order: whether to enforce the order of the \
                                   given subclasses.
         :param bool strict_match_names: if start name present, end name \
-                                        must exist and match
+                                        must exist and match.
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls

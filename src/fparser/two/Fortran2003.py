@@ -5546,6 +5546,10 @@ class Masked_Elsewhere_Stmt(StmtBase):  # R749
         return 'ELSEWHERE(%s) %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
@@ -5571,6 +5575,10 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
         return "ELSEWHERE", None
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
@@ -5963,6 +5971,10 @@ class Else_If_Stmt(StmtBase):  # R804
         return 'ELSE IF (%s) THEN %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
@@ -5991,6 +6003,10 @@ class Else_Stmt(StmtBase):  # R805
         return 'ELSE %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[0]
         if name is not None:
             return name.string
@@ -6173,6 +6189,10 @@ class Case_Stmt(StmtBase):  # R810
         return 'CASE %s %s' % (self.items)
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
@@ -6438,6 +6458,10 @@ items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
         return s
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[-1]
         if name is not None:
             return name.string
@@ -6645,6 +6669,10 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         return WORDClsBase.match('DO', Loop_Control, string)
 
     def get_start_name(self):
+        '''
+        :return: optional labeled "DO" statement name
+        :rtype: string
+        '''
         return self.item.name
 
 
