@@ -1,5 +1,5 @@
 # This Python file uses the following encoding: utf-8
-# Copyright (c) 2019-2020 Science and Technology Facilities Council.
+# Copyright (c) 2019-2022 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -41,6 +41,7 @@ import pytest
 from fparser.api import get_reader
 from fparser.common.readfortran import FortranStringReader
 from fparser.two.Fortran2003 import Case_Construct
+from fparser.two.utils import FortranSyntaxError
 
 
 @pytest.mark.usefixtures("f2003_create")
@@ -66,6 +67,28 @@ end select
             '  signum = - 2\nEND SELECT')
 
 
+def test_case_construct_name(f2003_create):
+    ''' Basic test that we parse a Case Construct successfully. '''
+    tcls = Case_Construct
+    obj = tcls(get_reader('''\
+    name: select case (n)
+    case (:-1) name
+        signum = -1
+    case (0) name
+        signum = 0
+    case (1:) name
+        signum = 1
+    case default name
+        signum = -2
+    end select name
+    '''))
+    assert isinstance(obj, tcls), repr(obj)
+    assert (str(obj) ==
+            'name:SELECT CASE (n)\nCASE (: - 1) name\n  signum = - 1\nCASE (0) name\n'
+            '  signum = 0\nCASE (1 :) name\n  signum = 1\nCASE DEFAULT name\n'
+            '  signum = - 2\nEND SELECT name')
+
+
 @pytest.mark.usefixtures("f2003_create")
 def test_tofortran_non_ascii():
     ''' Check that the tofortran() method works when the character string
@@ -78,3 +101,51 @@ def test_tofortran_non_ascii():
     obj = Case_Construct(reader)
     out_str = str(obj)
     assert "for e1=1" in out_str
+
+
+def test_case_construct_wrong_name(f2003_create, fake_symbol_table):
+    """Check that named 'case' block has correct matching start/end name"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Case_Construct(
+            get_reader("""\
+            name: select case (n)
+            case (:-1)
+                a = 1
+            end select wrong"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
+
+
+def test_case_construct_missing_start_name(f2003_create, fake_symbol_table):
+    """Check that named 'case' block has correct matching start/end name"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Case_Construct(
+            get_reader("""\
+            select case(n)
+            case (:-1)
+                a = 1
+            end select name"""))
+    assert exc_info.value.args[0].endswith("Name 'name' has no corresponding starting name")
+
+
+def test_case_construct_missing_end_name(f2003_create, fake_symbol_table):
+    """Check that named 'case' block has correct matching start/end name"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Case_Construct(
+            get_reader("""\
+            name: select case(n)
+            case (:-1)
+                a = 1
+            end select"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name' but none given")
+
+
+def test_case_construct_case_wrong_name(f2003_create, fake_symbol_table):
+    """Check that named 'case' block has correct matching start/end name"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Case_Construct(
+            get_reader("""\
+            name: select case(n)
+            case (:-1) wrong
+                a = 1
+            end select name"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
