@@ -622,9 +622,6 @@ class BlockBase(Base):
                     if end_name and not start_name:
                         raise FortranSyntaxError(
                             reader, f"Name '{end_name}' has no corresponding starting name")
-                    elif strict_match_names and start_name and not end_name:
-                        raise FortranSyntaxError(
-                            reader, f"Expecting name '{start_name}' but none given")
                     if end_name and start_name and \
                        end_name.lower() != start_name.lower():
                         raise FortranSyntaxError(
