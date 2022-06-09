@@ -12,9 +12,13 @@ Modifications by (in alphabetical order):
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
+* S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+09/06/2022 PR #336 towards #312 (performance improvements). Introduces a
+           memoization fixture that caches the result of the tokenizer.
 
 ## Release 0.0.15 (30/05/2022) ##
 
