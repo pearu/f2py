@@ -1,5 +1,5 @@
 # This Python file uses the following encoding: utf-8
-# Copyright (c) 2019-2020 Science and Technology Facilities Council.
+# Copyright (c) 2019-2022 Science and Technology Facilities Council.
 
 # All rights reserved.
 
