@@ -5549,6 +5549,7 @@ class Masked_Elsewhere_Stmt(StmtBase):  # R749
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
@@ -5573,6 +5574,7 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class End_Where_Stmt(EndStmtBase):  # R751
@@ -5964,6 +5966,7 @@ class Else_If_Stmt(StmtBase):  # R804
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Else_Stmt(StmtBase):  # R805
@@ -5991,6 +5994,7 @@ class Else_Stmt(StmtBase):  # R805
         name = self.items[0]
         if name is not None:
             return name.string
+        return None
 
 
 class End_If_Stmt(EndStmtBase):  # R806
@@ -6172,6 +6176,7 @@ class Case_Stmt(StmtBase):  # R810
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class End_Select_Stmt(EndStmtBase):  # R811
@@ -6436,6 +6441,7 @@ items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
         name = self.items[-1]
         if name is not None:
             return name.string
+        return None
 
 
 class End_Select_Type_Stmt(EndStmtBase):  # R824
