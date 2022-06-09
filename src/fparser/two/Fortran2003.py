@@ -5428,7 +5428,7 @@ class Where_Construct(BlockBase):  # R744
                                    Where_Body_Construct, ],
             End_Where_Stmt, string,
             match_names=True,  # C730
-            strict_match_names=True,
+            strict_match_names=True,  # C730
             match_name_classes=(Masked_Elsewhere_Stmt, Elsewhere_Stmt,
                                 End_Where_Stmt),  # C730
             enable_where_construct_hook=True)
@@ -5603,7 +5603,7 @@ class Forall_Construct(BlockBase):  # R752
         return BlockBase.match(
             Forall_Construct_Stmt, [Forall_Body_Construct],
             End_Forall_Stmt, reader, match_names=True,  # C732
-            strict_match_names=True,
+            strict_match_names=True,                    # C732
         )
 
 
@@ -5868,7 +5868,7 @@ class If_Construct(BlockBase):  # R802
                            Execution_Part_Construct],
             End_If_Stmt, string,
             match_names=True,  # C801
-            strict_match_names=True,
+            strict_match_names=True,  # C801
             match_name_classes=(Else_If_Stmt, Else_Stmt, End_If_Stmt),
             enable_if_construct_hook=True)
 
@@ -6079,7 +6079,7 @@ class Case_Construct(BlockBase):  # R808
                                Case_Stmt],
             End_Select_Stmt, reader,
             match_names=True,  # C803
-            strict_match_names=True,
+            strict_match_names=True,  # C803
             match_name_classes=(Case_Stmt)
         )
 
@@ -6261,7 +6261,7 @@ class Associate_Construct(BlockBase):  # R816
             Associate_Stmt, [Execution_Part_Construct],
             End_Associate_Stmt, reader,
             match_names=True,  # C810
-            strict_match_names=True,
+            strict_match_names=True,  # C810
         )
 
 
@@ -6333,7 +6333,7 @@ class Select_Type_Construct(BlockBase):  # R821
             Select_Type_Stmt, [Type_Guard_Stmt, Execution_Part_Construct,
                                Type_Guard_Stmt], End_Select_Type_Stmt, reader,
             match_names=True,   # C819
-            strict_match_names=True,
+            strict_match_names=True,  # C819
             match_name_classes=(Type_Guard_Stmt),
         )
 
@@ -6538,8 +6538,8 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         '''
         return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
                                End_Do_Stmt, reader,
-                               match_names=True,
-                               strict_match_names=True,
+                               match_names=True,         # C821
+                               strict_match_names=True,  # C821
                                )
 
 
