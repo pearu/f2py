@@ -127,4 +127,4 @@ def runner(num_routines: int):
 
 
 if __name__ == "__main__":
-    runner(10000)
+    runner(10000)  # pragma: no cover
