@@ -621,16 +621,14 @@ class BlockBase(Base):
                     end_name = obj.get_end_name()
                     if end_name and not start_name:
                         raise FortranSyntaxError(
-                            reader, "Name '{0}' has no corresponding starting "
-                            "name".format(end_name))
+                            reader, f"Name '{end_name}' has no corresponding starting name")
                     elif strict_match_names and start_name and not end_name:
                         raise FortranSyntaxError(
-                            reader, "Expecting name '{0}' but none given".format(
-                                start_name))
+                            reader, f"Expecting name '{start_name}' but none given")
                     if end_name and start_name and \
                        end_name.lower() != start_name.lower():
                         raise FortranSyntaxError(
-                            reader, "Expecting name '{0}', got '{1}'".format(start_name, end_name))
+                            reader, f"Expecting name '{start_name}', got '{end_name}'")
 
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
@@ -647,17 +645,14 @@ class BlockBase(Base):
                         if end_name and not start_name:
                             raise FortranSyntaxError(
                                 reader,
-                                "Name '{0}' has no corresponding starting "
-                                "name".format(end_name))
+                                f"Name '{end_name}' has no corresponding starting name")
                         elif strict_match_names and start_name and not end_name:
                             raise FortranSyntaxError(
-                                reader, "Expecting name '{0}' but none given".format(
-                                    start_name))
+                                reader, f"Expecting name '{start_name}' but none given")
                         elif start_name and end_name and (start_name.lower() !=
                                                           end_name.lower()):
                             raise FortranSyntaxError(
-                                reader, "Expecting name '{0}', got '{1}'".format(
-                                    start_name, end_name))
+                                reader, f"Expecting name '{start_name}', got '{end_name}'")
                     # We've found the enclosing end statement so break out
                     found_end = True
                     break
