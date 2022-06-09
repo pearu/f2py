@@ -1,5 +1,7 @@
 # News #
 
+  * 30/05/2022 Version 0.0.15 released. See the [CHANGELOG](CHANGELOG.md)
+    for details.
   * 10/03/2022 Version 0.0.14 released. See the [CHANGELOG](CHANGELOG.md)
     for details.
   * 02/11/2021 Version 0.0.13 released. See the [CHANGELOG](CHANGELOG.md)

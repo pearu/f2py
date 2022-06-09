@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2018-2021 Science and Technology
+# Modified work Copyright (c) 2018-2022 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -93,18 +93,20 @@ def get_module_classes(input_module):
     return module_cls_members
 
 
-class ParserFactory(object):
+class ParserFactory():
     '''Creates a parser suitable for the specified Fortran standard.'''
 
     def create(self, std=None):
         '''Creates a class hierarchy suitable for the specified Fortran
         standard. Also sets-up the list of classes that define scoping
-        regions in the global SymbolTables object.
+        regions in the global SymbolTables object and clears any existing
+        symbol table information.
 
         :param str std: the Fortran standard. Choices are 'f2003' or \
                         'f2008'. 'f2003' is the default.
         :return: a Program class (not object) for use with the Fortran reader
         :rtype: :py:class:`fparser.two.Fortran2003.Program`
+
         :raises ValueError: if the supplied value for the std parameter \
                             is invalid
 
@@ -116,11 +118,15 @@ class ParserFactory(object):
         >>> f2008_parser = ParserFactory().create(std='f2008')
         >>> # Assuming that a reader has already been created ...
         >>> ast = f2008_parser(reader)
-        >>> print ast
+        >>> print(ast)
 
         '''
+        # Clear any existing symbol tables.
+        SYMBOL_TABLES.clear()
+
         # find all relevant classes in our Fortran2003 file as we
         # always need these.
+        # pylint: disable=import-outside-toplevel
         from fparser.two import Fortran2003
         f2003_cls_members = get_module_classes(Fortran2003)
         if not std:
@@ -141,7 +147,7 @@ class ParserFactory(object):
             # the class hierarchy has been set up so return the top
             # level class that we start from when parsing Fortran code.
             return Fortran2003.Program
-        elif std == "f2008":
+        if std == "f2008":
             # we need to find all relevent classes in our Fortran2003
             # and Fortran2008 files and then ensure that where classes
             # have the same name we return the Fortran2008 class
@@ -172,8 +178,8 @@ class ParserFactory(object):
             # code. Fortran2008 does not extend the top level class so
             # we return the Fortran2003 one.
             return Fortran2003.Program
-        else:
-            raise ValueError("'{0}' is an invalid standard".format(std))
+
+        raise ValueError(f"'{std}' is an invalid standard")
 
     def _setup(self, input_classes):
         '''Perform some Python magic to create the connections between classes

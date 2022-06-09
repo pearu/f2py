@@ -80,7 +80,7 @@ from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
     KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
-    InternalSyntaxError, InternalError, show_result, py2_encode_list_items
+    InternalSyntaxError, InternalError, show_result
 
 #
 # SECTION  1
@@ -151,10 +151,9 @@ class Comment(Base):
     def tostr(self):
         '''
         :returns: this comment as a string.
-        :rtype: :py:class:`six.text_type`
+        :rtype: :py:class:`str`
         '''
-        import six
-        return six.text_type(self.items[0])
+        return str(self.items[0])
 
     def restore_reader(self, reader):
         '''
@@ -883,7 +882,7 @@ class Intrinsic_Type_Spec(WORDClsBase):  # R403
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
     match = staticmethod(match)
 
 
@@ -1143,6 +1142,7 @@ class Char_Selector(Base):  # R424
     subclass_names = ['Length_Selector']
     use_names = ['Type_Param_Value', 'Scalar_Int_Initialization_Expr']
 
+    @staticmethod
     def match(string):
         if string[0] + string[-1] != '()':
             return
@@ -1190,8 +1190,7 @@ class Char_Selector(Base):  # R424
                 line = line[4:].lstrip()
                 line = line[1:].lstrip()
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
-        return
-    match = staticmethod(match)
+        return None
 
     def tostr(self):
         if self.items[0] is None:
@@ -1207,6 +1206,7 @@ class Length_Selector(Base):  # R425
     subclass_names = []
     use_names = ['Type_Param_Value', 'Char_Length']
 
+    @staticmethod
     def match(string):
         if string[0]+string[-1] == '()':
             line = string[1:-1].strip()
@@ -1220,7 +1220,6 @@ class Length_Selector(Base):  # R425
         if string[-1] == ',':
             line = line[:-1].rstrip()
         return '*', Char_Length(line)
-    match = staticmethod(match)
 
     def tostr(self):
         if len(self.items) == 2:
@@ -1303,8 +1302,6 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
         :raises InternalError: if the first element of the internal \
                 items list is None or is an empty string.
         '''
-        import six
-
         if len(self.items) != 2:
             raise InternalError(
                 "Class Char_Literal_Constant method tostr() has '{0}' items, "
@@ -1316,20 +1313,12 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
             raise InternalError(
                 "Class Char_Literal_Constant method tostr(). 'Items' entry 0 "
                 "should not be empty")
-        if six.PY2:
-            # In Python2 we must return a byte str and the contents of this
-            # string may include non-ASCII characters
-            char_str = self.items[0].encode('utf-8')
-        else:
-            char_str = str(self.items[0])
+        char_str = str(self.items[0])
         if not self.items[1]:
             return char_str
         # The character constant has a kind specifier
-        if six.PY2:
-            kind_str = self.items[1].encode('utf-8')
-            return kind_str + "_".encode('utf-8') + char_str
         kind_str = str(self.items[1])
-        return "{0}_{1}".format(kind_str, char_str)
+        return f"{kind_str}_{char_str}"
 
 
 class Logical_Literal_Constant(NumberBase):  # R428
@@ -1631,7 +1620,7 @@ class Component_Part(BlockBase):  # R438
             content.append(obj)
         if content:
             return (content,)
-        return
+        return None
     match = staticmethod(match)
 
     def tofortran(self, tab='', isfix=None):
@@ -1648,7 +1637,6 @@ class Component_Part(BlockBase):  # R438
         mylist = []
         for item in self.content:
             mylist.append(item.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(mylist)
         return '\n'.join(mylist)
 
 
@@ -1821,13 +1809,13 @@ class Component_Initialization(Base):  # R444
     subclass_names = []
     use_names = ['Initialization_Expr', 'Null_Init']
 
+    @staticmethod
     def match(string):
         if string.startswith('=>'):
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
-        return
-    match = staticmethod(match)
+        return None
 
     def tostr(self):
         return '%s %s' % tuple(self.items)
@@ -2935,6 +2923,13 @@ class Entity_Decl(Base):  # R504
             s += ' ' + str(self.items[3])
         return s
 
+    def get_name(self):
+        '''Provides the entity name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[0]
+
 
 class Object_Name(Base):  # R505
     """
@@ -2956,7 +2951,7 @@ class Initialization(Base):  # R506
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
-        return
+        return None
     match = staticmethod(match)
 
     def tostr(self):
@@ -3110,7 +3105,7 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
     def match(string):
         if string == ':':
             return None, None
-        return
+        return None
     match = staticmethod(match)
 
 
@@ -3893,7 +3888,7 @@ items : ({'NONE', Implicit_Spec_List},)
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
 
     def tostr(self):
         return 'IMPLICIT %s' % (self.items[0])
@@ -4487,7 +4482,7 @@ class Alloc_Opt(KeywordValueBase):  # R624
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
     match = staticmethod(match)
 
 
@@ -4648,7 +4643,7 @@ class Dealloc_Opt(KeywordValueBase):  # R636
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
     match = staticmethod(match)
 
 
@@ -5454,7 +5449,6 @@ class Where_Construct(BlockBase):  # R744
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -5903,7 +5897,6 @@ class If_Construct(BlockBase):  # R802
             else:
                 tmp.append(item.tofortran(tab=tab+'  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -6124,8 +6117,6 @@ class Case_Construct(BlockBase):  # R808
             else:
                 tmp.append(item.tofortran(tab=tab + '  ', isfix=isfix))
         tmp.append(end.tofortran(tab=tab, isfix=isfix))
-        # Ensure all strings in list are encoded consistently
-        py2_encode_list_items(tmp)
         return '\n'.join(tmp)
 
 
@@ -6543,7 +6534,6 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
             lblock.append(item.tofortran(tab=tab+extra_tab, isfix=isfix))
         if len(self.content) > 1:
             lblock.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(lblock)
         return '\n'.join(lblock)
 
 
@@ -6865,7 +6855,6 @@ class Action_Term_Do_Construct(BlockBase):  # R836
                 extra_tab += '  '
         if len(self.content) > 1:
             line.append(end.tofortran(tab=tab, isfix=isfix))
-        py2_encode_list_items(line)
         return '\n'.join(line)
 
 
@@ -8789,7 +8778,7 @@ class Data_Edit_Desc(Base):  # R1005
             if not line:
                 return c, None, lst, None
             return c, Char_Literal_Constant(line), lst, None
-        return
+        return None
 
     def tostr(self):
         c = self.items[0]
@@ -9295,8 +9284,8 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
     def get_name(self):
         '''Provides the program name as an instance of the `Name` class.
 
-        :returns: the program name as a `Name` class
-        :rtype: `Name`
+        :returns: the program name as a :py:class:`Name` class
+        :rtype: :py:class:`Name`
 
         '''
         return self.items[1]
@@ -10627,6 +10616,13 @@ class Function_Stmt(StmtBase):  # R1224
         if suffix is not None:
             s += ' %s' % (suffix)
         return s
+
+    def get_name(self):
+        '''Provides the function name as an instance of the :py:class:`Name` class.
+
+        :rtype: :py:class:`Name`
+        '''
+        return self.items[1]
 
 
 class Proc_Language_Binding_Spec(Base):  # 1225

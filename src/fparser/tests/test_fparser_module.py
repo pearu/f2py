@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Science and Technology Facilities Council.
+# Copyright (c) 2022, Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -32,34 +32,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2003 rule R1232 : the majority of the tests for this
-are still in test_fortran2003.py and need to be moved here TODO #306.
+"""
+Test the setup performed for the fparser module.
 
-'''
-
-import pytest
-from fparser.api import get_reader
-from fparser.two.Fortran2003 import Subroutine_Subprogram, Subroutine_Stmt, Name
-from fparser.two.symbol_table import SYMBOL_TABLES
+"""
+import os
 
 
-def test_sub_stmt_new_symbol_table(f2003_create):
-    '''
-    Test that valid code is parsed correctly and an associated symbol table
-    created.
+def test_fparser_logging_handler(tmpdir, caplog):
+    '''Test the custom error handler that is configured in the __init__.py
+    file.  Invalid characters in an input file are skipped and logging
+    messages are created.
 
     '''
-    obj = Subroutine_Subprogram(get_reader("subroutine a\nend subroutine"))
-    assert isinstance(obj, Subroutine_Subprogram)
-    assert str(obj) == 'SUBROUTINE a\nEND SUBROUTINE'
-    assert repr(obj) == ("Subroutine_Subprogram(Subroutine_Stmt(None, "
-                         "Name('a'), None, None), End_Subroutine_Stmt('"
-                         "SUBROUTINE', None))")
-    assert "a" in SYMBOL_TABLES._symbol_tables
-
-
-def test_subroutine_get_name():
-    """Test we can get the name of the subroutine
-    """
-    obj = Subroutine_Stmt("subroutine foo")
-    assert obj.get_name() == Name("foo")
+    content = "HELLO"
+    invalid_content = u"\xca".join(content)
+    filepath = os.path.join(str(tmpdir), "tmp_in.f90")
+    # Create the input file
+    with open(filepath, "w", encoding='UTF-8') as tmp_file:
+        tmp_file.write(invalid_content)
+    # Specify encoding as 'ascii' to trigger errors for the non-ascii chars.
+    with open(filepath, "r", errors="fparser-logging",
+              encoding='ascii') as cfile:
+        output = cfile.read()
+    assert output == content
+    for record in caplog.records:
+        assert record.levelname != 'CRITICAL'
+    assert ("Skipped bad character in input file. Error returned was 'ascii' "
+            "codec can't decode byte ") in caplog.text
+    # Can't check the actual value as some versions of Python3 return
+    # a different value to the one above.
+    assert "in position 1: ordinal not in range(128)." in caplog.text

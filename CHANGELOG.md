@@ -7,13 +7,32 @@ Modifications by (in alphabetical order):
 * P. Elson, UK Met Office
 * R. W. Ford, Science & Technology Facilities Council, UK
 * M. Hambley, UK Met Office
-* J. Henrichs, Australia Bureau of Meteorology
+* J. Henrichs, Australian Bureau of Meteorology
+* P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
+* S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+09/06/2022 PR #336 towards #312 (performance improvements). Introduces a
+           memoization fixture that caches the result of the tokenizer.
+
+## Release 0.0.15 (30/05/2022) ##
+
+19/05/2022 PR #340 - clears existing symbol table when a new Parser is
+           requested.
+
+19/05/2022 PR #328 - removes last traces of special handling for Python 2.
+
+09/05/2022 PR #322 for #307. Drops Python2 GHA testing and removes most
+           of the Python2-specfic code. Python2 will no longer be
+	   supported.
+
+07/04/2022 PR #323 for #225. Adds get_name() method to Function_Stmt
+           and Entity_Decl.
 
 23/03/2022 PR #317 for #316. Fixes the creation of symbol table entries
            in the F2008 parser.
