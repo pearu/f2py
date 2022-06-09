@@ -180,34 +180,54 @@ def test_ifconstruct_tofortran_non_ascii():
 
 
 def test_if_construct_wrong_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         If_Construct(
             get_reader("""\
             name: if (expr) then
                 a = 1
             end if wrong"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
 
 
 def test_if_construct_missing_start_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         If_Construct(
             get_reader("""\
             if (expr) then
                 a = 1
             end if name"""))
+    assert exc_info.value.args[0].endswith("Name 'name' has no corresponding starting name")
 
 
 def test_if_construct_missing_end_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         If_Construct(
             get_reader("""\
             name: if (expr) then
                 a = 1
             end if"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name' but none given")
+
+
+def test_if_construct_else_wrong_end_name(f2003_create, fake_symbol_table):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        If_Construct(
+            get_reader("""\
+            name: if (expr) then
+                a = 1
+            else
+                a = 2
+            end if wrong"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
 
 
 def test_if_construct_else_wrong_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         If_Construct(
             get_reader("""\
             name: if (expr) then
@@ -215,10 +235,12 @@ def test_if_construct_else_wrong_name(f2003_create, fake_symbol_table):
             else wrong
                 a = 2
             end if name"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
 
 
 def test_if_construct_else_if_wrong_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check named 'if' constructs have correct start/end names"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         If_Construct(
             get_reader("""\
             name: if (expr) then
@@ -226,3 +248,4 @@ def test_if_construct_else_if_wrong_name(f2003_create, fake_symbol_table):
             else if (other_expr) then wrong
                 a = 2
             end if name"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")

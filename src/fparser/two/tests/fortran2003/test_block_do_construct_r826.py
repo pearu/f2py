@@ -212,27 +212,33 @@ def test_doconstruct_tofortran_non_ascii():
 
 
 def test_do_construct_wrong_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check that named 'do' block has correct name at end of block"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         Block_Nonlabel_Do_Construct(
             get_reader("""\
             name: do
                 a = 1
             end do wrong"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")
 
 
 def test_do_construct_missing_start_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check that named 'do' block has correct name at end of block"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         Block_Nonlabel_Do_Construct(
             get_reader("""\
             do
                 a = 1
             end do name"""))
+    assert exc_info.value.args[0].endswith("Name 'name' has no corresponding starting name")
 
 
 def test_do_construct_missing_end_name(f2003_create, fake_symbol_table):
-    with pytest.raises(FortranSyntaxError):
+    """Check that named 'do' block has correct name at end of block"""
+    with pytest.raises(FortranSyntaxError) as exc_info:
         Block_Nonlabel_Do_Construct(
             get_reader("""\
             name: do
                 a = 1
             end do"""))
+    assert exc_info.value.args[0].endswith("Expecting name 'name' but none given")
