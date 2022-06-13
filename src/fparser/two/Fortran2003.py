@@ -11032,6 +11032,5 @@ class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
 
-# EOF
 
 DynamicImport().import_now()

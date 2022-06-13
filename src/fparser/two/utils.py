@@ -245,12 +245,12 @@ class ComparableMixin():
 
 
 class DynamicImport():
-    ''' This class import a set of fparser.two dependencies that can not
+    ''' This class imports a set of fparser.two dependencies that can not
     be imported during the Python Import time because they have a circular
     dependency with this file.
 
-    They are imported once when the Fotran2003 is already processed by calling
-    the import_now() method.
+    They are imported once when the Fortran2003 is already processed by
+    calling the import_now() method.
 
     The alternative is to have the equivalent top-level imports in the
     Base.__new__ method, but this method is in the parser critical path and
@@ -552,6 +552,11 @@ class BlockBase(Base):
         :rtype: startcls
 
         '''
+        # This implementation uses the DynamicImport class and its instance di
+        # to access the Fortran2003 and C99Preprocessor classes, this is a
+        # performance optimization to avoid importing the classes inside this
+        # method since it is in the hotpath (and it can't be done in the
+        # top-level due to circular dependencies).
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
