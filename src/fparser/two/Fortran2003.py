@@ -5424,6 +5424,7 @@ class Where_Construct(BlockBase):  # R744
                                    Where_Body_Construct, ],
             End_Where_Stmt, string,
             match_names=True,  # C730
+            strict_match_names=True,  # C730
             match_name_classes=(Masked_Elsewhere_Stmt, Elsewhere_Stmt,
                                 End_Where_Stmt),  # C730
             enable_where_construct_hook=True)
@@ -5540,9 +5541,14 @@ class Masked_Elsewhere_Stmt(StmtBase):  # R749
         return 'ELSEWHERE(%s) %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
@@ -5564,9 +5570,14 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
         return "ELSEWHERE", None
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class End_Where_Stmt(EndStmtBase):  # R751
@@ -5597,6 +5608,7 @@ class Forall_Construct(BlockBase):  # R752
         return BlockBase.match(
             Forall_Construct_Stmt, [Forall_Body_Construct],
             End_Forall_Stmt, reader, match_names=True,  # C732
+            strict_match_names=True,                    # C732
         )
 
 
@@ -5861,6 +5873,7 @@ class If_Construct(BlockBase):  # R802
                            Execution_Part_Construct],
             End_If_Stmt, string,
             match_names=True,  # C801
+            strict_match_names=True,  # C801
             match_name_classes=(Else_If_Stmt, Else_Stmt, End_If_Stmt),
             enable_if_construct_hook=True)
 
@@ -5952,9 +5965,14 @@ class Else_If_Stmt(StmtBase):  # R804
         return 'ELSE IF (%s) THEN %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Else_Stmt(StmtBase):  # R805
@@ -5979,9 +5997,14 @@ class Else_Stmt(StmtBase):  # R805
         return 'ELSE %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[0]
         if name is not None:
             return name.string
+        return None
 
 
 class End_If_Stmt(EndStmtBase):  # R806
@@ -6069,7 +6092,9 @@ class Case_Construct(BlockBase):  # R808
                                Execution_Part_Construct,
                                Case_Stmt],
             End_Select_Stmt, reader,
-            match_names=True  # C803
+            match_names=True,  # C803
+            strict_match_names=True,  # C803
+            match_name_classes=(Case_Stmt)
         )
 
     def tofortran(self, tab='', isfix=None):
@@ -6154,6 +6179,16 @@ class Case_Stmt(StmtBase):  # R810
         if self.items[1] is None:
             return 'CASE %s' % (self.items[0])
         return 'CASE %s %s' % (self.items)
+
+    def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
+        name = self.items[1]
+        if name is not None:
+            return name.string
+        return None
 
 
 class End_Select_Stmt(EndStmtBase):  # R811
@@ -6243,6 +6278,7 @@ class Associate_Construct(BlockBase):  # R816
             Associate_Stmt, [Execution_Part_Construct],
             End_Associate_Stmt, reader,
             match_names=True,  # C810
+            strict_match_names=True,  # C810
         )
 
 
@@ -6313,7 +6349,10 @@ class Select_Type_Construct(BlockBase):  # R821
         return BlockBase.match(
             Select_Type_Stmt, [Type_Guard_Stmt, Execution_Part_Construct,
                                Type_Guard_Stmt], End_Select_Type_Stmt, reader,
-            match_names=True)  # C819
+            match_names=True,   # C819
+            strict_match_names=True,  # C819
+            match_name_classes=(Type_Guard_Stmt),
+        )
 
 
 class Select_Type_Stmt(StmtBase):  # R822
@@ -6409,6 +6448,16 @@ items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
         if self.items[2] is not None:
             s += ' %s' % (self.items[2])
         return s
+
+    def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
+        name = self.items[-1]
+        if name is not None:
+            return name.string
+        return None
 
 
 class End_Select_Type_Stmt(EndStmtBase):  # R824
@@ -6509,7 +6558,9 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: string
         '''
         return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
-                               End_Do_Stmt, reader
+                               End_Do_Stmt, reader,
+                               match_names=True,         # C821
+                               strict_match_names=True,  # C821
                                )
 
 
@@ -6607,6 +6658,13 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: string
         '''
         return WORDClsBase.match('DO', Loop_Control, string)
+
+    def get_start_name(self):
+        '''
+        :return: optional labeled "DO" statement name
+        :rtype: string
+        '''
+        return self.item.name
 
 
 class Loop_Control(Base):  # pylint: disable=invalid-name
