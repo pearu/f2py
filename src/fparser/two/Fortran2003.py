@@ -78,7 +78,8 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
-    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk
+    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk, \
+    DynamicImport
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
     InternalSyntaxError, InternalError, show_result
 
@@ -11089,4 +11090,5 @@ class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
 
-# EOF
+
+DynamicImport().import_now()
