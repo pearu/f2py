@@ -87,14 +87,16 @@ def test_use_nature(f2003_create):
 
 
 # match() 'use x, rename'
-def test_use_rename(f2003_create):
-    '''Check that a use with a nename clause is parsed correctly.'''
+def test_use_rename(f2003_create, fake_symbol_table):
+    '''Check that a use with a rename clause is parsed correctly.'''
     line = "use my_module, name=>new_name"
     ast = Use_Stmt(line)
     assert "USE my_module, name => new_name" in str(ast)
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
         "(Rename(None, Name('name'), Name('new_name')),)))")
+    table = SYMBOL_TABLES.current_scope
+    import pdb; pdb.set_trace()
 
 
 # match() 'use x, only: y'
