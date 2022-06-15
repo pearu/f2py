@@ -65,7 +65,8 @@ def test_basic_table():
 
 
 def test_add_data_symbol():
-    ''' Test that the add_data_symbol() method behaves as expected. '''
+    ''' Test that the add_data_symbol() method behaves as expected when
+    validation is enabled. '''
     table = SymbolTable("basic", checking_enabled=True)
     table.add_data_symbol("var", "integer")
     sym = table.lookup("var")
@@ -107,6 +108,7 @@ def test_add_data_symbols_no_checks():
     table.add_data_symbol("mod1", "real")
     table.add_use_symbols("mod2", ["var3"])
     table.add_data_symbol("var3", "real")
+    assert table.lookup("var3").primitive_type == "real"
 
 
 def test_add_use_symbols():
