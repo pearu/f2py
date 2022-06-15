@@ -87,7 +87,8 @@ def test_use_nature(f2003_create):
 
 
 # match() 'use x, rename'
-def test_use_rename(f2003_create, fake_symbol_table):
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
+def test_use_rename():
     '''Check that a use with a rename clause is parsed correctly.'''
     line = "use my_module, name=>new_name"
     ast = Use_Stmt(line)
@@ -96,8 +97,10 @@ def test_use_rename(f2003_create, fake_symbol_table):
         "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
         "(Rename(None, Name('name'), Name('new_name')),)))")
     table = SYMBOL_TABLES.current_scope
-    import pdb; pdb.set_trace()
-
+    assert "my_module" in table._modules
+    # TODO need to decide how to store information on use-associated
+    # symbols.
+    assert False
 
 # match() 'use x, only: y'
 def test_use_only(f2003_create):
