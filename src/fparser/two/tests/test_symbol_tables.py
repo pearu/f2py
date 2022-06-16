@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2021 Science and Technology Facilities Council
+# Copyright (c) 2021-2022 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -48,6 +48,7 @@ def test_construction_addition_removal():
     tables = SymbolTables()
     assert tables._current_scope is None
     assert tables._symbol_tables == {}
+    assert tables._enable_checks is False
     with pytest.raises(KeyError) as err:
         tables.lookup("missing")
     assert "missing" in str(err.value)
@@ -62,10 +63,16 @@ def test_construction_addition_removal():
             "an entry for 'table1'" in str(err.value))
     # Add a second table and then remove it
     table2 = tables.add("taBLe2")
+    # Check that validation checks are disabled by default
+    assert table2._checking_enabled is False
     assert tables.lookup("table2") is table2
     tables.remove("table2")
     with pytest.raises(KeyError) as err:
         tables.lookup("table2")
+    # Turn on validation checking
+    tables.enable_checks(True)
+    table3 = tables.add("table3")
+    assert table3._checking_enabled is True
     # Clear the stored symbol tables
     tables.clear()
     assert tables._current_scope is None
