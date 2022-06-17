@@ -71,7 +71,6 @@ I'm not sure what that is.
 '''
 import os
 import re
-import six
 
 
 ##############################################################################
@@ -266,7 +265,7 @@ def get_source_info(file_candidate):
     Determines the format of Fortran source held in a file.
 
     :param file_candidate: a filename or a file object
-    :type file_candidate: str or (file (py2) or _io.TextIOWrapper (py3))
+    :type file_candidate: str or _io.TextIOWrapper (py3)
 
     :returns: the Fortran format encoded as a string.
     :rtype: str
@@ -280,9 +279,7 @@ def get_source_info(file_candidate):
         if isinstance(filename, int):
             filename = None
 
-    elif isinstance(file_candidate, six.string_types):
-        # The preferred method for identifying strings changed between Python2
-        # and Python3.
+    elif isinstance(file_candidate, str):
         filename = file_candidate
     else:
         message = 'Argument must be a filename or file-like object.'

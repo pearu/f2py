@@ -49,7 +49,7 @@ def test_log_empty(log):
     '''
     Tests that a reader without next() method causes an event to be logged.
     '''
-    class EmptyReader(object):
+    class EmptyReader():
         '''
         A faux reader with no next() method.
         '''
@@ -69,7 +69,7 @@ def test_log_cache(log):
     '''
     Tests that using a cached reader object logs an event.
     '''
-    class Readerlike(object):
+    class Readerlike():
         '''
         Dummy reader class, the only purpose of which is to have an id and not
         cause the parser to fail.

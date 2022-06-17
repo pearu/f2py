@@ -78,7 +78,8 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import Base, BlockBase, StringBase, WORDClsBase, \
     NumberBase, STRINGBase, BracketBase, StmtBase, EndStmtBase, \
     BinaryOpBase, Type_Declaration_StmtBase, CALLBase, CallBase, \
-    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk
+    KeywordValueBase, SeparatorBase, SequenceBase, UnaryOpBase, walk, \
+    DynamicImport
 from fparser.two.utils import NoMatchError, FortranSyntaxError, \
     InternalSyntaxError, InternalError, show_result
 
@@ -151,10 +152,9 @@ class Comment(Base):
     def tostr(self):
         '''
         :returns: this comment as a string.
-        :rtype: :py:class:`six.text_type`
+        :rtype: :py:class:`str`
         '''
-        import six
-        return six.text_type(self.items[0])
+        return str(self.items[0])
 
     def restore_reader(self, reader):
         '''
@@ -884,7 +884,7 @@ class Intrinsic_Type_Spec(WORDClsBase):  # R403
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
 
 
 class Kind_Selector(Base):  # R404
@@ -1195,7 +1195,7 @@ class Char_Selector(Base):  # R424
                 line = line[4:].lstrip()
                 line = line[1:].lstrip()
             return Type_Param_Value(v), Scalar_Int_Initialization_Expr(line)
-        return
+        return None
 
     def tostr(self):
         if self.items[0] is None:
@@ -1627,7 +1627,7 @@ class Component_Part(BlockBase):  # R438
             content.append(obj)
         if content:
             return (content,)
-        return
+        return None
 
 
     def tofortran(self, tab='', isfix=None):
@@ -1823,7 +1823,7 @@ class Component_Initialization(Base):  # R444
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
-        return
+        return None
 
     def tostr(self):
         return '%s %s' % tuple(self.items)
@@ -2964,7 +2964,7 @@ class Initialization(Base):  # R506
             return '=>', Null_Init(string[2:].lstrip())
         if string.startswith('='):
             return '=', Initialization_Expr(string[1:].lstrip())
-        return
+        return None
 
 
     def tostr(self):
@@ -3121,7 +3121,7 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
     def match(string):
         if string == ':':
             return None, None
-        return
+        return None
 
 
 class Assumed_Size_Spec(Base):  # R516
@@ -3913,7 +3913,7 @@ items : ({'NONE', Implicit_Spec_List},)
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
 
     def tostr(self):
         return 'IMPLICIT %s' % (self.items[0])
@@ -4513,7 +4513,7 @@ class Alloc_Opt(KeywordValueBase):  # R624
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
 
 
 class Stat_Variable(Base):  # R625
@@ -4675,7 +4675,7 @@ class Dealloc_Opt(KeywordValueBase):  # R636
                 obj = None
             if obj is not None:
                 return obj
-        return
+        return None
 
 
 class Scalar_Char_Initialization_Expr(Base):
@@ -5459,6 +5459,7 @@ class Where_Construct(BlockBase):  # R744
                                    Where_Body_Construct, ],
             End_Where_Stmt, string,
             match_names=True,  # C730
+            strict_match_names=True,  # C730
             match_name_classes=(Masked_Elsewhere_Stmt, Elsewhere_Stmt,
                                 End_Where_Stmt),  # C730
             enable_where_construct_hook=True)
@@ -5575,9 +5576,14 @@ class Masked_Elsewhere_Stmt(StmtBase):  # R749
         return 'ELSEWHERE(%s) %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
@@ -5599,9 +5605,14 @@ class Elsewhere_Stmt(StmtBase, WORDClsBase):  # R750
         return "ELSEWHERE", None
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class End_Where_Stmt(EndStmtBase):  # R751
@@ -5632,6 +5643,7 @@ class Forall_Construct(BlockBase):  # R752
         return BlockBase.match(
             Forall_Construct_Stmt, [Forall_Body_Construct],
             End_Forall_Stmt, reader, match_names=True,  # C732
+            strict_match_names=True,                    # C732
         )
 
 
@@ -5896,6 +5908,7 @@ class If_Construct(BlockBase):  # R802
                            Execution_Part_Construct],
             End_If_Stmt, string,
             match_names=True,  # C801
+            strict_match_names=True,  # C801
             match_name_classes=(Else_If_Stmt, Else_Stmt, End_If_Stmt),
             enable_if_construct_hook=True)
 
@@ -5987,9 +6000,14 @@ class Else_If_Stmt(StmtBase):  # R804
         return 'ELSE IF (%s) THEN %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[1]
         if name is not None:
             return name.string
+        return None
 
 
 class Else_Stmt(StmtBase):  # R805
@@ -6014,9 +6032,14 @@ class Else_Stmt(StmtBase):  # R805
         return 'ELSE %s' % self.items
 
     def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
         name = self.items[0]
         if name is not None:
             return name.string
+        return None
 
 
 class End_If_Stmt(EndStmtBase):  # R806
@@ -6104,7 +6127,9 @@ class Case_Construct(BlockBase):  # R808
                                Execution_Part_Construct,
                                Case_Stmt],
             End_Select_Stmt, reader,
-            match_names=True  # C803
+            match_names=True,  # C803
+            strict_match_names=True,  # C803
+            match_name_classes=(Case_Stmt)
         )
 
     def tofortran(self, tab='', isfix=None):
@@ -6189,6 +6214,16 @@ class Case_Stmt(StmtBase):  # R810
         if self.items[1] is None:
             return 'CASE %s' % (self.items[0])
         return 'CASE %s %s' % (self.items)
+
+    def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
+        name = self.items[1]
+        if name is not None:
+            return name.string
+        return None
 
 
 class End_Select_Stmt(EndStmtBase):  # R811
@@ -6278,6 +6313,7 @@ class Associate_Construct(BlockBase):  # R816
             Associate_Stmt, [Execution_Part_Construct],
             End_Associate_Stmt, reader,
             match_names=True,  # C810
+            strict_match_names=True,  # C810
         )
 
 
@@ -6348,7 +6384,10 @@ class Select_Type_Construct(BlockBase):  # R821
         return BlockBase.match(
             Select_Type_Stmt, [Type_Guard_Stmt, Execution_Part_Construct,
                                Type_Guard_Stmt], End_Select_Type_Stmt, reader,
-            match_names=True)  # C819
+            match_names=True,   # C819
+            strict_match_names=True,  # C819
+            match_name_classes=(Type_Guard_Stmt),
+        )
 
 
 class Select_Type_Stmt(StmtBase):  # R822
@@ -6444,6 +6483,16 @@ items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
         if self.items[2] is not None:
             s += ' %s' % (self.items[2])
         return s
+
+    def get_end_name(self):
+        """
+        :return: the name at the END of this block, if it exists
+        :rtype: str or NoneType
+        """
+        name = self.items[-1]
+        if name is not None:
+            return name.string
+        return None
 
 
 class End_Select_Type_Stmt(EndStmtBase):  # R824
@@ -6544,7 +6593,9 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: string
         '''
         return BlockBase.match(Nonlabel_Do_Stmt, [Execution_Part_Construct],
-                               End_Do_Stmt, reader
+                               End_Do_Stmt, reader,
+                               match_names=True,         # C821
+                               strict_match_names=True,  # C821
                                )
 
 
@@ -6642,6 +6693,13 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: string
         '''
         return WORDClsBase.match('DO', Loop_Control, string)
+
+    def get_start_name(self):
+        '''
+        :return: optional labeled "DO" statement name
+        :rtype: string
+        '''
+        return self.item.name
 
 
 class Loop_Control(Base):  # pylint: disable=invalid-name
@@ -8762,7 +8820,7 @@ class Data_Edit_Desc(Base):  # R1005
             if not line:
                 return c, None, lst, None
             return c, Char_Literal_Constant(line), lst, None
-        return
+        return None
 
     def tostr(self):
         c = self.items[0]
@@ -11080,4 +11138,5 @@ class Scalar_%s(Base):
     subclass_names = [\'%s\']
 ''' % (n, n))
 
-# EOF
+
+DynamicImport().import_now()

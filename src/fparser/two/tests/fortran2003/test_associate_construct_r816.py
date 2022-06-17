@@ -1,29 +1,27 @@
-#!/usr/bin/env python
-
 # Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
-# Original work Copyright (c) 1999-2008 Pearu Peterson.
-
+# Original work Copyright (c) 1999-2008 Pearu Peterson
+#
 # All rights reserved.
-
+#
 # Modifications made as part of the fparser project are distributed
 # under the following license:
-
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-
+#
 # 1. Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-
+#
 # 2. Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-
+#
 # 3. Neither the name of the copyright holder nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -65,70 +63,79 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Setup script. Used by easy_install and pip."""
+import pytest
+from fparser.api import get_reader
+from fparser.two.Fortran2003 import Associate_Construct
+from fparser.two.utils import FortranSyntaxError
 
-from setuptools import setup, find_packages
 
-PACKAGES = find_packages(where="src")
+@pytest.mark.parametrize(
+    "code, expected_string",
+    [
+        (
+            """\
+            ASSOCIATE ( Z => EXP(-(X**2+Y**2)) * COS(THETA) )
+                PRINT *, A+Z, A-Z
+            END ASSOCIATE
+            """,
+            "ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n"
+            "  PRINT *, A + Z, A - Z\nEND ASSOCIATE",
+        ),
+        (
+            """\
+            name:ASSOCIATE ( XC => AX%B(I,J)%C )
+                XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
+            END ASSOCIATE name
+            """,
+            "name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + "
+            "PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name",
+        ),
+        (
+            """\
+            ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
+                W = ZX*X + ZY*Y
+            END ASSOCIATE
+            """,
+            "ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => "
+            "AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE",
+        ),
+    ],
+)
+def test_associate_construct(fake_symbol_table, code, expected_string):
+    """Test some basic 'associate' constructs are parsed correctly
+    """
+    obj = Associate_Construct(get_reader(code))
+    assert isinstance(obj, Associate_Construct), repr(obj)
+    assert str(obj) == expected_string
 
-NAME = 'fparser'
-AUTHOR = 'Andrew Porter'
-AUTHOR_EMAIL = 'trackstand.andy@gmail.com'
-URL = 'https://github.com/stfc/fparser'
-DOWNLOAD_URL = 'https://github.com/stfc/fparser'
-DESCRIPTION = 'The fparser Project'
-LONG_DESCRIPTION = '''\
-The fparser project is created to develop a parser for
-Fortran 77..2008 code. It is based on the work of Pearu Peterson in
-the F2PY project (http://www.f2py.com).
 
-See https://github.com/stfc/fparser for more information.
-'''
-LICENSE = 'OSI Approved :: BSD 3-Clause License'
+def test_end_block_missing_name(f2003_create, fake_symbol_table):
+    """Check that a named associate block has a name at the end
+    """
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Associate_Construct(
+            get_reader(
+                """\
+                name:associate (xc => ax%b(i,j)%c)
+                    xc%dv = xc%dv + product(xc%ev(1:n))
+                end associate
+                """
+            )
+        )
+    assert exc_info.value.args[0].endswith("Expecting name 'name' but none given")
 
-CLASSIFIERS = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: Console',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Science/Research',
-    'Natural Language :: English',
-    'Programming Language :: Fortran',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Software Development',
-    'Topic :: Utilities',
-    'Operating System :: POSIX',
-    'Operating System :: Unix',
-    'Operating System :: MacOS']
 
-MAJOR = 0
-MINOR = 0
-MICRO = 16
-VERSION = f'{MAJOR}.{MINOR}.{MICRO}'
-
-if __name__ == '__main__':
-
-    setup(
-        name=NAME,
-        version=VERSION,
-        author=AUTHOR,
-        author_email=(AUTHOR_EMAIL),
-        license=LICENSE,
-        url=URL,
-        description=DESCRIPTION,
-        long_description=LONG_DESCRIPTION,
-        classifiers=CLASSIFIERS,
-        packages=PACKAGES,
-        package_dir={"": "src"},
-        install_requires=['six'],
-        extras_require={
-            'doc': ["sphinx", "sphinx_rtd_theme"]
-        },
-        entry_points={
-            'console_scripts': [
-                'fparser2=fparser.scripts.fparser2:main',
-            ],
-        },
-        # We need the following line to ensure we get the fparser/log.config
-        # file installed.
-        include_package_data=True)
+def test_end_block_wrong_name(f2003_create, fake_symbol_table):
+    """Check that a named associate block has the correct name at the end
+    """
+    with pytest.raises(FortranSyntaxError) as exc_info:
+        Associate_Construct(
+            get_reader(
+                """\
+                name:associate (xc => ax%b(i,j)%c)
+                    xc%dv = xc%dv + product(xc%ev(1:n))
+                end associate wrong
+                """
+            )
+        )
+    assert exc_info.value.args[0].endswith("Expecting name 'name', got 'wrong'")

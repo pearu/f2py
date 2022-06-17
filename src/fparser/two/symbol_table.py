@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2021, Science and Technology Facilities Council.
+# Copyright (c) 2021-2022, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,16 +38,14 @@ the single, global SYMBOL_TABLES instance. The latter is a container
 for all of the top-level scoping units encountered during parsing.
 
 '''
-from __future__ import absolute_import, print_function
 from collections import namedtuple
-import six
 
 
 class SymbolTableError(Exception):
     ''' Base class exception for symbol-table related errors. '''
 
 
-class SymbolTables(object):
+class SymbolTables():
     '''
     Class encapsulating functionality for the global symbol-tables object.
     This is a container for all symbol tables constructed while parsing
@@ -61,12 +59,25 @@ class SymbolTables(object):
         self._scoping_unit_classes = []
         # The symbol table of the current scope
         self._current_scope = None
+        # Whether or not we enable consistency checks in the symbol tables
+        # that are created.
+        self._enable_checks = False
 
     def __str__(self):
         result = ("SymbolTables: {0} tables\n"
                   "========================\n".format(
                       len(self._symbol_tables)))
         return result + "\n".join(sorted(self._symbol_tables.keys()))
+
+    def enable_checks(self, value):
+        '''
+        Sets whether or not to enable consistency checks in every symbol
+        table that is created during a parse.
+
+        :param bool value: whether or not checks are enabled.
+
+        '''
+        self._enable_checks = value
 
     def clear(self):
         '''
@@ -95,7 +106,7 @@ class SymbolTables(object):
             raise SymbolTableError(
                 "The table of top-level (un-nested) symbol tables already "
                 "contains an entry for '{0}'".format(lower_name))
-        table = SymbolTable(lower_name)
+        table = SymbolTable(lower_name, checking_enabled=self._enable_checks)
         self._symbol_tables[lower_name] = table
         return table
 
@@ -137,7 +148,7 @@ class SymbolTables(object):
         if not isinstance(value, list):
             raise TypeError("Supplied value must be a list but got '{0}'".
                             format(type(value).__name__))
-        if not all([isinstance(item, type) for item in value]):
+        if not all(isinstance(item, type) for item in value):
             raise TypeError("Supplied list must contain only classes but "
                             "got: {0}".format(value))
         self._scoping_unit_classes = value
@@ -175,7 +186,8 @@ class SymbolTables(object):
         else:
             # We are already inside a scoping region so create a new table
             # and setup its parent/child connections.
-            table = SymbolTable(lname, parent=self._current_scope)
+            table = SymbolTable(lname, parent=self._current_scope,
+                                checking_enabled=self._enable_checks)
             self._current_scope.add_child(table)
 
         # Finally, make this new table the current scope
@@ -240,14 +252,21 @@ class SymbolTables(object):
         del self._symbol_tables[lname]
 
 
-class SymbolTable(object):
+class SymbolTable():
     '''
     Class implementing a single symbol table.
+
+    Since this functionality is not yet fully mature, checks that new symbols
+    don't clash with existing symbols are disabled by default.
+    Once #201 is complete it is planned to switch this so that the checks
+    are instead enabled by default.
 
     :param str name: the name of this scope. Will be the name of the \
                      associated module or routine.
     :param parent: the symbol table within which this one is nested (if any).
     :type parent: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
+    :param bool checking_enabled: whether or not validity checks are \
+        performed for symbols added to the table.
 
     '''
     # TODO #201 add support for other symbol properties (kind, shape
@@ -255,7 +274,7 @@ class SymbolTable(object):
     # type checking for the various properties.
     Symbol = namedtuple("Symbol", "name primitive_type")
 
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None, checking_enabled=False):
         self._name = name.lower()
         # Symbols defined in this scope that represent data.
         self._data_symbols = {}
@@ -265,6 +284,8 @@ class SymbolTable(object):
         # value (if any) is set via setter method.
         self._parent = None
         self.parent = parent
+        # Whether or not to perform validity checks when symbols are added.
+        self._checking_enabled = checking_enabled
         # Symbol tables nested within this one.
         self._children = []
 
@@ -295,26 +316,31 @@ class SymbolTable(object):
         :raises SymbolTableError: if the symbol table already contains an
                                   entry with the supplied name.
         '''
-        if not isinstance(name, six.string_types):
+        if not isinstance(name, str):
             raise TypeError("The name of the symbol must be a str but got "
                             "'{0}'".format(type(name).__name__))
         # TODO #201 use an enumeration for the primitive type
-        if not isinstance(primitive_type, six.string_types):
+        if not isinstance(primitive_type, str):
             raise TypeError(
                 "The primitive type of the symbol must be specified as a str "
                 "but got '{0}'".format(type(primitive_type).__name__))
+
         lname = name.lower()
-        if lname in self._data_symbols:
-            raise SymbolTableError("Symbol table already contains a symbol for"
-                                   " a variable with name '{0}'".format(name))
-        if lname in self._modules:
-            raise SymbolTableError("Symbol table already contains a use of a "
-                                   "module with name '{0}'".format(name))
-        for mod_name in self._modules:
-            if self._modules[mod_name] and lname in self._modules[mod_name]:
+
+        if self._checking_enabled:
+            if lname in self._data_symbols:
                 raise SymbolTableError(
-                    "Symbol table already contains a use of a symbol named "
-                    "'{0}' from module '{1}'".format(name, mod_name))
+                    f"Symbol table already contains a symbol for"
+                    f" a variable with name '{name}'")
+            if lname in self._modules:
+                raise SymbolTableError(
+                    f"Symbol table already contains a use of a "
+                    f"module with name '{name}'")
+            for mod_name, var_list in self._modules.items():
+                if var_list and lname in var_list:
+                    raise SymbolTableError(
+                        f"Symbol table already contains a use of a symbol "
+                        f"named '{name}' from module '{mod_name}'")
 
         self._data_symbols[lname] = SymbolTable.Symbol(lname,
                                                        primitive_type.lower())
@@ -337,14 +363,14 @@ class SymbolTable(object):
         :raises TypeError: if either of the supplied parameters are of the \
                            wrong type.
         '''
-        if not isinstance(name, six.string_types):
+        if not isinstance(name, str):
             raise TypeError("The name of the module must be a str but got "
                             "'{0}'".format(type(name).__name__))
         if only_list and not isinstance(only_list, list):
             raise TypeError("If present, the only_list must be a list but got "
                             "'{0}'".format(type(only_list).__name__))
         if only_list and not all(
-                [isinstance(item, six.string_types) for item in only_list]):
+                isinstance(item, str) for item in only_list):
             raise TypeError("If present, the only_list must be a list of str "
                             "but got: {0}".format(
                                 [type(item).__name__ for item in only_list]))
@@ -482,6 +508,7 @@ class SymbolTable(object):
         while current.parent:
             current = current.parent
         return current
+
 
 #: The single, global container for all symbol tables constructed while
 #: parsing.

@@ -38,7 +38,6 @@ the list variant - r913.
 
 '''
 
-from __future__ import print_function
 import pytest
 from fparser.two import Fortran2003
 from fparser.two.parser import ParserFactory

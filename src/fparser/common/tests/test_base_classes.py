@@ -53,7 +53,7 @@ def test_statement_logging(log, monkeypatch):
     '''
     Tests the Statement class' logging methods.
     '''
-    class DummyParser(object):
+    class DummyParser():
         '''
         Null parser harness.
         '''

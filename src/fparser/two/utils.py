@@ -70,11 +70,10 @@
 # First version created: Oct 2006
 
 import re
-import six
-from fparser.common.splitline import string_replace_map
-from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.common import readfortran
+from fparser.common.splitline import string_replace_map
 from fparser.common.readfortran import FortranReaderBase
+from fparser.two.symbol_table import SYMBOL_TABLES
 
 # A list of supported extensions to the standard(s)
 
@@ -245,6 +244,70 @@ class ComparableMixin():
         return self._compare(other, lambda s, o: s != o)
 
 
+class DynamicImport():
+    ''' This class imports a set of fparser.two dependencies that can not
+    be imported during the Python Import time because they have a circular
+    dependency with this file.
+
+    They are imported once when the Fortran2003 is already processed by
+    calling the import_now() method.
+
+    The alternative is to have the equivalent top-level imports in the
+    Base.__new__ method, but this method is in the parser critical path and
+    is best to keep expensive operations out of it.
+    '''
+
+    @staticmethod
+    def import_now():
+        ''' Execute the Import of Fortran2003 dependencies. '''
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2003 import Else_If_Stmt, Else_Stmt, \
+            End_If_Stmt, Masked_Elsewhere_Stmt, Elsewhere_Stmt, \
+            End_Where_Stmt, Type_Guard_Stmt, End_Select_Type_Stmt, \
+            Case_Stmt, End_Select_Stmt, Comment, Include_Stmt, \
+            add_comments_includes_directives
+        from fparser.two import C99Preprocessor
+        DynamicImport.Else_If_Stmt = Else_If_Stmt
+        DynamicImport.Else_Stmt = Else_Stmt
+        DynamicImport.End_If_Stmt = End_If_Stmt
+        DynamicImport.Masked_Elsewhere_Stmt = Masked_Elsewhere_Stmt
+        DynamicImport.Elsewhere_Stmt = Elsewhere_Stmt
+        DynamicImport.End_Where_Stmt = End_Where_Stmt
+        DynamicImport.Type_Guard_Stmt = Type_Guard_Stmt
+        DynamicImport.End_Select_Type_Stmt = End_Select_Type_Stmt
+        DynamicImport.Case_Stmt = Case_Stmt
+        DynamicImport.End_Select_Stmt = End_Select_Stmt
+        DynamicImport.Comment = Comment
+        DynamicImport.Include_Stmt = Include_Stmt
+        DynamicImport.C99Preprocessor = C99Preprocessor
+        DynamicImport.add_comments_includes_directives = \
+            add_comments_includes_directives
+
+
+di = DynamicImport()
+
+
+def _set_parent(parent_node, items):
+    ''' Recursively set the parent of all of the elements
+    in the list that are a sub-class of Base. (Recursive because
+    sometimes the list of elements itself contains a list or tuple.)
+
+    :param parent_node: the parent of the nodes listed in `items`.
+    :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
+    :param items: list or tuple of nodes for which to set the parent.
+    :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
+                 or `str` or `list` or `tuple` or NoneType.
+    '''
+    for item in items:
+        if item:
+            if isinstance(item, Base):
+                # We can only set the parent of `Base` objects.
+                # Anything else (e.g. str) is passed over.
+                item.parent = parent_node
+            elif isinstance(item, (list, tuple)):
+                _set_parent(parent_node, item)
+
+
 class Base(ComparableMixin):
     ''' Base class for Fortran 2003 syntax rules.
 
@@ -272,27 +335,6 @@ class Base(ComparableMixin):
 
     @show_result
     def __new__(cls, string, parent_cls=None):
-
-        def _set_parent(parent_node, items):
-            ''' Recursively set the parent of all of the elements
-            in the list that are a sub-class of Base. (Recursive because
-            sometimes the list of elements itself contains a list or tuple.)
-
-            :param parent_node: the parent of the nodes listed in `items`.
-            :type parent_node: sub-class of :py:class:`fparser.two.utils.Base`
-            :param items: list or tuple of nodes for which to set the parent.
-            :type items: list or tuple of :py:class:`fparser.two.utils.Base` \
-                         or `str` or `list` or `tuple` or NoneType.
-            '''
-            for item in items:
-                if item:
-                    if isinstance(item, Base):
-                        # We can only set the parent of `Base` objects.
-                        # Anything else (e.g. str) is passed over.
-                        item.parent = parent_node
-                    elif isinstance(item, (list, tuple)):
-                        _set_parent(parent_node, item)
-        # ------------------------------------------------------------------
 
         if parent_cls is None:
             parent_cls = [cls]
@@ -454,7 +496,7 @@ class Base(ComparableMixin):
         :returns: Fortran representation of this comment.
         :rtype: str
         '''
-        this_str = six.text_type(self)
+        this_str = str(self)
         if this_str.strip():
             return tab + this_str
         # If this_str is empty (i.e this Comment is a blank line) then
@@ -484,7 +526,8 @@ class BlockBase(Base):
               enable_do_label_construct_hook=False,
               enable_if_construct_hook=False,
               enable_where_construct_hook=False,
-              strict_order=False):
+              strict_order=False,
+              strict_match_names=False):
         '''
         Checks whether the content in reader matches the given
         type of block statement (e.g. DO..END DO, IF...END IF etc.)
@@ -505,22 +548,24 @@ class BlockBase(Base):
         :param bool enable_where_construct_hook: TBD
         :param bool strict_order: whether to enforce the order of the \
                                   given subclasses.
+        :param bool strict_match_names: if start name present, end name \
+                                        must exist and match.
 
         :return: instance of startcls or None if no match is found
         :rtype: startcls
 
         '''
-        # Have to import C99Preprocessor & Fortran2003 here to avoid circular
-        # import.
-        # pylint: disable=import-outside-toplevel
-        from fparser.two import C99Preprocessor
-        from fparser.two import Fortran2003
+        # This implementation uses the DynamicImport class and its instance di
+        # to access the Fortran2003 and C99Preprocessor classes, this is a
+        # performance optimization to avoid importing the classes inside this
+        # method since it is in the hotpath (and it can't be done in the
+        # top-level due to circular dependencies).
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
-            Fortran2003.add_comments_includes_directives(content, reader)
+            DynamicImport.add_comments_includes_directives(content, reader)
             # Now attempt to match the start of the block
             try:
                 obj = startcls(reader)
@@ -552,10 +597,10 @@ class BlockBase(Base):
                 start_name = obj.get_start_name()
 
         # Comments and Include statements are always valid sub-classes
-        classes = subclasses + [Fortran2003.Comment, Fortran2003.Include_Stmt]
+        classes = subclasses + [di.Comment, di.Include_Stmt]
         # Preprocessor directives are always valid sub-classes
-        cpp_classes = [getattr(C99Preprocessor, cls_name)
-                       for cls_name in C99Preprocessor.CPP_CLASS_NAMES]
+        cpp_classes = [getattr(di.C99Preprocessor, cls_name)
+                       for cls_name in di.C99Preprocessor.CPP_CLASS_NAMES]
         classes += cpp_classes
         if endcls is not None:
             classes += [endcls]
@@ -597,12 +642,11 @@ class BlockBase(Base):
                     end_name = obj.get_end_name()
                     if end_name and not start_name:
                         raise FortranSyntaxError(
-                            reader, "Name '{0}' has no corresponding starting "
-                            "name".format(end_name))
+                            reader, f"Name '{end_name}' has no corresponding starting name")
                     if end_name and start_name and \
                        end_name.lower() != start_name.lower():
                         raise FortranSyntaxError(
-                            reader, "Expecting name '{0}'".format(start_name))
+                            reader, f"Expecting name '{start_name}', got '{end_name}'")
 
                 if endcls is not None and isinstance(obj, endcls_all):
                     if match_labels:
@@ -615,16 +659,18 @@ class BlockBase(Base):
                         start_name, end_name = (content[start_idx].
                                                 get_start_name(),
                                                 content[-1].get_end_name())
+
                         if end_name and not start_name:
                             raise FortranSyntaxError(
                                 reader,
-                                "Name '{0}' has no corresponding starting "
-                                "name".format(end_name))
-                        if start_name and end_name and (start_name.lower() !=
-                                                        end_name.lower()):
+                                f"Name '{end_name}' has no corresponding starting name")
+                        elif strict_match_names and start_name and not end_name:
                             raise FortranSyntaxError(
-                                reader, "Expecting name '{0}'".format(
-                                    start_name))
+                                reader, f"Expecting name '{start_name}' but none given")
+                        elif start_name and end_name and (start_name.lower() !=
+                                                          end_name.lower()):
+                            raise FortranSyntaxError(
+                                reader, f"Expecting name '{start_name}', got '{end_name}'")
                     # We've found the enclosing end statement so break out
                     found_end = True
                     break
@@ -632,19 +678,17 @@ class BlockBase(Base):
                     # Return to start of classes list now that we've matched.
                     i = 0
                 if enable_if_construct_hook:
-                    if isinstance(obj, Fortran2003.Else_If_Stmt):
+                    if isinstance(obj, di.Else_If_Stmt):
                         # Got an else-if so go back to start of possible
                         # classes to match
                         i = 0
-                    if isinstance(obj, (Fortran2003.Else_Stmt,
-                                        Fortran2003.End_If_Stmt)):
+                    if isinstance(obj, (di.Else_Stmt, di.End_If_Stmt)):
                         # Found end-if
                         enable_if_construct_hook = False
                 if enable_where_construct_hook:
-                    if isinstance(obj, Fortran2003.Masked_Elsewhere_Stmt):
+                    if isinstance(obj, di.Masked_Elsewhere_Stmt):
                         i = 0
-                    if isinstance(obj, (Fortran2003.Elsewhere_Stmt,
-                                        Fortran2003.End_Where_Stmt)):
+                    if isinstance(obj, (di.Elsewhere_Stmt, di.End_Where_Stmt)):
                         enable_where_construct_hook = False
                 continue
 
@@ -774,14 +818,14 @@ class SequenceBase(Base):
         :raises InternalError: if the separator is white space.
 
         '''
-        if not isinstance(separator, (str, six.text_type)):
+        if not isinstance(separator, str):
             raise InternalError(
-                "SequenceBase class match method argument separator expected "
-                "to be a string but found '{0}'.".format(type(string)))
-        if not isinstance(string, (str, six.text_type)):
+                f"SequenceBase class match method argument separator expected "
+                f"to be a string but found '{type(separator)}'.")
+        if not isinstance(string, str):
             raise InternalError(
-                "SequenceBase class match method argument string expected to "
-                "be a string but found '{0}'.".format(type(string)))
+                f"SequenceBase class match method argument string expected to "
+                f"be a string but found '{type(string)}'.")
 
         if separator == ' ':
             raise InternalError(
@@ -1300,7 +1344,7 @@ string
             return
         if pattern.match(string):
             return string,
-        return
+        return None
 
     def init(self, string):
         self.string = string
@@ -1357,10 +1401,10 @@ class STRINGBase(StringBase):
         '''
         if string is None:
             return None
-        if not isinstance(string, (str, six.text_type)):
+        if not isinstance(string, str):
             raise InternalError(
-                "Supplied string should be of type str or {0}, but found "
-                "{1}".format(six.text_type, type(string)))
+                f"Supplied string should be of type str, but found {type(string)}"
+            )
         if isinstance(my_pattern, (list, tuple)):
             for child in my_pattern:
                 result = STRINGBase.match(child, string)
@@ -1377,8 +1421,8 @@ class STRINGBase(StringBase):
                 return string_upper,
         except AttributeError:
             raise InternalError(
-                "Supplied pattern should be a list, tuple, str or regular "
-                "expression but found {0}".format(type(my_pattern)))
+                f"Supplied pattern should be a list, tuple, str or regular "
+                f"expression but found {type(my_pattern)}")
         return None
 
 
