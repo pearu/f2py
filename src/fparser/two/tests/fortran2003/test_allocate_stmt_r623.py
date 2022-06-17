@@ -68,3 +68,7 @@ def test_alloc_opt():
     assert str(obj) == 'ERRMSG = my_msg'
     obj = tcls('source=b')
     assert str(obj) == 'SOURCE = b'
+    # Check for a failed match - use 'mold' as that's a Fortran2008 addition
+    # so should not match here.
+    with pytest.raises(NoMatchError):
+        tcls('MOLD=b')
