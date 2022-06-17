@@ -4536,10 +4536,7 @@ class Alloc_Opt(KeywordValueBase):  # R624
     @classmethod
     def match(cls, string):
         for (k, v) in cls._keyword_pairs:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
-            except NoMatchError:
-                obj = None
+            obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
             if obj is not None:
                 return obj
         return None

@@ -72,3 +72,5 @@ def test_alloc_opt():
     # so should not match here.
     with pytest.raises(NoMatchError):
         tcls('MOLD=b')
+    with pytest.raises(NoMatchError):
+        tcls('value')
