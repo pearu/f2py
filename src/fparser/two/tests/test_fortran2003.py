@@ -1613,30 +1613,6 @@ def test_subscript_triplet():  # R620
     assert str(obj) == 'a + 1 :'
 
 
-def test_allocate_stmt():  # R623
-
-    tcls = Allocate_Stmt
-    obj = tcls('allocate(a,b)')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'ALLOCATE(a, b)'
-
-    obj = tcls('allocate(real::a)')
-    assert str(obj) == 'ALLOCATE(REAL::a)'
-
-    obj = tcls('allocate(real(kind=8)::a, stat=b, source=c//d)')
-    assert (str(obj) ==
-            'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
-
-
-def test_alloc_opt():  # R624
-
-    tcls = Alloc_Opt
-    obj = tcls('stat=a')
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'STAT = a'
-    assert repr(obj) == "Alloc_Opt('STAT', Name('a'))"
-
-
 def test_nullify_stmt():  # R633
 
     tcls = Nullify_Stmt

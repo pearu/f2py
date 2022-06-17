@@ -77,14 +77,16 @@ from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
-    SeparatorBase, Type_Declaration_StmtBase, StmtBase
+    SeparatorBase, Type_Declaration_StmtBase, StmtBase, NoMatchError
 from fparser.two.Fortran2003 import (
     EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
     Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
     Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
-    Entity_Decl_List, Component_Decl_List, Stop_Code)
+    Entity_Decl_List, Component_Decl_List, Stop_Code, Stat_Variable,
+    Errmsg_Variable, Source_Expr, KeywordValueBase)
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
+    Alloc_Opt as Alloc_Opt_2003, Allocate_Stmt as Allocate_Stmt_2003,
     Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
     Component_Attr_Spec as Component_Attr_Spec_2003,
@@ -674,6 +676,38 @@ class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
           goto-stmt, return-stmt, or stop-stmt."
     """
     subclass_names = ['Action_Stmt_C816']
+
+
+class Alloc_Opt(Alloc_Opt_2003):
+    '''
+    Fortran2008 rule R627
+    alloc-opt is ERRMSG = errmsg-variable
+              or MOLD = source-expr
+              or SOURCE = source-expr
+              or STAT = stat-variable
+
+    Extends the Fortran2003 version of this class by updating the keyword
+    pairs (used in match) with support for MOLD.
+
+    '''
+    _keyword_pairs = [('STAT', Stat_Variable),
+                      ('ERRMSG', Errmsg_Variable),
+                      ('SOURCE', Source_Expr),
+                      ('MOLD', Source_Expr)]
+
+
+class Allocate_Stmt(Allocate_Stmt_2003):  # R626
+    '''
+    Fortran 2008 rule R626
+    allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
+                                [, alloc-opt-list ] )
+
+    The implementation of this rule simply ensures that the Fortran2008 version
+    of Alloc_Opt is used.
+
+    '''
+    subclass_names = []
+    use_names = ['Type_Spec', 'Allocation_List', 'Alloc_Opt_List']
 
 
 class If_Stmt(If_Stmt_2003):  # R837
