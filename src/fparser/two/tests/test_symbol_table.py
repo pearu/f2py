@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2021 Science and Technology Facilities Council
+# Copyright (c) 2021-2022 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -49,6 +49,8 @@ def test_basic_table():
     assert table.name == "basic"
     assert table.parent is None
     assert table.children == []
+    # Consistency checking is disabled by default
+    assert table._checking_enabled is False
     with pytest.raises(KeyError) as err:
         table.lookup("missing")
     assert "Failed to find symbol named 'missing'" in str(err.value)
@@ -57,11 +59,15 @@ def test_basic_table():
     sym = table.lookup("var")
     assert sym.name == "var"
     assert table.lookup("VAR") is sym
+    # Check that we can enable consistency checking
+    table2 = SymbolTable("table2", checking_enabled=True)
+    assert table2._checking_enabled is True
 
 
 def test_add_data_symbol():
-    ''' Test that the add_data_symbol() method behaves as expected. '''
-    table = SymbolTable("basic")
+    ''' Test that the add_data_symbol() method behaves as expected when
+    validation is enabled. '''
+    table = SymbolTable("basic", checking_enabled=True)
     table.add_data_symbol("var", "integer")
     sym = table.lookup("var")
     assert sym.primitive_type == "integer"
@@ -88,6 +94,21 @@ def test_add_data_symbol():
         table.add_data_symbol("var3", "real")
     assert ("table already contains a use of a symbol named 'var3' from "
             "module 'mod1'" in str(err.value))
+
+
+def test_add_data_symbols_no_checks():
+    ''' Check that we can disable the checks in the
+    add_data_symbol() method. '''
+    table = SymbolTable("basic", checking_enabled=False)
+    table.add_data_symbol("var", "integer")
+    table.add_data_symbol("var", "real")
+    sym = table.lookup("var")
+    assert sym.primitive_type == "real"
+    table.add_use_symbols("mod1", ["var3"])
+    table.add_data_symbol("mod1", "real")
+    table.add_use_symbols("mod2", ["var3"])
+    table.add_data_symbol("var3", "real")
+    assert table.lookup("var3").primitive_type == "real"
 
 
 def test_add_use_symbols():

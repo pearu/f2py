@@ -17,6 +17,13 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+## Release 0.0.16 (16/06/2022) ##
+
+14/06/2022 PR #337 towards #312 (performance improvements). Removes some
+           imports and function declaration from the hotpath.
+
+09/06/2022 PR #325 - apply constraints on named blocks.
+
 09/06/2022 PR #336 towards #312 (performance improvements). Introduces a
            memoization fixture that caches the result of the tokenizer.
 

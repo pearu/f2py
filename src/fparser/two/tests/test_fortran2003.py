@@ -2085,61 +2085,6 @@ def test_case_selector():  # R813
     assert str(obj) == '(2 : 3, c + 2 :, : - a)'
 
 
-@pytest.mark.usefixtures("fake_symbol_table")
-def test_associate_construct():  # R816
-
-    tcls = Associate_Construct
-    obj = tcls(get_reader('''\
-ASSOCIATE ( Z => EXP(-(X**2+Y**2)) * COS(THETA) )
-PRINT *, A+Z, A-Z
-END ASSOCIATE
-    '''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) ==
-            'ASSOCIATE(Z => EXP(- (X ** 2 + Y ** 2)) * COS(THETA))\n'
-            '  PRINT *, A + Z, A - Z\nEND ASSOCIATE')
-
-    obj = tcls(get_reader('''\
-name:ASSOCIATE ( XC => AX%B(I,J)%C )
-XC%DV = XC%DV + PRODUCT(XC%EV(1:N))
-END ASSOCIATE name
-    '''))
-    assert isinstance(obj, tcls), repr(obj)
-    assert (str(obj) ==
-            'name:ASSOCIATE(XC => AX % B(I, J) % C)\n  XC % DV = XC % DV + '
-            'PRODUCT(XC % EV(1 : N))\nEND ASSOCIATE name')
-
-    obj = tcls(get_reader('''\
-ASSOCIATE ( W => RESULT(I,J)%W, ZX => AX%B(I,J)%D, ZY => AY%B(I,J)%D )
-W = ZX*X + ZY*Y
-END ASSOCIATE
-    '''))
-    assert (str(obj) ==
-            'ASSOCIATE(W => RESULT(I, J) % W, ZX => AX % B(I, J) % D, ZY => '
-            'AY % B(I, J) % D)\n  W = ZX * X + ZY * Y\nEND ASSOCIATE')
-
-
-def test_select_type_construct():  # R821
-
-    tcls = Select_Type_Construct
-    tree = tcls(get_reader('''\
-n:SELECT TYPE ( A => P_OR_C )
-CLASS IS ( POINT )
-PRINT *, A%X, A%Y ! This block gets executed
-TYPE IS ( POINT_3D )
-PRINT *, A%X, A%Y, A%Z
-END SELECT n
-    ''', ignore_comments=False))
-    print(str(tree))
-    assert (str(tree) == "n:SELECT TYPE(A=>P_OR_C)\n"
-            "  CLASS IS (POINT)\n"
-            "  PRINT *, A % X, A % Y\n"
-            "  ! This block gets executed\n"
-            "  TYPE IS (POINT_3D)\n"
-            "  PRINT *, A % X, A % Y, A % Z\n"
-            "END SELECT n")
-
-
 def test_select_type_stmt():  # R822
 
     tcls = Select_Type_Stmt
