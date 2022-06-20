@@ -64,8 +64,9 @@
 
 from fparser import api
 
+
 def test_reproduce_issue():
-    source_str = '''\
+    source_str = """\
       module m_rdctrl
 
       contains
@@ -75,10 +76,11 @@ def test_reproduce_issue():
       end subroutine readctrl
       end module
       
-'''
-    tree = api.parse(source_str, isfree=False, isstrict=False,
-                     ignore_comments=False)
-    assert str(tree).strip().split('\n')[1:]=='''
+"""
+    tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
+    assert (
+        str(tree).strip().split("\n")[1:]
+        == """
       !      BEGINSOURCE <cStringIO.StringI object at 0x2405ea0> mode=fix90
         MODULE m_rdctrl
 
@@ -88,4 +90,9 @@ def test_reproduce_issue():
 
           END SUBROUTINE readctrl
         END MODULE m_rdctrl
-    '''.strip().split('\n')[1:]
+    """.strip().split(
+            "\n"
+        )[
+            1:
+        ]
+    )

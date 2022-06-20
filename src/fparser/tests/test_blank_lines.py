@@ -64,8 +64,9 @@
 
 from fparser import api
 
+
 def test_reproduce_issue():
-    source_str = '''\
+    source_str = """\
       subroutine bl(a,
      &b,
 
@@ -91,11 +92,14 @@ c a third annoying comment
       a = b + c + d + e
 
       end subroutine blc
-'''
-    tree = api.parse(source_str, isfree=False, isstrict=True,
-                     analyze=False, ignore_comments=True)
+"""
+    tree = api.parse(
+        source_str, isfree=False, isstrict=True, analyze=False, ignore_comments=True
+    )
     print(tree)
-    assert str(tree).strip().split('\n')[1:] == '''
+    assert (
+        str(tree).strip().split("\n")[1:]
+        == """
       !      BEGINSOURCE <cStringIO.StringI object at 0x3723710> mode=f77
         SUBROUTINE bl(a, b, c)
           INTEGER a, b, c
@@ -104,4 +108,9 @@ c a third annoying comment
         SUBROUTINE blc(a, b, c, d, e)
           a = b + c + d + e
         END SUBROUTINE blc
-    '''.strip().split('\n')[1:]
+    """.strip().split(
+            "\n"
+        )[
+            1:
+        ]
+    )
