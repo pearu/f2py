@@ -218,7 +218,7 @@ def parse(
 
 
 def walk(stmt, depth=-1, _initial_depth=None):
-    """ Generate Fortran statements by walking the stmt tree until given depth.
+    """Generate Fortran statements by walking the stmt tree until given depth.
 
     For each block statement in stmt, the walk functions yields a
     tuple ``(statement, depth)`` where ``depth`` is the depth of tree

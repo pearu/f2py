@@ -42,7 +42,7 @@ from fparser.two.Fortran2003 import Write_Stmt, Io_Control_Spec_List
 
 @pytest.mark.usefixtures("f2003_create")
 def test_write_stmt():
-    """ Tests for various forms of WRITE statement (R911). """
+    """Tests for various forms of WRITE statement (R911)."""
     tcls = Write_Stmt
     obj = tcls('write (123)"hey"')
     assert isinstance(obj, tcls), repr(obj)
@@ -111,7 +111,7 @@ def test_write_stmt():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_named_unit_before_fmt_error():
-    """ Check that we reject a WRITE that names the io-unit argument but
+    """Check that we reject a WRITE that names the io-unit argument but
     still has a positional format argument (containing an '=').
     TODO #267. This test needs expanding and probably moving to a file
     dedicated to R913 and its (many) constraints.

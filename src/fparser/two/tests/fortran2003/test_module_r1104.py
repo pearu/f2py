@@ -60,7 +60,6 @@ def test_module_new_symbol_table(f2003_create):
 
 
 def test_module_get_name():
-    """Test we can get the name of the module
-    """
+    """Test we can get the name of the module"""
     obj = Module_Stmt("module foo")
     assert obj.get_name() == Name("foo")

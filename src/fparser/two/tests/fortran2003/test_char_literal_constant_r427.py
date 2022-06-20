@@ -43,7 +43,7 @@ from fparser.two.utils import NoMatchError, InternalError
 
 
 def test_match_valid():
-    """ Test that valid input is parsed correctly """
+    """Test that valid input is parsed correctly"""
 
     # simple, single quotes
     obj = Char_Literal_Constant("'DO'")
@@ -102,7 +102,7 @@ def test_match_valid():
 
 
 def test_match_invalid():
-    """ Test that invalid input raises an exception """
+    """Test that invalid input raises an exception"""
 
     # test various invalid options
     for example in [
@@ -130,7 +130,7 @@ def test_match_invalid():
 
 
 def test_tostr_invalid1(monkeypatch):
-    """ Test that an invalid number of items raises an exception """
+    """Test that an invalid number of items raises an exception"""
 
     # test internal error in tostr() when the items list is not the
     # expected size
@@ -142,7 +142,7 @@ def test_tostr_invalid1(monkeypatch):
 
 
 def test_tostr_invalid2(monkeypatch):
-    """ Test that an empty items value raises an exception """
+    """Test that an empty items value raises an exception"""
 
     # test internal error in tostr() when the items list index 0 has
     # no content
@@ -154,12 +154,12 @@ def test_tostr_invalid2(monkeypatch):
 
 
 def test_tostr_non_ascii():
-    """ Check that the tostr() method works when the character string
-    contains non-ascii characters. """
-    obj = Char_Literal_Constant(u"'for e1=1\xb0'")
+    """Check that the tostr() method works when the character string
+    contains non-ascii characters."""
+    obj = Char_Literal_Constant("'for e1=1\xb0'")
     out_str = str(obj)
     assert "for e1=1" in out_str
     # With a kind specifier...
-    obj = Char_Literal_Constant(u"ckind_'for e1=1\xb0'")
+    obj = Char_Literal_Constant("ckind_'for e1=1\xb0'")
     out_str = str(obj)
     assert "ckind_'for e1=" in out_str

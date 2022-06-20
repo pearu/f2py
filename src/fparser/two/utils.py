@@ -194,7 +194,7 @@ def show_result(func):
 
 
 class ComparableMixin:
-    """ Mixin class to provide rich comparison operators.
+    """Mixin class to provide rich comparison operators.
 
     This mixin provides a set of rich comparison operators. Each class using
     this mixin has to provide a _cmpkey() method that returns a key of objects
@@ -206,7 +206,7 @@ class ComparableMixin:
     # pylint: disable=too-few-public-methods
 
     def _compare(self, other, method):
-        """ Call the method, if other is able to be used within it.
+        """Call the method, if other is able to be used within it.
 
         :param object other: The other object to compare with
         :type other: object
@@ -249,7 +249,7 @@ class ComparableMixin:
 
 
 class DynamicImport:
-    """ This class imports a set of fparser.two dependencies that can not
+    """This class imports a set of fparser.two dependencies that can not
     be imported during the Python Import time because they have a circular
     dependency with this file.
 
@@ -263,7 +263,7 @@ class DynamicImport:
 
     @staticmethod
     def import_now():
-        """ Execute the Import of Fortran2003 dependencies. """
+        """Execute the Import of Fortran2003 dependencies."""
         # pylint: disable=import-outside-toplevel
         from fparser.two.Fortran2003 import (
             Else_If_Stmt,
@@ -501,8 +501,7 @@ class Base(ComparableMixin):
         return self.torepr()
 
     def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
+        """Provides a key of objects to be used for comparing."""
         return self.items
 
     def tofortran(self, tab="", isfix=None):
@@ -798,8 +797,7 @@ class BlockBase(Base):
         self.content = content
 
     def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
+        """Provides a key of objects to be used for comparing."""
         return self.content
 
     def tostr(self):
@@ -942,8 +940,8 @@ class SequenceBase(Base):
 
 class UnaryOpBase(Base):
     """
-::
-    <unary-op-base> = <unary-op> <rhs>
+    ::
+        <unary-op-base> = <unary-op> <rhs>
     """
 
     def tostr(self):
@@ -1083,8 +1081,8 @@ class BinaryOpBase(Base):
 
 class SeparatorBase(Base):
     """
-::
-    <separator-base> = [ <lhs> ] : [ <rhs> ]
+    ::
+        <separator-base> = [ <lhs> ] : [ <rhs> ]
     """
 
     def match(lhs_cls, rhs_cls, string, require_lhs=False, require_rhs=False):
@@ -1303,8 +1301,8 @@ class BracketBase(Base):
 
 class NumberBase(Base):
     """
-::
-    <number-base> = <number> [ _ <kind-param> ]
+    ::
+        <number-base> = <number> [ _ <kind-param> ]
     """
 
     def match(number_pattern, string):
@@ -1322,15 +1320,14 @@ class NumberBase(Base):
         return "%s_%s" % tuple(self.items)
 
     def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
+        """Provides a key of objects to be used for comparing."""
         return self.items[0]
 
 
 class CallBase(Base):
     """
-::
-    <call-base> = <lhs> ( [ <rhs> ] )
+    ::
+        <call-base> = <lhs> ( [ <rhs> ] )
     """
 
     def match(lhs_cls, rhs_cls, string, upper_lhs=False, require_rhs=False):
@@ -1377,8 +1374,8 @@ class CallBase(Base):
 
 class CALLBase(CallBase):
     """
-::
-    <CALL-base> = <LHS> ( [ <rhs> ] )
+    ::
+        <CALL-base> = <LHS> ( [ <rhs> ] )
     """
 
     def match(lhs_cls, rhs_cls, string, require_rhs=False):
@@ -1391,12 +1388,12 @@ class CALLBase(CallBase):
 
 class StringBase(Base):
     """
-::
-    <string-base> = <xyz>
+    ::
+        <string-base> = <xyz>
 
-Attributes
-----------
-string
+    Attributes
+    ----------
+    string
     """
 
     @staticmethod
@@ -1425,8 +1422,7 @@ string
         return "%s(%r)" % (self.__class__.__name__, self.string)
 
     def _cmpkey(self):
-        """ Provides a key of objects to be used for comparing.
-        """
+        """Provides a key of objects to be used for comparing."""
         return self.string
 
 
@@ -1498,12 +1494,12 @@ class STRINGBase(StringBase):
 
 class StmtBase(Base):
     """
-::
-    [ [ <label> ] [ <construct-name> : ] ] <stmt>
+    ::
+        [ [ <label> ] [ <construct-name> : ] ] <stmt>
 
-Attributes
-----------
-item : readfortran.Line
+    Attributes
+    ----------
+    item : readfortran.Line
     """
 
     def tofortran(self, tab="", isfix=None):
@@ -1536,8 +1532,8 @@ item : readfortran.Line
 
 class EndStmtBase(StmtBase):
     """
-::
-    <end-stmt-base> = END [ <stmt> [ <stmt-name>] ]
+    ::
+        <end-stmt-base> = END [ <stmt> [ <stmt-name>] ]
     """
 
     @staticmethod

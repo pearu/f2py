@@ -119,8 +119,8 @@ def test_valid(f2003_create):
 
 
 def test_invalid():
-    """ Test that parsing invalid Fortran syntax for
-    Specific_Binding statements raises an appropriate error. """
+    """Test that parsing invalid Fortran syntax for
+    Specific_Binding statements raises an appropriate error."""
 
     # includes tests for breaking C456 and C457
     for string in [
@@ -152,7 +152,7 @@ def test_invalid():
 
 
 def test_tostr_invalid(f2003_create, monkeypatch):
-    """ Test that invalid input raises an exception """
+    """Test that invalid input raises an exception"""
 
     # test internal error in tostr() when the items list is not the
     # expected size

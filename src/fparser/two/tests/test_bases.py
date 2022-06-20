@@ -43,8 +43,8 @@ from fparser.two.utils import NoMatchError, BlockBase, walk
 
 @pytest.mark.usefixtures("f2003_create")
 def test_keywordvaluebase_errors():
-    """ Unit tests for the KeywordValueBase class to check that it rejects
-    invalid input """
+    """Unit tests for the KeywordValueBase class to check that it rejects
+    invalid input"""
     from fparser.two.Fortran2003 import (
         KeywordValueBase,
         Io_Unit,
@@ -86,8 +86,8 @@ def test_keywordvaluebase_errors():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_read_stmt_errors():
-    """ Unit tests for the Read class to ensure it rejects invalid
-    inputs """
+    """Unit tests for the Read class to ensure it rejects invalid
+    inputs"""
     from fparser.two.Fortran2003 import Read_Stmt
 
     # Missing closing parenthesis
@@ -113,8 +113,8 @@ def test_read_stmt_errors():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_io_ctrl_spec_list_errors():
-    """ Unit tests for the Io_Control_Spec_List class to ensure it
-    rejects invalid input """
+    """Unit tests for the Io_Control_Spec_List class to ensure it
+    rejects invalid input"""
     from fparser.two.Fortran2003 import Io_Control_Spec_List
 
     # Positional arg following named arg
@@ -124,8 +124,8 @@ def test_io_ctrl_spec_list_errors():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_io_ctrl_spec_errors():
-    """ Unit tests for the Io_Control_Spec class to ensure it
-    rejects invalid input """
+    """Unit tests for the Io_Control_Spec class to ensure it
+    rejects invalid input"""
     from fparser.two.Fortran2003 import Io_Control_Spec
 
     # An argument with a name that is not valid within an IO control
@@ -136,19 +136,19 @@ def test_io_ctrl_spec_errors():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_blockbase_tofortran_non_ascii():
-    """ Check that the tofortran() method works when we have a program
+    """Check that the tofortran() method works when we have a program
     containing non-ascii characters within a sub-class of BlockBase. We
-    use a Case Construct for this purpose. """
+    use a Case Construct for this purpose."""
     from fparser.two.Fortran2003 import Program, Case_Construct
 
     code = (
-        u"program my_test\n"
-        u"! A comment outside the select block\n"
-        u"SELECT CASE(iflag)\n"
-        u"CASE(  30  )\n"
-        u"  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
-        u"END SELECT\n"
-        u"end program\n"
+        "program my_test\n"
+        "! A comment outside the select block\n"
+        "SELECT CASE(iflag)\n"
+        "CASE(  30  )\n"
+        "  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
+        "END SELECT\n"
+        "end program\n"
     )
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Program(reader)
@@ -160,22 +160,22 @@ def test_blockbase_tofortran_non_ascii():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_blockbase_symbol_table(monkeypatch):
-    """ Check that the BlockBase.match method creates symbol-tables
+    """Check that the BlockBase.match method creates symbol-tables
     for those classes that correspond to a scoping unit and not
-    otherwise. """
+    otherwise."""
     # Monkeypatch the list of classes that are recognised as
     # defining scoping regions.
     monkeypatch.setattr(
         SYMBOL_TABLES, "_scoping_unit_classes", [Fortran2003.Program_Stmt]
     )
-    code = u"program my_test\n" u"end program\n"
+    code = "program my_test\n" "end program\n"
     reader = FortranStringReader(code, ignore_comments=False)
     obj = BlockBase.match(
         Fortran2003.Program_Stmt, [], Fortran2003.End_Program_Stmt, reader
     )
     # We should have a new symbol table named "my_test"
     assert SYMBOL_TABLES.lookup("my_test")
-    code = u"subroutine my_sub\n" u"end subroutine\n"
+    code = "subroutine my_sub\n" "end subroutine\n"
     reader = FortranStringReader(code, ignore_comments=False)
     obj = BlockBase.match(
         Fortran2003.Subroutine_Stmt, [], Fortran2003.End_Subroutine_Stmt, reader

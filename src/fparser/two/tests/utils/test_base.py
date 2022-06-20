@@ -58,8 +58,8 @@ TEST_CODE = (
 
 @pytest.mark.usefixtures("f2003_create")
 def test_parent_info():
-    """ Check that parent information is correctly set-up in the
-    parse tree. """
+    """Check that parent information is correctly set-up in the
+    parse tree."""
     from fparser.two.utils import Base
 
     reader = get_reader(TEST_CODE)
@@ -81,8 +81,8 @@ def test_parent_info():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_children_property():
-    """ Test that the children property of Base returns the correct
-    results for both statements and expressions. """
+    """Test that the children property of Base returns the correct
+    results for both statements and expressions."""
     reader = get_reader(TEST_CODE)
     main = Fortran2003.Program(reader)
     # Check that children returns items when we have an expression

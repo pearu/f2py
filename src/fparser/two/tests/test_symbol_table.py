@@ -42,7 +42,7 @@ from fparser.api import get_reader
 
 
 def test_basic_table():
-    """ Check the basic functionality of a symbol table. """
+    """Check the basic functionality of a symbol table."""
     table = SymbolTable("BAsic")
     # Name of table is not case sensitive
     assert table.name == "basic"
@@ -64,8 +64,8 @@ def test_basic_table():
 
 
 def test_add_data_symbol():
-    """ Test that the add_data_symbol() method behaves as expected when
-    validation is enabled. """
+    """Test that the add_data_symbol() method behaves as expected when
+    validation is enabled."""
     table = SymbolTable("basic", checking_enabled=True)
     table.add_data_symbol("var", "integer")
     sym = table.lookup("var")
@@ -100,8 +100,8 @@ def test_add_data_symbol():
 
 
 def test_add_data_symbols_no_checks():
-    """ Check that we can disable the checks in the
-    add_data_symbol() method. """
+    """Check that we can disable the checks in the
+    add_data_symbol() method."""
     table = SymbolTable("basic", checking_enabled=False)
     table.add_data_symbol("var", "integer")
     table.add_data_symbol("var", "real")
@@ -115,7 +115,7 @@ def test_add_data_symbols_no_checks():
 
 
 def test_add_use_symbols():
-    """ Test that the add_use_symbols() method behaves as expected. """
+    """Test that the add_use_symbols() method behaves as expected."""
     table = SymbolTable("basic")
     # A use without an 'only' clause
     table.add_use_symbols("mod1")
@@ -133,8 +133,8 @@ def test_add_use_symbols():
 
 
 def test_add_use_symbols_errors():
-    """ Test the various checks on the supplied parameters to
-    add_use_symbols(). """
+    """Test the various checks on the supplied parameters to
+    add_use_symbols()."""
     table = SymbolTable("basic")
     with pytest.raises(TypeError) as err:
         table.add_use_symbols(table)
@@ -151,7 +151,7 @@ def test_add_use_symbols_errors():
 
 
 def test_str_method():
-    """ Test the str property of the SymbolTable class. """
+    """Test the str property of the SymbolTable class."""
     table = SymbolTable("basic")
     assert "Symbol Table 'basic'\nSymbols:\nUsed modules:\n" in str(table)
     table.add_data_symbol("var", "integer")
@@ -163,7 +163,7 @@ def test_str_method():
 
 
 def test_del_child():
-    """ Checks for the del_child method. """
+    """Checks for the del_child method."""
     table = SymbolTable("BASIC")
     inner_table = SymbolTable("func1", parent=table)
     table.add_child(inner_table)
@@ -177,7 +177,7 @@ def test_del_child():
 
 
 def test_parent_child():
-    """ Test the parent/child-related properties. """
+    """Test the parent/child-related properties."""
     table = SymbolTable("BASIC")
     with pytest.raises(TypeError) as err:
         table.add_child("wrong")
@@ -195,7 +195,7 @@ def test_parent_child():
 
 
 def test_root_property():
-    """ Test the `root` property of the SymbolTable. """
+    """Test the `root` property of the SymbolTable."""
     table = SymbolTable("BASIC")
     inner_table = SymbolTable("func1", parent=table)
     table.add_child(inner_table)
@@ -206,7 +206,7 @@ def test_root_property():
 
 
 def test_module_use(f2003_parser):
-    """ Check that a USE of a module is captured in the symbol table. """
+    """Check that a USE of a module is captured in the symbol table."""
     _ = f2003_parser(
         get_reader(
             """\
@@ -224,8 +224,8 @@ END PROGRAM a_prog
 
 
 def test_module_use_with_only(f2003_parser):
-    """ Check that USE statements with an ONLY: clause are correctly captured
-    in the symbol table. """
+    """Check that USE statements with an ONLY: clause are correctly captured
+    in the symbol table."""
     _ = f2003_parser(
         get_reader(
             """\
@@ -247,8 +247,8 @@ END PROGRAM a_prog
 
 
 def test_module_definition(f2003_parser):
-    """ Check that a SymbolTable is created for a module and populated with
-    the symbols it defines. """
+    """Check that a SymbolTable is created for a module and populated with
+    the symbols it defines."""
     _ = f2003_parser(
         get_reader(
             """\
@@ -271,8 +271,8 @@ end module my_mod
 
 
 def test_routine_in_module(f2003_parser):
-    """ Check that we get two, nested symbol tables when a module contains
-    a subroutine. """
+    """Check that we get two, nested symbol tables when a module contains
+    a subroutine."""
     _ = f2003_parser(
         get_reader(
             """\
@@ -299,8 +299,8 @@ end module my_mod
 
 
 def test_routine_in_prog(f2003_parser):
-    """ Check that we get two, nested symbol tables when a program contains
-    a subroutine. """
+    """Check that we get two, nested symbol tables when a program contains
+    a subroutine."""
     _ = f2003_parser(
         get_reader(
             """\

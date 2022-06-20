@@ -43,9 +43,7 @@ from fparser.two.utils import NoMatchError, InternalError
 
 
 def test_cray_pointer_decl(f2003_create):
-    """Check that Cray-pointer declarations are parsed correctly.
-
-    """
+    """Check that Cray-pointer declarations are parsed correctly."""
     for myinput in ["(a, b)", "  ( a , b )  "]:
         ast = Cray_Pointer_Decl(myinput)
         assert "(a, b)" in str(ast)

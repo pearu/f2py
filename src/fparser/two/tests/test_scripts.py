@@ -48,7 +48,7 @@ from fparser.scripts import fparser2, read
 
 
 class DummyArgs:
-    """ dummy object pretending to be the argument options """
+    """dummy object pretending to be the argument options"""
 
     mode = "auto"
     task = "show"
@@ -110,7 +110,7 @@ def test_runner_set_mode(tmpdir, capsys):
     # runner() as an argument options class
 
     class DummyArgsFree:
-        """ dummy object pretending to be the argument options """
+        """dummy object pretending to be the argument options"""
 
         mode = "free"
         task = "show"
@@ -151,7 +151,7 @@ def test_runner_internal_error(tmpdir, monkeypatch, capsys):
     # Create a dummy function that replaces the parser
 
     def dummy_parser(_self, std="f2003"):
-        """ dummy function that simply raises an internal error """
+        """dummy function that simply raises an internal error"""
         raise InternalError(std)
 
     # monkeypatch the parser so that it returns an InternalError exception.
@@ -174,7 +174,7 @@ def test_runner_output_task_show(tmpdir, capsys):
     """
 
     class DummyArgsTask:
-        """ dummy object pretending to be the argument options """
+        """dummy object pretending to be the argument options"""
 
         mode = "free"
         task = "show"
@@ -199,7 +199,7 @@ def test_runner_output_task_repr(tmpdir, capsys):
     """
 
     class DummyArgsTask:
-        """ dummy object pretending to be the argument options """
+        """dummy object pretending to be the argument options"""
 
         mode = "free"
         task = "repr"
@@ -228,7 +228,7 @@ def test_runner_output_task_none(tmpdir, capsys):
     """
 
     class DummyArgsTask:
-        """ dummy object pretending to be the argument options """
+        """dummy object pretending to be the argument options"""
 
         mode = "free"
         task = "none"

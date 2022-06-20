@@ -195,7 +195,7 @@ def parse(cls, line, label="", isfree=True, isstrict=False):
 
 
 def test_assignment():
-    """ Test that assignment statements are parsed correctly. """
+    """Test that assignment statements are parsed correctly."""
     assert parse(Assignment, "a=b") == "a = b"
     assert parse(PointerAssignment, "a=>b") == "a => b"
     assert parse(Assignment, "a (2)=b(n,m)") == "a(2) = b(n,m)"
@@ -293,7 +293,7 @@ def test_contains():
 
 
 def test_allocate():
-    """ Tests for various forms of ALLOCATE statement """
+    """Tests for various forms of ALLOCATE statement"""
     assert parse(Allocate, "allocate (a)") == "ALLOCATE (a)"
     assert parse(Allocate, "allocate (a, stat=b)") == "ALLOCATE (a, STAT = b)"
     assert parse(Allocate, "allocate (a,b(:1))") == "ALLOCATE (a, b(:1))"
@@ -316,7 +316,7 @@ def test_deallocate():
 
 
 def test_moduleprocedure():
-    """ Test  [ MODULE ] PROCEDURE [::] <procedure-name-list> """
+    """Test  [ MODULE ] PROCEDURE [::] <procedure-name-list>"""
 
     assert parse(ModuleProcedure, "Procedure a") == "MODULE PROCEDURE a"
     assert parse(ModuleProcedure, "procedure a , b") == "MODULE PROCEDURE a, b"
@@ -348,7 +348,7 @@ def test_close():
 
 
 def test_class():
-    """ Check that we correctly parse and generate a class declaration """
+    """Check that we correctly parse and generate a class declaration"""
     from fparser.one.typedecl_statements import Class
 
     assert (
@@ -412,7 +412,7 @@ def test_nullify():
 
 
 def test_use():
-    """ Check that we can parse USE statement. """
+    """Check that we can parse USE statement."""
     assert parse(Use, "use a") == "USE a"
     assert parse(Use, "use :: a") == "USE a"
     assert parse(Use, "use, intrinsic:: a") == "USE, INTRINSIC :: a"
@@ -797,7 +797,7 @@ def test_logical():
 
 
 def test_real():
-    """Test various declarations of real variables. """
+    """Test various declarations of real variables."""
 
     assert parse(Real, "real") == "REAL"
     assert parse(Real, "real*4") == "REAL*4"
@@ -820,7 +820,7 @@ def test_real():
 
 
 def test_double_precision():
-    """Test various declarations of double precision variables. """
+    """Test various declarations of double precision variables."""
 
     assert parse(DoublePrecision, "doubleprecision") == "DOUBLEPRECISION"
     assert parse(DoublePrecision, "double precision") == "DOUBLEPRECISION"
@@ -848,7 +848,7 @@ def test_double_precision():
 
 
 def test_complex():
-    """Test various declarations of complex variables. """
+    """Test various declarations of complex variables."""
 
     assert parse(Complex, "complex") == "COMPLEX"
     assert parse(Complex, "complex") == "COMPLEX"
@@ -871,7 +871,7 @@ def test_complex():
 
 
 def test_double_complex():
-    """Test various declarations of double complex variables. """
+    """Test various declarations of double complex variables."""
 
     assert parse(DoubleComplex, "double complex") == "DOUBLECOMPLEX"
     assert parse(DoubleComplex, "double complex") == "DOUBLECOMPLEX"
@@ -946,8 +946,8 @@ def test_implicit():
 
 
 def test_type_bound_array_access():
-    """ Check that we can parse code that calls a type-bound procedure
-    on the element of an array (of derived types) """
+    """Check that we can parse code that calls a type-bound procedure
+    on the element of an array (of derived types)"""
     parsed_code = parse(Call, "call an_array(idx)%a_func(arg)")
     assert parsed_code == "CALL an_array(idx)%a_func(arg)"
     # Routine being called has no arguments - it is valid Fortran to
@@ -965,8 +965,8 @@ def test_type_bound_array_access():
 
 
 def test_invalid_type_bound_array_access():  # pylint: disable=invalid-name
-    """ Check that a call to a type-bound procedure with incorrect
-    syntax is flagged as invalid """
+    """Check that a call to a type-bound procedure with incorrect
+    syntax is flagged as invalid"""
     with pytest.raises(ValueError) as excinfo:
         _ = parse(Call, "call an_array(idx)%a_func)")
     assert "with Call pattern failed" in str(excinfo.value)
@@ -976,7 +976,7 @@ def test_invalid_type_bound_array_access():  # pylint: disable=invalid-name
 
 
 def test_analyze_errors():
-    """ Tests that AnalyzeErrors are raised as expected. It also tests
+    """Tests that AnalyzeErrors are raised as expected. It also tests
     for various calling-sequence issues, e.g. parsing or analyzing twice,
     or calling analyze() without calling parse() first."""
     from fparser import api

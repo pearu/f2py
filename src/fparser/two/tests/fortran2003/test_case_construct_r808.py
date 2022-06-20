@@ -46,7 +46,7 @@ from fparser.two.utils import FortranSyntaxError
 
 @pytest.mark.usefixtures("f2003_create")
 def test_case_construct():
-    """ Basic test that we parse a Case Construct successfully. """
+    """Basic test that we parse a Case Construct successfully."""
     tcls = Case_Construct
     obj = tcls(
         get_reader(
@@ -73,7 +73,7 @@ end select
 
 
 def test_case_construct_name(f2003_create):
-    """ Basic test that we parse a Case Construct successfully. """
+    """Basic test that we parse a Case Construct successfully."""
     tcls = Case_Construct
     obj = tcls(
         get_reader(
@@ -102,13 +102,13 @@ def test_case_construct_name(f2003_create):
 
 @pytest.mark.usefixtures("f2003_create")
 def test_tofortran_non_ascii():
-    """ Check that the tofortran() method works when the character string
-    contains non-ascii characters. """
+    """Check that the tofortran() method works when the character string
+    contains non-ascii characters."""
     code = (
-        u"SELECT CASE(iflag)\n"
-        u"CASE(  30  ) ! This is a comment\n"
-        u"  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
-        u"END SELECT\n"
+        "SELECT CASE(iflag)\n"
+        "CASE(  30  ) ! This is a comment\n"
+        "  IF(lwp) WRITE(*,*) ' for e1=1\xb0'\n"
+        "END SELECT\n"
     )
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Case_Construct(reader)

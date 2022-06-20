@@ -79,9 +79,7 @@ def test_case_construct(f2003_create):
 
 
 def test_do_construct(f2003_create):
-    """Test a do construct is supported by the executable construct class.
-
-    """
+    """Test a do construct is supported by the executable construct class."""
     code = "do i = 1, n\n" "end do"
     reader = get_reader(code)
     result = Executable_Construct(reader)

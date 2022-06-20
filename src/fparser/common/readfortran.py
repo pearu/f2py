@@ -271,7 +271,7 @@ class FortranReaderError(Exception):
 
 
 class Line:
-    """ Holds a Fortran source line.
+    """Holds a Fortran source line.
 
     Attributes
     ----------
@@ -471,7 +471,7 @@ class Comment:
 
 
 class MultiLine:
-    """ Holds PYF file multiline.
+    """Holds PYF file multiline.
 
     PYF file multiline is represented as follows::
       prefix+'''+lines+'''+suffix.
@@ -643,14 +643,13 @@ class FortranReaderBase:
         return "{source} mode={mode}".format(source=self.source, mode=self._format.mode)
 
     def close_source(self):
-        """ Called when self.source.next() raises StopIteration.
-        """
+        """Called when self.source.next() raises StopIteration."""
         pass
 
     # For handling raw source lines:
 
     def put_single_line(self, line):
-        """ Put single line to FILO line buffer.
+        """Put single line to FILO line buffer.
 
         ``linecount`` will be decremented, that is, the line was
         returned by ``get_single_line`` call then it will be
@@ -705,7 +704,7 @@ class FortranReaderBase:
         self.linecount += 1
 
         # expand tabs, replace special symbols, get rid of nl characters
-        line = line.expandtabs().replace(u"\xa0", u" ").rstrip()
+        line = line.expandtabs().replace("\xa0", " ").rstrip()
 
         self.source_lines.append(line)
 
@@ -726,7 +725,7 @@ class FortranReaderBase:
         return line
 
     def get_next_line(self, ignore_empty=False, ignore_comments=None):
-        """ Return next non-empty line from FILO line buffer or from source.
+        """Return next non-empty line from FILO line buffer or from source.
 
         The line will be put to FILO line buffer. So, this method can
         be used for looking forward lines without consuming them.
@@ -746,8 +745,7 @@ class FortranReaderBase:
 
     # Parser methods:
     def get_item(self, ignore_comments=None):
-        """ Return next item.
-        """
+        """Return next item."""
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
 
@@ -758,15 +756,13 @@ class FortranReaderBase:
         return item
 
     def put_item(self, item):
-        """ Insert item to FIFO item buffer.
-        """
+        """Insert item to FIFO item buffer."""
         self.fifo_item.insert(0, item)
 
     # Iterator methods:
 
     def __iter__(self):
-        """ Make FortranReader an iterator.
-        """
+        """Make FortranReader an iterator."""
         return self
 
     def __next__(self):
@@ -941,8 +937,7 @@ class FortranReaderBase:
     # Interface to returned items:
 
     def line_item(self, line, startlineno, endlineno, label, name, errmessage=None):
-        """ Construct Line item.
-        """
+        """Construct Line item."""
         if errmessage is None:
             return Line(line, (startlineno, endlineno), label, name, self)
         return SyntaxErrorLine(
@@ -952,8 +947,7 @@ class FortranReaderBase:
     def multiline_item(
         self, prefix, lines, suffix, startlineno, endlineno, errmessage=None
     ):
-        """ Construct MultiLine item.
-        """
+        """Construct MultiLine item."""
         if errmessage is None:
             return MultiLine(prefix, lines, suffix, (startlineno, endlineno), self)
         return SyntaxErrorMultiLine(
@@ -961,8 +955,7 @@ class FortranReaderBase:
         )
 
     def comment_item(self, comment, startlineno, endlineno):
-        """ Construct Comment item.
-        """
+        """Construct Comment item."""
         return Comment(comment, (startlineno, endlineno), self)
 
     def cpp_directive_item(self, line, startlineno, endlineno):
@@ -1022,7 +1015,7 @@ class FortranReaderBase:
     def format_warning_message(
         self, message, startlineno, endlineno, startcolno=0, endcolno=-1
     ):
-        """Create a string with a warning message. """
+        """Create a string with a warning message."""
         return self.format_message(
             "WARNING", message, startlineno, endlineno, startcolno, endcolno
         )

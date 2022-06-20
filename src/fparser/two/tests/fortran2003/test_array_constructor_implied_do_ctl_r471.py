@@ -45,8 +45,8 @@ from fparser.two import Fortran2003
 
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_implicit_loop_constructor():
-    """ Test array constructor with implicit loop containing an intrinsic
-    call. """
+    """Test array constructor with implicit loop containing an intrinsic
+    call."""
     fcode = "WHERE((/(JBODY,JBODY=1,SIZE(ARR1(:)))/)/=1) ARR1(:)=1.0"
     reader = FortranStringReader(fcode)
     ast = Fortran2003.Where_Stmt(reader)
@@ -59,8 +59,8 @@ def test_implicit_loop_constructor():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_implied_do_no_match():
-    """ R471 - implied-do-control must contain an "=" and 2 or three integer
-    expressions. """
+    """R471 - implied-do-control must contain an "=" and 2 or three integer
+    expressions."""
     reader = FortranStringReader("j=1,2,1")
     assert Fortran2003.Ac_Implied_Do_Control(reader)
     # Missing '='

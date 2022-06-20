@@ -115,7 +115,7 @@ def runner(_, options, args):
 
 
 def main():
-    """ Check arguments before parsing code """
+    """Check arguments before parsing code"""
     parser = OptionParser()
     set_fparser_options(parser)
     options, args = parser.parse_args()

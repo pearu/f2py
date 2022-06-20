@@ -44,7 +44,7 @@ from fparser.two.Fortran2003 import Action_Term_Do_Construct, Nonblock_Do_Constr
 
 @pytest.mark.usefixtures("f2003_create")
 def test_nonblock_do_construct():
-    """ Tests that nonblock DO construct is parsed correctly (R835). """
+    """Tests that nonblock DO construct is parsed correctly (R835)."""
     tcls = Nonblock_Do_Construct
     obj = tcls(
         get_reader(
@@ -83,7 +83,7 @@ def test_nonblock_do_construct():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_outer_shared_do_construct():
-    """ Test for parsing of an outer-shared do construct (R839). """
+    """Test for parsing of an outer-shared do construct (R839)."""
     tcls = Nonblock_Do_Construct
     obj = tcls(
         get_reader(
@@ -105,12 +105,12 @@ def test_outer_shared_do_construct():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_nonblock_do_construct_tofortran_non_ascii():
-    """ Check that the tofortran() method works when the non-block
-    do-construct contains a character string with non-ascii characters. """
+    """Check that the tofortran() method works when the non-block
+    do-construct contains a character string with non-ascii characters."""
     from fparser.common.readfortran import FortranStringReader
     from fparser.common.sourceinfo import FortranFormat
 
-    code = u"      DO 50\n" u" 50   WRITE(*,*) ' for e1=1\xb0'\n"
+    code = "      DO 50\n" " 50   WRITE(*,*) ' for e1=1\xb0'\n"
     reader = FortranStringReader(code)
     # Ensure reader in in 'fixed-format' mode
     reader.set_format(FortranFormat(False, True))

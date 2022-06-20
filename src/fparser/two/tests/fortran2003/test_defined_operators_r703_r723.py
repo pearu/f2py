@@ -45,9 +45,7 @@ from fparser.two.utils import NoMatchError
 
 
 def test_defined_operator(f2003_create, op_type):
-    """Check that basic unary and binary operators are parsed correctly.
-
-    """
+    """Check that basic unary and binary operators are parsed correctly."""
     for line in [".myoperator.", "  .myoperator.  ", "." + 63 * "a" + "."]:
         ast = op_type(line)
         target = line.strip().upper()
@@ -56,7 +54,7 @@ def test_defined_operator(f2003_create, op_type):
 
 
 def test_syntax_error(f2003_create, op_type):
-    """ Test that NoMatchError is raised for various syntax errors. """
+    """Test that NoMatchError is raised for various syntax errors."""
     for line in ["", "  ", "x", ".x", "x.", "..", ".,.", ". x.", ".x .", ".x x."]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = op_type(line)

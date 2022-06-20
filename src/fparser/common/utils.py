@@ -115,10 +115,10 @@ module_file_extensions = [".f", ".f90", ".f95", ".f03", ".f08"]
 
 
 def split_comma(line, item=None, comma=",", keep_empty=False, brackets=None):
-    """ Split (an optionally bracketed) comma-separated list into
+    """Split (an optionally bracketed) comma-separated list into
     items and return a list containing them. If supplied then
     brackets must be a list of containing two strings, the first
-    being the opening bracket and the second the closing bracket. """
+    being the opening bracket and the second the closing bracket."""
     # we may have blank space so strip the line
     line = line.strip()
     if not line:
@@ -157,10 +157,10 @@ def split_comma(line, item=None, comma=",", keep_empty=False, brackets=None):
 
 
 def extract_bracketed_list_items(line, item=None):
-    """ Takes any line that contains "xxx (a,b,...) yyy" and returns
+    """Takes any line that contains "xxx (a,b,...) yyy" and returns
     a list of items corresponding to a, b, ... Anything outside of
     the parentheses is ignored. Only works for strings containing
-    a single set of parentheses. """
+    a single set of parentheses."""
     if line.count("(") > 1 or line.count(")") > 1:
         raise ParseError(
             "parse_bracketed_list: more than one opening/closing parenthesis "
@@ -239,8 +239,7 @@ def parse_result(line, item=None):
 
 
 def filter_stmts(content, classes):
-    """ Pop and return classes instances from content.
-    """
+    """Pop and return classes instances from content."""
     stmts = []
     indices = []
     for i in range(len(content)):
@@ -308,8 +307,7 @@ def module_in_file(name, filename):
 
 
 def str2stmt(string, isfree=True, isstrict=False):
-    """ Convert Fortran code to Statement tree.
-    """
+    """Convert Fortran code to Statement tree."""
     from .readfortran import Line, FortranStringReader
     from .parsefortran import FortranParser
 
@@ -351,8 +349,7 @@ _classes_cache = {}
 
 
 class meta_classes(type):
-    """ Meta class for ``classes``.
-    """
+    """Meta class for ``classes``."""
 
     __abstractmethods__ = False
 

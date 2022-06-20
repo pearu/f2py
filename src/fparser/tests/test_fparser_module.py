@@ -46,7 +46,7 @@ def test_fparser_logging_handler(tmpdir, caplog):
 
     """
     content = "HELLO"
-    invalid_content = u"\xca".join(content)
+    invalid_content = "\xca".join(content)
     filepath = os.path.join(str(tmpdir), "tmp_in.f90")
     # Create the input file
     with open(filepath, "w", encoding="UTF-8") as tmp_file:

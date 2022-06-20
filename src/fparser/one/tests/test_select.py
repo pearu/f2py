@@ -79,14 +79,14 @@ import fparser.common.sourceinfo
 # have to create our own function that simply wraps print and returns
 # a value.
 def print_wrapper(arg):
-    """ A wrapper that allows us to call print as a function. Used for
-    monkeypatching logging calls. """
+    """A wrapper that allows us to call print as a function. Used for
+    monkeypatching logging calls."""
     print(arg)
     return None
 
 
 def test_case():
-    """ Basic tests for parsing of individual case statements """
+    """Basic tests for parsing of individual case statements"""
     from fparser.one.tests.test_parser import parse
     from fparser.one.block_statements import Case
 
@@ -103,8 +103,8 @@ def test_case():
 
 
 def test_case_internal_error(monkeypatch, capsys):
-    """ Check that expected errors are raised when invalid case
-    statements are encountered """
+    """Check that expected errors are raised when invalid case
+    statements are encountered"""
     from fparser.one.block_statements import Case
     from fparser.common.readfortran import FortranStringReader
 
@@ -128,8 +128,8 @@ def test_case_internal_error(monkeypatch, capsys):
 
 
 def test_class_internal_error(monkeypatch, capsys):
-    """ Check that expected errors are raised when invalid CLASS
-    statements are encountered """
+    """Check that expected errors are raised when invalid CLASS
+    statements are encountered"""
     from fparser.one.block_statements import ClassIs
     from fparser.common.readfortran import FortranStringReader
 
@@ -227,7 +227,7 @@ def test_named_select_case():
 
 def test_select_case_brackets():
     """Test that fparser correctly parses a select case involving
-    parentheses """
+    parentheses"""
     from fparser import api
 
     source_str = """
@@ -308,7 +308,7 @@ def test_select_type():
 
 
 def test_type_is_process_item(monkeypatch, capsys):
-    """ Test error condition raised in TypeIs.process_item() method """
+    """Test error condition raised in TypeIs.process_item() method"""
     from fparser import api
 
     source_str = """
@@ -345,7 +345,7 @@ def test_type_is_process_item(monkeypatch, capsys):
 
 
 def test_type_is_to_fortran():
-    """ Test error condition raised in TypeIs.to_fortran() method """
+    """Test error condition raised in TypeIs.to_fortran() method"""
     from fparser import api
     from fparser.common.utils import ParseError
 
@@ -381,7 +381,7 @@ def test_type_is_to_fortran():
 
 
 def test_class_is_process_item(monkeypatch, capsys):
-    """ Test error condition raised in ClassIs.process_item() method """
+    """Test error condition raised in ClassIs.process_item() method"""
     from fparser import api
 
     source_str = """
@@ -418,7 +418,7 @@ def test_class_is_process_item(monkeypatch, capsys):
 
 
 def test_class_is_to_fortran():
-    """ Test ClassIs.to_fortran() method """
+    """Test ClassIs.to_fortran() method"""
     from fparser import api
 
     source_str = """

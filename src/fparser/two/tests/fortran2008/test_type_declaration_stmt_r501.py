@@ -98,8 +98,8 @@ def test_type_declaration_stmt():  # R501
 
 
 def test_shadowed_intrinsic(f2008_parser):
-    """ Check that a locally-defined symbol that shadows (overwrites) a
-    Fortran intrinsic is correctly identified. """
+    """Check that a locally-defined symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified."""
     tree = f2008_parser(
         get_reader(
             """\

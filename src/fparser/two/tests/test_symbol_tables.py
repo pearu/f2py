@@ -42,8 +42,8 @@ from fparser.two.symbol_table import SymbolTables, SymbolTable, SymbolTableError
 
 
 def test_construction_addition_removal():
-    """ Check that we can create a SymbolTables instance, add a table to it,
-    remove a table from it and query it. """
+    """Check that we can create a SymbolTables instance, add a table to it,
+    remove a table from it and query it."""
     tables = SymbolTables()
     assert tables._current_scope is None
     assert tables._symbol_tables == {}
@@ -81,8 +81,8 @@ def test_construction_addition_removal():
 
 
 def test_scoping_unit_classes_setter():
-    """ Check that the setter for the list of classes used to define scoping
-    regions works as expected. """
+    """Check that the setter for the list of classes used to define scoping
+    regions works as expected."""
     tables = SymbolTables()
     assert tables.scoping_unit_classes == []
     tables.scoping_unit_classes = [Fortran2003.Block_Data]
@@ -98,7 +98,7 @@ def test_scoping_unit_classes_setter():
 
 
 def test_str_method():
-    """ Tests for the str() method. """
+    """Tests for the str() method."""
     tables = SymbolTables()
     text = str(tables)
     assert "SymbolTables: 0 tables" in text
@@ -116,8 +116,8 @@ def test_str_method():
 
 
 def test_nested_scoping():
-    """ Test the functionality related to moving into and out of scoping
-    regions. """
+    """Test the functionality related to moving into and out of scoping
+    regions."""
     tables = SymbolTables()
     tables.enter_scope("some_mod")
     outer_table = tables.lookup("some_mod")
@@ -148,7 +148,7 @@ def test_nested_scoping():
 
 
 def test_nested_removal():
-    """ Tests the removal of symbol tables when we have nested scopes. """
+    """Tests the removal of symbol tables when we have nested scopes."""
     tables = SymbolTables()
     tables.enter_scope("some_mod")
     tables.enter_scope("some_func")

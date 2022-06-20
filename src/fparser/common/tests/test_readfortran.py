@@ -62,14 +62,14 @@ from fparser.common.sourceinfo import FortranFormat
 
 @pytest.fixture(scope="module", name="f2py_enabled", params=[True, False])
 def f2py_enabled_fixture(request):
-    """ Fixture that returns whether or not to enable reader support for
-    f2py directives. """
+    """Fixture that returns whether or not to enable reader support for
+    f2py directives."""
     return request.param
 
 
 def test_empty_line_err():
-    """ Check that we raise the expected error if we try and create
-    an empty Line """
+    """Check that we raise the expected error if we try and create
+    an empty Line"""
     from fparser.common.readfortran import FortranReaderError
 
     with pytest.raises(FortranReaderError) as err:
@@ -78,7 +78,7 @@ def test_empty_line_err():
 
 
 def test_line_map():
-    """ Check the application and reversal of tokenisation of a Line for
+    """Check the application and reversal of tokenisation of a Line for
     strings, expressions in parentheses and literal constants with an
     exponent.
 
@@ -739,7 +739,7 @@ def test_multi_put_item(ignore_comments):
 
 ##############################################################################
 
-FULL_FREE_SOURCE = u"""
+FULL_FREE_SOURCE = """
 
 !> Unicode comment: ❤ ✓ ☂ ♞ ☯
 
@@ -753,7 +753,7 @@ end program test
 """
 
 FULL_FREE_EXPECTED = [
-    u"!> Unicode comment: ❤ ✓ ☂ ♞ ☯",
+    "!> Unicode comment: ❤ ✓ ☂ ♞ ☯",
     "program test",
     "  implicit none",
     "  character, parameter :: nature = 'free format'",
@@ -811,8 +811,8 @@ def test_file_reader():
 
 
 def test_none_in_fifo(log):
-    """ Check that a None entry in the reader FIFO buffer is handled
-    correctly. """
+    """Check that a None entry in the reader FIFO buffer is handled
+    correctly."""
     log.reset()
     handle, filename = tempfile.mkstemp(suffix=".f90", text=True)
     os.close(handle)
@@ -1029,7 +1029,7 @@ cComment
 
 
 def test_f2py_directive_fixf90(f2py_enabled):
-    """ Test the handling of the f2py directive in fixed-format f90. """
+    """Test the handling of the f2py directive in fixed-format f90."""
     string_fix90 = """c -*- fix -*-
       subroutine foo
       a = 3!f2py.14 ! pi!
@@ -1056,8 +1056,8 @@ def test_f2py_directive_fixf90(f2py_enabled):
 
 
 def test_f2py_freef90(f2py_enabled):
-    """ Test the handling of f2py directives in free-format f90, in both
-    in-line and full-line comments. """
+    """Test the handling of f2py directives in free-format f90, in both
+    in-line and full-line comments."""
     lines = [
         "subroutine foo",
         "   a = 3!f2py.14 ! pi!",
@@ -1086,7 +1086,7 @@ def test_f2py_freef90(f2py_enabled):
 
 @pytest.mark.xfail(reason="Issue #270: f2py directives not working in F77 " "code.")
 def test_f2py_directive_f77(f2py_enabled):
-    """ Test the handling of the f2py directive in fixed-format f77. """
+    """Test the handling of the f2py directive in fixed-format f77."""
     string_f77 = """c -*- f77 -*-
       subroutine foo
 cf2py call me ! hey
@@ -1105,8 +1105,8 @@ cf2py call me ! hey
 
 
 def test_utf_char_in_code(log):
-    """ Check that we cope with Fortran code that contains UTF characters. This
-    is not valid Fortran but most compilers cope with it. """
+    """Check that we cope with Fortran code that contains UTF characters. This
+    is not valid Fortran but most compilers cope with it."""
     log.reset()
     fort_file = os.path.join(os.path.dirname(__file__), "utf_in_code.f90")
     reader = FortranFileReader(fort_file, ignore_comments=True)
@@ -1117,7 +1117,7 @@ def test_utf_char_in_code(log):
 
 
 def test_extract_label():
-    """ Test the extract label function in readfortran.py."""
+    """Test the extract label function in readfortran.py."""
     text_input = "no label"
     label, text_result = extract_label(text_input)
     assert label is None

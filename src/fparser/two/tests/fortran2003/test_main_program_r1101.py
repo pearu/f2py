@@ -135,7 +135,7 @@ def test_valid(f2003_create):
 
 
 def test_invalid1(f2003_create):
-    """ Test that exceptions are raised for invalid code """
+    """Test that exceptions are raised for invalid code"""
     # no end
     with pytest.raises(NoMatchError) as excinfo:
         _ = Main_Program(get_reader("program a\n"))

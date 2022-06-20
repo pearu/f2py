@@ -43,9 +43,7 @@ from fparser.two.utils import NoMatchError
 
 
 def test_cray_pointee_array_spec(f2003_create):
-    """Check that Cray-pointee array specifications are parsed correctly.
-
-    """
+    """Check that Cray-pointee array specifications are parsed correctly."""
     for myinput in ["n", "0 : n", "n, m", "5, *", "*", "0 : 1, 2 : *"]:
         ast = Cray_Pointee_Array_Spec(myinput)
         assert myinput in str(ast)

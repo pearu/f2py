@@ -734,13 +734,12 @@ class Statement(metaclass=classes):
         self.warning("nothing analyzed")
 
     def get_variable(self, name):
-        """ Return Variable instance of variable name.
-        """
+        """Return Variable instance of variable name."""
         mth = getattr(self, "get_variable_by_name", self.parent.get_variable)
         return mth(name)
 
     def get_type(self, name):
-        """ Return type declaration using implicit rules
+        """Return type declaration using implicit rules
         for name.
         """
         mth = getattr(self, "get_type_by_name", self.parent.get_type)
@@ -825,8 +824,7 @@ class BeginStatement(Statement):
         return "\n".join(lines)
 
     def process_item(self):
-        """ Process the line
-        """
+        """Process the line"""
         item = self.item
         if item is None:
             return

@@ -80,11 +80,11 @@ import re
 
 
 class String(str):
-    """ Dummy string class. """
+    """Dummy string class."""
 
 
 class ParenString(str):
-    """ Class representing a parenthesis string. """
+    """Class representing a parenthesis string."""
 
 
 __all__ = ["String", "string_replace_map", "splitquote", "splitparen"]
@@ -126,7 +126,7 @@ class StringReplaceDict(dict):
 
 
 def memoize(function):
-    """ Simple memoization decorator.
+    """Simple memoization decorator.
 
     :param function: The function to memoize.
     :type function: Callable

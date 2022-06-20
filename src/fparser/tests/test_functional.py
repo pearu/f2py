@@ -37,8 +37,8 @@
 
 
 def test_procedure_interface():
-    """ Test that parser copes with a procedure declaration in
-    a subroutine """
+    """Test that parser copes with a procedure declaration in
+    a subroutine"""
     from fparser import api
 
     source_str = """  subroutine proc_interface_test()

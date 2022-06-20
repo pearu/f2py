@@ -41,8 +41,7 @@ from fparser.two.utils import FortranSyntaxError
 
 
 def test_select_type_construct():
-    """Check 'select type' construct is parsed correctly
-    """
+    """Check 'select type' construct is parsed correctly"""
     tcls = Select_Type_Construct
     tree = tcls(
         get_reader(
