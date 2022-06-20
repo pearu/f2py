@@ -58,7 +58,7 @@ from fparser.two.utils import NoMatchError
     ],
 )
 def test_match_valid(example, result):
-    """ Test that valid input is parsed correctly """
+    """Test that valid input is parsed correctly"""
 
     obj = Import_Stmt(example)
     assert isinstance(obj, Import_Stmt), repr(obj)
@@ -70,7 +70,7 @@ def test_match_valid(example, result):
     "example", ["", "  ", "IMPOR", "IMPORT : name1", "IMPORT ::", "IMPORTname1"]
 )
 def test_match_invalid(example):
-    """ Test that invalid input raises an exception """
+    """Test that invalid input raises an exception"""
 
     with pytest.raises(NoMatchError) as excinfo:
         _ = Import_Stmt(example)

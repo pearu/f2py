@@ -76,8 +76,8 @@ from fparser.api import get_reader
 
 @pytest.fixture(autouse=True)
 def auto_f2003_create(f2003_create):
-    """ Since all of the tests in this file need the `f2003_create` fixture,
-    this fixture simply adds 'autouse=True' to it. """
+    """Since all of the tests in this file need the `f2003_create` fixture,
+    this fixture simply adds 'autouse=True' to it."""
 
 
 def assert_raises(exc, fcls, string):
@@ -105,7 +105,7 @@ def assert_raises(exc, fcls, string):
 
 
 def test_specification_part():
-    """ Tests for parsing specification-part (R204). """
+    """Tests for parsing specification-part (R204)."""
     reader = get_reader(
         """\
     integer a"""
@@ -147,7 +147,7 @@ end type b
 
 
 def test_constant():
-    """ Tests that various types of constant expressions are parsed
+    """Tests that various types of constant expressions are parsed
     correctly (R305). The example here is for Literal_Constant
     subclass. Other literal constant types are tested separately.
     """
@@ -158,7 +158,7 @@ def test_constant():
 
 
 def test_literal_constant():
-    """ Tests that various types of literal constant expressions are
+    """Tests that various types of literal constant expressions are
     parsed correctly (R306).
     """
     tcls = Literal_Constant
@@ -330,8 +330,8 @@ def test_hex_constant():  # R414
 
 
 def test_signed_real_literal_constant():
-    """ Tests that various formats of a signed ("+", "-") real
-    literal constant are parsed correctly (R416). """
+    """Tests that various formats of a signed ("+", "-") real
+    literal constant are parsed correctly (R416)."""
     # pylint: disable=invalid-name
 
     tcls = Signed_Real_Literal_Constant
@@ -385,8 +385,8 @@ def test_signed_real_literal_constant():
 
 
 def test_real_literal_constant():
-    """ Tests that various formats of a real literal constant
-    are parsed correctly (R417). """
+    """Tests that various formats of a real literal constant
+    are parsed correctly (R417)."""
 
     tcls = Real_Literal_Constant
     obj = tcls("12.78")
@@ -707,8 +707,8 @@ def test_proc_component_def_stmt():  # R445
 
 
 def test_private_components_stmt():
-    """ Tests that declaration of PRIVATE components in a type definition
-    is parsed correctly (R447). """
+    """Tests that declaration of PRIVATE components in a type definition
+    is parsed correctly (R447)."""
     tcls = Private_Components_Stmt
     obj = tcls("private")
     assert isinstance(obj, tcls), repr(obj)
@@ -722,7 +722,7 @@ def test_private_components_stmt():
 
 
 def test_type_bound_procedure_part():
-    """ Tests for type-bound procedure (R448). """
+    """Tests for type-bound procedure (R448)."""
     tcls = Type_Bound_Procedure_Part
     obj = tcls(
         get_reader(
@@ -1963,7 +1963,7 @@ def test_logical_initialization_expr():  # R733
 
 
 def test_assignment_stmt():
-    """ Tests for the Assignment_Stmt class (R734). """
+    """Tests for the Assignment_Stmt class (R734)."""
     tcls = Assignment_Stmt
     obj = tcls("a = b")
     assert isinstance(obj, tcls), repr(obj)
@@ -2108,7 +2108,7 @@ def test_forall_triplet_spec():  # R755
 
 
 def test_if_nonblock_do():
-    """ Tests that conditional nonblock DO construct is parsed correctly. """
+    """Tests that conditional nonblock DO construct is parsed correctly."""
     tcls = If_Construct
 
     obj = tcls(
@@ -2195,7 +2195,7 @@ def test_type_guard_stmt():  # R823
 
 
 def test_label_do_stmt():
-    """ Tests that labeled DO statement is parsed correctly (R828). """
+    """Tests that labeled DO statement is parsed correctly (R828)."""
     tcls = Label_Do_Stmt
     obj = tcls("do 12")
     assert isinstance(obj, tcls), repr(obj)
@@ -2204,9 +2204,9 @@ def test_label_do_stmt():
 
 
 def test_loop_control():
-    """ Tests incorrect loop control constructs (R829). Correct loop
+    """Tests incorrect loop control constructs (R829). Correct loop
     control constructs are tested in test_block_label_do_construct()
-    and test_nonblock_label_do_construct(). """
+    and test_nonblock_label_do_construct()."""
     tcls = Loop_Control
 
     # More than one '=' in counter expression
@@ -2266,8 +2266,8 @@ def test_io_unit():  # R901
 
 
 def test_read_stmt():
-    """ Tests that we successfully parse various forms of
-    READ statement (R910). """
+    """Tests that we successfully parse various forms of
+    READ statement (R910)."""
     tcls = Read_Stmt
     obj = tcls("read(123)")
     assert isinstance(obj, tcls), repr(obj)
@@ -2459,7 +2459,7 @@ def test_flush_spec():  # R928
 
 
 def test_inquire_stmt():
-    """ Tests for the INQUIRE statement (R929). """
+    """Tests for the INQUIRE statement (R929)."""
     tcls = Inquire_Stmt
     obj = tcls("inquire(1,file=a)")
     assert isinstance(obj, tcls), repr(obj)
@@ -2472,8 +2472,8 @@ def test_inquire_stmt():
 
 
 def test_inquire_spec():
-    """ Tests that we recognise the various possible forms of
-    entries in an inquire list (R930). """
+    """Tests that we recognise the various possible forms of
+    entries in an inquire list (R930)."""
     tcls = Inquire_Spec
     obj = tcls("1")
     assert isinstance(obj, tcls), repr(obj)
@@ -2500,8 +2500,8 @@ def test_inquire_spec():
 
 
 def test_inquire_spec_list():
-    """ Tests that we recognise the various possible forms of
-    inquire list (R930). """
+    """Tests that we recognise the various possible forms of
+    inquire list (R930)."""
     # Inquire_Spec_List is generated at runtime in Fortran2003.py
     tcls = Inquire_Spec_List
 
@@ -2516,8 +2516,8 @@ def test_inquire_spec_list():
 
 
 def test_open_stmt():
-    """ Tests that we correctly parse and re-generate the various forms
-    of OPEN statement (R904). """
+    """Tests that we correctly parse and re-generate the various forms
+    of OPEN statement (R904)."""
     tcls = Open_Stmt
     obj = tcls("open(23, file='some_file.txt')")
     assert isinstance(obj, tcls)
@@ -2528,7 +2528,7 @@ def test_open_stmt():
 
 
 def test_connect_spec():
-    """ Tests for individual elements of Connect_Spec (R905). """
+    """Tests for individual elements of Connect_Spec (R905)."""
     tcls = Connect_Spec
     # Incorrect name for a member of the list
     with pytest.raises(NoMatchError) as excinfo:
@@ -2731,7 +2731,7 @@ def test_format_item():  # R1003
 
 
 def test_data_edit_desc():
-    """ Tests for matching Edit Descriptors (R1005). """
+    """Tests for matching Edit Descriptors (R1005)."""
     tcls = Data_Edit_Desc
     obj = tcls("I3")
     assert str(obj) == "I3"
@@ -2842,8 +2842,8 @@ end
 
 
 def test_invalid_main_program0():
-    """ Test for when the Main_Program0 class fails to match. We should
-    get a NoMatchError and no symbol table. """
+    """Test for when the Main_Program0 class fails to match. We should
+    get a NoMatchError and no symbol table."""
     with pytest.raises(Fortran2003.NoMatchError):
         _ = Fortran2003.Main_Program0(get_reader("integer :: i\n" "i = 9\n" "en\n"))
     # Ensure that no symbol table has been created
@@ -2903,8 +2903,8 @@ contains
 
 
 def test_module_nature():
-    """ Tests that a module nature statement is parsed correctly
-    (INTRINSIC or NON_INTRINSIC allowed, R1110). """
+    """Tests that a module nature statement is parsed correctly
+    (INTRINSIC or NON_INTRINSIC allowed, R1110)."""
     tcls = Module_Nature
     obj = tcls("intrinsic")
     assert isinstance(obj, tcls), repr(obj)

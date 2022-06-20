@@ -43,48 +43,48 @@ from fparser.two.Fortran2008 import Submodule_Stmt
 
 
 def test_simple(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     result = Submodule_Stmt("submodule (id) name")
     assert str(result) == "SUBMODULE (id) name"
 
 
 def test_simple_error1(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submod (id) name")
     assert "Submodule_Stmt: 'submod (id) name" in str(excinfo.value)
 
 
 def test_simple_error2(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule name")
     assert "Submodule_Stmt: 'submodule name'" in str(excinfo.value)
 
 
 def test_simple_error3(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule () name")
     assert "Submodule_Stmt: 'submodule () name'" in str(excinfo.value)
 
 
 def test_simple_error4(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id)")
     assert "Submodule_Stmt: 'submodule (id)'" in str(excinfo.value)
 
 
 def test_simple_error5(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule name (id)")
     assert "Submodule_Stmt: 'submodule name (id)'" in str(excinfo.value)
 
 
 def test_simple_error6(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) (name)")
     assert "Submodule_Stmt: 'submodule (id) (name)'" in str(excinfo.value)
@@ -135,7 +135,7 @@ def test_splitparen_error(monkeypatch):
 
 
 def test_simple_error9(f2008_create):
-    """ Test the parsing of a submodule statement"""
+    """Test the parsing of a submodule statement"""
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) name :")
     assert "Submodule_Stmt: 'submodule (id) name :'" in str(excinfo.value)

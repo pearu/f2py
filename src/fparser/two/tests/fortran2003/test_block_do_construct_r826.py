@@ -47,8 +47,8 @@ from fparser.two.Fortran2003 import (
 
 @pytest.mark.usefixtures("f2003_create")
 def test_block_label_do_construct():
-    """ Tests that block labeled DO construct
-    is parsed correctly (R826_1). """
+    """Tests that block labeled DO construct
+    is parsed correctly (R826_1)."""
     tcls = Block_Label_Do_Construct
 
     obj = tcls(
@@ -137,8 +137,8 @@ def test_block_label_do_construct():
 @pytest.mark.usefixtures("f2003_create")
 def test_block_nonlabel_do_construct():
     # pylint: disable=invalid-name
-    """ Tests that block nonlabeled DO construct is parsed
-    correctly (R826_2) """
+    """Tests that block nonlabeled DO construct is parsed
+    correctly (R826_2)"""
     tcls = Block_Nonlabel_Do_Construct
 
     obj = tcls(
@@ -262,9 +262,9 @@ def test_block_nonlabel_do_construct():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_doconstruct_tofortran_non_ascii():
-    """ Check that the tofortran() method works when the do-construct contains
-    a character string with non-ascii characters. """
-    code = u"DO i=1,10\n" u"  WRITE(*,*) ' for e1=1\xb0'\n" u"END DO\n"
+    """Check that the tofortran() method works when the do-construct contains
+    a character string with non-ascii characters."""
+    code = "DO i=1,10\n" "  WRITE(*,*) ' for e1=1\xb0'\n" "END DO\n"
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Block_Nonlabel_Do_Construct(reader)
     out_str = str(obj)

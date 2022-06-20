@@ -43,9 +43,7 @@ from fparser.two.utils import NoMatchError
 
 
 def test_cray_pointee_decl(f2003_create):
-    """Check that Cray-pointee declarations are parsed correctly.
-
-    """
+    """Check that Cray-pointee declarations are parsed correctly."""
     for myinput in [
         "a(n)",
         "a(0 : n)",

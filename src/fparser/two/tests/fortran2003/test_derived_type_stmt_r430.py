@@ -45,9 +45,7 @@ from fparser.two.utils import NoMatchError, InternalError
 
 
 def test_valid(f2003_create):
-    """Check that valid input is parsed correctly.
-
-    """
+    """Check that valid input is parsed correctly."""
 
     # simple minimal type statement
     ast = Derived_Type_Stmt("type a")
@@ -101,9 +99,7 @@ def test_valid(f2003_create):
 
 
 def test_errors(f2003_create):
-    """Check that invalid input does not match.
-
-    """
+    """Check that invalid input does not match."""
 
     for value in [
         "",

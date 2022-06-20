@@ -49,8 +49,8 @@ from fparser.two import Fortran2003
 
 @pytest.mark.usefixtures("f2003_create")
 def test_implicit_loop_constructor_no_parentheses():
-    """ Test that the parser does not match an implicit loop if the
-    surrounding parentheses are missing (R470). """
+    """Test that the parser does not match an implicit loop if the
+    surrounding parentheses are missing (R470)."""
     fcode = "(/ival, ival=1, nval, istep/)"
     reader = FortranStringReader(fcode)
     ast = Fortran2003.Array_Constructor(reader)
@@ -60,8 +60,8 @@ def test_implicit_loop_constructor_no_parentheses():
 @pytest.mark.xfail(reason="#257 Constraint C497 is not checked.")
 @pytest.mark.usefixtures("f2003_create")
 def test_nested_implied_do():
-    """ Test C497 - the ac-do-variable of a nested implicit do shall not
-    appear as the ac-do-variable of the containing implicit do. """
+    """Test C497 - the ac-do-variable of a nested implicit do shall not
+    appear as the ac-do-variable of the containing implicit do."""
     reader = FortranStringReader("(/(JBODY,JBODY=1,SUM((/(JBODY,JBODY=1,4)/)))/)")
     ast = Fortran2003.Array_Constructor(reader)
     assert ast is None

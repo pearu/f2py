@@ -205,7 +205,7 @@ def test_walk():
 
 
 def test_caching():
-    """ Tests relating to enabling/disabling of parser cache. """
+    """Tests relating to enabling/disabling of parser cache."""
     tree1 = api.parse(SOURCE_STR, isfree=True, isstrict=False, ignore_comments=False)
     # If we keep the cache from the last call to parse then we
     # should get the same object back

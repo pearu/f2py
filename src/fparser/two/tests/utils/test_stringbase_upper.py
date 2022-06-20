@@ -113,10 +113,10 @@ def test_invalid_pattern():
     for invalid_pattern in [None, 123]:
         with pytest.raises(InternalError) as excinfo:
             _ = STRINGBase.match(invalid_pattern, "hello")
-        assert "Supplied pattern should be a list, tuple, str or regular " "expression but found {0}".format(
-            type(invalid_pattern)
-        ) in str(
-            excinfo.value
+        assert (
+            "Supplied pattern should be a list, tuple, str or regular "
+            "expression but found {0}".format(type(invalid_pattern))
+            in str(excinfo.value)
         )
 
 

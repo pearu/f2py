@@ -46,7 +46,7 @@ from fparser.two.utils import FortranSyntaxError
 
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_if_construct():
-    """ Basic tests for the if construct. """
+    """Basic tests for the if construct."""
     tcls = If_Construct
     obj = tcls(
         get_reader(
@@ -212,9 +212,9 @@ end if
 
 @pytest.mark.usefixtures("f2003_create")
 def test_ifconstruct_tofortran_non_ascii():
-    """ Check that the tofortran() method works when the if-construct contains
-    a character string with non-ascii characters. """
-    code = u"IF(iflag)THEN\n" u"  WRITE(*,*) ' for e1=1\xb0'\n" u"END IF\n"
+    """Check that the tofortran() method works when the if-construct contains
+    a character string with non-ascii characters."""
+    code = "IF(iflag)THEN\n" "  WRITE(*,*) ' for e1=1\xb0'\n" "END IF\n"
     reader = FortranStringReader(code, ignore_comments=False)
     obj = If_Construct(reader)
     out_str = str(obj)

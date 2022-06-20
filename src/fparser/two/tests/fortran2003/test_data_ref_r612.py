@@ -69,7 +69,7 @@ def test_single_entry(f2003_create):
 
 
 def test_invalid(f2003_create):
-    """Test that there is no match when the input is invalid. """
+    """Test that there is no match when the input is invalid."""
 
     for string in ["", "  ", "1", "%", "a b"]:
         with pytest.raises(NoMatchError):

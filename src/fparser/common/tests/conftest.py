@@ -42,7 +42,7 @@ import pytest
 @pytest.fixture(scope="module", params=[True, False])
 def ignore_comments(request):
     """Fixture for testing with and without the parser ignoring comments.
-       Returns the content of params in turn.
+    Returns the content of params in turn.
 
     """
     return request.param

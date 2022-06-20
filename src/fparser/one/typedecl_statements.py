@@ -332,7 +332,7 @@ class TypeDeclarationStatement(Statement):
         return l, kind
 
     def tostr(self):
-        """ Create a text representation of this object and return it """
+        """Create a text representation of this object and return it"""
         clsname = self.__class__.__name__.upper()
         text = ""
         length, kind = self.selector

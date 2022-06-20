@@ -241,7 +241,7 @@ def test_c1002_triples(f2003_create):
 
 
 def test_syntaxerror(f2003_create):
-    """ Test that we get an exception for incorrect bracket syntax. """
+    """Test that we get an exception for incorrect bracket syntax."""
     for my_input in [None, "", "  ", "(", ")", "x('hello')", "('hello')x"]:
         with pytest.raises(NoMatchError):
             _ = Format_Specification(my_input)

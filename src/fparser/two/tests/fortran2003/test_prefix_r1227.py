@@ -40,9 +40,7 @@ from fparser.two.utils import NoMatchError
 
 
 def test_prefix(f2003_create):
-    """Test that valid Prefix strings are matched successfully.
-
-    """
+    """Test that valid Prefix strings are matched successfully."""
     # single space
     result = f2003.Prefix("impure elemental type(my_type) module")
     assert result.tostr() == "IMPURE ELEMENTAL TYPE(my_type) MODULE"
@@ -131,9 +129,7 @@ def test_no_decl_spec(f2003_create):
 
 @pytest.mark.parametrize("string", ["invalid", "pure impure purile", "", " "])
 def test_prefix_nomatch(f2003_create, string):
-    """Test that invalid Prefix strings raise a NoMatchError exception.
-
-    """
+    """Test that invalid Prefix strings raise a NoMatchError exception."""
     with pytest.raises(NoMatchError):
         _ = f2003.Prefix(string)
 

@@ -42,7 +42,7 @@ from fparser.two import Fortran2003
 
 @pytest.mark.usefixtures("f2003_create")
 def test_walk():
-    """ Test the walk() utility. """
+    """Test the walk() utility."""
     reader = get_reader(
         "program hello\n"
         "write(*,*) 'hello'\n"
@@ -70,7 +70,7 @@ def test_walk():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_walk_debug(capsys):
-    """ Test the debug output of the walk() utility. """
+    """Test the debug output of the walk() utility."""
     reader = get_reader(
         "program just_a_test\n"
         "if(.true.)then\n"

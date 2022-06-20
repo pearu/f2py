@@ -110,8 +110,7 @@ def possible_subclasses(node_type, _seen=None):
 
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_intrinsic_function():
-    """Test that an intrinsic function is matched by Primary.
-    """
+    """Test that an intrinsic function is matched by Primary."""
     assert_subclass_parse(
         "sin(x)",
         f2003.Intrinsic_Function_Reference,
@@ -122,8 +121,7 @@ def test_intrinsic_function():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_constant():
-    """Test that Constant types are matched by Primary.
-    """
+    """Test that Constant types are matched by Primary."""
     assert_subclass_parse(
         "1.2e-03",
         f2003.Constant,
@@ -134,8 +132,7 @@ def test_constant():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_designator():
-    """Test that Designator types are matched by Primary.
-    """
+    """Test that Designator types are matched by Primary."""
     assert_subclass_parse(
         "array(1:5)",
         f2003.Designator,
@@ -146,8 +143,7 @@ def test_designator():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_array_constructor():
-    """Test that Array Constructor types are matched by Primary.
-    """
+    """Test that Array Constructor types are matched by Primary."""
     assert_subclass_parse(
         "[ 1.2, 2.3e + 2,    -5.1 e-3 ]",
         f2003.Array_Constructor,
@@ -158,9 +154,7 @@ def test_array_constructor():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_structure_constructor_1():
-    """Test that Structure Constructor types are matched by Primary.
-
-    """
+    """Test that Structure Constructor types are matched by Primary."""
     assert_subclass_parse(
         'PERSON ( 12,   "Jones" )',
         f2003.Structure_Constructor,
@@ -216,8 +210,7 @@ def test_type_param_inquiry():
 
 
 def test_type_param_name():
-    """Test that Type_Param_Name types are matched by Primary.
-    """
+    """Test that Type_Param_Name types are matched by Primary."""
     assert_subclass_parse(
         "INTEGER", f2003.Type_Param_Name, actual_type=f2003.Name, expected_str="INTEGER"
     )

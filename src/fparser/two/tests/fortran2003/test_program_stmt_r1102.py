@@ -46,7 +46,7 @@ from fparser.two.Fortran2003 import Program_Stmt, Program, Name
 
 @pytest.mark.usefixtures("f2003_create")
 def test_valid():
-    """ Test that valid code is parsed correctly. """
+    """Test that valid code is parsed correctly."""
 
     obj = Program_Stmt("program a")
     assert isinstance(obj, Program_Stmt)
@@ -58,7 +58,7 @@ def test_valid():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_invalid():
-    """ Test that exceptions are raised for invalid code. """
+    """Test that exceptions are raised for invalid code."""
 
     for string in [
         "",
@@ -77,23 +77,21 @@ def test_invalid():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_prog_symbol_table():
-    """ Check that an associated symbol table is created when parsing a
-    program unit. """
+    """Check that an associated symbol table is created when parsing a
+    program unit."""
     reader = get_reader("program my_prog\n" "end program my_prog\n")
     prog = Program(reader)
     assert "my_prog" in SYMBOL_TABLES._symbol_tables
 
 
 def test_get_name():
-    """Test we can get the name of the program
-    """
+    """Test we can get the name of the program"""
     obj = Program_Stmt("program foo")
     assert obj.get_name() == Name("foo")
 
 
 def test_get_start_name():
-    """Test we can get the name of the function as a string
-    """
+    """Test we can get the name of the function as a string"""
 
     obj = Program_Stmt("program foo")
     assert obj.get_start_name() == "foo"

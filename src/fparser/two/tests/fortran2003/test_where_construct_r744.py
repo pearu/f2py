@@ -46,7 +46,7 @@ from fparser.two.utils import FortranSyntaxError
 
 @pytest.mark.usefixtures("f2003_create")
 def test_where_construct():
-    """ Tests for the WHERE construct, R744. """
+    """Tests for the WHERE construct, R744."""
     tcls = Where_Construct
     obj = tcls(
         get_reader(
@@ -129,9 +129,9 @@ def test_where_construct():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_where_tofortran_non_ascii():
-    """ Check that the tofortran() method works when a WHERE construct
-    contains a character string with non-ascii characters. """
-    code = u"WHERE(iflag)\n" u"  msg_list = ' for e1=1\xb0'\n" u"END WHERE\n"
+    """Check that the tofortran() method works when a WHERE construct
+    contains a character string with non-ascii characters."""
+    code = "WHERE(iflag)\n" "  msg_list = ' for e1=1\xb0'\n" "END WHERE\n"
     reader = FortranStringReader(code, ignore_comments=False)
     obj = Where_Construct(reader)
     out_str = str(obj)

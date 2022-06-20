@@ -40,7 +40,7 @@ from fparser.api import get_reader
 
 @pytest.mark.usefixtures("f2003_create")
 def test_get_child():
-    """ Test the get_child() utility. """
+    """Test the get_child() utility."""
     from fparser.two import Fortran2003
     from fparser.two.utils import walk, get_child
 

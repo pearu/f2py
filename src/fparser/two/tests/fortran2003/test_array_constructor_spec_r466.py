@@ -46,7 +46,7 @@ from fparser.two import Fortran2003
 
 @pytest.mark.usefixtures("f2003_create")
 def test_zero_size_array_constructor():
-    """ Test that we can parse a valid, zero-size array constructor. """
+    """Test that we can parse a valid, zero-size array constructor."""
     fcode = "integer ::"
     ast = Fortran2003.Ac_Spec(fcode)
     assert isinstance(ast, Fortran2003.Ac_Spec)
@@ -54,8 +54,8 @@ def test_zero_size_array_constructor():
 
 
 def test_int_literals_array_constructor():
-    """ Test when a simple list of integer literals is provided as the
-    content of the constructor. """
+    """Test when a simple list of integer literals is provided as the
+    content of the constructor."""
     fcode = "1, 2, 3"
     ast = Fortran2003.Ac_Spec(fcode)
     assert isinstance(ast, Fortran2003.Ac_Value_List)
@@ -63,7 +63,7 @@ def test_int_literals_array_constructor():
 
 @pytest.mark.usefixtures("fake_symbol_table")
 def test_expr_list_array_constructor():
-    """ Test when the provided content consists of expressions. """
+    """Test when the provided content consists of expressions."""
     fcode = "ACOS(-1.0), SIN(1.0), 1.0+3.0"
     ast = Fortran2003.Ac_Spec(fcode)
     assert isinstance(ast, Fortran2003.Ac_Value_List)
@@ -71,7 +71,7 @@ def test_expr_list_array_constructor():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_array_spec_char_len():
-    """ Test with a specifier that specifies a length type parameter. """
+    """Test with a specifier that specifies a length type parameter."""
     fcode = "CHARACTER(LEN=7) :: 'Takata', 'Tanaka', 'Hayashi'"
     ast = Fortran2003.Ac_Spec(fcode)
     assert isinstance(ast, Fortran2003.Ac_Spec)
@@ -81,7 +81,7 @@ def test_array_spec_char_len():
 
 @pytest.mark.usefixtures("f2003_create")
 def test_array_spec_no_match():
-    """ Check that incorrect content is not matched. """
+    """Check that incorrect content is not matched."""
     fcode = "call hello()"
     with pytest.raises(NoMatchError):
         Fortran2003.Ac_Spec(fcode)

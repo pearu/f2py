@@ -200,9 +200,7 @@ def test_error_star_only(f2003_create):
 
 
 def test_error_empty(f2003_create):
-    """Test that an InternalError is raised if the input is empty.
-
-    """
+    """Test that an InternalError is raised if the input is empty."""
     with pytest.raises(InternalError) as excinfo:
         _ = Kind_Selector("")
     assert "too short to be valid" in str(excinfo.value)

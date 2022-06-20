@@ -77,8 +77,9 @@ def test_thing():
     """
     Tests inherited from implementation source.
     """
-    match = ~fparser.two.pattern_tools.sign.named() + fparser.two.pattern_tools.digit_string.named(
-        "number"
+    match = (
+        ~fparser.two.pattern_tools.sign.named()
+        + fparser.two.pattern_tools.digit_string.named("number")
     )
     result = match.match("23")
     assert result.groupdict() == {"number": "23", "sign": None}

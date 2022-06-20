@@ -81,7 +81,7 @@ _ = ParserFactory().create(std="f2003")
     ],
 )
 def test_level2_exprn(string, str_repr):
-    """ Test for a successful match with a valid level-2 expression. """
+    """Test for a successful match with a valid level-2 expression."""
     result = Level_2_Expr(string)
     assert str(result).lower() == string.lower()
     assert repr(result) == str_repr

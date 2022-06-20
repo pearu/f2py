@@ -330,8 +330,8 @@ class Call(Statement):
     match = re.compile(r"call\b\s*\w([\s\w\(\)\%]*\w)?\s*(\(.*\))?\s*$", re.I).match
 
     def process_item(self):
-        """ Parse the string containing the Call and store the
-        designator and list of arguments (if any) """
+        """Parse the string containing the Call and store the
+        designator and list of arguments (if any)"""
         item = self.item
         apply_map = item.apply_map
         line = item.get_line()[4:].strip()
@@ -371,7 +371,7 @@ class Call(Statement):
         return
 
     def tofortran(self, isfix=None):
-        """ Returns the Fortran representation of this object as a string """
+        """Returns the Fortran representation of this object as a string"""
         txt = self.get_indent_tab(isfix=isfix) + "CALL " + str(self.designator)
         if self.items:
             txt += "(" + ", ".join(map(str, self.items)) + ")"
@@ -562,16 +562,16 @@ class Print(Statement):
 
 class Read(Statement):
     """
-Read0:    READ ( <io-control-spec-list> ) [ <input-item-list> ]
+    Read0:    READ ( <io-control-spec-list> ) [ <input-item-list> ]
 
-    <io-control-spec-list> = [ UNIT = ] <io-unit>
-                             | [ FORMAT = ] <format>
-                             | [ NML = ] <namelist-group-name>
-                             | ADVANCE = <scalar-default-char-expr>
-                             ...
+        <io-control-spec-list> = [ UNIT = ] <io-unit>
+                                 | [ FORMAT = ] <format>
+                                 | [ NML = ] <namelist-group-name>
+                                 | ADVANCE = <scalar-default-char-expr>
+                                 ...
 
-Read1:    READ <format> [, <input-item-list>]
-    <format> == <default-char-expr> | <label> | *
+    Read1:    READ <format> [, <input-item-list>]
+        <format> == <default-char-expr> | <label> | *
     """
 
     match = re.compile(r'read\b\s*[\w(*\'"]', re.I).match
@@ -1235,8 +1235,8 @@ class Use(Statement):
     match = re.compile(r"use\b", re.I).match
 
     def process_item(self):
-        """ Parse the string containing the Use and store the
-        module name and list of attributes (if any) """
+        """Parse the string containing the Use and store the
+        module name and list of attributes (if any)"""
         line = self.item.get_line()[3:].lstrip()
         nature = ""
         if line.startswith(","):
@@ -1285,7 +1285,7 @@ class Use(Statement):
         return tab + s
 
     def analyze(self):  # pylint: disable=invalid-name
-        """ Returns warnings if this object is incorrect """
+        """Returns warnings if this object is incorrect"""
         use = self.parent.a.use
         if self.name in use:
             return
@@ -1345,7 +1345,7 @@ class Use(Statement):
         return
 
     def populate_use_provides(self, all_mod_provides, use_provides, name, rename=None):
-        """ Checks for entity name in the module """
+        """Checks for entity name in the module"""
         ovar = all_mod_provides.get(name, None)
         if ovar is None:
             raise AnalyzeError(
@@ -2244,8 +2244,8 @@ class Case(Statement):
     match = re.compile(r"case\b\s*(\(.*\)|DEFAULT)\s*\w*\Z", re.I).match
 
     def process_item(self):
-        """ Populate the state of this item by parsing the associated line
-        of code """
+        """Populate the state of this item by parsing the associated line
+        of code"""
         line = self.item.get_line()[4:].lstrip()
         try:
             self.items = extract_bracketed_list_items(line, self.item)
@@ -2273,7 +2273,7 @@ class Case(Statement):
         return
 
     def tofortran(self, isfix=None):
-        """ Return the Fortran for this object as a string """
+        """Return the Fortran for this object as a string"""
         tab = self.get_indent_tab(isfix=isfix)
         txt = tab + "CASE"
         if self.items:
@@ -2302,8 +2302,8 @@ class TypeIs(Statement):
     match = re.compile(r"type\b\s*is\b\s*\(.*\)\s*\w*\Z", re.I).match
 
     def process_item(self):
-        """ Populate the state of this object by parsing the associated
-        line of code """
+        """Populate the state of this object by parsing the associated
+        line of code"""
         line = self.item.get_line()
         # We have a 'type is (...)' statement. At this point
         # any expression used for the type specifier will have
@@ -2323,8 +2323,8 @@ class TypeIs(Statement):
         return
 
     def tofortran(self, isfix=None):
-        """ Create the Fortran representation of this object and return
-        it as a string """
+        """Create the Fortran representation of this object and return
+        it as a string"""
         tab = self.get_indent_tab(isfix=isfix)
         text = tab + "TYPE IS"
         if self.items:
@@ -2353,7 +2353,7 @@ class ClassIs(Statement):
     match = re.compile(r"class\b\s*(is\b\s*\(.*\)|default)\s*\w*\Z", re.I).match
 
     def process_item(self):
-        """ Populate the state of this object by parsing the string """
+        """Populate the state of this object by parsing the string"""
         line = self.item.get_line()[5:].lstrip()
         try:
             self.items = extract_bracketed_list_items(line, self.item)
@@ -2385,7 +2385,7 @@ class ClassIs(Statement):
         return
 
     def tofortran(self, isfix=None):
-        """ Returns the Fortran for this object as a string """
+        """Returns the Fortran for this object as a string"""
         tab = self.get_indent_tab(isfix=isfix)
         text = tab + "CLASS"
         if self.items:

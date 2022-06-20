@@ -254,8 +254,8 @@ def test_intrinsic_inside_intrinsic(f2003_create):
 
 
 def test_shadowed_intrinsic(f2003_parser):
-    """ Check that a locally-defined symbol that shadows (overwrites) a
-    Fortran intrinsic is correctly identified. """
+    """Check that a locally-defined symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified."""
     tree = f2003_parser(
         get_reader(
             """\

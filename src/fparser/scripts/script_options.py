@@ -102,7 +102,7 @@ Description:
 
 
 def set_fparser_options(parser):
-    """ Command line options used by the fparser2 script.
+    """Command line options used by the fparser2 script.
 
     :param parser: The OptionParser object.
     :type parser: :py:class:`optparse.OptionParser`

@@ -575,8 +575,7 @@ class Program(
     HasUseStmt,
     AccessSpecs,
 ):
-    """ PROGRAM [name]
-    """
+    """PROGRAM [name]"""
 
     match = re.compile(r"program\s*\w*\Z", re.I).match
     end_stmt_cls = EndProgram
@@ -1026,8 +1025,8 @@ class Select(BeginStatement):
     name = ""
 
     def process_item(self):
-        """ Populate the state of this Select object by parsing the
-        associated line of code """
+        """Populate the state of this Select object by parsing the
+        associated line of code"""
         item = self.item
         # TODO make the following more robust, particularly to the
         # presence of a name at the beginning
@@ -1050,8 +1049,8 @@ class SelectCase(Select):
         return "SELECT CASE ( %s )" % (self.expr)
 
     def get_classes(self):
-        """ Return the list of classes that this instance may
-        have as children """
+        """Return the list of classes that this instance may
+        have as children"""
         return [Case] + execution_part_construct
 
 
@@ -1067,8 +1066,8 @@ class SelectType(Select):
         return "SELECT TYPE ( %s )" % (self.expr)
 
     def get_classes(self):
-        """ Return the list of classes that this instance may
-        have as children """
+        """Return the list of classes that this instance may
+        have as children"""
         return [TypeIs, ClassIs] + execution_part_construct
 
 

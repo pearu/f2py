@@ -50,8 +50,8 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 @pytest.mark.usefixtures("f2003_create")
 @pytest.mark.parametrize("table_name", ["", "test_mod"])
 def test_type_declaration_stmt(table_name):
-    """ Various tests for the type declaration statement (R501). We test both
-    with and without an existing scoping region. """
+    """Various tests for the type declaration statement (R501). We test both
+    with and without an existing scoping region."""
     if table_name:
         SYMBOL_TABLES.enter_scope(table_name)
     table = SYMBOL_TABLES.current_scope

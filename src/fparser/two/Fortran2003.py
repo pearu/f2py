@@ -402,11 +402,11 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
 
 class Program_Unit(Base):  # R202
     """
-:F03R:`202`::
-    <program-unit> = <main-program>
-                     | <external-subprogram>
-                     | <module>
-                     | <block-data>
+    :F03R:`202`::
+        <program-unit> = <main-program>
+                         | <external-subprogram>
+                         | <module>
+                         | <block-data>
     """
 
     subclass_names = [
@@ -420,9 +420,9 @@ class Program_Unit(Base):  # R202
 
 class External_Subprogram(Base):  # R203
     """
-:F03R:`203`::
-    <external-subprogram> = <function-subprogram>
-                            | <subroutine-subprogram>
+    :F03R:`203`::
+        <external-subprogram> = <function-subprogram>
+                                | <subroutine-subprogram>
     """
 
     subclass_names = ["Comment", "Function_Subprogram", "Subroutine_Subprogram"]
@@ -430,11 +430,11 @@ class External_Subprogram(Base):  # R203
 
 class Specification_Part(BlockBase):  # R204
     """
-:F03R:`204`::
-    <specification-part> = [ <use-stmt> ]...
-                             [ <import-stmt> ]...
-                             [ <implicit-part> ]
-                             [ <declaration-construct> ]...
+    :F03R:`204`::
+        <specification-part> = [ <use-stmt> ]...
+                                 [ <import-stmt> ]...
+                                 [ <implicit-part> ]
+                                 [ <declaration-construct> ]...
     """
 
     subclass_names = []
@@ -452,9 +452,9 @@ class Specification_Part(BlockBase):  # R204
 
 class Implicit_Part(BlockBase):  # R205
     """
-:F03R:`205`::
-    <implicit-part> = [ <implicit-part-stmt> ]...
-                        <implicit-stmt>
+    :F03R:`205`::
+        <implicit-part> = [ <implicit-part-stmt> ]...
+                            <implicit-stmt>
     """
 
     subclass_names = []
@@ -467,11 +467,11 @@ class Implicit_Part(BlockBase):  # R205
 
 class Implicit_Part_Stmt(Base):  # R206
     """
-:F03R:`206`::
-    <implicit-part-stmt> = <implicit-stmt>
-                           | <parameter-stmt>
-                           | <format-stmt>
-                           | <entry-stmt>
+    :F03R:`206`::
+        <implicit-part-stmt> = <implicit-stmt>
+                               | <parameter-stmt>
+                               | <format-stmt>
+                               | <entry-stmt>
     """
 
     subclass_names = [
@@ -939,12 +939,12 @@ class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
 
 class Label(StringBase):  # R313
     """
-::
-    <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
+    ::
+        <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
 
-Attributes
-----------
-string : str
+    Attributes
+    ----------
+    string : str
     """
 
     subclass_names = []
@@ -1231,8 +1231,7 @@ class Signed_Real_Literal_Constant(NumberBase):  # R416
 
 
 class Real_Literal_Constant(NumberBase):  # R417
-    """
-    """
+    """ """
 
     subclass_names = []
 
@@ -1887,7 +1886,7 @@ class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
 
     C436-C441, C443, C446-C447 are currently not checked - issue #258.
 
-   """
+    """
 
     subclass_names = []
     use_names = [
@@ -3270,9 +3269,9 @@ class Null_Init(STRINGBase):  # R507
 
 class Access_Spec(STRINGBase):  # R508
     """
-:F03R:`508`::
-    <access-spec> = PUBLIC
-                    | PRIVATE
+    :F03R:`508`::
+        <access-spec> = PUBLIC
+                        | PRIVATE
     """
 
     subclass_names = []
@@ -3285,9 +3284,9 @@ class Access_Spec(STRINGBase):  # R508
 
 class Language_Binding_Spec(Base):  # R509
     """
-:F03R:`509`::
-    <language-binding-spec> = BIND ( C [ ,
-        NAME = <scalar-char-initialization-expr> ] )
+    :F03R:`509`::
+        <language-binding-spec> = BIND ( C [ ,
+            NAME = <scalar-char-initialization-expr> ] )
     """
 
     subclass_names = []
@@ -3330,11 +3329,11 @@ class Language_Binding_Spec(Base):  # R509
 
 class Array_Spec(Base):  # R510
     """
-:F03R:`510`::
-    <array-spec> = <explicit-shape-spec-list>
-                   | <assumed-shape-spec-list>
-                   | <deferred-shape-spec-list>
-                   | <assumed-size-spec>
+    :F03R:`510`::
+        <array-spec> = <explicit-shape-spec-list>
+                       | <assumed-shape-spec-list>
+                       | <deferred-shape-spec-list>
+                       | <assumed-size-spec>
     """
 
     subclass_names = [
@@ -3392,8 +3391,8 @@ class Upper_Bound(Base):  # R513
 
 class Assumed_Shape_Spec(SeparatorBase):  # R514
     """
-:F03R:`514`::
-    <assumed-shape-spec> = [ <lower-bound> ] :
+    :F03R:`514`::
+        <assumed-shape-spec> = [ <lower-bound> ] :
     """
 
     subclass_names = []
@@ -3407,8 +3406,8 @@ class Assumed_Shape_Spec(SeparatorBase):  # R514
 
 class Deferred_Shape_Spec(SeparatorBase):  # R515
     """
-:F03R:`515`::
-    <deferred_shape_spec> = :
+    :F03R:`515`::
+        <deferred_shape_spec> = :
     """
 
     subclass_names = []
@@ -3423,9 +3422,9 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
 
 class Assumed_Size_Spec(Base):  # R516
     """
-:F03R:`516`::
-    <assumed-size-spec> = [ <explicit-shape-spec-list> , ]
-        [ <lower-bound> : ] *
+    :F03R:`516`::
+        <assumed-size-spec> = [ <explicit-shape-spec-list> , ]
+            [ <lower-bound> : ] *
     """
 
     subclass_names = []
@@ -3480,8 +3479,8 @@ class Intent_Spec(STRINGBase):  # R517
 
 class Access_Stmt(StmtBase, WORDClsBase):  # R518
     """
-:F03R:`518`::
-    <access-stmt> = <access-spec> [ [ :: ] <access-id-list> ]
+    :F03R:`518`::
+        <access-stmt> = <access-spec> [ [ :: ] <access-id-list> ]
     """
 
     subclass_names = []
@@ -3502,9 +3501,9 @@ class Access_Stmt(StmtBase, WORDClsBase):  # R518
 
 class Access_Id(Base):  # R519
     """
-:F03R:`519`::
-    <access-id> = <use-name>
-                  | <generic-spec>
+    :F03R:`519`::
+        <access-id> = <use-name>
+                      | <generic-spec>
     """
 
     subclass_names = ["Use_Name", "Generic_Spec"]
@@ -3528,10 +3527,10 @@ class Object_Name_Deferred_Shape_Spec_List_Item(CallBase):
 
 class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
     """
-:F03R:`520`::
-    <allocateble-stmt> = ALLOCATABLE [ :: ] <object-name> [
-        ( <deferred-shape-spec-list> ) ] [ , <object-name>
-        [ ( <deferred-shape-spec-list> ) ] ]...
+    :F03R:`520`::
+        <allocateble-stmt> = ALLOCATABLE [ :: ] <object-name> [
+            ( <deferred-shape-spec-list> ) ] [ , <object-name>
+            [ ( <deferred-shape-spec-list> ) ] ]...
     """
 
     subclass_names = []
@@ -3551,8 +3550,8 @@ class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
 
 class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
     """
-:F03R:`521`::
-    <asynchronous-stmt> = ASYNCHRONOUS [ :: ] <object-name-list>
+    :F03R:`521`::
+        <asynchronous-stmt> = ASYNCHRONOUS [ :: ] <object-name-list>
     """
 
     subclass_names = []
@@ -3568,8 +3567,8 @@ class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
 
 class Bind_Stmt(StmtBase):  # R522
     """
-:F03R:`522`::
-    <bind-stmt> = <language-binding-spec> [ :: ] <bind-entity-list>
+    :F03R:`522`::
+        <bind-stmt> = <language-binding-spec> [ :: ] <bind-entity-list>
     """
 
     subclass_names = []
@@ -3613,8 +3612,8 @@ class Bind_Entity(BracketBase):  # R523
 
 class Data_Stmt(StmtBase):  # R524
     """
-:F03R:524::
-    <data-stmt> = DATA <data-stmt-set> [ [ , ] <data-stmt-set> ]...
+    :F03R:524::
+        <data-stmt> = DATA <data-stmt-set> [ [ , ] <data-stmt-set> ]...
     """
 
     subclass_names = []
@@ -3652,8 +3651,8 @@ class Data_Stmt(StmtBase):  # R524
 
 class Data_Stmt_Set(Base):  # R525
     """
-:F03R:525::
-    <data-stmt-set> = <data-stmt-object-list> / <data-stmt-value-list> /
+    :F03R:525::
+        <data-stmt-set> = <data-stmt-object-list> / <data-stmt-value-list> /
     """
 
     subclass_names = []
@@ -3680,9 +3679,9 @@ class Data_Stmt_Set(Base):  # R525
 
 class Data_Stmt_Object(Base):  # R526
     """
-:F03R:526::
-    <data-stmt-object> = <variable>
-                         | <data-implied-do>
+    :F03R:526::
+        <data-stmt-object> = <variable>
+                             | <data-implied-do>
     """
 
     subclass_names = ["Variable", "Data_Implied_Do"]
@@ -3690,10 +3689,10 @@ class Data_Stmt_Object(Base):  # R526
 
 class Data_Implied_Do(Base):  # R527
     """
-:F03R:527::
-    <data-implied-do> = ( <data-i-do-object-list> ,
-        <data-i-do-variable> = <scalar-int-expr > ,
-        <scalar-int-expr> [ , <scalar-int-expr> ] )
+    :F03R:527::
+        <data-implied-do> = ( <data-i-do-object-list> ,
+            <data-i-do-variable> = <scalar-int-expr > ,
+            <scalar-int-expr> [ , <scalar-int-expr> ] )
     """
 
     subclass_names = []
@@ -4257,13 +4256,13 @@ class Volatile_Stmt(StmtBase, WORDClsBase):  # R548
 
 class Implicit_Stmt(StmtBase):  # R549
     """
-::
-    <implicit-stmt> = IMPLICIT <implicit-spec-list>
-                      | IMPLICIT NONE
+    ::
+        <implicit-stmt> = IMPLICIT <implicit-spec-list>
+                          | IMPLICIT NONE
 
-Attributes
-----------
-items : ({'NONE', Implicit_Spec_List},)
+    Attributes
+    ----------
+    items : ({'NONE', Implicit_Spec_List},)
     """
 
     subclass_names = []
@@ -4350,14 +4349,14 @@ class Letter_Spec(Base):  # R551
 
 class Namelist_Stmt(StmtBase):  # R552
     """
-::
-    <namelist-stmt> = NAMELIST / <namelist-group-name> /
-        <namelist-group-object-list> [ [ , ] / <namelist-group-name> /
-        <namelist-group-object-list> ]...
+    ::
+        <namelist-stmt> = NAMELIST / <namelist-group-name> /
+            <namelist-group-object-list> [ [ , ] / <namelist-group-name> /
+            <namelist-group-object-list> ]...
 
-Attributes
-----------
-items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
+    Attributes
+    ----------
+    items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
     """
 
     subclass_names = []
@@ -6066,10 +6065,10 @@ class Where_Construct_Stmt(StmtBase):  # R745
 
 class Where_Body_Construct(Base):  # R746
     """
-::
-    <where-body-construct> = <where-assignment-stmt>
-                             | <where-stmt>
-                             | <where-construct>
+    ::
+        <where-body-construct> = <where-assignment-stmt>
+                                 | <where-stmt>
+                                 | <where-construct>
     """
 
     subclass_names = ["Where_Assignment_Stmt", "Where_Stmt", "Where_Construct"]
@@ -6077,8 +6076,8 @@ class Where_Body_Construct(Base):  # R746
 
 class Where_Assignment_Stmt(Base):  # R747
     """
-::
-    <where-assignment-stmt> = <assignment-stmt>
+    ::
+        <where-assignment-stmt> = <assignment-stmt>
     """
 
     subclass_names = ["Assignment_Stmt"]
@@ -7040,15 +7039,15 @@ class Select_Type_Stmt(StmtBase):  # R822
 
 class Type_Guard_Stmt(StmtBase):  # R823
     """
-::
-    <type-guard-stmt> = TYPE IS ( <type-spec> ) [ <select-construct-name> ]
-                        | CLASS IS ( <type-spec> ) [ <select-construct-name> ]
-                        | CLASS DEFAULT [ <select-construct-name> ]
+    ::
+        <type-guard-stmt> = TYPE IS ( <type-spec> ) [ <select-construct-name> ]
+                            | CLASS IS ( <type-spec> ) [ <select-construct-name> ]
+                            | CLASS DEFAULT [ <select-construct-name> ]
 
-Attributes
-----------
-items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
-        Select_Construct_Name)
+    Attributes
+    ----------
+    items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
+            Select_Construct_Name)
     """
 
     subclass_names = []
@@ -7488,15 +7487,15 @@ class Nonblock_Do_Construct(Base):  # pylint: disable=invalid-name
 
 class Action_Term_Do_Construct(BlockBase):  # R836
     """
-::
-    <action-term-do-construct> = <label-do-stmt>
-                                     <do-body>
-                                     <do-term-action-stmt>
+    ::
+        <action-term-do-construct> = <label-do-stmt>
+                                         <do-body>
+                                         <do-term-action-stmt>
 
-::
-    <action-term-do-construct> = <label-do-stmt>
-                                 [ <execution-part-construct> ]...
-                                 <do-term-action-stmt>
+    ::
+        <action-term-do-construct> = <label-do-stmt>
+                                     [ <execution-part-construct> ]...
+                                     <do-term-action-stmt>
     """
 
     subclass_names = []
@@ -7554,15 +7553,15 @@ class Do_Body(BlockBase):  # R837
 
 class Do_Term_Action_Stmt(StmtBase):  # R838
     """
-::
-    <do-term-action-stmt> = <action-stmt>
+    ::
+        <do-term-action-stmt> = <action-stmt>
 
-Notes
------
-C824: <do-term-action-stmt> shall not be <continue-stmt>, <goto-stmt>,
-      <return-stmt>, <stop-stmt>, <exit-stmt>, <cycle-stmt>,
-      <end-function-stmt>, <end-subroutine-stmt>, <end-program-stmt>,
-      <arithmetic-if-stmt>
+    Notes
+    -----
+    C824: <do-term-action-stmt> shall not be <continue-stmt>, <goto-stmt>,
+          <return-stmt>, <stop-stmt>, <exit-stmt>, <cycle-stmt>,
+          <end-function-stmt>, <end-subroutine-stmt>, <end-program-stmt>,
+          <arithmetic-if-stmt>
     """
 
     subclass_names = ["Action_Stmt_C824"]
@@ -7993,13 +7992,13 @@ class Close_Spec(KeywordValueBase):  # R909
 
 class Read_Stmt(StmtBase):  # R910
     """
-:F03R:`910`::
-    <read-stmt> = READ ( <io-control-spec-list> ) [ <input-item-list> ]
-                    | READ <format> [ , <input-item-list> ]
+    :F03R:`910`::
+        <read-stmt> = READ ( <io-control-spec-list> ) [ <input-item-list> ]
+                        | READ <format> [ , <input-item-list> ]
 
-Attributes
-----------
-items : (Io_Control_Spec_List, Format, Input_Item_List)
+    Attributes
+    ----------
+    items : (Io_Control_Spec_List, Format, Input_Item_List)
     """
 
     subclass_names = []
@@ -8112,12 +8111,12 @@ class Write_Stmt(StmtBase):  # pylint: disable=invalid-name
 
 class Print_Stmt(StmtBase):  # R912
     """
-:F03R:`912`::
-    <print-stmt> = PRINT <format> [ , <output-item-list> ]
+    :F03R:`912`::
+        <print-stmt> = PRINT <format> [ , <output-item-list> ]
 
-Parameters
-----------
-items : (Format, Output_Item_List)
+    Parameters
+    ----------
+    items : (Format, Output_Item_List)
     """
 
     subclass_names = []
@@ -8551,13 +8550,13 @@ class Wait_Spec(KeywordValueBase):  # R922
 
 class Backspace_Stmt(StmtBase):  # R923
     """
-:F03R:`923`::
-    <backspace-stmt> = BACKSPACE <file-unit-number>
-                       | BACKSPACE ( <position-spec-list> )
+    :F03R:`923`::
+        <backspace-stmt> = BACKSPACE <file-unit-number>
+                           | BACKSPACE ( <position-spec-list> )
 
-Attributes
-----------
-items : (File_Unit_Number, Position_Spec_List)
+    Attributes
+    ----------
+    items : (File_Unit_Number, Position_Spec_List)
     """
 
     subclass_names = []
@@ -8583,13 +8582,13 @@ items : (File_Unit_Number, Position_Spec_List)
 
 class Endfile_Stmt(StmtBase):  # R924
     """
-:F03R:`924`::
-    <endfile-stmt> = ENDFILE <file-unit-number>
-                     | ENDFILE ( <position-spec-list> )
+    :F03R:`924`::
+        <endfile-stmt> = ENDFILE <file-unit-number>
+                         | ENDFILE ( <position-spec-list> )
 
-Attributes
-----------
-items : (File_Unit_Number, Position_Spec_List)
+    Attributes
+    ----------
+    items : (File_Unit_Number, Position_Spec_List)
     """
 
     subclass_names = []
@@ -8615,13 +8614,13 @@ items : (File_Unit_Number, Position_Spec_List)
 
 class Rewind_Stmt(StmtBase):  # R925
     """
-:F03R:`925`::
-    <rewind-stmt> = REWIND <file-unit-number>
-                    | REWIND ( <position-spec-list> )
+    :F03R:`925`::
+        <rewind-stmt> = REWIND <file-unit-number>
+                        | REWIND ( <position-spec-list> )
 
-Attributes
-----------
-items : (File_Unit_Number, Position_Spec_List)
+    Attributes
+    ----------
+    items : (File_Unit_Number, Position_Spec_List)
     """
 
     subclass_names = []
@@ -8676,12 +8675,12 @@ class Position_Spec(KeywordValueBase):  # R926
 
 class Flush_Stmt(StmtBase):  # R927
     """
-:F03R:`927`::
-    <flush-stmt> = FLUSH <file-unit-number>
-                    | FLUSH ( <position-spec-list> )
-Attributes
-----------
-items : (File_Unit_Number, Position_Spec_List)
+    :F03R:`927`::
+        <flush-stmt> = FLUSH <file-unit-number>
+                        | FLUSH ( <position-spec-list> )
+    Attributes
+    ----------
+    items : (File_Unit_Number, Position_Spec_List)
     """
 
     subclass_names = []
@@ -8707,15 +8706,15 @@ items : (File_Unit_Number, Position_Spec_List)
 
 class Flush_Spec(KeywordValueBase):  # R928
     """
-:F03R:`928`::
-    <flush-spec> = [ UNIT = ] <file-unit-number>
-                   | IOMSG = <iomsg-variable>
-                   | IOSTAT = <scalar-int-variable>
-                   | ERR = <label>
-Attributes
-----------
-items : ({'UNIT', 'IOMSG', 'IOSTAT', 'ERR'}, {File_Unit_Number,
-          Iomsg_Variable, Scalar_Int_Variable, Label})
+    :F03R:`928`::
+        <flush-spec> = [ UNIT = ] <file-unit-number>
+                       | IOMSG = <iomsg-variable>
+                       | IOSTAT = <scalar-int-variable>
+                       | ERR = <label>
+    Attributes
+    ----------
+    items : ({'UNIT', 'IOMSG', 'IOSTAT', 'ERR'}, {File_Unit_Number,
+              Iomsg_Variable, Scalar_Int_Variable, Label})
     """
 
     subclass_names = []
@@ -8741,13 +8740,13 @@ items : ({'UNIT', 'IOMSG', 'IOSTAT', 'ERR'}, {File_Unit_Number,
 
 class Inquire_Stmt(StmtBase):  # R929
     """
-:F03R:`929`::
-    <inquire-stmt> = INQUIRE ( <inquire-spec-list> )
-                     | INQUIRE ( IOLENGTH = <scalar-int-variable> )
-                       <output-item-list>
-Attributes
-----------
-items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
+    :F03R:`929`::
+        <inquire-stmt> = INQUIRE ( <inquire-spec-list> )
+                         | INQUIRE ( IOLENGTH = <scalar-int-variable> )
+                           <output-item-list>
+    Attributes
+    ----------
+    items : (Inquire_Spec_List, Scalar_Int_Variable, Output_Item_List)
     """
 
     subclass_names = []
@@ -9412,12 +9411,12 @@ class Format_Item(Base):  # pylint: disable=invalid-name
 
 class R(Base):  # R1004
     """
-::
-    <r> = <int-literal-constant>
+    ::
+        <r> = <int-literal-constant>
 
-Notes
------
-C1003, C1004: <r> shall be positive and without kind parameter specified.
+    Notes
+    -----
+    C1003, C1004: <r> shall be positive and without kind parameter specified.
     """
 
     subclass_names = ["Digit_String"]
@@ -9573,15 +9572,15 @@ class Data_Edit_Desc_C1002(Base):
 
 class Data_Edit_Desc(Base):  # R1005
     """
-::
-    <data-edit-desc> =   I <w> [ . <m> ]
-                       | B <w> [ . <m> ]
-                       | O <w> [ . <m> ]
-                       | Z <w> [ . <m> ]
-                       | L <w>
-                       | A [ <w> ]
-                       | DT [ <char-literal-constant> ] [ ( <v-list> ) ]
-                       | <data-edit-desc-c1002>
+    ::
+        <data-edit-desc> =   I <w> [ . <m> ]
+                           | B <w> [ . <m> ]
+                           | O <w> [ . <m> ]
+                           | Z <w> [ . <m> ]
+                           | L <w>
+                           | A [ <w> ]
+                           | DT [ <char-literal-constant> ] [ ( <v-list> ) ]
+                           | <data-edit-desc-c1002>
     """
 
     subclass_names = ["Data_Edit_Desc_C1002"]
@@ -9654,12 +9653,12 @@ class Data_Edit_Desc(Base):  # R1005
 
 class W(Base):  # R1006
     """
-::
-    <w> = <int-literal-constant> == <digit-string>
+    ::
+        <w> = <int-literal-constant> == <digit-string>
 
-Notes
------
-C1006, C1007: <w> is zero or postive and without kind parameters.
+    Notes
+    -----
+    C1006, C1007: <w> is zero or postive and without kind parameters.
     """
 
     subclass_names = ["Digit_String"]
@@ -9667,12 +9666,12 @@ C1006, C1007: <w> is zero or postive and without kind parameters.
 
 class M(Base):  # R1007
     """
-::
-    <m> = <int-literal-constant>
+    ::
+        <m> = <int-literal-constant>
 
-Notes
------
-C1007: <w> is without kind parameters.
+    Notes
+    -----
+    C1007: <w> is without kind parameters.
     """
 
     subclass_names = ["Int_Literal_Constant"]
@@ -9680,12 +9679,12 @@ C1007: <w> is without kind parameters.
 
 class D(Base):  # R1008
     """
-::
-    <d> = <int-literal-constant>
+    ::
+        <d> = <int-literal-constant>
 
-Notes
------
-C1007: <d> is without kind parameters.
+    Notes
+    -----
+    C1007: <d> is without kind parameters.
     """
 
     subclass_names = ["Int_Literal_Constant"]
@@ -9693,12 +9692,12 @@ C1007: <d> is without kind parameters.
 
 class E(Base):  # R1009
     """
-::
-    <e> = <int-literal-constant>
+    ::
+        <e> = <int-literal-constant>
 
-Notes
------
-C1005, C1007: <e> is postive and without kind parameters.
+    Notes
+    -----
+    C1005, C1007: <e> is postive and without kind parameters.
     """
 
     subclass_names = ["Digit_String"]
@@ -9706,12 +9705,12 @@ C1005, C1007: <e> is postive and without kind parameters.
 
 class V(Base):  # R1010
     """
-::
-    <v> = <signed-int-literal-constant>
+    ::
+        <v> = <signed-int-literal-constant>
 
-Notes
------
-C1007: <w> is without kind parameters.
+    Notes
+    -----
+    C1007: <w> is without kind parameters.
     """
 
     subclass_names = ["Signed_Int_Literal_Constant"]
@@ -9804,12 +9803,12 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
 
 class K(Base):  # R1012
     """
-::
-    <k> = <signed-int-literal-constant>
+    ::
+        <k> = <signed-int-literal-constant>
 
-Notes
------
-C1009: <k> is without kind parameters.
+    Notes
+    -----
+    C1009: <k> is without kind parameters.
     """
 
     subclass_names = ["Signed_Int_Literal_Constant"]
@@ -9916,10 +9915,10 @@ class Position_Edit_Desc(Base):  # R1013
 
 class N(Base):  # R1014
     """
-::
-    <n> = <int-literal-constant> == <digit-string>
+    ::
+        <n> = <int-literal-constant> == <digit-string>
 
-C1010, C1011: <n> is positive and without kind parameter.
+    C1010, C1011: <n> is positive and without kind parameter.
     """
 
     subclass_names = ["Digit_String"]
@@ -10562,10 +10561,10 @@ class Use_Defined_Operator(Base):  # R1115
 
 class Block_Data(BlockBase):  # R1116
     """
-::
-    <block-data> = <block-data-stmt>
-                       [ <specification-part> ]
-                       <end-block-data-stmt>
+    ::
+        <block-data> = <block-data-stmt>
+                           [ <specification-part> ]
+                           <end-block-data-stmt>
     """
 
     subclass_names = []
@@ -10580,8 +10579,8 @@ class Block_Data(BlockBase):  # R1116
 
 class Block_Data_Stmt(StmtBase):  # R1117
     """
-::
-    <block-data-stmt> = BLOCK DATA [ <block-data-name> ]
+    ::
+        <block-data-stmt> = BLOCK DATA [ <block-data-name> ]
     """
 
     subclass_names = []
@@ -10610,8 +10609,8 @@ class Block_Data_Stmt(StmtBase):  # R1117
 
 class End_Block_Data_Stmt(EndStmtBase):  # R1118
     """
-::
-    <end-block-data-stmt> = END [ BLOCK DATA [ <block-data-name> ] ]
+    ::
+        <end-block-data-stmt> = END [ BLOCK DATA [ <block-data-name> ] ]
     """
 
     subclass_names = []
@@ -10629,10 +10628,10 @@ class End_Block_Data_Stmt(EndStmtBase):  # R1118
 
 class Interface_Block(BlockBase):  # R1201
     """
-::
-    <interface-block> = <interface-stmt>
-                            [ <interface-specification> ]...
-                            <end-interface-stmt>
+    ::
+        <interface-block> = <interface-stmt>
+                                [ <interface-specification> ]...
+                                <end-interface-stmt>
     """
 
     subclass_names = []
@@ -10656,13 +10655,13 @@ class Interface_Specification(Base):  # R1202
 
 class Interface_Stmt(StmtBase):  # R1203
     """
-::
-    <interface-stmt> = INTERFACE [ <generic-spec> ]
-                       | ABSTRACT INTERFACE
+    ::
+        <interface-stmt> = INTERFACE [ <generic-spec> ]
+                           | ABSTRACT INTERFACE
 
-Attributes
-----------
-items : ({Generic_Spec, 'ABSTRACT'},)
+    Attributes
+    ----------
+    items : ({Generic_Spec, 'ABSTRACT'},)
     """
 
     subclass_names = []
@@ -10690,12 +10689,12 @@ items : ({Generic_Spec, 'ABSTRACT'},)
 
 class End_Interface_Stmt(EndStmtBase):  # R1204
     """
-::
-    <end-interface-stmt> = END INTERFACE [ <generic-spec> ]
+    ::
+        <end-interface-stmt> = END INTERFACE [ <generic-spec> ]
 
-Attributes
-----------
-items : (Generic_Spec, )
+    Attributes
+    ----------
+    items : (Generic_Spec, )
     """
 
     subclass_names = []
@@ -10711,10 +10710,10 @@ items : (Generic_Spec, )
 
 class Function_Body(BlockBase):
     """
-::
-    <function-body> = <function-stmt>
-                        [ <specification-part> ]
-                      <end-function-stmt>
+    ::
+        <function-body> = <function-stmt>
+                            [ <specification-part> ]
+                          <end-function-stmt>
     """
 
     subclass_names = []
@@ -10729,10 +10728,10 @@ class Function_Body(BlockBase):
 
 class Subroutine_Body(BlockBase):
     """
-::
-    <subroutine-body> = <subroutine-stmt>
-                        [ <specification-part> ]
-                      <end-subroutine-stmt>
+    ::
+        <subroutine-body> = <subroutine-stmt>
+                            [ <specification-part> ]
+                          <end-subroutine-stmt>
     """
 
     subclass_names = []
@@ -10747,12 +10746,12 @@ class Subroutine_Body(BlockBase):
 
 class Interface_Body(Base):  # R1205
     """
-::
-    <interface-body> = <function-body> | <subroutine-body>
+    ::
+        <interface-body> = <function-body> | <subroutine-body>
 
-See also
---------
-Function_Body, Subroutine_Body
+    See also
+    --------
+    Function_Body, Subroutine_Body
     """
 
     subclass_names = ["Function_Body", "Subroutine_Body"]
@@ -10761,12 +10760,12 @@ Function_Body, Subroutine_Body
 
 class Procedure_Stmt(StmtBase):  # R1206
     """
-::
-    <procedure-stmt> = [ MODULE ] PROCEDURE <procedure-name-list>
+    ::
+        <procedure-stmt> = [ MODULE ] PROCEDURE <procedure-name-list>
 
-Attributes
-----------
-items : (Procedure_Name_List, )
+    Attributes
+    ----------
+    items : (Procedure_Name_List, )
     """
 
     subclass_names = []
@@ -10789,14 +10788,14 @@ items : (Procedure_Name_List, )
 
 class Generic_Spec(Base):  # R1207
     """
-::
-    <generic-spec> = <generic-name>
-                     | OPERATOR ( <defined-operator> )
-                     | ASSIGNMENT ( = )
-                     | <dtio-generic-spec>
-Attributes
-----------
-items : ({'OPERATOR', 'ASSIGNMENT'}, {Defined_Operator, '='})
+    ::
+        <generic-spec> = <generic-name>
+                         | OPERATOR ( <defined-operator> )
+                         | ASSIGNMENT ( = )
+                         | <dtio-generic-spec>
+    Attributes
+    ----------
+    items : ({'OPERATOR', 'ASSIGNMENT'}, {Defined_Operator, '='})
     """
 
     subclass_names = ["Generic_Name", "Dtio_Generic_Spec"]
@@ -10822,14 +10821,14 @@ items : ({'OPERATOR', 'ASSIGNMENT'}, {Defined_Operator, '='})
 
 class Dtio_Generic_Spec(Base):  # R1208
     """
-::
-    <dtio-generic-spec> = READ ( FORMATTED )
-                          | READ ( UNFORMATTED )
-                          | WRITE ( FORMATTED )
-                          | WRITE ( UNFORMATTED )
-Attributes
-----------
-items : (str, )
+    ::
+        <dtio-generic-spec> = READ ( FORMATTED )
+                              | READ ( UNFORMATTED )
+                              | WRITE ( FORMATTED )
+                              | WRITE ( UNFORMATTED )
+    Attributes
+    ----------
+    items : (str, )
     """
 
     subclass_names = []
@@ -10913,13 +10912,13 @@ class External_Stmt(StmtBase, WORDClsBase):  # R1210
 
 class Procedure_Declaration_Stmt(StmtBase):  # R1211
     """
-::
-    <procedure-declaration-stmt> = PROCEDURE ( [ <proc-interface> ] )
-        [ [ , <proc-attr-spec> ]... :: ] <proc-decl-list>
+    ::
+        <procedure-declaration-stmt> = PROCEDURE ( [ <proc-interface> ] )
+            [ [ , <proc-attr-spec> ]... :: ] <proc-decl-list>
 
-Attributes
-----------
-items : (Proc_Interface, Proc_Attr_Spec_List, Proc_Decl_List)
+    Attributes
+    ----------
+    items : (Proc_Interface, Proc_Attr_Spec_List, Proc_Decl_List)
     """
 
     subclass_names = []
@@ -10970,17 +10969,17 @@ class Proc_Interface(Base):  # R1212
 
 class Proc_Attr_Spec(Base):  # R1213
     """
-    <proc-attr-spec> = <access-spec>
-                       | <proc-language-binding-spec>
-                       | INTENT ( <intent-spec> )
-                       | OPTIONAL
-                       | POINTER
-                       | PROTECTED
-                       | SAVE
+        <proc-attr-spec> = <access-spec>
+                           | <proc-language-binding-spec>
+                           | INTENT ( <intent-spec> )
+                           | OPTIONAL
+                           | POINTER
+                           | PROTECTED
+                           | SAVE
 
-Attributes
-----------
-items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
+    Attributes
+    ----------
+    items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
     """
 
     subclass_names = ["Access_Spec", "Proc_Language_Binding_Spec"]
@@ -11019,12 +11018,12 @@ items : ({'INTENT', 'OPTIONAL', 'POINTER', 'PROTECTED', 'SAVE'}, Intent_Spec)
 
 class Proc_Decl(BinaryOpBase):  # R1214
     """
-::
-    <proc-decl> = <procedure-entity-name> [ => <null-init> ]
+    ::
+        <proc-decl> = <procedure-entity-name> [ => <null-init> ]
 
-Attributes
-----------
-items : (Procedure_Entity_Name, Null_Init)
+    Attributes
+    ----------
+    items : (Procedure_Entity_Name, Null_Init)
     """
 
     subclass_names = ["Procedure_Entity_Name"]
@@ -11464,12 +11463,12 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
 class Call_Stmt(StmtBase):  # R1218
     """
-    <call-stmt> = CALL <procedure-designator>
-                  [ ( [ <actual-arg-spec-list> ] ) ]
+        <call-stmt> = CALL <procedure-designator>
+                      [ ( [ <actual-arg-spec-list> ] ) ]
 
-Attributes
-----------
-items : (Procedure_Designator, Actual_Arg_Spec_List)
+    Attributes
+    ----------
+    items : (Procedure_Designator, Actual_Arg_Spec_List)
     """
 
     subclass_names = []
@@ -12005,12 +12004,12 @@ class End_Subroutine_Stmt(EndStmtBase):  # R1234
 
 class Entry_Stmt(StmtBase):  # R1235
     """
-::
-    <entry-stmt> = ENTRY <entry-name> [ ( [ <dummy-arg-list> ] ) [ <suffix> ] ]
+    ::
+        <entry-stmt> = ENTRY <entry-name> [ ( [ <dummy-arg-list> ] ) [ <suffix> ] ]
 
-Attributes
-----------
-items : (Entry_Name, Dummy_Arg_List, Suffix)
+    Attributes
+    ----------
+    items : (Entry_Name, Dummy_Arg_List, Suffix)
     """
 
     subclass_names = []

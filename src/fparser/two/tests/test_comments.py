@@ -45,7 +45,7 @@ _ = ParserFactory().create(std="f2003")
 
 
 def test_ignore_comments():
-    """ Check that the parser does throw away comments when requested """
+    """Check that the parser does throw away comments when requested"""
     tree = Program(
         get_reader(
             """\
@@ -79,7 +79,7 @@ END PROGRAM a_prog
 
 
 def test_simple_prog():
-    """ Tests simplest case of comments in a program unit """
+    """Tests simplest case of comments in a program unit"""
     tree = Program(
         get_reader(
             """\
@@ -101,7 +101,7 @@ END PROGRAM a_prog
 
 
 def test_ifthen():
-    """ Tests for comments within an if-then block """
+    """Tests for comments within an if-then block"""
     cls = Program
     tree = cls(
         get_reader(
@@ -129,7 +129,7 @@ END PROGRAM a_prog
 
 
 def test_inline_ifthen():
-    """ Tests for in-line comments within an if-then block """
+    """Tests for in-line comments within an if-then block"""
     tree = Program(
         get_reader(
             """\
@@ -157,7 +157,7 @@ END PROGRAM a_prog
 
 @pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
 def test_fixed_fmt():
-    """ Test that we handle comments in fixed-format mode """
+    """Test that we handle comments in fixed-format mode"""
     reader = get_reader(
         """\
       subroutine foo
@@ -200,8 +200,8 @@ c this is a subroutine
 
 @pytest.mark.xfail(reason="fails to preserve formatting in fixed format")
 def test_fixed_continuation():
-    """ Check that we handle comments that occur within fixed-format
-    continued lines """
+    """Check that we handle comments that occur within fixed-format
+    continued lines"""
     reader = get_reader(
         """\
       subroutine foo
@@ -220,7 +220,7 @@ c this comment is a problem
 
 
 def test_prog_comments():
-    """ Unit tests for lines in programs containing comments """
+    """Unit tests for lines in programs containing comments"""
     cls = Program
     reader = get_reader(
         """\
@@ -273,7 +273,7 @@ def test_prog_comments():
 
 
 def test_module_comments():
-    """ Tests for comments in modules """
+    """Tests for comments in modules"""
     source = """! This is a module
       module my_mod
         implicit none
@@ -288,7 +288,7 @@ def test_module_comments():
 
 
 def test_function_comments():
-    """ Tests for comments in functions """
+    """Tests for comments in functions"""
     source = """\
 function my_mod()
   ! This is a function
@@ -328,7 +328,7 @@ end function my_mod
 
 
 def test_subroutine_comments():
-    """ Tests for comments in subroutines """
+    """Tests for comments in subroutines"""
     source = """\
 subroutine my_mod()
   ! First comment
@@ -359,7 +359,7 @@ end subroutine my_mod
 
 
 def test_derived_type():
-    """ Test for comments within declaration of derived type """
+    """Test for comments within declaration of derived type"""
     source = """\
 type my_type ! Inline comment1
   ! First comment
@@ -386,7 +386,7 @@ end type my_type
 
 
 def test_action_stmts():
-    """ Tests for comments within action statements such as allocate """
+    """Tests for comments within action statements such as allocate"""
     # We have to have our allocate() within some other block otherwise
     # we lose the comment (it is deferred until after the current,
     # continuted line is complete but once that happens, the match for

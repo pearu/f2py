@@ -42,7 +42,7 @@ from collections import namedtuple
 
 
 class SymbolTableError(Exception):
-    """ Base class exception for symbol-table related errors. """
+    """Base class exception for symbol-table related errors."""
 
 
 class SymbolTables:

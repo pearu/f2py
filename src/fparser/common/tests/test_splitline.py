@@ -83,7 +83,7 @@ from fparser.common.splitline import (
 
 
 def test_splitparen():
-    """ Unit tests for splitparen function."""
+    """Unit tests for splitparen function."""
     assert splitparen("abc") == ["abc"]
     assert splitparen("abc(1)") == ["abc", "(1)"]
     assert splitparen("abc(1) xyz") == ["abc", "(1)", " xyz"]
@@ -266,7 +266,7 @@ def test_string_replace_map(test_str, result, result_map):
 
 
 def test_string_replace_dict():
-    """ Tests for the StringReplaceDict class. """
+    """Tests for the StringReplaceDict class."""
     repmap = StringReplaceDict()
     assert repmap == {}
     repmap["F2PY_REAL_CONSTANT_1_"] = "a_value"
