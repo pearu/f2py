@@ -48,14 +48,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup Python
-      uses: actions/setup-python@v2
+    - uses: psf/black@stable
       with:
-        python-version: 3.x
-    - name: Install black
-      run: pip install black
-    - name: Run black
-      run: black src
+        src: "./src ./example"
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "Apply black changes"
+        commit_message: "Apply black changes [skip ci]"
