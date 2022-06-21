@@ -180,9 +180,7 @@ def test_base_next_good_include(log):
         "    1:include 'modfile.f95' " + "<== including file '{path}/modfile.f95'"
     )
     result = log.messages["info"][0].split("\n")[1]
-    assert re.sub("u", "", result) == re.sub(
-        "u", "", expected.format(path=include_directories[0])
-    )
+    assert result == expected.format(path=include_directories[0])
 
 
 def test_fortranreaderbase_info(log):

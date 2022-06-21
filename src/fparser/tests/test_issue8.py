@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -81,9 +81,7 @@ def test_reproduce_issue():
       end
 """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
+    expected = """
       !      BEGINSOURCE <cStringIO.StringI object at 0x1e52ea0> mode=fix90
         SUBROUTINE gwinput_v2x(ifi, konf, ncore)
           INTEGER ifi, konf(0:lmxamx,nclass), ncore(nclass)
@@ -98,12 +96,8 @@ def test_reproduce_issue():
           ! ncore = \sum_l
           ! Number of diffe
         END SUBROUTINE gwinput_v2x
-    """.strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+    """
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]
 
 
 def test_Issue_r25_1():
@@ -129,9 +123,7 @@ cabi
       end
     """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
+    expected = """
       !      BEGINSOURCE <cStringIO.StringI object at 0xb52b40> mode=fix90
 
         SUBROUTINE bndfp()
@@ -154,12 +146,8 @@ cabi
 
           !
         END SUBROUTINE bndfp
-    """.strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+    """
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]
 
 
 def test_Issue_r25_1():
@@ -174,9 +162,7 @@ def test_Issue_r25_1():
 
     """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
+    expected = """
       !      BEGINSOURCE <cStringIO.StringI object at 0x121bab0> mode=fix90
 
         SUBROUTINE rsedit()
@@ -184,12 +170,8 @@ def test_Issue_r25_1():
  311      FORMAT (/  t4, 'read [fn]', t15, t14, '  Third argument = flip: exchange n+, n- ')
 
         END SUBROUTINE rsedit
-    """.strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+    """
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]
 
 
 def test_comment_4():
@@ -199,17 +181,11 @@ def test_comment_4():
       end
     """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
+    expected = """
       !      BEGINSOURCE <cStringIO.StringI object at 0x121aa80> mode=fix90
 
         SUBROUTINE m_struc_def()
           !abc test
         END SUBROUTINE m_struc_def
-""".strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+"""
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]

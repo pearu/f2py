@@ -376,11 +376,7 @@ def test_get_source_info_utf8():
     """
     encoding = dict(encoding="UTF-8")
     with tempfile.NamedTemporaryFile(mode="w", **encoding) as tmp_file:
-        content = """
-            ! A fortran comment with a unicode character "{0}"
-        """.format(
-            "\u2014"
-        )
+        content = '  ! A fortran comment with a unicode character "\u2014"'
         tmp_file.write(content)
         tmp_file.flush()
 

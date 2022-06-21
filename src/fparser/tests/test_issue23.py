@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -74,11 +74,9 @@ def test_reproduce_issue_1():
 """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
     ifstmt = tree.content[0].content[1]
-    assert (
-        str(ifstmt).strip()
-        == """
-    IF (ax) i = 1""".strip()
-    )
+    expected = """
+    IF (ax) i = 1"""
+    assert str(ifstmt).strip() == expected.strip()
 
 
 def test_reproduce_issue_2():
@@ -90,8 +88,6 @@ def test_reproduce_issue_2():
 """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
     ifstmt = tree.content[0].content[1]
-    assert (
-        str(ifstmt).strip()
-        == """
-    IF (ax) CALL bb(a, b)""".strip()
-    )
+    expected = """
+    IF (ax) CALL bb(a, b)"""
+    assert str(ifstmt).strip() == expected.strip()

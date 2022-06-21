@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -77,12 +77,6 @@ def test_reproduce_issue():
       end
 """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
-    """.strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+    expected = """
+    """
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]

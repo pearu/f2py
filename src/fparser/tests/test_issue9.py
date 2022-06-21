@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017 Science and Technology Facilities Council
+# Modified work Copyright (c) 2017-2022 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -78,9 +78,7 @@ def test_reproduce_issue():
       
 """
     tree = api.parse(source_str, isfree=False, isstrict=False, ignore_comments=False)
-    assert (
-        str(tree).strip().split("\n")[1:]
-        == """
+    expected = """
       !      BEGINSOURCE <cStringIO.StringI object at 0x2405ea0> mode=fix90
         MODULE m_rdctrl
 
@@ -90,9 +88,5 @@ def test_reproduce_issue():
 
           END SUBROUTINE readctrl
         END MODULE m_rdctrl
-    """.strip().split(
-            "\n"
-        )[
-            1:
-        ]
-    )
+    """
+    assert str(tree).strip().split("\n")[1:] == expected.strip().split("\n")[1:]
