@@ -51,6 +51,7 @@ jobs:
     - uses: psf/black@stable
       with:
         src: "./src ./example"
+        options: ""
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "Apply black changes [skip ci]"
