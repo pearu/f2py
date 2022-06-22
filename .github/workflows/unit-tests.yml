@@ -46,7 +46,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  unit-tests:
 
     runs-on: ubuntu-latest
     strategy:
@@ -80,3 +80,16 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         verbose: true
+
+  black:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: psf/black@stable
+      with:
+        src: "./src ./example"
+        options: ""
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Apply black changes [skip ci]"
