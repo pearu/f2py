@@ -47,6 +47,19 @@ on:
 
 jobs:
 
+  # Checks the whole code base for conformance with Black formatting.
+  # It is the responsibility of the developer to apply Black. (Auto-
+  # committing the results of running Black here is possible but
+  # then breaks the normal GitHub reviewing workflow.)
+  black:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: psf/black@stable
+      with:
+        src: "./src ./example"
+
   unit-tests:
 
     runs-on: ubuntu-latest
@@ -75,21 +88,3 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         verbose: true
-
-  # Applies Black formatting to the whole code base and commits any resulting
-  # changes. This is done *after* the unit tests as otherwise they get
-  # aborted (and don't get re-run because an Action cannot trigger another
-  # Action - https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs).
-  black:
-
-    needs: unit-tests
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: psf/black@stable
-      with:
-        src: "./src ./example"
-        options: ""
-    - uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "Apply black changes"
