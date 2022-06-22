@@ -727,7 +727,7 @@ class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
 
 
 class Alloc_Opt(Alloc_Opt_2003):
-    '''
+    """
     Fortran2008 rule R627
     alloc-opt is ERRMSG = errmsg-variable
               or MOLD = source-expr
@@ -737,15 +737,18 @@ class Alloc_Opt(Alloc_Opt_2003):
     Extends the Fortran2003 version of this class by updating the keyword
     pairs (used in match) with support for MOLD.
 
-    '''
-    _keyword_pairs = [('STAT', Stat_Variable),
-                      ('ERRMSG', Errmsg_Variable),
-                      ('SOURCE', Source_Expr),
-                      ('MOLD', Source_Expr)]
+    """
+
+    _keyword_pairs = [
+        ("STAT", Stat_Variable),
+        ("ERRMSG", Errmsg_Variable),
+        ("SOURCE", Source_Expr),
+        ("MOLD", Source_Expr),
+    ]
 
 
 class Allocate_Stmt(Allocate_Stmt_2003):  # R626
-    '''
+    """
     Fortran 2008 rule R626
     allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
                                 [, alloc-opt-list ] )
@@ -753,9 +756,10 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
     The implementation of this rule simply ensures that the Fortran2008 version
     of Alloc_Opt is used.
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Type_Spec', 'Allocation_List', 'Alloc_Opt_List']
+    use_names = ["Type_Spec", "Allocation_List", "Alloc_Opt_List"]
 
 
 class If_Stmt(If_Stmt_2003):  # R837

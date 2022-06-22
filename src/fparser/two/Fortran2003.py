@@ -4979,12 +4979,15 @@ class Alloc_Opt(KeywordValueBase):  # R624
                   | ERRMSG = <errmsg-variable>
                   | SOURCE = <source-expr>
     """
+
     subclass_names = []
-    use_names = ['Stat_Variable', 'Errmsg_Variable', 'Source_Expr']
+    use_names = ["Stat_Variable", "Errmsg_Variable", "Source_Expr"]
     #: The keywords tested for in the match() method.
-    _keyword_pairs = [('STAT', Stat_Variable),
-                      ('ERRMSG', Errmsg_Variable),
-                      ('SOURCE', Source_Expr)]
+    _keyword_pairs = [
+        ("STAT", Stat_Variable),
+        ("ERRMSG", Errmsg_Variable),
+        ("SOURCE", Source_Expr),
+    ]
 
     @classmethod
     def match(cls, string):
