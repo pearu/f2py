@@ -76,8 +76,7 @@ Module content
 from fparser.common.base_classes import classes
 from fparser.common.utils import AnalyzeError
 
-__autodoc__ = ["get_reader",
-               "parse", "walk"]
+__autodoc__ = ["get_reader", "parse", "walk"]
 
 
 def get_reader(
