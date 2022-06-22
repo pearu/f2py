@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-''' pytest module for the Fortran2003 Allocate Statement - R263. '''
+""" pytest module for the Fortran2003 Allocate Statement - R263. """
 
 import pytest
 from fparser.two.utils import NoMatchError
@@ -42,35 +42,34 @@ from fparser.two.Fortran2003 import Allocate_Stmt, Alloc_Opt
 
 @pytest.mark.usefixtures("f2003_create")
 def test_allocate_stmt():
-    ''' Tests for the allocate statement: R623. '''
+    """Tests for the allocate statement: R623."""
     tcls = Allocate_Stmt
-    obj = tcls('allocate(a,b)')
+    obj = tcls("allocate(a,b)")
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'ALLOCATE(a, b)'
+    assert str(obj) == "ALLOCATE(a, b)"
 
-    obj = tcls('allocate(real::a)')
-    assert str(obj) == 'ALLOCATE(REAL::a)'
+    obj = tcls("allocate(real::a)")
+    assert str(obj) == "ALLOCATE(REAL::a)"
 
-    obj = tcls('allocate(real(kind=8)::a, stat=b, source=c//d)')
-    assert (str(obj) ==
-            'ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)')
+    obj = tcls("allocate(real(kind=8)::a, stat=b, source=c//d)")
+    assert str(obj) == "ALLOCATE(REAL(KIND = 8)::a, STAT = b, SOURCE = c // d)"
 
 
 @pytest.mark.usefixtures("f2003_create")
 def test_alloc_opt():
-    ''' Tests for the various forms of alloc-opt: R624. '''
+    """Tests for the various forms of alloc-opt: R624."""
     tcls = Alloc_Opt
-    obj = tcls('stat=a')
+    obj = tcls("stat=a")
     assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == 'STAT = a'
+    assert str(obj) == "STAT = a"
     assert repr(obj) == "Alloc_Opt('STAT', Name('a'))"
-    obj = tcls('errmsg=my_msg')
-    assert str(obj) == 'ERRMSG = my_msg'
-    obj = tcls('source=b')
-    assert str(obj) == 'SOURCE = b'
+    obj = tcls("errmsg=my_msg")
+    assert str(obj) == "ERRMSG = my_msg"
+    obj = tcls("source=b")
+    assert str(obj) == "SOURCE = b"
     # Check for a failed match - use 'mold' as that's a Fortran2008 addition
     # so should not match here.
     with pytest.raises(NoMatchError):
-        tcls('MOLD=b')
+        tcls("MOLD=b")
     with pytest.raises(NoMatchError):
-        tcls('value')
+        tcls("value")

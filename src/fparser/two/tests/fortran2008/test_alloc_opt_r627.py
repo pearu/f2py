@@ -32,7 +32,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Test Fortran 2008 rule R627
+"""Test Fortran 2008 rule R627
 
     alloc-opt is ERRMSG = errmsg-variable
               or MOLD = source-expr
@@ -42,7 +42,7 @@
 The only difference to 2003 is the addition of 'MOLD' so that's what we
 test for.
 
-'''
+"""
 
 import pytest
 from fparser.two.Fortran2008 import Allocate_Stmt, Alloc_Opt
@@ -50,7 +50,7 @@ from fparser.two.Fortran2008 import Allocate_Stmt, Alloc_Opt
 
 @pytest.mark.usefixtures("f2008_create")
 def test_alloc_opt():
-    '''Test that Alloc_Opt supports the F2008 addition of 'MOLD'.'''
+    """Test that Alloc_Opt supports the F2008 addition of 'MOLD'."""
     obj = Alloc_Opt("MOLD=c")
     assert isinstance(obj, Alloc_Opt), repr(obj)
     assert str(obj) == "MOLD = c"
@@ -58,8 +58,8 @@ def test_alloc_opt():
 
 @pytest.mark.usefixtures("f2008_create")
 def test_allocate_stmt():
-    ''' Check that the Fortran2008 version of allocate has picked up the
-    version of Alloc_Opt that supports MOLD. '''
+    """Check that the Fortran2008 version of allocate has picked up the
+    version of Alloc_Opt that supports MOLD."""
     obj = Allocate_Stmt("allocate(b, mold=c)")
     assert isinstance(obj, Allocate_Stmt), repr(obj)
     assert str(obj) == "ALLOCATE(b, MOLD = c)"
