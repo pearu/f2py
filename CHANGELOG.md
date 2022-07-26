@@ -17,6 +17,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+26/07/2022 PR #341 - replace staticmethod calls with decorator.
+
 14/07/2022 PR #361 - remove six dependency from setup.py
 
 22/06/2022 PR #357 - this project now uses the Black formatter in a GH Action.
