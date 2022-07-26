@@ -17,6 +17,12 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+14/07/2022 PR #361 - remove six dependency from setup.py
+
+22/06/2022 PR #357 - this project now uses the Black formatter in a GH Action.
+
+20/06/2022 PR #345 - add fparser2 performance benchmark in the scripts folder.
+
 ## Release 0.0.16 (16/06/2022) ##
 
 14/06/2022 PR #337 towards #312 (performance improvements). Removes some
