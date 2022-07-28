@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2018-2020 Science and Technology
+# Modified work Copyright (c) 2018-2022 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -63,10 +63,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-'''The file implements the Fortran2008 rules as defined in
+"""The file implements the Fortran2008 rules as defined in
     https://j3-fortran.org/doc/year/10/10-007r1.pdf
 
-'''
+"""
 # pylint: disable=invalid-name
 # pylint: disable=arguments-differ
 # pylint: disable=undefined-variable
@@ -76,23 +76,52 @@
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
-from fparser.two.utils import STRINGBase, BracketBase, WORDClsBase, \
-    SeparatorBase, Type_Declaration_StmtBase
+from fparser.two.utils import (
+    STRINGBase,
+    BracketBase,
+    WORDClsBase,
+    SeparatorBase,
+    Type_Declaration_StmtBase,
+    StmtBase,
+)
 from fparser.two.Fortran2003 import (
-    EndStmtBase, BlockBase, SequenceBase, Base, Specification_Part,
-    Module_Subprogram_Part, Implicit_Part, Implicit_Part_Stmt,
-    Declaration_Construct, Use_Stmt, Import_Stmt, Declaration_Type_Spec,
-    Entity_Decl_List, Component_Decl_List)
+    EndStmtBase,
+    BlockBase,
+    SequenceBase,
+    Base,
+    Specification_Part,
+    Module_Subprogram_Part,
+    Implicit_Part,
+    Implicit_Part_Stmt,
+    Declaration_Construct,
+    Use_Stmt,
+    Import_Stmt,
+    Declaration_Type_Spec,
+    Entity_Decl_List,
+    Component_Decl_List,
+    Stop_Code,
+)
+
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
-    Program_Unit as Program_Unit_2003, Attr_Spec as Attr_Spec_2003,
+    Program_Unit as Program_Unit_2003,
+    Attr_Spec as Attr_Spec_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
     Component_Attr_Spec as Component_Attr_Spec_2003,
-    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003)
+    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
+    Action_Stmt as Action_Stmt_2003,
+    Action_Stmt_C201 as Action_Stmt_C201_2003,
+    Action_Stmt_C802 as Action_Stmt_C802_2003,
+    Action_Stmt_C824 as Action_Stmt_C824_2003,
+    If_Stmt as If_Stmt_2003,
+    Do_Term_Action_Stmt as Do_Term_Action_Stmt_2003,
+    Executable_Construct as Executable_Construct_2003,
+    Executable_Construct_C201 as Executable_Construct_C201_2003,
+)
 
 
 class Program_Unit(Program_Unit_2003):  # R202
-    '''
+    """
     Fortran 2008 rule R202
     program-unit is main-program
                     or external-subprogram
@@ -100,7 +129,7 @@ class Program_Unit(Program_Unit_2003):  # R202
                     or submodule
                     or block-data
 
-    '''
+    """
 
     # Fortran2008 adds the concept of submodules to a program-unit. We
     # therefore extend the Fortran2003 specification
@@ -108,8 +137,158 @@ class Program_Unit(Program_Unit_2003):  # R202
     subclass_names.append("Submodule")
 
 
+class Executable_Construct(Executable_Construct_2003):  # R213
+    # pylint: disable=invalid-name
+    """
+    Fortran 2003 rule R213
+    executable-construct is action-stmt
+                         or associate-construct
+                         or block-construct
+                         or case-construct
+                         or critical-construct
+                         or do-construct
+                         or forall-construct
+                         or if-construct
+                         or select-type-construct
+                         or where-construct
+
+    Associated constraints are:
+
+    "C201 (R208) An execution-part shall not contain an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
+
+    NB: The new block-construct and critical-construct are not yet implemented.
+    TODO: Implement missing F2008 executable-construct (#320)
+
+    """
+    subclass_names = [
+        "Action_Stmt",
+        "Associate_Construct",
+        "Case_Construct",
+        "Do_Construct",
+        "Forall_Construct",
+        "If_Construct",
+        "Select_Type_Construct",
+        "Where_Construct",
+    ]
+
+
+class Executable_Construct_C201(Executable_Construct_C201_2003):
+    """
+    executable-construct-c201 is executable construct.
+    This applies C201.
+    """
+
+    subclass_names = Executable_Construct.subclass_names[:]
+    subclass_names[subclass_names.index("Action_Stmt")] = "Action_Stmt_C201"
+
+
+class Action_Stmt(Action_Stmt_2003):  # R214
+    """
+    Fortran 2008 rule R214
+    action-stmt is allocate-stmt
+                    or assignment-stmt
+                    or backspace-stmt
+                    or call-stmt
+                    or close-stmt
+                    or continue-stmt
+                    or cycle-stmt
+                    or deallocate-stmt
+                    or end-function-stmt
+                    or end-mp-subprogram-stmt
+                    or end-program-stmt
+                    or end-subroutine-stmt
+                    or endfile-stmt
+                    or error-stop-stmt
+                    or exit-stmt
+                    or flush-stmt
+                    or forall-stmt
+                    or goto-stmt
+                    or if-stmt
+                    or inquire-stmt
+                    or lock-stmt
+                    or nullify-stmt
+                    or open-stmt
+                    or pointer-assignment-stmt
+                    or print-stmt
+                    or read-stmt
+                    or return-stmt
+                    or rewind-stmt
+                    or stop-stmt
+                    or sync-all-stmt
+                    or sync-images-stmt
+                    or sync-memory-stmt
+                    or unlock-stmt
+                    or wait-stmt
+                    or where-stmt
+                    or write-stmt
+                    or arithmetic-if-stmt
+                    or computed-goto-stmt
+
+    The implementation of this rule adds the relevant subclass names
+    for new statements added in Fortran 2008.
+
+    Associated constraints are:
+
+    "C201 (R208) An execution-part shall not contain an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
+
+    NB: The following statements are not yet implemented:
+    end-mp-subprogram-stmt, endfile-stmt, lock-stmt, sync-all-stmt,
+    sync-images-stmt, sync-memory-stmt, unlock-stmt.
+
+    """
+
+    # Fortran 2008 adds a few additional action-stmt. We therefore
+    # extend the Fortran 2003 specification
+    subclass_names = Action_Stmt_2003.subclass_names[:]
+    subclass_names.append("Error_Stop_Stmt")
+
+
+class Action_Stmt_C201(Action_Stmt_C201_2003):
+    """
+    action-stmt-c201 is action-stmt
+    C201 is applied.
+    """
+
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove("End_Function_Stmt")
+    subclass_names.remove("End_Subroutine_Stmt")
+
+
+class Action_Stmt_C816(Action_Stmt_C824_2003):
+    """
+    action-stmt-c816 is action-stmt
+    C816 is applied.
+    """
+
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove("Arithmetic_If_Stmt")
+    subclass_names.remove("Continue_Stmt")
+    subclass_names.remove("Cycle_Stmt")
+    subclass_names.remove("End_Function_Stmt")
+    subclass_names.remove("End_Subroutine_Stmt")
+    subclass_names.remove("Error_Stop_Stmt")
+    subclass_names.remove("Exit_Stmt")
+    subclass_names.remove("Goto_Stmt")
+    subclass_names.remove("Return_Stmt")
+    subclass_names.remove("Stop_Stmt")
+
+
+class Action_Stmt_C828(Action_Stmt_C802_2003):
+    """
+    action-stmt-c828 is action-stmt
+    C828 is applied.
+    """
+
+    subclass_names = Action_Stmt.subclass_names[:]
+    subclass_names.remove("End_Function_Stmt")
+    subclass_names.remove("End_Subroutine_Stmt")
+    subclass_names.remove("If_Stmt")
+
+
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
-    '''
+    """
     Fortran 2008 rule 436
     data-component-def-stmt is declaration-type-spec [
              [ , component-attr-spec-list ] :: ] component-decl-list
@@ -155,11 +334,11 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
     C439-C443, C445, C447-C448, C457-C459 are currently not checked
     - issue #258.
 
-    '''
+    """
 
     @staticmethod
     def match(string):
-        '''Implements the matching of a data component definition statement.
+        """Implements the matching of a data component definition statement.
 
         :param str string: the reader or string to match as a data \
                            component definition statement.
@@ -172,14 +351,14 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
              :py:class:`fparser.two.Fortran2008.Component_Attr_Spec_List`, \
              :py:class:`fparser.two.Fortran2003.Component_Decl_List`)
 
-        '''
+        """
         return Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Component_Attr_Spec_List,
-            Component_Decl_List, string)
+            Declaration_Type_Spec, Component_Attr_Spec_List, Component_Decl_List, string
+        )
 
 
 class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
-    '''
+    """
     Fortran 2008 rule R437
     component-attr-spec is access-spec
                            or ALLOCATABLE
@@ -194,25 +373,23 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
 
     This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R441.
 
-    '''
+    """
+
     subclass_names = Component_Attr_Spec_2003.subclass_names[:]
-    subclass_names.append('Codimension_Attr_Spec')
+    subclass_names.append("Codimension_Attr_Spec")
     attributes = Component_Attr_Spec_2003.attributes[:]
-    attributes.append('CONTIGUOUS')
+    attributes.append("CONTIGUOUS")
 
 
 class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
-    '''
+    """
     Fortran 2008 rule 501
     type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
                              entity-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
-    variant but reimplements the match method identical to Fortran 2003 as
-    otherwise the generated Fortran 2008 variant of `Attr_Spec_List` would not
-    be used. Unfortunately, the required `attr_spec_list_cls` can not simply be
-    provided as a class property since the relevant class is only generated
-    at the end of this file using the `use_names` class property of this class.
+    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
+    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
 
     Associated constraints are:
 
@@ -227,43 +404,34 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
 
     C501-C503, C505 are currently not checked - issue #259.
 
-    '''
+    """
 
     @staticmethod
-    def match(string):
-        '''Implements the matching of a type declaration statement.
+    def get_attr_spec_list_cls():
+        """Return the type used to match the attr-spec-list
 
-        :param str string: the reader or string to match as a type \
-                           declaration statement.
+        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
 
-        :return: a 3-tuple containing declaration type specification, \
-                 attributespecification and entity declaration list \
-                 if there is a match or None if there is no match.
-        :rtype: `NoneType` or \
-            (:py:class:`fparser.two.Fortran2003.Declaration_Type_Spec`, \
-             :py:class:`fparser.two.Fortran2008.Attr_Spec_List`, \
-             :py:class:`fparser.two.Fortran2003.Entity_Decl_List`)
-
-        '''
-        return Type_Declaration_StmtBase.match(
-            Declaration_Type_Spec, Attr_Spec_List, Entity_Decl_List, string)
+        """
+        return Attr_Spec_List
 
 
 class Codimension_Attr_Spec(WORDClsBase):  # R502.d
-    '''
+    """
     codimension-attr-spec is CODIMENSION lbracket coarray-spec rbracket
 
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
     as optional parts.
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Coarray_Bracket_Spec']
+    use_names = ["Coarray_Bracket_Spec"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for the CODIMENSION attribute.
 
         :param str string: the string to match as the attribute.
@@ -274,27 +442,28 @@ class Codimension_Attr_Spec(WORDClsBase):  # R502.d
         :rtype: `NoneType` or \
             (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Bracket_Spec`,)
 
-        '''
+        """
         return WORDClsBase.match(
-            'CODIMENSION', Coarray_Bracket_Spec, string, colons=False,
-            require_cls=True)
+            "CODIMENSION", Coarray_Bracket_Spec, string, colons=False, require_cls=True
+        )
 
 
 class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
-    '''
+    """
     coarray-bracket-spec is lbracket coarray-spec rbracket
 
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
     as optional parts.
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Coarray_Spec']
+    use_names = ["Coarray_Spec"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for the coarray specification
         including the square brackets.
 
@@ -306,12 +475,12 @@ class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
         :rtype: `NoneType` or \
             (`str`, :py:class:`fparser.two.Fortran2008.Coarray_Spec`, `str`)
 
-        '''
-        return BracketBase.match('[]', Coarray_Spec, string)
+        """
+        return BracketBase.match("[]", Coarray_Spec, string)
 
 
 class Attr_Spec(Attr_Spec_2003):  # R502
-    '''
+    """
     Fortran 2008 rule R502
     attr-spec is access-spec
                  or ALLOCATABLE
@@ -338,14 +507,15 @@ class Attr_Spec(Attr_Spec_2003):  # R502
 
     This rule adds CODIMENSION and CONTIGUOUS attributes to Fortran2003's R503.
 
-    '''
+    """
+
     subclass_names = Attr_Spec_2003.subclass_names[:]
-    subclass_names.append('Codimension_Attr_Spec')
+    subclass_names.append("Codimension_Attr_Spec")
     use_names = []
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for attributes of types.
 
         :param str string: the string to match as attribute.
@@ -354,32 +524,33 @@ class Attr_Spec(Attr_Spec_2003):  # R502
                  containing the matched string.
         :rtype: `NoneType` or (`str`,)
 
-        '''
+        """
         return STRINGBase.match(pattern.abs_attr_spec_f08, string)
 
 
 class Coarray_Spec(Base):  # R509
-    '''
+    """
     Fortran 2008 rule R509
     coarray-spec is deferred-coshape-spec-list
                     or explicit-coshape-spec-list
 
-    '''
-    subclass_names = ['Explicit_Coshape_Spec',
-                      'Deferred_Coshape_Spec_List']
+    """
+
+    subclass_names = ["Explicit_Coshape_Spec", "Deferred_Coshape_Spec_List"]
 
 
 class Deferred_Coshape_Spec(SeparatorBase):  # R510
-    '''
+    """
     Fortran 2008 rule R510
     deferred-coshape-spec is :
 
-    '''
+    """
+
     subclass_names = []
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for deferred coarray shape specification.
 
         :param str string: the string to match as deferred shape.
@@ -388,14 +559,14 @@ class Deferred_Coshape_Spec(SeparatorBase):  # R510
                  containing `None`.
         :rtype: `NoneType` or (`None`, `None`)
 
-        '''
-        if string == ':':
+        """
+        if string == ":":
             return (None, None)
         return None
 
 
 class Explicit_Coshape_Spec(SeparatorBase):  # R511
-    '''
+    """
     Fortran 2008 rule R511
     explicit-coshape-spec is [ coshape-spec-list , ] [ lower-cobound : ] *
 
@@ -407,13 +578,14 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
 
     C529 is currently not checked - issue #259.
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Coshape_Spec_List', 'Lower_Cobound']
+    use_names = ["Coshape_Spec_List", "Lower_Cobound"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for explicit coarray shape specification.
 
         :param str string: the string to match as deferred shape.
@@ -425,52 +597,55 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
             (:py:class:`fparser.two.Fortran2008.Coshape_Spec_List` or `None`, \
              :py:class:`fparser.two:Fortran2008.Lower_Cobound` or `None`)
 
-        '''
-        if not string.endswith('*'):
+        """
+        if not string.endswith("*"):
             return None
         line = string[:-1].rstrip()
         if not line:
             return (None, None)
-        if line.endswith(':'):
+        if line.endswith(":"):
             line, repmap = string_replace_map(line[:-1].rstrip())
-            sep_pos = line.rfind(',')
+            sep_pos = line.rfind(",")
             if sep_pos == -1:
                 return (None, Lower_Cobound(repmap(line)))
-            return (Coshape_Spec_List(repmap(line[:sep_pos].rstrip())),
-                    Lower_Cobound(repmap(line[sep_pos+1:].lstrip())))
-        if not line.endswith(','):
+            return (
+                Coshape_Spec_List(repmap(line[:sep_pos].rstrip())),
+                Lower_Cobound(repmap(line[sep_pos + 1 :].lstrip())),
+            )
+        if not line.endswith(","):
             return None
         line = line[:-1].rstrip()
         return (Coshape_Spec_List(line), None)
 
     def tostr(self):
-        '''
+        """
         Converts the explicit coarray shape specification to string.
 
         :return: the shape specification as string.
         :rtype: str
 
-        '''
-        s = ''
+        """
+        s = ""
         if self.items[0]:
-            s += str(self.items[0]) + ', '
+            s += str(self.items[0]) + ", "
         if self.items[1]:
-            s += str(self.items[1]) + ' : '
-        s += '*'
+            s += str(self.items[1]) + " : "
+        s += "*"
         return s
 
 
 class Coshape_Spec(SeparatorBase):  # R511.a
-    '''
+    """
     coshape-spec is [ lower-cobound : ] upper-cobound
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Lower_Cobound', 'Upper_Cobound']
+    use_names = ["Lower_Cobound", "Upper_Cobound"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         Implements the matching for a coarray shape.
 
         :param str string: the string to match as shape.
@@ -482,11 +657,11 @@ class Coshape_Spec(SeparatorBase):  # R511.a
             (:py:class:`fparser.two.Fortran2008.Lower_Cobound`, \
              :py:class:`fparser.two.Fortran2008.Upper_Cobound`)
 
-        '''
+        """
         line, repmap = string_replace_map(string)
-        if ':' not in line:
+        if ":" not in line:
             return (None, Upper_Cobound(string))
-        lower, upper = line.split(':', 1)
+        lower, upper = line.split(":", 1)
         lower = lower.rstrip()
         upper = upper.lstrip()
         if not upper:
@@ -496,38 +671,105 @@ class Coshape_Spec(SeparatorBase):  # R511.a
         return (Lower_Cobound(repmap(lower)), Upper_Cobound(repmap(upper)))
 
     def tostr(self):
-        '''
+        """
         Converts the Shape specification to string.
 
         :return: the shape specification as string.
         :rtype: str
 
-        '''
+        """
         if self.items[0] is None:
             return str(self.items[1])
         return SeparatorBase.tostr(self)
 
 
 class Lower_Cobound(Base):  # R512
-    '''
+    """
     Fortran 2008 rule R512
     lower-cobound is specification-expr
 
-    '''
-    subclass_names = ['Specification_Expr']
+    """
+
+    subclass_names = ["Specification_Expr"]
 
 
 class Upper_Cobound(Base):  # R513
-    '''
+    """
     Fortran 2008 rule R513
     upper-cobound is specification-expr
 
-    '''
-    subclass_names = ['Specification_Expr']
+    """
+
+    subclass_names = ["Specification_Expr"]
+
+
+class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
+    """
+    Fortran 2008 rule R826
+    do-term-action-stmt is action-stmt
+
+    Associated constraints are:
+
+    "C816 (R826) A do-term-action-stmt shall not be an arithmetic-if-stmt,
+          continue-stmt, cycle-stmt, end-function-stmt, end-mp-subprogram-stmt,
+          end-program-stmt, end-subroutine-stmt, error-stop-stmt, exit-stmt,
+          goto-stmt, return-stmt, or stop-stmt."
+    """
+
+    subclass_names = ["Action_Stmt_C816"]
+
+
+class If_Stmt(If_Stmt_2003):  # R837
+    """
+    Fortran 2008 rule R837
+    if-stmt is IF ( scalar-logical-expr ) action-stmt
+
+    The implementation of this rule only replaces the :py:attr:`use_names` and
+    :py:attr:`action_stmt_class` attributes to use the Fortran 2008 variant
+    :py:class:`Action_Stmt_C828` instead of
+    :py:class:`fparser.two.Fortran2003.Action_Stmt_C802`.
+
+    Associated constraints are:
+
+    C828 (R837) The action-stmt in the if-stmt shall not be an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, end-subroutine-stmt, or if-stmt.
+
+    """
+
+    use_names = ["Scalar_Logical_Expr", "Action_Stmt_C828"]
+    action_stmt_cls = Action_Stmt_C828
+
+
+class Error_Stop_Stmt(StmtBase, WORDClsBase):  # R856
+    """
+    Fortran 2008 rule R856
+    error-stop-stmt is ERROR STOP [ stop-code ]
+
+    """
+
+    subclass_names = []
+    use_names = ["Stop_Code"]
+
+    @staticmethod
+    def match(string):
+        """Check whether the input matches the rule
+
+        :param str string: Text that we are trying to match.
+
+        :returns: None if there is no match or, if there is a match, a \
+            2-tuple containing a string matching 'ERROR STOP' and an \
+            instance of :py:class:`fparser.two.Fortran2003.Stop_Code` \
+            (or None if an instance of 'Stop_Code' is not required and \
+            not provided).
+        :rtype: (str, :py:class:`fparser.two.Fortran2003.Stop_Code` or None) \
+            or NoneType
+
+        """
+        return WORDClsBase.match("ERROR STOP", Stop_Code, string)
 
 
 class Specification_Part_C1112(Specification_Part):  # C1112
-    '''Fortran 2008 constraint C1112
+    """Fortran 2008 constraint C1112
     C1112 A submodule specification-part shall not contain a
     format-stmt, entry-stmt, or stmt-function-stmt.
 
@@ -543,13 +785,18 @@ class Specification_Part_C1112(Specification_Part):  # C1112
     Therefore we need to specialise implicit_part, implicit_part_stmt
     and declaration_construct
 
-    '''
-    use_names = ['Use_Stmt', 'Import_Stmt', 'Implicit_Part_C1112',
-                 'Declaration_Construct_C1112']
+    """
+
+    use_names = [
+        "Use_Stmt",
+        "Import_Stmt",
+        "Implicit_Part_C1112",
+        "Declaration_Construct_C1112",
+    ]
 
     @staticmethod
     def match(reader):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param reader: the fortran file reader containing the line(s)
                       of code that we are trying to match
@@ -560,15 +807,17 @@ class Specification_Part_C1112(Specification_Part):  # C1112
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
 
-        '''
-        return BlockBase.match(None, [Use_Stmt, Import_Stmt,
-                                      Implicit_Part_C1112,
-                                      Declaration_Construct_C1112],
-                               None, reader)
+        """
+        return BlockBase.match(
+            None,
+            [Use_Stmt, Import_Stmt, Implicit_Part_C1112, Declaration_Construct_C1112],
+            None,
+            reader,
+        )
 
 
 class Implicit_Part_C1112(Implicit_Part):  # C1112
-    '''Fortran 2008 constraint C1112
+    """Fortran 2008 constraint C1112
     C1112 A submodule specification-part shall not contain a
     format-stmt, entry-stmt, or stmt-function-stmt.
 
@@ -576,12 +825,13 @@ class Implicit_Part_C1112(Implicit_Part):  # C1112
     'Implicit_Part_Stmt_C1112' is called rather than the original
     'Implicit_Part_Stmt'
 
-    '''
-    use_names = ['Implicit_Part_Stmt_C1112', 'Implicit_Stmt']
+    """
+
+    use_names = ["Implicit_Part_Stmt_C1112", "Implicit_Stmt"]
 
     @staticmethod
     def match(reader):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param reader: the fortran file reader containing the line(s)
                       of code that we are trying to match
@@ -592,36 +842,38 @@ class Implicit_Part_C1112(Implicit_Part):  # C1112
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
 
-        '''
+        """
         return BlockBase.match(None, [Implicit_Part_Stmt_C1112], None, reader)
 
 
 class Implicit_Part_Stmt_C1112(Implicit_Part_Stmt):  # C1112
-    '''Fortran 2008 constraint C1112
+    """Fortran 2008 constraint C1112
     C1112 A submodule specification-part shall not contain a
     format-stmt, entry-stmt, or stmt-function-stmt.
 
     This class specialises 'Implicit_Part_Stmt' to remove
     'Format_Stmt' and 'Entry_Stmt'
 
-    '''
+    """
+
     subclass_names = Implicit_Part_Stmt.subclass_names[:]
-    subclass_names.remove('Format_Stmt')
-    subclass_names.remove('Entry_Stmt')
+    subclass_names.remove("Format_Stmt")
+    subclass_names.remove("Entry_Stmt")
 
 
 class Declaration_Construct_C1112(Declaration_Construct):  # C1112
-    '''Fortran 2008 constraint C1112
+    """Fortran 2008 constraint C1112
     C1112 A submodule specification-part shall not contain a
     format-stmt, entry-stmt, or stmt-function-stmt.
 
     This class specialises 'Declaration_Construct' to remove
     'Format_Stmt', 'Entry_Stmt' and 'Stmt_Function_Stmt'
 
-    '''
+    """
+
     subclass_names = Declaration_Construct.subclass_names[:]
-    subclass_names.remove('Format_Stmt')
-    subclass_names.remove('Entry_Stmt')
+    subclass_names.remove("Format_Stmt")
+    subclass_names.remove("Entry_Stmt")
     # Commented out Stmt_Function_Stmt as it can falsely match an
     # access to an array or function. Reintroducing statement
     # functions is captured in issue #202.
@@ -629,7 +881,7 @@ class Declaration_Construct_C1112(Declaration_Construct):  # C1112
 
 
 class Submodule(BlockBase):  # R1116 [C1112,C1114]
-    '''Fortran 2008 rule R1116
+    """Fortran 2008 rule R1116
     submodule is submodule-stmt
                  [ specification-part ]
                  [ module-subprogram-part ]
@@ -646,15 +898,19 @@ class Submodule(BlockBase):  # R1116 [C1112,C1114]
     provided by the 'Submodule_Stmt and 'End_Submodule_Stmt' classes
     via a `get_name` method
 
-    '''
+    """
 
     subclass_names = []
-    use_names = ['Submodule_Stmt', 'Specification_Part_C1112',
-                 'Module_Subprogram_Part', 'End_Submodule_Stmt']
+    use_names = [
+        "Submodule_Stmt",
+        "Specification_Part_C1112",
+        "Module_Subprogram_Part",
+        "End_Submodule_Stmt",
+    ]
 
     @staticmethod
     def match(reader):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param reader: the fortran file reader containing the line(s)
                       of code that we are trying to match
@@ -665,27 +921,30 @@ class Submodule(BlockBase):  # R1116 [C1112,C1114]
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
 
-        '''
+        """
 
         result = BlockBase.match(
             Submodule_Stmt,
             [Specification_Part_C1112, Module_Subprogram_Part],
-            End_Submodule_Stmt, reader)
+            End_Submodule_Stmt,
+            reader,
+        )
         return result
 
 
 class Submodule_Stmt(Base):  # R1117
-    '''
+    """
     Fortran 2008 rule R1117
     submodule-stmt is SUBMODULE ( parent-identifier ) submodule-name
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Submodule_Name', 'Parent_Identifier']
+    use_names = ["Submodule_Name", "Parent_Identifier"]
 
     @staticmethod
     def match(fstring):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param string fstring : contains the Fortran that we are trying
         to match
@@ -693,17 +952,18 @@ class Submodule_Stmt(Base):  # R1117
         :return: instances of the Classes that have matched if there
         is a match or `None` if there is no match
 
-        '''
+        """
         # First look for "SUBMODULE"
         name = "SUBMODULE"
-        if fstring[:len(name)].upper() != name:
+        if fstring[: len(name)].upper() != name:
             # the string does not start with SUBMODULE so does not
             # match
             return None
         # "SUBMODULE is found so strip it out and split the remaining
         # line by parenthesis
         from fparser.common.splitline import splitparen
-        splitline = splitparen(fstring[len(name):].lstrip())
+
+        splitline = splitparen(fstring[len(name) :].lstrip())
         # We expect 2 entries, the first being parent_identifier with
         # brackets and the second submodule_name. However for some
         # reason we get an additional empty 1st entry when using
@@ -729,34 +989,35 @@ class Submodule_Stmt(Base):  # R1117
         return Parent_Identifier(parent_id), Submodule_Name(submodule_name)
 
     def tostr(self):
-        '''return the fortran representation of this object'''
+        """return the fortran representation of this object"""
         # return self.string  # this returns the original code
         return "SUBMODULE ({0}) {1}".format(self.items[0], self.items[1])
 
     def get_name(self):  # C1114
-        '''Fortran 2008 constraint C1114
+        """Fortran 2008 constraint C1114
         return the submodule name. This is used by the base class to check
         whether the submodule name matches the name used for the end
         submodule statement if one is provided.
 
         :return: the name of the submodule stored in a Name class
         :return type: :py:class:`fparser.two.Fortran2003.Name`
-        '''
+        """
         return self.items[1]
 
 
 class End_Submodule_Stmt(EndStmtBase):  # R1119
-    '''
+    """
     Fortran 2008 rule R1119
     end-submodule-stmt is END [ SUBMODULE [ submodule-name ] ]
 
-    '''
+    """
+
     subclass_names = []
-    use_names = ['Submodule_Name']
+    use_names = ["Submodule_Name"]
 
     @staticmethod
     def match(fstring):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param string fstring : contains the Fortran that we are trying
         to match
@@ -764,11 +1025,11 @@ class End_Submodule_Stmt(EndStmtBase):  # R1119
         :return: instances of the Classes that have matched if there
         is a match or `None` if there is no match
 
-        '''
-        return EndStmtBase.match('SUBMODULE', Submodule_Name, fstring)
+        """
+        return EndStmtBase.match("SUBMODULE", Submodule_Name, fstring)
 
     def get_name(self):  # C1114
-        '''Fortran 2008 constraint C1114 return the submodule name as
+        """Fortran 2008 constraint C1114 return the submodule name as
         specified by the end submodule statement or `None` if one is
         not specified. This is used by the base class to check whether
         this name matches the submodule name.
@@ -776,12 +1037,12 @@ class End_Submodule_Stmt(EndStmtBase):  # R1119
         :return: the name of the submodule stored in a Name class
         :return type: :py:class:`fparser.two.Fortran2003.Name` or `None`
 
-        '''
+        """
         return self.items[1]
 
 
 class Parent_Identifier(Base):  # R1118 (C1113)
-    '''Fortran 2008 rule R1118
+    """Fortran 2008 rule R1118
     parent-identifier is ancestor-module-name [ : parent-submodule-name ]
 
     C1113 The ancestor-module-name shall be the name of a nonintrinsic
@@ -791,13 +1052,13 @@ class Parent_Identifier(Base):  # R1118 (C1113)
     module or submodule may be in a different file. We therefore do
     not check this constraint in fparser.
 
-    '''
+    """
 
-    use_names = ['Ancestor_Module_Name', 'Parent_SubModule_Name']
+    use_names = ["Ancestor_Module_Name", "Parent_SubModule_Name"]
 
     @staticmethod
     def match(fstring):
-        '''Check whether the input matches the rule
+        """Check whether the input matches the rule
 
         param string fstring : contains the Fortran that we are trying
         to match
@@ -805,7 +1066,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         :return: instances of the Classes that have matched if there
         is a match or `None` if there is no match
 
-        '''
+        """
         split_string = fstring.split(":")
         len_split_string = len(split_string)
         lhs_name = split_string[0].lstrip().rstrip()
@@ -813,17 +1074,17 @@ class Parent_Identifier(Base):  # R1118 (C1113)
             return Ancestor_Module_Name(lhs_name), None
         elif len_split_string == 2:
             rhs_name = split_string[1].lstrip().rstrip()
-            return Ancestor_Module_Name(lhs_name), \
-                Parent_SubModule_Name(rhs_name)
+            return Ancestor_Module_Name(lhs_name), Parent_SubModule_Name(rhs_name)
         # we expect at most one ':' in our input so the match fails
         return None
 
     def tostr(self):
-        '''return the fortran representation of this object'''
+        """return the fortran representation of this object"""
         # return self.string  # this returns the original code
         if self.items[1]:
             return "{0}:{1}".format(self.items[0], self.items[1])
         return str(self.items[0])
+
 
 #
 # GENERATE Scalar_, _List, _Name CLASSES
@@ -834,37 +1095,48 @@ ClassType = type(Base)
 _names = dir()
 for clsname in _names:
     cls = eval(clsname)
-    if not (isinstance(cls, ClassType) and issubclass(cls, Base) and
-            not cls.__name__.endswith('Base')):
+    if not (
+        isinstance(cls, ClassType)
+        and issubclass(cls, Base)
+        and not cls.__name__.endswith("Base")
+    ):
         continue
 
-    names = getattr(cls, 'subclass_names', []) + getattr(cls, 'use_names', [])
+    names = getattr(cls, "subclass_names", []) + getattr(cls, "use_names", [])
     for n in names:
         if n in _names:
             continue
-        if n.endswith('_List'):
+        if n.endswith("_List"):
             _names.append(n)
             n = n[:-5]
             # Generate 'list' class
-            exec('''\
+            exec(
+                """\
 class %s_List(SequenceBase):
     subclass_names = [\'%s\']
     use_names = []
+    @staticmethod
     def match(string): return SequenceBase.match(r\',\', %s, string)
-    match = staticmethod(match)
-''' % (n, n, n))
-        elif n.endswith('_Name'):
+"""
+                % (n, n, n)
+            )
+        elif n.endswith("_Name"):
             _names.append(n)
             n = n[:-5]
-            exec('''\
+            exec(
+                """\
 class %s_Name(Base):
     subclass_names = [\'Name\']
-''' % (n))
-# Currently there are no examples using scalar_* as a class name.
-#         elif n.startswith('Scalar_'):
-#             _names.append(n)
-#             n = n[7:]
-#             exec('''\
-# class Scalar_%s(Base):
-#     subclass_names = [\'%s\']
-# ''' % (n, n))
+"""
+                % (n)
+            )
+        elif n.startswith("Scalar_"):
+            _names.append(n)
+            n = n[7:]
+            exec(
+                """\
+class Scalar_%s(Base):
+    subclass_names = [\'%s\']
+"""
+                % (n, n)
+            )

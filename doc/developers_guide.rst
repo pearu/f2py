@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2021 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2022 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -67,45 +67,16 @@ debugging purposes.
 Invalid input
 -------------
 
-The file reader uses 'open' to open a Fortran file. If invalid input
-is found then Python2 does not complain, however Python3 raises a
-`UnicodeDecodeError` exception.
-
-To get round this problem a utility function has been written in
-`utils.py` called `make_clean_tmpfile`. This utility gives control
-over whether an exception is raised or not in both Python2 and 3. It
-also allows the offending errors to be stripped so that the rest of
-the file can be processed successfully.
-
-The uility is required in two places in the code, in `readfortran.py`
-by the file reader and in `sourceinfo.py`. The latter is used to
-determine which Fortran formatting to use (fixed, free etc).
-
-The utility makes use of the `codec.open(errors="ignore")`
-function. Whilst it would have been easier in theory to replace the
-existing `open` calls with `codec.open` this led to many Python2
-problems due to `codec.open` returning `unicode` for both Python 2 and
-3 (whereas `open` returns `str`). The changes that would need to be made
-to make Python2 and the Python2 tests work were significant.
-
-Therefore it was decided to use `codec.open` to check for errors and
-to strip out any errors if requested. Once checked and stripped, the
-resultant code is written into a temporary file (regardless of whether
-there were errors in it or not). This then allows the unchanged
-original code to continue to use the `open` function to open the newly
-created temporary file.
-
-Note, if Python2 support is dropped in the future then this function
-can be re-worked so that `codec.open` replaces `open` and no temporary
-file would be required.
-
-In Python, temporary files are usually deleted when closed. This
-feature is not wanted here. Therefore the `make_clean_tmpfile`
-function creates a temporary file that will not be deleted when
-closed. This means that the main code must take responsibility for
-deleting the file once it is no longer required. Logic has been added
-to the Fortran file reading and formatting code to make sure any
-temporary files are removed when required.
+The file reader uses :py:func:`open` to open a Fortran file. If
+invalid input is found then Python raises a `UnicodeDecodeError`
+exception by default. Since we typically wish to skip invalid
+characters (on the principle that, for valid Fortran, they can only
+occur in comments) while logging their presence, a bespoke error
+handler named "fparser-logging" is implemented in
+``fparser/__init__.py`` and registered using
+:py:func:`codecs.register_error`.  This handler may be specified when
+using :py:func:`open` to open a file by supplying the
+``errors='fparser-logging'`` argument.
 
 Fparser2
 --------
@@ -989,6 +960,14 @@ Python versions and the coverage reports are uploaded automatically to CodeCov
 (https://codecov.io/gh/stfc/fparser). The configuration for this is in the
 `.github/workflows/unit-tests.yml` file.
 
+In addition, an Action is also used check that all of the code conforms
+to Black (https://black.readthedocs.io) formatting. It is up to the developer
+to ensure that this passes (e.g. by running `black` locally and committing
+the results). Note that it is technically possibly to have the Action
+actually make the changes and commit them but this was found to break
+the Github review process since the automated commit is not permitted to
+trigger further Actions and this then leaves GitHub thinking that the
+various checks have not run.
 
 Test Fixtures
 -------------
@@ -1010,3 +989,15 @@ clear_symbol_table  --                      Removes all stored symbol tables.
 fake_symbol_table   --                      Creates a fake scoping region and
                                             associated symbol table.
 =================== ======================= ===================================
+
+
+Performance Benchmark
+---------------------
+
+The fparser scripts folder contains a benchmarking script to assess the
+performance of the parser by generating a synthetic Fortran file with
+multiple subroutine and the associated subroutine calls. It can be executed
+with the following command::
+
+    ./src/fparser/scripts/fparser2_bench.py
+

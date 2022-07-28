@@ -7,13 +7,56 @@ Modifications by (in alphabetical order):
 * P. Elson, UK Met Office
 * R. W. Ford, Science & Technology Facilities Council, UK
 * M. Hambley, UK Met Office
-* J. Henrichs, Australia Bureau of Meteorology
+* J. Henrichs, Australian Bureau of Meteorology
+* P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
+* S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+26/07/2022 PR #341 - replace staticmethod calls with decorator.
+
+14/07/2022 PR #361 - remove six dependency from setup.py
+
+22/06/2022 PR #357 - this project now uses the Black formatter in a GH Action.
+
+20/06/2022 PR #345 - add fparser2 performance benchmark in the scripts folder.
+
+## Release 0.0.16 (16/06/2022) ##
+
+14/06/2022 PR #337 towards #312 (performance improvements). Removes some
+           imports and function declaration from the hotpath.
+
+09/06/2022 PR #325 - apply constraints on named blocks.
+
+09/06/2022 PR #336 towards #312 (performance improvements). Introduces a
+           memoization fixture that caches the result of the tokenizer.
+
+## Release 0.0.15 (30/05/2022) ##
+
+19/05/2022 PR #340 - clears existing symbol table when a new Parser is
+           requested.
+
+19/05/2022 PR #328 - removes last traces of special handling for Python 2.
+
+09/05/2022 PR #322 for #307. Drops Python2 GHA testing and removes most
+           of the Python2-specfic code. Python2 will no longer be
+	   supported.
+
+07/04/2022 PR #323 for #225. Adds get_name() method to Function_Stmt
+           and Entity_Decl.
+
+23/03/2022 PR #317 for #316. Fixes the creation of symbol table entries
+           in the F2008 parser.
+
+21/03/2022 PR #315 for #314. Adds support for the F2008 Error_Stop_Stmt.
+
+## Release 0.0.14 (16/03/2022) ##
+
+15/03/2022 PR #311 for #310. Allows symbol table scope to be None.
 
 08/12/2021 PR #293 towards #201. Initial symbol-table support added.
 
