@@ -8863,11 +8863,33 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
         """
         if not string:
             return None
-        current_string = string.strip()
+        current_string = string.lstrip()
         if not current_string:
             return None
         item_list = []
         while current_string:
+            # Look for a slash edit descriptor with repeat modifier
+            found, index = skip_digits(current_string)
+            if found and current_string[index] == "/":
+                item_list.append(Control_Edit_Desc(current_string[: index + 1]))
+                current_string = current_string[index + 1 :].lstrip()
+                # Rule C1002 allows omitting a comma after slash edit descriptors,
+                # so skip the comma if it exists and carry on
+                if current_string and current_string[0] == ",":
+                    current_string = current_string[1:].lstrip()
+                continue
+
+            # Look for a colon edit descriptor or a slash edit descriptor without
+            # a repeat modifier
+            if current_string[0] in ":/":
+                item_list.append(Control_Edit_Desc(current_string[0]))
+                current_string = current_string[index + 1 :].lstrip()
+                # Rule C1002 allows omitting a comma after colon or slash edit
+                # descriptors, so skip the comma if it exists and carry on
+                if current_string and current_string[0] == ",":
+                    current_string = current_string[1:].lstrip()
+                continue
+
             # Does the current item match the start of a
             # hollerith string?
             my_pattern = Hollerith_Item.match_pattern
@@ -8881,26 +8903,38 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
                 if len(current_string) < num_chars:
                     # The string is not long enough.
                     return None
-                item_list.append(Format_Item(current_string[:num_chars]))
+                item_list.append(Hollerith_Item(current_string[:num_chars]))
                 current_string = current_string[num_chars:].lstrip()
                 if current_string:
-                    # Remove the next comma and any white space.
-                    if current_string[0] != ",":
-                        # There is no comma so we have a format error.
+                    if current_string[0] == ",":
+                        # Remove the next comma and any white space.
+                        current_string = current_string[1:].lstrip()
+                    elif current_string[0] == "/":
+                        # Commas aren't required before a slash edit descriptor without
+                        # repeat modifier (C1002)
+                        pass
+                    elif current_string[0] == ":":
+                        # Commas aren't required before a colon edit descriptor (C1002)
+                        pass
+                    else:
                         return None
-                    current_string = current_string[1:].lstrip()
             else:
                 # Current item does not match with a hollerith string
-                # so we are safe to split using a ',' as separator
+                # so get the next format item by splitting on ',', '/' or ':'
                 # after applying string_replace_map.
                 line, repmap = string_replace_map(current_string)
-                splitted = line.split(",", 1)
-                item_list.append(Format_Item(repmap(splitted[0].strip())))
-                current_string = ""
-                if len(splitted) == 2:
-                    current_string = repmap(splitted[1]).strip()
-        if len(item_list) <= 1:
-            # a list must contain at least 2 items (see SequenceBase)
+                match = re.search("[,/:]", line)
+                if match:
+                    item_list.append(Format_Item(repmap(line[: match.start()])))
+                    current_string = repmap(line[match.start() :])
+                    if match.group() == ",":
+                        # skip the comma
+                        current_string = current_string[1:].lstrip()
+                else:
+                    item_list.append(Format_Item(repmap(line)))
+                    current_string = ""
+        if len(item_list) == 0:
+            # a list must contain at least 1 item (see SequenceBase)
             return None
         return ",", tuple(item_list)
 

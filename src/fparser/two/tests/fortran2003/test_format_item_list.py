@@ -134,6 +134,23 @@ def test_hollerith_only_spaces(f2003_create, monkeypatch):
     )
 
 
+def test_hollerith_slash(f2003_create, monkeypatch):
+    """Check that a hollerith item is parsed correctly when preceeded by a
+    slash without a separating comma.
+
+    """
+    from fparser.two import utils
+
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
+    myinput = "/3Habc"
+    ast = Format_Item_List(myinput)
+    assert str(ast) == "/, 3Habc"
+    assert repr(ast) == (
+        "Format_Item_List(',', (Control_Edit_Desc(None, '/'), "
+        "Hollerith_Item('abc')))"
+    )
+
+
 def test_errors(f2003_create, monkeypatch):
     """test some list errors. Individual item errors will be picked up by
     the subclasses.

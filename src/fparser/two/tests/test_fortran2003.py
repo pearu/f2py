@@ -2774,7 +2774,7 @@ def test_format_item_list():  # R1002, R1003
 
     tcls = Format_Item_List
     obj = tcls("3f9.4")
-    assert isinstance(obj, Format_Item), repr(type(obj))
+    assert isinstance(obj, Format_Item_List), repr(type(obj))
     assert str(obj) == "3F9.4"
 
     obj = tcls("3f9.4, 2f8.1")
