@@ -134,21 +134,54 @@ def test_hollerith_only_spaces(f2003_create, monkeypatch):
     )
 
 
-def test_hollerith_slash(f2003_create, monkeypatch):
+def test_hollerith_omitted_comma_before(f2003_create, monkeypatch):
     """Check that a hollerith item is parsed correctly when preceeded by a
-    slash without a separating comma.
+    slash or colon without a separating comma.
 
     """
     from fparser.two import utils
 
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
-    myinput = "/3Habc"
+    for item in ["/", ":"]:
+        myinput = "{0}3Habc".format(item)
+        ast = Format_Item_List(myinput)
+        assert str(ast) == "{0}, 3Habc".format(item)
+        assert repr(ast) == (
+            "Format_Item_List(',', (Control_Edit_Desc(None, '{0}'), "
+            "Hollerith_Item('abc')))"
+        ).format(item)
+
+
+def test_hollerith_omitted_comma_after(f2003_create, monkeypatch):
+    """Check that a hollerith item is parsed correctly when followed by a
+    slash or colon without a separating comma.
+
+    """
+    from fparser.two import utils
+
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
+    for item in ["/", ":"]:
+        myinput = "3Habc{0}".format(item)
+        ast = Format_Item_List(myinput)
+        assert str(ast) == "3Habc, {0}".format(item)
+        assert repr(ast) == (
+            "Format_Item_List(',', (Hollerith_Item('abc'), "
+            "Control_Edit_Desc(None, '{0}')))"
+        ).format(item)
+
+
+def test_hollerith_trailing_space(f2003_create, monkeypatch):
+    """Check that a hollerith item is parsed correctly at the end of a list
+    when it contains a trailing space.
+
+    """
+    from fparser.two import utils
+
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
+    myinput = "4Habc "
     ast = Format_Item_List(myinput)
-    assert str(ast) == "/, 3Habc"
-    assert repr(ast) == (
-        "Format_Item_List(',', (Control_Edit_Desc(None, '/'), "
-        "Hollerith_Item('abc')))"
-    )
+    assert str(ast) == "4Habc "
+    assert repr(ast) == "Format_Item_List(',', (Hollerith_Item('abc '),))"
 
 
 def test_errors(f2003_create, monkeypatch):
