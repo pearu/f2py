@@ -8933,9 +8933,6 @@ class Format_Item_List(SequenceBase):  # pylint: disable=invalid-name
                 else:
                     item_list.append(Format_Item(repmap(line)))
                     current_string = ""
-        if len(item_list) == 0:
-            # a list must contain at least 1 item (see SequenceBase)
-            return None
         return ",", tuple(item_list)
 
 
