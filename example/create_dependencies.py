@@ -60,7 +60,7 @@ def usage():
     """This function prints the usage information and exits. It is called if
     incorrect input parameters are supplied.
     """
-    print("{argv[0]} file1 [file2...]")
+    print(f"{sys.argv[0]} file1 [file2...]")
     sys.exit(-1)
 
 
@@ -69,11 +69,13 @@ def get_root(file_name):
     """This function returns the 'root' of a file, which is the filename
     without any path component and without an extension. E.g.:
     `dir1/dir2/myfile.x90` would return `myfile`.
+
     :param str file_name: the name of the file.
+
     :returns: the root of the name of the file.
     :rtype: str
-    """
 
+    """
     return os.path.splitext(os.path.basename(file_name))[0]
 
 
@@ -87,8 +89,8 @@ if __name__ == "__main__":
     # pylint: disable=invalid-name
     all_files = sys.argv[1:]
 
-    # Create a look-up directories that maps the filenames without
-    # path and extensions to the full filename:
+    # Create a mapping of filenames without path and extensions to the
+    # full filename"
     lookup_files = {}
     for file in all_files:
         root = get_root(file)
@@ -98,7 +100,7 @@ if __name__ == "__main__":
                 f"the file '{lookup_files[root]}'."
             )
             sys.exit(-1)
-        lookup_files[get_root(file)] = file
+        lookup_files[root] = file
 
     # Sort the input file names, so that they are output alphabetically
     all_files.sort()
