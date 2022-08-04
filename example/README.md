@@ -31,18 +31,18 @@ It also supports files in subdirectories, e.g.:
   or modify the first line of the script to use ``python3`` instead of
   ``python``.
 - The script will only detect dependencies from the files specified on the
-  command line to files in the current directory. It assumes that the name in
-  the ``use`` statement is the same as the file name that stores the module.
+  command line to files provided on the command line. It assumes that the name
+  in the ``use`` statement is the same as the file name that stores the module.
   For example, if your code has:
 
   	  use mymodule
 
-  then it will look for a file with the 'root' name ``mymodule``, e.g.  it
-  would use ``mymodule.f90``, ``mymodule.F90``, or ``mymodule.x90`` in the
-  list of files provided as argument. If no matching file is found, no
+  then the script will look for a file with the 'root' name ``mymodule``,
+  e.g. it would use ``mymodule.f90``, ``mymodule.F90``, or ``mymodule.x90``
+  in the list of files provided as argument. If no matching file is found, no
   dependencies will be printed for this case, it will be silently ignored.
   You can modify the ``create_dependency.py`` script if you are using a
-   different naming style for your files (see lines 120 to 123 in the script).
+  different naming style for your files (see lines 120 to 123 in the script).
 
 ### Todo
 - Remove the need for a file naming convention by parsing all files, and then
