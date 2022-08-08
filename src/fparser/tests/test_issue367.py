@@ -67,6 +67,7 @@ from fparser.two.parser import ParserFactory
 from fparser.two.utils import walk
 from fparser.two.Fortran2003 import Name, Block_Nonlabel_Do_Construct
 
+
 def test_reproduce_issue367():
     ARG_FORTRAN_STANDARD = "f2008"
 
