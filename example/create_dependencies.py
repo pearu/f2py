@@ -90,7 +90,7 @@ if __name__ == "__main__":
     all_files = sys.argv[1:]
 
     # Create a mapping of filenames without path and extensions to the
-    # full filename"
+    # full filename.
     lookup_files = {}
     for file in all_files:
         root = get_root(file)
