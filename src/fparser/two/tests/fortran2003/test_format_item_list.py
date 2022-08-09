@@ -45,6 +45,7 @@ Fortran95. However, Fortran compilers still support it.
 import pytest
 from fparser.two.Fortran2003 import Format_Item_List
 from fparser.two.utils import NoMatchError
+from fparser.two import utils
 
 
 def test_non_hollerith(f2003_create):
@@ -139,17 +140,16 @@ def test_hollerith_omitted_comma_before(f2003_create, monkeypatch):
     slash or colon without a separating comma.
 
     """
-    from fparser.two import utils
 
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for item in ["/", ":"]:
-        myinput = "{0}3Habc".format(item)
+        myinput = f"{item}3Habc"
         ast = Format_Item_List(myinput)
-        assert str(ast) == "{0}, 3Habc".format(item)
+        assert str(ast) == f"{item}, 3Habc"
         assert repr(ast) == (
-            "Format_Item_List(',', (Control_Edit_Desc(None, '{0}'), "
+            f"Format_Item_List(',', (Control_Edit_Desc(None, '{item}'), "
             "Hollerith_Item('abc')))"
-        ).format(item)
+        )
 
 
 def test_hollerith_omitted_comma_after(f2003_create, monkeypatch):
@@ -157,17 +157,16 @@ def test_hollerith_omitted_comma_after(f2003_create, monkeypatch):
     slash or colon without a separating comma.
 
     """
-    from fparser.two import utils
 
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     for item in ["/", ":"]:
-        myinput = "3Habc{0}".format(item)
+        myinput = f"3Habc{item}"
         ast = Format_Item_List(myinput)
-        assert str(ast) == "3Habc, {0}".format(item)
+        assert str(ast) == f"3Habc, {item}"
         assert repr(ast) == (
             "Format_Item_List(',', (Hollerith_Item('abc'), "
-            "Control_Edit_Desc(None, '{0}')))"
-        ).format(item)
+            f"Control_Edit_Desc(None, '{item}')))"
+        )
 
 
 def test_hollerith_trailing_space(f2003_create, monkeypatch):
@@ -175,7 +174,6 @@ def test_hollerith_trailing_space(f2003_create, monkeypatch):
     when it contains a trailing space.
 
     """
-    from fparser.two import utils
 
     monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
     myinput = "4Habc "
