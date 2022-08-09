@@ -62,9 +62,9 @@ R906 file-name-expr is scalar-d
 """
 
 import pytest
-from fparser.api import get_reader, walk
+from fparser.api import get_reader
 from fparser.two import Fortran2008
-from fparser.two.utils import NoMatchError
+from fparser.two.utils import NoMatchError, walk
 
 
 def test_open_newunit(f2008_parser):
@@ -80,5 +80,7 @@ endsubroutine myopen
     """
         )
     )
-    assert walk(tree, Fortran2008.Open_Stmt)
-    assert "STOP" in str(tree)
+    open_stmts = walk(tree, Fortran2008.Open_Stmt)
+    assert open_stmts
+    assert len(open_stmts[0].children) == 2
+    assert str(open_stmts[0]) == "OPEN(NEWUNIT = unit, FILE = file)"
