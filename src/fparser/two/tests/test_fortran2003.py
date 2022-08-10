@@ -2729,6 +2729,9 @@ def test_format_item():  # R1003
     obj = tcls("'(5X,\"q_mesh =\",4F12.8)'")
     assert isinstance(obj, Char_Literal_Constant)
 
+    obj = tcls("3/' '")
+    assert str(obj) == "3/, ' '"
+
 
 def test_data_edit_desc():
     """Tests for matching Edit Descriptors (R1005)."""
