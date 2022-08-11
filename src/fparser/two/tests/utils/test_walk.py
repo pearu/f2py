@@ -99,7 +99,7 @@ def test_walk_debug(capsys):
 
 
 def test_walk_tuples():
-    """Check that the wlak utility properly visits tuples.
+    """Check that the walk utility properly visits tuples.
     See related issue : https://github.com/stfc/fparser/issues/367
     and pull request: https://github.com/stfc/fparser/pull/368
     """
