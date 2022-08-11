@@ -10,12 +10,16 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australian Bureau of Meteorology
 * P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
+* A. Morvan, France
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
 * S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+11/08/2022 PR #368 for #367. Add support for visiting tuples in walk()
+           utility.
 
 11/08/2022 PR #364. Fix parsing of format-items with hollerith items and
            omitted commas.
