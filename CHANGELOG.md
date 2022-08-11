@@ -17,6 +17,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+11/08/2022 PR #364. Fix parsing of format-items with hollerith items and
+           omitted commas.
+
 08/08/2022 PR #363 for #363. Extends the dependency-analysis example utility
            to cope with files in subdirectories.
 
