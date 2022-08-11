@@ -96,7 +96,7 @@ def test_walk_debug(capsys):
     assert stdout.startswith(8 * " " + "child type =")
     assert "Program" not in stdout
 
-def test_reproduce_issue367():
+def test_walk_tuples():
     source_str = """\
 program test
     integer :: iterator, size
