@@ -42,6 +42,7 @@ from fparser.common.readfortran import FortranStringReader
 from fparser.two.parser import ParserFactory
 from fparser.two.Fortran2003 import Name, Block_Nonlabel_Do_Construct
 
+
 @pytest.mark.usefixtures("f2003_create")
 def test_walk():
     """Test the walk() utility."""
@@ -95,6 +96,7 @@ def test_walk_debug(capsys):
     stdout, _ = capsys.readouterr()
     assert stdout.startswith(8 * " " + "child type =")
     assert "Program" not in stdout
+
 
 def test_walk_tuples():
     """Check that the wlak utility properly visits tuples.
