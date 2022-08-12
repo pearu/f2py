@@ -37,7 +37,7 @@ utils.py"""
 
 import pytest
 from fparser.two.utils import BracketBase, InternalError
-from fparser.two.Fortran2003 import Name
+from fparser.two.Fortran2003 import Name, Hollerith_Item
 
 
 def test_brackets():
@@ -95,6 +95,29 @@ def test_cls():
             input_text = lhs + "hello" + rhs
             result = BracketBase.match(brackets, Name, input_text, require_cls=require)
             assert str(result) == "('{0}', Name('hello'), '{1}')".format(
+                lhs.replace(" ", ""), rhs.replace(" ", "")
+            )
+
+
+def test_trailing_whitespace():
+    """Test that the BracketBase match method passes any trailing whitespace
+    within the brackets to the specified class.
+    """
+    for require in [False, True]:
+        for lhs, rhs in [
+            ("(", ")"),
+            (" ( ", " ) "),
+            ("[", "]"),
+            ("A", "A"),
+            ("([", "])"),
+            ("{{[(", ")]}}"),
+        ]:
+            brackets = lhs + rhs
+            input_text = lhs + "4habc " + rhs
+            result = BracketBase.match(
+                brackets, Hollerith_Item, input_text, require_cls=require
+            )
+            assert str(result) == "('{0}', Hollerith_Item('abc '), '{1}')".format(
                 lhs.replace(" ", ""), rhs.replace(" ", "")
             )
 
