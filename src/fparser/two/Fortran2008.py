@@ -73,7 +73,8 @@
 # pylint: disable=eval-used
 # pylint: disable=exec-used
 # pylint: disable=unused-import
-from fparser.common.splitline import string_replace_map
+from fparser.common.splitline import string_replace_map, splitparen
+
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import (
@@ -970,8 +971,6 @@ class Submodule_Stmt(Base):  # R1117
             return None
         # "SUBMODULE is found so strip it out and split the remaining
         # line by parenthesis
-        from fparser.common.splitline import splitparen
-
         splitline = splitparen(fstring[len(name) :].lstrip())
         # We expect 2 entries, the first being parent_identifier with
         # brackets and the second submodule_name. However for some
@@ -1000,7 +999,7 @@ class Submodule_Stmt(Base):  # R1117
     def tostr(self):
         """return the fortran representation of this object"""
         # return self.string  # this returns the original code
-        return "SUBMODULE ({0}) {1}".format(self.items[0], self.items[1])
+        return f"SUBMODULE ({self.items[0]}) {self.items[1]}"
 
     def get_name(self):  # C1114
         """Fortran 2008 constraint C1114
@@ -1081,7 +1080,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         lhs_name = split_string[0].lstrip().rstrip()
         if len_split_string == 1:
             return Ancestor_Module_Name(lhs_name), None
-        elif len_split_string == 2:
+        if len_split_string == 2:
             rhs_name = split_string[1].lstrip().rstrip()
             return Ancestor_Module_Name(lhs_name), Parent_SubModule_Name(rhs_name)
         # we expect at most one ':' in our input so the match fails
@@ -1091,7 +1090,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         """return the fortran representation of this object"""
         # return self.string  # this returns the original code
         if self.items[1]:
-            return "{0}:{1}".format(self.items[0], self.items[1])
+            return f"{self.items[0]}:{self.items[1]}"
         return str(self.items[0])
 
 
@@ -1108,9 +1107,42 @@ class Open_Stmt(Open_Stmt_2003):  # R904
 
     @staticmethod
     def match(string):
+        """
+        Attempts to match the supplied string as an Open_Stmt.
+
+        :param str string: the string to attempt to match.
+
+        :returns: a new Open_Stmt object if the match is successful, None otherwise.
+        :rtype: Optional[:py:class:`fparser.two.Fortran2008.Open_Stmt]
+
+        """
         # The Connect_Spec_List class is generated automatically
         # by code at the end of this module
-        return CALLBase.match("OPEN", Connect_Spec_List, string, require_rhs=True)
+        obj = CALLBase.match("OPEN", Connect_Spec_List, string, require_rhs=True)
+        if not obj:
+            return None
+
+        # Apply constraints
+        have_unit = False
+        have_newunit = False
+        connect_specs = []
+        spec_list = obj[1].children
+        for spec in spec_list:
+            if spec.children[0] in connect_specs:
+                # C903 - no specifier can appear more than once.
+                return None
+            connect_specs.append(spec.children[0])
+            if spec.children[0] == "UNIT":
+                have_unit = True
+            elif spec.children[0] == "NEWUNIT":
+                have_newunit = True
+            if have_unit and have_newunit:
+                # C906 - cannot have both UNIT and NEWUNIT
+                return None
+        if not (have_unit or have_newunit):
+            # C904 - a file unit number must be specified.
+            return None
+        return obj
 
 
 class Connect_Spec(Connect_Spec_2003):

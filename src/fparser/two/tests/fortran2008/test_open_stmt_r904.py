@@ -57,7 +57,18 @@
                     or SIGN = scalar-default-char-expr
                     or STATUS = scalar-default-char-expr
 
-R906 file-name-expr is scalar-d
+R906 file-name-expr is scalar-default-char-expr
+R907 iomsg-variable is scalar-default-char-variable
+
+C903 No specifier shall appear more than once in a given connect-spec-list.
+C904 (R904) If the NEWUNIT= specifier does not appear, a file-unit-number
+     shall be specified; if the optional characters UNIT= are omitted, the
+     file-unit-number shall be the first item in the connect-spec-list.
+C905 (R904) The label used in the ERR= specifier shall be the statement label
+     of a branch target statement that appears in the same inclusive scope as
+     the OPEN statement.
+C906 (R904) If a NEWUNIT= specifier appears, a file-unit-number shall not
+     appear.
 
 """
 
@@ -67,8 +78,24 @@ from fparser.two import Fortran2008
 from fparser.two.utils import NoMatchError, walk
 
 
+@pytest.mark.parametrize(
+    "open_args",
+    [
+        "unit=23, file='hello'",
+        "23, file='hello', err=36",
+        "23, file='hello', status='OLD'",
+        "unit=23, file='hello', action='read'",
+    ],
+)
+def test_open_f2003_args(f2008_parser, open_args):
+    """Check that the Fortran2008 version of Open_Stmt still supports the
+    various arguments defined in 2003."""
+    obj = Fortran2008.Open_Stmt(f"open({open_args})")
+    assert isinstance(obj, Fortran2008.Open_Stmt)
+
+
 def test_open_newunit(f2008_parser):
-    """Test previous subclasses are still matched correctly in a subroutine."""
+    """Test that NEWUNIT is a valid argument to OPEN."""
     tree = f2008_parser(
         get_reader(
             """\
@@ -84,3 +111,36 @@ endsubroutine myopen
     assert open_stmts
     assert len(open_stmts[0].children) == 2
     assert str(open_stmts[0]) == "OPEN(NEWUNIT = unit, FILE = file)"
+
+
+def test_constraint_903(f2008_parser):
+    """Check that Constraint 903 (no specifier shall appear more than once)
+    is applied."""
+    with pytest.raises(NoMatchError):
+        Fortran2008.Open_Stmt("open(23, unit=24, file='hello')")
+    with pytest.raises(NoMatchError):
+        Fortran2008.Open_Stmt("open(23, file='hello', file='another')")
+
+
+def test_constraint_904(f2008_parser):
+    """Check that a unit number is specified. We cannot currently check that
+    if no UNIT= appears that it is the first argument to open() because the
+    Connect_Spec.match() method always adds a UNIT= if one is missing."""
+    with pytest.raises(NoMatchError):
+        Fortran2008.Open_Stmt("open(file='hello')")
+
+
+def test_constraint_906(f2008_parser):
+    """Check that Constraint 906 is applied (no unit number may appear if
+    NEWUNIT is specified)."""
+    with pytest.raises(NoMatchError):
+        Fortran2008.Open_Stmt("open(23, newunit=10, file='hello')")
+    with pytest.raises(NoMatchError):
+        Fortran2008.Open_Stmt("open(unit=23, newunit=10, file='hello')")
+
+
+def test_open_invalid_arg(f2008_parser):
+    """Check that there is no match if an invalid argument is supplied."""
+    with pytest.raises(NoMatchError) as err:
+        Fortran2008.Open_Stmt("open(newunit=10, file='hello', andy='yes')")
+    assert "andy='yes'" in str(err)
