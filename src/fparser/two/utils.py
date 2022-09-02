@@ -1811,6 +1811,9 @@ def walk(node_list, types=None, indent=0, debug=False):
         # Recurse down
         if isinstance(child, Base):
             local_list += walk(child.children, types, indent + 1, debug)
+        elif isinstance(child, tuple):
+            for component in child:
+                local_list += walk(component, types, indent + 1, debug)
 
     return local_list
 
