@@ -1122,7 +1122,7 @@ class Open_Stmt(Open_Stmt_2003):  # R904
         if not obj:
             return None
 
-        # Apply constraints
+        # Apply constraints now that we have the full Connect_Spec_List.
         have_unit = False
         have_newunit = False
         connect_specs = []
@@ -1184,6 +1184,12 @@ class Connect_Spec(Connect_Spec_2003):
 
     C906 (R904) If a NEWUNIT= specifier appears, a file-unit-number shall not
          appear.
+
+    The constraints listed above are checked for in the Open_Stmt.match() method
+    as we don't have access to the full list of Connect_Spec elements here.
+    The exceptions are the second part of C904 (un-named file-unit-number must
+    be first in the list) and C905: these are not currently checked.
+
     """
 
     subclass_names = []
