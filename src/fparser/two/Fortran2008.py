@@ -83,7 +83,6 @@ from fparser.two.utils import (
     SeparatorBase,
     Type_Declaration_StmtBase,
     StmtBase,
-    NoMatchError,
 )
 from fparser.two.Fortran2003 import (
     EndStmtBase,
