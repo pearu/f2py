@@ -35,6 +35,8 @@ Modifications by (in alphabetical order):
 
 20/06/2022 PR #345 - add fparser2 performance benchmark in the scripts folder.
 
+02/09/2022 PR #356 - add support for the mold allocate parameter.
+
 ## Release 0.0.16 (16/06/2022) ##
 
 14/06/2022 PR #337 towards #312 (performance improvements). Removes some
