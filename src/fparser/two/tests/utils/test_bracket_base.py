@@ -99,27 +99,30 @@ def test_cls():
             )
 
 
-def test_trailing_whitespace():
+@pytest.mark.parametrize("require", [False, True])
+@pytest.mark.parametrize(
+    "lhs, rhs",
+    [
+        ("(", ")"),
+        (" ( ", " ) "),
+        ("[", "]"),
+        ("A", "A"),
+        ("([", "])"),
+        ("{{[(", ")]}}"),
+    ],
+)
+def test_trailing_whitespace(require, lhs, rhs):
     """Test that the BracketBase match method passes any trailing whitespace
     within the brackets to the specified class.
     """
-    for require in [False, True]:
-        for lhs, rhs in [
-            ("(", ")"),
-            (" ( ", " ) "),
-            ("[", "]"),
-            ("A", "A"),
-            ("([", "])"),
-            ("{{[(", ")]}}"),
-        ]:
-            brackets = lhs + rhs
-            input_text = lhs + "4habc " + rhs
-            result = BracketBase.match(
-                brackets, Hollerith_Item, input_text, require_cls=require
-            )
-            assert str(result) == "('{0}', Hollerith_Item('abc '), '{1}')".format(
-                lhs.replace(" ", ""), rhs.replace(" ", "")
-            )
+    brackets = lhs + rhs
+    input_text = lhs + "4habc " + rhs
+    result = BracketBase.match(
+        brackets, Hollerith_Item, input_text, require_cls=require
+    )
+    assert str(result) == "('{0}', Hollerith_Item('abc '), '{1}')".format(
+        lhs.replace(" ", ""), rhs.replace(" ", "")
+    )
 
 
 def test_brackets_error1():
