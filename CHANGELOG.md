@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+05/09/2022 PR #372 fix for whitespace being lost when Format_Item_List is
+           contained within parentheses.
+
 11/08/2022 PR #368 for #367. Add support for visiting tuples in walk()
            utility.
 
