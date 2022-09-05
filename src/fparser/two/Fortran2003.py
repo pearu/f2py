@@ -4805,8 +4805,43 @@ class Vector_Subscript(Base):  # R622
 
 class Allocate_Stmt(StmtBase):  # R623
     """
-    <allocate-stmt> = ALLOCATE ( [ <type-spec> :: ] <allocation-list>
-        [ , <alloc-opt-list> ] )
+    Fortran2003 rule R623
+    allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
+                                [, alloc-opt-list ] )
+
+    Subject to the following constraints:
+
+    C622 (R629) Each allocate-object shall be a nonprocedure pointer or an
+                 allocatable variable.
+    C623 (R623) If any allocate-object in the statement has a deferred type
+                parameter, either type-spec or SOURCE= shall appear.
+    C624 (R623) If a type-spec appears, it shall specify a type with which
+                each allocate-object is type compatible.
+    C625 (R623) If any allocate-object is unlimited polymorphic, either
+                type-spec or SOURCE= shall appear.
+    C626 (R623) A type-param-value in a type-spec shall be an asterisk if and
+                only if each allocate-object is a dummy argument for which the
+                corresponding type parameter is assumed.
+    C627 (R623) If a type-spec appears, the kind type parameter values of each
+                allocate-object shall be the same as the corresponding type
+                parameter values of the type-spec.
+    C628 (R628) An allocate-shape-spec-list shall appear if and only if the
+                allocate-object is an array.
+    C629 (R628) The number of allocate-shape-specs in an
+                allocate-shape-spec-list shall be the same as the rank of the
+                allocate-object.
+    C630 (R624) No alloc-opt shall appear more than once in a given
+                alloc-opt-list.
+    C631 (R623) If SOURCE= appears, type-spec shall not appear and
+                allocation-list shall contain only one allocate-object, which
+                shall be type compatible (5.1.1.2) with source-expr.
+    C632 (R623) The source-expr shall be a scalar or have the same rank as
+                allocate-object.
+    C633 (R623) Corresponding kind type parameters of allocate-object and
+                source-expr shall have the same values.
+
+    None of these constraints are currently applied - issue #355.
+
     """
 
     subclass_names = []
@@ -4847,32 +4882,6 @@ class Allocate_Stmt(StmtBase):  # R623
             return "ALLOCATE(%s)" % (lst)
 
 
-class Alloc_Opt(KeywordValueBase):  # R624
-    """
-    <alloc-opt> = STAT = <stat-variable>
-                  | ERRMSG = <errmsg-variable>
-                  | SOURCE = <source-expr>
-    """
-
-    subclass_names = []
-    use_names = ["Stat_Variable", "Errmsg_Variable", "Source_Expr"]
-
-    @staticmethod
-    def match(string):
-        for (k, v) in [
-            ("STAT", Stat_Variable),
-            ("ERRMSG", Errmsg_Variable),
-            ("SOURCE", Source_Expr),
-        ]:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
-                return obj
-        return None
-
-
 class Stat_Variable(Base):  # R625
     """
     <stat-variable> = <scalar-int-variable>
@@ -4895,6 +4904,31 @@ class Source_Expr(Base):  # R627
     """
 
     subclass_names = ["Expr"]
+
+
+class Alloc_Opt(KeywordValueBase):  # R624
+    """
+    <alloc-opt> = STAT = <stat-variable>
+                  | ERRMSG = <errmsg-variable>
+                  | SOURCE = <source-expr>
+    """
+
+    subclass_names = []
+    use_names = ["Stat_Variable", "Errmsg_Variable", "Source_Expr"]
+    #: The keywords tested for in the match() method.
+    _keyword_pairs = [
+        ("STAT", Stat_Variable),
+        ("ERRMSG", Errmsg_Variable),
+        ("SOURCE", Source_Expr),
+    ]
+
+    @classmethod
+    def match(cls, string):
+        for (k, v) in cls._keyword_pairs:
+            obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
+            if obj is not None:
+                return obj
+        return None
 
 
 class Allocation(CallBase):  # R628
