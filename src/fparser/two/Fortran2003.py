@@ -9336,7 +9336,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         # match method. Other matches are performed by the subclasses.
         if my_string[0] == "(" and my_string[-1] == ")":
             # This could be a format-item-list
-            rest = Format_Item_List(my_string[1:-1].strip())
+            rest = Format_Item_List(my_string[1:-1].lstrip())
         else:
             # This is not a format-item-list so see if it is a
             # data-edit-descriptor
