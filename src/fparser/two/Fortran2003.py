@@ -12060,7 +12060,6 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
             return Function_Name(name), Dummy_Arg_Name_List(args), Scalar_Expr(expr)
         return Function_Name(name), None, Scalar_Expr(expr)
 
-    @staticmethod
     def tostr(self):
         if self.items[1] is None:
             return "%s () = %s" % (self.items[0], self.items[2])
