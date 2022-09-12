@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+12/09/2022 PR #374 for #373. Removes @staticmethod decorator added to
+           Stmt_Function_Stmt.tostr() in error.
+
 05/09/2022 PR #372 fix for whitespace being lost when Format_Item_List is
            contained within parentheses.
 
