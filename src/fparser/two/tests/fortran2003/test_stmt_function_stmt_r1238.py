@@ -43,11 +43,11 @@ from fparser.two.utils import NoMatchError
 
 
 def test_stmt_function_stmt():
-    '''Test that the stmt_function_stmt class can be created, raises the
+    """Test that the stmt_function_stmt class can be created, raises the
     expected exception and outputs the expected string
     representation.
 
-    '''
+    """
     tcls = Stmt_Function_Stmt
 
     # no args
