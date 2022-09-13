@@ -9417,11 +9417,24 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
             table = SYMBOL_TABLES.current_scope
             if table:
                 only_list = None
-                # TODO #201 we currently ignore any symbol renaming here
+                rename_list = None
+                if "only" in result[3].lower():
+                    only_list = []
                 if isinstance(result[4], Only_List):
-                    names = walk(result[4], Name)
-                    only_list = [name.string for name in names]
-                table.add_use_symbols(str(result[2]), only_list)
+                    # An Only_List can contain either Name or Rename entries.
+                    for child in result[4].children:
+                        if isinstance(child, Name):
+                            only_list.append((child.string, None))
+                        elif isinstance(child, Rename):
+                            only_list.append((child.children[1].string,
+                                              child.children[2].string))
+                elif isinstance(result[4], Rename_List):
+                    renames = walk(result[4], Rename)
+                    # Tuples of <local-name>, <use-name>
+                    rename_list = [(rename.children[1].string,
+                                    rename.children[2].string) for
+                                   rename in renames]
+                table.add_use_symbols(str(result[2]), only_list, rename_list)
 
         return result
 

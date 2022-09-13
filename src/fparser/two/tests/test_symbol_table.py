@@ -79,7 +79,7 @@ def test_add_data_symbol():
             "'SymbolTable'" in str(err.value))
     # Check a clash with a USE statement - both the module name and the
     # name of imported variables
-    table.add_use_symbols("mod1", ["var3"])
+    table.add_use_symbols("mod1", only_list=[("var3", None)])
     with pytest.raises(SymbolTableError) as err:
         table.add_data_symbol("mod1", "real")
     assert ("table already contains a use of a module with name 'mod1'" in
@@ -95,17 +95,19 @@ def test_add_use_symbols():
     table = SymbolTable("basic")
     # A use without an 'only' clause
     table.add_use_symbols("mod1")
-    assert table._modules["mod1"] is None
+    assert table._modules["mod1"].only_list is None
+    assert table._modules["mod1"].rename_list is None
+    assert table._modules["mod1"].wildcard_import is True
     # Fortran permits other use statements for the same module
-    table.add_use_symbols("mod1", ["var"])
-    # Since we already have a wildcard import and don't yet capture any
-    # additional, specific imports (TODO #294) the list of associated symbols
-    # should still be None.
-    assert table._modules["mod1"] is None
-    table.add_use_symbols("mod2", ["iVar"])
-    assert table._modules["mod2"] == ["ivar"]
-    table.add_use_symbols("mod2", ["jvar"])
-    assert table._modules["mod2"] == ["ivar", "jvar"]
+    table.add_use_symbols("mod1", only_list=[("var", None)])
+    # Since we already have a wildcard import that should remain true while
+    # we now also capture thos symbols that are explicitly imported.
+    assert table._modules["mod1"].only_list == set(["var"])
+    assert table._modules["mod1"].wildcard_import
+    table.add_use_symbols("mod2", only_list=[("iVar", None)])
+    assert table._modules["mod2"].only_list == set(["ivar"])
+    table.add_use_symbols("mod2", only_list=[("jvar", None)])
+    assert table._modules["mod2"].only_list == set(["ivar", "jvar"])
 
 
 def test_add_use_symbols_errors():
@@ -121,9 +123,9 @@ def test_add_use_symbols_errors():
     assert ("If present, the only_list must be a list but got 'str'" in
             str(err.value))
     with pytest.raises(TypeError) as err:
-        table.add_use_symbols("mod3", only_list=["hello", table])
-    assert ("If present, the only_list must be a list of str but got: ['str', "
-            "'SymbolTable']" in str(err.value))
+        table.add_use_symbols("mod3", only_list=[("hello", None, None)])
+    assert ("If present, the only_list must be a list of 2-tuples but got: "
+            "[('hello', None, None)]" in str(err.value))
 
 
 def test_str_method():
@@ -205,9 +207,9 @@ END PROGRAM a_prog
     assert isinstance(table, SymbolTable)
     assert table.parent is None
     assert "some_mod" in table._modules
-    assert table._modules["some_mod"] is None
+    assert table._modules["some_mod"].only_list == set()
     assert "mod2" in table._modules
-    assert sorted(table._modules["mod2"]) == ["that_one", "this_one"]
+    assert sorted(table._modules["mod2"].only_list) == ["that_one", "this_one"]
 
 
 def test_module_definition(f2003_parser):

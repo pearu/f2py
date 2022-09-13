@@ -40,7 +40,7 @@ Use statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Use_Stmt
-from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two.symbol_table import SYMBOL_TABLES, Use
 from fparser.two.utils import NoMatchError, InternalError
 
 # match() use ...
@@ -90,17 +90,21 @@ def test_use_nature(f2003_create):
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_use_rename():
     '''Check that a use with a rename clause is parsed correctly.'''
-    line = "use my_module, name=>new_name"
+    line = "use my_module, new_name=>name"
     ast = Use_Stmt(line)
-    assert "USE my_module, name => new_name" in str(ast)
+    assert "USE my_module, new_name => name" in str(ast)
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
-        "(Rename(None, Name('name'), Name('new_name')),)))")
+        "(Rename(None, Name('new_name'), Name('name')),)))")
     table = SYMBOL_TABLES.current_scope
     assert "my_module" in table._modules
-    # TODO need to decide how to store information on use-associated
-    # symbols.
-    assert False
+    use = table._modules["my_module"]
+    # We only store the *local* names of the symbols in rename_list
+    assert use.rename_list == set(["new_name"])
+    # The original name of the symbol in the module being imported is stored
+    # in a separate map.
+    assert use._local_to_module_map["new_name"] == "name"
+
 
 # match() 'use x, only: y'
 def test_use_only(f2003_create):
@@ -119,7 +123,10 @@ def test_use_only(f2003_create):
     ast = Use_Stmt(line)
     table = SYMBOL_TABLES.current_scope
     assert "my_model" in table._modules
-    assert table._modules["my_model"] == ["name"]
+    use = table._modules["my_model"]
+    assert use.name == "my_model"
+    assert use.only_list == set(["name"])
+    assert use.rename_list is None
     SYMBOL_TABLES.exit_scope()
 
 
@@ -134,6 +141,40 @@ def test_use_only_empty(f2003_create):
     assert "USE my_model, ONLY:" in str(ast)
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_model'), ', ONLY:', None)")
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    assert "my_model" in table._modules
+    use = table._modules["my_model"]
+    assert isinstance(use, Use)
+    assert use.only_list == set()
+    assert use.rename_list is None
+    SYMBOL_TABLES.exit_scope()
+
+
+def test_use_only_plus_rename(f2003_create):
+    '''Check that a use statement with an only clause and some variable
+    renaming is parsed correctly.
+
+    '''
+    line = "use my_model, only: a, b=>c"
+    ast = Use_Stmt(line)
+    assert repr(ast) == ("Use_Stmt(None, None, Name('my_model'), "
+                         "', ONLY:', Only_List(',', (Name('a'), "
+                         "Rename(None, Name('b'), Name('c')))))")
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    assert "my_model" in table._modules
+    use = table._modules["my_model"]
+    assert isinstance(use, Use)
+    sym_names = use.symbol_names
+    assert sym_names == ["a", "b"]
+    assert use.only_list == set(["a", "b"])
+    assert use.rename_list is None
+    SYMBOL_TABLES.exit_scope()
 
 
 # match() '  use  ,  nature  ::  x  ,  name=>new_name'

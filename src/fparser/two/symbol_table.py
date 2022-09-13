@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2021, Science and Technology Facilities Council.
+# Copyright (c) 2021-2022, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -238,6 +238,104 @@ class SymbolTables():
         del self._symbol_tables[lname]
 
 
+class Use():
+    '''
+    Class capturing information on all USE statements referring to a given
+    Fortran module.
+
+    :param str name:
+    :param only_list:
+    :param rename_list:
+
+    '''
+    def __init__(self, name, only_list=None, rename_list=None):
+        self._name = name
+
+        self._symbols = []
+        self._local_to_module_map = {}
+
+        if only_list is not None:
+            self._store_symbols(only_list)
+            self._wildcard_import = False
+            self._only_list = set([local_name.lower() for
+                                  local_name, _ in only_list])
+        else:
+            self._only_list = None
+            self._wildcard_import = True
+
+        if rename_list:
+            self._store_symbols(rename_list)
+            self._rename_list = set([local_name.lower() for
+                                     local_name, _ in rename_list])
+        else:
+            self._rename_list = None
+
+    def _store_symbols(self, rename_list):
+        '''
+        Utility that updates the local list of symbols and renaming map for
+        the given list of local-name, module-name tuples.
+
+        :param rename_list:
+
+        '''
+        for local_name, orig_name in rename_list:
+            lname = local_name.lower()
+            oname = orig_name.lower() if orig_name else None
+            self._symbols.append(
+                SymbolTable.Symbol(lname, "unknown"))
+            if oname:
+                self._local_to_module_map[lname] = oname
+
+    def update(self, other):
+        '''
+        Update the current information with the information on the USE held
+        in 'other'.
+
+        :param other: the other Use instance from which to update this one.
+        :type other: :py:class:`fparser.two.symbol_table.Use`
+
+        :raises TypeError: if 'other' is of the wrong type.
+
+        '''
+        if not isinstance(other, Use):
+            raise TypeError(f"update() must be supplied with an instance of "
+                            f"Use but got '{type(other).__name__}'")
+
+        # Take the union of the only and rename lists
+        if self._only_list is None:
+            self._only_list = other.only_list
+        else:
+            self._only_list = self._only_list.union(other.only_list)
+        if self._rename_list is None:
+            self._rename_list = other.rename_list
+        else:
+            self._rename_list = self._rename_list.union(other.rename_list)
+
+        self._local_to_module_map.update(other._local_to_module_map)
+
+        self._wildcard_import = self._wildcard_import or other.wildcard_import
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def symbol_names(self):
+        return [sym.name for sym in self._symbols]
+
+    @property
+    def only_list(self):
+        return self._only_list
+
+    @property
+    def rename_list(self):
+        return self._rename_list
+
+    @property
+    def wildcard_import(self):
+        return self._wildcard_import
+
+
 class SymbolTable():
     '''
     Class implementing a single symbol table.
@@ -274,7 +372,7 @@ class SymbolTable():
         uses = "Used modules:\n"
         if self._modules:
             uses += "\n".join(list(self._modules.keys())) + "\n"
-        return ("{0}Symbol Table '{1}'\n".format(header, self._name) +
+        return (f"{header}Symbol Table '{self._name}'\n" +
                 symbols + uses + header)
 
     def add_data_symbol(self, name, primitive_type):
@@ -294,30 +392,31 @@ class SymbolTable():
                                   entry with the supplied name.
         '''
         if not isinstance(name, str):
-            raise TypeError("The name of the symbol must be a str but got "
-                            "'{0}'".format(type(name).__name__))
+            raise TypeError(f"The name of the symbol must be a str but got "
+                            f"'{type(name).__name__}'")
         # TODO #201 use an enumeration for the primitive type
         if not isinstance(primitive_type, str):
             raise TypeError(
-                "The primitive type of the symbol must be specified as a str "
-                "but got '{0}'".format(type(primitive_type).__name__))
+                f"The primitive type of the symbol must be specified as a str "
+                f"but got '{type(primitive_type).__name__}'")
         lname = name.lower()
         if lname in self._data_symbols:
-            raise SymbolTableError("Symbol table already contains a symbol for"
-                                   " a variable with name '{0}'".format(name))
+            raise SymbolTableError(f"Symbol table already contains a symbol "
+                                   f"for a variable with name '{name}'")
         if lname in self._modules:
-            raise SymbolTableError("Symbol table already contains a use of a "
-                                   "module with name '{0}'".format(name))
+            raise SymbolTableError(f"Symbol table already contains a use of a "
+                                   f"module with name '{name}'")
         for mod_name in self._modules:
-            if self._modules[mod_name] and lname in self._modules[mod_name]:
+            if (self._modules[mod_name] and
+                    lname in self._modules[mod_name].symbol_names):
                 raise SymbolTableError(
-                    "Symbol table already contains a use of a symbol named "
-                    "'{0}' from module '{1}'".format(name, mod_name))
+                    f"Symbol table already contains a use of a symbol named "
+                    f"'{name}' from module '{mod_name}'")
 
         self._data_symbols[lname] = SymbolTable.Symbol(lname,
                                                        primitive_type.lower())
 
-    def add_use_symbols(self, name, only_list=None):
+    def add_use_symbols(self, name, only_list=None, rename_list=None):
         '''
         Creates an entry in the table for the USE of a module with the supplied
         name. If no `only_list` is supplied then this USE represents a wildcard
@@ -325,51 +424,45 @@ class SymbolTable():
         has an ONLY clause but without any named symbols then `only_list`
         should be an empty list.
 
+        A USE can also have one or more rename entries *without* an only list.
+
         :param str name: the name of the module being imported via a USE. Not \
             case sensitive.
-        :param only_list: Whether or not there is an 'only:' clause on the \
-            USE statement and, if so, the names of the symbols being imported \
-            (not case sensitive).
-        :type only_list: NoneType or list of str
+        :param only_list: if there is an 'only:' clause on the USE statement \
+            then this contains a list of tuples, each holding the local name \
+            of the symbol and its name in the module from which it is \
+            imported. These names are case insensitive.
+        :type only_list: Optional[List[Tuple[str, str]]]
+        :param rename_list: a list of symbols that are renamed from the scope \
+            being imported. Each entry is a tuple containing the name in the \
+            local scope and the corresponding name in the module from which it\
+            is imported. These names are case insensitive.
+        :type rename_list: Optional[List[Tuple[str, str]]]
 
         :raises TypeError: if either of the supplied parameters are of the \
                            wrong type.
         '''
         if not isinstance(name, str):
-            raise TypeError("The name of the module must be a str but got "
-                            "'{0}'".format(type(name).__name__))
+            raise TypeError(f"The name of the module must be a str but got "
+                            f"'{type(name).__name__}'")
         if only_list and not isinstance(only_list, list):
-            raise TypeError("If present, the only_list must be a list but got "
-                            "'{0}'".format(type(only_list).__name__))
+            raise TypeError(f"If present, the only_list must be a list but "
+                            f"got '{type(only_list).__name__}'")
         if only_list and not all(
-                [isinstance(item, str) for item in only_list]):
-            raise TypeError("If present, the only_list must be a list of str "
-                            "but got: {0}".format(
-                                [type(item).__name__ for item in only_list]))
-
-        # Convert the list of names to lower case
-        if only_list is not None:
-            lowered_list = [var_name.lower() for var_name in only_list]
-        else:
-            lowered_list = None
-
+                [isinstance(item, tuple) and len(item) == 2
+                 for item in only_list]):
+            raise TypeError(f"If present, the only_list must be a list of "
+                            f"2-tuples but got: {only_list}")
         lname = name.lower()
+
+        use = Use(lname, only_list, rename_list)
+
         if lname in self._modules:
             # The same module can appear in more than one use statement
             # in Fortran.
-            if lowered_list:
-                if self._modules[lname] is None:
-                    # We already have a wildcard import for this module but
-                    # now we also know the names of some specific symbols that
-                    # are imported.
-                    # TODO #294 improve the data structures used to hold
-                    # information on use statements so that we can capture
-                    # this.
-                    pass
-                else:
-                    self._modules[lname].extend(lowered_list)
+            self._modules[lname].update(use)
         else:
-            self._modules[lname] = lowered_list
+            self._modules[lname] = use
 
     def lookup(self, name):
         '''
