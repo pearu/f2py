@@ -263,19 +263,57 @@ class SymbolTables:
         del self._symbol_tables[lname]
 
 
-class Use:
+class ModuleUse:
     """
     Class capturing information on all USE statements referring to a given
     Fortran module.
 
-    :param str name:
-    :param only_list:
-    :param rename_list:
+    A USE statement can rename an imported symbol so as to avoid a clash in
+    the local scope, e.g. `USE my_mod, alocal => amod` where `amod` is the
+    name of the symbol declared in `my_mod`. This renaming can also occur
+    inside an Only_List, e.g. `USE my_mod, only: alocal => amod`.
+
+    :param str name: the name of the module.
+    :param only_list: list of 2-tuples giving the (local-name, module-name) \
+        of symbols that appear in an Only_List. If a symbol is not re-named \
+        then module-name can be None.
+    :type only_list: Optional[List[Tuple[str, str | NoneType]]]
+    :param rename_list: list of 2-tuples given the (local-name, module-name) \
+        of symbols that appear in a Rename_List.
+    :type rename_list: Optional[List[Tuple[str, str]]]
+
+    :raises TypeError: if any of the supplied parameters are of the wrong type.
 
     """
 
     def __init__(self, name, only_list=None, rename_list=None):
-        self._name = name
+        if not isinstance(name, str):
+            raise TypeError(
+                f"The name of the module must be a str but got "
+                f"'{type(name).__name__}'"
+            )
+        self._validate_tuple_list("only", only_list)
+        self._validate_tuple_list("rename", rename_list)
+
+        if only_list and not all(
+            [isinstance(item[0], str) and
+             (item[1] is None or isinstance(item[1], str)) for item in only_list]
+        ):
+            raise TypeError(
+                f"If present, the only_list must be a list of "
+                f"2-tuples of (str, str | NoneType) but got: {only_list}"
+            )
+
+        if rename_list and not all(
+            [isinstance(item[0], str) and isinstance(item[1], str) for
+             item in rename_list]
+        ):
+            raise TypeError(
+                f"If present, the rename_list must be a list of "
+                f"2-tuples of (str, str) but got: {rename_list}"
+            )
+
+        self._name = name.lower()
 
         self._symbols = []
         self._local_to_module_map = {}
@@ -295,6 +333,35 @@ class Use:
             )
         else:
             self._rename_list = None
+
+    @staticmethod
+    def _validate_tuple_list(name, tlist):
+        """
+        Validate the supplied list of tuples.
+
+        :param str name: the name of the list being validated.
+        :param tlist: the list of tuples to validate.
+        :type tlist: Optional[List[Tuple[str, str | NoneType]]]
+
+        :raises TypeError: if the supplied list is of the wrong type.
+
+        """
+        if not tlist:
+            # None or an empty list is fine.
+            return
+
+        if not isinstance(tlist, list):
+            raise TypeError(
+                f"If present, the {name}_list must be a list but "
+                f"got '{type(tlist).__name__}'"
+            )
+        if not all(
+            [isinstance(item, tuple) and len(item) == 2 for item in tlist]
+        ):
+            raise TypeError(
+                f"If present, the {name}_list must be a list of "
+                f"2-tuples but got: {tlist}"
+            )
 
     def _store_symbols(self, rename_list):
         """
@@ -390,7 +457,8 @@ class SymbolTable:
         self._name = name.lower()
         # Symbols defined in this scope that represent data.
         self._data_symbols = {}
-        # Modules imported into this scope.
+        # dict of ModuleUse objects (indexed by module name) representing
+        # modules imported into this scope.
         self._modules = {}
         # Reference to a SymbolTable that contains this one (if any). Actual
         # value (if any) is set via setter method.
@@ -483,36 +551,15 @@ class SymbolTable:
             is imported. These names are case insensitive.
         :type rename_list: Optional[List[Tuple[str, str]]]
 
-        :raises TypeError: if either of the supplied parameters are of the \
-                           wrong type.
         """
-        if not isinstance(name, str):
-            raise TypeError(
-                f"The name of the module must be a str but got "
-                f"'{type(name).__name__}'"
-            )
-        if only_list and not isinstance(only_list, list):
-            raise TypeError(
-                f"If present, the only_list must be a list but "
-                f"got '{type(only_list).__name__}'"
-            )
-        if only_list and not all(
-            [isinstance(item, tuple) and len(item) == 2 for item in only_list]
-        ):
-            raise TypeError(
-                f"If present, the only_list must be a list of "
-                f"2-tuples but got: {only_list}"
-            )
-        lname = name.lower()
+        use = ModuleUse(name, only_list, rename_list)
 
-        use = Use(lname, only_list, rename_list)
-
-        if lname in self._modules:
+        if use.name in self._modules:
             # The same module can appear in more than one use statement
             # in Fortran.
-            self._modules[lname].update(use)
+            self._modules[use.name].update(use)
         else:
-            self._modules[lname] = use
+            self._modules[use.name] = use
 
     def lookup(self, name):
         """
