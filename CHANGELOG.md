@@ -10,12 +10,40 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australian Bureau of Meteorology
 * P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
+* A. Morvan, Bull S. A. S., France
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
 * S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+12/09/2022 PR #374 for #373. Removes @staticmethod decorator added to
+           Stmt_Function_Stmt.tostr() in error.
+
+05/09/2022 PR #372 fix for whitespace being lost when Format_Item_List is
+           contained within parentheses.
+
+11/08/2022 PR #368 for #367. Add support for visiting tuples in walk()
+           utility.
+
+11/08/2022 PR #364. Fix parsing of format-items with hollerith items and
+           omitted commas.
+
+08/08/2022 PR #363 for #363. Extends the dependency-analysis example utility
+           to cope with files in subdirectories.
+
+26/07/2022 PR #341 - replace staticmethod calls with decorator.
+
+14/07/2022 PR #361 - remove six dependency from setup.py
+
+22/06/2022 PR #357 - this project now uses the Black formatter in a GH Action.
+
+20/06/2022 PR #345 - add fparser2 performance benchmark in the scripts folder.
+
+02/09/2022 PR #356 - add support for the mold allocate parameter.
+
+## Release 0.0.16 (16/06/2022) ##
 
 14/06/2022 PR #337 towards #312 (performance improvements). Removes some
            imports and function declaration from the hotpath.
