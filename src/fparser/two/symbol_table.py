@@ -451,8 +451,8 @@ class SymbolTable:
                     f"Symbol table already contains a use of a "
                     f"module with name '{name}'"
                 )
-            for mod_name, var_list in self._modules.items():
-                if var_list and lname in var_list:
+            for mod_name, mod in self._modules.items():
+                if mod.symbol_names and lname in mod.symbol_names:
                     raise SymbolTableError(
                         f"Symbol table already contains a use of a symbol "
                         f"named '{name}' from module '{mod_name}'"
