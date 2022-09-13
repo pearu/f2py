@@ -90,13 +90,14 @@ def test_use_nature(f2003_create):
 # match() 'use x, rename'
 @pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
 def test_use_rename():
-    '''Check that a use with a rename clause is parsed correctly.'''
+    """Check that a use with a rename clause is parsed correctly."""
     line = "use my_module, new_name=>name"
     ast = Use_Stmt(line)
     assert "USE my_module, new_name => name" in str(ast)
     assert repr(ast) == (
         "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
-        "(Rename(None, Name('new_name'), Name('name')),)))")
+        "(Rename(None, Name('new_name'), Name('name')),)))"
+    )
     table = SYMBOL_TABLES.current_scope
     assert "my_module" in table._modules
     use = table._modules["my_module"]
@@ -141,8 +142,7 @@ def test_use_only_empty(f2003_create):
     line = "use my_model, only:"
     ast = Use_Stmt(line)
     assert "USE my_model, ONLY:" in str(ast)
-    assert repr(ast) == (
-        "Use_Stmt(None, None, Name('my_model'), ', ONLY:', None)")
+    assert repr(ast) == ("Use_Stmt(None, None, Name('my_model'), ', ONLY:', None)")
     # Repeat when there is a scoping region.
     SYMBOL_TABLES.enter_scope("test_scope")
     ast = Use_Stmt(line)
@@ -156,15 +156,17 @@ def test_use_only_empty(f2003_create):
 
 
 def test_use_only_plus_rename(f2003_create):
-    '''Check that a use statement with an only clause and some variable
+    """Check that a use statement with an only clause and some variable
     renaming is parsed correctly.
 
-    '''
+    """
     line = "use my_model, only: a, b=>c"
     ast = Use_Stmt(line)
-    assert repr(ast) == ("Use_Stmt(None, None, Name('my_model'), "
-                         "', ONLY:', Only_List(',', (Name('a'), "
-                         "Rename(None, Name('b'), Name('c')))))")
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_model'), "
+        "', ONLY:', Only_List(',', (Name('a'), "
+        "Rename(None, Name('b'), Name('c')))))"
+    )
     # Repeat when there is a scoping region.
     SYMBOL_TABLES.enter_scope("test_scope")
     ast = Use_Stmt(line)

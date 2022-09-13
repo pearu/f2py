@@ -107,9 +107,9 @@ def test_add_data_symbols_no_checks():
     table.add_data_symbol("var", "real")
     sym = table.lookup("var")
     assert sym.primitive_type == "real"
-    table.add_use_symbols("mod1", ["var3"])
+    table.add_use_symbols("mod1", [("var3", None)])
     table.add_data_symbol("mod1", "real")
-    table.add_use_symbols("mod2", ["var3"])
+    table.add_use_symbols("mod2", [("var3", None)])
     table.add_data_symbol("var3", "real")
     assert table.lookup("var3").primitive_type == "real"
 
@@ -146,8 +146,10 @@ def test_add_use_symbols_errors():
     assert "If present, the only_list must be a list but got 'str'" in str(err.value)
     with pytest.raises(TypeError) as err:
         table.add_use_symbols("mod3", only_list=[("hello", None, None)])
-    assert ("If present, the only_list must be a list of 2-tuples but got: "
-            "[('hello', None, None)]" in str(err.value))
+    assert (
+        "If present, the only_list must be a list of 2-tuples but got: "
+        "[('hello', None, None)]" in str(err.value)
+    )
 
 
 def test_str_method():
