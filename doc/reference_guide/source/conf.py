@@ -20,14 +20,14 @@ import subprocess
 
 # -- Project information -----------------------------------------------------
 
-project = 'Reference Guide'
+project = 'Fparser Reference Guide'
 copyright = ('2019-2022, R. W. Ford, P. Peterson, A. R. Porter')
 author = 'R. W. Ford, P. Peterson, A. R. Porter'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.14'
+release = '0.0.16'
 
 
 # -- General configuration ---------------------------------------------------
@@ -140,7 +140,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'fparserReferenceGuide.tex',
-     'fparser Reference Guide',
+     'Fparser Reference Guide',
      'R. W. Ford, P. Peterson, A. R. Porter', 'manual'),
 ]
 
@@ -164,7 +164,8 @@ man_pages = [
 texinfo_documents = [
     (master_doc, 'fparserReferenceGuide',
      'fparser Reference Guide',
-     author, 'fparserReferenceGuide', 'One line description of project.',
+     author, 'fparserReferenceGuide',
+     'Reference guide for the fparser Fortran parser.',
      'Miscellaneous'),
 ]
 
