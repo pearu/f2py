@@ -290,6 +290,9 @@ class Program(BlockBase):  # R201
         """
         content = []
         add_comments_includes_directives(content, reader)
+        comments = False
+        if content:
+            comments = True
         try:
             while True:
                 obj = Program_Unit(reader)
@@ -304,7 +307,12 @@ class Program(BlockBase):  # R201
             # (via Main_Program0) with a program containing no program
             # statement as this is optional in Fortran.
             #
-            return BlockBase.match(Main_Program0, [], None, reader)
+            result = BlockBase.match(Main_Program0, [], None, reader)
+            if not result and comments:
+                # This program only contains comments.
+                return(content,)
+            else:
+                return result
         except StopIteration:
             # Reader has no more lines.
             pass
@@ -12030,9 +12038,11 @@ class Contains_Stmt(StmtBase, STRINGBase):  # R1237
 
 
 class Stmt_Function_Stmt(StmtBase):  # R1238
-    """
-    <stmt-function-stmt>
-    = <function-name> ( [ <dummy-arg-name-list> ] ) = Scalar_Expr
+    """Implements the matching of a Fortran statement function statement.
+
+    stmt_function_stmt is
+                  function-name ( [ dummy-arg-name-list ] ) = scalar-expr
+
     """
 
     subclass_names = []
@@ -12040,30 +12050,47 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
 
     @staticmethod
     def match(string):
-        i = string.find("=")
-        if i == -1:
-            return
-        expr = string[i + 1 :].lstrip()
+        """Implements the matching for an statement function statement.
+
+        :param str string: the string to match with as a statement
+            function statement.
+
+        :returns: a tuple of size 1 containing a Stmt_Function_Stmt \
+            object with the matched string if there is a match, or None \
+            if there is not.
+        :rtype: (:py:class:`fparser.two.Fortran2003.Stmt_Function_Stmt`) \
+            or NoneType
+
+        """
+        index = string.find("=")
+        if index == -1:
+            return None
+        expr = string[index + 1 :].lstrip()
         if not expr:
-            return
-        line = string[:i].rstrip()
+            return None
+        line = string[:index].rstrip()
         if not line or not line.endswith(")"):
-            return
-        i = line.find("(")
-        if i == -1:
-            return
-        name = line[:i].rstrip()
+            return None
+        index = line.find("(")
+        if index == -1:
+            return None
+        name = line[:index].rstrip()
         if not name:
-            return
-        args = line[i + 1 : -1].strip()
+            return None
+        args = line[index + 1 : -1].strip()
         if args:
-            return Function_Name(name), Dummy_Arg_Name_List(args), Scalar_Expr(expr)
+            return (Function_Name(name), Dummy_Arg_Name_List(args),
+                    Scalar_Expr(expr))
         return Function_Name(name), None, Scalar_Expr(expr)
 
     def tostr(self):
+        """
+        :returns: this stmt_function_stmt as a string
+        :rtype: str
+        """
         if self.items[1] is None:
-            return "%s () = %s" % (self.items[0], self.items[2])
-        return "%s (%s) = %s" % self.items
+            return f"{self.items[0]} () = {self.items[2]}"
+        return f"{self.items[0]} ({self.items[1]}) = self.items[2]"
 
 
 #
