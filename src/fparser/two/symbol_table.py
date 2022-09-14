@@ -600,7 +600,7 @@ class SymbolTable:
             then this contains a list of tuples, each holding the local name \
             of the symbol and its name in the module from which it is \
             imported. These names are case insensitive.
-        :type only_list: Optional[List[Tuple[str, str]]]
+        :type only_list: Optional[List[Tuple[str, str | NoneType]]]
         :param rename_list: a list of symbols that are renamed from the scope \
             being imported. Each entry is a tuple containing the name in the \
             local scope and the corresponding name in the module from which it\

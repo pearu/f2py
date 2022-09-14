@@ -259,6 +259,16 @@ replaced with enumerations where it makes sense. Similarly, support
 will be added for other types of symbols (e.g. those representing
 program/subroutine names or reserved Fortran keywords).
 
+Symbols available in the scoping region of a module may be made
+available in another scoping region through one or more `USE` statements.
+In a `SymbolTable` such uses are captured as instances of `ModuleUse`:
+
+.. autoclass:: fparser.two.symbol_table.ModuleUse
+
+These instances are created by calling:
+
+.. automethod:: fparser.two.symbol_table.SymbolTable.add_use_symbols
+
 Fortran has support for nested scopes - e.g. variables declared within
 a module are in scope within any routines defined within that
 module. Therefore, when searching for the definition a symbol, we
