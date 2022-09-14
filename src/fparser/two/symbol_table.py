@@ -296,8 +296,11 @@ class ModuleUse:
         self._validate_tuple_list("rename", rename_list)
 
         if only_list and not all(
-            [isinstance(item[0], str) and
-             (item[1] is None or isinstance(item[1], str)) for item in only_list]
+            [
+                isinstance(item[0], str)
+                and (item[1] is None or isinstance(item[1], str))
+                for item in only_list
+            ]
         ):
             raise TypeError(
                 f"If present, the only_list must be a list of "
@@ -305,8 +308,10 @@ class ModuleUse:
             )
 
         if rename_list and not all(
-            [isinstance(item[0], str) and isinstance(item[1], str) for
-             item in rename_list]
+            [
+                isinstance(item[0], str) and isinstance(item[1], str)
+                for item in rename_list
+            ]
         ):
             raise TypeError(
                 f"If present, the rename_list must be a list of "
@@ -315,7 +320,10 @@ class ModuleUse:
 
         self._name = name.lower()
 
-        self._symbols = []
+        # dict of Symbols known to be accessed in this module.
+        self._symbols = {}
+        # Mapping from local symbol name in current scope to actual, declared
+        # name in the module from which it is imported.
         self._local_to_module_map = {}
 
         if only_list is not None:
@@ -355,9 +363,7 @@ class ModuleUse:
                 f"If present, the {name}_list must be a list but "
                 f"got '{type(tlist).__name__}'"
             )
-        if not all(
-            [isinstance(item, tuple) and len(item) == 2 for item in tlist]
-        ):
+        if not all([isinstance(item, tuple) and len(item) == 2 for item in tlist]):
             raise TypeError(
                 f"If present, the {name}_list must be a list of "
                 f"2-tuples but got: {tlist}"
@@ -366,15 +372,18 @@ class ModuleUse:
     def _store_symbols(self, rename_list):
         """
         Utility that updates the local list of symbols and renaming map for
-        the given list of local-name, module-name tuples.
+        the given list of local-name, module-name tuples. If a symbol is
+        not renamed then module-name can be None.
 
-        :param rename_list:
+        :param rename_list: list of local-name, module-name pairs.
+        :type rename_list: List[Tuple[str, str | NoneType]]
 
         """
         for local_name, orig_name in rename_list:
             lname = local_name.lower()
             oname = orig_name.lower() if orig_name else None
-            self._symbols.append(SymbolTable.Symbol(lname, "unknown"))
+            if lname not in self._symbols:
+                self._symbols[lname] = SymbolTable.Symbol(lname, "unknown")
             if oname:
                 self._local_to_module_map[lname] = oname
 
@@ -387,23 +396,46 @@ class ModuleUse:
         :type other: :py:class:`fparser.two.symbol_table.Use`
 
         :raises TypeError: if 'other' is of the wrong type.
+        :raises ValueError: if 'other' is for a module with a different \
+                            name to the current one.
 
         """
-        if not isinstance(other, Use):
+        if not isinstance(other, ModuleUse):
             raise TypeError(
                 f"update() must be supplied with an instance of "
-                f"Use but got '{type(other).__name__}'"
+                f"ModuleUse but got '{type(other).__name__}'"
             )
 
-        # Take the union of the only and rename lists
-        if self._only_list is None:
-            self._only_list = other.only_list
-        else:
-            self._only_list = self._only_list.union(other.only_list)
-        if self._rename_list is None:
-            self._rename_list = other.rename_list
-        else:
-            self._rename_list = self._rename_list.union(other.rename_list)
+        if self.name != other.name:
+            raise ValueError(
+                f"The ModuleUse supplied to update() is for module "
+                f"'{other.name}' but this ModuleUse is for module "
+                f"'{self.name}'"
+            )
+
+        # Take the union of the only and rename lists and update the list
+        # of symbols.
+        if other.only_list:
+            for local_name in other.only_list:
+                if local_name not in self._symbols:
+                    self._symbols[local_name] = SymbolTable.Symbol(
+                        local_name, "unknown"
+                    )
+            if self._only_list is None:
+                self._only_list = other.only_list
+            else:
+                self._only_list = self._only_list.union(other.only_list)
+
+        if other.rename_list:
+            for local_name in other.rename_list:
+                if local_name not in self._symbols:
+                    self._symbols[local_name] = SymbolTable.Symbol(
+                        local_name, "unknown"
+                    )
+            if self._rename_list is None:
+                self._rename_list = other.rename_list
+            else:
+                self._rename_list = self._rename_list.union(other.rename_list)
 
         self._local_to_module_map.update(other._local_to_module_map)
 
@@ -411,23 +443,47 @@ class ModuleUse:
 
     @property
     def name(self):
+        """
+        :returns: the name of the Fortran module.
+        :rtype: str
+        """
         return self._name
 
     @property
     def symbol_names(self):
-        return [sym.name for sym in self._symbols]
+        """
+        :returns: the names of all symbols associated with USE(s) of this \
+                  module.
+        :rtype: List[str]
+        """
+        return list(self._symbols.keys())
 
     @property
     def only_list(self):
+        """:returns: the local names that appear in an Only_List.
+        :rtype: Optional[Set[str]]"""
         return self._only_list
 
     @property
     def rename_list(self):
+        """:returns: the local names that appear in a Rename_List.
+        :rtype: Optional[Set[str]]"""
         return self._rename_list
 
     @property
     def wildcard_import(self):
+        """
+        :returns: whether there is a wildcard import from this module.
+        :rtype: bool
+        """
         return self._wildcard_import
+
+    def get_declared_name(self, name):
+        """
+        :returns: the name of the supplied symbol as declared in the module.
+        :rtype: str
+        """
+        return self._local_to_module_map.get(name, name)
 
 
 class SymbolTable:

@@ -47,22 +47,24 @@ def test_moduse_constructor():
     assert muse1.only_list is None
     assert muse1.rename_list is None
     assert muse1.wildcard_import is True
+    assert muse1.symbol_names == []
     # Only-list.
     muse2 = ModuleUse("peggy", only_list=[("amazon", None), ("swallow", None)])
     assert muse2.only_list == set(["amazon", "swallow"])
     assert muse2.wildcard_import is False
     assert muse2.rename_list is None
+    assert muse2.symbol_names == ["amazon", "swallow"]
     # Only-list with renaming.
-    muse3 = ModuleUse("roger", only_list=[("swallow", None),
-                                          ("amazon", "dingy")])
+    muse3 = ModuleUse("roger", only_list=[("swallow", None), ("amazon", "dingy")])
     assert muse3.only_list == set(["swallow", "amazon"])
-    assert muse3._local_to_module_map["amazon"] == "dingy"
+    assert muse3.get_declared_name("amazon") == "dingy"
+    assert muse3.symbol_names == ["swallow", "amazon"]
     # Rename list.
-    muse4 = ModuleUse("susan", rename_list=[("swallow", "amazon"),
-                                            ("boat", "dingy")])
+    muse4 = ModuleUse("susan", rename_list=[("swallow", "amazon"), ("boat", "dingy")])
     assert muse4.rename_list == set(["swallow", "boat"])
-    assert muse4._local_to_module_map["swallow"] == "amazon"
-    assert muse4._local_to_module_map["boat"] == "dingy"
+    assert muse4.get_declared_name("swallow") == "amazon"
+    assert muse4.get_declared_name("boat") == "dingy"
+    assert muse4.symbol_names == ["swallow", "boat"]
 
 
 def test_moduse_constructor_validate():
@@ -74,29 +76,86 @@ def test_moduse_constructor_validate():
     # Check that it calls _validate_tuple_list.
     with pytest.raises(TypeError) as err:
         _ = ModuleUse("titty", only_list="polly")
-    assert ("If present, the only_list must be a list but got 'str'" in
-            str(err.value))
+    assert "If present, the only_list must be a list but got 'str'" in str(err.value)
     with pytest.raises(TypeError) as err:
         _ = ModuleUse("titty", rename_list="polly")
-    assert ("If present, the rename_list must be a list but got 'str'" in
-            str(err.value))
+    assert "If present, the rename_list must be a list but got 'str'" in str(err.value)
     with pytest.raises(TypeError) as err:
         _ = ModuleUse("titty", only_list=[("polly", 1)])
-    assert ("If present, the only_list must be a list of 2-tuples of "
-            "(str, str | NoneType) but got: [('polly', 1)]" in str(err.value))
+    assert (
+        "If present, the only_list must be a list of 2-tuples of "
+        "(str, str | NoneType) but got: [('polly', 1)]" in str(err.value)
+    )
     with pytest.raises(TypeError) as err:
         _ = ModuleUse("titty", rename_list=[("polly", 1)])
-    assert ("If present, the rename_list must be a list of 2-tuples of "
-            "(str, str) but got: [('polly', 1)]" in str(err.value))
+    assert (
+        "If present, the rename_list must be a list of 2-tuples of "
+        "(str, str) but got: [('polly', 1)]" in str(err.value)
+    )
 
 
 def test_moduse_validate_tuple_list():
     """Checks for the _validate_tuple_list() method."""
     with pytest.raises(TypeError) as err:
         _ = ModuleUse._validate_tuple_list("only", ["polly"])
-    assert ("If present, the only_list must be a list of 2-tuples but "
-            "got: ['polly']" in str(err.value))
+    assert (
+        "If present, the only_list must be a list of 2-tuples but "
+        "got: ['polly']" in str(err.value)
+    )
     with pytest.raises(TypeError) as err:
         _ = ModuleUse._validate_tuple_list("only", [("polly", "gibber", 1)])
-    assert ("If present, the only_list must be a list of 2-tuples but "
-            "got: [('polly', 'gibber', 1)]" in str(err.value))
+    assert (
+        "If present, the only_list must be a list of 2-tuples but "
+        "got: [('polly', 'gibber', 1)]" in str(err.value)
+    )
+
+
+def test_moduse_update():
+    """Checks for the update() method."""
+    moduse = ModuleUse("flint")
+    assert moduse.wildcard_import is True
+    # Wrong argument type.
+    with pytest.raises(TypeError) as err:
+        moduse.update("hello")
+    assert (
+        "update() must be supplied with an instance of ModuleUse but got "
+        "'str'" in str(err.value)
+    )
+    # Wrong module name.
+    moduse1 = ModuleUse("houseboat", only_list=[("cannon", None)])
+    with pytest.raises(ValueError) as err:
+        moduse.update(moduse1)
+    assert (
+        "ModuleUse supplied to update() is for module 'houseboat' but this "
+        "ModuleUse is for module 'flint'" in str(err.value)
+    )
+    # Add an import with an ONLY: clause.
+    moduse2 = ModuleUse("flint", only_list=[("cannon", None)])
+    moduse.update(moduse2)
+    assert moduse.wildcard_import is True
+    assert moduse.only_list == set(["cannon"])
+    assert moduse.rename_list is None
+    # Add an import with a Rename_List.
+    moduse3 = ModuleUse("Flint", rename_list=[("uncle", "jim")])
+    moduse.update(moduse3)
+    assert moduse.only_list == set(["cannon"])
+    assert moduse.rename_list == set(["uncle"])
+    assert moduse.get_declared_name("uncle") == "jim"
+    assert moduse.symbol_names == ["cannon", "uncle"]
+    # Add further Only and Rename lists.
+    moduse4 = ModuleUse("Flint", rename_list=[("rogEr", "giBber")])
+    moduse.update(moduse4)
+    assert moduse.get_declared_name("uncle") == "jim"
+    assert moduse.get_declared_name("roger") == "gibber"
+    assert moduse.symbol_names == ["cannon", "uncle", "roger"]
+    assert moduse.rename_list == set(["uncle", "roger"])
+    moduse5 = ModuleUse("Flint", only_list=[("maTe", "peggy")])
+    moduse.update(moduse5)
+    assert moduse.only_list == set(["cannon", "mate"])
+    assert moduse.get_declared_name("roger") == "gibber"
+    assert moduse.get_declared_name("mate") == "peggy"
+    assert moduse.symbol_names == ["cannon", "uncle", "roger", "mate"]
+    # Adding a wildcard import.
+    moduse6 = ModuleUse("flInt")
+    moduse5.update(moduse6)
+    assert moduse5.wildcard_import is True

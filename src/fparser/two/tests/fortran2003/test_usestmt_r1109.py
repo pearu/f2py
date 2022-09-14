@@ -40,7 +40,7 @@ Use statement.
 import pytest
 from fparser.api import get_reader
 from fparser.two.Fortran2003 import Use_Stmt
-from fparser.two.symbol_table import SYMBOL_TABLES, Use
+from fparser.two.symbol_table import SYMBOL_TABLES, ModuleUse
 from fparser.two.utils import NoMatchError, InternalError
 
 # match() use ...
@@ -149,7 +149,7 @@ def test_use_only_empty(f2003_create):
     table = SYMBOL_TABLES.current_scope
     assert "my_model" in table._modules
     use = table._modules["my_model"]
-    assert isinstance(use, Use)
+    assert isinstance(use, ModuleUse)
     assert use.only_list == set()
     assert use.rename_list is None
     SYMBOL_TABLES.exit_scope()
@@ -173,7 +173,7 @@ def test_use_only_plus_rename(f2003_create):
     table = SYMBOL_TABLES.current_scope
     assert "my_model" in table._modules
     use = table._modules["my_model"]
-    assert isinstance(use, Use)
+    assert isinstance(use, ModuleUse)
     sym_names = use.symbol_names
     assert sym_names == ["a", "b"]
     assert use.only_list == set(["a", "b"])
