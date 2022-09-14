@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2021 Science and Technology
+# Modified work Copyright (c) 2017-2022 Science and Technology
 # Facilities Council.
 # Modified work Copyright (c) 2017 by J. Henrichs, Bureau of Meteorology
 # Original work Copyright (c) 1999-2008 Pearu Peterson
@@ -77,25 +77,34 @@ First version created: May 2006
 
 
 import re
-import six
 
 
-class String(six.text_type):
-    ''' Dummy string class. '''
+class String(str):
+    """Dummy string class."""
 
 
-class ParenString(six.text_type):
-    ''' Class representing a parenthesis string. '''
+class ParenString(str):
+    """Class representing a parenthesis string."""
 
 
-__all__ = ['String', 'string_replace_map', 'splitquote', 'splitparen']
+__all__ = ["String", "string_replace_map", "splitquote", "splitparen"]
 
 _f2py_str_findall = re.compile(r"_F2PY_STRING_CONSTANT_\d+_").findall
-_is_name = re.compile(r'\w*\Z', re.I).match
-_is_simple_str = re.compile(r'\w*\Z', re.I).match
+_is_name = re.compile(r"\w*\Z", re.I).match
+_is_simple_str = re.compile(r"\w*\Z", re.I).match
 _f2py_findall = re.compile(
-    r'(_F2PY_STRING_CONSTANT_\d+_|F2PY_REAL_CONSTANT_\d+_|'
-    r'F2PY_EXPR_TUPLE_\d+)').findall
+    r"(_F2PY_STRING_CONSTANT_\d+_|F2PY_REAL_CONSTANT_\d+_|" r"F2PY_EXPR_TUPLE_\d+)"
+).findall
+# A valid exponential constant must begin with a digit or a '.' (and be
+# preceeded by a non-'word' character or the start of the string).
+# We have to exclude '.' from the match for a non-word character as
+# otherwise, in a string such as ".5d0", it would be matched by the
+# non-capturing group. Since the first group is non-capturing (?:),
+# the matched literal is in group 1.
+# R417 for real-literal-constant does not permit whitespace.
+exponential_constant = re.compile(
+    r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)"
+)
 
 
 class StringReplaceDict(dict):
@@ -103,6 +112,7 @@ class StringReplaceDict(dict):
     Dictionary object that is callable for applying map returned
     by string_replace_map() function.
     """
+
     def __call__(self, line):
         for key in _f2py_findall(line):
             if key in self:
@@ -115,6 +125,35 @@ class StringReplaceDict(dict):
         return line
 
 
+def memoize(function):
+    """Simple memoization decorator.
+
+    :param function: The function to memoize.
+    :type function: Callable
+
+    Note: Python 3.9 comes with a thread-safe and more efficient cache as it
+    can be bounded and we are interested in lines that have temporal locality.
+    It's the: @functools.lru_cache(maxsize=8)
+
+    """
+    memo = {}
+
+    def wrapper(*args, **kwargs):
+        key = args
+        if kwargs:
+            for item in kwargs.items():
+                key += item
+        result = memo.get(key, None)
+        if result is not None:
+            return result
+        result = function(*args, **kwargs)
+        memo[key] = result
+        return result
+
+    return wrapper
+
+
+@memoize
 def string_replace_map(line, lower=False):
     """
     #. Replaces string constants with symbol `'_F2PY_STRING_CONSTANT_<index>_'`
@@ -131,15 +170,6 @@ def string_replace_map(line, lower=False):
             :py:class:`fparser.common.splitline.StringReplaceDict`
 
     """
-    # A valid exponential constant must begin with a digit or a '.' (and be
-    # preceeded by a non-'word' character or the start of the string).
-    # We have to exclude '.' from the match for a non-word character as
-    # otherwise, in a string such as ".5d0", it would be matched by the
-    # non-capturing group. Since the first group is non-capturing (?:),
-    # the matched literal is in group 1.
-    # R417 for real-literal-constant does not permit whitespace.
-    exponential_constant = re.compile(
-        r"(?:[^\w.]|^)((\d+[.]\d*|\d*[.]\d+|\d+)[edED][+-]?\d+(_\w+)?)")
 
     str_idx = 0
     const_idx = 0
@@ -157,10 +187,10 @@ def string_replace_map(line, lower=False):
                 trimmed = item[1:-1]
                 string_map[key] = trimmed
                 rev_string_map[trimmed] = key
-            items.append(item[0]+key+item[-1])
+            items.append(item[0] + key + item[-1])
         else:
             items.append(item)
-    newline = ''.join(items)
+    newline = "".join(items)
 
     const_keys = []
     for item in exponential_constant.finditer(newline):
@@ -184,12 +214,12 @@ def string_replace_map(line, lower=False):
             key = rev_string_map.get(item)
             if key is None:
                 parens_idx += 1
-                key = 'F2PY_EXPR_TUPLE_{0}'.format(parens_idx)
+                key = "F2PY_EXPR_TUPLE_{0}".format(parens_idx)
                 trimmed = item[1:-1].strip()
                 string_map[key] = trimmed
                 rev_string_map[trimmed] = key
                 expr_keys.append(key)
-            items.append(item[0]+key+item[-1])
+            items.append(item[0] + key + item[-1])
         else:
             items.append(item)
 
@@ -206,10 +236,10 @@ def string_replace_map(line, lower=False):
                 entry = entry.replace(inc_key, string_map[inc_key], 1)
             string_map[key] = entry
 
-    return ''.join(items), string_map
+    return "".join(items), string_map
 
 
-def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
+def splitquote(line, stopchar=None, lower=False, quotechars="\"'"):
     """
     Fast LineSplitter
     """
@@ -231,7 +261,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                     stopchar = char
                     i -= 1
                     break
-                if char == '\\':
+                if char == "\\":
                     nofslashes += 1
                 else:
                     nofslashes = 0
@@ -243,7 +273,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                     break
             if not l:
                 continue
-            item = ''.join(l)
+            item = "".join(l)
             if lower:
                 item = item.lower()
             items.append(item)
@@ -256,7 +286,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                 i += 1
             except IndexError:
                 if l:
-                    item = String(u''.join(l))
+                    item = String("".join(l))
                     items.append(item)
                 break
         # else continued string
@@ -265,7 +295,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
                 l_append(char)
                 stopchar = None
                 break
-            if char == '\\':
+            if char == "\\":
                 nofslashes += 1
             else:
                 nofslashes = 0
@@ -276,7 +306,7 @@ def splitquote(line, stopchar=None, lower=False, quotechars='"\''):
             except IndexError:
                 break
         if l:
-            item = String(u''.join(l))
+            item = String("".join(l))
             items.append(item)
     return items, stopchar
 
@@ -297,17 +327,17 @@ def splitparen(line, paren_open="([", paren_close=")]"):
 
     assert len(paren_open) == len(paren_close)
 
-    items = []   # Result list
-    num_backslashes = 0   # Counts consecutive "\" characters
+    items = []  # Result list
+    num_backslashes = 0  # Counts consecutive "\" characters
     # Empty if outside quotes, or set to the starting (and therefore
     # also the ending) quote character while reading text inside quotes.
     inside_quotes_char = ""
-    start = 0    # Index of start of current part.
-    stack = []   # Stack keeping track of required closing brackets
+    start = 0  # Index of start of current part.
+    stack = []  # Stack keeping track of required closing brackets
 
     for idx, char in enumerate(line):
         if char == "\\":
-            num_backslashes = (num_backslashes+1) % 2
+            num_backslashes = (num_backslashes + 1) % 2
             continue
 
         # We had an odd number of \, so the next character is neither
@@ -318,13 +348,13 @@ def splitparen(line, paren_open="([", paren_close=")]"):
 
         # If we are reading a quote, keep on reading till closing
         # quote is reached
-        if inside_quotes_char != '':
+        if inside_quotes_char != "":
             # Reset inside_quotes_char if we find the closing quote
             if char == inside_quotes_char:
-                inside_quotes_char = ''
+                inside_quotes_char = ""
             continue
 
-        if char == "\'" or char == '"':
+        if char == "'" or char == '"':
             inside_quotes_char = char
             continue
 
@@ -342,8 +372,8 @@ def splitparen(line, paren_open="([", paren_close=")]"):
             stack.pop()
             if len(stack) == 0:
                 # Found last closing bracket
-                items.append(ParenString(line[start:idx+1]))
-                start = idx+1
+                items.append(ParenString(line[start : idx + 1]))
+                start = idx + 1
 
     # Add any leftover characters as a separate item
     if start != len(line):
