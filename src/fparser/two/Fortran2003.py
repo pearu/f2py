@@ -12089,7 +12089,7 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
         """
         if self.items[1] is None:
             return f"{self.items[0]} () = {self.items[2]}"
-        return f"{self.items[0]} ({self.items[1]}) = self.items[2]"
+        return f"{self.items[0]} ({self.items[1]}) = {self.items[2]}"
 
 
 #
