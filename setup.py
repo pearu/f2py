@@ -121,7 +121,8 @@ if __name__ == "__main__":
         classifiers=CLASSIFIERS,
         packages=PACKAGES,
         package_dir={"": "src"},
-        extras_require={"doc": ["sphinx", "sphinx_rtd_theme"]},
+        extras_require={"doc": ["sphinx", "sphinxcontrib.bibtex",
+                                "sphinx_rtd_theme", "autoapi"]},
         entry_points={
             "console_scripts": [
                 "fparser2=fparser.scripts.fparser2:main",
