@@ -57,12 +57,13 @@ def test_empty_input(f2003_create):
         ast = Program(reader)
         assert str(ast) == ""
 
+
 def test_only_comments(f2003_create):
     """Test that a file containing only comments can be parsed
     successfully
 
     """
-    code = ("! comment1\n! comment2")
+    code = "! comment1\n! comment2"
     reader = get_reader(code, ignore_comments=False)
     ast = Program(reader)
     assert code in str(ast)

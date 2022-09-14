@@ -310,7 +310,7 @@ class Program(BlockBase):  # R201
             result = BlockBase.match(Main_Program0, [], None, reader)
             if not result and comments:
                 # This program only contains comments.
-                return(content,)
+                return (content,)
             else:
                 return result
         except StopIteration:
@@ -12079,8 +12079,7 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
             return None
         args = line[index + 1 : -1].strip()
         if args:
-            return (Function_Name(name), Dummy_Arg_Name_List(args),
-                    Scalar_Expr(expr))
+            return (Function_Name(name), Dummy_Arg_Name_List(args), Scalar_Expr(expr))
         return Function_Name(name), None, Scalar_Expr(expr)
 
     def tostr(self):
