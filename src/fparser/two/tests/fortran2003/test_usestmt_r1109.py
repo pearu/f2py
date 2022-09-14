@@ -174,8 +174,7 @@ def test_use_only_plus_rename(f2003_create):
     assert "my_model" in table._modules
     use = table._modules["my_model"]
     assert isinstance(use, ModuleUse)
-    sym_names = use.symbol_names
-    assert sym_names == ["a", "b"]
+    assert use.symbol_names == ["a", "b"]
     assert use.only_list == set(["a", "b"])
     assert use.rename_list is None
     SYMBOL_TABLES.exit_scope()
@@ -297,3 +296,24 @@ def test_use_internal_error3(f2003_create):
     with pytest.raises(InternalError) as excinfo:
         str(ast)
     assert "entry 3 should be a string but found 'None'" in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
+def test_use_internal_error_only_list(monkeypatch):
+    """Check that an internal error is raised if an Only_List contains an
+    unexpected entry.
+
+    """
+    # First get a valid parse tree and then break it.
+    line = "use my_model, only: var"
+    ast = Use_Stmt(line)
+    only_list = ast.children[4]
+    only_list.items = ("wrong",)
+    # Monkeypatch the underlying _match method to return this broken tree.
+    monkeypatch.setattr(Use_Stmt, "_match", lambda x: ast.children)
+    with pytest.raises(InternalError) as err:
+        Use_Stmt(line)
+    assert (
+        "An Only_List can contain only Name or Rename entries but found "
+        "'str' when matching 'use my_model, only: var'" in str(err.value)
+    )

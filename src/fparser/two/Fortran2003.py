@@ -10294,6 +10294,11 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                             only_list.append(
                                 (child.children[1].string, child.children[2].string)
                             )
+                        else:
+                            raise InternalError(
+                                f"An Only_List can contain only Name or Rename "
+                                f"entries but found '{type(child).__name__}' when matching '{string}'"
+                            )
                 elif isinstance(result[4], Rename_List):
                     renames = walk(result[4], Rename)
                     # Tuples of <local-name>, <use-name>
@@ -10301,6 +10306,7 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                         (rename.children[1].string, rename.children[2].string)
                         for rename in renames
                     ]
+
                 table.add_use_symbols(str(result[2]), only_list, rename_list)
 
         return result

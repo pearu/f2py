@@ -248,6 +248,37 @@ END PROGRAM a_prog
     assert sorted(table._modules["mod2"].only_list) == ["that_one", "this_one"]
 
 
+def test_module_use_with_rename(f2003_parser):
+    """Check that USE statements with renamed imported symbols are correctly
+    captured in the symbol table and do not clash."""
+    _ = f2003_parser(
+        get_reader(
+            """\
+PROGRAM a_prog
+  use mod2, only: this_one => that_one
+  use mod3, local => other
+  integer :: that_one
+  logical :: other
+END PROGRAM a_prog
+    """
+        )
+    )
+    tables = SYMBOL_TABLES
+    table = tables.lookup("a_prog")
+    assert isinstance(table, SymbolTable)
+    assert table.parent is None
+    assert "mod2" in table._modules
+    mod2 = table._modules["mod2"]
+    assert mod2.only_list == set(["this_one"])
+    assert mod2.get_declared_name("this_one") == "that_one"
+    sym = table.lookup("that_one")
+    assert sym.primitive_type == "integer"
+    mod3 = table._modules["mod3"]
+    assert mod3.rename_list == set(["local"])
+    assert mod3.get_declared_name("local") == "other"
+    assert table.lookup("other").primitive_type == "logical"
+
+
 def test_module_definition(f2003_parser):
     """Check that a SymbolTable is created for a module and populated with
     the symbols it defines."""
