@@ -47,21 +47,22 @@ def test_moduse_constructor():
     assert muse1.only_list is None
     assert muse1.rename_list is None
     assert muse1.wildcard_import is True
+    # pylint: disable=use-implicit-booleaness-not-comparison
     assert muse1.symbol_names == []
     # Only-list.
     muse2 = ModuleUse("peggy", only_list=[("amazon", None), ("swallow", None)])
-    assert muse2.only_list == set(["amazon", "swallow"])
+    assert sorted(muse2.only_list) == ["amazon", "swallow"]
     assert muse2.wildcard_import is False
     assert muse2.rename_list is None
     assert muse2.symbol_names == ["amazon", "swallow"]
     # Only-list with renaming.
     muse3 = ModuleUse("roger", only_list=[("swallow", None), ("amazon", "dingy")])
-    assert muse3.only_list == set(["swallow", "amazon"])
+    assert sorted(muse3.only_list) == ["amazon", "swallow"]
     assert muse3.get_declared_name("amazon") == "dingy"
     assert muse3.symbol_names == ["swallow", "amazon"]
     # Rename list.
     muse4 = ModuleUse("susan", rename_list=[("swallow", "amazon"), ("boat", "dingy")])
-    assert muse4.rename_list == set(["swallow", "boat"])
+    assert sorted(muse4.rename_list) == ["boat", "swallow"]
     assert muse4.get_declared_name("swallow") == "amazon"
     assert muse4.get_declared_name("boat") == "dingy"
     assert muse4.symbol_names == ["swallow", "boat"]
@@ -133,13 +134,13 @@ def test_moduse_update():
     moduse2 = ModuleUse("flint", only_list=[("cannon", None)])
     moduse.update(moduse2)
     assert moduse.wildcard_import is True
-    assert moduse.only_list == set(["cannon"])
+    assert moduse.only_list == ["cannon"]
     assert moduse.rename_list is None
     # Add an import with a Rename_List.
     moduse3 = ModuleUse("Flint", rename_list=[("uncle", "jim")])
     moduse.update(moduse3)
-    assert moduse.only_list == set(["cannon"])
-    assert moduse.rename_list == set(["uncle"])
+    assert moduse.only_list == ["cannon"]
+    assert moduse.rename_list == ["uncle"]
     assert moduse.get_declared_name("uncle") == "jim"
     assert moduse.symbol_names == ["cannon", "uncle"]
     # Add further Only and Rename lists.
@@ -148,10 +149,10 @@ def test_moduse_update():
     assert moduse.get_declared_name("uncle") == "jim"
     assert moduse.get_declared_name("roger") == "gibber"
     assert moduse.symbol_names == ["cannon", "uncle", "roger"]
-    assert moduse.rename_list == set(["uncle", "roger"])
+    assert sorted(moduse.rename_list) == ["roger", "uncle"]
     moduse5 = ModuleUse("Flint", only_list=[("maTe", "peggy")])
     moduse.update(moduse5)
-    assert moduse.only_list == set(["cannon", "mate"])
+    assert moduse.only_list == ["cannon", "mate"]
     assert moduse.get_declared_name("roger") == "gibber"
     assert moduse.get_declared_name("mate") == "peggy"
     assert moduse.symbol_names == ["cannon", "uncle", "roger", "mate"]

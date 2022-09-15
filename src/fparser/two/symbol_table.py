@@ -319,16 +319,16 @@ class ModuleUse:
         if only_list is not None:
             self._store_symbols(only_list)
             self._wildcard_import = False
-            self._only_list = set(local_name.lower() for local_name, _ in only_list)
+            self._only_set = set(local_name.lower() for local_name, _ in only_list)
         else:
-            self._only_list = None
+            self._only_set = None
             self._wildcard_import = True
 
         if rename_list:
             self._store_symbols(rename_list)
-            self._rename_list = set(local_name.lower() for local_name, _ in rename_list)
+            self._rename_set = set(local_name.lower() for local_name, _ in rename_list)
         else:
-            self._rename_list = None
+            self._rename_set = None
 
     @staticmethod
     def _validate_tuple_list(name, tlist):
@@ -409,10 +409,12 @@ class ModuleUse:
                     self._symbols[local_name] = SymbolTable.Symbol(
                         local_name, "unknown"
                     )
-            if self._only_list is None:
-                self._only_list = other.only_list
+            # pylint: disable=protected-access
+            if self._only_set is None:
+                self._only_set = other._only_set
             else:
-                self._only_list = self._only_list.union(other.only_list)
+                self._only_set = self._only_set.union(other._only_set)
+            # pylint: enable=protected-access
 
         if other.rename_list:
             for local_name in other.rename_list:
@@ -420,10 +422,12 @@ class ModuleUse:
                     self._symbols[local_name] = SymbolTable.Symbol(
                         local_name, "unknown"
                     )
-            if self._rename_list is None:
-                self._rename_list = other.rename_list
+            # pylint: disable=protected-access
+            if self._rename_set is None:
+                self._rename_set = other._rename_set
             else:
-                self._rename_list = self._rename_list.union(other.rename_list)
+                self._rename_set = self._rename_set.union(other._rename_set)
+            # pylint: enable=protected-access
 
         # pylint: disable=protected-access
         self._local_to_module_map.update(other._local_to_module_map)
@@ -455,9 +459,9 @@ class ModuleUse:
                   is no such list.
         :rtype: Optional[List[str]]
         """
-        if self._only_list is None:
+        if self._only_set is None:
             return None
-        return list(self._only_list)
+        return list(self._only_set)
 
     @property
     def rename_list(self):
@@ -466,9 +470,9 @@ class ModuleUse:
                   is no such list.
         :rtype: Optional[List[str]]
         """
-        if self._rename_list is None:
+        if self._rename_set is None:
             return None
-        return list(self._rename_list)
+        return list(self._rename_set)
 
     @property
     def wildcard_import(self):
