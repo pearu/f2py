@@ -290,6 +290,7 @@ class Program(BlockBase):  # R201
         """
         content = []
         add_comments_includes_directives(content, reader)
+        comments = content != []
         try:
             while True:
                 obj = Program_Unit(reader)
@@ -304,7 +305,12 @@ class Program(BlockBase):  # R201
             # (via Main_Program0) with a program containing no program
             # statement as this is optional in Fortran.
             #
-            return BlockBase.match(Main_Program0, [], None, reader)
+            result = BlockBase.match(Main_Program0, [], None, reader)
+            if not result and comments:
+                # This program only contains comments.
+                return (content,)
+            else:
+                return result
         except StopIteration:
             # Reader has no more lines.
             pass
