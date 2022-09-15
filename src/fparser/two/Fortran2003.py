@@ -290,9 +290,7 @@ class Program(BlockBase):  # R201
         """
         content = []
         add_comments_includes_directives(content, reader)
-        comments = False
-        if content:
-            comments = True
+        comments = content != []
         try:
             while True:
                 obj = Program_Unit(reader)
