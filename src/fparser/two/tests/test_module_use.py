@@ -152,7 +152,7 @@ def test_moduse_update():
     assert sorted(moduse.rename_list) == ["roger", "uncle"]
     moduse5 = ModuleUse("Flint", only_list=[("maTe", "peggy")])
     moduse.update(moduse5)
-    assert moduse.only_list == ["cannon", "mate"]
+    assert sorted(moduse.only_list) == ["cannon", "mate"]
     assert moduse.get_declared_name("roger") == "gibber"
     assert moduse.get_declared_name("mate") == "peggy"
     assert moduse.symbol_names == ["cannon", "uncle", "roger", "mate"]
