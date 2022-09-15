@@ -65,8 +65,9 @@ class SymbolTables:
         self._enable_checks = False
 
     def __str__(self):
-        result = "SymbolTables: {0} tables\n" "========================\n".format(
-            len(self._symbol_tables)
+        result = (
+            f"SymbolTables: {len(self._symbol_tables)} tables\n"
+            "========================\n"
         )
         return result + "\n".join(sorted(self._symbol_tables.keys()))
 
@@ -105,8 +106,8 @@ class SymbolTables:
         lower_name = name.lower()
         if lower_name in self._symbol_tables:
             raise SymbolTableError(
-                "The table of top-level (un-nested) symbol tables already "
-                "contains an entry for '{0}'".format(lower_name)
+                f"The table of top-level (un-nested) symbol tables already "
+                f"contains an entry for '{lower_name}'"
             )
         table = SymbolTable(lower_name, checking_enabled=self._enable_checks)
         self._symbol_tables[lower_name] = table
@@ -149,14 +150,10 @@ class SymbolTables:
         """
         if not isinstance(value, list):
             raise TypeError(
-                "Supplied value must be a list but got '{0}'".format(
-                    type(value).__name__
-                )
+                f"Supplied value must be a list but got '{type(value).__name__}'"
             )
         if not all(isinstance(item, type) for item in value):
-            raise TypeError(
-                "Supplied list must contain only classes but " "got: {0}".format(value)
-            )
+            raise TypeError(f"Supplied list must contain only classes but got: {value}")
         self._scoping_unit_classes = value
 
     @property
@@ -210,9 +207,7 @@ class SymbolTables:
                                   exit.
         """
         if not self._current_scope:
-            raise SymbolTableError(
-                "exit_scope() called but no current scope " "exists."
-            )
+            raise SymbolTableError("exit_scope() called but no current scope exists.")
         self._current_scope = self._current_scope.parent
 
     def remove(self, name):
@@ -238,13 +233,15 @@ class SymbolTables:
                 pass
 
         if lname not in self._symbol_tables:
-            msg = "Failed to find a table named '{0}' in ".format(name)
+            msg = f"Failed to find a table named '{name}' in "
             if self._current_scope:
-                msg += "either the current scope (which contains {0}) or ".format(
-                    [child.name for child in self._current_scope.children]
+                msg += (
+                    f"either the current scope (which contains "
+                    f"{[child.name for child in self._current_scope.children]}) or "
                 )
-            msg += "the list of top-level symbol tables ({0}).".format(
-                list(self._symbol_tables.keys())
+            msg += (
+                f"the list of top-level symbol tables "
+                f"({list(self._symbol_tables.keys())})."
             )
             raise SymbolTableError(msg)
 
@@ -254,10 +251,8 @@ class SymbolTables:
         if self._current_scope:
             if self._current_scope.root is top_table:
                 raise SymbolTableError(
-                    "Cannot remove top-level symbol table '{0}' because the "
-                    "current scope '{1}' has it as an ancestor.".format(
-                        name, self._current_scope.name
-                    )
+                    f"Cannot remove top-level symbol table '{name}' because the "
+                    f"current scope '{self._current_scope.name}' has it as an ancestor."
                 )
 
         del self._symbol_tables[lname]
@@ -296,11 +291,8 @@ class ModuleUse:
         self._validate_tuple_list("rename", rename_list)
 
         if only_list and not all(
-            [
-                isinstance(item[0], str)
-                and (item[1] is None or isinstance(item[1], str))
-                for item in only_list
-            ]
+            isinstance(item[0], str) and (item[1] is None or isinstance(item[1], str))
+            for item in only_list
         ):
             raise TypeError(
                 f"If present, the only_list must be a list of "
@@ -308,10 +300,8 @@ class ModuleUse:
             )
 
         if rename_list and not all(
-            [
-                isinstance(item[0], str) and isinstance(item[1], str)
-                for item in rename_list
-            ]
+            isinstance(item[0], str) and isinstance(item[1], str)
+            for item in rename_list
         ):
             raise TypeError(
                 f"If present, the rename_list must be a list of "
@@ -329,16 +319,14 @@ class ModuleUse:
         if only_list is not None:
             self._store_symbols(only_list)
             self._wildcard_import = False
-            self._only_list = set([local_name.lower() for local_name, _ in only_list])
+            self._only_list = set(local_name.lower() for local_name, _ in only_list)
         else:
             self._only_list = None
             self._wildcard_import = True
 
         if rename_list:
             self._store_symbols(rename_list)
-            self._rename_list = set(
-                [local_name.lower() for local_name, _ in rename_list]
-            )
+            self._rename_list = set(local_name.lower() for local_name, _ in rename_list)
         else:
             self._rename_list = None
 
@@ -363,7 +351,7 @@ class ModuleUse:
                 f"If present, the {name}_list must be a list but "
                 f"got '{type(tlist).__name__}'"
             )
-        if not all([isinstance(item, tuple) and len(item) == 2 for item in tlist]):
+        if not all(isinstance(item, tuple) and len(item) == 2 for item in tlist):
             raise TypeError(
                 f"If present, the {name}_list must be a list of "
                 f"2-tuples but got: {tlist}"
@@ -437,7 +425,9 @@ class ModuleUse:
             else:
                 self._rename_list = self._rename_list.union(other.rename_list)
 
+        # pylint: disable=protected-access
         self._local_to_module_map.update(other._local_to_module_map)
+        # pylint: enable=protected-access
 
         self._wildcard_import = self._wildcard_import or other.wildcard_import
 
@@ -460,15 +450,25 @@ class ModuleUse:
 
     @property
     def only_list(self):
-        """:returns: the local names that appear in an Only_List.
-        :rtype: Optional[Set[str]]"""
-        return self._only_list
+        """
+        :returns: the local names that appear in an Only_List or None if there \
+                  is no such list.
+        :rtype: Optional[List[str]]
+        """
+        if self._only_list is None:
+            return None
+        return list(self._only_list)
 
     @property
     def rename_list(self):
-        """:returns: the local names that appear in a Rename_List.
-        :rtype: Optional[Set[str]]"""
-        return self._rename_list
+        """
+        :returns: the local names that appear in a Rename_List or None if there \
+                  is no such list.
+        :rtype: Optional[List[str]]
+        """
+        if self._rename_list is None:
+            return None
+        return list(self._rename_list)
 
     @property
     def wildcard_import(self):
@@ -533,7 +533,7 @@ class SymbolTable:
         uses = "Used modules:\n"
         if self._modules:
             uses += "\n".join(list(self._modules.keys())) + "\n"
-        return f"{header}Symbol Table '{self._name}'\n" + symbols + uses + header
+        return f"{header}Symbol Table '{self._name}'\n{symbols}{uses}{header}"
 
     def add_data_symbol(self, name, primitive_type):
         """
@@ -636,7 +636,7 @@ class SymbolTable:
         # No match in this scope - search in parent scope (if any)
         if self.parent:
             return self.parent.lookup(lname)
-        raise KeyError("Failed to find symbol named '{0}'".format(lname))
+        raise KeyError(f"Failed to find symbol named '{lname}'")
 
     @property
     def name(self):
@@ -668,8 +668,8 @@ class SymbolTable:
         """
         if value is not None and not isinstance(value, SymbolTable):
             raise TypeError(
-                "Unless it is None, the parent of a SymbolTable must also be "
-                "a SymbolTable but got '{0}'".format(type(value).__name__)
+                f"Unless it is None, the parent of a SymbolTable must also be "
+                f"a SymbolTable but got '{type(value).__name__}'"
             )
         self._parent = value
 
@@ -685,9 +685,7 @@ class SymbolTable:
         """
         if not isinstance(child, SymbolTable):
             raise TypeError(
-                "Expected a SymbolTable instance but got '{0}'".format(
-                    type(child).__name__
-                )
+                f"Expected a SymbolTable instance but got '{type(child).__name__}'"
             )
         self._children.append(child)
 
@@ -708,8 +706,7 @@ class SymbolTable:
                 break
         else:
             raise KeyError(
-                "Symbol table '{0}' does not contain a table named "
-                "'{1}'".format(self.name, name)
+                f"Symbol table '{self.name}' does not contain a table named '{name}'"
             )
 
     @property

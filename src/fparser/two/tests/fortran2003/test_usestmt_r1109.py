@@ -102,7 +102,7 @@ def test_use_rename():
     assert "my_module" in table._modules
     use = table._modules["my_module"]
     # We only store the *local* names of the symbols in rename_list
-    assert use.rename_list == set(["new_name"])
+    assert use.rename_list == ["new_name"]
     # The original name of the symbol in the module being imported is stored
     # in a separate map.
     assert use._local_to_module_map["new_name"] == "name"
@@ -128,7 +128,7 @@ def test_use_only(f2003_create):
     assert "my_model" in table._modules
     use = table._modules["my_model"]
     assert use.name == "my_model"
-    assert use.only_list == set(["name"])
+    assert use.only_list == ["name"]
     assert use.rename_list is None
     SYMBOL_TABLES.exit_scope()
 
@@ -136,7 +136,7 @@ def test_use_only(f2003_create):
 # match() 'use x, only:'
 def test_use_only_empty(f2003_create):
     """Check that a use statement is parsed correctly when there is an
-    only clause without any content.
+    only clause without any content. Test both with and without a scoping region.
 
     """
     line = "use my_model, only:"
@@ -150,11 +150,12 @@ def test_use_only_empty(f2003_create):
     assert "my_model" in table._modules
     use = table._modules["my_model"]
     assert isinstance(use, ModuleUse)
-    assert use.only_list == set()
+    assert use.only_list == []
     assert use.rename_list is None
     SYMBOL_TABLES.exit_scope()
 
 
+# match() 'use x, only: b => c'
 def test_use_only_plus_rename(f2003_create):
     """Check that a use statement with an only clause and some variable
     renaming is parsed correctly.
@@ -175,8 +176,9 @@ def test_use_only_plus_rename(f2003_create):
     use = table._modules["my_model"]
     assert isinstance(use, ModuleUse)
     assert use.symbol_names == ["a", "b"]
-    assert use.only_list == set(["a", "b"])
+    assert sorted(use.only_list) == ["a", "b"]
     assert use.rename_list is None
+    assert use._local_to_module_map["b"] == "c"
     SYMBOL_TABLES.exit_scope()
 
 
@@ -308,7 +310,7 @@ def test_use_internal_error_only_list(monkeypatch):
     line = "use my_model, only: var"
     ast = Use_Stmt(line)
     only_list = ast.children[4]
-    only_list.items = ("wrong",)
+    monkeypatch.setattr(only_list, "items", ("wrong",))
     # Monkeypatch the underlying _match method to return this broken tree.
     monkeypatch.setattr(Use_Stmt, "_match", lambda x: ast.children)
     with pytest.raises(InternalError) as err:

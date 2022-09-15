@@ -125,13 +125,13 @@ def test_add_use_symbols():
     # Fortran permits other use statements for the same module
     table.add_use_symbols("mod1", only_list=[("var", None)])
     # Since we already have a wildcard import that should remain true while
-    # we now also capture thos symbols that are explicitly imported.
-    assert table._modules["mod1"].only_list == set(["var"])
+    # we now also capture those symbols that are explicitly imported.
+    assert table._modules["mod1"].only_list == ["var"]
     assert table._modules["mod1"].wildcard_import
     table.add_use_symbols("mod2", only_list=[("iVar", None)])
-    assert table._modules["mod2"].only_list == set(["ivar"])
+    assert table._modules["mod2"].only_list == ["ivar"]
     table.add_use_symbols("mod2", only_list=[("jvar", None)])
-    assert table._modules["mod2"].only_list == set(["ivar", "jvar"])
+    assert sorted(table._modules["mod2"].only_list) == ["ivar", "jvar"]
 
 
 def test_add_use_symbols_errors():
@@ -243,7 +243,7 @@ END PROGRAM a_prog
     assert isinstance(table, SymbolTable)
     assert table.parent is None
     assert "some_mod" in table._modules
-    assert table._modules["some_mod"].only_list == set()
+    assert table._modules["some_mod"].only_list == []
     assert "mod2" in table._modules
     assert sorted(table._modules["mod2"].only_list) == ["that_one", "this_one"]
 
@@ -269,12 +269,12 @@ END PROGRAM a_prog
     assert table.parent is None
     assert "mod2" in table._modules
     mod2 = table._modules["mod2"]
-    assert mod2.only_list == set(["this_one"])
+    assert mod2.only_list == ["this_one"]
     assert mod2.get_declared_name("this_one") == "that_one"
     sym = table.lookup("that_one")
     assert sym.primitive_type == "integer"
     mod3 = table._modules["mod3"]
-    assert mod3.rename_list == set(["local"])
+    assert mod3.rename_list == ["local"]
     assert mod3.get_declared_name("local") == "other"
     assert table.lookup("other").primitive_type == "logical"
 

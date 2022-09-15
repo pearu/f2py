@@ -10276,6 +10276,9 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  or None if the match fails.
         :rtype: 5-tuple of objects (module name and 4 optional) or NoneType
 
+        :raises InternalError: if an Only_List is found to contain anything \
+                               other than Name or Rename objects.
+
         """
         result = Use_Stmt._match(string)
         if result:
