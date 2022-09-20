@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+20/09/2022 PR #376 for #349. Add support for use association to the
+           symbol table.
+
 15/09/2022 PR #378 for #375. Permit source files containing only comments
            to be parsed.
 
