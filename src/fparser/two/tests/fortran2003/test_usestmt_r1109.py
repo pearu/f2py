@@ -108,6 +108,28 @@ def test_use_rename():
     assert use._local_to_module_map["new_name"] == "name"
 
 
+@pytest.mark.usefixtures("f2003_create")
+def test_use_operator_rename():
+    """
+    Check that a use with a rename clause for an operator is parsed correctly.
+
+    """
+    line = "use my_module, operator(.new.) => operator(.old.)"
+    ast = Use_Stmt(line)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
+        "(Rename('OPERATOR', Defined_Op('.NEW.'), Defined_Op('.OLD.')),)))"
+    )
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    # Check that the symbol table functionality copes (by ignoring operators).
+    table = SYMBOL_TABLES.current_scope
+    use = table._modules["my_module"]
+    # Operators are not currently captured in the SymbolTable (TODO #379)
+    assert use.rename_list is None
+    SYMBOL_TABLES.exit_scope()
+
+
 # match() 'use x, only: y'
 def test_use_only(f2003_create):
     """Check that a use statement is parsed correctly when there is an
@@ -179,6 +201,48 @@ def test_use_only_plus_rename(f2003_create):
     assert sorted(use.only_list) == ["a", "b"]
     assert use.rename_list is None
     assert use._local_to_module_map["b"] == "c"
+    SYMBOL_TABLES.exit_scope()
+
+
+# match() 'use x, only: operator(-)'
+def test_use_only_operator(f2003_create):
+    """
+    Check that a 'use, only' that imports an operator is parsed correctly.
+
+    """
+    line = "use my_mod, only: operator(-)"
+    ast = Use_Stmt(line)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_mod'), ', ONLY:', Only_List(',', "
+        "(Generic_Spec('OPERATOR', Extended_Intrinsic_Op('-')),)))"
+    )
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    use = table._modules["my_mod"]
+    # Operators are not currently captured in the symbol table.
+    # TODO #379.
+    assert use.only_list == []
+    SYMBOL_TABLES.exit_scope()
+
+
+def test_use_only_renamed_operator(f2003_create):
+    """
+    Check that a 'use, only' that imports and locally renames an operator is
+    correctly parsed.
+
+    """
+    line = "use my_mod, only: operator(-) => operator(+)"
+    ast = Use_Stmt(line)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_mod'), ', ONLY:', Only_List(',', "
+        "(Generic_Spec('OPERATOR', Extended_Intrinsic_Op('-) => "
+        "operator(+')),)))"
+    )
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
     SYMBOL_TABLES.exit_scope()
 
 
@@ -316,6 +380,6 @@ def test_use_internal_error_only_list(monkeypatch):
     with pytest.raises(InternalError) as err:
         Use_Stmt(line)
     assert (
-        "An Only_List can contain only Name or Rename entries but found "
-        "'str' when matching 'use my_model, only: var'" in str(err.value)
+        "An Only_List can contain only Name, Rename or Generic_Spec entries but "
+        "found 'str' when matching 'use my_model, only: var'" in str(err.value)
     )
