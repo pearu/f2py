@@ -10526,13 +10526,13 @@ class Rename(Base):  # R1111
         if lhs[:8].upper() == "OPERATOR" and rhs[:8].upper() == "OPERATOR":
             tmp = lhs[8:].lstrip()
             rhs_op = rhs[8:].lstrip()
-            if tmp and rhs_op and tmp[0] + tmp[-1] == "()":
-                if rhs_op[0] + rhs_op[-1] != "()":
+            if tmp and rhs_op and tmp[0] == "(" and tmp[-1] == ")":
+                if rhs_op[0] != "(" or rhs_op[-1] != ")":
                     return None
                 tmp = tmp[1:-1].strip()
                 rhs_op = rhs_op[1:-1].strip()
                 if not tmp or not rhs_op:
-                    return
+                    return None
                 return (
                     "OPERATOR",
                     Local_Defined_Operator(tmp),
@@ -10541,13 +10541,17 @@ class Rename(Base):  # R1111
         return None, Local_Name(lhs), Use_Name(rhs)
 
     def tostr(self):
+        """
+        :returns: the string representation of this Rename object.
+        :rtype: str
+        """
         if not self.items[0]:
-            return "%s => %s" % self.items[1:]
-        return "%s(%s) => %s(%s)" % (
-            self.items[0],
-            self.items[1],
-            self.items[0],
-            self.items[2],
+            # Not an operator.
+            return f"{self.children[1]} => {self.children[2]}"
+        # This represents the renaming of an Operator.
+        return (
+            f"{self.children[0]}({self.children[1]}) => "
+            f"{self.children[0]}({self.children[2]})"
         )
 
 
