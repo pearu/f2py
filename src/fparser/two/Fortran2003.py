@@ -10302,13 +10302,14 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                     for child in result[4].children:
                         if isinstance(child, Name):
                             only_list.append((child.string, None))
-                        elif isinstance(child, Rename) and not child.children[0]:
-                            # This is a Rename of a symbol rather than an operator
-                            # (which would have child.children[0] == 'OPERATOR'.
-                            # TODO #379 - support operators.
-                            only_list.append(
-                                (child.children[1].string, child.children[2].string)
-                            )
+                        elif isinstance(child, Rename):
+                            if not child.children[0]:
+                                # This is a Rename of a symbol rather than an operator
+                                # (which would have child.children[0] == 'OPERATOR'.
+                                # TODO #379 - support operators.
+                                only_list.append(
+                                    (child.children[1].string, child.children[2].string)
+                                )
                         elif isinstance(child, Generic_Spec):
                             # For now we ignore anything other than symbol names
                             # and this includes operators (TODO #379).
