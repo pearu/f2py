@@ -58,6 +58,21 @@ def test_allocate_stmt():
 
 
 @pytest.mark.usefixtures("f2003_create")
+def test_allocate_no_match():
+    """Tests that the expected NoMatchError is raised if there are problems."""
+    tcls = Allocate_Stmt
+    with pytest.raises(NoMatchError) as err:
+        tcls("allocte(var(3))")
+    assert "allocte(var(3))" in str(err.value)
+    with pytest.raises(NoMatchError) as err:
+        tcls("allocate()")
+    assert "allocate()" in str(err.value)
+    with pytest.raises(NoMatchError) as err:
+        tcls("allocate(stat=ierr)")
+    assert "allocate()" in str(err.value)
+
+
+@pytest.mark.usefixtures("f2003_create")
 def test_alloc_opt():
     """Tests for the various forms of alloc-opt: R624."""
     tcls = Alloc_Opt
