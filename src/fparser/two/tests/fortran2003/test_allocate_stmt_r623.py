@@ -37,13 +37,15 @@
 
 import pytest
 from fparser.two.utils import NoMatchError
-from fparser.two.Fortran2003 import Allocate_Stmt, Alloc_Opt
+from fparser.two.Fortran2003 import Allocate_Stmt, Alloc_Opt, Alloc_Opt_List
 
 
 @pytest.mark.usefixtures("f2003_create")
 def test_allocate_stmt():
     """Tests for the allocate statement: R623."""
     tcls = Allocate_Stmt
+    assert tcls.alloc_opt_list == Alloc_Opt_List
+
     obj = tcls("allocate(a,b)")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "ALLOCATE(a, b)"
