@@ -4885,12 +4885,11 @@ class Allocate_Stmt(StmtBase):  # R623
             # Use the class 'alloc_opt_list' property to ensure we use the
             # correct class depending on whether 'cls' is associated with
             # Fortran2003 or Fortran2008.
-            opts = cls.alloc_opt_list(repmap(line[jdx + 1 :].lstrip()))
+            opts = cls.alloc_opt_list()(repmap(line[jdx + 1 :].lstrip()))
             line = line[:jdx].rstrip()
         return spec, Allocation_List(repmap(line)), opts
 
     @classmethod
-    @property
     def alloc_opt_list(cls):
         """
         :returns: the Fortran2003 flavour of Alloc_Opt_List.

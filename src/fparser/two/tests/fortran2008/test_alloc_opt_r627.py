@@ -61,7 +61,7 @@ def test_allocate_stmt():
     """Check that the Fortran2008 version of allocate has picked up the
     version of Alloc_Opt that supports MOLD."""
     obj = Allocate_Stmt("allocate(b, mold=c)")
-    assert obj.alloc_opt_list == Alloc_Opt_List
+    assert obj.alloc_opt_list() == Alloc_Opt_List
     assert isinstance(obj, Allocate_Stmt), repr(obj)
     assert str(obj) == "ALLOCATE(b, MOLD = c)"
     obj = Allocate_Stmt("allocate(b, mold=c, stat=ierr)")
