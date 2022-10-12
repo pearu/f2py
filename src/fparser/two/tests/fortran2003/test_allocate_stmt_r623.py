@@ -69,7 +69,7 @@ def test_allocate_no_match():
     assert "allocate()" in str(err.value)
     with pytest.raises(NoMatchError) as err:
         tcls("allocate(stat=ierr)")
-    assert "allocate()" in str(err.value)
+    assert "allocate(stat=ierr)" in str(err.value)
 
 
 @pytest.mark.usefixtures("f2003_create")

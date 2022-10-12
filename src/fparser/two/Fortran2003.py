@@ -4881,7 +4881,10 @@ class Allocate_Stmt(StmtBase):  # R623
         opts = None
         if idx != -1:
             jdx = line[:idx].rfind(",")
-            assert jdx != -1, repr((idx, jdx, line))
+            if jdx == -1:
+                # There must be at least one positional argument before any
+                # named arguments.
+                return None
             # Use the class 'alloc_opt_list' property to ensure we use the
             # correct class depending on whether 'cls' is associated with
             # Fortran2003 or Fortran2008.
