@@ -61,12 +61,22 @@ def test_allocate_stmt():
 def test_allocate_no_match():
     """Tests that the expected NoMatchError is raised if there are problems."""
     tcls = Allocate_Stmt
+    # Missing parenthesis.
+    with pytest.raises(NoMatchError) as err:
+        tcls("allocate(var(3)")
+    assert "allocate(var(3)" in str(err.value)
+    with pytest.raises(NoMatchError) as err:
+        tcls("allocate var(3))")
+    assert "allocate var(3))" in str(err.value)
+    # Misspelt key word.
     with pytest.raises(NoMatchError) as err:
         tcls("allocte(var(3))")
     assert "allocte(var(3))" in str(err.value)
+    # No arguments.
     with pytest.raises(NoMatchError) as err:
         tcls("allocate()")
     assert "allocate()" in str(err.value)
+    # Missing positional argument.
     with pytest.raises(NoMatchError) as err:
         tcls("allocate(stat=ierr)")
     assert "allocate(stat=ierr)" in str(err.value)
