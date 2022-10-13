@@ -72,6 +72,7 @@ Welcome to fparser's documentation!
 
 .. toctree::
    :maxdepth: 3
+   :caption: Contents:
 
    license
    introduction
