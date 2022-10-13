@@ -78,3 +78,4 @@ Welcome to fparser's documentation!
    fparser
    fparser2
    developers_guide
+   reference_guide
