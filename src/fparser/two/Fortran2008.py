@@ -73,6 +73,9 @@
 # pylint: disable=eval-used
 # pylint: disable=exec-used
 # pylint: disable=unused-import
+import inspect
+import sys
+
 from fparser.common.splitline import string_replace_map
 from fparser.two import pattern_tools as pattern
 
@@ -1190,3 +1193,14 @@ class Scalar_%s(Base):
 """
                 % (n, n)
             )
+
+
+# Inspect the contents of this module and list all of the classes in __all__
+# for automatic documentation generation with AutoDoc.
+
+classes = inspect.getmembers(
+    sys.modules[__name__],
+    lambda member: inspect.isclass(member) and member.__module__ == __name__,
+)
+
+__all__ = [name[0] for name in classes]

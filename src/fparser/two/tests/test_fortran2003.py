@@ -71,6 +71,7 @@ import pytest
 from fparser.two.Fortran2003 import *
 from fparser.two import Fortran2003
 from fparser.two.symbol_table import SYMBOL_TABLES
+from fparser.two.utils import NoMatchError
 from fparser.api import get_reader
 
 
@@ -86,7 +87,7 @@ def assert_raises(exc, fcls, string):
     string is not parsed correctly.
 
     :param exc: the error to be raised
-    :type exc: :py:class:'fparser.two.Fortran2003.NoMatchError'
+    :type exc: :py:class:'fparser.two.utils.NoMatchError'
     :param fcls: the class of Fortran object to create
     :type fcls: names of classes deriving from `:py:class:Base` or str
     :param string: (source of) Fortran string to parse
@@ -2847,7 +2848,7 @@ end
 def test_invalid_main_program0():
     """Test for when the Main_Program0 class fails to match. We should
     get a NoMatchError and no symbol table."""
-    with pytest.raises(Fortran2003.NoMatchError):
+    with pytest.raises(NoMatchError):
         _ = Fortran2003.Main_Program0(get_reader("integer :: i\n" "i = 9\n" "en\n"))
     # Ensure that no symbol table has been created
     assert SYMBOL_TABLES._symbol_tables == {}

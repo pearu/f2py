@@ -8,7 +8,7 @@
 import subprocess
 
 project = 'fparser'
-copyright = '2022, Andrew Porter, Rupert Ford, Balthasar Reuter and Pearu Peterson'
+copyright = '2017-2022, Science and Technology Facilities Council'
 author = 'Andrew Porter, Rupert Ford, Balthasar Reuter and Pearu Peterson'
 
 version = '0.0.16'
@@ -21,6 +21,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.viewcode',
     'autoapi.sphinx',
 ]
 
