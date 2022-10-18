@@ -114,7 +114,7 @@ from fparser.two.Fortran2003 import (
     Entity_Decl_List,
     Component_Decl_List,
     Stop_Code,
-    Execution_Part_Construct
+    Execution_Part_Construct,
 )
 
 # Import of F2003 classes that are updated in this standard.
@@ -1304,6 +1304,7 @@ class Connect_Spec(Connect_Spec_2003):
                 return obj
         return None
 
+
 class Block_Construct(BlockBase):  # R807
     """
     <block-construct> = <block-stmt>
@@ -1314,30 +1315,38 @@ class Block_Construct(BlockBase):  # R807
     TODO: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
     NAMELIST, OPTIONAL, VALUE, and statement functions (C806)
     """
+
     subclass_names = []
-    use_names = ["Block_Stmt", "Specification_Part", "Execution_Part_Construct",
-                 "End_Block_Stmt"]
+    use_names = [
+        "Block_Stmt",
+        "Specification_Part",
+        "Execution_Part_Construct",
+        "End_Block_Stmt",
+    ]
 
     @staticmethod
     def match(reader):
         return BlockBase.match(
-            Block_Stmt, [Specification_Part, Execution_Part_Construct],
-            End_Block_Stmt, reader,
+            Block_Stmt,
+            [Specification_Part, Execution_Part_Construct],
+            End_Block_Stmt,
+            reader,
             match_names=True,  # C810
             strict_match_names=True,  # C810
-            )
+        )
 
 
 class Block_Stmt(StmtBase, WORDClsBase):  # R808
     """
     <block-stmt> = [ <block-construct-name> : ] BLOCK
     """
+
     subclass_names = []
-    use_names = ['Block_Construct_Name']
+    use_names = ["Block_Construct_Name"]
 
     class Counter:
-        """Global counter so that each block-stmt introduces a new scope
-        """
+        """Global counter so that each block-stmt introduces a new scope"""
+
         counter = 0
 
         def __init__(self):
@@ -1362,21 +1371,23 @@ class Block_Stmt(StmtBase, WORDClsBase):  # R808
         return "BLOCK"
 
 
-class End_Block_Stmt(EndStmtBase):          # R809
+class End_Block_Stmt(EndStmtBase):  # R809
     """<end-block-stmt> = END BLOCK [ <block-construct-name> ]"""
+
     subclass_names = []
     use_names = ["Block_Construct_Name"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         :param str string: Fortran code to check for a match
         :return: code line matching the "END DO" statement
         :rtype: string
-        '''
-        return EndStmtBase.match('BLOCK', Block_Construct_Name, string,
-                                 require_stmt_type=True)
-    
+        """
+        return EndStmtBase.match(
+            "BLOCK", Block_Construct_Name, string, require_stmt_type=True
+        )
+
 
 class Critical_Construct(BlockBase):  # R807
     """
@@ -1386,26 +1397,29 @@ class Critical_Construct(BlockBase):  # R807
 
     TODO: Should disallow RETURN (C809) and CYCLE or EXIT to outside block (C811)
     """
+
     subclass_names = []
-    use_names = ["Critical_Stmt", "Execution_Part_Construct",
-                 "End_Critical_Stmt"]
+    use_names = ["Critical_Stmt", "Execution_Part_Construct", "End_Critical_Stmt"]
 
     @staticmethod
     def match(reader):
         return BlockBase.match(
-            Critical_Stmt, [Execution_Part_Construct],
-            End_Critical_Stmt, reader,
+            Critical_Stmt,
+            [Execution_Part_Construct],
+            End_Critical_Stmt,
+            reader,
             match_names=True,  # C810
             strict_match_names=True,  # C810
-            )
+        )
 
 
 class Critical_Stmt(StmtBase, WORDClsBase):  # R808
     """
     <critical-stmt> = [ <critical-construct-name> : ] CRITICAL
     """
+
     subclass_names = []
-    use_names = ['Critical_Construct_Name']
+    use_names = ["Critical_Construct_Name"]
 
     @staticmethod
     def match(string):
@@ -1418,20 +1432,23 @@ class Critical_Stmt(StmtBase, WORDClsBase):  # R808
         return "CRITICAL"
 
 
-class End_Critical_Stmt(EndStmtBase):          # R809
+class End_Critical_Stmt(EndStmtBase):  # R809
     """<end-critical-stmt> = END CRITICAL [ <critical-construct-name> ]"""
+
     subclass_names = []
     use_names = ["Critical_Construct_Name"]
 
     @staticmethod
     def match(string):
-        '''
+        """
         :param str string: Fortran code to check for a match
         :return: code line matching the "END DO" statement
         :rtype: string
-        '''
-        return EndStmtBase.match('CRITICAL', Critical_Construct_Name, string,
-                                 require_stmt_type=True)
+        """
+        return EndStmtBase.match(
+            "CRITICAL", Critical_Construct_Name, string, require_stmt_type=True
+        )
+
 
 #
 # GENERATE Scalar_, _List, _Name CLASSES
