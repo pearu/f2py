@@ -4853,27 +4853,52 @@ class Allocate_Stmt(StmtBase):  # R623
     subclass_names = []
     use_names = ["Type_Spec", "Allocation_List", "Alloc_Opt_List"]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def match(cls, string):
+        """
+        Attempts to match the supplied string as an Allocate_Stmt.
+
+        :param str string: the string to attempt to match.
+
+        :returns: A 2-tuple giving the Type_Spec and Allocation_List if the \
+            match is successful, None otherwise.
+        :rtype: Optional[ \
+            Tuple[Optional[:py:class:`fparser.two.Fortran2003.Type_Spec`], \
+                  :py:class:`fparser.two.Fortran2003.Allocation_List`]]
+        """
         if string[:8].upper() != "ALLOCATE":
-            return
+            return None
         line = string[8:].lstrip()
         if not line or line[0] != "(" or line[-1] != ")":
-            return
+            return None
         line, repmap = string_replace_map(line[1:-1].strip())
-        i = line.find("::")
+        idx = line.find("::")
         spec = None
-        if i != -1:
-            spec = Type_Spec(repmap(line[:i].rstrip()))
-            line = line[i + 2 :].lstrip()
-        i = line.find("=")
+        if idx != -1:
+            spec = Type_Spec(repmap(line[:idx].rstrip()))
+            line = line[idx + 2 :].lstrip()
+        idx = line.find("=")
         opts = None
-        if i != -1:
-            j = line[:i].rfind(",")
-            assert j != -1, repr((i, j, line))
-            opts = Alloc_Opt_List(repmap(line[j + 1 :].lstrip()))
-            line = line[:j].rstrip()
+        if idx != -1:
+            jdx = line[:idx].rfind(",")
+            if jdx == -1:
+                # There must be at least one positional argument before any
+                # named arguments.
+                return None
+            # Use the class 'alloc_opt_list' property to ensure we use the
+            # correct class depending on whether 'cls' is associated with
+            # Fortran2003 or Fortran2008.
+            opts = cls.alloc_opt_list()(repmap(line[jdx + 1 :].lstrip()))
+            line = line[:jdx].rstrip()
         return spec, Allocation_List(repmap(line)), opts
+
+    @classmethod
+    def alloc_opt_list(cls):
+        """
+        :returns: the Fortran2003 flavour of Alloc_Opt_List.
+        :rtype: type
+        """
+        return Alloc_Opt_List
 
     def tostr(self):
         spec, lst, opts = self.items

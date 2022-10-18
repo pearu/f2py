@@ -760,6 +760,14 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
     subclass_names = []
     use_names = ["Type_Spec", "Allocation_List", "Alloc_Opt_List"]
 
+    @classmethod
+    def alloc_opt_list(cls):
+        """
+        :returns: the Fortran2008 flavour of Alloc_Opt_List.
+        :rtype: type
+        """
+        return Alloc_Opt_List
+
 
 class If_Stmt(If_Stmt_2003):  # R837
     """
