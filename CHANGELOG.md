@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+18/10/2022 PR #380 towards #379. Improve support for operators and symbol
+           renaming in the use construct.
+
 18/10/2022 PR #369 for #332. Add support for F2008 open intrinsic arguments.
 
 13/10/2022 PR #381 for #298. Fix F2008 allocate statement with arguments.
