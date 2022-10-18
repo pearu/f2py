@@ -53,7 +53,7 @@ def test_rename():
     obj = tcls("operator(.foo.)=>operator(.bar.)")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "OPERATOR(.FOO.) => OPERATOR(.BAR.)"
-    assert obj.children[0] == 'OPERATOR'
+    assert obj.children[0] == "OPERATOR"
 
     obj = tcls("operator_1=>operator_2")
     assert isinstance(obj, tcls), repr(obj)
