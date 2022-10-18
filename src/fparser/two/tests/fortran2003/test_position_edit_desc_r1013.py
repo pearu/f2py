@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 Science and Technology Facilities Council
+# Copyright (c) 2018-2022 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -137,5 +137,5 @@ def test_tostr_invalid_2(f2003_create, monkeypatch):
     with pytest.raises(InternalError) as excinfo:
         _ = str(obj)
     assert (
-        "items[1] in Class Position_Edit_Desc method tostr() is " "empty or None"
+        "items[1] in Class Position_Edit_Desc method tostr() is empty or None"
     ) in str(excinfo.value)

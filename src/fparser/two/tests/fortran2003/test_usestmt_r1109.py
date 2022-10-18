@@ -369,9 +369,7 @@ def test_use_internal_error2():
         ast.items = (None, None, content, None, None)
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert "entry 2 should be a module name but it is " "empty" in str(
-            excinfo.value
-        )
+        assert "entry 2 should be a module name but it is empty" in str(excinfo.value)
 
 
 def test_use_internal_error3():
