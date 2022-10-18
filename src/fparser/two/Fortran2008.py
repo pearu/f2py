@@ -71,18 +71,25 @@
 # pylint: disable=arguments-differ
 # pylint: disable=undefined-variable
 # pylint: disable=eval-used
+# These warnings are due to the auto-generation of classes when this
+# module is first imported.
 # pylint: disable=exec-used
 # pylint: disable=unused-import
-from fparser.common.splitline import string_replace_map
+# pylint: disable=no-name-in-module
+from fparser.common.splitline import string_replace_map, splitparen
+
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import (
-    STRINGBase,
     BracketBase,
-    WORDClsBase,
+    CALLBase,
+    KeywordValueBase,
+    NoMatchError,
     SeparatorBase,
-    Type_Declaration_StmtBase,
     StmtBase,
+    STRINGBase,
+    Type_Declaration_StmtBase,
+    WORDClsBase,
 )
 from fparser.two.Fortran2003 import (
     EndStmtBase,
@@ -93,13 +100,16 @@ from fparser.two.Fortran2003 import (
     Stat_Variable,
     Errmsg_Variable,
     Source_Expr,
-    KeywordValueBase,
     Module_Subprogram_Part,
     Implicit_Part,
     Implicit_Part_Stmt,
     Declaration_Construct,
     Use_Stmt,
+    File_Name_Expr,
+    File_Unit_Number,
     Import_Stmt,
+    Iomsg_Variable,
+    Label,
     Declaration_Type_Spec,
     Entity_Decl_List,
     Component_Decl_List,
@@ -108,21 +118,23 @@ from fparser.two.Fortran2003 import (
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
-    Program_Unit as Program_Unit_2003,
-    Attr_Spec as Attr_Spec_2003,
-    Alloc_Opt as Alloc_Opt_2003,
-    Allocate_Stmt as Allocate_Stmt_2003,
-    Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
-    Component_Attr_Spec as Component_Attr_Spec_2003,
-    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
     Action_Stmt as Action_Stmt_2003,
     Action_Stmt_C201 as Action_Stmt_C201_2003,
     Action_Stmt_C802 as Action_Stmt_C802_2003,
     Action_Stmt_C824 as Action_Stmt_C824_2003,
-    If_Stmt as If_Stmt_2003,
+    Alloc_Opt as Alloc_Opt_2003,
+    Allocate_Stmt as Allocate_Stmt_2003,
+    Attr_Spec as Attr_Spec_2003,
+    Component_Attr_Spec as Component_Attr_Spec_2003,
+    Connect_Spec as Connect_Spec_2003,
+    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
     Do_Term_Action_Stmt as Do_Term_Action_Stmt_2003,
     Executable_Construct as Executable_Construct_2003,
     Executable_Construct_C201 as Executable_Construct_C201_2003,
+    If_Stmt as If_Stmt_2003,
+    Open_Stmt as Open_Stmt_2003,
+    Program_Unit as Program_Unit_2003,
+    Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
 )
 
 
@@ -1011,8 +1023,6 @@ class Submodule_Stmt(Base):  # R1117
             return None
         # "SUBMODULE is found so strip it out and split the remaining
         # line by parenthesis
-        from fparser.common.splitline import splitparen
-
         splitline = splitparen(fstring[len(name) :].lstrip())
         # We expect 2 entries, the first being parent_identifier with
         # brackets and the second submodule_name. However for some
@@ -1041,7 +1051,7 @@ class Submodule_Stmt(Base):  # R1117
     def tostr(self):
         """return the fortran representation of this object"""
         # return self.string  # this returns the original code
-        return "SUBMODULE ({0}) {1}".format(self.items[0], self.items[1])
+        return f"SUBMODULE ({self.items[0]}) {self.items[1]}"
 
     def get_name(self):  # C1114
         """Fortran 2008 constraint C1114
@@ -1122,7 +1132,7 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         lhs_name = split_string[0].lstrip().rstrip()
         if len_split_string == 1:
             return Ancestor_Module_Name(lhs_name), None
-        elif len_split_string == 2:
+        if len_split_string == 2:
             rhs_name = split_string[1].lstrip().rstrip()
             return Ancestor_Module_Name(lhs_name), Parent_SubModule_Name(rhs_name)
         # we expect at most one ':' in our input so the match fails
@@ -1132,8 +1142,166 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         """return the fortran representation of this object"""
         # return self.string  # this returns the original code
         if self.items[1]:
-            return "{0}:{1}".format(self.items[0], self.items[1])
+            return f"{self.items[0]}:{self.items[1]}"
         return str(self.items[0])
+
+
+class Open_Stmt(Open_Stmt_2003):  # R904
+    """
+    Fortran2008 Rule R904.
+
+    open-stmt is OPEN ( connect-spec-list )
+
+    """
+
+    subclass_names = []
+    use_names = ["Connect_Spec_List"]
+
+    @staticmethod
+    def match(string):
+        """
+        Attempts to match the supplied string as an Open_Stmt.
+
+        :param str string: the string to attempt to match.
+
+        :returns: a new Open_Stmt object if the match is successful, None otherwise.
+        :rtype: Optional[:py:class:`fparser.two.Fortran2008.Open_Stmt]
+
+        """
+        # The Connect_Spec_List class is generated automatically
+        # by code at the end of this module
+        obj = CALLBase.match("OPEN", Connect_Spec_List, string, require_rhs=True)
+        if not obj:
+            return None
+
+        # Apply constraints now that we have the full Connect_Spec_List.
+        have_unit = False
+        have_newunit = False
+        connect_specs = []
+        spec_list = obj[1].children
+        for spec in spec_list:
+            if spec.children[0] in connect_specs:
+                # C903 - no specifier can appear more than once.
+                return None
+            connect_specs.append(spec.children[0])
+            if spec.children[0] == "UNIT":
+                have_unit = True
+            elif spec.children[0] == "NEWUNIT":
+                have_newunit = True
+            if have_unit and have_newunit:
+                # C906 - cannot have both UNIT and NEWUNIT
+                return None
+        if not (have_unit or have_newunit):
+            # C904 - a file unit number must be specified.
+            return None
+        return obj
+
+
+class Connect_Spec(Connect_Spec_2003):
+    """
+    Fortran2008 rule R905.
+
+    connect-spec is [ UNIT = ] file-unit-number
+                     or ACCESS = scalar-default-char-expr
+                     or ACTION = scalar-default-char-expr
+                     or ASYNCHRONOUS = scalar-default-char-expr
+                     or BLANK = scalar-default-char-expr
+                     or DECIMAL = scalar-default-char-expr
+                     or DELIM = scalar-default-char-expr
+                     or ENCODING = scalar-default-char-expr
+                     or ERR = label
+                     or FILE = file-name-expr
+                     or FORM = scalar-default-char-expr
+                     or IOMSG = iomsg-variable
+                     or IOSTAT = scalar-int-variable
+                     or NEWUNIT = scalar-int-variable
+                     or PAD = scalar-default-char-expr
+                     or POSITION = scalar-default-char-expr
+                     or RECL = scalar-int-expr
+                     or ROUND = scalar-default-char-expr
+                     or SIGN = scalar-default-char-expr
+                     or STATUS = scalar-default-char-expr
+
+    R906 file-name-expr is scalar-default-char-expr
+    R907 iomsg-variable is scalar-default-char-variable
+    C903 No specifier shall appear more than once in a given connect-spec-list.
+
+    C904 (R904) If the NEWUNIT= specifier does not appear, a file-unit-number
+         shall be specified; if the optional characters UNIT= are omitted, the
+         file-unit-number shall be the first item in the connect-spec-list.
+
+    C905 (R904) The label used in the ERR= specifier shall be the statement label
+         of a branch target statement that appears in the same inclusive scope as
+         the OPEN statement.
+
+    C906 (R904) If a NEWUNIT= specifier appears, a file-unit-number shall not
+         appear.
+
+    The constraints listed above are checked for in the Open_Stmt.match() method
+    as we don't have access to the full list of Connect_Spec elements here.
+    The exceptions are the second part of C904 (un-named file-unit-number must
+    be first in the list) and C905: these are not currently checked.
+
+    """
+
+    subclass_names = []
+    use_names = [
+        "File_Unit_Number",
+        "Scalar_Default_Char_Expr",
+        "Label",
+        "File_Name_Expr",
+        "Iomsg_Variable",
+        "Scalar_Int_Expr",
+        "Scalar_Int_Variable",
+    ]
+
+    @staticmethod
+    def match(string):
+        """
+        :param str string: Fortran code to check for a match
+
+        :returns: 2-tuple containing the keyword and value or None if the
+                  supplied string is not a match
+        :rtype: Optional[Tuple[str, Any]]
+        """
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return "UNIT", File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
+        for (keyword, value) in [
+            (
+                [
+                    "ACCESS",
+                    "ACTION",
+                    "ASYNCHRONOUS",
+                    "BLANK",
+                    "DECIMAL",
+                    "DELIM",
+                    "ENCODING",
+                    "FORM",
+                    "PAD",
+                    "POSITION",
+                    "ROUND",
+                    "SIGN",
+                    "STATUS",
+                ],
+                Scalar_Default_Char_Expr,
+            ),
+            ("ERR", Label),
+            ("FILE", File_Name_Expr),
+            ("IOSTAT", Scalar_Int_Variable),
+            ("IOMSG", Iomsg_Variable),
+            ("RECL", Scalar_Int_Expr),
+            ("UNIT", File_Unit_Number),
+            ("NEWUNIT", File_Unit_Number),
+        ]:
+            try:
+                obj = KeywordValueBase.match(keyword, value, string, upper_lhs=True)
+            except NoMatchError:
+                obj = None
+            if obj is not None:
+                return obj
+        return None
 
 
 #
