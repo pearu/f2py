@@ -63,7 +63,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-from __future__ import print_function
 import logging
 from fparser.scripts.script_options import set_parse_options
 import fparser.common.sourceinfo
@@ -81,18 +80,18 @@ except ImportError:
 def runner(parser, options, args):
     from fparser.common.readfortran import FortranFileReader
     from fparser.one.parsefortran import FortranParser
+
     for filename in args:
         reader = FortranFileReader(filename)
-        if options.mode != 'auto':
-            mode = fparser.common.sourceinfo\
-                   .FortranFormat.from_mode(options.mode)
+        if options.mode != "auto":
+            mode = fparser.common.sourceinfo.FortranFormat.from_mode(options.mode)
             reader.format.set_mode(mode)
         parser = FortranParser(reader)
         parser.parse()
         parser.analyze()
-        if options.task == 'show':
+        if options.task == "show":
             print(parser.block.torepr(4))
-        elif options.task == 'none':
+        elif options.task == "none":
             pass
         else:
             raise NotImplementedError(repr(options.task))
@@ -101,7 +100,7 @@ def runner(parser, options, args):
 def main():
     parser = OptionParser()
     set_parse_options(parser)
-    if hasattr(parser, 'runner'):
+    if hasattr(parser, "runner"):
         parser.runner = runner
     options, args = parser.parse_args()
     runner(parser, options, args)
