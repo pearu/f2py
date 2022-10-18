@@ -411,7 +411,8 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
 
 class Program_Unit(Base):  # R202
     """
-    :F03R:`202`::
+    Fortran 2003 Rule R202::
+
         <program-unit> = <main-program>
                          | <external-subprogram>
                          | <module>
@@ -429,7 +430,8 @@ class Program_Unit(Base):  # R202
 
 class External_Subprogram(Base):  # R203
     """
-    :F03R:`203`::
+    Fortran2003 Rule R203::
+
         <external-subprogram> = <function-subprogram>
                                 | <subroutine-subprogram>
     """
@@ -439,7 +441,8 @@ class External_Subprogram(Base):  # R203
 
 class Specification_Part(BlockBase):  # R204
     """
-    :F03R:`204`::
+    Fortran2003 Rule R204::
+
         <specification-part> = [ <use-stmt> ]...
                                  [ <import-stmt> ]...
                                  [ <implicit-part> ]
@@ -461,7 +464,8 @@ class Specification_Part(BlockBase):  # R204
 
 class Implicit_Part(BlockBase):  # R205
     """
-    :F03R:`205`::
+    Fortran2003 Rule R205::
+
         <implicit-part> = [ <implicit-part-stmt> ]...
                             <implicit-stmt>
     """
@@ -476,7 +480,8 @@ class Implicit_Part(BlockBase):  # R205
 
 class Implicit_Part_Stmt(Base):  # R206
     """
-    :F03R:`206`::
+    Fortran2003 Rule R206::
+
         <implicit-part-stmt> = <implicit-stmt>
                                | <parameter-stmt>
                                | <format-stmt>
@@ -529,7 +534,8 @@ class Declaration_Construct(Base):  # R207
 
 
 class Execution_Part(BlockBase):  # R208
-    """:F03R:`208`::
+    """Fortran2003 Rule R208::
+
     <execution-part> = <executable-construct>
                        | [ <execution-part-construct> ]...
 
@@ -950,9 +956,9 @@ class Label(StringBase):  # R313
     ::
         <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
 
-    Attributes
-    ----------
-    string : str
+    Has attributes::
+
+        string : str
     """
 
     subclass_names = []
@@ -981,9 +987,11 @@ class Type_Spec(Base):  # R401
 
 class Type_Param_Value(StringBase):  # R402
     """
-    <type-param-value> = <scalar-int-expr>
-                       | *
-                       | :
+    Fortran 2003 Rule 402::
+
+        <type-param-value> = <scalar-int-expr>
+                           | *
+                           | :
     """
 
     subclass_names = ["Scalar_Int_Expr"]
@@ -1406,10 +1414,10 @@ class Char_Length(BracketBase):  # R426
 
 class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
     """
-    Fortran 2003 rule R427
+    Fortran 2003 rule R427::
 
-    char-literal-constant is [ kind-param _ ] ' rep-char '
-                          or [ kind-param _ ] " rep-char "
+        char-literal-constant is [ kind-param _ ] ' rep-char '
+                              or [ kind-param _ ] " rep-char "
     """
 
     subclass_names = []
@@ -1417,11 +1425,12 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
 
     @staticmethod
     def match(string):
-        """Implements the matching for a Char_Literal_Constant. For example
+        """
+        Implements the matching for a Char_Literal_Constant. For example::
 
-        "hello"
-        'hello'
-        nondefaultcharset_"nondefaultchars"
+            "hello"
+            'hello'
+            nondefaultcharset_"nondefaultchars"
 
         There is an associated constraint C422: "The value of
         kind-param shall specify a representation method that exists
@@ -1429,6 +1438,7 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
         fparser so no checks are performed.
 
         :param str string: a string containing the code to match.
+
         :return: `None` if there is no match, otherwise a `tuple` of
                  size 2 containing the character constant and the kind
                  value as strings.
@@ -2139,13 +2149,13 @@ class Proc_Component_Attr_Spec(STRINGBase):  # R446
 
 class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
     """
-    :F03R:`447`::
+    Fortran2003 Rule R447::
 
-    Fortran 2003 rule R447
-    that specifies support for private components statement
+        <private-components-stmt> = PRIVATE
+
+    Specifies support for private components statement
     within a derived type.
 
-    <private-components-stmt> = PRIVATE
     """
 
     subclass_names = []
@@ -2162,15 +2172,14 @@ class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
 
 class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
     """
-    :F03R:`448`::
+    Fortran 2003 rule R448.
 
-    Fortran 2003 rule R448
-    that specifies the type-bound procedure part of a derived type.
+    Specifies the type-bound procedure part of a derived type::
 
-    <type-bound-procedure-part> = <contains-stmt>
-                                      [ <binding-private-stmt> ]
-                                      <proc-binding-stmt>
-                                      [ <proc-binding-stmt> ]...
+        type-bound-procedure-part is contains-stmt
+                                          [ binding-private-stmt ]
+                                          proc-binding-stmt
+                                          [ proc-binding-stmt ]...
     """
 
     subclass_names = []
@@ -2194,13 +2203,13 @@ class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
 
 class Binding_Private_Stmt(StmtBase, STRINGBase):  # pylint: disable=invalid-name
     """
-    :F03R:`449`::
+    Fortran2003 Rule R449::
 
-    Fortran 2003 rule R449
-    for binding private statement within the type-bound procedure
+        <binding-private-stmt> = PRIVATE
+
+    For binding private statement within the type-bound procedure
     part of a derived type.
 
-    <binding-private-stmt> = PRIVATE
     """
 
     subclass_names = []
@@ -2217,29 +2226,28 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):  # pylint: disable=invalid-nam
 
 class Proc_Binding_Stmt(Base):  # pylint: disable=invalid-name
     """
-    :F03R:`450`::
+    Fortran2003 Rule R450::
 
-    Fortran 2003 rule R450
-    that specifies procedure binding for the type-bound procedures
+        <proc-binding-stmt> = <specific-binding>
+                              | <generic-binding>
+                              | <final-binding>
+
+    Specifies the procedure binding for the type-bound procedures
     within a derived type.
 
-    <proc-binding-stmt> = <specific-binding>
-                          | <generic-binding>
-                          | <final-binding>
     """
 
     subclass_names = ["Specific_Binding", "Generic_Binding", "Final_Binding"]
 
 
 class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
-    """:F03R:`451`::
+    """Fortran2003 Rule R451::
 
-    Fortran 2003 rule R451
-    that specifies syntax of specific binding for a type-bound
+        <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
+            [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
+
+    Specifies the syntax of specific binding for a type-bound
     procedure within a derived type.
-
-    <specific-binding> = PROCEDURE [ ( <interface-name> ) ] [
-        [ , <binding-attr-list> ] :: ] <binding-name> [ => <procedure-name> ]
 
     The following are associated constraints:
 
@@ -2368,13 +2376,13 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
 class Binding_PASS_Arg_Name(CALLBase):
     # pylint: disable=invalid-name
     """
-    :F03R:`453_help`::
+    Fortran 2003 helper rule (for R453)::
 
-    Fortran 2003 helper rule (for R453)
-    that specifies syntax of passed-object dummy argument for a
+        <binding-PASS-arg-name> = PASS ( <arg-name> )
+
+    Specifies the syntax of passed-object dummy argument for a
     specific type-bound procedure.
 
-    <binding-PASS-arg-name> = PASS ( <arg-name> )
     """
     subclass_names = []
     use_names = ["Arg_Name"]
@@ -2393,14 +2401,14 @@ class Binding_PASS_Arg_Name(CALLBase):
 class Generic_Binding(StmtBase):
     # pylint: disable=invalid-name
     """
-    :F03R:`452`::
+    Fortran2003 Rule R452::
 
-    Fortran 2003 rule R452
-    that specifies syntax of generic binding for a type-bound
+        <generic-binding> = GENERIC [ , <access-spec> ] ::
+            <generic-spec> => <binding-name-list>
+
+    Specifies the syntax of generic binding for a type-bound
     procedure within a derived type.
 
-    <generic-binding> = GENERIC [ , <access-spec> ] ::
-        <generic-spec> => <binding-name-list>
     """
     subclass_names = []
     use_names = ["Access_Spec", "Generic_Spec", "Binding_Name_List"]
@@ -2451,17 +2459,17 @@ class Generic_Binding(StmtBase):
 class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
 
     """
-    :F03R:`453`::
+    Fortran2003 Rule R453::
 
-    Fortran 2003 rule R453
-    that specifies syntax of allowed binding attributes for a
+        <binding-attr> = PASS [ ( <arg-name> ) ]
+                         | NOPASS
+                         | NON_OVERRIDABLE
+                         | DEFERRED
+                         | <access-spec>
+
+    Specifies syntax of allowed binding attributes for a
     specific type-bound procedure binding.
 
-    <binding-attr> = PASS [ ( <arg-name> ) ]
-                     | NOPASS
-                     | NON_OVERRIDABLE
-                     | DEFERRED
-                     | <access-spec>
     """
 
     subclass_names = ["Access_Spec", "Binding_PASS_Arg_Name"]
@@ -2481,13 +2489,13 @@ class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
 class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
 
     """
-    :F03R:`454`::
+    Fortran2003 Rule R454::
 
-    Fortran 2003 rule R454
-    that specifies syntax of final binding for a type-bound
+        <final-binding> = FINAL [ :: ] <final-subroutine-name-list>
+
+    Specifies the syntax of final binding for a type-bound
     procedure within a derived type.
 
-    <final-binding> = FINAL [ :: ] <final-subroutine-name-list>
     """
 
     subclass_names = []
@@ -2830,9 +2838,10 @@ class Ac_Do_Variable(Base):
 
 class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
     """
-    Fortran 2003 rule 501
-    <type-declaration-stmt> = <declaration-type-spec> [
-        [ , <attr-spec> ]... :: ] <entity-decl-list>
+    Fortran 2003 rule 501::
+
+        type-declaration-stmt is declaration-type-spec [
+            [ , attr-spec ]... :: ] entity-decl-list
 
     Associated constraints are:
 
@@ -3241,7 +3250,8 @@ class Null_Init(STRINGBase):  # R507
 
 class Access_Spec(STRINGBase):  # R508
     """
-    :F03R:`508`::
+    Fortran2003 Rule R508::
+
         <access-spec> = PUBLIC
                         | PRIVATE
     """
@@ -3255,7 +3265,8 @@ class Access_Spec(STRINGBase):  # R508
 
 class Language_Binding_Spec(Base):  # R509
     """
-    :F03R:`509`::
+    Fortran2003 Rule R509::
+
         <language-binding-spec> = BIND ( C [ ,
             NAME = <scalar-char-initialization-expr> ] )
     """
@@ -3299,7 +3310,8 @@ class Language_Binding_Spec(Base):  # R509
 
 class Array_Spec(Base):  # R510
     """
-    :F03R:`510`::
+    Fortran2003 Rule R510::
+
         <array-spec> = <explicit-shape-spec-list>
                        | <assumed-shape-spec-list>
                        | <deferred-shape-spec-list>
@@ -3360,7 +3372,8 @@ class Upper_Bound(Base):  # R513
 
 class Assumed_Shape_Spec(SeparatorBase):  # R514
     """
-    :F03R:`514`::
+    Fortran2003 Rule R514::
+
         <assumed-shape-spec> = [ <lower-bound> ] :
     """
 
@@ -3374,7 +3387,8 @@ class Assumed_Shape_Spec(SeparatorBase):  # R514
 
 class Deferred_Shape_Spec(SeparatorBase):  # R515
     """
-    :F03R:`515`::
+    Fortran2003 Rule R515::
+
         <deferred_shape_spec> = :
     """
 
@@ -3389,7 +3403,8 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
 
 class Assumed_Size_Spec(Base):  # R516
     """
-    :F03R:`516`::
+    Fortran2003 Rule R516::
+
         <assumed-size-spec> = [ <explicit-shape-spec-list> , ]
             [ <lower-bound> : ] *
     """
@@ -3444,7 +3459,8 @@ class Intent_Spec(STRINGBase):  # R517
 
 class Access_Stmt(StmtBase, WORDClsBase):  # R518
     """
-    :F03R:`518`::
+    Fortran2003 Rule R518::
+
         <access-stmt> = <access-spec> [ [ :: ] <access-id-list> ]
     """
 
@@ -3466,7 +3482,8 @@ class Access_Stmt(StmtBase, WORDClsBase):  # R518
 
 class Access_Id(Base):  # R519
     """
-    :F03R:`519`::
+    Fortran2003 Rule R519::
+
         <access-id> = <use-name>
                       | <generic-spec>
     """
@@ -3491,7 +3508,8 @@ class Object_Name_Deferred_Shape_Spec_List_Item(CallBase):
 
 class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
     """
-    :F03R:`520`::
+    Fortran2003 Rule R520::
+
         <allocateble-stmt> = ALLOCATABLE [ :: ] <object-name> [
             ( <deferred-shape-spec-list> ) ] [ , <object-name>
             [ ( <deferred-shape-spec-list> ) ] ]...
@@ -3513,7 +3531,8 @@ class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
 
 class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
     """
-    :F03R:`521`::
+    Fortran2003 Rule R521::
+
         <asynchronous-stmt> = ASYNCHRONOUS [ :: ] <object-name-list>
     """
 
@@ -3529,7 +3548,8 @@ class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
 
 class Bind_Stmt(StmtBase):  # R522
     """
-    :F03R:`522`::
+    Fortran2003 Rule R522::
+
         <bind-stmt> = <language-binding-spec> [ :: ] <bind-entity-list>
     """
 
@@ -4213,9 +4233,9 @@ class Implicit_Stmt(StmtBase):  # R549
         <implicit-stmt> = IMPLICIT <implicit-spec-list>
                           | IMPLICIT NONE
 
-    Attributes
-    ----------
-    items : ({'NONE', Implicit_Spec_List},)
+    Has attributes::
+
+        items : ({'NONE', Implicit_Spec_List},)
     """
 
     subclass_names = []
@@ -5951,14 +5971,16 @@ class Where_Stmt(StmtBase):  # R743
 
 class Where_Construct(BlockBase):  # R744
     """
-    <where-construct> = <where-construct-stmt>
-                              [ <where-body-construct> ]...
-                            [ <masked-elsewhere-stmt>
-                              [ <where-body-construct> ]...
-                            ]...
-                            [ <elsewhere-stmt>
-                              [ <where-body-construct> ]... ]
-                            <end-where-stmt>
+    ::
+
+        <where-construct> = <where-construct-stmt>
+                                  [ <where-body-construct> ]...
+                                [ <masked-elsewhere-stmt>
+                                  [ <where-body-construct> ]...
+                                ]...
+                                [ <elsewhere-stmt>
+                                  [ <where-body-construct> ]... ]
+                                <end-where-stmt>
     """
 
     subclass_names = []
@@ -7027,10 +7049,10 @@ class Type_Guard_Stmt(StmtBase):  # R823
                             | CLASS IS ( <type-spec> ) [ <select-construct-name> ]
                             | CLASS DEFAULT [ <select-construct-name> ]
 
-    Attributes
-    ----------
-    items : ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec,
-            Select_Construct_Name)
+    The `items` attribute for this class will contain::
+
+        ({'TYPE IS', 'CLASS IS', 'CLASS DEFAULT'}, Type_Spec, Select_Construct_Name)
+
     """
 
     subclass_names = []
@@ -7962,7 +7984,8 @@ class Close_Spec(KeywordValueBase):  # R909
 
 class Read_Stmt(StmtBase):  # R910
     """
-    :F03R:`910`::
+    Fortran2003 Rule R910::
+
         <read-stmt> = READ ( <io-control-spec-list> ) [ <input-item-list> ]
                         | READ <format> [ , <input-item-list> ]
 
@@ -8026,12 +8049,14 @@ class Read_Stmt(StmtBase):  # R910
 
 class Write_Stmt(StmtBase):  # pylint: disable=invalid-name
     """
-    :F03R:`911`::
+    Fortran 2003 rule R911.
 
-    Fortran 2003 rule R911
-    that specifies syntax of a "WRITE" statement.
+    Specifies the syntax of a "WRITE" statement.
 
-    <write-stmt> = WRITE ( <io-control-spec-list> ) [ <output-item-list> ]
+    .. code-block::
+
+        write-stmt is WRITE ( io-control-spec-list ) [ output-item-list ]
+
     """
 
     subclass_names = []
@@ -8081,7 +8106,8 @@ class Write_Stmt(StmtBase):  # pylint: disable=invalid-name
 
 class Print_Stmt(StmtBase):  # R912
     """
-    :F03R:`912`::
+    Fortran2003 Rule R912::
+
         <print-stmt> = PRINT <format> [ , <output-item-list> ]
 
     Parameters
@@ -8519,7 +8545,8 @@ class Wait_Spec(KeywordValueBase):  # R922
 
 class Backspace_Stmt(StmtBase):  # R923
     """
-    :F03R:`923`::
+    Fortran2003 Rule R923::
+
         <backspace-stmt> = BACKSPACE <file-unit-number>
                            | BACKSPACE ( <position-spec-list> )
 
@@ -8551,7 +8578,8 @@ class Backspace_Stmt(StmtBase):  # R923
 
 class Endfile_Stmt(StmtBase):  # R924
     """
-    :F03R:`924`::
+    Fortran2003 Rule R924::
+
         <endfile-stmt> = ENDFILE <file-unit-number>
                          | ENDFILE ( <position-spec-list> )
 
@@ -8583,7 +8611,8 @@ class Endfile_Stmt(StmtBase):  # R924
 
 class Rewind_Stmt(StmtBase):  # R925
     """
-    :F03R:`925`::
+    Fortran2003 Rule R925::
+
         <rewind-stmt> = REWIND <file-unit-number>
                         | REWIND ( <position-spec-list> )
 
@@ -8643,7 +8672,8 @@ class Position_Spec(KeywordValueBase):  # R926
 
 class Flush_Stmt(StmtBase):  # R927
     """
-    :F03R:`927`::
+    Fortran2003 Rule R927::
+
         <flush-stmt> = FLUSH <file-unit-number>
                         | FLUSH ( <position-spec-list> )
     Attributes
@@ -8674,7 +8704,8 @@ class Flush_Stmt(StmtBase):  # R927
 
 class Flush_Spec(KeywordValueBase):  # R928
     """
-    :F03R:`928`::
+    Fortran2003 Rule R928::
+
         <flush-spec> = [ UNIT = ] <file-unit-number>
                        | IOMSG = <iomsg-variable>
                        | IOSTAT = <scalar-int-variable>
@@ -8707,7 +8738,8 @@ class Flush_Spec(KeywordValueBase):  # R928
 
 class Inquire_Stmt(StmtBase):  # R929
     """
-    :F03R:`929`::
+    Fortran2003 Rule R929::
+
         <inquire-stmt> = INQUIRE ( <inquire-spec-list> )
                          | INQUIRE ( IOLENGTH = <scalar-int-variable> )
                            <output-item-list>
@@ -8754,47 +8786,47 @@ class Inquire_Stmt(StmtBase):  # R929
 
 class Inquire_Spec(KeywordValueBase):  # R930
     """
-    :F03R:`930`::
-    <inquire-spec> = [ UNIT = ] <file-unit-number>
-                     | FILE = <file-name-expr>
-                     | ACCESS = <scalar-default-char-variable>
-                     | ACTION = <scalar-default-char-variable>
-                     | ASYNCHRONOUS = <scalar-default-char-variable>
-                     | BLANK = <scalar-default-char-variable>
-                     | DECIMAL = <scalar-default-char-variable>
-                     | DELIM = <scalar-default-char-variable>
-                     | DIRECT = <scalar-default-char-variable>
-                     | ENCODING = <scalar-default-char-variable>
-                     | ERR = <label>
-                     | EXIST = <scalar-default-logical-variable>
-                     | FORM = <scalar-default-char-variable>
-                     | FORMATTED = <scalar-default-char-variable>
-                     | ID = <scalar-int-expr>
-                     | IOMSG = <iomsg-variable>
-                     | IOSTAT = <scalar-int-variable>
-                     | NAME = <scalar-default-char-variable>
-                     | NAMED = <scalar-default-logical-variable>
-                     | NEXTREC = <scalar-int-variable>
-                     | NUMBER = <scalar-int-variable>
-                     | OPENED = <scalar-default-logical-variable>
-                     | PAD = <scalar-default-char-variable>
-                     | PENDING = <scalar-default-logical-variable>
-                     | POS = <scalar-int-variable>
-                     | POSITION = <scalar-default-char-variable>
-                     | READ = <scalar-default-char-variable>
-                     | READWRITE = <scalar-default-char-variable>
-                     | RECL = <scalar-int-variable>
-                     | ROUND = <scalar-default-char-variable>
-                     | SEQUENTIAL = <scalar-default-char-variable>
-                     | SIGN = <scalar-default-char-variable>
-                     | SIZE = <scalar-int-variable>
-                     | STREAM = <scalar-default-char-variable>
-                     | UNFORMATTED = <scalar-default-char-variable>
-                     | WRITE = <scalar-default-char-variable>
+    Fortran2003 Rule R930::
 
-    Attributes
-    ----------
-    items : (str, instance)
+        <inquire-spec> = [ UNIT = ] <file-unit-number>
+                         | FILE = <file-name-expr>
+                         | ACCESS = <scalar-default-char-variable>
+                         | ACTION = <scalar-default-char-variable>
+                         | ASYNCHRONOUS = <scalar-default-char-variable>
+                         | BLANK = <scalar-default-char-variable>
+                         | DECIMAL = <scalar-default-char-variable>
+                         | DELIM = <scalar-default-char-variable>
+                         | DIRECT = <scalar-default-char-variable>
+                         | ENCODING = <scalar-default-char-variable>
+                         | ERR = <label>
+                         | EXIST = <scalar-default-logical-variable>
+                         | FORM = <scalar-default-char-variable>
+                         | FORMATTED = <scalar-default-char-variable>
+                         | ID = <scalar-int-expr>
+                         | IOMSG = <iomsg-variable>
+                         | IOSTAT = <scalar-int-variable>
+                         | NAME = <scalar-default-char-variable>
+                         | NAMED = <scalar-default-logical-variable>
+                         | NEXTREC = <scalar-int-variable>
+                         | NUMBER = <scalar-int-variable>
+                         | OPENED = <scalar-default-logical-variable>
+                         | PAD = <scalar-default-char-variable>
+                         | PENDING = <scalar-default-logical-variable>
+                         | POS = <scalar-int-variable>
+                         | POSITION = <scalar-default-char-variable>
+                         | READ = <scalar-default-char-variable>
+                         | READWRITE = <scalar-default-char-variable>
+                         | RECL = <scalar-int-variable>
+                         | ROUND = <scalar-default-char-variable>
+                         | SEQUENTIAL = <scalar-default-char-variable>
+                         | SIGN = <scalar-default-char-variable>
+                         | SIZE = <scalar-int-variable>
+                         | STREAM = <scalar-default-char-variable>
+                         | UNFORMATTED = <scalar-default-char-variable>
+                         | WRITE = <scalar-default-char-variable>
+
+    The `items` attribute for this class contains (str, instance).
+
     """
 
     subclass_names = []
@@ -9652,11 +9684,12 @@ class Data_Edit_Desc(Base):  # R1005
 class W(Base):  # R1006
     """
     ::
-        <w> = <int-literal-constant> == <digit-string>
+        w is int-literal-constant == digit-string
 
-    Notes
-    -----
-    C1006, C1007: <w> is zero or postive and without kind parameters.
+    Subject to constraints::
+
+        C1006, C1007: w is zero or postive and without kind parameters.
+
     """
 
     subclass_names = ["Digit_String"]
@@ -9665,11 +9698,12 @@ class W(Base):  # R1006
 class M(Base):  # R1007
     """
     ::
-        <m> = <int-literal-constant>
+        m = int-literal-constant
 
-    Notes
-    -----
-    C1007: <w> is without kind parameters.
+    Subject to the constraint::
+
+        C1007: m is without kind parameters.
+
     """
 
     subclass_names = ["Int_Literal_Constant"]
@@ -9678,11 +9712,12 @@ class M(Base):  # R1007
 class D(Base):  # R1008
     """
     ::
-        <d> = <int-literal-constant>
+        d = int-literal-constant
 
-    Notes
-    -----
-    C1007: <d> is without kind parameters.
+    Subject to the constraint::
+
+        C1007: d is without kind parameters.
+
     """
 
     subclass_names = ["Int_Literal_Constant"]
@@ -9691,11 +9726,12 @@ class D(Base):  # R1008
 class E(Base):  # R1009
     """
     ::
-        <e> = <int-literal-constant>
+        e is int-literal-constant
 
-    Notes
-    -----
-    C1005, C1007: <e> is postive and without kind parameters.
+    Subject to the constraints::
+
+        C1005, C1007: e is postive and without kind parameters.
+
     """
 
     subclass_names = ["Digit_String"]
@@ -9704,11 +9740,12 @@ class E(Base):  # R1009
 class V(Base):  # R1010
     """
     ::
-        <v> = <signed-int-literal-constant>
+        v is signed-int-literal-constant
 
-    Notes
-    -----
-    C1007: <w> is without kind parameters.
+    Subject to the constraint::
+
+        C1007: w is without kind parameters.
+
     """
 
     subclass_names = ["Signed_Int_Literal_Constant"]
@@ -11961,9 +11998,11 @@ def c1242_valid(prefix, binding_spec):
 
 
 class Subroutine_Stmt(StmtBase):  # R1232
-    """<subroutine-stmt>
-    = [ <prefix> ] SUBROUTINE <subroutine-name>
-      [ ( [ <dummy-arg-list> ] ) [ <proc-language-binding-spec> ] ]
+    """
+    Fortran2003 rule R1232::
+
+        subroutine-stmt is [ prefix ] SUBROUTINE subroutine-name \
+[ ( [ dummy-arg-list ] ) [ proc-language-binding-spec ] ]
 
     C1242 (R1227) A prefix shall not specify ELEMENTAL if
     proc-language-binding-spec appears in the function-stmt or
