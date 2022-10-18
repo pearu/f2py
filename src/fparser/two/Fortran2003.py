@@ -10298,6 +10298,9 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         use statements in the symbol table associated with the current scope
         (if there is one).
 
+        TODO #379 - currently operator imports/renaming are not captured in
+                    the symbol table.
+
         :param str string: Fortran code to check for a match.
 
         :return: 5-tuple containing strings and instances of the classes
@@ -10325,21 +10328,34 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                         if isinstance(child, Name):
                             only_list.append((child.string, None))
                         elif isinstance(child, Rename):
-                            only_list.append(
-                                (child.children[1].string, child.children[2].string)
-                            )
+                            if not child.children[0]:
+                                # This is a Rename of a symbol rather than an operator
+                                # (which would have child.children[0] == 'OPERATOR'.
+                                # TODO #379 - support operators.
+                                only_list.append(
+                                    (child.children[1].string, child.children[2].string)
+                                )
+                        elif isinstance(child, Generic_Spec):
+                            # For now we ignore anything other than symbol names
+                            # and this includes operators (TODO #379).
+                            pass
                         else:
                             raise InternalError(
-                                f"An Only_List can contain only Name or Rename "
-                                f"entries but found '{type(child).__name__}' when matching '{string}'"
+                                f"An Only_List can contain only Name, Rename or "
+                                f"Generic_Spec entries but found "
+                                f"'{type(child).__name__}' when matching '{string}'"
                             )
                 elif isinstance(result[4], Rename_List):
-                    renames = walk(result[4], Rename)
                     # Tuples of <local-name>, <use-name>
-                    rename_list = [
-                        (rename.children[1].string, rename.children[2].string)
-                        for rename in renames
-                    ]
+                    rename_list = []
+                    for rename in walk(result[4], Rename):
+                        # For now we exclude any operators in the Rename_List
+                        # (these have rename.children[0] == 'OPERATOR').
+                        # TODO #379.
+                        if rename.children[0] is None:
+                            rename_list.append(
+                                (rename.children[1].string, rename.children[2].string)
+                            )
 
                 table.add_use_symbols(str(result[2]), only_list, rename_list)
 
@@ -10360,32 +10376,32 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         line = string.strip()
         # Incorrect 'USE' statement or line too short
         if line[:3].upper() != "USE":
-            return
+            return None
         line = line[3:]
         # Empty string after 'USE'
         if not line:
-            return
+            return None
         # No separation between 'USE' statement and its specifiers
         if line[0].isalnum():
-            return
+            return None
         line = line.lstrip()
-        i = line.find("::")
+        idx = line.find("::")
         nature = None
         dcolon = None
-        if i != -1:
+        if idx != -1:
             # The nature of the module ("intrinsic" or
             # "non-intrinsic") is specified
             dcolon = "::"
             if line.startswith(","):
-                line_nat = line[1:i].strip()
+                line_nat = line[1:idx].strip()
                 # Missing Module_Nature between ',' and '::'
                 if not line_nat:
-                    return
+                    return None
                 nature = Module_Nature(line_nat)
-            line = line[i + 2 :].lstrip()
+            line = line[idx + 2 :].lstrip()
             # No Module_Name after 'USE, Module_Nature ::'
             if not line:
-                return
+                return None
         else:
             # Check for missing '::' after Module_Nature
             items = re.findall(r"[\w']+", line)
@@ -10404,22 +10420,22 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
         name = line[:position].rstrip()
         # Missing Module_Name before Only_List
         if not name:
-            return
+            return None
         name = Module_Name(name)
         line = line[position + 1 :].lstrip()
         # Missing 'ONLY' specification after 'USE Module_Name,'
         if not line:
-            return
+            return None
         if line[:4].upper() == "ONLY":
             line = line[4:].lstrip()
             if not line:
                 # Expected ':' but there is nothing after the 'ONLY'
                 # specification
-                return
+                return None
             if line[0] != ":":
                 # Expected ':' but there is a different character
                 # after the 'ONLY' specification
-                return
+                return None
             line = line[1:].lstrip()
             if not line:
                 # Missing Only_List after 'USE Module_Name, ONLY:'
@@ -10492,9 +10508,18 @@ class Module_Nature(STRINGBase):  # pylint: disable=invalid-name
 
 class Rename(Base):  # R1111
     """
-    <rename> = <local-name> => <use-name>
-               | OPERATOR(<local-defined-operator>) =>
-                 OPERATOR(<use-defined-operator>)
+    Class defining Rule #R1111:
+
+    rename is local-name => use-name
+           or OPERATOR(local-defined-operator) => OPERATOR(use-defined-operator)
+
+    where:
+
+    local-defined-operator is defined-uary-op or
+                              defined-binary-op
+
+    defined-binary-op is .letter [letter] ... .
+
     """
 
     subclass_names = []
@@ -10507,33 +10532,52 @@ class Rename(Base):  # R1111
 
     @staticmethod
     def match(string):
-        s = string.split("=>", 1)
-        if len(s) != 2:
-            return
-        lhs, rhs = s[0].rstrip(), s[1].lstrip()
+        """
+        :param str string: the string to attempt to match.
+
+        :returns: three tuple containing description, local name, remote name.
+        :rtype: Optional[
+                    Tuple[Optional[str],
+                          :py:class:`fparser.two.Fortran2003.Local_Name` |
+                          :py:class:`fparser.two.Fortran2003.Local_Defined_Operator`,
+                          :py:class:`fparser.two.Fortran2003.Use_Name` |
+                          :py:class:`fparser.two.Fortran2003.Use_Defined_Operator`]]
+        """
+        parts = string.split("=>", 1)
+        if len(parts) != 2:
+            return None
+        lhs, rhs = parts[0].rstrip(), parts[1].lstrip()
         if not lhs or not rhs:
-            return
+            return None
         if lhs[:8].upper() == "OPERATOR" and rhs[:8].upper() == "OPERATOR":
             tmp = lhs[8:].lstrip()
-            r = rhs[8:].lstrip()
-            if tmp and r and tmp[0] + tmp[-1] == "()":
-                if r[0] + r[-1] != "()":
-                    return
+            rhs_op = rhs[8:].lstrip()
+            if tmp and rhs_op and tmp[0] == "(" and tmp[-1] == ")":
+                if rhs_op[0] != "(" or rhs_op[-1] != ")":
+                    return None
                 tmp = tmp[1:-1].strip()
-                r = r[1:-1].strip()
-                if not tmp or not r:
-                    return
-                return "OPERATOR", Local_Defined_Operator(tmp), Use_Defined_Operator(r)
+                rhs_op = rhs_op[1:-1].strip()
+                if not tmp or not rhs_op:
+                    return None
+                return (
+                    "OPERATOR",
+                    Local_Defined_Operator(tmp),
+                    Use_Defined_Operator(rhs_op),
+                )
         return None, Local_Name(lhs), Use_Name(rhs)
 
     def tostr(self):
+        """
+        :returns: the string representation of this Rename object.
+        :rtype: str
+        """
         if not self.items[0]:
-            return "%s => %s" % self.items[1:]
-        return "%s(%s) => %s(%s)" % (
-            self.items[0],
-            self.items[1],
-            self.items[0],
-            self.items[2],
+            # Not an operator.
+            return f"{self.children[1]} => {self.children[2]}"
+        # This represents the renaming of an Operator.
+        return (
+            f"{self.children[0]}({self.children[1]}) => "
+            f"{self.children[0]}({self.children[2]})"
         )
 
 

@@ -43,13 +43,23 @@ from fparser.two.Fortran2003 import Use_Stmt
 from fparser.two.symbol_table import SYMBOL_TABLES, ModuleUse
 from fparser.two.utils import NoMatchError, InternalError
 
+
+@pytest.fixture(autouse=True)
+@pytest.mark.usefixtures("f2003_create")
+def use_f2003():
+    """
+    A pytest fixture that just sets things up so that the f2003_create
+    fixture is used automatically for every test in this file.
+    """
+
+
 # match() use ...
 
 
 # match() 'use x'. Use both string and reader input here, but from
 # here on we will just use string input as that is what is passed to
 # the match() method
-def test_use(f2003_create):
+def test_use():
     """Check that a basic use is parsed correctly. Input separately as a
     string and as a reader object
 
@@ -68,7 +78,7 @@ def test_use(f2003_create):
 
 
 # match() 'use :: x'
-def test_use_colons(f2003_create):
+def test_use_colons():
     """Check that a basic use with '::' is parsed correctly."""
     line = "use :: my_model"
     ast = Use_Stmt(line)
@@ -77,7 +87,7 @@ def test_use_colons(f2003_create):
 
 
 # match() 'use, nature :: x'
-def test_use_nature(f2003_create):
+def test_use_nature():
     """Check that a use with a 'nature' specification is parsed correctly."""
     line = "use, intrinsic :: my_model"
     ast = Use_Stmt(line)
@@ -88,7 +98,7 @@ def test_use_nature(f2003_create):
 
 
 # match() 'use x, rename'
-@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_rename():
     """Check that a use with a rename clause is parsed correctly."""
     line = "use my_module, new_name=>name"
@@ -108,8 +118,29 @@ def test_use_rename():
     assert use._local_to_module_map["new_name"] == "name"
 
 
+def test_use_operator_rename():
+    """
+    Check that a use with a rename clause for an operator is parsed correctly.
+
+    """
+    line = "use my_module, operator(.new.) => operator(.old.)"
+    ast = Use_Stmt(line)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_module'), ',', Rename_List(',', "
+        "(Rename('OPERATOR', Defined_Op('.NEW.'), Defined_Op('.OLD.')),)))"
+    )
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    # Check that the symbol table functionality copes (by ignoring operators).
+    table = SYMBOL_TABLES.current_scope
+    use = table._modules["my_module"]
+    # Operators are not currently captured in the SymbolTable (TODO #379)
+    assert use.rename_list is None
+    SYMBOL_TABLES.exit_scope()
+
+
 # match() 'use x, only: y'
-def test_use_only(f2003_create):
+def test_use_only():
     """Check that a use statement is parsed correctly when there is an
     only clause. Test both with and without a scoping region.
 
@@ -134,7 +165,7 @@ def test_use_only(f2003_create):
 
 
 # match() 'use x, only:'
-def test_use_only_empty(f2003_create):
+def test_use_only_empty():
     """Check that a use statement is parsed correctly when there is an
     only clause without any content. Test both with and without a scoping region.
 
@@ -156,7 +187,7 @@ def test_use_only_empty(f2003_create):
 
 
 # match() 'use x, only: b => c'
-def test_use_only_plus_rename(f2003_create):
+def test_use_only_plus_rename():
     """Check that a use statement with an only clause and some variable
     renaming is parsed correctly.
 
@@ -182,8 +213,65 @@ def test_use_only_plus_rename(f2003_create):
     SYMBOL_TABLES.exit_scope()
 
 
+# match() 'use x, only: operator(-)'
+def test_use_only_operator():
+    """
+    Check that a 'use, only' that imports an operator is parsed correctly.
+
+    """
+    line = "use my_mod, only: operator(-), operator(.yes.)"
+    ast = Use_Stmt(line)
+    assert repr(ast) == (
+        "Use_Stmt(None, None, Name('my_mod'), ', ONLY:', Only_List(',', "
+        "(Generic_Spec('OPERATOR', Extended_Intrinsic_Op('-')),"
+        " Generic_Spec('OPERATOR', Defined_Op('.YES.')))))"
+    )
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    use = table._modules["my_mod"]
+    # Operators are not currently captured in the symbol table.
+    # TODO #379.
+    assert use.only_list == []
+    SYMBOL_TABLES.exit_scope()
+
+
+@pytest.mark.parametrize("lhs, rhs", [("-", "+"), (".in.", ".out.")])
+def test_use_only_renamed_operator(lhs, rhs):
+    """
+    Check that a 'use, only' that imports and locally renames an operator is
+    correctly parsed. We test both for an extended intrinsic operator and a
+    defined operator.
+
+    """
+    line = f"use my_mod, only: operator({lhs}) => operator({rhs})"
+    ast = Use_Stmt(line)
+    if lhs == "-":
+        assert repr(ast) == (
+            "Use_Stmt(None, None, Name('my_mod'), ', ONLY:', Only_List(',', "
+            "(Generic_Spec('OPERATOR', Extended_Intrinsic_Op('-) => "
+            "operator(+')),)))"
+        )
+    else:
+        assert repr(ast) == (
+            "Use_Stmt(None, None, Name('my_mod'), ', ONLY:', Only_List(',', "
+            "(Rename('OPERATOR', Defined_Op('.IN.'), Defined_Op('.OUT.')),)))"
+        )
+
+    # Repeat when there is a scoping region.
+    SYMBOL_TABLES.enter_scope("test_scope")
+    ast = Use_Stmt(line)
+    table = SYMBOL_TABLES.current_scope
+    use = table._modules["my_mod"]
+    # Operators are not currently captured in the symbol table.
+    # TODO #379.
+    assert use.only_list == []
+    SYMBOL_TABLES.exit_scope()
+
+
 # match() '  use  ,  nature  ::  x  ,  name=>new_name'
-def test_use_spaces_1(f2003_create):
+def test_use_spaces_1():
     """Check that a use statement with spaces works correctly with
     renaming.
 
@@ -198,7 +286,7 @@ def test_use_spaces_1(f2003_create):
 
 
 # match() '  use  ,  nature  ::  x  ,  only  :  name'
-def test_use_spaces_2(f2003_create):
+def test_use_spaces_2():
     """Check that a use statement with spaces works correctly with an only
     clause.
 
@@ -213,7 +301,7 @@ def test_use_spaces_2(f2003_create):
 
 
 # match() mixed case
-def test_use_mixed_case(f2003_create):
+def test_use_mixed_case():
     """Check that a use statement with mixed case keywords ('use' and
     'only') works as expected.
 
@@ -230,7 +318,7 @@ def test_use_mixed_case(f2003_create):
 # match() Syntax errors
 
 
-def test_syntaxerror(f2003_create):
+def test_syntaxerror():
     """Test that NoMatchError is raised for various syntax errors."""
     for line in [
         "us",
@@ -250,13 +338,13 @@ def test_syntaxerror(f2003_create):
     ]:
         with pytest.raises(NoMatchError) as excinfo:
             _ = Use_Stmt(line)
-        assert "Use_Stmt: '{0}'".format(line) in str(excinfo.value)
+        assert f"Use_Stmt: '{line}'" in str(excinfo.value)
 
 
 # match() Internal errors
 
 
-def test_use_internal_error1(f2003_create):
+def test_use_internal_error1():
     """Check that an internal error is raised if the length of the Items
     list is not 5 as the str() method assumes that it is.
 
@@ -269,7 +357,7 @@ def test_use_internal_error1(f2003_create):
     assert "should be of size 5 but found '4'" in str(excinfo.value)
 
 
-def test_use_internal_error2(f2003_create):
+def test_use_internal_error2():
     """Check that an internal error is raised if the module name (entry 2
     of Items) is empty or None as the str() method assumes that it is
     a string with content.
@@ -281,12 +369,10 @@ def test_use_internal_error2(f2003_create):
         ast.items = (None, None, content, None, None)
         with pytest.raises(InternalError) as excinfo:
             str(ast)
-        assert ("entry 2 should be a module name but it is " "empty") in str(
-            excinfo.value
-        )
+        assert "entry 2 should be a module name but it is empty" in str(excinfo.value)
 
 
-def test_use_internal_error3(f2003_create):
+def test_use_internal_error3():
     """Check that an internal error is raised if entry 3 of Items is
     'None' as the str() method assumes it is a (potentially empty)
     string.
@@ -300,7 +386,7 @@ def test_use_internal_error3(f2003_create):
     assert "entry 3 should be a string but found 'None'" in str(excinfo.value)
 
 
-@pytest.mark.usefixtures("f2003_create", "fake_symbol_table")
+@pytest.mark.usefixtures("fake_symbol_table")
 def test_use_internal_error_only_list(monkeypatch):
     """Check that an internal error is raised if an Only_List contains an
     unexpected entry.
@@ -316,6 +402,6 @@ def test_use_internal_error_only_list(monkeypatch):
     with pytest.raises(InternalError) as err:
         Use_Stmt(line)
     assert (
-        "An Only_List can contain only Name or Rename entries but found "
-        "'str' when matching 'use my_model, only: var'" in str(err.value)
+        "An Only_List can contain only Name, Rename or Generic_Spec entries but "
+        "found 'str' when matching 'use my_model, only: var'" in str(err.value)
     )
