@@ -48,14 +48,17 @@ def test_rename():
     obj = tcls("a=>b")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "a => b"
+    assert obj.children[0] is None
 
     obj = tcls("operator(.foo.)=>operator(.bar.)")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "OPERATOR(.FOO.) => OPERATOR(.BAR.)"
+    assert obj.children[0] == 'OPERATOR'
 
     obj = tcls("operator_1=>operator_2")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "operator_1 => operator_2"
+    assert obj.children[0] is None
 
 
 def test_rename_nomatch():
