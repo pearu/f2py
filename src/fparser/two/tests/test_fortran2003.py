@@ -2926,18 +2926,6 @@ def test_module_nature():
     assert "Module_Nature: 'other_nature'" in str(excinfo.value)
 
 
-def test_rename():  # R1111
-
-    tcls = Rename
-    obj = tcls("a=>b")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "a => b"
-
-    obj = tcls("operator(.foo.)=>operator(.bar.)")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "OPERATOR(.FOO.) => OPERATOR(.BAR.)"
-
-
 @pytest.mark.xfail(reason="Match fails with multiple spaces, see issue #197")
 def test_block_data():  # R1116
 
