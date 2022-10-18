@@ -72,6 +72,7 @@ C906 (R904) If a NEWUNIT= specifier appears, a file-unit-number shall not
 
 """
 
+# pylint: disable=no-member
 import pytest
 from fparser.api import get_reader
 from fparser.two import Fortran2008
@@ -87,7 +88,8 @@ from fparser.two.utils import NoMatchError, walk
         "unit=23, file='hello', action='read'",
     ],
 )
-def test_open_f2003_args(f2008_parser, open_args):
+@pytest.mark.usefixtures("f2008_parser")
+def test_open_f2003_args(open_args):
     """Check that the Fortran2008 version of Open_Stmt still supports the
     various arguments defined in 2003."""
     obj = Fortran2008.Open_Stmt(f"open({open_args})")
@@ -113,7 +115,8 @@ endsubroutine myopen
     assert str(open_stmts[0]) == "OPEN(NEWUNIT = unit, FILE = file)"
 
 
-def test_constraint_903(f2008_parser):
+@pytest.mark.usefixtures("f2008_parser")
+def test_constraint_903():
     """Check that Constraint 903 (no specifier shall appear more than once)
     is applied."""
     with pytest.raises(NoMatchError):
@@ -122,7 +125,8 @@ def test_constraint_903(f2008_parser):
         Fortran2008.Open_Stmt("open(23, file='hello', file='another')")
 
 
-def test_constraint_904(f2008_parser):
+@pytest.mark.usefixtures("f2008_parser")
+def test_constraint_904():
     """Check that a unit number is specified. We cannot currently check that
     if no UNIT= appears that it is the first argument to open() because the
     Connect_Spec.match() method always adds a UNIT= if one is missing."""
@@ -130,7 +134,8 @@ def test_constraint_904(f2008_parser):
         Fortran2008.Open_Stmt("open(file='hello')")
 
 
-def test_constraint_906(f2008_parser):
+@pytest.mark.usefixtures("f2008_parser")
+def test_constraint_906():
     """Check that Constraint 906 is applied (no unit number may appear if
     NEWUNIT is specified)."""
     with pytest.raises(NoMatchError):
@@ -139,7 +144,8 @@ def test_constraint_906(f2008_parser):
         Fortran2008.Open_Stmt("open(unit=23, newunit=10, file='hello')")
 
 
-def test_open_invalid_arg(f2008_parser):
+@pytest.mark.usefixtures("f2008_parser")
+def test_open_invalid_arg():
     """Check that there is no match if an invalid argument is supplied."""
     with pytest.raises(NoMatchError) as err:
         Fortran2008.Open_Stmt("open(newunit=10, file='hello', andy='yes')")

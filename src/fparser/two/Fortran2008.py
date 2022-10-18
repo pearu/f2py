@@ -71,8 +71,11 @@
 # pylint: disable=arguments-differ
 # pylint: disable=undefined-variable
 # pylint: disable=eval-used
+# These warnings are due to the auto-generation of classes when this
+# module is first imported.
 # pylint: disable=exec-used
 # pylint: disable=unused-import
+# pylint: disable=no-name-in-module
 from fparser.common.splitline import string_replace_map, splitparen
 
 from fparser.two import pattern_tools as pattern
