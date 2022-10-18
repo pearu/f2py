@@ -100,7 +100,6 @@ from fparser.two.Fortran2003 import (
     Stat_Variable,
     Errmsg_Variable,
     Source_Expr,
-    KeywordValueBase,
     Module_Subprogram_Part,
     Implicit_Part,
     Implicit_Part_Stmt,
