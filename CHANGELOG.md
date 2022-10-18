@@ -18,6 +18,22 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+13/10/2022 PR #381 for #298. Fix F2008 allocate statement with arguments.
+
+20/09/2022 PR #376 for #349. Add support for use association to the
+           symbol table.
+
+15/09/2022 PR #378 for #375. Permit source files containing only comments
+           to be parsed.
+
+12/09/2022 PR #374 for #373. Removes @staticmethod decorator added to
+           Stmt_Function_Stmt.tostr() in error.
+
+05/09/2022 PR #372 fix for whitespace being lost when Format_Item_List is
+           contained within parentheses.
+
+02/09/2022 PR #356 - add support for the mold allocate parameter.
+
 11/08/2022 PR #368 for #367. Add support for visiting tuples in walk()
            utility.
 

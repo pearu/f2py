@@ -290,6 +290,7 @@ class Program(BlockBase):  # R201
         """
         content = []
         add_comments_includes_directives(content, reader)
+        comments = content != []
         try:
             while True:
                 obj = Program_Unit(reader)
@@ -304,7 +305,12 @@ class Program(BlockBase):  # R201
             # (via Main_Program0) with a program containing no program
             # statement as this is optional in Fortran.
             #
-            return BlockBase.match(Main_Program0, [], None, reader)
+            result = BlockBase.match(Main_Program0, [], None, reader)
+            if not result and comments:
+                # This program only contains comments.
+                return (content,)
+            else:
+                return result
         except StopIteration:
             # Reader has no more lines.
             pass
@@ -4805,34 +4811,94 @@ class Vector_Subscript(Base):  # R622
 
 class Allocate_Stmt(StmtBase):  # R623
     """
-    <allocate-stmt> = ALLOCATE ( [ <type-spec> :: ] <allocation-list>
-        [ , <alloc-opt-list> ] )
+    Fortran2003 rule R623
+    allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
+                                [, alloc-opt-list ] )
+
+    Subject to the following constraints:
+
+    C622 (R629) Each allocate-object shall be a nonprocedure pointer or an
+                 allocatable variable.
+    C623 (R623) If any allocate-object in the statement has a deferred type
+                parameter, either type-spec or SOURCE= shall appear.
+    C624 (R623) If a type-spec appears, it shall specify a type with which
+                each allocate-object is type compatible.
+    C625 (R623) If any allocate-object is unlimited polymorphic, either
+                type-spec or SOURCE= shall appear.
+    C626 (R623) A type-param-value in a type-spec shall be an asterisk if and
+                only if each allocate-object is a dummy argument for which the
+                corresponding type parameter is assumed.
+    C627 (R623) If a type-spec appears, the kind type parameter values of each
+                allocate-object shall be the same as the corresponding type
+                parameter values of the type-spec.
+    C628 (R628) An allocate-shape-spec-list shall appear if and only if the
+                allocate-object is an array.
+    C629 (R628) The number of allocate-shape-specs in an
+                allocate-shape-spec-list shall be the same as the rank of the
+                allocate-object.
+    C630 (R624) No alloc-opt shall appear more than once in a given
+                alloc-opt-list.
+    C631 (R623) If SOURCE= appears, type-spec shall not appear and
+                allocation-list shall contain only one allocate-object, which
+                shall be type compatible (5.1.1.2) with source-expr.
+    C632 (R623) The source-expr shall be a scalar or have the same rank as
+                allocate-object.
+    C633 (R623) Corresponding kind type parameters of allocate-object and
+                source-expr shall have the same values.
+
+    None of these constraints are currently applied - issue #355.
+
     """
 
     subclass_names = []
     use_names = ["Type_Spec", "Allocation_List", "Alloc_Opt_List"]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def match(cls, string):
+        """
+        Attempts to match the supplied string as an Allocate_Stmt.
+
+        :param str string: the string to attempt to match.
+
+        :returns: A 2-tuple giving the Type_Spec and Allocation_List if the \
+            match is successful, None otherwise.
+        :rtype: Optional[ \
+            Tuple[Optional[:py:class:`fparser.two.Fortran2003.Type_Spec`], \
+                  :py:class:`fparser.two.Fortran2003.Allocation_List`]]
+        """
         if string[:8].upper() != "ALLOCATE":
-            return
+            return None
         line = string[8:].lstrip()
         if not line or line[0] != "(" or line[-1] != ")":
-            return
+            return None
         line, repmap = string_replace_map(line[1:-1].strip())
-        i = line.find("::")
+        idx = line.find("::")
         spec = None
-        if i != -1:
-            spec = Type_Spec(repmap(line[:i].rstrip()))
-            line = line[i + 2 :].lstrip()
-        i = line.find("=")
+        if idx != -1:
+            spec = Type_Spec(repmap(line[:idx].rstrip()))
+            line = line[idx + 2 :].lstrip()
+        idx = line.find("=")
         opts = None
-        if i != -1:
-            j = line[:i].rfind(",")
-            assert j != -1, repr((i, j, line))
-            opts = Alloc_Opt_List(repmap(line[j + 1 :].lstrip()))
-            line = line[:j].rstrip()
+        if idx != -1:
+            jdx = line[:idx].rfind(",")
+            if jdx == -1:
+                # There must be at least one positional argument before any
+                # named arguments.
+                return None
+            # Use the class 'alloc_opt_list' property to ensure we use the
+            # correct class depending on whether 'cls' is associated with
+            # Fortran2003 or Fortran2008.
+            opts = cls.alloc_opt_list()(repmap(line[jdx + 1 :].lstrip()))
+            line = line[:jdx].rstrip()
         return spec, Allocation_List(repmap(line)), opts
+
+    @classmethod
+    def alloc_opt_list(cls):
+        """
+        :returns: the Fortran2003 flavour of Alloc_Opt_List.
+        :rtype: type
+        """
+        return Alloc_Opt_List
 
     def tostr(self):
         spec, lst, opts = self.items
@@ -4845,32 +4911,6 @@ class Allocate_Stmt(StmtBase):  # R623
             return "ALLOCATE(%s, %s)" % (lst, opts)
         else:
             return "ALLOCATE(%s)" % (lst)
-
-
-class Alloc_Opt(KeywordValueBase):  # R624
-    """
-    <alloc-opt> = STAT = <stat-variable>
-                  | ERRMSG = <errmsg-variable>
-                  | SOURCE = <source-expr>
-    """
-
-    subclass_names = []
-    use_names = ["Stat_Variable", "Errmsg_Variable", "Source_Expr"]
-
-    @staticmethod
-    def match(string):
-        for (k, v) in [
-            ("STAT", Stat_Variable),
-            ("ERRMSG", Errmsg_Variable),
-            ("SOURCE", Source_Expr),
-        ]:
-            try:
-                obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
-                return obj
-        return None
 
 
 class Stat_Variable(Base):  # R625
@@ -4895,6 +4935,31 @@ class Source_Expr(Base):  # R627
     """
 
     subclass_names = ["Expr"]
+
+
+class Alloc_Opt(KeywordValueBase):  # R624
+    """
+    <alloc-opt> = STAT = <stat-variable>
+                  | ERRMSG = <errmsg-variable>
+                  | SOURCE = <source-expr>
+    """
+
+    subclass_names = []
+    use_names = ["Stat_Variable", "Errmsg_Variable", "Source_Expr"]
+    #: The keywords tested for in the match() method.
+    _keyword_pairs = [
+        ("STAT", Stat_Variable),
+        ("ERRMSG", Errmsg_Variable),
+        ("SOURCE", Source_Expr),
+    ]
+
+    @classmethod
+    def match(cls, string):
+        for (k, v) in cls._keyword_pairs:
+            obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
+            if obj is not None:
+                return obj
+        return None
 
 
 class Allocation(CallBase):  # R628
@@ -9302,7 +9367,7 @@ class Format_Item(Base):  # pylint: disable=invalid-name
         # match method. Other matches are performed by the subclasses.
         if my_string[0] == "(" and my_string[-1] == ")":
             # This could be a format-item-list
-            rest = Format_Item_List(my_string[1:-1].strip())
+            rest = Format_Item_List(my_string[1:-1].lstrip())
         else:
             # This is not a format-item-list so see if it is a
             # data-edit-descriptor
@@ -10242,17 +10307,41 @@ class Use_Stmt(StmtBase):  # pylint: disable=invalid-name
                  or None if the match fails.
         :rtype: 5-tuple of objects (module name and 4 optional) or NoneType
 
+        :raises InternalError: if an Only_List is found to contain anything \
+                               other than Name or Rename objects.
+
         """
         result = Use_Stmt._match(string)
         if result:
             table = SYMBOL_TABLES.current_scope
             if table:
                 only_list = None
-                # TODO #201 we currently ignore any symbol renaming here
+                rename_list = None
+                if "only" in result[3].lower():
+                    only_list = []
                 if isinstance(result[4], Only_List):
-                    names = walk(result[4], Name)
-                    only_list = [name.string for name in names]
-                table.add_use_symbols(str(result[2]), only_list)
+                    # An Only_List can contain either Name or Rename entries.
+                    for child in result[4].children:
+                        if isinstance(child, Name):
+                            only_list.append((child.string, None))
+                        elif isinstance(child, Rename):
+                            only_list.append(
+                                (child.children[1].string, child.children[2].string)
+                            )
+                        else:
+                            raise InternalError(
+                                f"An Only_List can contain only Name or Rename "
+                                f"entries but found '{type(child).__name__}' when matching '{string}'"
+                            )
+                elif isinstance(result[4], Rename_List):
+                    renames = walk(result[4], Rename)
+                    # Tuples of <local-name>, <use-name>
+                    rename_list = [
+                        (rename.children[1].string, rename.children[2].string)
+                        for rename in renames
+                    ]
+
+                table.add_use_symbols(str(result[2]), only_list, rename_list)
 
         return result
 
@@ -12026,7 +12115,6 @@ class Stmt_Function_Stmt(StmtBase):  # R1238
             return Function_Name(name), Dummy_Arg_Name_List(args), Scalar_Expr(expr)
         return Function_Name(name), None, Scalar_Expr(expr)
 
-    @staticmethod
     def tostr(self):
         if self.items[1] is None:
             return "%s () = %s" % (self.items[0], self.items[2])
