@@ -116,17 +116,12 @@ from fparser.two.Fortran2003 import (
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
-    Program_Unit as Program_Unit_2003,
-    Attr_Spec as Attr_Spec_2003,
-    Alloc_Opt as Alloc_Opt_2003,
-    Allocate_Stmt as Allocate_Stmt_2003,
-    Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
-    Component_Attr_Spec as Component_Attr_Spec_2003,
-    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
     Action_Stmt as Action_Stmt_2003,
     Action_Stmt_C201 as Action_Stmt_C201_2003,
     Action_Stmt_C802 as Action_Stmt_C802_2003,
     Action_Stmt_C824 as Action_Stmt_C824_2003,
+    Alloc_Opt as Alloc_Opt_2003,
+    Allocate_Stmt as Allocate_Stmt_2003,
     Attr_Spec as Attr_Spec_2003,
     Component_Attr_Spec as Component_Attr_Spec_2003,
     Connect_Spec as Connect_Spec_2003,
