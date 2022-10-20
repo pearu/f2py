@@ -81,19 +81,23 @@ dollar_ok = True
 
 class Pattern:
     """
-    p1 | p2    -> <p1> | <p2>
-    p1 + p2    -> <p1> <p2>
-    p1 & p2    -> <p1><p2>
-    ~p1        -> [ <p1> ]
-    ~~p1       -> [ <p1> ]...
-    ~~~p1      -> <p1> [ <p1> ]...
-    ~~~~p1     -> ~~~p1
-    abs(p1)    -> whole string match of <p1>
-    p1.named(name) -> match of <p1> has name
-    p1.match(string) -> return string match with <p1>
-    p1.flags(<re.I,..>)
-    p1.rsplit(..) -> split a string from the rightmost p1 occurrence
-    p1.lsplit(..) -> split a string from the leftmost p1 occurrence
+
+    ::
+
+        p1 | p2    -> <p1> | <p2>
+        p1 + p2    -> <p1> <p2>
+        p1 & p2    -> <p1><p2>
+        ~p1        -> [ <p1> ]
+        ~~p1       -> [ <p1> ]...
+        ~~~p1      -> <p1> [ <p1> ]...
+        ~~~~p1     -> ~~~p1
+        abs(p1)    -> whole string match of <p1>
+        p1.named(name) -> match of <p1> has name
+        p1.match(string) -> return string match with <p1>
+        p1.flags(<re.I,..>)
+        p1.rsplit(..) -> split a string from the rightmost p1 occurrence
+        p1.lsplit(..) -> split a string from the leftmost p1 occurrence
+
     """
 
     _special_symbol_map = {

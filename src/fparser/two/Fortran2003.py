@@ -239,9 +239,10 @@ def add_comments_includes_directives(content, reader):
 
 class Program(BlockBase):  # R201
     """
-    Fortran 2003 rule R201
-    program is program-unit
-               [ program-unit ] ...
+    Fortran 2003 rule R201::
+
+        program is program-unit
+                   [ program-unit ] ...
 
     """
 
@@ -349,9 +350,9 @@ class Include_Stmt(Base):  # pylint: disable=invalid-name
     rule for this as the compiler is expected to inline any content
     from an include statement when one is found. However, for a parser
     it can make sense to represent an include statement in a parse
-    tree.
+    tree::
 
-    include-stmt is INCLUDE ['filename' or "filename"]
+        include-stmt is INCLUDE ['filename' or "filename"]
 
     """
 
@@ -498,18 +499,19 @@ class Implicit_Part_Stmt(Base):  # R206
 
 
 class Declaration_Construct(Base):  # R207
-    """Fortran 2003 rule R207
+    """
+    Fortran 2003 rule R207::
 
-    declaration-construct is derived-type-def
-                           or entry-stmt
-                           or enum-def
-                           or format-stmt
-                           or interface-block
-                           or parameter-stmt
-                           or procedure-declaration-stmt
-                           or specification-stmt
-                           or type-declaration-stmt
-                           or stmt-function-stmt
+        declaration-construct is derived-type-def
+                               or entry-stmt
+                               or enum-def
+                               or format-stmt
+                               or interface-block
+                               or parameter-stmt
+                               or procedure-declaration-stmt
+                               or specification-stmt
+                               or type-declaration-stmt
+                               or stmt-function-stmt
 
     Note, stmt-function-stmt is not currently matched.
 
@@ -11807,8 +11809,8 @@ class Prefix(SequenceBase):
         tuple containing one or more Prefix_Spec objects if there is a \
         match and None if not.
 
-        :rtype: (str, (:class:py:`fparser.two.Fortran2003.Prefix_Spec`,)) \
-        or NoneType
+        :rtype: Optional[Tuple[Str, \
+                Tuple[:py:class:`fparser.two.Fortran2003.Prefix_Spec`, ...]]]
 
         """
         start_match_list = []
