@@ -538,11 +538,11 @@ class Declaration_Construct(Base):  # R207
 class Execution_Part(BlockBase):  # R208
     """Fortran2003 Rule R208::
 
-    <execution-part> = <executable-construct>
-                       | [ <execution-part-construct> ]...
+        <execution-part> = <executable-construct>
+                           | [ <execution-part-construct> ]...
 
-    <execution-part> shall not contain <end-function-stmt>,
-    <end-program-stmt>, <end-subroutine-stmt>
+        <execution-part> shall not contain <end-function-stmt>,
+        <end-program-stmt>, <end-subroutine-stmt>
 
     """
 
@@ -558,10 +558,13 @@ class Execution_Part(BlockBase):  # R208
 
 class Execution_Part_Construct(Base):  # R209
     """
-    <execution-part-construct> = <executable-construct>
-                                 | <format-stmt>
-                                 | <entry-stmt>
-                                 | <data-stmt>
+    ::
+
+        <execution-part-construct> = <executable-construct>
+                                     | <format-stmt>
+                                     | <entry-stmt>
+                                     | <data-stmt>
+
     """
 
     subclass_names = [
@@ -585,9 +588,12 @@ class Execution_Part_Construct_C201(Base):
 
 class Internal_Subprogram_Part(BlockBase):  # R210
     """
-    <internal-subprogram-part> = <contains-stmt>
-                                   <internal-subprogram>
-                                   [ <internal-subprogram> ]...
+    ::
+
+        <internal-subprogram-part> = <contains-stmt>
+                                       <internal-subprogram>
+                                       [ <internal-subprogram> ]...
+
     """
 
     subclass_names = []
@@ -600,8 +606,11 @@ class Internal_Subprogram_Part(BlockBase):  # R210
 
 class Internal_Subprogram(Base):  # R211
     """
-    <internal-subprogram> = <function-subprogram>
-                            | <subroutine-subprogram>
+    ::
+
+        <internal-subprogram> = <function-subprogram>
+                                | <subroutine-subprogram>
+
     """
 
     subclass_names = ["Function_Subprogram", "Subroutine_Subprogram"]
@@ -609,25 +618,28 @@ class Internal_Subprogram(Base):  # R211
 
 class Specification_Stmt(Base):  # R212
     """
-    <specification-stmt> = <access-stmt>
-                           | <allocatable-stmt>
-                           | <asynchronous-stmt>
-                           | <bind-stmt>
-                           | <common-stmt>
-                           | <data-stmt>
-                           | <dimension-stmt>
-                           | <equivalence-stmt>
-                           | <external-stmt>
-                           | <intent-stmt>
-                           | <intrinsic-stmt>
-                           | <namelist-stmt>
-                           | <optional-stmt>
-                           | <pointer-stmt>
-                           | <protected-stmt>
-                           | <save-stmt>
-                           | <target-stmt>
-                           | <volatile-stmt>
-                           | <value-stmt>
+    ::
+
+        <specification-stmt> = <access-stmt>
+                               | <allocatable-stmt>
+                               | <asynchronous-stmt>
+                               | <bind-stmt>
+                               | <common-stmt>
+                               | <data-stmt>
+                               | <dimension-stmt>
+                               | <equivalence-stmt>
+                               | <external-stmt>
+                               | <intent-stmt>
+                               | <intrinsic-stmt>
+                               | <namelist-stmt>
+                               | <optional-stmt>
+                               | <pointer-stmt>
+                               | <protected-stmt>
+                               | <save-stmt>
+                               | <target-stmt>
+                               | <volatile-stmt>
+                               | <value-stmt>
+
     """
 
     subclass_names = [
@@ -658,15 +670,16 @@ class Specification_Stmt(Base):  # R212
 class Executable_Construct(Base):  # R213
     # pylint: disable=invalid-name
     """
-    Fortran 2003 rule R213
-    executable-construct is action-stmt
-                         or associate-construct
-                         or case-construct
-                         or do-construct
-                         or forall-construct
-                         or if-construct
-                         or select-type-construct
-                         or where-construct
+    Fortran 2003 rule R213::
+
+        executable-construct is action-stmt
+                             or associate-construct
+                             or case-construct
+                             or do-construct
+                             or forall-construct
+                             or if-construct
+                             or select-type-construct
+                             or where-construct
 
     """
     subclass_names = [
@@ -688,37 +701,40 @@ class Executable_Construct_C201(Base):
 
 class Action_Stmt(Base):  # R214
     """
-    <action-stmt> = <allocate-stmt>
-                    | <assignment-stmt>
-                    | <backspace-stmt>
-                    | <call-stmt>
-                    | <close-stmt>
-                    | <continue-stmt>
-                    | <cycle-stmt>
-                    | <deallocate-stmt>
-                    | <endfile-stmt>
-                    | <end-function-stmt>
-                    | <end-program-stmt>
-                    | <end-subroutine-stmt>
-                    | <exit-stmt>
-                    | <flush-stmt>
-                    | <forall-stmt>
-                    | <goto-stmt>
-                    | <if-stmt>
-                    | <inquire-stmt>
-                    | <nullify-stmt>
-                    | <open-stmt>
-                    | <pointer-assignment-stmt>
-                    | <print-stmt>
-                    | <read-stmt>
-                    | <return-stmt>
-                    | <rewind-stmt>
-                    | <stop-stmt>
-                    | <wait-stmt>
-                    | <where-stmt>
-                    | <write-stmt>
-                    | <arithmetic-if-stmt>
-                    | <computed-goto-stmt>
+    ::
+
+        <action-stmt> = <allocate-stmt>
+                        | <assignment-stmt>
+                        | <backspace-stmt>
+                        | <call-stmt>
+                        | <close-stmt>
+                        | <continue-stmt>
+                        | <cycle-stmt>
+                        | <deallocate-stmt>
+                        | <endfile-stmt>
+                        | <end-function-stmt>
+                        | <end-program-stmt>
+                        | <end-subroutine-stmt>
+                        | <exit-stmt>
+                        | <flush-stmt>
+                        | <forall-stmt>
+                        | <goto-stmt>
+                        | <if-stmt>
+                        | <inquire-stmt>
+                        | <nullify-stmt>
+                        | <open-stmt>
+                        | <pointer-assignment-stmt>
+                        | <print-stmt>
+                        | <read-stmt>
+                        | <return-stmt>
+                        | <rewind-stmt>
+                        | <stop-stmt>
+                        | <wait-stmt>
+                        | <where-stmt>
+                        | <write-stmt>
+                        | <arithmetic-if-stmt>
+                        | <computed-goto-stmt>
+
     """
 
     subclass_names = [
@@ -758,8 +774,12 @@ class Action_Stmt(Base):  # R214
 
 class Action_Stmt_C201(Base):
     """
-    <action-stmt-c201> = <action-stmt>
+    ::
+
+        <action-stmt-c201> = <action-stmt>
+
     C201 is applied.
+
     """
 
     subclass_names = Action_Stmt.subclass_names[:]
@@ -770,8 +790,12 @@ class Action_Stmt_C201(Base):
 
 class Action_Stmt_C802(Base):
     """
-    <action-stmt-c802> = <action-stmt>
+    ::
+
+        <action-stmt-c802> = <action-stmt>
+   
     C802 is applied.
+
     """
 
     subclass_names = Action_Stmt.subclass_names[:]
@@ -782,7 +806,10 @@ class Action_Stmt_C802(Base):
 
 class Action_Stmt_C824(Base):
     """
-    <action-stmt-c824> = <action-stmt>
+    ::
+
+        <action-stmt-c824> = <action-stmt>
+
     C824 is applied.
     """
 
@@ -800,7 +827,10 @@ class Action_Stmt_C824(Base):
 
 class Keyword(Base):  # R215
     """
-    <keyword> = <name>
+    ::
+    
+        <keyword> = <name>
+
     """
 
     subclass_names = ["Name"]
@@ -817,8 +847,9 @@ class Keyword(Base):  # R215
 
 class Name(StringBase):  # R304
     """
-    Fortran 2003 rule R304
-    name is letter [ alphanumeric_character ]...
+    Fortran 2003 rule R304::
+
+        name is letter [ alphanumeric_character ]...
 
     """
 
@@ -841,8 +872,10 @@ class Name(StringBase):  # R304
 
 class Constant(Base):  # R305
     """
-    <constant> = <literal-constant>
-                 | <named-constant>
+    ::
+
+        <constant> = <literal-constant>
+                     | <named-constant>
     """
 
     subclass_names = ["Literal_Constant", "Named_Constant"]
@@ -850,12 +883,14 @@ class Constant(Base):  # R305
 
 class Literal_Constant(Base):  # R306
     """
-    <literal-constant> = <int-literal-constant>
-                         | <real-literal-constant>
-                         | <complex-literal-constant>
-                         | <logical-literal-constant>
-                         | <char-literal-constant>
-                         | <boz-literal-constant>
+    ::
+
+        <literal-constant> = <int-literal-constant>
+                             | <real-literal-constant>
+                             | <complex-literal-constant>
+                             | <logical-literal-constant>
+                             | <char-literal-constant>
+                             | <boz-literal-constant>
     """
 
     subclass_names = [
@@ -870,7 +905,9 @@ class Literal_Constant(Base):  # R306
 
 class Named_Constant(Base):  # R307
     """
-    <named-constant> = <name>
+    ::
+        <named-constant> = <name>
+
     """
 
     subclass_names = ["Name"]
@@ -878,7 +915,9 @@ class Named_Constant(Base):  # R307
 
 class Int_Constant(Base):  # R308
     """
-    <int-constant> = <constant>
+    ::
+    
+        <int-constant> = <constant>
     """
 
     subclass_names = ["Constant"]
@@ -886,7 +925,9 @@ class Int_Constant(Base):  # R308
 
 class Char_Constant(Base):  # R309
     """
-    <char-constant> = <constant>
+    ::
+
+        <char-constant> = <constant>
     """
 
     subclass_names = ["Constant"]
@@ -902,8 +943,10 @@ class Char_Constant(Base):  # R309
 
 
 class Defined_Operator(Base):  # pylint: disable=invalid-name
-    """Fortran 2003 rule R311
-    R311 defined-operator is defined-unary-op
+    """
+    Fortran 2003 rule R311::
+    
+        defined-operator is defined-unary-op
                           or defined-binary-op
                           or extended-intrinsic-op
 
@@ -924,8 +967,10 @@ class Defined_Operator(Base):  # pylint: disable=invalid-name
 
 
 class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
-    """Fortran 2003 rule R312
-    R312 extended-intrinsic-op is intrinsic-operator
+    """
+    Fortran 2003 rule R312::
+
+        extended-intrinsic-op is intrinsic-operator
 
     Note, extended-intrinsic-op is only ever used by R311 and is
     defined in pattern_tools.py so could be matched directly in the
@@ -956,6 +1001,7 @@ class Extended_Intrinsic_Op(StringBase):  # pylint: disable=invalid-name
 class Label(StringBase):  # R313
     """
     ::
+
         <label> = <digit> [ <digit> [ <digit> [ <digit> [ <digit> ] ] ] ]
 
     Has attributes::
@@ -980,8 +1026,9 @@ class Label(StringBase):  # R313
 
 class Type_Spec(Base):  # R401
     """
-    <type-spec> = <intrinsic-type-spec>
-                  | <derived-type-spec>
+    ::
+        <type-spec> = <intrinsic-type-spec>
+                      | <derived-type-spec>
     """
 
     subclass_names = ["Intrinsic_Type_Spec", "Derived_Type_Spec"]
@@ -1006,15 +1053,17 @@ class Type_Param_Value(StringBase):  # R402
 
 class Intrinsic_Type_Spec(WORDClsBase):  # R403
     """
-    <intrinsic-type-spec> = INTEGER [ <kind-selector> ]
-                            | REAL [ <kind-selector> ]
-                            | DOUBLE COMPLEX
-                            | COMPLEX [ <kind-selector> ]
-                            | CHARACTER [ <char-selector> ]
-                            | LOGICAL [ <kind-selector> ]
-    Extensions:
-                            | DOUBLE PRECISION
-                            | BYTE
+    ::
+
+        <intrinsic-type-spec> = INTEGER [ <kind-selector> ]
+                                | REAL [ <kind-selector> ]
+                                | DOUBLE COMPLEX
+                                | COMPLEX [ <kind-selector> ]
+                                | CHARACTER [ <char-selector> ]
+                                | LOGICAL [ <kind-selector> ]
+        Extensions:
+                                | DOUBLE PRECISION
+                                | BYTE
     """
 
     subclass_names = []
@@ -1043,16 +1092,18 @@ class Intrinsic_Type_Spec(WORDClsBase):  # R403
 
 class Kind_Selector(Base):  # R404
     """
-    Fortran 2003 rule R404
-    kind-selector is ( [ KIND = ] scalar-int-initialization-expr )
-    A non-standard extension is also supported here:
-                      | * char-length
+    Fortran 2003 rule R404::
 
-    There is an associated constraint that we can't enforce in fparser:
+        kind-selector is ( [ KIND = ] scalar-int-initialization-expr )
 
-    'C404 (R404) The value of scalar-int-initialization-expr shall be
-    nonnegative and shall specify a representation method that
-    exists on the processor.'
+        A non-standard extension is also supported here:
+                          | * char-length
+
+    There is an associated constraint that we can't enforce in fparser::
+
+        C404 (R404) The value of scalar-int-initialization-expr shall be
+        nonnegative and shall specify a representation method that
+        exists on the processor.
 
     """
 
@@ -1134,7 +1185,9 @@ class Kind_Selector(Base):  # R404
 
 class Signed_Int_Literal_Constant(NumberBase):  # R405
     """
-    <signed-int-literal-constant> = [ <sign> ] <int-literal-constant>
+    ::
+        <signed-int-literal-constant> = [ <sign> ] <int-literal-constant>
+
     """
 
     # never used because sign is included in pattern
@@ -1147,7 +1200,9 @@ class Signed_Int_Literal_Constant(NumberBase):  # R405
 
 class Int_Literal_Constant(NumberBase):  # R406
     """
-    <int-literal-constant> = <digit-string> [ _ <kind-param> ]
+    ::
+        <int-literal-constant> = <digit-string> [ _ <kind-param> ]
+
     """
 
     subclass_names = []
@@ -1159,7 +1214,10 @@ class Int_Literal_Constant(NumberBase):  # R406
 
 class Digit_String(NumberBase):
     """
-    <digit-string> = <digit> [ <digit> ]...
+    ::
+
+        <digit-string> = <digit> [ <digit> ]...
+
     """
 
     subclass_names = []
@@ -1177,9 +1235,11 @@ class Digit_String(NumberBase):
 
 class Boz_Literal_Constant(Base):  # R411
     """
-    <boz-literal-constant> = <binary-constant>
-                             | <octal-constant>
-                             | <hex-constant>
+    ::
+
+        <boz-literal-constant> = <binary-constant>
+                                 | <octal-constant>
+                                 | <hex-constant>
     """
 
     subclass_names = ["Binary_Constant", "Octal_Constant", "Hex_Constant"]
@@ -1187,8 +1247,10 @@ class Boz_Literal_Constant(Base):  # R411
 
 class Binary_Constant(STRINGBase):  # R412
     """
-    <binary-constant> = B ' <digit> [ <digit> ]... '
-                        | B \" <digit> [ <digit> ]... \"
+    ::
+
+        <binary-constant> = B ' <digit> [ <digit> ]... '
+                            | B \" <digit> [ <digit> ]... \"
     """
 
     subclass_names = []
@@ -1200,8 +1262,10 @@ class Binary_Constant(STRINGBase):  # R412
 
 class Octal_Constant(STRINGBase):  # R413
     """
-    <octal-constant> = O ' <digit> [ <digit> ]... '
-                       | O \" <digit> [ <digit> ]... \"
+    ::
+
+        <octal-constant> = O ' <digit> [ <digit> ]... '
+                           | O \" <digit> [ <digit> ]... \"
     """
 
     subclass_names = []
@@ -1213,8 +1277,10 @@ class Octal_Constant(STRINGBase):  # R413
 
 class Hex_Constant(STRINGBase):  # R414
     """
-    <hex-constant> = Z ' <digit> [ <digit> ]... '
-                     | Z \" <digit> [ <digit> ]... \"
+    ::
+
+        <hex-constant> = Z ' <digit> [ <digit> ]... '
+                         | Z \" <digit> [ <digit> ]... \"
     """
 
     subclass_names = []
@@ -1229,7 +1295,9 @@ class Hex_Constant(STRINGBase):  # R414
 
 class Signed_Real_Literal_Constant(NumberBase):  # R416
     """
-    <signed-real-literal-constant> = [ <sign> ] <real-literal-constant>
+    ::
+
+        <signed-real-literal-constant> = [ <sign> ] <real-literal-constant>
     """
 
     subclass_names = ["Real_Literal_Constant"]  # never used
@@ -1256,7 +1324,9 @@ class Real_Literal_Constant(NumberBase):  # R417
 
 class Complex_Literal_Constant(Base):  # R421
     """
-    <complex-literal-constant> = ( <real-part>, <imag-part> )
+    ::
+
+        <complex-literal-constant> = ( <real-part>, <imag-part> )
     """
 
     subclass_names = []
@@ -1277,9 +1347,11 @@ class Complex_Literal_Constant(Base):  # R421
 
 class Real_Part(Base):  # R422
     """
-    <real-part> = <signed-int-literal-constant>
-                  | <signed-real-literal-constant>
-                  | <named-constant>
+    ::
+
+        <real-part> = <signed-int-literal-constant>
+                      | <signed-real-literal-constant>
+                      | <named-constant>
     """
 
     subclass_names = [
@@ -1291,7 +1363,10 @@ class Real_Part(Base):  # R422
 
 class Imag_Part(Base):  # R423
     """
-    <imag-part> = <real-part>
+    ::
+
+        <imag-part> = <real-part>
+
     """
 
     subclass_names = [
@@ -1303,13 +1378,16 @@ class Imag_Part(Base):  # R423
 
 class Char_Selector(Base):  # R424
     """
-    <char-selector> = <length-selector>
-                      | ( LEN = <type-param-value> ,
-                         KIND = <scalar-int-initialization-expr> )
-                      | ( <type-param-value> ,
-                         [ KIND = ] <scalar-int-initialization-expr> )
-                      | ( KIND = <scalar-int-initialization-expr>
-                        [ , LEN = <type-param-value> ] )
+    ::
+
+        <char-selector> = <length-selector>
+                          | ( LEN = <type-param-value> ,
+                             KIND = <scalar-int-initialization-expr> )
+                          | ( <type-param-value> ,
+                             [ KIND = ] <scalar-int-initialization-expr> )
+                          | ( KIND = <scalar-int-initialization-expr>
+                            [ , LEN = <type-param-value> ] )
+
     """
 
     subclass_names = ["Length_Selector"]
@@ -1372,8 +1450,10 @@ class Char_Selector(Base):  # R424
 
 class Length_Selector(Base):  # R425
     """
-    <length -selector> = ( [ LEN = ] <type-param-value> )
-                        | * <char-length> [ , ]
+    ::
+
+        <length -selector> = ( [ LEN = ] <type-param-value> )
+                            | * <char-length> [ , ]
     """
 
     subclass_names = []
@@ -1402,8 +1482,10 @@ class Length_Selector(Base):  # R425
 
 class Char_Length(BracketBase):  # R426
     """
-    <char-length> = ( <type-param-value> )
-                    | <scalar-int-literal-constant>
+    ::
+
+        <char-length> = ( <type-param-value> )
+                        | <scalar-int-literal-constant>
     """
 
     subclass_names = ["Scalar_Int_Literal_Constant"]
@@ -1505,8 +1587,10 @@ class Char_Literal_Constant(Base):  # pylint: disable=invalid-name
 
 class Logical_Literal_Constant(NumberBase):  # R428
     """
-    <logical-literal-constant> = .TRUE. [ _ <kind-param> ]
-                                 | .FALSE. [ _ <kind-param> ]
+    ::
+
+        <logical-literal-constant> = .TRUE. [ _ <kind-param> ]
+                                     | .FALSE. [ _ <kind-param> ]
     """
 
     subclass_names = []
@@ -1518,12 +1602,14 @@ class Logical_Literal_Constant(NumberBase):  # R428
 
 class Derived_Type_Def(BlockBase):  # R429
     """
-    <derived-type-def> = <derived-type-stmt>
-                           [ <type-param-def-stmt> ]...
-                           [ <private-or-sequence> ]...
-                           [ <component-part> ]
-                           [ <type-bound-procedure-part> ]
-                           <end-type-stmt>
+    ::
+
+        <derived-type-def> = <derived-type-stmt>
+                               [ <type-param-def-stmt> ]...
+                               [ <private-or-sequence> ]...
+                               [ <component-part> ]
+                               [ <type-bound-procedure-part> ]
+                               <end-type-stmt>
     """
 
     subclass_names = []
@@ -1554,10 +1640,10 @@ class Derived_Type_Def(BlockBase):  # R429
 
 class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
     """
-    Fortran 2003 rule R430
+    Fortran 2003 rule R430::
 
-    derived-type-stmt is TYPE [ [ , type-attr-spec-list ] :: ]
-                         type-name [ ( type-param-name-list ) ]
+        derived-type-stmt is TYPE [ [ , type-attr-spec-list ] :: ]
+                             type-name [ ( type-param-name-list ) ]
 
     """
 
@@ -1646,8 +1732,11 @@ class Derived_Type_Stmt(StmtBase):  # pylint: disable=invalid-name
 
 class Type_Name(Name):  # C424
     """
-    <type-name> = <name>
-    <type-name> shall not be DOUBLEPRECISION or the name of intrinsic type
+    ::
+
+        <type-name> = <name>
+        <type-name> shall not be DOUBLEPRECISION or the name of intrinsic type
+
     """
 
     subclass_names = []
@@ -1662,10 +1751,13 @@ class Type_Name(Name):  # C424
 
 class Type_Attr_Spec(Base):  # R431
     """
-    <type-attr-spec> = <access-spec>
-                       | EXTENDS ( <parent-type-name> )
-                       | ABSTRACT
-                       | BIND (C)
+    ::
+
+        <type-attr-spec> = <access-spec>
+                           | EXTENDS ( <parent-type-name> )
+                           | ABSTRACT
+                           | BIND (C)
+
     """
 
     subclass_names = ["Access_Spec", "Language_Binding_Spec"][:-1]
@@ -1696,8 +1788,11 @@ class Type_Attr_Spec(Base):  # R431
 
 class Private_Or_Sequence(Base):  # R432
     """
-    <private-or-sequence> = <private-components-stmt>
-                            | <sequence-stmt>
+    ::
+
+        <private-or-sequence> = <private-components-stmt>
+                                | <sequence-stmt>
+
     """
 
     subclass_names = ["Private_Components_Stmt", "Sequence_Stmt"]
@@ -1705,7 +1800,10 @@ class Private_Or_Sequence(Base):  # R432
 
 class End_Type_Stmt(EndStmtBase):  # R433
     """
-    <end-type-stmt> = END TYPE [ <type-name> ]
+    ::
+
+        <end-type-stmt> = END TYPE [ <type-name> ]
+
     """
 
     subclass_names = []
@@ -1718,7 +1816,10 @@ class End_Type_Stmt(EndStmtBase):  # R433
 
 class Sequence_Stmt(STRINGBase):  # R434
     """
-    <sequence-stmt> = SEQUENCE
+    ::
+
+        <sequence-stmt> = SEQUENCE
+
     """
 
     subclass_names = []
@@ -1730,8 +1831,11 @@ class Sequence_Stmt(STRINGBase):  # R434
 
 class Type_Param_Def_Stmt(StmtBase):  # R435
     """
-    <type-param-def-stmt> = INTEGER [ <kind-selector> ] ,
-        <type-param-attr-spec> :: <type-param-decl-list>
+    ::
+
+        <type-param-def-stmt> = INTEGER [ <kind-selector> ] ,
+            <type-param-attr-spec> :: <type-param-decl-list>
+
     """
 
     subclass_names = []
@@ -1771,8 +1875,10 @@ class Type_Param_Def_Stmt(StmtBase):  # R435
 
 class Type_Param_Decl(BinaryOpBase):  # R436
     """
-    <type-param-decl> = <type-param-name>
-        [ = <scalar-int-initialization-expr> ]
+    ::
+        <type-param-decl> = <type-param-name>
+            [ = <scalar-int-initialization-expr> ]
+
     """
 
     subclass_names = ["Type_Param_Name"]
@@ -1792,8 +1898,11 @@ class Type_Param_Decl(BinaryOpBase):  # R436
 
 class Type_Param_Attr_Spec(STRINGBase):  # R437
     """
-    <type-param-attr-spec> = KIND
-                             | LEN
+    ::
+
+        <type-param-attr-spec> = KIND
+                                 | LEN
+
     """
 
     subclass_names = []
@@ -1805,7 +1914,10 @@ class Type_Param_Attr_Spec(STRINGBase):  # R437
 
 class Component_Part(BlockBase):  # R438
     """
-    <component-part> is [ <component-def-stmt> ]...
+    ::
+
+        <component-part> is [ <component-def-stmt> ]...
+
     """
 
     subclass_names = []
@@ -1845,8 +1957,11 @@ class Component_Part(BlockBase):  # R438
 
 class Component_Def_Stmt(Base):  # R439
     """
-    <component-def-stmt> is <data-component-def-stmt>
-                         or <proc-component-def-stmt>
+    ::
+
+        <component-def-stmt> is <data-component-def-stmt>
+                             or <proc-component-def-stmt>
+
     """
 
     subclass_names = ["Data_Component_Def_Stmt", "Proc_Component_Def_Stmt"]
@@ -1854,37 +1969,38 @@ class Component_Def_Stmt(Base):  # R439
 
 class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
     """
-    Fortran 2003 rule 440
-    <data-component-def-stmt> is <declaration-type-spec> [
-             [ , <component-attr-spec-list> ] :: ] <component-decl-list>
+    Fortran 2003 rule 440::
 
-    Associated constraints are:
+        <data-component-def-stmt> is <declaration-type-spec> [
+                 [ , <component-attr-spec-list> ] :: ] <component-decl-list>
 
-    "C436 (R440)  No component-attr-spec shall appear more than once in a given
-          component-def-stmt."
-    "C437 (R440)  A component declared with the CLASS keyword shall have the
-          ALLOCATABLE or POINTER attribute."
-    "C438 (R440)  If the POINTER attribute is not specified for a component,
-          the declaration-type-spec in the component-def-stmt shall be CLASS(*)
-          or shall specify an intrinsic type or a previously defined derived
-          type."
-    "C439 (R440)  If the POINTER attribute is specified for a component, the
-          declaration-type-spec in the component-def-stmt shall be CLASS(*) or
-          shall specify an intrinsic type or any accessible derived type
-          including the type being defined."
-    "C440 (R440)  If the POINTER or ALLOCATABLE attribute is specified, each
-          component-array-spec shall be a deferred-shape-spec-list."
-    "C441 (R440)  If neither the POINTER attribute nor the ALLOCATABLE
-          attribute is specified, each component-array-spec shall be an
-          explicit-shape-spec-list."
-    "C443 (R440)  A component shall not have both the ALLOCATABLE and the
-          POINTER attribute."
-    "C446 (R440)  If component-initialization appears, a double-colon separator
-          shall appear before the component-decl-list."
-    "C447 (R440)  If => appears in component-initialization, POINTER shall
-          appear in the component-attr-spec-list. If = appears in
-          component-initialization, POINTER or ALLOCATABLE shall not appear in
-          the component-attr-spec-list."
+    Associated constraints are::
+
+        C436 (R440)  No component-attr-spec shall appear more than once in a given
+             component-def-stmt.
+        C437 (R440)  A component declared with the CLASS keyword shall have the
+             ALLOCATABLE or POINTER attribute.
+        C438 (R440)  If the POINTER attribute is not specified for a component,
+             the declaration-type-spec in the component-def-stmt shall be CLASS(*)
+             or shall specify an intrinsic type or a previously defined derived
+             type.
+        C439 (R440)  If the POINTER attribute is specified for a component, the
+             declaration-type-spec in the component-def-stmt shall be CLASS(*) or
+             shall specify an intrinsic type or any accessible derived type
+             including the type being defined.
+        C440 (R440)  If the POINTER or ALLOCATABLE attribute is specified, each
+             component-array-spec shall be a deferred-shape-spec-list.
+        C441 (R440)  If neither the POINTER attribute nor the ALLOCATABLE
+             attribute is specified, each component-array-spec shall be an
+             explicit-shape-spec-list.
+        C443 (R440)  A component shall not have both the ALLOCATABLE and the
+             POINTER attribute.
+        C446 (R440)  If component-initialization appears, a double-colon separator
+             shall appear before the component-decl-list.
+        C447 (R440)  If => appears in component-initialization, POINTER shall
+             appear in the component-attr-spec-list. If = appears in
+             component-initialization, POINTER or ALLOCATABLE shall not appear in
+             the component-attr-spec-list.
 
     C436-C441, C443, C446-C447 are currently not checked - issue #258.
 
@@ -1906,7 +2022,10 @@ class Data_Component_Def_Stmt(Type_Declaration_StmtBase):  # R440
 
 class Dimension_Component_Attr_Spec(CALLBase):
     """
-    <dimension-component-attr-spec> = DIMENSION ( <component-array-spec> )
+    ::
+
+        <dimension-component-attr-spec> = DIMENSION ( <component-array-spec> )
+
     """
 
     subclass_names = []
@@ -1919,10 +2038,13 @@ class Dimension_Component_Attr_Spec(CALLBase):
 
 class Component_Attr_Spec(STRINGBase):  # R441
     """
-    <component-attr-spec> = POINTER
-                            | DIMENSION ( <component-array-spec> )
-                            | ALLOCATABLE
-                            | <access-spec>
+    ::
+
+        <component-attr-spec> = POINTER
+                                | DIMENSION ( <component-array-spec> )
+                                | ALLOCATABLE
+                                | <access-spec>
+
     """
 
     subclass_names = ["Access_Spec", "Dimension_Component_Attr_Spec"]
@@ -1950,8 +2072,11 @@ class Component_Attr_Spec(STRINGBase):  # R441
 
 class Component_Decl(Base):  # R442
     """
-    <component-decl> = <component-name> [ ( <component-array-spec> ) ]
-        [ * <char-length> ] [ <component-initialization> ]
+    ::
+
+        <component-decl> = <component-name> [ ( <component-array-spec> ) ]
+            [ * <char-length> ] [ <component-initialization> ]
+
     """
 
     subclass_names = []
@@ -2010,8 +2135,11 @@ class Component_Decl(Base):  # R442
 
 class Component_Array_Spec(Base):  # R443
     """
-    <component-array-spec> = <explicit-shape-spec-list>
-                             | <deferred-shape-spec-list>
+    ::
+
+        <component-array-spec> = <explicit-shape-spec-list>
+                                 | <deferred-shape-spec-list>
+
     """
 
     subclass_names = ["Explicit_Shape_Spec_List", "Deferred_Shape_Spec_List"]
@@ -2019,8 +2147,11 @@ class Component_Array_Spec(Base):  # R443
 
 class Component_Initialization(Base):  # R444
     """
-    <component-initialization> =  = <initialization-expr>
-                                 | => <null-init>
+    ::
+
+        <component-initialization> =  = <initialization-expr>
+                                     | => <null-init>
+
     """
 
     subclass_names = []
@@ -2040,32 +2171,35 @@ class Component_Initialization(Base):  # R444
 
 class Proc_Component_Def_Stmt(StmtBase):  # R445
     """
-    <proc-component-def-stmt> is PROCEDURE ( [ <proc-interface> ] )
-        , <proc-component-attr-spec-list> :: <proc-decl-list>
+    ::
 
-    where
+        <proc-component-def-stmt> is PROCEDURE ( [ <proc-interface> ] )
+            , <proc-component-attr-spec-list> :: <proc-decl-list>
+
+    where::
 
         proc-component-attr-spec is POINTER
                                  or PASS [ (arg-name) ]
                                  or NOPASS
                                  or access-spec
 
-    The standard specifies the following constraints:
+    The standard specifies the following constraints::
 
-    "C448 The same proc-component-attr-spec shall not appear more than once
-          in a given proc-component-def-stmt." Not checked by fparser - #232.
+        C448 The same proc-component-attr-spec shall not appear more than once
+             in a given proc-component-def-stmt. Not checked by fparser - #232.
 
-    "C449 POINTER shall appear in each proc-component-attr-spec-list."
+        C449 POINTER shall appear in each proc-component-attr-spec-list.
 
-    "C450 If the procedure pointer component has an implicit interface or
-          has no arguments, NOPASS shall be specified." Not checked by
-          fparser - #232.
+        C450 If the procedure pointer component has an implicit interface or
+             has no arguments, NOPASS shall be specified. Not checked by
+             fparser - #232.
 
-    "C451 If PASS (arg-name) appears, the interface shall have a dummy argument
-          named arg-name." Not checked by fparser - #232.
+        C451 If PASS (arg-name) appears, the interface shall have a dummy argument
+             named arg-name. Not checked by fparser - #232.
 
-    "C452 PASS and NOPASS shall not both appear in the same
-          proc-component-attr-spec-list." Not checked by fparser - #232.
+        C452 PASS and NOPASS shall not both appear in the same
+             proc-component-attr-spec-list. Not checked by fparser - #232.
+
     """
 
     subclass_names = []
@@ -2123,7 +2257,10 @@ class Proc_Component_Def_Stmt(StmtBase):  # R445
 
 class Proc_Component_PASS_Arg_Name(CALLBase):
     """
-    <proc-component-PASS-arg-name> = PASS ( <arg-name> )
+    ::
+
+        <proc-component-PASS-arg-name> = PASS ( <arg-name> )
+
     """
 
     subclass_names = []
@@ -2136,10 +2273,13 @@ class Proc_Component_PASS_Arg_Name(CALLBase):
 
 class Proc_Component_Attr_Spec(STRINGBase):  # R446
     """
-    <proc-component-attr-spec> = POINTER
-                                 | PASS [ ( <arg-name> ) ]
-                                 | NOPASS
-                                 | <access-spec>
+    ::
+
+        <proc-component-attr-spec> = POINTER
+                                     | PASS [ ( <arg-name> ) ]
+                                     | NOPASS
+                                     | <access-spec>
+
     """
 
     subclass_names = ["Access_Spec", "Proc_Component_PASS_Arg_Name"]
@@ -2155,8 +2295,7 @@ class Private_Components_Stmt(STRINGBase):  # pylint: disable=invalid-name
 
         <private-components-stmt> = PRIVATE
 
-    Specifies support for private components statement
-    within a derived type.
+    Specifies support for private components statement within a derived type.
 
     """
 
@@ -2182,6 +2321,7 @@ class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
                                           [ binding-private-stmt ]
                                           proc-binding-stmt
                                           [ proc-binding-stmt ]...
+
     """
 
     subclass_names = []
@@ -2193,6 +2333,7 @@ class Type_Bound_Procedure_Part(BlockBase):  # pylint: disable=invalid-name
         :param reader: the Fortran reader containing the line(s) of code \
         that we are trying to match
         :type reader: :py:class:`fparser.common.readfortran.FortranReaderBase`
+
         :return: code block containing instances of the classes that match \
                  the syntax of the type-bound procedure part of a derived type.
         :rtype: ([`Contains_Stmt`, `Specific_Binding`, `str`, `Name`, \
@@ -2220,6 +2361,7 @@ class Binding_Private_Stmt(StmtBase, STRINGBase):  # pylint: disable=invalid-nam
     def match(string):
         """
         :param str string: Fortran code to check for a match
+
         :return: keyword  "PRIVATE" or None if no match is found
         :rtype: str or None
         """
@@ -2251,17 +2393,17 @@ class Specific_Binding(StmtBase):  # pylint: disable=invalid-name
     Specifies the syntax of specific binding for a type-bound
     procedure within a derived type.
 
-    The following are associated constraints:
+    The following are associated constraints::
 
-    "C456 (R451) If => procedure-name appears, the double-colon
-    separator shall appear."
+        C456 (R451) If => procedure-name appears, the double-colon
+        separator shall appear.
 
-    "C457 (R451) If => procedure-name appears, interface-name shall not
-    appear."
-
-    "C458 (R451) The procedure-name shall be the name of an accessible
-    module procedure or an external procedure that has an explicit
-    interface." Note, this is not checked by fparser.
+        C457 (R451) If => procedure-name appears, interface-name shall not
+        appear.
+    
+        C458 (R451) The procedure-name shall be the name of an accessible
+        module procedure or an external procedure that has an explicit
+        interface. Note, this is not checked by fparser.
 
     """
 
@@ -2520,7 +2662,10 @@ class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
 
 class Derived_Type_Spec(CallBase):  # R455
     """
-    <derived-type-spec> = <type-name> [ ( <type-param-spec-list> ) ]
+    ::
+
+        <derived-type-spec> = <type-name> [ ( <type-param-spec-list> ) ]
+
     """
 
     subclass_names = ["Type_Name"]
@@ -2533,7 +2678,10 @@ class Derived_Type_Spec(CallBase):  # R455
 
 class Type_Param_Spec(KeywordValueBase):  # R456
     """
-    <type-param-spec> = [ <keyword> = ] <type-param-value>
+    ::
+
+        <type-param-spec> = [ <keyword> = ] <type-param-value>
+
     """
 
     subclass_names = ["Type_Param_Value"]
@@ -2546,7 +2694,10 @@ class Type_Param_Spec(KeywordValueBase):  # R456
 
 class Structure_Constructor(CallBase):  # R457
     """
-    <structure-constructor> = <derived-type-spec> ( [ <component-spec-list> ] )
+    ::
+
+        <structure-constructor> = <derived-type-spec> ( [ <component-spec-list> ] )
+
     """
 
     subclass_names = []
@@ -2559,7 +2710,10 @@ class Structure_Constructor(CallBase):  # R457
 
 class Component_Spec(KeywordValueBase):  # R458
     """
-    <component-spec> = [ <keyword> = ] <component-data-source>
+    ::
+
+        <component-spec> = [ <keyword> = ] <component-data-source>
+
     """
 
     subclass_names = ["Component_Data_Source"]
@@ -2572,9 +2726,12 @@ class Component_Spec(KeywordValueBase):  # R458
 
 class Component_Data_Source(Base):  # R459
     """
-    <component-data-source> = <expr>
-                              | <data-target>
-                              | <proc-target>
+    ::
+
+        <component-data-source> = <expr>
+                                  | <data-target>
+                                  | <proc-target>
+
     """
 
     subclass_names = ["Proc_Target", "Data_Target", "Expr"]
@@ -2582,10 +2739,13 @@ class Component_Data_Source(Base):  # R459
 
 class Enum_Def(BlockBase):  # R460
     """
-    <enum-def> = <enum-def-stmt>
-                     <enumerator-def-stmt>
-                     [ <enumerator-def-stmt> ]...
-                     <end-enum-stmt>
+    ::
+
+        <enum-def> = <enum-def-stmt>
+                         <enumerator-def-stmt>
+                         [ <enumerator-def-stmt> ]...
+                         <end-enum-stmt>
+
     """
 
     subclass_names = []
@@ -2600,7 +2760,10 @@ class Enum_Def(BlockBase):  # R460
 
 class Enum_Def_Stmt(StmtBase):  # R461
     """
-    <enum-def-stmt> = ENUM, BIND(C)
+    ::
+
+        <enum-def-stmt> = ENUM, BIND(C)
+
     """
 
     subclass_names = []
@@ -2618,7 +2781,10 @@ class Enum_Def_Stmt(StmtBase):  # R461
 
 class Enumerator_Def_Stmt(StmtBase, WORDClsBase):  # R462
     """
-    <enumerator-def-stmt> = ENUMERATOR [ :: ] <enumerator-list>
+    ::
+
+        <enumerator-def-stmt> = ENUMERATOR [ :: ] <enumerator-list>
+
     """
 
     subclass_names = []
@@ -2635,7 +2801,10 @@ class Enumerator_Def_Stmt(StmtBase, WORDClsBase):  # R462
 
 class Enumerator(BinaryOpBase):  # R463
     """
-    <enumerator> = <named-constant> [ = <scalar-int-initialization-expr> ]
+    ::
+
+        <enumerator> = <named-constant> [ = <scalar-int-initialization-expr> ]
+
     """
 
     subclass_names = ["Named_Constant"]
@@ -2655,7 +2824,10 @@ class Enumerator(BinaryOpBase):  # R463
 
 class End_Enum_Stmt(EndStmtBase):  # R464
     """
-    <end-enum-stmt> = END ENUM
+    ::
+
+        <end-enum-stmt> = END ENUM
+
     """
 
     subclass_names = []
@@ -2667,9 +2839,11 @@ class End_Enum_Stmt(EndStmtBase):  # R464
 
 class Array_Constructor(BracketBase):  # R465
     """
-    <array-constructor> = (/ <ac-spec> /)
-                          | <left-square-bracket> <ac-spec>
-                            <right-square-bracket>
+    ::
+
+        <array-constructor> = (/ <ac-spec> /)
+                              | <left-square-bracket> <ac-spec>
+                                <right-square-bracket>
 
     """
 
@@ -2689,8 +2863,11 @@ class Array_Constructor(BracketBase):  # R465
 
 class Ac_Spec(Base):  # R466
     """
-    <ac-spec> = <type-spec> ::
-                | [ <type-spec> :: ] <ac-value-list>
+    ::
+
+        <ac-spec> = <type-spec> ::
+                    | [ <type-spec> :: ] <ac-value-list>
+
     """
 
     subclass_names = ["Ac_Value_List"]
@@ -2724,8 +2901,11 @@ class Ac_Spec(Base):  # R466
 
 class Ac_Value(Base):  # R469
     """
-    <ac-value> = <expr>
-                 | <ac-implied-do>
+    ::
+
+        <ac-value> = <expr>
+                     | <ac-implied-do>
+
     """
 
     subclass_names = ["Ac_Implied_Do", "Expr"]
@@ -2734,15 +2914,15 @@ class Ac_Value(Base):  # R469
 class Ac_Implied_Do(Base):
     """
     Fortran2003 rule R470.
-    Describes the form of implicit do loop used within an array constructor.
+    Describes the form of implicit do loop used within an array constructor::
 
-    ac-implied-do is ( ac-value-list , ac-implied-do-control )
+        ac-implied-do is ( ac-value-list , ac-implied-do-control )
 
-    Subject to the following constraint:
+    Subject to the following constraint::
 
-    "C497 (R470) The ac-do-variable of an ac-implied-do that is in another
-          ac-implied-do shall not appear as the ac-do-variable of the
-          containing ac-implied-do."
+        C497 (R470) The ac-do-variable of an ac-implied-do that is in another
+              ac-implied-do shall not appear as the ac-do-variable of the
+              containing ac-implied-do.
 
     C497 is currently not checked - issue #257.
 
@@ -2773,10 +2953,10 @@ class Ac_Implied_Do_Control(Base):
     """
     Fortran2003 rule R471.
     Specifies the syntax for the control of an implicit loop within an
-    array constructor.
+    array constructor::
 
-    ac-implied-do-control is ac-do-variable = scalar-int-expr,
-                                    scalar-int-expr [ , scalar-int-expr ]
+        ac-implied-do-control is ac-do-variable = scalar-int-expr,
+                                        scalar-int-expr [ , scalar-int-expr ]
 
     where (R472) ac-do-variable is scalar-int-variable
 
@@ -2817,14 +2997,14 @@ class Ac_Do_Variable(Base):
     """
     Fortran2003 rule R472.
     Specifies the permitted form of an implicit do-loop variable within an
-    array constructor.
+    array constructor::
 
-    ac-do-variable is scalar-int-variable
-    ac-do-variable shall be a named variable
+        ac-do-variable is scalar-int-variable
+        ac-do-variable shall be a named variable
 
-    Subject to the following constraint:
+    Subject to the following constraint::
 
-    "C493 (R472) ac-do-variable shall be a named variable."
+        C493 (R472) ac-do-variable shall be a named variable.
 
     C493 is currently not checked - issue #257.
 
@@ -2845,61 +3025,61 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
         type-declaration-stmt is declaration-type-spec [
             [ , attr-spec ]... :: ] entity-decl-list
 
-    Associated constraints are:
+    Associated constraints are::
 
-    "C507 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C509 (R501)  An entity declared with the CLASS keyword shall be a dummy
-          argument or have the ALLOCATABLE or POINTER attribute."
-    "C510 (R501)  An array that has the POINTER or ALLOCATABLE attribute shall
-          be specified with an array-spec that is a deferred-shape-spec-list."
-    "C511 (R501)  An array-spec for an object-name that is a function result
-          that does not have the ALLOCATABLE or POINTER attribute shall be an
-          explicit-shape-spec-list."
-    "C512 (R501)  If the POINTER attribute is specified, the ALLOCATABLE,
-          TARGET, EXTERNAL, or INTRINSIC attribute shall not be specified."
-    "C513 (R501)  If the TARGET attribute is specified, the POINTER, EXTERNAL,
-          INTRINSIC, or PARAMETER attribute shall not be specified."
-    "C514 (R501)  The PARAMETER attribute shall not be specified for a dummy
-          argument, a pointer, an allocatable entity, a function, or an object
-          in a common block."
-    "C515 (R501)  The INTENT, VALUE, and OPTIONAL attributes may be specified
-          only for dummy arguments."
-    "C516 (R501)  The INTENT attribute shall not be specified for a dummy
-          procedure without the POINTER attribute."
-    "C517 (R501)  The SAVE attribute shall not be specified for an object that
-          is in a common block, a dummy argument, a procedure, a function
-          result, an automatic data object, or an object with the PARAMETER
-          attribute."
-    "C519 (R501)  An entity in an entity-decl-list shall not have the EXTERNAL
-          or INTRINSIC attribute specified unless it is a function."
-    "C522 (R501)  The initialization shall appear if the statement contains a
-          PARAMETER attribute."
-    "C523 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-    "C526 (R501)  If the VOLATILE attribute is specified, the PARAMETER,
-          INTRINSIC, EXTERNAL, or INTENT(IN) attribute shall not be specified."
-    "C527 (R501)  If the VALUE attribute is specified, the PARAMETER, EXTERNAL,
-          POINTER, ALLOCATABLE, DIMENSION, VOLATILE, INTENT(INOUT), or
-          INTENT(OUT) attribute shall not be specified."
-    "C528 (R501)  If the VALUE attribute is specified, the length type
-          parameter values shall be omitted or specified by initialization
-          expressions."
-    "C529 (R501)  The VALUE attribute shall not be specified for a dummy
-          procedure."
-    "C530 (R501)  The ALLOCATABLE, POINTER, or OPTIONAL attribute shall not be
-          specified for adummy argument of a procedure that has
-          aproc-language-binding-spec."
-    "C532 (R501)  If a language-binding-spec is specified, the entity declared
-          shall be an interoperable variable."
-    "C533 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C534 (R503)  The PROTECTED attribute is permitted only in the
-          specification part of a module."
-    "C535 (R501)  The PROTECTED attribute is permitted only for a procedure
-          pointer or named variable that is not in a common block."
-    "C536 (R501)  If the PROTECTED attribute is specified, the EXTERNAL,
-          INTRINSIC, or PARAMETER attribute shall not be specified."
+        C507 (R501)  The same attr-spec shall not appear more than once in a given
+             type-declaration-stmt.
+        C509 (R501)  An entity declared with the CLASS keyword shall be a dummy
+             argument or have the ALLOCATABLE or POINTER attribute.
+        C510 (R501)  An array that has the POINTER or ALLOCATABLE attribute shall
+             be specified with an array-spec that is a deferred-shape-spec-list.
+        C511 (R501)  An array-spec for an object-name that is a function result
+             that does not have the ALLOCATABLE or POINTER attribute shall be an
+             explicit-shape-spec-list.
+        C512 (R501)  If the POINTER attribute is specified, the ALLOCATABLE,
+             TARGET, EXTERNAL, or INTRINSIC attribute shall not be specified.
+        C513 (R501)  If the TARGET attribute is specified, the POINTER, EXTERNAL,
+             INTRINSIC, or PARAMETER attribute shall not be specified.
+        C514 (R501)  The PARAMETER attribute shall not be specified for a dummy
+             argument, a pointer, an allocatable entity, a function, or an object
+             in a common block.
+        C515 (R501)  The INTENT, VALUE, and OPTIONAL attributes may be specified
+             only for dummy arguments.
+        C516 (R501)  The INTENT attribute shall not be specified for a dummy
+             procedure without the POINTER attribute.
+        C517 (R501)  The SAVE attribute shall not be specified for an object that
+             is in a common block, a dummy argument, a procedure, a function
+             result, an automatic data object, or an object with the PARAMETER
+             attribute.
+        C519 (R501)  An entity in an entity-decl-list shall not have the EXTERNAL
+             or INTRINSIC attribute specified unless it is a function.
+        C522 (R501)  The initialization shall appear if the statement contains a
+             PARAMETER attribute.
+        C523 (R501)  If initialization appears, a double-colon separator shall
+             appear before the entity-decl-list.
+        C526 (R501)  If the VOLATILE attribute is specified, the PARAMETER,
+             INTRINSIC, EXTERNAL, or INTENT(IN) attribute shall not be specified.
+        C527 (R501)  If the VALUE attribute is specified, the PARAMETER, EXTERNAL,
+             POINTER, ALLOCATABLE, DIMENSION, VOLATILE, INTENT(INOUT), or
+             INTENT(OUT) attribute shall not be specified.
+        C528 (R501)  If the VALUE attribute is specified, the length type
+             parameter values shall be omitted or specified by initialization
+             expressions.
+        C529 (R501)  The VALUE attribute shall not be specified for a dummy
+             procedure.
+        C530 (R501)  The ALLOCATABLE, POINTER, or OPTIONAL attribute shall not be
+             specified for adummy argument of a procedure that has
+             aproc-language-binding-spec.
+        C532 (R501)  If a language-binding-spec is specified, the entity declared
+             shall be an interoperable variable.
+        C533 (R501)  If a language-binding-spec with a NAME= specifier appears,
+             the entity-decl-list shall consist of a single entity-decl.
+        C534 (R503)  The PROTECTED attribute is permitted only in the
+             specification part of a module.
+        C535 (R501)  The PROTECTED attribute is permitted only for a procedure
+             pointer or named variable that is not in a common block.
+        C536 (R501)  If the PROTECTED attribute is specified, the EXTERNAL,
+             INTRINSIC, or PARAMETER attribute shall not be specified.
 
     C507, C509-C517, C519, C522-C523, C526-C530, C532-C533, C535-C536 are
     currently not checked - issue #259.
@@ -3023,10 +3203,13 @@ class Type_Declaration_Stmt(Type_Declaration_StmtBase):  # R501
 
 class Declaration_Type_Spec(Base):  # R502
     """
-    <declaration-type-spec> = <intrinsic-type-spec>
-                              | TYPE ( <derived-type-spec> )
-                              | CLASS ( <derived-type-spec> )
-                              | CLASS ( * )
+    ::
+
+        <declaration-type-spec> = <intrinsic-type-spec>
+                                  | TYPE ( <derived-type-spec> )
+                                  | CLASS ( <derived-type-spec> )
+                                  | CLASS ( * )
+
     """
 
     subclass_names = ["Intrinsic_Type_Spec"]
@@ -3042,9 +3225,8 @@ class Declaration_Type_Spec(Base):  # R502
         :return: A tuple of size 2 containing a string with the value \
         'TYPE' or 'CLASS' and a 'Derived_Type_Spec' instance if there \
         is a match or None if not.
-        :rtype: (str, \
-        py:class:`fparser.two.Fortran2003.Derived_Type_Spec`,) or \
-        NoneType
+        :rtype: Optional[Tuple[Str, \
+            py:class:`fparser.two.Fortran2003.Derived_Type_Spec`]
 
         """
         if not string:
@@ -3074,7 +3256,10 @@ class Declaration_Type_Spec(Base):  # R502
 
 class Dimension_Attr_Spec(CALLBase):  # R503.d
     """
-    <dimension-attr-spec> = DIMENSION ( <array-spec> )
+    ::
+
+        <dimension-attr-spec> = DIMENSION ( <array-spec> )
+
     """
 
     subclass_names = []
@@ -3087,7 +3272,10 @@ class Dimension_Attr_Spec(CALLBase):  # R503.d
 
 class Intent_Attr_Spec(CALLBase):  # R503.f
     """
-    <intent-attr-spec> = INTENT ( <intent-spec> )
+    ::
+
+        <intent-attr-spec> = INTENT ( <intent-spec> )
+
     """
 
     subclass_names = []
@@ -3100,22 +3288,25 @@ class Intent_Attr_Spec(CALLBase):  # R503.f
 
 class Attr_Spec(STRINGBase):  # R503
     """
-    <attr-spec> = <access-spec>
-                  | ALLOCATABLE
-                  | ASYNCHRONOUS
-                  | DIMENSION ( <array-spec> )
-                  | EXTERNAL
-                  | INTENT ( <intent-spec> )
-                  | INTRINSIC
-                  | <language-binding-spec>
-                  | OPTIONAL
-                  | PARAMETER
-                  | POINTER
-                  | PROTECTED
-                  | SAVE
-                  | TARGET
-                  | VALUE
-                  | VOLATILE
+    ::
+
+        <attr-spec> = <access-spec>
+                      | ALLOCATABLE
+                      | ASYNCHRONOUS
+                      | DIMENSION ( <array-spec> )
+                      | EXTERNAL
+                      | INTENT ( <intent-spec> )
+                      | INTRINSIC
+                      | <language-binding-spec>
+                      | OPTIONAL
+                      | PARAMETER
+                      | POINTER
+                      | PROTECTED
+                      | SAVE
+                      | TARGET
+                      | VALUE
+                      | VOLATILE
+
     """
 
     subclass_names = [
@@ -3133,9 +3324,12 @@ class Attr_Spec(STRINGBase):  # R503
 
 class Entity_Decl(Base):  # R504
     """
-    <entity-decl> = <object-name> [ ( <array-spec> ) ]
-        [ * <char-length> ] [ <initialization> ]
-                    | <function-name> [ * <char-length> ]
+    ::
+
+        <entity-decl> = <object-name> [ ( <array-spec> ) ]
+            [ * <char-length> ] [ <initialization> ]
+                        | <function-name> [ * <char-length> ]
+
     """
 
     subclass_names = []
@@ -3208,7 +3402,10 @@ class Entity_Decl(Base):  # R504
 
 class Object_Name(Base):  # R505
     """
-    <object-name> = <name>
+    ::
+
+        <object-name> = <name>
+
     """
 
     subclass_names = ["Name"]
@@ -3216,8 +3413,11 @@ class Object_Name(Base):  # R505
 
 class Initialization(Base):  # R506
     """
-    <initialization> =  = <initialization-expr>
-                       | => <null-init>
+    ::
+
+        <initialization> =  = <initialization-expr>
+                           | => <null-init>
+
     """
 
     subclass_names = []
@@ -3237,10 +3437,15 @@ class Initialization(Base):  # R506
 
 class Null_Init(STRINGBase):  # R507
     """
-    <null-init> = <function-reference>
+    ::
 
-    <function-reference> shall be a reference to the NULL
-        intrinsic function with no arguments.
+        null-init is function-reference
+
+    where::
+
+        function-reference shall be a reference to the NULL
+                           intrinsic function with no arguments.
+
     """
 
     subclass_names = ["Function_Reference"]
@@ -3256,6 +3461,7 @@ class Access_Spec(STRINGBase):  # R508
 
         <access-spec> = PUBLIC
                         | PRIVATE
+
     """
 
     subclass_names = []
@@ -3271,6 +3477,7 @@ class Language_Binding_Spec(Base):  # R509
 
         <language-binding-spec> = BIND ( C [ ,
             NAME = <scalar-char-initialization-expr> ] )
+
     """
 
     subclass_names = []
@@ -3318,6 +3525,7 @@ class Array_Spec(Base):  # R510
                        | <assumed-shape-spec-list>
                        | <deferred-shape-spec-list>
                        | <assumed-size-spec>
+
     """
 
     subclass_names = [
@@ -3330,7 +3538,10 @@ class Array_Spec(Base):  # R510
 
 class Explicit_Shape_Spec(SeparatorBase):  # R511
     """
-    <explicit-shape-spec> = [ <lower-bound> : ] <upper-bound>
+    ::
+
+        <explicit-shape-spec> = [ <lower-bound> : ] <upper-bound>
+
     """
 
     subclass_names = []
@@ -3358,7 +3569,10 @@ class Explicit_Shape_Spec(SeparatorBase):  # R511
 
 class Lower_Bound(Base):  # R512
     """
-    <lower-bound> = <specification-expr>
+    ::
+
+        <lower-bound> = <specification-expr>
+
     """
 
     subclass_names = ["Specification_Expr"]
@@ -3366,7 +3580,10 @@ class Lower_Bound(Base):  # R512
 
 class Upper_Bound(Base):  # R513
     """
-    <upper-bound> = <specification-expr>
+    ::
+
+        <upper-bound> = <specification-expr>
+
     """
 
     subclass_names = ["Specification_Expr"]
@@ -3377,6 +3594,7 @@ class Assumed_Shape_Spec(SeparatorBase):  # R514
     Fortran2003 Rule R514::
 
         <assumed-shape-spec> = [ <lower-bound> ] :
+
     """
 
     subclass_names = []
@@ -3392,6 +3610,7 @@ class Deferred_Shape_Spec(SeparatorBase):  # R515
     Fortran2003 Rule R515::
 
         <deferred_shape_spec> = :
+
     """
 
     subclass_names = []
@@ -3409,6 +3628,7 @@ class Assumed_Size_Spec(Base):  # R516
 
         <assumed-size-spec> = [ <explicit-shape-spec-list> , ]
             [ <lower-bound> : ] *
+
     """
 
     subclass_names = []
@@ -3447,9 +3667,12 @@ class Assumed_Size_Spec(Base):  # R516
 
 class Intent_Spec(STRINGBase):  # R517
     """
-    <intent-spec> = IN
-                    | OUT
-                    | INOUT
+    ::
+
+        <intent-spec> = IN
+                        | OUT
+                        | INOUT
+
     """
 
     subclass_names = []
@@ -3464,6 +3687,7 @@ class Access_Stmt(StmtBase, WORDClsBase):  # R518
     Fortran2003 Rule R518::
 
         <access-stmt> = <access-spec> [ [ :: ] <access-id-list> ]
+
     """
 
     subclass_names = []
@@ -3488,6 +3712,7 @@ class Access_Id(Base):  # R519
 
         <access-id> = <use-name>
                       | <generic-spec>
+
     """
 
     subclass_names = ["Use_Name", "Generic_Spec"]
@@ -3495,7 +3720,10 @@ class Access_Id(Base):  # R519
 
 class Object_Name_Deferred_Shape_Spec_List_Item(CallBase):
     """
-    <..> =  <object-name> [ ( <deferred-shape-spec-list> ) ]
+    ::
+
+        <..> =  <object-name> [ ( <deferred-shape-spec-list> ) ]
+
     """
 
     subclass_names = ["Object_Name"]
@@ -3515,6 +3743,7 @@ class Allocatable_Stmt(StmtBase, WORDClsBase):  # R520
         <allocateble-stmt> = ALLOCATABLE [ :: ] <object-name> [
             ( <deferred-shape-spec-list> ) ] [ , <object-name>
             [ ( <deferred-shape-spec-list> ) ] ]...
+
     """
 
     subclass_names = []
@@ -3536,6 +3765,7 @@ class Asynchronous_Stmt(StmtBase, WORDClsBase):  # R521
     Fortran2003 Rule R521::
 
         <asynchronous-stmt> = ASYNCHRONOUS [ :: ] <object-name-list>
+
     """
 
     subclass_names = []
@@ -3553,6 +3783,7 @@ class Bind_Stmt(StmtBase):  # R522
     Fortran2003 Rule R522::
 
         <bind-stmt> = <language-binding-spec> [ :: ] <bind-entity-list>
+
     """
 
     subclass_names = []
@@ -3580,8 +3811,11 @@ class Bind_Stmt(StmtBase):  # R522
 
 class Bind_Entity(BracketBase):  # R523
     """
-    <bind-entity> = <entity-name>
-                    | / <common-block-name> /
+    ::
+
+        <bind-entity> = <entity-name>
+                        | / <common-block-name> /
+
     """
 
     subclass_names = ["Entity_Name"]
@@ -3594,8 +3828,10 @@ class Bind_Entity(BracketBase):  # R523
 
 class Data_Stmt(StmtBase):  # R524
     """
-    :F03R:524::
+    Fortran 2003 Rule R524::
+
         <data-stmt> = DATA <data-stmt-set> [ [ , ] <data-stmt-set> ]...
+
     """
 
     subclass_names = []
@@ -3633,8 +3869,10 @@ class Data_Stmt(StmtBase):  # R524
 
 class Data_Stmt_Set(Base):  # R525
     """
-    :F03R:525::
+    Fortran2003 Rule R525::
+
         <data-stmt-set> = <data-stmt-object-list> / <data-stmt-value-list> /
+
     """
 
     subclass_names = []
@@ -3661,9 +3899,11 @@ class Data_Stmt_Set(Base):  # R525
 
 class Data_Stmt_Object(Base):  # R526
     """
-    :F03R:526::
+    Fortran 2003 Rule R526::
+
         <data-stmt-object> = <variable>
                              | <data-implied-do>
+
     """
 
     subclass_names = ["Variable", "Data_Implied_Do"]
@@ -3671,10 +3911,12 @@ class Data_Stmt_Object(Base):  # R526
 
 class Data_Implied_Do(Base):  # R527
     """
-    :F03R:527::
+    Fortran 2003 Rule R527::
+
         <data-implied-do> = ( <data-i-do-object-list> ,
             <data-i-do-variable> = <scalar-int-expr > ,
             <scalar-int-expr> [ , <scalar-int-expr> ] )
+
     """
 
     subclass_names = []
@@ -3727,9 +3969,12 @@ class Data_Implied_Do(Base):  # R527
 
 class Data_I_Do_Object(Base):  # R528
     """
-    <data-i-do-object> = <array-element>
-                         | <scalar-structure-component>
-                         | <data-implied-do>
+    ::
+
+        <data-i-do-object> = <array-element>
+                             | <scalar-structure-component>
+                             | <data-implied-do>
+
     """
 
     subclass_names = ["Array_Element", "Scalar_Structure_Component", "Data_Implied_Do"]

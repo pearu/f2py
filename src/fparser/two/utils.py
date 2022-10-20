@@ -966,7 +966,10 @@ class UnaryOpBase(Base):
 
 
 class BinaryOpBase(Base):
-    """binary-op-base is lhs op rhs
+    """
+    ::
+
+        binary-op-base is lhs op rhs
 
     Splits the input text into text to the left of the matched
     operator and text to the right of the matched operator and tries
@@ -1125,8 +1128,9 @@ class SeparatorBase(Base):
 
 class KeywordValueBase(Base):
     """
+    ::
 
-    keyword-value-base is [ lhs = ] rhs
+        keyword-value-base is [ lhs = ] rhs
 
     where::
 

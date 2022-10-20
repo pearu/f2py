@@ -67,7 +67,7 @@
 Tools for constructing patterns.
 
 Permission to use, modify, and distribute this software is given under the
-terms of the NumPy License. See http://scipy.org.
+terms of the NumPy License. See http\://scipy.org.
 
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
@@ -149,8 +149,10 @@ class Pattern:
 
     def rsplit(self, string, is_add=False):
         """
-        Return (<lhs>, <pattern_match>, <rhs>) where
-          string = lhs + pattern_match + rhs
+        Return (<lhs>, <pattern_match>, <rhs>) where::
+
+            string = lhs + pattern_match + rhs
+
         and rhs does not contain pattern_match.
         If no pattern_match is found in string, return None.
         """
@@ -172,8 +174,10 @@ class Pattern:
 
     def lsplit(self, string):
         """
-        Return (<lhs>, <pattern_match>, <rhs>) where
-          string = lhs + pattern_match + rhs
+        Return (<lhs>, <pattern_match>, <rhs>) where::
+
+            string = lhs + pattern_match + rhs
+
         and rhs does not contain pattern_match.
         If no pattern_match is found in string, return None.
         """
