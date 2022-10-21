@@ -78,9 +78,7 @@ Provides FortranReader classes for reading Fortran codes from files and
 strings. FortranReader handles comments and line continuations of both
 fix and free format Fortran codes.
 
-Examples
-
-::
+Examples::
 
     >> from fparser.common.readfortran import FortranFileReader
     >>> import os
@@ -175,9 +173,7 @@ def _is_fix_comment(line, isstrict, f2py_enabled):
     """
     Check whether line is a comment line in fixed format Fortran source.
 
-    References
-    ----------
-    :f2008:`3.3.3`
+    References - Fortran2008 3.3.3.
 
     :param str line: line of code to check.
     :param bool isstrict: whether we are strictly enforcing fixed/free fmt.
@@ -271,20 +267,20 @@ class FortranReaderError(Exception):
 class Line:
     """Holds a Fortran source line.
 
-    Attributes
+    Attributes::
 
-    line : str
-      code line
-    span : 2-tuple
-      starting and ending line numbers
-    label : {int, None}
-      Specify statement label
-    name : {str, None}
-      Specify construct name.
-    reader : FortranReaderBase
-    strline : {None, str}
-    is_f2py_directive : bool
-      the line contains f2py directive
+        line : str
+          code line
+        span : 2-tuple
+          starting and ending line numbers
+        label : {int, None}
+          Specify statement label
+        name : {str, None}
+          Specify construct name.
+        reader : FortranReaderBase
+        strline : {None, str}
+        is_f2py_directive : bool
+          the line contains f2py directive
 
     """
 
@@ -473,7 +469,8 @@ class MultiLine:
     """Holds PYF file multiline.
 
     PYF file multiline is represented as follows::
-      prefix+'''+lines+'''+suffix.
+
+        prefix+'''+lines+'''+suffix.
 
     :param str prefix: the prefix of the line(s)
     :param block: list of lines
@@ -654,9 +651,7 @@ class FortranReaderBase:
         returned by ``get_single_line`` call then it will be
         un-consumed.
 
-        See also
-        --------
-        get_single_line, get_next_line
+        See also - get_single_line, get_next_line
         """
         self.filo_line.append(line)
         self.linecount -= 1
@@ -679,9 +674,7 @@ class FortranReaderBase:
         :param bool ignore_comments: if True then ignore comments (overrides \
                                      self._ignore_comments)
 
-        See also
-        --------
-        put_single_line, get_next_line
+        See also - put_single_line, get_next_line
         """
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
@@ -729,9 +722,7 @@ class FortranReaderBase:
         The line will be put to FILO line buffer. So, this method can
         be used for looking forward lines without consuming them.
 
-        See also
-        --------
-        get_single_line, put_single_line
+        See also - get_single_line, put_single_line
         """
         if ignore_comments is None:
             ignore_comments = self._ignore_comments
@@ -858,9 +849,7 @@ class FortranReaderBase:
 
         Resolves ``;`` statement terminations.
 
-        See also
-        --------
-        next, get_source_item
+        See also - next, get_source_item
 
         :param bool ignore_comments: Whether or not to ignore comments \
                                      (overrides self._ignore_comments)
@@ -1187,9 +1176,9 @@ class FortranReaderBase:
         Examines line for Python triple quote strings (f2py feature).
 
         :param str line: line of Fortran source text
-        :param int startlineno: the number of the line on which this
+        :param int startlineno: the number of the line on which this \
                                  multi-line string began.
-        :param list mlstr: list of delimiters for a multi-line string
+        :param list mlstr: list of delimiters for a multi-line string \
                            (e.g. '"""')
         '''
         i = line.find(mlstr)
@@ -1258,7 +1247,7 @@ class FortranReaderBase:
         """
         Return the next source item.
 
-        A source item is ..
+        A source item is\:
         - a fortran line
         - a list of continued fortran lines
         - a multiline - lines inside triple-quotes, only when in ispyf mode
@@ -1549,15 +1538,15 @@ class FortranFileReader(FortranReaderBase):
 
     :param file_candidate: A filename or file-like object.
     :param list include_dirs: Directories in which to look for inclusions.
-    :param list source_only: Fortran source files to search for modules
+    :param list source_only: Fortran source files to search for modules \
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
 
-    For example:
+    For example::
 
-    >>> from fparser.common.readfortran import FortranFileReader
-    >>> import os
-    >>> reader = FortranFileReader(\'myfile.f90\')
+        >>> from fparser.common.readfortran import FortranFileReader
+        >>> import os
+        >>> reader = FortranFileReader(\'myfile.f90\')
 
     """
 
@@ -1611,7 +1600,7 @@ class FortranStringReader(FortranReaderBase):
 
     :param str string: string to read
     :param list include_dirs: List of dirs to search for include files
-    :param list source_only: Fortran source files to search for modules
+    :param list source_only: Fortran source files to search for modules \
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
 

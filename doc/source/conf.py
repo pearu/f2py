@@ -28,6 +28,7 @@ extensions = [
 
 autoapi_dirs = ['../../src']
 autoapi_ignore = ['*test_*']
+autoapi_keep_files = True
 
 templates_path = ['_templates']
 exclude_patterns = []
