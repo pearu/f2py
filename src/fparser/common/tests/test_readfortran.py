@@ -1264,18 +1264,18 @@ def test_many_comments():
 
 
 def test_quotes_in_comments():
-    """Test that a comment containing quotation marks is read successfully.
+    """Test that a comment containing a quotation mark is read successfully.
 
     """
-    input_text = """
+    input_text = """\
     character(*) :: a='hello' &! "
     &        b
 """
     reader = FortranStringReader(input_text, ignore_comments=False)
     lines = list(reader)
-    print(lines)
-    assert len(lines) == 4
-    assert isinstance(lines[2], Comment)
+    assert len(lines) == 2
+    assert isinstance(lines[1], Comment)
+    assert lines[1].line.endswith('"')
 
 
 def test_comments_within_continuation():

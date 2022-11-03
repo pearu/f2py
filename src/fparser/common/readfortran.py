@@ -1136,6 +1136,7 @@ class FortranReaderBase:
 
         :return: line_with_no_comments, quotechar, had_comment
         :rtype: 3-tuple of str, str, bool
+
         """
         had_comment = False
         if (
@@ -1146,9 +1147,7 @@ class FortranReaderBase:
         ):
             # There's no comment on this line
             return line, quotechar, had_comment
-        import pdb
 
-        pdb.set_trace()
         idx = line.find("!")
         put_item = self.fifo_item.append
         if quotechar is None and idx != -1:
@@ -1163,18 +1162,19 @@ class FortranReaderBase:
         items, newquotechar = splitquote(line, quotechar)
         noncomment_items = []
         noncomment_items_append = noncomment_items.append
-        n = len(items)
+
         commentline = None
-        for k in range(n):
-            item = items[k]
+        for idx, item in enumerate(items[:]):
             if isinstance(item, String) or "!" not in item:
                 noncomment_items_append(item)
                 continue
             j = item.find("!")
             noncomment_items_append(item[:j])
-            items[k] = item[j:]
+            items[idx] = item[j:]
             # The rest of the line must be a comment.
-            commentline = "".join(items[k:])
+            commentline = "".join(items[idx:])
+            # As such, any quotation marks in it can be ignored.
+            newquotechar = None
             break
         if commentline is not None:
             if self._format.f2py_enabled and commentline.startswith("!f2py"):
