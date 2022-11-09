@@ -1263,19 +1263,18 @@ def test_many_comments():
     assert len(lines) == 2
 
 
-def test_quotes_in_comments():
-    """Test that a comment containing a quotation mark is read successfully.
-
-    """
-    input_text = """\
-    character(*) :: a='hello' &! "
+@pytest.mark.parametrize("inline_comment", [' "', " '", " 'andy' '"])
+def test_quotes_in_inline_comments(inline_comment):
+    """Test that an in-line comment containing a quotation mark is read successfully."""
+    input_text = f"""\
+    character(*) :: a='hello' &!{inline_comment}
     &        b
 """
     reader = FortranStringReader(input_text, ignore_comments=False)
     lines = list(reader)
     assert len(lines) == 2
     assert isinstance(lines[1], Comment)
-    assert lines[1].line.endswith('"')
+    assert lines[1].line.endswith(inline_comment)
 
 
 def test_comments_within_continuation():

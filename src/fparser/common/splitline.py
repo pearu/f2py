@@ -253,7 +253,8 @@ def splitquote(line, stopchar=None, lower=False, quotechars="\"'"):
                                    existing quoted string or None otherwise.
     :param bool lower: whether or not to convert the split parts of the line \
                        to lowercase.
-    :param str quotechars:
+    :param str quotechars: the characters that are considered to delimit \
+                           quoted strings.
 
     :returns: tuple containing a list of the parts of the line split into \
               those parts that are not quoted strings and those parts that are \
