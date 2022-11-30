@@ -44,13 +44,13 @@ Test battery associated with fparser.common.readfortran package.
 import io
 import os.path
 import tempfile
-import re
 import pytest
 
 from fparser.common.readfortran import (
     FortranFileReader,
     FortranStringReader,
     FortranReaderBase,
+    FortranReaderError,
     Line,
     extract_label,
     extract_construct_name,
@@ -70,8 +70,6 @@ def f2py_enabled_fixture(request):
 def test_empty_line_err():
     """Check that we raise the expected error if we try and create
     an empty Line"""
-    from fparser.common.readfortran import FortranReaderError
-
     with pytest.raises(FortranReaderError) as err:
         _ = Line("   ", 1, "", "a_name", None)
     assert "Got empty line: '   '" in str(err.value)
@@ -1263,6 +1261,20 @@ def test_many_comments():
     reader = FortranStringReader(input_text, ignore_comments=True)
     lines = list(reader)
     assert len(lines) == 2
+
+
+@pytest.mark.parametrize("inline_comment", [' "', " '", " 'andy' '"])
+def test_quotes_in_inline_comments(inline_comment):
+    """Test that an in-line comment containing a quotation mark is read successfully."""
+    input_text = f"""\
+    character(*) :: a='hello' &!{inline_comment}
+    &        b
+"""
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    lines = list(reader)
+    assert len(lines) == 2
+    assert isinstance(lines[1], Comment)
+    assert lines[1].line.endswith(inline_comment)
 
 
 def test_comments_within_continuation():
