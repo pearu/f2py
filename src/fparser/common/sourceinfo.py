@@ -239,7 +239,8 @@ def get_source_info_str(source):
 
     firstline = lines[0].lstrip()
     if _HAS_F_HEADER(firstline):
-        return FortranFormat(False, True)
+        # -*- fortran -*- implies Fortran77 so fixed format.
+        return FortranFormat(False, False)
     if _HAS_FIX_HEADER(firstline):
         return FortranFormat(False, False)
     if _HAS_FREE_HEADER(firstline):

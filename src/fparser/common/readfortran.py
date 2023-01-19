@@ -812,6 +812,7 @@ class FortranReaderBase:
                 # catch INCLUDE statement and create a new FortranReader
                 # to enter to included file.
                 reader = item.reader
+                # TODO allow for trailing comment on INCLUDE line
                 filename = item.line.strip()[7:].lstrip()[1:-1]
                 include_dirs = self.include_dirs[:]
                 path = filename
