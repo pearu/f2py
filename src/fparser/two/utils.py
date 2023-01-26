@@ -327,7 +327,7 @@ def _set_parent(parent_node, items):
 
 
 class Base(ComparableMixin):
-    """ Base class for Fortran 2003 syntax rules.
+    """Base class for Fortran 2003 syntax rules.
 
     All Base classes have the following attributes::
 
