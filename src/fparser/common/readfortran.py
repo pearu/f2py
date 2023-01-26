@@ -1124,6 +1124,7 @@ class FortranReaderBase:
 
         :return: line_with_no_comments, quotechar, had_comment
         :rtype: 3-tuple of str, str, bool
+
         """
         had_comment = False
         if (
@@ -1149,17 +1150,19 @@ class FortranReaderBase:
         items, newquotechar = splitquote(line, quotechar)
         noncomment_items = []
         noncomment_items_append = noncomment_items.append
-        n = len(items)
+
         commentline = None
-        for k in range(n):
-            item = items[k]
+        for idx, item in enumerate(items[:]):
             if isinstance(item, String) or "!" not in item:
                 noncomment_items_append(item)
                 continue
             j = item.find("!")
             noncomment_items_append(item[:j])
-            items[k] = item[j:]
-            commentline = "".join(items[k:])
+            items[idx] = item[j:]
+            # The rest of the line must be a comment.
+            commentline = "".join(items[idx:])
+            # As such, any quotation marks in it can be ignored.
+            newquotechar = None
             break
         if commentline is not None:
             if self._format.f2py_enabled and commentline.startswith("!f2py"):
@@ -1436,7 +1439,7 @@ class FortranReaderBase:
             return self.line_item("".join(lines), startlineno, endlineno, label, name)
 
         # line is free format or fixed format with f2py directive (that
-        # will be interpretted as free format line).
+        # will be interpreted as free format line).
 
         start_index = 0
         if self._format.is_fix:
@@ -1444,11 +1447,11 @@ class FortranReaderBase:
         lines = []
         lines_append = lines.append
         put_item = self.fifo_item.append
-        qc = None
+        qchar = None
         while line is not None:
             if start_index:  # fix format code
-                line, qc, had_comment = handle_inline_comment(
-                    line[start_index:], self.linecount, qc
+                line, qchar, had_comment = handle_inline_comment(
+                    line[start_index:], self.linecount, qchar
                 )
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
@@ -1476,7 +1479,9 @@ class FortranReaderBase:
                     label, line = extract_label(line)
                     name, line = extract_construct_name(line)
 
-                line, qc, had_comment = handle_inline_comment(line, self.linecount, qc)
+                line, qchar, had_comment = handle_inline_comment(
+                    line, self.linecount, qchar
+                )
                 have_comment |= had_comment
                 is_f2py_directive = self.linecount in self.f2py_comment_lines
 
@@ -1497,7 +1502,7 @@ class FortranReaderBase:
                 i = len(line)
             k = -1
             if i != -1:
-                # handle the beggining of continued line
+                # handle the beginning of continued line
                 k = line[:i].find("&")
                 if k != 1 and line[:k].lstrip():
                     k = -1
@@ -1507,10 +1512,10 @@ class FortranReaderBase:
                 break
             line = get_single_line()
 
-        if qc is not None:
+        if qchar is not None:
             message = "following character continuation: {!r}, " + "expected None."
             message = self.format_message(
-                "ASSERTION FAILURE(free)", message.format(qc), startlineno, endlineno
+                "ASSERTION FAILURE(free)", message.format(qchar), startlineno, endlineno
             )
             logging.getLogger(__name__).error(message)
         line_content = "".join(lines).strip()

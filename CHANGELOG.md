@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+
+30/11/2022 PR #382 for #264. Ignore quotation marks in in-line comments.
+
 18/10/2022 PR #380 towards #379. Improve support for operators and symbol
            renaming in the use construct.
 
