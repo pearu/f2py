@@ -313,8 +313,9 @@ def get_source_info(file_candidate, ignore_encoding=True):
         #
         pointer = file_candidate.tell()
         file_candidate.seek(0)
-        source_info = get_source_info_str(file_candidate.read(),
-                                          ignore_encoding=ignore_encoding)
+        source_info = get_source_info_str(
+            file_candidate.read(), ignore_encoding=ignore_encoding
+        )
         file_candidate.seek(pointer)
         return source_info
 
@@ -333,8 +334,9 @@ def get_source_info(file_candidate, ignore_encoding=True):
     with open(
         file_candidate, "r", encoding="utf-8", errors="fparser-logging"
     ) as file_object:
-        string = get_source_info_str(file_object.read(),
-                                     ignore_encoding=ignore_encoding)
+        string = get_source_info_str(
+            file_object.read(), ignore_encoding=ignore_encoding
+        )
     return string
 
 

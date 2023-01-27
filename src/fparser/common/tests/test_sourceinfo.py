@@ -206,7 +206,7 @@ def test_format_from_mode_bad():
         ("! -*- fix -*-", FortranFormat(False, False)),
         ("! -*- pyf -*-", FortranFormat(True, True)),
     ],
-    name="header"
+    name="header",
 )
 def header_fixture(request):
     """
