@@ -227,26 +227,35 @@ _HAS_PYF_HEADER = re.compile(r"-[*]-\s*pyf\s*-[*]-", re.I).search
 _FREE_FORMAT_START = re.compile(r"[^c*!]\s*[^\s\d\t]", re.I).match
 
 
-def get_source_info_str(source):
+def get_source_info_str(source, ignore_encoding=True):
     """
     Determines the format of Fortran source held in a string.
 
-    Returns a FortranFormat object.
+    :param bool ignore_encoding: whether or not to ignore any Python-style \
+                                 encoding information in the first line of the file.
+
+    :returns: a FortranFormat object.
+    :rtype: :py:class:`fparser.common.sourceinfo.FortranFormat`
+
     """
     lines = source.splitlines()
     if not lines:
         return FortranFormat(False, False)
 
-    firstline = lines[0].lstrip()
-    if _HAS_F_HEADER(firstline):
-        # -*- fortran -*- implies Fortran77 so fixed format.
-        return FortranFormat(False, False)
-    if _HAS_FIX_HEADER(firstline):
-        return FortranFormat(False, False)
-    if _HAS_FREE_HEADER(firstline):
-        return FortranFormat(True, False)
-    if _HAS_PYF_HEADER(firstline):
-        return FortranFormat(True, True)
+    if not ignore_encoding:
+        # We check to see whether the file contains a comment describing its
+        # encoding. This is nothing to do with the Fortran standard (see e.g.
+        # https://peps.python.org/pep-0263/) and hence is not done by default.
+        firstline = lines[0].lstrip()
+        if _HAS_F_HEADER(firstline):
+            # -*- fortran -*- implies Fortran77 so fixed format.
+            return FortranFormat(False, True)
+        if _HAS_FIX_HEADER(firstline):
+            return FortranFormat(False, False)
+        if _HAS_FREE_HEADER(firstline):
+            return FortranFormat(True, False)
+        if _HAS_PYF_HEADER(firstline):
+            return FortranFormat(True, True)
 
     line_tally = 10000  # Check up to this number of non-comment lines
     is_free = False
@@ -264,7 +273,7 @@ def get_source_info_str(source):
 ##############################################################################
 
 
-def get_source_info(file_candidate):
+def get_source_info(file_candidate, ignore_encoding=True):
     """
     Determines the format of Fortran source held in a file.
 
@@ -304,7 +313,8 @@ def get_source_info(file_candidate):
         #
         pointer = file_candidate.tell()
         file_candidate.seek(0)
-        source_info = get_source_info_str(file_candidate.read())
+        source_info = get_source_info_str(file_candidate.read(),
+                                          ignore_encoding=ignore_encoding)
         file_candidate.seek(pointer)
         return source_info
 
@@ -323,7 +333,8 @@ def get_source_info(file_candidate):
     with open(
         file_candidate, "r", encoding="utf-8", errors="fparser-logging"
     ) as file_object:
-        string = get_source_info_str(file_object.read())
+        string = get_source_info_str(file_object.read(),
+                                     ignore_encoding=ignore_encoding)
     return string
 
 

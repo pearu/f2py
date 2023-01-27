@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2022 Science and Technology Facilities Council
+# Copyright (c) 2017-2023 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -889,7 +889,9 @@ a    'g
     ]
 
     # Reading from buffer
-    reader = FortranStringReader(string_f77, ignore_comments=False)
+    reader = FortranStringReader(
+        string_f77, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "f77", repr(reader.format.mode)
     stack = expected[:]
     for item in reader:
@@ -901,7 +903,7 @@ a    'g
     with open(filename, "w") as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = FortranFileReader(filename, ignore_comments=False)
+    reader = FortranFileReader(filename, ignore_comments=False, ignore_encoding=False)
     stack = expected[:]
     for item in reader:
         assert str(item) == stack.pop(0)
@@ -973,7 +975,9 @@ end python module foo
         "Comment('! end of file',(26, 26))",
     ]
 
-    reader = FortranStringReader(string_pyf, ignore_comments=False)
+    reader = FortranStringReader(
+        string_pyf, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "pyf", repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
@@ -1020,7 +1024,9 @@ cComment
         "Comment('',(15, 15))",
         "line #17'end'",
     ]
-    reader = FortranStringReader(string_fix90, ignore_comments=False)
+    reader = FortranStringReader(
+        string_fix90, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "fix", repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)

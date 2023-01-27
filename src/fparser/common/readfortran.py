@@ -1551,9 +1551,12 @@ class FortranFileReader(FortranReaderBase):
 
     :param file_candidate: A filename or file-like object.
     :param list include_dirs: Directories in which to look for inclusions.
-    :param list source_only: Fortran source files to search for modules
+    :param list source_only: Fortran source files to search for modules \
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
+    :param Optional[bool] ignore_encoding: whether or not to ignore Python-style \
+        encoding information (e.g. "-*- fortran -*-") when attempting to determine \
+        the format of the file. Default is True.
 
     For example:
 
@@ -1564,7 +1567,12 @@ class FortranFileReader(FortranReaderBase):
     """
 
     def __init__(
-        self, file_candidate, include_dirs=None, source_only=None, ignore_comments=True
+        self,
+        file_candidate,
+        include_dirs=None,
+        source_only=None,
+        ignore_comments=True,
+        ignore_encoding=True,
     ):
         # The filename is used as a unique ID. This is then used to cache the
         # contents of the file. Obviously if the file changes content but not
@@ -1588,9 +1596,11 @@ class FortranFileReader(FortranReaderBase):
             message = "FortranFileReader is used with a filename"
             message += " or file-like object."
             raise ValueError(message)
-        mode = fparser.common.sourceinfo.get_source_info(file_candidate)
+        mode = fparser.common.sourceinfo.get_source_info(
+            file_candidate, ignore_encoding
+        )
 
-        FortranReaderBase.__init__(self, self.file, mode, ignore_comments)
+        super().__init__(self.file, mode, ignore_comments)
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1616,6 +1626,9 @@ class FortranStringReader(FortranReaderBase):
     :param list source_only: Fortran source files to search for modules
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
+    :param Optional[bool] ignore_encoding: whether or not to ignore Python-style \
+        encoding information (e.g. "-*- fortran -*-") when attempting to determine \
+        the format of the source. Default is True.
 
     For example:
 
@@ -1631,7 +1644,12 @@ class FortranStringReader(FortranReaderBase):
     """
 
     def __init__(
-        self, string, include_dirs=None, source_only=None, ignore_comments=True
+        self,
+        string,
+        include_dirs=None,
+        source_only=None,
+        ignore_comments=True,
+        ignore_encoding=True,
     ):
         # The Python ID of the string was used to uniquely identify it for
         # caching purposes. Unfortunately this ID is only unique for the
@@ -1644,8 +1662,10 @@ class FortranStringReader(FortranReaderBase):
         #
         self.id = "string-" + str(hash(string))
         source = StringIO(string)
-        mode = fparser.common.sourceinfo.get_source_info_str(string)
-        FortranReaderBase.__init__(self, source, mode, ignore_comments)
+        mode = fparser.common.sourceinfo.get_source_info_str(
+            string, ignore_encoding=ignore_encoding
+        )
+        super().__init__(source, mode, ignore_comments)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:
