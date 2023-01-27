@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson.
 
@@ -95,6 +95,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
