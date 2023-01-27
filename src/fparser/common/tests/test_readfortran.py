@@ -864,17 +864,19 @@ def test_reader_ignore_encoding(reader_cls, tmp_path):
     Python-style encoding information.
     """
     source = "! -*- f77 -*-\n" + FULL_FREE_SOURCE
-    if isinstance(reader_cls, FortranFileReader):
+    if reader_cls is FortranFileReader:
         sfile = tmp_path / "my_test.f90"
         sfile.write_text(source)
-        reader = FortranFileReader(sfile)
+        # File location with full path.
+        rinput = str(sfile.absolute())
     else:
-        reader = FortranStringReader(source)
+        rinput = source
+    reader = reader_cls(rinput)
     # By default the encoding information is ignored so the format should be
     # free format, not strict.
     assert reader.format == FortranFormat(True, False)
     # Now test when the reader takes notice of the encoding information.
-    reader2 = FortranStringReader(source, ignore_encoding=False)
+    reader2 = reader_cls(rinput, ignore_encoding=False)
     # Should be fixed format, strict.
     assert reader2.format == FortranFormat(False, True)
 
