@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -791,28 +791,18 @@ class FortranReaderBase:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    # Manually check to see if something has not
-                    # matched and has been placed in the fifo. We
-                    # can't use _next() as this method is associated
-                    # with the include reader (self.reader._next()),
-                    # not this reader (self._next()).
-                    return self.fifo_item.pop(0)
-                except IndexError:
-                    # There is nothing in the fifo buffer.
-                    try:
-                        # Return a line from the include.
-                        return self.reader.next(ignore_comments)
-                    except StopIteration:
-                        # There is nothing left in the include
-                        # file. Setting reader to None indicates that
-                        # we should now read from the main reader.
-                        self.reader = None
+                    # Return a line from the include.
+                    return self.reader.next(ignore_comments)
+                except StopIteration:
+                    # There is nothing left in the include
+                    # file. Setting reader to None indicates that
+                    # we should now read from the main reader.
+                    self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader
                 # to enter to included file.
                 reader = item.reader
-                # TODO allow for trailing comment on INCLUDE line
                 filename = item.line.strip()[7:].lstrip()[1:-1]
                 include_dirs = self.include_dirs[:]
                 path = filename

@@ -533,7 +533,7 @@ def test_include6(tmpdir, ignore_comments):
     fortran_code = (
         "program test\n"
         "  ! prog comment 1\n"
-        "  include '{0}'\n"
+        "  include '{0}' ! this is an include\n"
         "  ! prog comment 2\n"
         "end program".format(include_filename)
     )
@@ -548,6 +548,7 @@ def test_include6(tmpdir, ignore_comments):
             "! include comment 1\n"
             "print *, 'Hello'\n"
             "! include comment 2\n"
+            "! this is an include\n"
             "! prog comment 2\n"
             "end program"
         )
