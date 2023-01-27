@@ -104,11 +104,10 @@ def test_line_map():
     assert line.get_line(apply_map=True) == "write(*,*) 'var = ', var"
 
 
-def test_111fortranreaderbase(log, monkeypatch):
+def test_fortranreaderbase_logging(log, monkeypatch):
     """
-    Tests the FortranReaderBase class.
+    Tests the logging functionality of the FortranReaderBase class.
 
-    Currently only tests logging functionality.
     """
 
     class FailFile:
@@ -858,7 +857,26 @@ def test_string_reader():
         assert unit_under_test.get_single_line(ignore_empty=True) == expected
 
 
-##############################################################################
+@pytest.mark.parametrize("reader_cls", [FortranStringReader, FortranFileReader])
+def test_reader_ignore_encoding(reader_cls, tmp_path):
+    """
+    Tests that the Fortran{String,File}Reader can be configured to take notice of
+    Python-style encoding information.
+    """
+    source = "! -*- f77 -*-\n" + FULL_FREE_SOURCE
+    if isinstance(reader_cls, FortranFileReader):
+        sfile = tmp_path / "my_test.f90"
+        sfile.write_text(source)
+        reader = FortranFileReader(sfile)
+    else:
+        reader = FortranStringReader(source)
+    # By default the encoding information is ignored so the format should be
+    # free format, not strict.
+    assert reader.format == FortranFormat(True, False)
+    # Now test when the reader takes notice of the encoding information.
+    reader2 = FortranStringReader(source, ignore_encoding=False)
+    # Should be fixed format, strict.
+    assert reader2.format == FortranFormat(False, True)
 
 
 def test_inherited_f77():
