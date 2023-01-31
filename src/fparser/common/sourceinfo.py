@@ -244,7 +244,7 @@ def get_source_info_str(source, ignore_encoding=True):
 
     if not ignore_encoding:
         # We check to see whether the file contains a comment describing its
-        # encoding. This is nothing to do with the Fortran standard (see e.g.
+        # encoding. This has nothing to do with the Fortran standard (see e.g.
         # https://peps.python.org/pep-0263/) and hence is not done by default.
         firstline = lines[0].lstrip()
         if _HAS_F_HEADER(firstline):

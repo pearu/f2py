@@ -876,6 +876,9 @@ def test_reader_ignore_encoding(reader_cls, tmp_path):
     # By default the encoding information is ignored so the format should be
     # free format, not strict.
     assert reader.format == FortranFormat(True, False)
+    # Check that explicitly setting ignore_encoding=True gives the same behaviour.
+    reader1 = reader_cls(rinput, ignore_encoding=True)
+    assert reader1.format == FortranFormat(True, False)
     # Now test when the reader takes notice of the encoding information.
     reader2 = reader_cls(rinput, ignore_encoding=False)
     # Should be fixed format, strict.
