@@ -212,9 +212,11 @@ class ComparableMixin:
         :type other: object
         :param method: The method to call to compare self and other.
         :type method: LambdaType
+
         :return: NotImplemented, when the comparison for the given type
                  combination can't be performed.
-        :rtype: :py:type:`NotImplementedType`
+        :rtype: :py:class:`types.NotImplementedType`
+
         """
         try:
             # This routine's purpose is to access the protected method
@@ -325,17 +327,17 @@ def _set_parent(parent_node, items):
 
 
 class Base(ComparableMixin):
-    """ Base class for Fortran 2003 syntax rules.
+    """Base class for Fortran 2003 syntax rules.
 
-    All Base classes have the following attributes:
-      self.string - original argument to construct a class instance, its type \
-                    is either str or FortranReaderBase.
-      self.item   - Line instance (holds label) or None.
+    All Base classes have the following attributes::
+
+        self.string - original argument to construct a class instance, its
+                      type is either str or FortranReaderBase.
+        self.item   - Line instance (holds label) or None.
 
     :param type cls: the class of object to create.
     :param string: (source of) Fortran string to parse.
-    :type string: `str` or \
-                  :py:class:`fparser.common.readfortran.FortranReaderBase`
+    :type string: [Str | :py:class:`fparser.common.readfortran.FortranReaderBase`]
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
 
@@ -527,13 +529,13 @@ class Base(ComparableMixin):
 
 class BlockBase(Base):
     """
-    Base class for matching all block constructs.
+    Base class for matching all block constructs::
 
-    <block-base> = [ <startcls> ]
-                     [ <subcls> ]...
-                     ...
-                     [ <subcls> ]...
-                     [ <endcls> ]
+        <block-base> = [ <startcls> ]
+                         [ <subcls> ]...
+                         ...
+                         [ <subcls> ]...
+                         [ <endcls> ]
 
     """
 
@@ -837,9 +839,9 @@ class BlockBase(Base):
 
 class SequenceBase(Base):
     """
-    Match one or more fparser2 rules separated by a defined separator.
+    Match one or more fparser2 rules separated by a defined separator::
 
-    sequence-base is obj [sep obj ] ...
+        sequence-base is obj [sep obj ] ...
 
     """
 
@@ -849,19 +851,18 @@ class SequenceBase(Base):
         separated by 'separator'.
 
         :param str separator: the separator used to split the supplied \
-        string.
+                              string.
         :param subcls: an fparser2 object representing the rule that \
-        should be matched.
+                       should be matched.
         :type subcls: subclass of :py:class:`fparser.two.utils.Base`
         :param str string: the input string to match.
 
         :returns: a tuple containing 1) the separator and 2) the \
-        matched objects in a tuple, or None if there is no match.
-        :rtype: (str, (Subclass of \
-        :py:class:`fparser.two.utils.Base`)) or NoneType
+                  matched objects in a tuple, or None if there is no match.
+        :rtype: Optional[(Str, :py:class:`fparser.two.utils.Base`)]
 
-        :raises InternalError: if the separator or string arguments \
-        are not the expected type.
+        :raises InternalError: if the separator or string arguments  \
+                               are not the expected type.
         :raises InternalError: if the separator is white space.
 
         """
@@ -941,7 +942,9 @@ class SequenceBase(Base):
 class UnaryOpBase(Base):
     """
     ::
-        <unary-op-base> = <unary-op> <rhs>
+
+        unary-op-base is unary-op rhs
+
     """
 
     def tostr(self):
@@ -963,7 +966,10 @@ class UnaryOpBase(Base):
 
 
 class BinaryOpBase(Base):
-    """binary-op-base is lhs op rhs
+    """
+    ::
+
+        binary-op-base is lhs op rhs
 
     Splits the input text into text to the left of the matched
     operator and text to the right of the matched operator and tries
@@ -1081,7 +1087,9 @@ class BinaryOpBase(Base):
 class SeparatorBase(Base):
     """
     ::
-        <separator-base> = [ <lhs> ] : [ <rhs> ]
+
+        separator-base is [ lhs ] : [ rhs ]
+
     """
 
     @staticmethod
@@ -1120,12 +1128,13 @@ class SeparatorBase(Base):
 
 class KeywordValueBase(Base):
     """
+    ::
 
-    keyword-value-base is [ lhs = ] rhs
+        keyword-value-base is [ lhs = ] rhs
 
-    where:
+    where::
 
-    R215 keyword is name.
+        R215 keyword is name.
 
     """
 
@@ -1270,9 +1279,9 @@ class BracketBase(Base):
     def tostr(self):
         """
         :raises InternalError: if the internal items list variable is \
-        not the expected size.
+                               not the expected size.
         :raises InternalError: if the first element of the internal \
-        items list is None or is an empty string.
+                               items list is None or is an empty string.
         """
 
         if len(self.items) != 3:
@@ -1300,7 +1309,9 @@ class BracketBase(Base):
 class NumberBase(Base):
     """
     ::
-        <number-base> = <number> [ _ <kind-param> ]
+
+        number-base is number [ _ kind-param ]
+
     """
 
     @staticmethod
@@ -1324,7 +1335,9 @@ class NumberBase(Base):
 class CallBase(Base):
     """
     ::
-        <call-base> = <lhs> ( [ <rhs> ] )
+
+        call-base is lhs ( [ rhs ] )
+
     """
 
     @staticmethod
@@ -1371,7 +1384,9 @@ class CallBase(Base):
 class CALLBase(CallBase):
     """
     ::
-        <CALL-base> = <LHS> ( [ <rhs> ] )
+
+        CALL-base is LHS ( [ rhs ] )
+
     """
 
     @staticmethod
@@ -1384,11 +1399,9 @@ class CALLBase(CallBase):
 class StringBase(Base):
     """
     ::
-        <string-base> = <xyz>
 
-    Attributes
-    ----------
-    string
+        string-base is xyz
+
     """
 
     @staticmethod
@@ -1490,11 +1503,13 @@ class STRINGBase(StringBase):
 class StmtBase(Base):
     """
     ::
-        [ [ <label> ] [ <construct-name> : ] ] <stmt>
 
-    Attributes
-    ----------
-    item : readfortran.Line
+        [ [ label ] [ construct-name : ] ] stmt
+
+    Attributes::
+
+        item : readfortran.Line
+
     """
 
     def tofortran(self, tab="", isfix=None):
@@ -1528,7 +1543,9 @@ class StmtBase(Base):
 class EndStmtBase(StmtBase):
     """
     ::
-        <end-stmt-base> = END [ <stmt> [ <stmt-name>] ]
+
+        end-stmt-base = END [ stmt [ stmt-name] ]
+
     """
 
     @staticmethod
@@ -1596,11 +1613,11 @@ def isalnum(c):
 class WORDClsBase(Base):
     """Base class to support situations where there is a keyword which is
     optionally followed by further text, potentially separated by
-    '::'.
+    a double colon. For example::
 
-    For example 'program fred', or 'import :: a,b'
+        'program fred', or 'import :: a,b'
 
-    WORD-cls is WORD [ [ :: ] cls ]
+        WORD-cls is WORD [ [ :: ] cls ]
 
     """
 
@@ -1609,14 +1626,14 @@ class WORDClsBase(Base):
         """Checks whether the content in string matches the expected
         WORDClsBase format with 'keyword' providing the keyword, 'cls'
         providing the following text, 'colons' specifying whether an
-        optional '::' is allowed as a separator between the keyword
+        optional double colon is allowed as a separator between the keyword
         and cls and 'require_cls' specifying whether cls must have
         content or not.
 
-        Note, if the optional '::' is allowed and exists in the string
+        Note, if the optional double colon is allowed and exists in the string
         then 1) cls must also have content i.e. it implies
         `require_cls=True` and 2) white space is not required between
-        the keyword and the '::' and the '::' and cls.
+        the keyword and the double colon and the double colon and cls.
 
         The simplest form of keyword pattern is a string. However this
         method can also match more complex patterns as specified by
@@ -1634,7 +1651,7 @@ class WORDClsBase(Base):
         :param cls: the class to match.
         :type cls: a subclass of :py:class:`fparser.two.utils.Base`
         :param str string: Text that we are trying to match.
-        :param bool colons: whether '::' is allowed as an optional \
+        :param bool colons: whether a double colon is allowed as an optional \
             separator between between WORD and cls.
         :param bool require_cls: whether content for cls is required \
             or not.
@@ -1643,7 +1660,7 @@ class WORDClsBase(Base):
             2-tuple containing a string matching the 'WORD' and an \
             instance of 'cls' (or None if an instance of cls is not \
             required and not provided).
-        :rtype: (str, cls or NoneType) or NoneType
+        :rtype: Optional[Tupe[Str, Optional[Cls]]]
 
         """
         if isinstance(keyword, (tuple, list)):
@@ -1696,7 +1713,7 @@ class WORDClsBase(Base):
         """Convert the class into Fortran.
 
         :return: String representation of this class without any \
-                 optional '::'.
+                 optional double colon.
         :rtype: str
 
         """
@@ -1708,10 +1725,10 @@ class WORDClsBase(Base):
         return "%s %s" % (self.items[0], s)
 
     def tostr_a(self):
-        """Convert the class into Fortran, adding in "::".
+        """Convert the class into Fortran, adding in the double colon.
 
         :return: String representation of this class including an \
-                 optional '::'.
+                 optional double colon.
         :rtype: str
 
         """
@@ -1721,8 +1738,11 @@ class WORDClsBase(Base):
 
 
 class Type_Declaration_StmtBase(StmtBase):
-    """<type-declaration-stmt> = <declaration-type-spec> [ [ ,
-    <attr-spec> ]... :: ] <entity-decl-list>
+    """
+    ::
+
+        type-declaration-stmt is declaration-type-spec [ [ ,
+            attr-spec ]... :: ] entity-decl-list
 
     """
 
