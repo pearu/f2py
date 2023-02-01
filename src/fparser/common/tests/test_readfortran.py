@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# Copyright (c) 2017-2022 Science and Technology Facilities Council
+# Copyright (c) 2017-2023 Science and Technology Facilities Council.
 #
 # All rights reserved.
 #
@@ -104,11 +104,10 @@ def test_line_map():
     assert line.get_line(apply_map=True) == "write(*,*) 'var = ', var"
 
 
-def test_111fortranreaderbase(log, monkeypatch):
+def test_fortranreaderbase_logging(log, monkeypatch):
     """
-    Tests the FortranReaderBase class.
+    Tests the logging functionality of the FortranReaderBase class.
 
-    Currently only tests logging functionality.
     """
 
     class FailFile:
@@ -534,7 +533,7 @@ def test_include6(tmpdir, ignore_comments):
     fortran_code = (
         "program test\n"
         "  ! prog comment 1\n"
-        "  include '{0}'\n"
+        "  include '{0}' ! this is an include\n"
         "  ! prog comment 2\n"
         "end program".format(include_filename)
     )
@@ -549,6 +548,7 @@ def test_include6(tmpdir, ignore_comments):
             "! include comment 1\n"
             "print *, 'Hello'\n"
             "! include comment 2\n"
+            "! this is an include\n"
             "! prog comment 2\n"
             "end program"
         )
@@ -858,7 +858,31 @@ def test_string_reader():
         assert unit_under_test.get_single_line(ignore_empty=True) == expected
 
 
-##############################################################################
+@pytest.mark.parametrize("reader_cls", [FortranStringReader, FortranFileReader])
+def test_reader_ignore_encoding(reader_cls, tmp_path):
+    """
+    Tests that the Fortran{String,File}Reader can be configured to take notice of
+    Python-style encoding information.
+    """
+    source = "! -*- f77 -*-\n" + FULL_FREE_SOURCE
+    if reader_cls is FortranFileReader:
+        sfile = tmp_path / "my_test.f90"
+        sfile.write_text(source)
+        # File location with full path.
+        rinput = str(sfile.absolute())
+    else:
+        rinput = source
+    reader = reader_cls(rinput)
+    # By default the encoding information is ignored so the format should be
+    # free format, not strict.
+    assert reader.format == FortranFormat(True, False)
+    # Check that explicitly setting ignore_encoding=True gives the same behaviour.
+    reader1 = reader_cls(rinput, ignore_encoding=True)
+    assert reader1.format == FortranFormat(True, False)
+    # Now test when the reader takes notice of the encoding information.
+    reader2 = reader_cls(rinput, ignore_encoding=False)
+    # Should be fixed format, strict.
+    assert reader2.format == FortranFormat(False, True)
 
 
 def test_inherited_f77():
@@ -887,7 +911,9 @@ a    'g
     ]
 
     # Reading from buffer
-    reader = FortranStringReader(string_f77, ignore_comments=False)
+    reader = FortranStringReader(
+        string_f77, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "f77", repr(reader.format.mode)
     stack = expected[:]
     for item in reader:
@@ -899,7 +925,7 @@ a    'g
     with open(filename, "w") as fortran_file:
         print(string_f77, file=fortran_file)
 
-    reader = FortranFileReader(filename, ignore_comments=False)
+    reader = FortranFileReader(filename, ignore_comments=False, ignore_encoding=False)
     stack = expected[:]
     for item in reader:
         assert str(item) == stack.pop(0)
@@ -971,7 +997,9 @@ end python module foo
         "Comment('! end of file',(26, 26))",
     ]
 
-    reader = FortranStringReader(string_pyf, ignore_comments=False)
+    reader = FortranStringReader(
+        string_pyf, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "pyf", repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
@@ -1018,7 +1046,9 @@ cComment
         "Comment('',(15, 15))",
         "line #17'end'",
     ]
-    reader = FortranStringReader(string_fix90, ignore_comments=False)
+    reader = FortranStringReader(
+        string_fix90, ignore_comments=False, ignore_encoding=False
+    )
     assert reader.format.mode == "fix", repr(reader.format.mode)
     for item in reader:
         assert str(item) == expected.pop(0)
