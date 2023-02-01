@@ -19,6 +19,9 @@ Modifications by (in alphabetical order):
 * A. Voysey, UK Met Office
 
 
+01/02/2023 PR #377 for #342. Add an AutoAPI and Doxygen sections in the
+           documentation.
+
 01/02/2023 PR #387 for #386. Support extension to permit in-line '!' 
            comments in fixed-format Fortran.
 

@@ -914,12 +914,14 @@ class EndFunction(EndStatement):
 
 class Function(SubProgramStatement):
     """
-    [<prefix>] FUNCTION <name> ( [<dummy-arg-list>] ) [<suffix>]
-    <prefix> = <prefix-spec> [<prefix-spec>]...
-    <prefix-spec> = <declaration-type-spec>
-                  | RECURSIVE | PURE | ELEMENTAL
-    <suffix> = <proc-language-binding-spec> [RESULT ( <result-name> )]
-             | RESULT ( <result-name> ) [<proc-language-binding-spec>]
+    ::
+
+        [<prefix>] FUNCTION <name> ( [<dummy-arg-list>] ) [<suffix>]
+        <prefix> = <prefix-spec> [<prefix-spec>]...
+        <prefix-spec> = <declaration-type-spec>
+                      | RECURSIVE | PURE | ELEMENTAL
+        <suffix> = <proc-language-binding-spec> [RESULT ( <result-name> )]
+                 | RESULT ( <result-name> ) [<proc-language-binding-spec>]
     """
 
     end_stmt_cls = EndFunction

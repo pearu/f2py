@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson.
 
@@ -121,7 +121,9 @@ if __name__ == "__main__":
         classifiers=CLASSIFIERS,
         packages=PACKAGES,
         package_dir={"": "src"},
-        extras_require={"doc": ["sphinx", "sphinx_rtd_theme"]},
+        extras_require={"doc": ["sphinx", "sphinxcontrib.bibtex",
+                                "sphinx_rtd_theme", "autoapi",
+                                "sphinx-autoapi"]},
         entry_points={
             "console_scripts": [
                 "fparser2=fparser.scripts.fparser2:main",

@@ -75,9 +75,10 @@
 # module is first imported.
 # pylint: disable=exec-used
 # pylint: disable=unused-import
-# pylint: disable=no-name-in-module
-from fparser.common.splitline import string_replace_map, splitparen
+import inspect
+import sys
 
+from fparser.common.splitline import string_replace_map, splitparen
 from fparser.two import pattern_tools as pattern
 
 from fparser.two.utils import (
@@ -140,12 +141,15 @@ from fparser.two.Fortran2003 import (
 
 class Program_Unit(Program_Unit_2003):  # R202
     """
-    Fortran 2008 rule R202
-    program-unit is main-program
-                    or external-subprogram
-                    or module
-                    or submodule
-                    or block-data
+    Fortran 2008 rule R202.
+
+    .. code-block:: fortran
+
+        program-unit is main-program
+                        or external-subprogram
+                        or module
+                        or submodule
+                        or block-data
 
     """
 
@@ -158,17 +162,20 @@ class Program_Unit(Program_Unit_2003):  # R202
 class Executable_Construct(Executable_Construct_2003):  # R213
     # pylint: disable=invalid-name
     """
-    Fortran 2003 rule R213
-    executable-construct is action-stmt
-                         or associate-construct
-                         or block-construct
-                         or case-construct
-                         or critical-construct
-                         or do-construct
-                         or forall-construct
-                         or if-construct
-                         or select-type-construct
-                         or where-construct
+    Fortran 2003 rule R213.
+
+    .. code-block:: fortran
+
+        executable-construct is action-stmt
+                             or associate-construct
+                             or block-construct
+                             or case-construct
+                             or critical-construct
+                             or do-construct
+                             or forall-construct
+                             or if-construct
+                             or select-type-construct
+                             or where-construct
 
     Associated constraints are:
 
@@ -203,45 +210,48 @@ class Executable_Construct_C201(Executable_Construct_C201_2003):
 
 class Action_Stmt(Action_Stmt_2003):  # R214
     """
-    Fortran 2008 rule R214
-    action-stmt is allocate-stmt
-                    or assignment-stmt
-                    or backspace-stmt
-                    or call-stmt
-                    or close-stmt
-                    or continue-stmt
-                    or cycle-stmt
-                    or deallocate-stmt
-                    or end-function-stmt
-                    or end-mp-subprogram-stmt
-                    or end-program-stmt
-                    or end-subroutine-stmt
-                    or endfile-stmt
-                    or error-stop-stmt
-                    or exit-stmt
-                    or flush-stmt
-                    or forall-stmt
-                    or goto-stmt
-                    or if-stmt
-                    or inquire-stmt
-                    or lock-stmt
-                    or nullify-stmt
-                    or open-stmt
-                    or pointer-assignment-stmt
-                    or print-stmt
-                    or read-stmt
-                    or return-stmt
-                    or rewind-stmt
-                    or stop-stmt
-                    or sync-all-stmt
-                    or sync-images-stmt
-                    or sync-memory-stmt
-                    or unlock-stmt
-                    or wait-stmt
-                    or where-stmt
-                    or write-stmt
-                    or arithmetic-if-stmt
-                    or computed-goto-stmt
+    Fortran 2008 rule R214.
+
+    .. code-block:: fortran
+
+        action-stmt is allocate-stmt
+                        or assignment-stmt
+                        or backspace-stmt
+                        or call-stmt
+                        or close-stmt
+                        or continue-stmt
+                        or cycle-stmt
+                        or deallocate-stmt
+                        or end-function-stmt
+                        or end-mp-subprogram-stmt
+                        or end-program-stmt
+                        or end-subroutine-stmt
+                        or endfile-stmt
+                        or error-stop-stmt
+                        or exit-stmt
+                        or flush-stmt
+                        or forall-stmt
+                        or goto-stmt
+                        or if-stmt
+                        or inquire-stmt
+                        or lock-stmt
+                        or nullify-stmt
+                        or open-stmt
+                        or pointer-assignment-stmt
+                        or print-stmt
+                        or read-stmt
+                        or return-stmt
+                        or rewind-stmt
+                        or stop-stmt
+                        or sync-all-stmt
+                        or sync-images-stmt
+                        or sync-memory-stmt
+                        or unlock-stmt
+                        or wait-stmt
+                        or where-stmt
+                        or write-stmt
+                        or arithmetic-if-stmt
+                        or computed-goto-stmt
 
     The implementation of this rule adds the relevant subclass names
     for new statements added in Fortran 2008.
@@ -307,9 +317,12 @@ class Action_Stmt_C828(Action_Stmt_C802_2003):
 
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
     """
-    Fortran 2008 rule 436
-    data-component-def-stmt is declaration-type-spec [
-             [ , component-attr-spec-list ] :: ] component-decl-list
+    Fortran 2008 rule 436.
+
+    .. code-block:: fortran
+
+        data-component-def-stmt is declaration-type-spec [
+                 [ , component-attr-spec-list ] :: ] component-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
     variant but reimplements the match method identical to Fortran 2003 as
@@ -377,13 +390,16 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
 
 class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
     """
-    Fortran 2008 rule R437
-    component-attr-spec is access-spec
-                           or ALLOCATABLE
-                           or CODIMENSION lbracket coarray-spec rbracket
-                           or CONTIGUOUS
-                           or DIMENSION ( component-array-spec )
-                           or POINTER
+    Fortran 2008 rule R437.
+
+    .. code-block:: fortran
+
+        component-attr-spec is access-spec
+                               or ALLOCATABLE
+                               or CODIMENSION lbracket coarray-spec rbracket
+                               or CONTIGUOUS
+                               or DIMENSION ( component-array-spec )
+                               or POINTER
 
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
@@ -401,9 +417,12 @@ class Component_Attr_Spec(Component_Attr_Spec_2003):  # R437
 
 class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
     """
-    Fortran 2008 rule 501
-    type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                             entity-decl-list
+    Fortran 2008 rule 501.
+
+    .. code-block:: fortran
+
+        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
+                                 entity-decl-list
 
     The implementation of this rule does not add anything to the Fortran 2003
     variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
@@ -499,25 +518,28 @@ class Coarray_Bracket_Spec(BracketBase):  # R502.d.0
 
 class Attr_Spec(Attr_Spec_2003):  # R502
     """
-    Fortran 2008 rule R502
-    attr-spec is access-spec
-                 or ALLOCATABLE
-                 or ASYNCHRONOUS
-                 or CODIMENSION lbracket coarray-spec rbracket
-                 or CONTIGUOUS
-                 or DIMENSION ( array-spec )
-                 or EXTERNAL
-                 or INTENT ( intent-spec )
-                 or INTRINSIC
-                 or language-binding-spec
-                 or OPTIONAL
-                 or PARAMETER
-                 or POINTER
-                 or PROTECTED
-                 or SAVE
-                 or TARGET
-                 or VALUE
-                 or VOLATILE
+    Fortran 2008 rule R502.
+
+    .. code-block:: fortran
+
+        attr-spec is access-spec
+                     or ALLOCATABLE
+                     or ASYNCHRONOUS
+                     or CODIMENSION lbracket coarray-spec rbracket
+                     or CONTIGUOUS
+                     or DIMENSION ( array-spec )
+                     or EXTERNAL
+                     or INTENT ( intent-spec )
+                     or INTRINSIC
+                     or language-binding-spec
+                     or OPTIONAL
+                     or PARAMETER
+                     or POINTER
+                     or PROTECTED
+                     or SAVE
+                     or TARGET
+                     or VALUE
+                     or VOLATILE
 
     In the spec above, lbracket and rbracket are left and right square
     brackets `[]` but not printed explicitly to avoid misinterpretation
@@ -548,9 +570,12 @@ class Attr_Spec(Attr_Spec_2003):  # R502
 
 class Coarray_Spec(Base):  # R509
     """
-    Fortran 2008 rule R509
-    coarray-spec is deferred-coshape-spec-list
-                    or explicit-coshape-spec-list
+    Fortran 2008 rule R509.
+
+    .. code-block:: fortran
+
+        coarray-spec is deferred-coshape-spec-list
+                        or explicit-coshape-spec-list
 
     """
 
@@ -723,7 +748,8 @@ class Upper_Cobound(Base):  # R513
 
 class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
     """
-    Fortran 2008 rule R826
+    Fortran 2008 rule R826.
+
     do-term-action-stmt is action-stmt
 
     Associated constraints are:
@@ -739,11 +765,14 @@ class Do_Term_Action_Stmt(Do_Term_Action_Stmt_2003):  # R826
 
 class Alloc_Opt(Alloc_Opt_2003):
     """
-    Fortran2008 rule R627
-    alloc-opt is ERRMSG = errmsg-variable
-              or MOLD = source-expr
-              or SOURCE = source-expr
-              or STAT = stat-variable
+    Fortran2008 rule R627.
+
+    .. code-block:: fortran
+
+        alloc-opt is ERRMSG = errmsg-variable
+                  or MOLD = source-expr
+                  or SOURCE = source-expr
+                  or STAT = stat-variable
 
     Extends the Fortran2003 version of this class by updating the keyword
     pairs (used in match) with support for MOLD.
@@ -760,9 +789,12 @@ class Alloc_Opt(Alloc_Opt_2003):
 
 class Allocate_Stmt(Allocate_Stmt_2003):  # R626
     """
-    Fortran 2008 rule R626
-    allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
-                                [, alloc-opt-list ] )
+    Fortran 2008 rule R626.
+
+    .. code-block:: fortran
+
+        allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
+                                    [, alloc-opt-list ] )
 
     The implementation of this rule simply ensures that the Fortran2008 version
     of Alloc_Opt is used.
@@ -943,22 +975,25 @@ class Declaration_Construct_C1112(Declaration_Construct):  # C1112
 
 
 class Submodule(BlockBase):  # R1116 [C1112,C1114]
-    """Fortran 2008 rule R1116
-    submodule is submodule-stmt
-                 [ specification-part ]
-                 [ module-subprogram-part ]
-                 end-submodule-stmt
+    """Fortran 2008 rule R1116.
+
+    .. code-block:: fortran
+
+        submodule is submodule-stmt
+                     [ specification-part ]
+                     [ module-subprogram-part ]
+                     end-submodule-stmt
 
     C1112 A submodule specification-part shall not contain a
     format-stmt, entry-stmt, or stmt-function-stmt.
     This constraint is handled by specialising the Specification_Part
-    class
+    class.
 
     C1114 If a submodule-name appears in the end-submodule-stmt, it
     shall be identical to the one in the submodule-stmt.
     This constraint is handled by the Base class with the names being
     provided by the 'Submodule_Stmt and 'End_Submodule_Stmt' classes
-    via a `get_name` method
+    via a `get_name` method.
 
     """
 
@@ -996,8 +1031,9 @@ class Submodule(BlockBase):  # R1116 [C1112,C1114]
 
 class Submodule_Stmt(Base):  # R1117
     """
-    Fortran 2008 rule R1117
-    submodule-stmt is SUBMODULE ( parent-identifier ) submodule-name
+    Fortran 2008 rule R1117::
+
+        submodule-stmt is SUBMODULE ( parent-identifier ) submodule-name
 
     """
 
@@ -1008,11 +1044,12 @@ class Submodule_Stmt(Base):  # R1117
     def match(fstring):
         """Check whether the input matches the rule
 
-        param string fstring : contains the Fortran that we are trying
-        to match
+        :param st fstring: contains the Fortran that we are trying to match.
 
-        :return: instances of the Classes that have matched if there
-        is a match or `None` if there is no match
+        :returns: instances of the Classes that have matched if there is a \
+                  match or `None` if there is no match.
+        :rtype: Optional[Tuple[:py:class:`fparser.two.Fortran2008.Parent_Identifier`, \
+                               :py:class:`fparser.two.Fortran2008.Submodule_Name`]]
 
         """
         # First look for "SUBMODULE"
@@ -1358,3 +1395,14 @@ class Scalar_%s(Base):
 """
                 % (n, n)
             )
+
+
+# Inspect the contents of this module and list all of the classes in __all__
+# for automatic documentation generation with AutoDoc.
+
+classes = inspect.getmembers(
+    sys.modules[__name__],
+    lambda member: inspect.isclass(member) and member.__module__ == __name__,
+)
+
+__all__ = [name[0] for name in classes]
