@@ -19,6 +19,8 @@ Modifications by (in alphabetical order):
 * A. Voysey, UK Met Office
 
 
+01/02/2023 PR #389 for #388. Black 23.1 formatting changes.
+
 01/02/2023 PR #377 for #342. Add an AutoAPI and Doxygen sections in the
            documentation.
 
