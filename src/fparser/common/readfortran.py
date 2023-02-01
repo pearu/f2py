@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -781,22 +781,13 @@ class FortranReaderBase:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    # Manually check to see if something has not
-                    # matched and has been placed in the fifo. We
-                    # can't use _next() as this method is associated
-                    # with the include reader (self.reader._next()),
-                    # not this reader (self._next()).
-                    return self.fifo_item.pop(0)
-                except IndexError:
-                    # There is nothing in the fifo buffer.
-                    try:
-                        # Return a line from the include.
-                        return self.reader.next(ignore_comments)
-                    except StopIteration:
-                        # There is nothing left in the include
-                        # file. Setting reader to None indicates that
-                        # we should now read from the main reader.
-                        self.reader = None
+                    # Return a line from the include.
+                    return self.reader.next(ignore_comments)
+                except StopIteration:
+                    # There is nothing left in the include
+                    # file. Setting reader to None indicates that
+                    # we should now read from the main reader.
+                    self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader
@@ -1546,6 +1537,9 @@ class FortranFileReader(FortranReaderBase):
     :param list source_only: Fortran source files to search for modules \
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
+    :param Optional[bool] ignore_encoding: whether or not to ignore Python-style \
+        encoding information (e.g. "-*- fortran -*-") when attempting to determine \
+        the format of the file. Default is True.
 
     For example::
 
@@ -1556,7 +1550,12 @@ class FortranFileReader(FortranReaderBase):
     """
 
     def __init__(
-        self, file_candidate, include_dirs=None, source_only=None, ignore_comments=True
+        self,
+        file_candidate,
+        include_dirs=None,
+        source_only=None,
+        ignore_comments=True,
+        ignore_encoding=True,
     ):
         # The filename is used as a unique ID. This is then used to cache the
         # contents of the file. Obviously if the file changes content but not
@@ -1580,9 +1579,11 @@ class FortranFileReader(FortranReaderBase):
             message = "FortranFileReader is used with a filename"
             message += " or file-like object."
             raise ValueError(message)
-        mode = fparser.common.sourceinfo.get_source_info(file_candidate)
+        mode = fparser.common.sourceinfo.get_source_info(
+            file_candidate, ignore_encoding
+        )
 
-        FortranReaderBase.__init__(self, self.file, mode, ignore_comments)
+        super().__init__(self.file, mode, ignore_comments)
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1608,6 +1609,9 @@ class FortranStringReader(FortranReaderBase):
     :param list source_only: Fortran source files to search for modules \
                              required by "use" statements.
     :param bool ignore_comments: Whether or not to ignore comments
+    :param Optional[bool] ignore_encoding: whether or not to ignore Python-style \
+        encoding information (e.g. "-*- fortran -*-") when attempting to determine \
+        the format of the source. Default is True.
 
     For example:
 
@@ -1623,7 +1627,12 @@ class FortranStringReader(FortranReaderBase):
     """
 
     def __init__(
-        self, string, include_dirs=None, source_only=None, ignore_comments=True
+        self,
+        string,
+        include_dirs=None,
+        source_only=None,
+        ignore_comments=True,
+        ignore_encoding=True,
     ):
         # The Python ID of the string was used to uniquely identify it for
         # caching purposes. Unfortunately this ID is only unique for the
@@ -1636,8 +1645,10 @@ class FortranStringReader(FortranReaderBase):
         #
         self.id = "string-" + str(hash(string))
         source = StringIO(string)
-        mode = fparser.common.sourceinfo.get_source_info_str(string)
-        FortranReaderBase.__init__(self, source, mode, ignore_comments)
+        mode = fparser.common.sourceinfo.get_source_info_str(
+            string, ignore_encoding=ignore_encoding
+        )
+        super().__init__(source, mode, ignore_comments)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:
