@@ -1268,7 +1268,7 @@ class Connect_Spec(Connect_Spec_2003):
             # The only argument which need not be named is the unit number
             return "UNIT", File_Unit_Number(string)
         # We have a keyword-value pair. Check whether it is valid...
-        for (keyword, value) in [
+        for keyword, value in [
             (
                 [
                     "ACCESS",

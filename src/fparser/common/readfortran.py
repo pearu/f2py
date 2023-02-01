@@ -445,7 +445,6 @@ class Comment:
     """
 
     def __init__(self, comment, linenospan, reader):
-
         self.comment = comment
         self.span = linenospan
         self.reader = reader
