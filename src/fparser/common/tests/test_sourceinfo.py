@@ -293,6 +293,7 @@ def test_get_source_info_str(header, content):
 
 ##############################################################################
 
+
 # Another parameterised test fixture. See "header" above.
 #
 @pytest.fixture(

@@ -4843,7 +4843,7 @@ class Common_Stmt(StmtBase):  # R557
 
     def tostr(self):
         s = "COMMON"
-        for (name, lst) in self.items[0]:
+        for name, lst in self.items[0]:
             if name is not None:
                 s += " /%s/ %s" % (name, lst)
             else:
@@ -5400,7 +5400,7 @@ class Alloc_Opt(KeywordValueBase):  # R624
 
     @classmethod
     def match(cls, string):
-        for (k, v) in cls._keyword_pairs:
+        for k, v in cls._keyword_pairs:
             obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
             if obj is not None:
                 return obj
@@ -5569,7 +5569,7 @@ class Dealloc_Opt(KeywordValueBase):  # R636
 
     @staticmethod
     def match(string):
-        for (k, v) in [("STAT", Stat_Variable), ("ERRMSG", Errmsg_Variable)]:
+        for k, v in [("STAT", Stat_Variable), ("ERRMSG", Errmsg_Variable)]:
             try:
                 obj = KeywordValueBase.match(k, v, string, upper_lhs=True)
             except NoMatchError:
@@ -8524,7 +8524,7 @@ class Connect_Spec(KeywordValueBase):
             # The only argument which need not be named is the unit number
             return "UNIT", File_Unit_Number(string)
         # We have a keyword-value pair. Check whether it is valid...
-        for (keyword, value) in [
+        for keyword, value in [
             (
                 [
                     "ACCESS",
@@ -8611,7 +8611,7 @@ class Close_Spec(KeywordValueBase):  # R909
 
     @staticmethod
     def match(string):
-        for (k, v) in [
+        for k, v in [
             ("ERR", Label),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
@@ -8878,7 +8878,6 @@ class Io_Control_Spec_List(SequenceBase):
         spec = repmap(spec)
 
         try:
-
             try:
                 Io_Unit(spec)
                 # We matched an unamed unit number. We now need to construct an
@@ -9002,7 +9001,7 @@ class Io_Control_Spec(KeywordValueBase):
 
     @staticmethod
     def match(string):
-        for (k, v) in [
+        for k, v in [
             ("UNIT", Io_Unit),
             ("FMT", Format),
             ("NML", Namelist_Group_Name),
@@ -9194,7 +9193,7 @@ class Wait_Spec(KeywordValueBase):  # R922
 
     @staticmethod
     def match(string):
-        for (k, v) in [
+        for k, v in [
             (["END", "EOR", "ERR"], Label),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
@@ -9328,7 +9327,7 @@ class Position_Spec(KeywordValueBase):  # R926
 
     @staticmethod
     def match(string):
-        for (k, v) in [
+        for k, v in [
             ("ERR", Label),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
@@ -9398,7 +9397,7 @@ class Flush_Spec(KeywordValueBase):  # R928
 
     @staticmethod
     def match(string):
-        for (k, v) in [
+        for k, v in [
             ("ERR", Label),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
@@ -9534,7 +9533,7 @@ class Inquire_Spec(KeywordValueBase):  # R930
             # The only argument which need not be named is the unit number
             return "UNIT", File_Unit_Number(string)
         # We have a keyword-value pair. Check whether it is valid...
-        for (keyword, value) in [
+        for keyword, value in [
             (
                 [
                     "ACCESS",

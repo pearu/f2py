@@ -354,7 +354,6 @@ class Base(ComparableMixin):
 
     @show_result
     def __new__(cls, string, parent_cls=None):
-
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:

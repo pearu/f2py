@@ -211,7 +211,6 @@ class HasImplicitStmt:
 
 
 class HasUseStmt:
-
     a = AttributeHolder(use={}, use_provides={})
 
     def get_entity(self, name):
@@ -227,7 +226,6 @@ class HasUseStmt:
 
 
 class AccessSpecs:
-
     a = AttributeHolder(private_id_list=[], public_id_list=[])
 
     def topyf(self, tab="  "):
@@ -250,7 +248,6 @@ class AccessSpecs:
 
 
 class HasVariables:
-
     a = AttributeHolder(
         variables={}, variable_names=[]  # defines the order of declarations
     )
@@ -275,7 +272,6 @@ class HasVariables:
 
 
 class HasTypeDecls:
-
     a = AttributeHolder(type_decls={})
 
     def topyf(self, tab=""):
@@ -293,7 +289,6 @@ class HasTypeDecls:
 
 
 class HasAttributes:
-
     known_attributes = []
     a = AttributeHolder(attributes=[])
 
@@ -323,7 +318,6 @@ class HasAttributes:
 
 
 class HasModuleProcedures:
-
     a = AttributeHolder(module_procedures=[])
 
 

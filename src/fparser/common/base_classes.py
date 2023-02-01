@@ -795,7 +795,6 @@ class BeginStatement(Statement):
     ] + Statement._repr_attr_names
 
     def __init__(self, parent, item=None):
-
         self.content = []
         self.get_item = parent.get_item  # get line function
         self.put_item = parent.put_item  # put line function
