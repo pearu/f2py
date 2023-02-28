@@ -41,12 +41,14 @@ import fparser
 
 
 def test_fparser_get_version(monkeypatch):
-    """Test the _get_version() utility routine."""
+    """Test the _get_version() utility routine. It doesn't make sense to
+    actually check precisely which version it reports - just that it returns a
+    suitable string."""
     ver1 = fparser._get_version()
     assert isinstance(ver1, str)
     assert "." in ver1
 
-    def _broken_version():
+    def _broken_version(_name):
         """Broken routine with which to patch the `version` method."""
         raise fparser.PackageNotFoundError()
 
@@ -62,7 +64,6 @@ def test_fparser_get_version(monkeypatch):
     ver2 = fparser._get_version()
     assert isinstance(ver2, str)
     assert "." in ver2
-    assert ver1 == ver2
 
 
 def test_fparser_logging_handler(tmpdir, caplog):

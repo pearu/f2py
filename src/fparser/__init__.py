@@ -66,10 +66,12 @@
 # First created: Oct 2006
 
 try:
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError
+    from importlib import metadata
 except ImportError:
     # Use backport package for python <3.8
-    from importlib_metadata import version, PackageNotFoundError
+    from importlib_metadata import PackageNotFoundError
+    import importlib_metadata as metadata
 
 import logging
 import codecs
@@ -81,8 +83,9 @@ def _get_version():
     :rtype: str
     """
     try:
-        return version(__name__)
+        return metadata.version(__name__)
     except PackageNotFoundError:
+        # Package is not installed.
         from setuptools_scm import get_version
 
         return get_version(root="../..", relative_to=__file__)
