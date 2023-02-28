@@ -67,7 +67,7 @@
 
 try:
     from importlib.metadata import version, PackageNotFoundError
-except ModuleNotFoundError:
+except ImportError:
     # Use backport package for python <3.8
     from importlib_metadata import version, PackageNotFoundError
 

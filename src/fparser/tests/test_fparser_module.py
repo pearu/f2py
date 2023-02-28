@@ -54,7 +54,7 @@ def test_fparser_get_version(monkeypatch):
         from importlib import metadata
 
         monkeypatch.setattr(metadata, "version", _broken_version)
-    except ModuleNotFoundError:
+    except ImportError:
         # Use backport package for python <3.8
         import importlib_metadata
 
