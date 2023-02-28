@@ -259,6 +259,16 @@ replaced with enumerations where it makes sense. Similarly, support
 will be added for other types of symbols (e.g. those representing
 program/subroutine names or reserved Fortran keywords).
 
+Symbols available in the scoping region of a module may be made
+available in another scoping region through one or more `USE` statements.
+In a `SymbolTable` such uses are captured as instances of `ModuleUse`:
+
+.. autoclass:: fparser.two.symbol_table.ModuleUse
+
+These instances are created by calling:
+
+.. automethod:: fparser.two.symbol_table.SymbolTable.add_use_symbols
+
 Fortran has support for nested scopes - e.g. variables declared within
 a module are in scope within any routines defined within that
 module. Therefore, when searching for the definition a symbol, we
@@ -960,6 +970,14 @@ Python versions and the coverage reports are uploaded automatically to CodeCov
 (https://codecov.io/gh/stfc/fparser). The configuration for this is in the
 `.github/workflows/unit-tests.yml` file.
 
+In addition, an Action is also used check that all of the code conforms
+to Black (https://black.readthedocs.io) formatting. It is up to the developer
+to ensure that this passes (e.g. by running `black` locally and committing
+the results). Note that it is technically possibly to have the Action
+actually make the changes and commit them but this was found to break
+the Github review process since the automated commit is not permitted to
+trigger further Actions and this then leaves GitHub thinking that the
+various checks have not run.
 
 Test Fixtures
 -------------
@@ -981,3 +999,15 @@ clear_symbol_table  --                      Removes all stored symbol tables.
 fake_symbol_table   --                      Creates a fake scoping region and
                                             associated symbol table.
 =================== ======================= ===================================
+
+
+Performance Benchmark
+---------------------
+
+The fparser scripts folder contains a benchmarking script to assess the
+performance of the parser by generating a synthetic Fortran file with
+multiple subroutine and the associated subroutine calls. It can be executed
+with the following command::
+
+    ./src/fparser/scripts/fparser2_bench.py
+
