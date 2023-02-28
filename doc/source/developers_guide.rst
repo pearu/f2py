@@ -1,4 +1,4 @@
-..  Copyright (c) 2017-2022 Science and Technology Facilities Council.
+..  Copyright (c) 2017-2023 Science and Technology Facilities Council.
 
     All rights reserved.
 
@@ -979,6 +979,15 @@ the Github review process since the automated commit is not permitted to
 trigger further Actions and this then leaves GitHub thinking that the
 various checks have not run.
 
+Automatic Packaging
+-------------------
+
+A GitHub Action (https://github.com/pypa/gh-action-pypi-publish)
+is also used to automate the process of uploading a new
+release of fparser to the Python Package Index (pypi). This action is
+configured in the `.github/workflows/python_publish.yml` file and is
+triggered by the creation of a new release on GitHub.
+
 Test Fixtures
 -------------
 
@@ -1006,7 +1015,7 @@ Performance Benchmark
 
 The fparser scripts folder contains a benchmarking script to assess the
 performance of the parser by generating a synthetic Fortran file with
-multiple subroutine and the associated subroutine calls. It can be executed
+multiple subroutines and the associated subroutine calls. It can be executed
 with the following command::
 
     ./src/fparser/scripts/fparser2_bench.py
