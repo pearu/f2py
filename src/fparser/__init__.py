@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2022 Science and Technology Facilities Council.
+# Copyright (c) 2017-2023 Science and Technology Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -70,22 +70,31 @@ try:
 except ModuleNotFoundError:
     # Use backport package for python <3.8
     from importlib_metadata import version, PackageNotFoundError
-try:
-    __version__ = version(__name__)
-except PackageNotFoundError:
-    from setuptools_scm import get_version
-
-    __version__ = get_version(root="../..", relative_to=__file__)
 
 import logging
 import codecs
 
-__all__ = ["__version__"]
+
+def _get_version():
+    """
+    :returns: the version of this package.
+    :rtype: str
+    """
+    try:
+        return version(__name__)
+    except PackageNotFoundError:
+        from setuptools_scm import get_version
+
+        return get_version(root="../..", relative_to=__file__)
+
+
+__version__ = _get_version()
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
 def log_decode_error_handler(err):
-    '''
+    """
     A custom error handler for use when reading files. Removes any
     characters that cause decoding errors and logs the error.
 
@@ -93,7 +102,7 @@ def log_decode_error_handler(err):
               and the position from where encoding should continue.
     :rtype: Tuple[str, int]
 
-    '''
+    """
     message = f"character in input file. Error returned was {str(err)}."
     # Log the fact that this character will be removed from the input file
     logging.getLogger(__name__).warning("Skipped bad %s", message)
