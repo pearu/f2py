@@ -105,7 +105,6 @@ if __name__ == "__main__":
     # Sort the input file names, so that they are output alphabetically
     all_files.sort()
     for filename in all_files:
-
         # Parse the current source file:
         try:
             reader = FortranFileReader(filename)
@@ -137,7 +136,6 @@ if __name__ == "__main__":
 
         # Now output all dependencies for this file (if any):
         if all_use:
-
             # Sort all module names on which this file depends,
             # so they are listed alphabetically
             all_use.sort()

@@ -18,6 +18,17 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+
+01/02/2023 PR #389 for #388. Black 23.1 formatting changes.
+
+01/02/2023 PR #377 for #342. Add an AutoAPI and Doxygen sections in the
+           documentation.
+
+01/02/2023 PR #387 for #386. Support extension to permit in-line '!' 
+           comments in fixed-format Fortran.
+
+30/11/2022 PR #382 for #264. Ignore quotation marks in in-line comments.
+
 18/10/2022 PR #380 towards #379. Improve support for operators and symbol
            renaming in the use construct.
 
