@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council.
+# Copyright (c) 2022-2023 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -33,14 +33,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from fparser.api import get_reader
-from fparser.two.utils import FortranSyntaxError
-from fparser.two.Fortran2008 import Block_Construct, Program_Unit
-
 import pytest
+
+from fparser.api import get_reader
+from fparser.two.Fortran2008 import Block_Construct, Program_Unit
+from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES
+from fparser.two.utils import FortranSyntaxError, walk
 
 
 def test_block(f2008_create):
+    """Test that the Block_Construct matches as expected."""
     block = Block_Construct(
         get_reader(
             """\
@@ -55,16 +57,22 @@ def test_block(f2008_create):
     assert "BLOCK\n  INTEGER :: b = 4\n  a = 1 + b\nEND BLOCK" in str(block)
 
 
-def test_block_new_scope(f2008_create):
-    block = Program_Unit(
+@pytest.mark.parametrize(
+    "before, after", [("", ""), ("b = 2.0 * b", ""), ("", "b = 2.0 * b")]
+)
+def test_block_new_scope(f2008_parser, before, after):
+    """Test that a Block_Construct creates a new scoping region."""
+    block = f2008_parser(
         get_reader(
-            """\
+            f"""\
             program foo
             integer :: b = 3
+            {before}
             block
                integer :: b = 4
                a = 1 + b
             end block
+            {after}
             end program foo
             """
         )
@@ -75,7 +83,33 @@ def test_block_new_scope(f2008_create):
     )
 
 
+def test_block_in_if(f2008_parser):
+    """Test that a Block may appear inside an IF."""
+    ptree = f2008_parser(
+        get_reader(
+            """\
+            program foo
+            integer :: b = 3
+            if (b == 2) then
+              block
+                real :: tmp
+                tmp = ATAN(0.5)
+                b = NINT(tmp)
+              end block
+            end if
+            end program foo
+            """
+        )
+    )
+    blocks = walk([ptree], Block_Construct)
+    assert len(blocks) == 1
+
+
 def test_named_block(f2008_create):
+    """
+    Test that a named block construct is correctly captured and also
+    reproduced.
+    """
     block = Block_Construct(
         get_reader(
             """\
@@ -124,3 +158,30 @@ def test_end_block_wrong_name(f2008_create):  # C808
                 """
             )
         )
+
+
+def test_block_in_subroutine(f2008_parser):
+    """Check that we get two, nested symbol tables when a subroutine contains
+    a Block construct."""
+    code = """\
+            program my_prog
+            real :: a
+            a = -1.0
+            if (a < 0.0) then
+             rocking: block
+               real :: b
+               b = 42.0
+               a = b
+             end block rocking
+            else
+             a = 10.0
+            end if
+            end program my_prog
+            """
+    print(code)
+    _ = f2008_parser(get_reader(code))
+    tables = SYMBOL_TABLES
+    assert list(tables._symbol_tables.keys()) == ["my_prog"]
+    table = SYMBOL_TABLES.lookup("my_prog")
+    assert len(table.children) == 1
+    assert table.children[0].name == "rocking"

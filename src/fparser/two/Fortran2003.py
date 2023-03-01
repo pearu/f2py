@@ -93,6 +93,7 @@ from fparser.two.utils import (
     CALLBase,
     CallBase,
     KeywordValueBase,
+    ScopingRegionMixin,
     SeparatorBase,
     SequenceBase,
     UnaryOpBase,
@@ -10920,6 +10921,9 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
         """
         return self.items[1]
 
+    def get_scope_name(self):
+        return self.get_start_name()
+
     def get_start_name(self):
         """Provides the program name as a string. This is used for matching
         with the equivalent `end program` name if there is one.
@@ -10973,7 +10977,7 @@ class Module(BlockBase):  # R1104
         )
 
 
-class Module_Stmt(StmtBase, WORDClsBase):  # R1105
+class Module_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):  # R1105
     """
     <module-stmt> = MODULE <module-name>
     """
@@ -12472,7 +12476,7 @@ class Function_Subprogram(BlockBase):  # R1223
         )
 
 
-class Function_Stmt(StmtBase):  # R1224
+class Function_Stmt(StmtBase, ScopingRegionMixin):  # R1224
     """
     ::
 

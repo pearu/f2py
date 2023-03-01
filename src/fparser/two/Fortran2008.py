@@ -1,5 +1,5 @@
-# Modified work Copyright (c) 2018-2022 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2018-2023 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -86,6 +86,7 @@ from fparser.two.utils import (
     CALLBase,
     KeywordValueBase,
     NoMatchError,
+    ScopingRegionMixin,
     SeparatorBase,
     StmtBase,
     STRINGBase,
@@ -93,29 +94,30 @@ from fparser.two.utils import (
     WORDClsBase,
 )
 from fparser.two.Fortran2003 import (
-    EndStmtBase,
-    BlockBase,
-    SequenceBase,
     Base,
-    Specification_Part,
-    Stat_Variable,
-    Errmsg_Variable,
-    Source_Expr,
-    Module_Subprogram_Part,
-    Implicit_Part,
-    Implicit_Part_Stmt,
+    BlockBase,
+    Component_Decl_List,
     Declaration_Construct,
-    Use_Stmt,
+    Declaration_Type_Spec,
+    EndStmtBase,
+    Entity_Decl_List,
+    Errmsg_Variable,
+    Execution_Part_Construct,
     File_Name_Expr,
     File_Unit_Number,
+    Implicit_Part,
+    Implicit_Part_Stmt,
     Import_Stmt,
     Iomsg_Variable,
     Label,
-    Declaration_Type_Spec,
-    Entity_Decl_List,
-    Component_Decl_List,
+    Module_Subprogram_Part,
+    Name,
+    SequenceBase,
+    Source_Expr,
+    Specification_Part,
+    Stat_Variable,
     Stop_Code,
-    Execution_Part_Construct,
+    Use_Stmt,
 )
 
 # Import of F2003 classes that are updated in this standard.
@@ -1030,7 +1032,7 @@ class Submodule(BlockBase):  # R1116 [C1112,C1114]
         return result
 
 
-class Submodule_Stmt(Base):  # R1117
+class Submodule_Stmt(Base, ScopingRegionMixin):  # R1117
     """
     Fortran 2008 rule R1117::
 
@@ -1342,12 +1344,14 @@ class Connect_Spec(Connect_Spec_2003):
         return None
 
 
-class Block_Construct(BlockBase):  # R807
+class Block_Construct(BlockBase):
     """
-    <block-construct> = <block-stmt>
-                            [ <specification-part> ]
-                            <block> == [ <execution-part-construct> ]...
-                            <end-block-stmt>
+    Fortran 2008 Rule 807.
+
+    block-construct is block-stmt
+                            [ specification-part ]
+                            block
+                            end-block-stmt
 
     TODO: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
     NAMELIST, OPTIONAL, VALUE, and statement functions (C806)
@@ -1373,38 +1377,68 @@ class Block_Construct(BlockBase):  # R807
         )
 
 
-class Block_Stmt(StmtBase, WORDClsBase):  # R808
+class Block_Stmt(StmtBase, WORDClsBase):
     """
-    <block-stmt> = [ <block-construct-name> : ] BLOCK
+    Fortran 2008 Rule 808.
+
+    block-stmt is [ block-construct-name : ] BLOCK
+
     """
 
     subclass_names = []
     use_names = ["Block_Construct_Name"]
+    counter = 0
 
     class Counter:
-        """Global counter so that each block-stmt introduces a new scope"""
+        """Global counter so that each block-stmt introduces a new scope."""
 
         counter = 0
 
         def __init__(self):
-            self.counter = Block_Stmt.Counter.counter
+            self._counter = Block_Stmt.Counter.counter
             Block_Stmt.Counter.counter += 1
 
         def __repr__(self):
-            return "block_{0}".format(self.counter)
+            return "_block_{0}".format(self._counter)
 
     @staticmethod
     def match(string):
+        """
+        Attempts to match the supplied text with this rule.
+
+        :param str string: the text to match.
+
+        :returns: a tuple of the matched node and instance of Counter or \
+                  None if there is no match.
+        :rtype: Tuple["BLOCK", \
+                      :py:class:`fparser.two.Fortran2008.Block_Stmt.Counter`] \
+                | NoneType
+        """
         found = WORDClsBase.match("BLOCK", None, string)
         if not found:
             return None
         block, _ = found
-        return block, Block_Stmt.Counter()
+        internal_name = f"_block_{Block_Stmt.counter}"
+        Block_Stmt.counter += 1
+        return block, Block_Stmt.Counter()  # internal_name
+
+    def get_scope_name(self):
+        if self.item.name:
+            return self.item.name
+        return f"_block_{self.items[1]}"
 
     def get_start_name(self):
+        """
+        :returns: the name associated with this Block construct or None.
+        :rtype: str | NoneType
+        """
         return self.item.name
 
     def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
         return "BLOCK"
 
 

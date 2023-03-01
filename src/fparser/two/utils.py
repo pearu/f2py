@@ -526,6 +526,18 @@ class Base(ComparableMixin):
         reader.put_item(self.item)
 
 
+class ScopingRegionMixin:
+    """
+    """
+
+    def get_scope_name(self):
+        """
+        :returns: the name of this scoping region.
+        :rtype: str
+        """
+        return self.get_name().string
+    
+
 class BlockBase(Base):
     """
     Base class for matching all block constructs::
@@ -608,7 +620,7 @@ class BlockBase(Base):
                 # symbol table.
                 # NOTE: if the match subsequently fails then we must
                 #       delete this symbol table.
-                table_name = str(obj.children[1])
+                table_name = obj.get_scope_name() #str(obj.children[1])
                 SYMBOL_TABLES.enter_scope(table_name)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
