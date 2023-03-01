@@ -65,7 +65,9 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Setup script. Used by easy_install and pip."""
+"""Setup script. Used by easy_install and pip. This is now just a stub
+which ensures that 'python setup.py' still works. All configuration is done
+in setup.cfg."""
 
 from setuptools import setup
 
