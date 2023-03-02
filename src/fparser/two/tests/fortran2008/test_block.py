@@ -178,7 +178,6 @@ def test_block_in_subroutine(f2008_parser):
             end if
             end program my_prog
             """
-    print(code)
     _ = f2008_parser(get_reader(code))
     tables = SYMBOL_TABLES
     assert list(tables._symbol_tables.keys()) == ["my_prog"]

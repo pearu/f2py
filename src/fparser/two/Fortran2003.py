@@ -12794,7 +12794,7 @@ def c1242_valid(prefix, binding_spec):
     return True
 
 
-class Subroutine_Stmt(StmtBase):  # R1232
+class Subroutine_Stmt(StmtBase, ScopingRegionMixin):  # R1232
     """
     Fortran2003 rule R1232::
 

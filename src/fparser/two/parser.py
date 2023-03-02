@@ -68,6 +68,7 @@ for a particular standard."""
 # pylint: disable=eval-used
 
 import inspect
+import logging
 import sys
 from fparser.two.symbol_table import SYMBOL_TABLES
 
@@ -202,7 +203,6 @@ class ParserFactory:
         __autodoc__ = []
         base_classes = {}
 
-        import logging
         import fparser.two.Fortran2003
 
         class_type = type(fparser.two.Fortran2003.Base)
@@ -214,6 +214,10 @@ class ParserFactory:
 
         for clsinfo in input_classes:
             clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
+            # if "Executable_Construct" in clsname:
+            #    import pdb
+
+            #    pdb.set_trace()
             cls = eval(clsname)
             # ?? classtype is set to Base so why have issubclass?
             if (
@@ -228,37 +232,85 @@ class ParserFactory:
         #
         # OPTIMIZE subclass_names tree.
         #
+        def _rpl_list(clsname):
+            """
+            Starting at the named class, searches down the tree defined by the
+            classes named in the `subclass_names` list to find the closest that
+            have `match` methods. If the current class does not have a
+            `match` method then this method is called again for each of
+            the classes in its `subclass_names` list.
 
-        if 1:  # Optimize subclass tree:
+            :param str clsname: The name of the class from which to search.
 
-            def _rpl_list(clsname):
-                if clsname not in base_classes:
-                    error_string = "Not implemented: {0}".format(clsname)
-                    logging.getLogger(__name__).debug(error_string)
-                    return []
-                # remove this code when all classes are implemented.
-                cls = base_classes[clsname]
-                if hasattr(cls, "match"):
-                    return [clsname]
-                bits = []
-                for names in getattr(cls, "subclass_names", []):
-                    list1 = _rpl_list(names)
-                    for names1 in list1:
-                        if names1 not in bits:
-                            bits.append(names1)
-                return bits
+            :returns: names of subclasses with `match` methods.
+            :rtype: List[str | NoneType]
 
-            for cls in list(base_classes.values()):
-                if not hasattr(cls, "subclass_names"):
-                    continue
-                opt_subclass_names = []
-                for names in cls.subclass_names:
-                    for names1 in _rpl_list(names):
-                        if names1 not in opt_subclass_names:
-                            opt_subclass_names.append(names1)
-                if not opt_subclass_names == cls.subclass_names:
-                    cls.subclass_names[:] = opt_subclass_names
+            """
+            if clsname not in base_classes:
+                error_string = "Not implemented: {0}".format(clsname)
+                logging.getLogger(__name__).debug(error_string)
+                return []
+            # remove this code when all classes are implemented.
+            cls = base_classes[clsname]
+            if hasattr(cls, "match"):
+                # This class has a `match` method so no need to search further
+                # down the tree.
+                return [clsname]
+            # clsname doesn't have a `match` method so we look at each of its
+            # subclasses and find the nearest class in each that does have a
+            # `match` method.
+            bits = []
+            for names in getattr(cls, "subclass_names", []):
+                list1 = _rpl_list(names)
+                for names1 in list1:
+                    if names1 not in bits:
+                        bits.append(names1)
+            return bits
 
+        if "Block_Construct" in base_classes:
+            cls = base_classes["Executable_Construct"]
+            print(sorted(cls.subclass_names))
+
+            cls = base_classes["Execution_Part_Construct"]
+            print(sorted(cls.subclass_names))
+            # exit(1)
+            # import pdb
+
+            # pdb.set_trace()
+
+        # Ensure we keep a copy of the original subclass_names list for each
+        # class.
+        for cls in list(base_classes.values()):
+            if not hasattr(cls, "subclass_names"):
+                continue
+            if not hasattr(cls, "_original_subclass_names"):
+                setattr(cls, "_original_subclass_names", cls.subclass_names[:])
+            # else:
+            #    cls.subclass_names = cls._original_subclass_names[:]
+
+        for cls in list(base_classes.keys()):
+            if not hasattr(cls, "subclass_names"):
+                continue
+            # The optimised list of subclass names will only include subclasses
+            # that have `match` methods.
+            opt_subclass_names = []
+            for names in cls.subclass_names:
+                for names1 in _rpl_list(names):
+                    if names1 not in opt_subclass_names:
+                        opt_subclass_names.append(names1)
+            if not opt_subclass_names == cls.subclass_names:
+                cls.subclass_names[:] = opt_subclass_names
+
+        if "Block_Construct" in base_classes:
+            cls = base_classes["Executable_Construct"]
+            print(sorted(cls.subclass_names))
+
+            cls = base_classes["Execution_Part_Construct"]
+            print(sorted(cls.subclass_names))
+            # exit(1)
+            # import pdb
+
+            # pdb.set_trace()
         # Initialize Base.subclasses dictionary:
         for clsname, cls in list(base_classes.items()):
             subclass_names = getattr(cls, "subclass_names", None)

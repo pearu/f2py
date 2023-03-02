@@ -58,17 +58,6 @@ def f2003_parser():
     return ParserFactory().create(std="f2003")
 
 
-@pytest.fixture
-def f2008_parser():
-    """Create a Fortran 2008 parser class hierarchy and return the parser
-    for usage in tests.
-
-    :return: a Program class (not object) for use with the Fortran reader.
-    :rtype: :py:class:`fparser.two.Fortran2008.Program`
-    """
-    return ParserFactory().create(std="f2008")
-
-
 @pytest.fixture(name="clear_symbol_table", autouse=True)
 def clear_symbol_tables_fixture():
     """Clear-up any existing symbol-table hierarchy."""
