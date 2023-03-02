@@ -10883,7 +10883,7 @@ class Main_Program0(BlockBase):
         return result
 
 
-class Program_Stmt(StmtBase, WORDClsBase):  # R1102
+class Program_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):  # R1102
     """
     Fortran 2003 rule R1102::
 
@@ -10920,9 +10920,6 @@ class Program_Stmt(StmtBase, WORDClsBase):  # R1102
 
         """
         return self.items[1]
-
-    def get_scope_name(self):
-        return self.get_start_name()
 
     def get_start_name(self):
         """Provides the program name as a string. This is used for matching

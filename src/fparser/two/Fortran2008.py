@@ -1377,7 +1377,7 @@ class Block_Construct(BlockBase):
         )
 
 
-class Block_Stmt(StmtBase, WORDClsBase):
+class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
     """
     Fortran 2008 Rule 808.
 

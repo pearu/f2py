@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2018-2022 Science and Technology
+# Modified work Copyright (c) 2018-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -214,10 +214,7 @@ class ParserFactory:
 
         for clsinfo in input_classes:
             clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
-            # if "Executable_Construct" in clsname:
-            #    import pdb
-
-            #    pdb.set_trace()
+            # Why not just clsinfo[1] instead of eval()?
             cls = eval(clsname)
             # ?? classtype is set to Base so why have issubclass?
             if (
@@ -267,17 +264,6 @@ class ParserFactory:
                         bits.append(names1)
             return bits
 
-        if "Block_Construct" in base_classes:
-            cls = base_classes["Executable_Construct"]
-            print(sorted(cls.subclass_names))
-
-            cls = base_classes["Execution_Part_Construct"]
-            print(sorted(cls.subclass_names))
-            # exit(1)
-            # import pdb
-
-            # pdb.set_trace()
-
         # Ensure we keep a copy of the original subclass_names list for each
         # class.
         for cls in list(base_classes.values()):
@@ -301,16 +287,6 @@ class ParserFactory:
             if not opt_subclass_names == cls.subclass_names:
                 cls.subclass_names[:] = opt_subclass_names
 
-        if "Block_Construct" in base_classes:
-            cls = base_classes["Executable_Construct"]
-            print(sorted(cls.subclass_names))
-
-            cls = base_classes["Execution_Part_Construct"]
-            print(sorted(cls.subclass_names))
-            # exit(1)
-            # import pdb
-
-            # pdb.set_trace()
         # Initialize Base.subclasses dictionary:
         for clsname, cls in list(base_classes.items()):
             subclass_names = getattr(cls, "subclass_names", None)
