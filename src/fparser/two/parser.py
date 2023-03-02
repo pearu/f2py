@@ -274,7 +274,7 @@ class ParserFactory:
             # else:
             #    cls.subclass_names = cls._original_subclass_names[:]
 
-        for cls in list(base_classes.keys()):
+        for cls in list(base_classes.values()):
             if not hasattr(cls, "subclass_names"):
                 continue
             # The optimised list of subclass names will only include subclasses
