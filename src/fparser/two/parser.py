@@ -87,9 +87,9 @@ def get_module_classes(input_module):
     # classes.
     all_cls_members = inspect.getmembers(sys.modules[module_name], inspect.isclass)
     # next only keep classes that are specified in the module.
-    for cls_member in all_cls_members:
-        if cls_member[1].__module__ == module_name:
-            module_cls_members.append(cls_member)
+    for name, cls in all_cls_members:
+        if cls.__module__ == module_name:
+            module_cls_members.append((name, cls))
     return module_cls_members
 
 
@@ -160,6 +160,10 @@ class ParserFactory:
             from fparser.two import Fortran2008
 
             f2008_cls_members = get_module_classes(Fortran2008)
+            for _, cls in f2008_cls_members:
+                if hasattr(cls, "_original_subclass_names"):
+                    delattr(cls, "_original_subclass_names")
+
             # next add in Fortran2003 classes if they do not already
             # exist as a Fortran2008 class.
             f2008_class_names = [i[0] for i in f2008_cls_members]
@@ -199,33 +203,28 @@ class ParserFactory:
         class name and a class.
 
         """
+        # pylint: disable=import-outside-toplevel
+        from fparser.two import Fortran2003
 
-        __autodoc__ = []
-        base_classes = {}
-
-        import fparser.two.Fortran2003
-
-        class_type = type(fparser.two.Fortran2003.Base)
+        class_type = type(Fortran2003.Base)
 
         # Reset subclasses dictionary in case this function has been
         # called before. If this is not done then multiple calls to
         # the ParserFactory create method may not work correctly.
-        fparser.two.Fortran2003.Base.subclasses = {}
+        Fortran2003.Base.subclasses = {}
+        base_classes = {}
 
-        for clsinfo in input_classes:
-            clsname = "{0}.{1}".format(clsinfo[1].__module__, clsinfo[0])
-            # Why not just clsinfo[1] instead of eval()?
-            cls = eval(clsname)
+        for _, cls in input_classes:
             # ?? classtype is set to Base so why have issubclass?
             if (
                 isinstance(cls, class_type)
-                and issubclass(cls, fparser.two.Fortran2003.Base)
+                and issubclass(cls, Fortran2003.Base)
                 and not cls.__name__.endswith("Base")
             ):
                 base_classes[cls.__name__] = cls
-                if len(__autodoc__) < 10:
-                    __autodoc__.append(cls.__name__)
-
+                #if cls.__name__ == "Executable_Construct":
+                #    import pdb; pdb.set_trace()
+                #    dir(cls)
         #
         # OPTIMIZE subclass_names tree.
         #
@@ -265,18 +264,20 @@ class ParserFactory:
             return bits
 
         # Ensure we keep a copy of the original subclass_names list for each
-        # class.
-        for cls in list(base_classes.values()):
+        # class (because this gets altered below).
+        for cls in base_classes.values():
             if not hasattr(cls, "subclass_names"):
                 continue
             if not hasattr(cls, "_original_subclass_names"):
                 setattr(cls, "_original_subclass_names", cls.subclass_names[:])
-            # else:
-            #    cls.subclass_names = cls._original_subclass_names[:]
+            else:
+                cls.subclass_names = cls._original_subclass_names[:]
 
-        for cls in list(base_classes.values()):
+        for cls in base_classes.values():
             if not hasattr(cls, "subclass_names"):
                 continue
+            #if cls.__name__ == "Executable_Construct":
+            #    import pdb; pdb.set_trace()
             # The optimised list of subclass names will only include subclasses
             # that have `match` methods.
             opt_subclass_names = []
@@ -285,19 +286,20 @@ class ParserFactory:
                     if names1 not in opt_subclass_names:
                         opt_subclass_names.append(names1)
             if not opt_subclass_names == cls.subclass_names:
-                cls.subclass_names[:] = opt_subclass_names
+                cls.subclass_names = opt_subclass_names[:]
 
-        # Initialize Base.subclasses dictionary:
-        for clsname, cls in list(base_classes.items()):
+        # Now that we've optimised the list of subclass names for each class,
+        # use this information to initialise the Base.subclasses dictionary:
+        for clsname, cls in base_classes.items():
             subclass_names = getattr(cls, "subclass_names", None)
             if subclass_names is None:
                 message = "%s class is missing subclass_names list" % (clsname)
                 logging.getLogger(__name__).debug(message)
                 continue
             try:
-                bits = fparser.two.Fortran2003.Base.subclasses[clsname]
+                bits = Fortran2003.Base.subclasses[clsname]
             except KeyError:
-                fparser.two.Fortran2003.Base.subclasses[clsname] = bits = []
+                Fortran2003.Base.subclasses[clsname] = bits = []
             for name in subclass_names:
                 if name in base_classes:
                     bits.append(base_classes[name])
@@ -305,9 +307,14 @@ class ParserFactory:
                     message = "{0} not implemented needed by {1}".format(name, clsname)
                     logging.getLogger(__name__).debug(message)
 
+        #import pdb; pdb.set_trace()
+        names = [cls.__name__ for cls in Fortran2003.Base.subclasses["Executable_Construct"]]
+        print(sorted(names))
+        #print(fparser.two.Fortran2003.Base.subclasses["Executable_Construct"])
+        
         if 1:
-            for cls in list(base_classes.values()):
-                # subclasses = fparser.two.Fortran2003.Base.subclasses.get(
+            for cls in base_classes.values():
+                # subclasses = Fortran2003.Base.subclasses.get(
                 #     cls.__name__, [])
                 # subclasses_names = [c.__name__ for c in subclasses]
                 subclass_names = getattr(cls, "subclass_names", [])

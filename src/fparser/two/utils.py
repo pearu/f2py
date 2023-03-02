@@ -344,8 +344,9 @@ class Base(ComparableMixin):
     """
 
     # This dict of subclasses is populated dynamically by code at the end
-    # of this module. That code uses the entries in the
+    # of the fparser.two.parser module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
+    # See Issue #191 for a discussion of a way of getting rid of this state.
     subclasses = {}
 
     def __init__(self, string, parent_cls=None):
@@ -411,7 +412,8 @@ class Base(ComparableMixin):
             return result
         if result is None:
             # Loop over the possible sub-classes of this class and
-            # check for matches
+            # check for matches. This uses the list of subclasses calculated
+            # at runtime in fparser.two.parser.
             for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls:  # avoid recursion 2.
                     continue
