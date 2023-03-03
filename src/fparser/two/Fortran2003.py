@@ -7037,7 +7037,13 @@ class If_Construct(BlockBase):  # R802
     """
 
     subclass_names = []
-    use_names = ["If_Then_Stmt", "Execution_Part_Construct", "Else_If_Stmt", "Else_Stmt", "End_If_Stmt"]
+    use_names = [
+        "If_Then_Stmt",
+        "Execution_Part_Construct",
+        "Else_If_Stmt",
+        "Else_Stmt",
+        "End_If_Stmt",
+    ]
 
     @staticmethod
     def match(string):
