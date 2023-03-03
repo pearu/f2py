@@ -1389,18 +1389,6 @@ class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
     use_names = ["Block_Construct_Name"]
     counter = 0
 
-    class Counter:
-        """Global counter so that each block-stmt introduces a new scope."""
-
-        counter = 0
-
-        def __init__(self):
-            self._counter = Block_Stmt.Counter.counter
-            Block_Stmt.Counter.counter += 1
-
-        def __repr__(self):
-            return "_block_{0}".format(self._counter)
-
     @staticmethod
     def match(string):
         """
@@ -1418,14 +1406,21 @@ class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
         if not found:
             return None
         block, _ = found
-        internal_name = f"_block_{Block_Stmt.counter}"
+        # Construct a unique name for this BLOCK (in case it isn't named). We
+        # ensure the name is not a valid Fortran name so that it can't clash
+        # with any regions named in the code.
+        scope_name = f"block:{Block_Stmt.counter}"
         Block_Stmt.counter += 1
-        return block, Block_Stmt.Counter()  # internal_name
+        return block, scope_name
 
     def get_scope_name(self):
+        """
+        :returns: the name of this scoping region.
+        :rtype: str
+        """
         if self.item.name:
             return self.item.name
-        return f"_block_{self.items[1]}"
+        return self.items[1]
 
     def get_start_name(self):
         """
@@ -1452,19 +1447,23 @@ class End_Block_Stmt(EndStmtBase):  # R809
     def match(string):
         """
         :param str string: Fortran code to check for a match
-        :return: code line matching the "END DO" statement
-        :rtype: string
+
+        :return: code line matching the "END BLOCK" statement
+        :rtype: str
+
         """
         return EndStmtBase.match(
             "BLOCK", Block_Construct_Name, string, require_stmt_type=True
         )
 
 
-class Critical_Construct(BlockBase):  # R807
+class Critical_Construct(BlockBase):
     """
-    <critical-construct> = <critical-stmt>
-                            <block> == [ <execution-part-construct> ]...
-                            <end-critical-stmt>
+    Fortran 2008 Rule 810.
+
+    critical-construct is critical-stmt
+                            block
+                            end-critical-stmt
 
     TODO: Should disallow RETURN (C809) and CYCLE or EXIT to outside block (C811)
     """
@@ -1474,6 +1473,16 @@ class Critical_Construct(BlockBase):  # R807
 
     @staticmethod
     def match(reader):
+        """
+        Attempt to match the supplied content with this Rule.
+
+        :param reader:
+        :type reader:
+
+        :returns:
+        :rtype:
+
+        """
         return BlockBase.match(
             Critical_Stmt,
             [Execution_Part_Construct],
@@ -1484,9 +1493,12 @@ class Critical_Construct(BlockBase):  # R807
         )
 
 
-class Critical_Stmt(StmtBase, WORDClsBase):  # R808
+class Critical_Stmt(StmtBase, WORDClsBase):
     """
-    <critical-stmt> = [ <critical-construct-name> : ] CRITICAL
+    Fortran 2008 Rule R811.
+
+    critical-stmt is [ critical-construct-name : ] CRITICAL
+
     """
 
     subclass_names = []
@@ -1503,8 +1515,13 @@ class Critical_Stmt(StmtBase, WORDClsBase):  # R808
         return "CRITICAL"
 
 
-class End_Critical_Stmt(EndStmtBase):  # R809
-    """<end-critical-stmt> = END CRITICAL [ <critical-construct-name> ]"""
+class End_Critical_Stmt(EndStmtBase):
+    """
+    Fortran 2008 Rule 812.
+
+    end-critical-stmt is END CRITICAL [ critical-construct-name ]
+
+    """
 
     subclass_names = []
     use_names = ["Critical_Construct_Name"]

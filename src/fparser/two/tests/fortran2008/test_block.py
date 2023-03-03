@@ -34,10 +34,11 @@
 
 
 import pytest
+import re
 
 from fparser.api import get_reader
-from fparser.two.Fortran2008 import Block_Construct, Program_Unit
-from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES
+from fparser.two.Fortran2008 import Block_Construct
+from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import FortranSyntaxError, walk
 
 
@@ -81,6 +82,11 @@ def test_block_new_scope(f2008_parser, before, after):
     assert "BLOCK\nINTEGER :: b = 4\na = 1 + b\nEND BLOCK" in str(block).replace(
         "  ", ""
     )
+    tables = SYMBOL_TABLES
+    assert list(tables._symbol_tables.keys()) == ["foo"]
+    table = SYMBOL_TABLES.lookup("foo")
+    assert len(table.children) == 1
+    assert re.match(r"block:[\d+]", table.children[0].name)
 
 
 def test_block_in_if(f2008_parser):
@@ -109,6 +115,7 @@ def test_named_block(f2008_create):
     """
     Test that a named block construct is correctly captured and also
     reproduced.
+
     """
     block = Block_Construct(
         get_reader(
@@ -125,6 +132,11 @@ def test_named_block(f2008_create):
 
 
 def test_end_block_missing_start_name(f2008_create):  # C808
+    """
+    Test Constraint 808 - that a name on the 'end block' must correspond
+    with the same name on the 'block'.
+
+    """
     with pytest.raises(FortranSyntaxError):
         Block_Construct(
             get_reader(
@@ -137,6 +149,11 @@ def test_end_block_missing_start_name(f2008_create):  # C808
 
 
 def test_end_block_missing_end_name(f2008_create):  # C808
+    """
+    Test that a named block that is missing a name on its 'end block' statement
+    results in a syntax error.
+
+    """
     with pytest.raises(FortranSyntaxError):
         Block_Construct(
             get_reader(
@@ -149,6 +166,11 @@ def test_end_block_missing_end_name(f2008_create):  # C808
 
 
 def test_end_block_wrong_name(f2008_create):  # C808
+    """
+    Test that an incorrect name on the end block statement results in a
+    syntax error.
+
+    """
     with pytest.raises(FortranSyntaxError):
         Block_Construct(
             get_reader(
@@ -161,8 +183,11 @@ def test_end_block_wrong_name(f2008_create):  # C808
 
 
 def test_block_in_subroutine(f2008_parser):
-    """Check that we get two, nested symbol tables when a subroutine contains
-    a Block construct."""
+    """
+    Check that we get two, nested symbol tables when a subroutine contains
+    a Block construct.
+
+    """
     code = """\
             program my_prog
             real :: a
