@@ -151,12 +151,6 @@ class ParserFactory:
             from fparser.two import Fortran2008
 
             f2008_cls_members = get_module_classes(Fortran2008)
-            for _, cls in f2008_cls_members:
-                if hasattr(cls, "_original_subclass_names"):
-                    # Reset the list of original subclass names as it will have
-                    # been inherited from the corresponding F2003 class.
-                    # pylint: disable=protected-access
-                    cls._original_subclass_names = []
 
             # next add in Fortran2003 classes if they do not already
             # exist as a Fortran2008 class.
@@ -206,20 +200,6 @@ class ParserFactory:
             ):
                 base_classes[cls.__name__] = cls
 
-        # Ensure we keep a copy of the original subclass_names list for each
-        # class (because this gets altered below).
-        for cls in base_classes.values():
-            if not hasattr(cls, "subclass_names"):
-                continue
-            # pylint: disable=protected-access
-            if (
-                not hasattr(cls, "_original_subclass_names")
-                or not cls._original_subclass_names
-            ):
-                setattr(cls, "_original_subclass_names", cls.subclass_names[:])
-            else:
-                cls.subclass_names = cls._original_subclass_names[:]
-
         # OPTIMIZE subclass_names tree.
         #
         def _rpl_list(clsname):
@@ -257,6 +237,9 @@ class ParserFactory:
                         bits.append(names1)
             return bits
 
+        # Dict in which to store optimised list of subclass names for each cls.
+        local_subclass_names = {}
+
         for cls in base_classes.values():
             if not hasattr(cls, "subclass_names"):
                 continue
@@ -267,17 +250,16 @@ class ParserFactory:
                 for names1 in _rpl_list(names):
                     if names1 not in opt_subclass_names:
                         opt_subclass_names.append(names1)
-            if not opt_subclass_names == cls.subclass_names:
-                cls.subclass_names = opt_subclass_names[:]
+            local_subclass_names[cls] = opt_subclass_names[:]
 
         # Now that we've optimised the list of subclass names for each class,
         # use this information to initialise the Base.subclasses dictionary:
         for clsname, cls in base_classes.items():
-            subclass_names = getattr(cls, "subclass_names", None)
-            if subclass_names is None:
+            if not hasattr(cls, "subclass_names"):
                 message = "%s class is missing subclass_names list" % (clsname)
                 logging.getLogger(__name__).debug(message)
                 continue
+            subclass_names = local_subclass_names.get(cls, [])
             try:
                 bits = Fortran2003.Base.subclasses[clsname]
             except KeyError:
@@ -294,7 +276,7 @@ class ParserFactory:
                 # subclasses = Fortran2003.Base.subclasses.get(
                 #     cls.__name__, [])
                 # subclasses_names = [c.__name__ for c in subclasses]
-                subclass_names = getattr(cls, "subclass_names", [])
+                subclass_names = local_subclass_names.get(cls, [])
                 use_names = getattr(cls, "use_names", [])
                 # for name in subclasses_names:
                 #     break
