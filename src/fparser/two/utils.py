@@ -530,6 +530,8 @@ class Base(ComparableMixin):
 
 class ScopingRegionMixin:
     """
+    Mixin class for use in all classes that represent a scoping region.
+
     """
 
     def get_scope_name(self):
@@ -538,7 +540,7 @@ class ScopingRegionMixin:
         :rtype: str
         """
         return self.get_name().string
-    
+
 
 class BlockBase(Base):
     """
@@ -601,6 +603,9 @@ class BlockBase(Base):
         # top-level due to circular dependencies).
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
+        # This will store the name of the new SymbolTable if we match a
+        # scoping region.
+        table_name = None
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
@@ -617,12 +622,12 @@ class BlockBase(Base):
                 for obj in reversed(content):
                     obj.restore_reader(reader)
                 return
-            if startcls in SYMBOL_TABLES.scoping_unit_classes:
+            if isinstance(obj, ScopingRegionMixin):
                 # We are entering a new scoping unit so create a new
                 # symbol table.
                 # NOTE: if the match subsequently fails then we must
                 #       delete this symbol table.
-                table_name = obj.get_scope_name() #str(obj.children[1])
+                table_name = obj.get_scope_name()
                 SYMBOL_TABLES.enter_scope(table_name)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
@@ -749,20 +754,20 @@ class BlockBase(Base):
 
         except FortranSyntaxError as err:
             # We hit trouble so clean up the symbol table
-            if startcls in SYMBOL_TABLES.scoping_unit_classes:
+            if table_name:
                 SYMBOL_TABLES.exit_scope()
                 # Remove any symbol table that we created
                 SYMBOL_TABLES.remove(table_name)
             raise err
 
-        if startcls in SYMBOL_TABLES.scoping_unit_classes:
+        if table_name:
             SYMBOL_TABLES.exit_scope()
 
         if not had_match or endcls and not found_end:
             # We did not get a match from any of the subclasses or
             # failed to find the endcls
             if endcls is not None:
-                if startcls in SYMBOL_TABLES.scoping_unit_classes:
+                if table_name:
                     # Remove any symbol table that we created
                     SYMBOL_TABLES.remove(table_name)
                 for obj in reversed(content):
