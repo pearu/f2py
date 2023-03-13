@@ -18,6 +18,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+13/03/2023 PR #391 for #324. Add GH workfow to automate a pypi upload during
+           GH releases.
 
 01/02/2023 PR #389 for #388. Black 23.1 formatting changes.
 
