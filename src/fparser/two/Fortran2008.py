@@ -80,7 +80,6 @@ import sys
 
 from fparser.common.splitline import string_replace_map, splitparen
 from fparser.two import pattern_tools as pattern
-from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import (
     BracketBase,
     CALLBase,
@@ -897,13 +896,13 @@ class Specification_Part_C1112(Specification_Part):  # C1112
 
         param reader: the fortran file reader containing the line(s)
                       of code that we are trying to match
-        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
-                      or
-                      :py:class:`fparser.common.readfortran.FortranStringReader`
-        :return: `tuple` containing a single `list` which contains
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+            | :py:class:`fparser.common.readfortran.FortranStringReader`
+
+        :returns: `tuple` containing a single `list` which contains
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
-
+        :rtype: Tuple[List[:py:class:`fparser.two.utils.Base`]] | NoneType
         """
         return BlockBase.match(
             None,
@@ -1438,7 +1437,12 @@ class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
 
 
 class End_Block_Stmt(EndStmtBase):  # R809
-    """<end-block-stmt> = END BLOCK [ <block-construct-name> ]"""
+    """
+    Fortran 2008 Rule 809.
+
+    end-block-stmt is END BLOCK [ block-construct-name ]
+
+    """
 
     subclass_names = []
     use_names = ["Block_Construct_Name"]
@@ -1476,11 +1480,13 @@ class Critical_Construct(BlockBase):
         """
         Attempt to match the supplied content with this Rule.
 
-        :param reader:
-        :type reader:
+        :param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+            | :py:class:`fparser.common.readfortran.FortranStringReader`
 
-        :returns:
-        :rtype:
+        :returns: instance of class that has matched or `None` if no match.
+        :rtype: :py:class:`fparser.two.utils.BlockBase` | NoneType
 
         """
         return BlockBase.match(
@@ -1506,12 +1512,30 @@ class Critical_Stmt(StmtBase, WORDClsBase):
 
     @staticmethod
     def match(string):
+        """
+        Attempts to match the supplied string as a CRITICAL statement.
+
+        :param str string: the string to attempt to match.
+
+        :returns: 2-tuple containing the matched word "CRITICAL" and None or \
+                  None if no match.
+        :rtype: Tuple[str, NoneType] or NoneType
+
+        """
         return WORDClsBase.match("CRITICAL", None, string)
 
     def get_start_name(self):
+        """
+        :returns: the name associated with the start of this CRITICAL region (if any)
+        :rtype: str | NoneType
+        """
         return self.item.name
 
     def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
         return "CRITICAL"
 
 
@@ -1530,8 +1554,10 @@ class End_Critical_Stmt(EndStmtBase):
     def match(string):
         """
         :param str string: Fortran code to check for a match
-        :return: code line matching the "END DO" statement
-        :rtype: string
+
+        :returns: code line matching the "END CRITICAL" statement
+        :rtype: str
+
         """
         return EndStmtBase.match(
             "CRITICAL", Critical_Construct_Name, string, require_stmt_type=True
