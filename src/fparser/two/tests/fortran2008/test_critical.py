@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Science and Technology Facilities Council.
+# Copyright (c) 2022-2023 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -34,13 +34,15 @@
 
 
 from fparser.api import get_reader
+from fparser.two.Fortran2003 import Assignment_Stmt
+from fparser.two.Fortran2008 import Critical_Construct, Critical_Stmt, End_Critical_Stmt
 from fparser.two.utils import FortranSyntaxError
-from fparser.two.Fortran2008 import Critical_Construct
 
 import pytest
 
 
 def test_critical(f2008_create):
+    """Test that a basic critical construct is correctly constructed."""
     critical = Critical_Construct(
         get_reader(
             """\
@@ -50,11 +52,16 @@ def test_critical(f2008_create):
             """
         )
     )
-
+    assert isinstance(critical.children[0], Critical_Stmt)
+    assert isinstance(critical.children[1], Assignment_Stmt)
+    assert isinstance(critical.children[2], End_Critical_Stmt)
+    assert critical.children[0].get_start_name() is None
     assert "CRITICAL\n  a = 1 + b\nEND CRITICAL" in str(critical)
 
 
 def test_named_critical(f2008_create):
+    """Test that a named critical construct is matched correctly and that
+    its name can be queried."""
     critical = Critical_Construct(
         get_reader(
             """\
@@ -64,12 +71,14 @@ def test_named_critical(f2008_create):
             """
         )
     )
-
+    assert critical.children[0].get_start_name() == "foo"
     assert "foo:CRITICAL\n  a = 1 + b\nEND CRITICAL foo" in str(critical)
 
 
 def test_end_critical_missing_start_name(f2008_create):  # C809
-    with pytest.raises(FortranSyntaxError):
+    """Check that a critical construct with an end name but no start name
+    results in a syntax error (C809)."""
+    with pytest.raises(FortranSyntaxError) as err:
         Critical_Construct(
             get_reader(
                 """\
@@ -78,10 +87,13 @@ def test_end_critical_missing_start_name(f2008_create):  # C809
                 """
             )
         )
+    assert "Name 'foo' has no corresponding starting name" in str(err)
 
 
 def test_end_critical_missing_end_name(f2008_create):  # C809
-    with pytest.raises(FortranSyntaxError):
+    """Test that a named critical construct with the name omitted from
+    the end critical results in a syntax error (C809)."""
+    with pytest.raises(FortranSyntaxError) as err:
         Critical_Construct(
             get_reader(
                 """\
@@ -90,10 +102,12 @@ def test_end_critical_missing_end_name(f2008_create):  # C809
                 """
             )
         )
+    assert "Expecting name 'foo' but none given" in str(err)
 
 
 def test_end_critical_wrong_name(f2008_create):  # C809
-    with pytest.raises(FortranSyntaxError):
+    """Test that mismatched start and end names result in a syntax error (C809)"""
+    with pytest.raises(FortranSyntaxError) as err:
         Critical_Construct(
             get_reader(
                 """\
@@ -102,3 +116,4 @@ def test_end_critical_wrong_name(f2008_create):  # C809
                 """
             )
         )
+    assert "Expecting name 'foo', got 'bar'" in str(err)
