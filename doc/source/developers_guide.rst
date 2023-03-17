@@ -294,10 +294,11 @@ there is no name associated with such a program, the corresponding
 symbol table is given the name "fparser2:main_program", chosen so as
 to prevent any clashes with other Fortran names.
 
-Those classes taken to define scoping regions are stored as
-a list within the `SymbolTables` instance. This list is populated
-after the class hierarchy has been constructed for the parser (since
-this depends on which Fortran standard has been chosen).
+Those classes which define scoping regions must subclass the
+`ScopingRegionMixin` class:
+
+.. autoclass:: fparser.two.utils.ScopingRegionMixin
+
 
 Class Generation
 ++++++++++++++++
