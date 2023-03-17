@@ -37,9 +37,9 @@ import pytest
 import re
 
 from fparser.api import get_reader
-from fparser.two.Fortran2008 import Block_Construct
+from fparser.two.Fortran2008 import Block_Construct, Block_Stmt
 from fparser.two.symbol_table import SYMBOL_TABLES
-from fparser.two.utils import FortranSyntaxError, walk
+from fparser.two.utils import FortranSyntaxError, ScopingRegionMixin, walk
 
 
 def test_block(f2008_create):
@@ -54,7 +54,10 @@ def test_block(f2008_create):
             """
         )
     )
-
+    assert isinstance(block.children[0], Block_Stmt)
+    assert isinstance(block.children[0], ScopingRegionMixin)
+    name = block.children[0].get_scope_name()
+    assert re.match(r"block:[\d+]", name)
     assert "BLOCK\n  INTEGER :: b = 4\n  a = 1 + b\nEND BLOCK" in str(block)
 
 
@@ -137,7 +140,7 @@ def test_end_block_missing_start_name(f2008_create):  # C808
     with the same name on the 'block'.
 
     """
-    with pytest.raises(FortranSyntaxError):
+    with pytest.raises(FortranSyntaxError) as err:
         Block_Construct(
             get_reader(
                 """\
@@ -146,6 +149,7 @@ def test_end_block_missing_start_name(f2008_create):  # C808
                 """
             )
         )
+    assert "Name 'foo' has no corresponding starting name" in str(err)
 
 
 def test_end_block_missing_end_name(f2008_create):  # C808
@@ -154,7 +158,7 @@ def test_end_block_missing_end_name(f2008_create):  # C808
     results in a syntax error.
 
     """
-    with pytest.raises(FortranSyntaxError):
+    with pytest.raises(FortranSyntaxError) as err:
         Block_Construct(
             get_reader(
                 """\
@@ -163,6 +167,7 @@ def test_end_block_missing_end_name(f2008_create):  # C808
                 """
             )
         )
+    assert "Expecting name 'foo' but none given" in str(err)
 
 
 def test_end_block_wrong_name(f2008_create):  # C808
@@ -171,7 +176,7 @@ def test_end_block_wrong_name(f2008_create):  # C808
     syntax error.
 
     """
-    with pytest.raises(FortranSyntaxError):
+    with pytest.raises(FortranSyntaxError) as err:
         Block_Construct(
             get_reader(
                 """\
@@ -180,11 +185,12 @@ def test_end_block_wrong_name(f2008_create):  # C808
                 """
             )
         )
+    assert "Expecting name 'foo', got 'bar'" in str(err)
 
 
 def test_block_in_subroutine(f2008_parser):
     """
-    Check that we get two, nested symbol tables when a subroutine contains
+    Check that we get two, nested symbol tables when a routine contains
     a Block construct.
 
     """
@@ -199,7 +205,11 @@ def test_block_in_subroutine(f2008_parser):
                a = b
              end block rocking
             else
-             a = 10.0
+             block
+               real :: c
+               c = 42.0 / 5.0
+               a = 10.0 * c
+             end block
             end if
             end program my_prog
             """
@@ -207,5 +217,6 @@ def test_block_in_subroutine(f2008_parser):
     tables = SYMBOL_TABLES
     assert list(tables._symbol_tables.keys()) == ["my_prog"]
     table = SYMBOL_TABLES.lookup("my_prog")
-    assert len(table.children) == 1
+    assert len(table.children) == 2
     assert table.children[0].name == "rocking"
+    assert re.match(r"block:[\d+]", table.children[1].name)

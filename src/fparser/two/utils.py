@@ -1,5 +1,5 @@
-# Modified work Copyright (c) 2017-2022 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2017-2023 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -337,7 +337,7 @@ class Base(ComparableMixin):
 
     :param type cls: the class of object to create.
     :param string: (source of) Fortran string to parse.
-    :type string: [Str | :py:class:`fparser.common.readfortran.FortranReaderBase`]
+    :type string: [str | :py:class:`fparser.common.readfortran.FortranReaderBase`]
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
 
@@ -530,7 +530,8 @@ class Base(ComparableMixin):
 
 class ScopingRegionMixin:
     """
-    Mixin class for use in all classes that represent a scoping region.
+    Mixin class for use in all classes that represent a scoping region and
+    thus have an associated symbol table.
 
     """
 
