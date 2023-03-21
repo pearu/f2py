@@ -92,6 +92,11 @@ from fparser.two.utils import (
     Type_Declaration_StmtBase,
     WORDClsBase,
 )
+
+# The _List classes imported here are auto-generated which confuses pylint
+# (because it doesn't actually import modules and therefore the classes are
+# not generated).
+# pylint: disable=no-name-in-module
 from fparser.two.Fortran2003 import (
     Base,
     BlockBase,
@@ -118,6 +123,8 @@ from fparser.two.Fortran2003 import (
     Stop_Code,
     Use_Stmt,
 )
+
+# pylint: enable=no-name-in-module
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
@@ -902,7 +909,7 @@ class Specification_Part_C1112(Specification_Part):  # C1112
         :returns: `tuple` containing a single `list` which contains
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
-        :rtype: Tuple[List[:py:class:`fparser.two.utils.Base`]] | NoneType
+        :rtype: Optional[Tuple[List[:py:class:`fparser.two.utils.Base`]]]
         """
         return BlockBase.match(
             None,
@@ -1352,8 +1359,9 @@ class Block_Construct(BlockBase):
                             block
                             end-block-stmt
 
-    TODO: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
-    NAMELIST, OPTIONAL, VALUE, and statement functions (C806)
+    TODO #394: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
+    NAMELIST, OPTIONAL, VALUE, and statement functions (C806) (which are all
+    valid members of Specification_Part).
     """
 
     subclass_names = []
@@ -1572,15 +1580,15 @@ class End_Critical_Stmt(EndStmtBase):
 ClassType = type(Base)
 _names = dir()
 for clsname in _names:
-    cls = eval(clsname)
+    new_cls = eval(clsname)
     if not (
-        isinstance(cls, ClassType)
-        and issubclass(cls, Base)
-        and not cls.__name__.endswith("Base")
+        isinstance(new_cls, ClassType)
+        and issubclass(new_cls, Base)
+        and not new_cls.__name__.endswith("Base")
     ):
         continue
 
-    names = getattr(cls, "subclass_names", []) + getattr(cls, "use_names", [])
+    names = getattr(new_cls, "subclass_names", []) + getattr(new_cls, "use_names", [])
     for n in names:
         if n in _names:
             continue
@@ -1589,34 +1597,31 @@ for clsname in _names:
             n = n[:-5]
             # Generate 'list' class
             exec(
-                """\
-class %s_List(SequenceBase):
-    subclass_names = [\'%s\']
+                f"""\
+class {n}_List(SequenceBase):
+    subclass_names = [\'{n}\']
     use_names = []
     @staticmethod
-    def match(string): return SequenceBase.match(r\',\', %s, string)
+    def match(string): return SequenceBase.match(r\',\', {n}, string)
 """
-                % (n, n, n)
             )
         elif n.endswith("_Name"):
             _names.append(n)
             n = n[:-5]
             exec(
-                """\
-class %s_Name(Base):
+                f"""\
+class {n}_Name(Base):
     subclass_names = [\'Name\']
 """
-                % (n)
             )
         elif n.startswith("Scalar_"):
             _names.append(n)
             n = n[7:]
             exec(
-                """\
-class Scalar_%s(Base):
-    subclass_names = [\'%s\']
+                f"""\
+class Scalar_{n}(Base):
+    subclass_names = [\'{n}\']
 """
-                % (n, n)
             )
 
 

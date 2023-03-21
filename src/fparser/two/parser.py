@@ -256,7 +256,7 @@ class ParserFactory:
         # use this information to initialise the Base.subclasses dictionary:
         for clsname, cls in base_classes.items():
             if not hasattr(cls, "subclass_names"):
-                message = "%s class is missing subclass_names list" % (clsname)
+                message = f"{clsname} class is missing subclass_names list"
                 logging.getLogger(__name__).debug(message)
                 continue
             subclass_names = local_subclass_names.get(cls, [])
@@ -271,27 +271,11 @@ class ParserFactory:
                     message = f"{name} not implemented needed by {clsname}"
                     logging.getLogger(__name__).debug(message)
 
-        if 1:
-            for cls in base_classes.values():
-                # subclasses = Fortran2003.Base.subclasses.get(
-                #     cls.__name__, [])
-                # subclasses_names = [c.__name__ for c in subclasses]
-                subclass_names = local_subclass_names.get(cls, [])
-                use_names = getattr(cls, "use_names", [])
-                # for name in subclasses_names:
-                #     break
-                #     if name not in subclass_names:
-                #         message = ('%s needs to be added to %s '
-                #                    'subclasses_name list'
-                #                    % (name, cls.__name__))
-                #         logging.getLogger(__name__).debug(message)
-                # for name in subclass_names:
-                #     break
-                #     if name not in subclasses_names:
-                #         message = '%s needs to be added to %s '
-                #         'subclass_name list' % (name, cls.__name__)
-                #         logging.getLogger(__name__).debug(message)
-                for name in use_names + subclass_names:
-                    if name not in base_classes:
-                        message = "%s not defined used " "by %s" % (name, cls.__name__)
-                        logging.getLogger(__name__).debug(message)
+        # Double-check that all required classes have been constructed.
+        for cls in base_classes.values():
+            subclass_names = local_subclass_names.get(cls, [])
+            use_names = getattr(cls, "use_names", [])
+            for name in use_names + subclass_names:
+                if name not in base_classes:
+                    message = f"{name} not defined, used by {cls.__name__}"
+                    logging.getLogger(__name__).debug(message)

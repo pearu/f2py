@@ -81,8 +81,7 @@ class SymbolTables:
 
     def clear(self):
         """
-        Deletes any stored SymbolTables but retains the stored list of
-        classes that define scoping units.
+        Deletes any stored SymbolTables.
 
         """
         self._symbol_tables = {}

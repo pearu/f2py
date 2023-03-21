@@ -170,9 +170,11 @@ returned. An example of a simple choice rule is `R202`. See the
 :ref:`program-unit-class` section for a description of its
 implementation.
 
-.. note::
-
-   A `use_names` description, explanation and example needs to be added.
+The `use_names` list should contain any classes that are referenced by the
+implementation of the current class. These lists of names are aggregated
+(along with `subclass_names`) and used to ensure that all necessary `Scalar_`,
+`_List` and `_Name` classes are generated (in code at the end of the
+`Fortran2003` and `Fortran2008` modules - see :ref:`class-generation`).
 
 When the rule is not a simple choice the developer needs to supply a
 static `match` method. An example of this is rule `R201`. See the
@@ -299,6 +301,8 @@ Those classes which define scoping regions must subclass the
 
 .. autoclass:: fparser.two.utils.ScopingRegionMixin
 
+
+.. _class-generation:
 
 Class Generation
 ++++++++++++++++
