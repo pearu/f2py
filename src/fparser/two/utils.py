@@ -337,7 +337,7 @@ class Base(ComparableMixin):
 
     :param type cls: the class of object to create.
     :param string: (source of) Fortran string to parse.
-    :type string: [str | :py:class:`fparser.common.readfortran.FortranReaderBase`]
+    :type string: str | :py:class:`fparser.common.readfortran.FortranReaderBase`
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
 
