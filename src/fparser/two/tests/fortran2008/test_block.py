@@ -32,9 +32,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Module containing pytest tests for the support of the Fortran2008
+Block construct."""
 
-import pytest
 import re
+import pytest
 
 from fparser.api import get_reader
 from fparser.two.Fortran2008 import Block_Construct, Block_Stmt
@@ -42,7 +44,7 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 from fparser.two.utils import FortranSyntaxError, ScopingRegionMixin, walk
 
 
-def test_block(f2008_create):
+def test_block():
     """Test that the Block_Construct matches as expected."""
     block = Block_Construct(
         get_reader(
@@ -114,7 +116,7 @@ def test_block_in_if(f2008_parser):
     assert len(blocks) == 1
 
 
-def test_named_block(f2008_create):
+def test_named_block():
     """
     Test that a named block construct is correctly captured and also
     reproduced.
@@ -134,7 +136,7 @@ def test_named_block(f2008_create):
     assert "foo:BLOCK\n  INTEGER :: b = 4\n  a = 1 + b\nEND BLOCK foo" in str(block)
 
 
-def test_end_block_missing_start_name(f2008_create):  # C808
+def test_end_block_missing_start_name():  # C808
     """
     Test Constraint 808 - that a name on the 'end block' must correspond
     with the same name on the 'block'.
@@ -152,7 +154,7 @@ def test_end_block_missing_start_name(f2008_create):  # C808
     assert "Name 'foo' has no corresponding starting name" in str(err)
 
 
-def test_end_block_missing_end_name(f2008_create):  # C808
+def test_end_block_missing_end_name():  # C808
     """
     Test that a named block that is missing a name on its 'end block' statement
     results in a syntax error.
@@ -170,7 +172,7 @@ def test_end_block_missing_end_name(f2008_create):  # C808
     assert "Expecting name 'foo' but none given" in str(err)
 
 
-def test_end_block_wrong_name(f2008_create):  # C808
+def test_end_block_wrong_name():  # C808
     """
     Test that an incorrect name on the end block statement results in a
     syntax error.

@@ -202,7 +202,7 @@ class ParserFactory:
 
         # OPTIMIZE subclass_names tree.
         #
-        def _rpl_list(clsname):
+        def _closest_descendants_with_match(clsname):
             """
             Starting at the named class, searches down the tree defined by the
             classes named in the `subclass_names` list to find the closest that
@@ -231,7 +231,7 @@ class ParserFactory:
             # `match` method.
             bits = []
             for names in getattr(cls, "subclass_names", []):
-                list1 = _rpl_list(names)
+                list1 = _closest_descendants_with_match(names)
                 for names1 in list1:
                     if names1 not in bits:
                         bits.append(names1)
@@ -247,7 +247,7 @@ class ParserFactory:
             # that have `match` methods.
             opt_subclass_names = []
             for names in cls.subclass_names:
-                for names1 in _rpl_list(names):
+                for names1 in _closest_descendants_with_match(names):
                     if names1 not in opt_subclass_names:
                         opt_subclass_names.append(names1)
             local_subclass_names[cls] = opt_subclass_names[:]
