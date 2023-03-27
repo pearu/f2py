@@ -177,12 +177,27 @@ class InternalSyntaxError(FparserException):
 
 
 def show_result(func):
+    """
+    A xxxxx that enables the matching sequence to be debugged by outputting
+    the result whenever a new node in the parse tree is successfully
+    constructed.
+
+    :param func:
+
+    :returns: the supplied function.
+    :rtype:
+    """
+    # Comment-out the line below to see debug output (on stdout).
     return func
 
     def new_func(cls, string, **kws):
+        """ """
         r = func(cls, string, **kws)
-        if r is not None and isinstance(r, StmtBase):
-            print("%s(%r) -> %r" % (cls.__name__, string, str(r)))
+        if isinstance(r, StmtBase):
+            if r:
+                print("%s(%r) -> %r" % (cls.__name__, string, str(r)))
+            else:
+                print(f"{cls.__name__}({string}) did NOT match")
         return r
 
     return new_func
@@ -360,7 +375,7 @@ class Base(ComparableMixin):
             parent_cls.append(cls)
 
         # Get the class' match method if it has one
-        match = getattr(cls, "match") if hasattr(cls, "match") else None
+        match = getattr(cls, "match", None)  # if hasattr(cls, "match") else None
 
         if (
             isinstance(string, FortranReaderBase)
@@ -1246,6 +1261,9 @@ class BracketBase(Base):
         `cls`, `str` )
 
         """
+        # import pdb
+
+        # pdb.set_trace()
         if not cls and require_cls:
             return None
         if not string:
@@ -1341,37 +1359,50 @@ class CallBase(Base):
 
     @staticmethod
     def match(lhs_cls, rhs_cls, string, upper_lhs=False, require_rhs=False):
-        if not string.endswith(")"):
-            return
+        """
+        :param lhs_cls:
+        :type lhs_cls:
+        :param rhs_cls:
+        :type rhs_cls:
+        :param str string: the string to attempt to match.
+        :param bool upper_lhs:
+        :param bool require_rhs:
+
+        :returns:
+        :rtype: Optional[Tuple[, Optional[]]]
+
+        """
+        if not string.rstrip().endswith(")"):
+            return None
         line, repmap = string_replace_map(string)
         i = line.rfind("(")
         if i == -1:
-            return
+            return None
         lhs = line[:i].rstrip()
         if not lhs:
             return
         j = line.rfind(")")
         rhs = line[i + 1 : j].strip()
         if line[j + 1 :].lstrip():
-            return
+            return None
         lhs = repmap(lhs)
         if upper_lhs:
             lhs = lhs.upper()
         rhs = repmap(rhs)
         if isinstance(lhs_cls, str):
             if lhs_cls != lhs:
-                return
+                return None
         else:
             lhs = lhs_cls(lhs)
         if rhs:
             if isinstance(rhs_cls, str):
                 if rhs_cls != rhs:
-                    return
+                    return None
             else:
                 rhs = rhs_cls(rhs)
             return lhs, rhs
         if require_rhs:
-            return
+            return None
         return lhs, None
 
     def tostr(self):
