@@ -109,6 +109,10 @@ EXTENSIONS += ["hollerith"]
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
 EXTENSIONS += ["dollar-descriptor"]
 
+# Set this to True to get verbose output (on stdout) detailing the matches made
+# while parsing.
+_SHOW_MATCH_RESULTS = False
+
 
 class FparserException(Exception):
     """Base class exception for fparser. This allows an external tool to
@@ -188,10 +192,14 @@ def show_result(func):
     :rtype: function
 
     """
-    # Just return the supplied functor unchanged. Comment-out this line to see
-    # debug output (on stdout).
-    return func
+    if not _SHOW_MATCH_RESULTS:
+        # Just return the supplied functor unchanged.
+        return func
 
+    # It's not possible to monkeypatch decorators since the functions they are
+    # wrapping get modified at module-import time. Therefore, we can't get
+    # coverage of the rest of this routine.
+    # pragma: no cover
     def new_func(cls, string, **kws):
         """
         New functor to replace the one supplied. Simply wraps the supplied
@@ -206,13 +214,13 @@ def show_result(func):
         :rtype: function
 
         """
-        r = func(cls, string, **kws)
-        if isinstance(r, StmtBase):
-            if r:
-                print("%s(%r) -> %r" % (cls.__name__, string, str(r)))
+        result = func(cls, string, **kws)
+        if isinstance(result, StmtBase):
+            if result:
+                print(f"{cls.__name__}({string}) -> {result}")
             else:
                 print(f"{cls.__name__}({string}) did NOT match")
-        return r
+        return result
 
     return new_func
 
