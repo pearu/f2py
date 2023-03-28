@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -178,20 +178,34 @@ class InternalSyntaxError(FparserException):
 
 def show_result(func):
     """
-    A xxxxx that enables the matching sequence to be debugged by outputting
-    the result whenever a new node in the parse tree is successfully
+    A decorator that enables the matching sequence to be debugged by outputting
+    the result (to stdout) whenever a new node in the parse tree is successfully
     constructed.
 
-    :param func:
+    :param function func: the functor that is being called.
 
-    :returns: the supplied function.
-    :rtype:
+    :returns: the supplied functor.
+    :rtype: function
+
     """
-    # Comment-out the line below to see debug output (on stdout).
+    # Just return the supplied functor unchanged. Comment-out this line to see
+    # debug output (on stdout).
     return func
 
     def new_func(cls, string, **kws):
-        """ """
+        """
+        New functor to replace the one supplied. Simply wraps the supplied
+        functor with some code that prints the match if it was successful.
+
+        :param type cls: the Class that is being matched.
+        :param str string: the string we are attempting to match.
+        :param *kws: additional keyword arguments.
+        :type *kws: Dict[str, Any]
+
+        :returns: new functor object.
+        :rtype: function
+
+        """
         r = func(cls, string, **kws)
         if isinstance(r, StmtBase):
             if r:
@@ -1360,31 +1374,33 @@ class CallBase(Base):
     @staticmethod
     def match(lhs_cls, rhs_cls, string, upper_lhs=False, require_rhs=False):
         """
-        :param lhs_cls:
-        :type lhs_cls:
-        :param rhs_cls:
-        :type rhs_cls:
+        :param lhs_cls: the class to match with the lhs.
+        :type lhs_cls: str | class
+        :param rhs_cls: the class to match with the rhs.
+        :type rhs_cls: str | class
         :param str string: the string to attempt to match.
-        :param bool upper_lhs:
-        :param bool require_rhs:
+        :param bool upper_lhs: whether or not to convert the lhs to uppercase \
+                               before attempting the match.
+        :param bool require_rhs: whether the rhs (the part within parentheses) \
+                                 must be present.
 
-        :returns:
-        :rtype: Optional[Tuple[, Optional[]]]
+        :returns: a tuple containing the lhs and rhs matches or None if there is \
+                  no match.
+        :rtype: Optional[Tuple[:py:class:`fparser.two.utils.Base`, \
+                               Optional[:py:class:`fparser.two.utils.Base`]]]
 
         """
         if not string.rstrip().endswith(")"):
             return None
         line, repmap = string_replace_map(string)
-        i = line.rfind("(")
-        if i == -1:
+        open_idx = line.rfind("(")
+        if open_idx == -1:
             return None
-        lhs = line[:i].rstrip()
+        lhs = line[:open_idx].rstrip()
         if not lhs:
             return
-        j = line.rfind(")")
-        rhs = line[i + 1 : j].strip()
-        if line[j + 1 :].lstrip():
-            return None
+        close_idx = line.rfind(")")
+        rhs = line[open_idx + 1 : close_idx].strip()
         lhs = repmap(lhs)
         if upper_lhs:
             lhs = lhs.upper()
