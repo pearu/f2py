@@ -199,8 +199,7 @@ def show_result(func):
     # It's not possible to monkeypatch decorators since the functions they are
     # wrapping get modified at module-import time. Therefore, we can't get
     # coverage of the rest of this routine.
-    # pragma: no cover
-    def new_func(cls, string, **kws):
+    def new_func(cls, string, **kws):  # pragma: no cover
         """
         New functor to replace the one supplied. Simply wraps the supplied
         functor with some code that prints the match if it was successful.
@@ -222,7 +221,7 @@ def show_result(func):
                 print(f"{cls.__name__}({string}) did NOT match")
         return result
 
-    return new_func
+    return new_func  # pragma: no cover
 
 
 #
@@ -397,7 +396,7 @@ class Base(ComparableMixin):
             parent_cls.append(cls)
 
         # Get the class' match method if it has one
-        match = getattr(cls, "match", None)  # if hasattr(cls, "match") else None
+        match = getattr(cls, "match", None)
 
         if (
             isinstance(string, FortranReaderBase)
@@ -1283,9 +1282,6 @@ class BracketBase(Base):
         `cls`, `str` )
 
         """
-        # import pdb
-
-        # pdb.set_trace()
         if not cls and require_cls:
             return None
         if not string:
