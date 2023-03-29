@@ -1418,6 +1418,12 @@ class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
         # with any regions named in the code.
         scope_name = f"block:{Block_Stmt.counter}"
         Block_Stmt.counter += 1
+        # TODO #397. Ideally we'd have the name associated with the Block
+        # Construct here (if any) so that it could be displayed in repr.
+        # As it is, repr will show scope_name which will not be the same
+        # as any explicit name given to the Block. (This name *is* shown
+        # in the repr of the End_Block_Stmt.) This problem is common to
+        # other block constructs such as Block_Nonlabel_Do_Construct.
         return block, scope_name
 
     def get_scope_name(self):
