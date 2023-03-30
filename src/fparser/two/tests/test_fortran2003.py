@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 #
@@ -1901,6 +1901,20 @@ def test_assignment_stmt():
     obj = tcls("b = a + 1d-8 + 1.1e+3")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "b = a + 1D-8 + 1.1E+3"
+
+    # Extra white space around a part-ref
+    obj = tcls("zdepth(:) = ((gdept_1d(:) ))")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = (( gdept_1d(:) ))")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = ( ( gdept_1d(:) ) )")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = ( gdept_1d(:) ) ")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = (gdept_1d(:))"
 
 
 @pytest.mark.usefixtures("fake_symbol_table")
