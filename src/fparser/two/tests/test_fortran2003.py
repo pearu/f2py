@@ -1902,10 +1902,19 @@ def test_assignment_stmt():
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "b = a + 1D-8 + 1.1E+3"
 
-    # Trailing space after a part-ref
+    # Extra white space around a part-ref
     obj = tcls("zdepth(:) = ((gdept_1d(:) ))")
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = (( gdept_1d(:) ))")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = ( ( gdept_1d(:) ) )")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = ((gdept_1d(:)))"
+    obj = tcls("zdepth(:) = ( gdept_1d(:) ) ")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "zdepth(:) = (gdept_1d(:))"
 
 
 @pytest.mark.usefixtures("fake_symbol_table")
