@@ -93,10 +93,6 @@ from fparser.two.utils import (
     WORDClsBase,
 )
 
-# The _List classes imported here are auto-generated which confuses pylint
-# (because it doesn't actually import modules and therefore the classes are
-# not generated).
-# pylint: disable=no-name-in-module
 from fparser.two.Fortran2003 import (
     Base,
     BlockBase,
@@ -123,8 +119,6 @@ from fparser.two.Fortran2003 import (
     Stop_Code,
     Use_Stmt,
 )
-
-# pylint: enable=no-name-in-module
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
