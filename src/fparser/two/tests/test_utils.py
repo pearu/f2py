@@ -45,7 +45,8 @@ from fparser.two import Fortran2003, utils
 # test BlockBase
 
 
-def test_blockbase_match_names(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_blockbase_match_names():
     """Test the blockbase name matching option in its match method. We use
     the Derived_Type_Def class (which subclasses BlockBase) for this
     as it sets match_names to True.
@@ -78,7 +79,8 @@ def test_blockbase_match_names(f2003_create):
     ) in str(excinfo.value)
 
 
-def test_blockbase_match_name_classes(f2003_create):
+@pytest.mark.usefixtures("f2003_create")
+def test_blockbase_match_name_classes():
     """Test the blockbase name matching option in its match method. We use
     the If_Construct class (which subclasses BlockBase) for this as it
     sets match_names to True and provides match_name_classes. This is
@@ -108,3 +110,34 @@ def test_blockbase_match_name_classes(f2003_create):
     assert (
         "at line 2\n>>>endif label\nName 'label' has no corresponding " "starting name"
     ) in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("f2003_create")
+def test_endstmtbase_match():
+    """Tests for the EndStmtBase.match() method."""
+    result = utils.EndStmtBase.match("critical", None, "hello")
+    assert result is None
+    # No statement type is required by default
+    result = utils.EndStmtBase.match("CRITICAL", None, "end")
+    assert result == (None, None)
+    # Missing statement type.
+    result = utils.EndStmtBase.match("CRITICAL", None, "end", require_stmt_type=True)
+    assert result is None
+    # Matching statement type.
+    result = utils.EndStmtBase.match(
+        "CRITICAL", None, "end  critical", require_stmt_type=True
+    )
+    assert result == ("CRITICAL", None)
+    # End construct with name but no class to match it with.
+    result = utils.EndStmtBase.match(
+        "SUBROUTINE", None, "end  subroutine sub", require_stmt_type=True
+    )
+    assert result is None
+    # End construct with name that matches with supplied class.
+    result = utils.EndStmtBase.match(
+        "SUBROUTINE",
+        Fortran2003.Subroutine_Name,
+        "end  subroutine sub",
+        require_stmt_type=True,
+    )
+    assert result == ("SUBROUTINE", Fortran2003.Name("sub"))

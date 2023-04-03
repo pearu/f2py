@@ -93,6 +93,7 @@ from fparser.two.utils import (
     CALLBase,
     CallBase,
     KeywordValueBase,
+    ScopingRegionMixin,
     SeparatorBase,
     SequenceBase,
     UnaryOpBase,
@@ -7036,7 +7037,13 @@ class If_Construct(BlockBase):  # R802
     """
 
     subclass_names = []
-    use_names = ["If_Then_Stmt", "Block", "Else_If_Stmt", "Else_Stmt", "End_If_Stmt"]
+    use_names = [
+        "If_Then_Stmt",
+        "Execution_Part_Construct",
+        "Else_If_Stmt",
+        "Else_Stmt",
+        "End_If_Stmt",
+    ]
 
     @staticmethod
     def match(string):
@@ -10882,7 +10889,7 @@ class Main_Program0(BlockBase):
         return result
 
 
-class Program_Stmt(StmtBase, WORDClsBase):  # R1102
+class Program_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):  # R1102
     """
     Fortran 2003 rule R1102::
 
@@ -10973,7 +10980,7 @@ class Module(BlockBase):  # R1104
         )
 
 
-class Module_Stmt(StmtBase, WORDClsBase):  # R1105
+class Module_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):  # R1105
     """
     <module-stmt> = MODULE <module-name>
     """
@@ -12472,7 +12479,7 @@ class Function_Subprogram(BlockBase):  # R1223
         )
 
 
-class Function_Stmt(StmtBase):  # R1224
+class Function_Stmt(StmtBase, ScopingRegionMixin):  # R1224
     """
     ::
 
@@ -12790,7 +12797,7 @@ def c1242_valid(prefix, binding_spec):
     return True
 
 
-class Subroutine_Stmt(StmtBase):  # R1232
+class Subroutine_Stmt(StmtBase, ScopingRegionMixin):  # R1232
     """
     Fortran2003 rule R1232::
 

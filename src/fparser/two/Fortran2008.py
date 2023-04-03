@@ -1,5 +1,5 @@
-# Modified work Copyright (c) 2018-2022 Science and Technology
-# Facilities Council
+# Modified work Copyright (c) 2018-2023 Science and Technology
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -80,41 +80,44 @@ import sys
 
 from fparser.common.splitline import string_replace_map, splitparen
 from fparser.two import pattern_tools as pattern
-
 from fparser.two.utils import (
     BracketBase,
     CALLBase,
     KeywordValueBase,
     NoMatchError,
+    ScopingRegionMixin,
     SeparatorBase,
     StmtBase,
     STRINGBase,
     Type_Declaration_StmtBase,
     WORDClsBase,
 )
+
 from fparser.two.Fortran2003 import (
-    EndStmtBase,
-    BlockBase,
-    SequenceBase,
     Base,
-    Specification_Part,
-    Stat_Variable,
-    Errmsg_Variable,
-    Source_Expr,
-    Module_Subprogram_Part,
-    Implicit_Part,
-    Implicit_Part_Stmt,
+    BlockBase,
+    Component_Decl_List,
     Declaration_Construct,
-    Use_Stmt,
+    Declaration_Type_Spec,
+    EndStmtBase,
+    Entity_Decl_List,
+    Errmsg_Variable,
+    Execution_Part_Construct,
     File_Name_Expr,
     File_Unit_Number,
+    Implicit_Part,
+    Implicit_Part_Stmt,
     Import_Stmt,
     Iomsg_Variable,
     Label,
-    Declaration_Type_Spec,
-    Entity_Decl_List,
-    Component_Decl_List,
+    Module_Subprogram_Part,
+    Name,
+    SequenceBase,
+    Source_Expr,
+    Specification_Part,
+    Stat_Variable,
     Stop_Code,
+    Use_Stmt,
 )
 
 # Import of F2003 classes that are updated in this standard.
@@ -182,14 +185,14 @@ class Executable_Construct(Executable_Construct_2003):  # R213
     "C201 (R208) An execution-part shall not contain an end-function-stmt,
           end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
 
-    NB: The new block-construct and critical-construct are not yet implemented.
-    TODO: Implement missing F2008 executable-construct (#320)
-
     """
+
     subclass_names = [
         "Action_Stmt",
         "Associate_Construct",
+        "Block_Construct",
         "Case_Construct",
+        "Critical_Construct",
         "Do_Construct",
         "Forall_Construct",
         "If_Construct",
@@ -894,13 +897,13 @@ class Specification_Part_C1112(Specification_Part):  # C1112
 
         param reader: the fortran file reader containing the line(s)
                       of code that we are trying to match
-        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader`
-                      or
-                      :py:class:`fparser.common.readfortran.FortranStringReader`
-        :return: `tuple` containing a single `list` which contains
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+            | :py:class:`fparser.common.readfortran.FortranStringReader`
+
+        :returns: `tuple` containing a single `list` which contains
                  instance of the classes that have matched if there is
                  a match or `None` if there is no match
-
+        :rtype: Optional[Tuple[List[:py:class:`fparser.two.utils.Base`]]]
         """
         return BlockBase.match(
             None,
@@ -1029,7 +1032,7 @@ class Submodule(BlockBase):  # R1116 [C1112,C1114]
         return result
 
 
-class Submodule_Stmt(Base):  # R1117
+class Submodule_Stmt(Base, ScopingRegionMixin):  # R1117
     """
     Fortran 2008 rule R1117::
 
@@ -1341,6 +1344,240 @@ class Connect_Spec(Connect_Spec_2003):
         return None
 
 
+class Block_Construct(BlockBase):
+    """
+    Fortran 2008 Rule 807.
+
+    block-construct is block-stmt
+                            [ specification-part ]
+                            block
+                            end-block-stmt
+
+    TODO #394: Should disallow COMMON, EQUIVALENCE, IMPLICIT, INTENT,
+    NAMELIST, OPTIONAL, VALUE, and statement functions (C806) (which are all
+    valid members of Specification_Part).
+    """
+
+    subclass_names = []
+    use_names = [
+        "Block_Stmt",
+        "Specification_Part",
+        "Execution_Part_Construct",
+        "End_Block_Stmt",
+    ]
+
+    @staticmethod
+    def match(reader):
+        return BlockBase.match(
+            Block_Stmt,
+            [Specification_Part, Execution_Part_Construct],
+            End_Block_Stmt,
+            reader,
+            match_names=True,  # C810
+            strict_match_names=True,  # C810
+        )
+
+
+class Block_Stmt(StmtBase, WORDClsBase, ScopingRegionMixin):
+    """
+    Fortran 2008 Rule 808.
+
+    block-stmt is [ block-construct-name : ] BLOCK
+
+    """
+
+    subclass_names = []
+    use_names = ["Block_Construct_Name"]
+    counter = 0
+
+    @staticmethod
+    def match(string):
+        """
+        Attempts to match the supplied text with this rule.
+
+        :param str string: the text to match.
+
+        :returns: a tuple of the matched node and instance of Counter or \
+                  None if there is no match.
+        :rtype: Tuple["BLOCK", \
+                      :py:class:`fparser.two.Fortran2008.Block_Stmt.Counter`] \
+                | NoneType
+        """
+        found = WORDClsBase.match("BLOCK", None, string)
+        if not found:
+            return None
+        block, _ = found
+        # Construct a unique name for this BLOCK (in case it isn't named). We
+        # ensure the name is not a valid Fortran name so that it can't clash
+        # with any regions named in the code.
+        scope_name = f"block:{Block_Stmt.counter}"
+        Block_Stmt.counter += 1
+        # TODO #397. Ideally we'd have the name associated with the Block
+        # Construct here (if any) so that it could be displayed in repr.
+        # As it is, repr will show scope_name which will not be the same
+        # as any explicit name given to the Block. (This name *is* shown
+        # in the repr of the End_Block_Stmt.) This problem is common to
+        # other block constructs such as Block_Nonlabel_Do_Construct.
+        return block, scope_name
+
+    def get_scope_name(self):
+        """
+        :returns: the name of this scoping region.
+        :rtype: str
+        """
+        if self.item.name:
+            return self.item.name
+        return self.items[1]
+
+    def get_start_name(self):
+        """
+        :returns: the name associated with this Block construct or None.
+        :rtype: str | NoneType
+        """
+        return self.item.name
+
+    def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
+        return "BLOCK"
+
+
+class End_Block_Stmt(EndStmtBase):  # R809
+    """
+    Fortran 2008 Rule 809.
+
+    end-block-stmt is END BLOCK [ block-construct-name ]
+
+    """
+
+    subclass_names = []
+    use_names = ["Block_Construct_Name"]
+
+    @staticmethod
+    def match(string):
+        """
+        :param str string: Fortran code to check for a match
+
+        :return: 2-tuple containing "BLOCK" and, optionally, an associated \
+            Name or None if no match.
+        :rtype: Optional[Tuple[
+            str,
+            Optional[:py:class:`fparser.two.Fortran2003.Block_Construct_Name`]]]
+
+        """
+        return EndStmtBase.match(
+            "BLOCK", Block_Construct_Name, string, require_stmt_type=True
+        )
+
+
+class Critical_Construct(BlockBase):
+    """
+    Fortran 2008 Rule 810.
+
+    critical-construct is critical-stmt
+                            block
+                            end-critical-stmt
+
+    TODO: Should disallow RETURN (C809) and CYCLE or EXIT to outside block (C811)
+    """
+
+    subclass_names = []
+    use_names = ["Critical_Stmt", "Execution_Part_Construct", "End_Critical_Stmt"]
+
+    @staticmethod
+    def match(reader):
+        """
+        Attempt to match the supplied content with this Rule.
+
+        :param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+            | :py:class:`fparser.common.readfortran.FortranStringReader`
+
+        :returns: instance of class that has matched or `None` if no match.
+        :rtype: :py:class:`fparser.two.utils.BlockBase` | NoneType
+
+        """
+        return BlockBase.match(
+            Critical_Stmt,
+            [Execution_Part_Construct],
+            End_Critical_Stmt,
+            reader,
+            match_names=True,  # C810
+            strict_match_names=True,  # C810
+        )
+
+
+class Critical_Stmt(StmtBase, WORDClsBase):
+    """
+    Fortran 2008 Rule R811.
+
+    critical-stmt is [ critical-construct-name : ] CRITICAL
+
+    """
+
+    subclass_names = []
+    use_names = ["Critical_Construct_Name"]
+
+    @staticmethod
+    def match(string):
+        """
+        Attempts to match the supplied string as a CRITICAL statement.
+
+        :param str string: the string to attempt to match.
+
+        :returns: 2-tuple containing the matched word "CRITICAL" and None or \
+                  None if no match.
+        :rtype: Tuple[str, NoneType] or NoneType
+
+        """
+        return WORDClsBase.match("CRITICAL", None, string)
+
+    def get_start_name(self):
+        """
+        :returns: the name associated with the start of this CRITICAL region (if any)
+        :rtype: str | NoneType
+        """
+        return self.item.name
+
+    def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
+        return "CRITICAL"
+
+
+class End_Critical_Stmt(EndStmtBase):
+    """
+    Fortran 2008 Rule 812.
+
+    end-critical-stmt is END CRITICAL [ critical-construct-name ]
+
+    """
+
+    subclass_names = []
+    use_names = ["Critical_Construct_Name"]
+
+    @staticmethod
+    def match(string):
+        """
+        :param str string: Fortran code to check for a match
+
+        :returns: 2-tuple containing "CRITICAL" and, optionally, an associated \
+            Name or None if there is no match.
+        :rtype: Optional[Tuple[
+            str, \
+            Optional[:py:class:`fparser.two.Fortran2003.Critical_Construct_Name`]]]
+
+        """
+        return EndStmtBase.match(
+            "CRITICAL", Critical_Construct_Name, string, require_stmt_type=True
+        )
+
+
 #
 # GENERATE Scalar_, _List, _Name CLASSES
 #
@@ -1349,15 +1586,15 @@ class Connect_Spec(Connect_Spec_2003):
 ClassType = type(Base)
 _names = dir()
 for clsname in _names:
-    cls = eval(clsname)
+    new_cls = eval(clsname)
     if not (
-        isinstance(cls, ClassType)
-        and issubclass(cls, Base)
-        and not cls.__name__.endswith("Base")
+        isinstance(new_cls, ClassType)
+        and issubclass(new_cls, Base)
+        and not new_cls.__name__.endswith("Base")
     ):
         continue
 
-    names = getattr(cls, "subclass_names", []) + getattr(cls, "use_names", [])
+    names = getattr(new_cls, "subclass_names", []) + getattr(new_cls, "use_names", [])
     for n in names:
         if n in _names:
             continue
@@ -1366,34 +1603,31 @@ for clsname in _names:
             n = n[:-5]
             # Generate 'list' class
             exec(
-                """\
-class %s_List(SequenceBase):
-    subclass_names = [\'%s\']
+                f"""\
+class {n}_List(SequenceBase):
+    subclass_names = [\'{n}\']
     use_names = []
     @staticmethod
-    def match(string): return SequenceBase.match(r\',\', %s, string)
+    def match(string): return SequenceBase.match(r\',\', {n}, string)
 """
-                % (n, n, n)
             )
         elif n.endswith("_Name"):
             _names.append(n)
             n = n[:-5]
             exec(
-                """\
-class %s_Name(Base):
+                f"""\
+class {n}_Name(Base):
     subclass_names = [\'Name\']
 """
-                % (n)
             )
         elif n.startswith("Scalar_"):
             _names.append(n)
             n = n[7:]
             exec(
-                """\
-class Scalar_%s(Base):
-    subclass_names = [\'%s\']
+                f"""\
+class Scalar_{n}(Base):
+    subclass_names = [\'{n}\']
 """
-                % (n, n)
             )
 
 

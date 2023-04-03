@@ -1,5 +1,5 @@
 # Modified work Copyright (c) 2017-2023 Science and Technology
-# Facilities Council
+# Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
 # All rights reserved.
@@ -373,15 +373,16 @@ class Base(ComparableMixin):
 
     :param type cls: the class of object to create.
     :param string: (source of) Fortran string to parse.
-    :type string: [Str | :py:class:`fparser.common.readfortran.FortranReaderBase`]
+    :type string: str | :py:class:`fparser.common.readfortran.FortranReaderBase`
     :param parent_cls: the parent class of this object.
     :type parent_cls: `type`
 
     """
 
     # This dict of subclasses is populated dynamically by code at the end
-    # of this module. That code uses the entries in the
+    # of the fparser.two.parser module. That code uses the entries in the
     # 'subclass_names' list belonging to each class defined in this module.
+    # See Issue #191 for a discussion of a way of getting rid of this state.
     subclasses = {}
 
     def __init__(self, string, parent_cls=None):
@@ -447,7 +448,8 @@ class Base(ComparableMixin):
             return result
         if result is None:
             # Loop over the possible sub-classes of this class and
-            # check for matches
+            # check for matches. This uses the list of subclasses calculated
+            # at runtime in fparser.two.parser.
             for subcls in Base.subclasses.get(cls.__name__, []):
                 if subcls in parent_cls:  # avoid recursion 2.
                     continue
@@ -562,6 +564,21 @@ class Base(ComparableMixin):
         reader.put_item(self.item)
 
 
+class ScopingRegionMixin:
+    """
+    Mixin class for use in all classes that represent a scoping region and
+    thus have an associated symbol table.
+
+    """
+
+    def get_scope_name(self):
+        """
+        :returns: the name of this scoping region.
+        :rtype: str
+        """
+        return self.get_name().string
+
+
 class BlockBase(Base):
     """
     Base class for matching all block constructs::
@@ -623,6 +640,9 @@ class BlockBase(Base):
         # top-level due to circular dependencies).
         assert isinstance(reader, FortranReaderBase), repr(reader)
         content = []
+        # This will store the name of the new SymbolTable if we match a
+        # scoping region.
+        table_name = None
 
         if startcls is not None:
             # Deal with any preceding comments, includes, and/or directives
@@ -639,12 +659,12 @@ class BlockBase(Base):
                 for obj in reversed(content):
                     obj.restore_reader(reader)
                 return
-            if startcls in SYMBOL_TABLES.scoping_unit_classes:
+            if isinstance(obj, ScopingRegionMixin):
                 # We are entering a new scoping unit so create a new
                 # symbol table.
                 # NOTE: if the match subsequently fails then we must
                 #       delete this symbol table.
-                table_name = str(obj.children[1])
+                table_name = obj.get_scope_name()
                 SYMBOL_TABLES.enter_scope(table_name)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
@@ -771,20 +791,20 @@ class BlockBase(Base):
 
         except FortranSyntaxError as err:
             # We hit trouble so clean up the symbol table
-            if startcls in SYMBOL_TABLES.scoping_unit_classes:
+            if table_name:
                 SYMBOL_TABLES.exit_scope()
                 # Remove any symbol table that we created
                 SYMBOL_TABLES.remove(table_name)
             raise err
 
-        if startcls in SYMBOL_TABLES.scoping_unit_classes:
+        if table_name:
             SYMBOL_TABLES.exit_scope()
 
         if not had_match or endcls and not found_end:
             # We did not get a match from any of the subclasses or
             # failed to find the endcls
             if endcls is not None:
-                if startcls in SYMBOL_TABLES.scoping_unit_classes:
+                if table_name:
                     # Remove any symbol table that we created
                     SYMBOL_TABLES.remove(table_name)
                 for obj in reversed(content):
@@ -1600,23 +1620,50 @@ class EndStmtBase(StmtBase):
 
     @staticmethod
     def match(stmt_type, stmt_name, string, require_stmt_type=False):
+        """
+        Attempts to match the supplied string as a form of 'END xxx' statement.
+
+        :param str stmt_type: the type of end statement (e.g. "do") that we \
+            attempt to match.
+        :param type stmt_name: a class which should be used to match against \
+            the name should this statement be named (e.g. end subroutine sub).
+        :param str string: the string to attempt to match.
+        :param bool require_stmt_type: whether or not the string must contain \
+            the type of the block that is ending.
+
+        :returns: 2-tuple containing the matched end-statement type (if any) \
+            and, optionally, an associated name or None if there is no match.
+        :rtype: Optional[
+                    Tuple[Optional[str],
+                          Optional[:py:class:`fparser.two.Fortran2003.Name`]]]
+
+        """
         start = string[:3].upper()
         if start != "END":
-            return
+            # string doesn't begin with 'END'
+            return None
         line = string[3:].lstrip()
         start = line[: len(stmt_type)].upper()
         if start:
             if start.replace(" ", "") != stmt_type.replace(" ", ""):
-                return
+                # Not the correct type of 'END ...' statement.
+                return None
             line = line[len(stmt_type) :].lstrip()
         else:
             if require_stmt_type:
-                return
+                # No type was found but one is required.
+                return None
+            # Got a bare "END" and that is a valid match.
             return None, None
         if line:
             if stmt_name is None:
-                return
+                # There is content after the 'end xxx' but this block isn't
+                # named so we fail to match.
+                return None
+            # Attempt to match the content after 'end xxx' with the supplied
+            # name class.
             return stmt_type, stmt_name(line)
+        # Successful match with an unnamed 'end xxx'.
         return stmt_type, None
 
     def init(self, stmt_type, stmt_name):

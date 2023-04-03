@@ -56,8 +56,6 @@ class SymbolTables:
 
     def __init__(self):
         self._symbol_tables = {}
-        # Those classes that correspond to a new scoping unit
-        self._scoping_unit_classes = []
         # The symbol table of the current scope
         self._current_scope = None
         # Whether or not we enable consistency checks in the symbol tables
@@ -83,8 +81,7 @@ class SymbolTables:
 
     def clear(self):
         """
-        Deletes any stored SymbolTables but retains the stored list of
-        classes that define scoping units.
+        Deletes any stored SymbolTables.
 
         """
         self._symbol_tables = {}
@@ -125,36 +122,6 @@ class SymbolTables:
 
         """
         return self._symbol_tables[name.lower()]
-
-    @property
-    def scoping_unit_classes(self):
-        """
-        :returns: the fparser2 classes that are taken to mark the start of \
-                  a new scoping region.
-        :rtype: list of types
-
-        """
-        return self._scoping_unit_classes
-
-    @scoping_unit_classes.setter
-    def scoping_unit_classes(self, value):
-        """
-        Set the list of fparser2 classes that are taken to mark the start of \
-        a new scoping region.
-
-        :param value: the list of fparser2 classes.
-        :type value: list of types
-
-        :raises TypeError: if the supplied value is not a list of types.
-
-        """
-        if not isinstance(value, list):
-            raise TypeError(
-                f"Supplied value must be a list but got '{type(value).__name__}'"
-            )
-        if not all(isinstance(item, type) for item in value):
-            raise TypeError(f"Supplied list must contain only classes but got: {value}")
-        self._scoping_unit_classes = value
 
     @property
     def current_scope(self):

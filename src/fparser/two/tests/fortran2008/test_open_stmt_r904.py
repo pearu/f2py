@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Science and Technology Facilities Council
+# Copyright (c) 2022-2023 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -72,7 +72,6 @@ C906 (R904) If a NEWUNIT= specifier appears, a file-unit-number shall not
 
 """
 
-# pylint: disable=no-member
 import pytest
 from fparser.api import get_reader
 from fparser.two import Fortran2008

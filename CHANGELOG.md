@@ -18,6 +18,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+03/04/2023 PR #392 for #326. Add support for F2008 block and critical constructs.
+
 30/03/2023 PR #396 for #395. Fix trailing whitespace bug in CallBase.
 
 13/03/2023 PR #391 for #324. Add GH workfow to automate a pypi upload during
