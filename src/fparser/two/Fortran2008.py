@@ -1460,8 +1460,11 @@ class End_Block_Stmt(EndStmtBase):  # R809
         """
         :param str string: Fortran code to check for a match
 
-        :return: code line matching the "END BLOCK" statement
-        :rtype: str
+        :return: 2-tuple containing "BLOCK" and, optionally, an associated \
+            Name or None if no match.
+        :rtype: Optional[Tuple[
+            str,
+            Optional[:py:class:`fparser.two.Fortran2003.Block_Construct_Name`]]]
 
         """
         return EndStmtBase.match(
@@ -1563,8 +1566,11 @@ class End_Critical_Stmt(EndStmtBase):
         """
         :param str string: Fortran code to check for a match
 
-        :returns: code line matching the "END CRITICAL" statement
-        :rtype: str
+        :returns: 2-tuple containing "CRITICAL" and, optionally, an associated \
+            Name or None if there is no match.
+        :rtype: Optional[Tuple[
+            str, \
+            Optional[:py:class:`fparser.two.Fortran2003.Critical_Construct_Name`]]]
 
         """
         return EndStmtBase.match(

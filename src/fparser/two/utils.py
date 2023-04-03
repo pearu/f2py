@@ -1620,23 +1620,50 @@ class EndStmtBase(StmtBase):
 
     @staticmethod
     def match(stmt_type, stmt_name, string, require_stmt_type=False):
+        """
+        Attempts to match the supplied string as a form of 'END xxx' statement.
+
+        :param str stmt_type: the type of end statement (e.g. "do") that we \
+            attempt to match.
+        :param type stmt_name: a class which should be used to match against \
+            the name should this statement be named (e.g. end subroutine sub).
+        :param str string: the string to attempt to match.
+        :param bool require_stmt_type: whether or not the string must contain \
+            the type of the block that is ending.
+
+        :returns: 2-tuple containing the matched end-statement type (if any) \
+            and, optionally, an associated name or None if there is no match.
+        :rtype: Optional[
+                    Tuple[Optional[str],
+                          Optional[:py:class:`fparser.two.Fortran2003.Name`]]]
+
+        """
         start = string[:3].upper()
         if start != "END":
-            return
+            # string doesn't begin with 'END'
+            return None
         line = string[3:].lstrip()
         start = line[: len(stmt_type)].upper()
         if start:
             if start.replace(" ", "") != stmt_type.replace(" ", ""):
-                return
+                # Not the correct type of 'END ...' statement.
+                return None
             line = line[len(stmt_type) :].lstrip()
         else:
             if require_stmt_type:
-                return
+                # No type was found but one is required.
+                return None
+            # Got a bare "END" and that is a valid match.
             return None, None
         if line:
             if stmt_name is None:
-                return
+                # There is content after the 'end xxx' but this block isn't
+                # named so we fail to match.
+                return None
+            # Attempt to match the content after 'end xxx' with the supplied
+            # name class.
             return stmt_type, stmt_name(line)
+        # Successful match with an unnamed 'end xxx'.
         return stmt_type, None
 
     def init(self, stmt_type, stmt_name):
