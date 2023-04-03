@@ -23,9 +23,12 @@ disable=suppressed-message,duplicate-code,too-many-locals,too-many-lines,protect
 # Maximum number of characters on a single line. Black's default is 88.
 max-line-length=88
 
-# fparser dynamically generates *_List classes so pylint can't
-# find them.
-generated-members=Fortran2003.*_List,Fortran2008.*_List
+[TYPECHECK]
+
+# fparser generates *_List classes at runtime so pylint can't
+# find them (as it's a static checker).
+ignored-modules=fparser.two.Fortran2003,fparser.two.Fortran2008
+generated-members=fparser.two.Fortran2003.*_List,fparser.two.Fortran2008.*_List
 
 [DESIGN]
 # Maximum number of parents for a class (see R0901)
