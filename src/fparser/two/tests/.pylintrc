@@ -17,3 +17,21 @@ enable=useless-suppression
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=suppressed-message,duplicate-code,too-many-locals,too-many-lines,protected-access,locally-disabled,too-few-public-methods,too-many-arguments,use-implicit-booleaness-not-comparison
+
+[FORMAT]
+
+# Maximum number of characters on a single line. Black's default is 88.
+max-line-length=88
+
+# fparser dynamically generates *_List classes so pylint can't
+# find them.
+generated-members=Fortran2003.*_List,Fortran2008.*_List
+
+[DESIGN]
+# Maximum number of parents for a class (see R0901)
+max-parents=9
+
+# Make sure private functions (_my_private_function) are also
+# documented, but standard double-underscore functions do not
+# need to have a docstring.
+no-docstring-rgx=__.*__

@@ -109,6 +109,10 @@ EXTENSIONS += ["hollerith"]
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
 EXTENSIONS += ["dollar-descriptor"]
 
+# Set this to True to get verbose output (on stdout) detailing the matches made
+# while parsing.
+_SHOW_MATCH_RESULTS = False
+
 
 class FparserException(Exception):
     """Base class exception for fparser. This allows an external tool to
@@ -177,15 +181,47 @@ class InternalSyntaxError(FparserException):
 
 
 def show_result(func):
-    return func
+    """
+    A decorator that enables the matching sequence to be debugged by outputting
+    the result (to stdout) whenever a new node in the parse tree is successfully
+    constructed.
 
-    def new_func(cls, string, **kws):
-        r = func(cls, string, **kws)
-        if r is not None and isinstance(r, StmtBase):
-            print("%s(%r) -> %r" % (cls.__name__, string, str(r)))
-        return r
+    :param function func: the functor that is being called.
 
-    return new_func
+    :returns: the supplied functor.
+    :rtype: function
+
+    """
+    if not _SHOW_MATCH_RESULTS:
+        # Just return the supplied functor unchanged.
+        return func
+
+    # It's not possible to monkeypatch decorators since the functions they are
+    # wrapping get modified at module-import time. Therefore, we can't get
+    # coverage of the rest of this routine.
+    def new_func(cls, string, **kws):  # pragma: no cover
+        """
+        New functor to replace the one supplied. Simply wraps the supplied
+        functor with some code that prints the match if it was successful.
+
+        :param type cls: the Class that is being matched.
+        :param str string: the string we are attempting to match.
+        :param *kws: additional keyword arguments.
+        :type *kws: Dict[str, Any]
+
+        :returns: new functor object.
+        :rtype: function
+
+        """
+        result = func(cls, string, **kws)
+        if isinstance(result, StmtBase):
+            if result:
+                print(f"{cls.__name__}({string}) -> {result}")
+            else:
+                print(f"{cls.__name__}({string}) did NOT match")
+        return result
+
+    return new_func  # pragma: no cover
 
 
 #
@@ -361,7 +397,7 @@ class Base(ComparableMixin):
             parent_cls.append(cls)
 
         # Get the class' match method if it has one
-        match = getattr(cls, "match") if hasattr(cls, "match") else None
+        match = getattr(cls, "match", None)
 
         if (
             isinstance(string, FortranReaderBase)
@@ -1361,37 +1397,52 @@ class CallBase(Base):
 
     @staticmethod
     def match(lhs_cls, rhs_cls, string, upper_lhs=False, require_rhs=False):
-        if not string.endswith(")"):
-            return
+        """
+        :param lhs_cls: the class to match with the lhs.
+        :type lhs_cls: str | class
+        :param rhs_cls: the class to match with the rhs.
+        :type rhs_cls: str | class
+        :param str string: the string to attempt to match.
+        :param bool upper_lhs: whether or not to convert the lhs to uppercase \
+                               before attempting the match.
+        :param bool require_rhs: whether the rhs (the part within parentheses) \
+                                 must be present.
+
+        :returns: a tuple containing the lhs and rhs matches or None if there is \
+                  no match.
+        :rtype: Optional[Tuple[:py:class:`fparser.two.utils.Base`, \
+                               Optional[:py:class:`fparser.two.utils.Base`]]]
+
+        """
+        if not string.rstrip().endswith(")"):
+            return None
         line, repmap = string_replace_map(string)
-        i = line.rfind("(")
-        if i == -1:
-            return
-        lhs = line[:i].rstrip()
+        open_idx = line.rfind("(")
+        if open_idx == -1:
+            return None
+        lhs = line[:open_idx].rstrip()
         if not lhs:
             return
-        j = line.rfind(")")
-        rhs = line[i + 1 : j].strip()
-        if line[j + 1 :].lstrip():
-            return
+        close_idx = line.rfind(")")
+        rhs = line[open_idx + 1 : close_idx].strip()
         lhs = repmap(lhs)
         if upper_lhs:
             lhs = lhs.upper()
         rhs = repmap(rhs)
         if isinstance(lhs_cls, str):
             if lhs_cls != lhs:
-                return
+                return None
         else:
             lhs = lhs_cls(lhs)
         if rhs:
             if isinstance(rhs_cls, str):
                 if rhs_cls != rhs:
-                    return
+                    return None
             else:
                 rhs = rhs_cls(rhs)
             return lhs, rhs
         if require_rhs:
-            return
+            return None
         return lhs, None
 
     def tostr(self):
