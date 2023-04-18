@@ -1,5 +1,6 @@
 # News #
 
+  * 18/04/2023 Version 0.1.0 released and status changed from `alpha` to `beta`. See the [CHANGELOG](CHANGELOG.md) for more details.
   * 16/06/2022 Version 0.0.16 released. See the [CHANGELOG](CHANGELOG.md)
     for details.
   * 30/05/2022 Version 0.0.15 released. See the [CHANGELOG](CHANGELOG.md)
