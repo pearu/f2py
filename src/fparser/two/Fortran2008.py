@@ -137,6 +137,7 @@ from fparser.two.Fortran2003 import (
     Executable_Construct_C201 as Executable_Construct_C201_2003,
     If_Stmt as If_Stmt_2003,
     Open_Stmt as Open_Stmt_2003,
+    Procedure_Stmt as Procedure_Stmt_2003,
     Program_Unit as Program_Unit_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
 )
@@ -165,7 +166,7 @@ class Program_Unit(Program_Unit_2003):  # R202
 class Executable_Construct(Executable_Construct_2003):  # R213
     # pylint: disable=invalid-name
     """
-    Fortran 2003 rule R213.
+    Fortran 2008 rule R213.
 
     .. code-block:: fortran
 
@@ -1576,6 +1577,54 @@ class End_Critical_Stmt(EndStmtBase):
         return EndStmtBase.match(
             "CRITICAL", Critical_Construct_Name, string, require_stmt_type=True
         )
+
+
+class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
+    """
+    Fortran 2008 Rule 1206.
+
+    procedure-stmt is [ MODULE ] PROCEDURE [ :: ] procedure-name-list
+
+    """
+
+    @staticmethod
+    def match(string):
+        """:param str string: Fortran code to check for a match
+
+        :returns: 3-tuple containing a boolean indicating whether the \
+            optional MODULE keyword is included, a boolean indicating \
+            whether the optional '::' is included and a Procedure_Name_List \
+            instance, or None if there is no match.
+        :rtype: Optional[Tuple[ \
+            bool, bool, \
+            :py:class:`fparser.two.Fortran2003.Procedure_Name_List`]]]
+
+        """
+        line = string.lstrip()
+        has_module = False
+        if line[:6].upper() == "MODULE":
+            line = line[6:].lstrip()
+            has_module = True
+        if line[:9].upper() != "PROCEDURE":
+            return None
+        line = line[9:].lstrip()
+        has_colons = False
+        if line[:2] == "::":
+            line = line[2:].lstrip()
+            has_colons = True
+        return (has_module, has_colons, Procedure_Name_List(line))
+
+    def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
+        result = "PROCEDURE"
+        if self.items[0]:
+            result = f"MODULE {result}"
+        if self.items[1]:
+            result = f"{result} ::"
+        return f"{result} {self.items[2]}"
 
 
 #

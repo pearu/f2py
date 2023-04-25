@@ -2964,6 +2964,9 @@ def test_procedure_stmt():  # R1206
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "MODULE PROCEDURE a, b"
 
+    with pytest.raises(NoMatchError):
+        _ = tcls("procedure :: a")
+
 
 def test_generic_spec():  # R1207
     tcls = Generic_Spec
