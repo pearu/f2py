@@ -136,6 +136,7 @@ from fparser.two.Fortran2003 import (
     Executable_Construct as Executable_Construct_2003,
     Executable_Construct_C201 as Executable_Construct_C201_2003,
     If_Stmt as If_Stmt_2003,
+    Loop_Control as Loop_Control_2003,
     Open_Stmt as Open_Stmt_2003,
     Program_Unit as Program_Unit_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
@@ -814,6 +815,48 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
         :rtype: type
         """
         return Alloc_Opt_List
+
+
+class Loop_Control(Loop_Control_2003): # R818
+    """
+    Fortran 2008 rule R818
+
+    loop-control is [ , ] do-variable = scalar-int-expr , scalar-int-expr
+                       [ , scalar-int-expr ]
+                    or [ , ] WHILE ( scalar-logical-expr )
+                    or [ , ] CONCURRENT forall-header
+
+    Extends the Fortran2003 rule R830 with the additional CONCURRENT clause.
+
+    """
+    use_names = ["Do_Variable",
+                 "Scalar_Int_Expr",
+                 "Scalar_Logical_Expr",
+                 "Forall_Header"]
+
+    @staticmethod
+    def match(string):
+        """
+        :param str string: Fortran code to check for a match
+        :return: 3-tuple containing strings and instances of the classes
+                 determining loop control (optional comma delimiter,
+                 optional scalar logical expression describing "WHILE"
+                 condition or optional counter expression containing loop
+                 counter and scalar integer expression)
+        :rtype: 3-tuple of objects or nothing for an "infinite loop"
+
+        """
+
+        *** result = Loop_Control_2003.match(string)
+
+        line = string.lstrip()
+        optional_delim = None
+        if line.startswith(","):
+            line = line[1:].lstrip()
+            optional_delim = ","
+        if line[:10].upper() != "CONCURRENT":
+            return None
+        ?????return (Forall_Header(line[:10].lstrip()), None, optional_delim)
 
 
 class If_Stmt(If_Stmt_2003):  # R837
