@@ -2964,6 +2964,7 @@ def test_procedure_stmt():  # R1206
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "MODULE PROCEDURE a, b"
 
+    # '::' is only valid from F2008 onwards
     with pytest.raises(NoMatchError):
         _ = tcls("procedure :: a")
 

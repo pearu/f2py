@@ -39,12 +39,10 @@
 """
 
 import pytest
-from fparser.api import get_reader, walk
 from fparser.two.Fortran2008 import Procedure_Stmt
 from fparser.two.utils import NoMatchError
 
 
-@pytest.mark.usefixtures("f2008_create")
 def test_start_space():
     """Test that there is a match if the string contains white space at
     the start and that the tostr() output is as expected.
@@ -55,7 +53,6 @@ def test_start_space():
     assert str(result) == "PROCEDURE dummy"
 
 
-@pytest.mark.usefixtures("f2008_create")
 def test_module():
     """Test that there is a match if the string contains the optional
     MODULE keyword and that the tostr() output is as expected.
@@ -66,7 +63,6 @@ def test_module():
     assert str(result) == "MODULE PROCEDURE dummy"
 
 
-@pytest.mark.usefixtures("f2008_create")
 def test_colons():
     """Test that there is a match if the string contains optional :: after
     the procedure keyword and that the tostr() output is as expected.
@@ -77,7 +73,6 @@ def test_colons():
     assert str(result) == "MODULE PROCEDURE :: dummy"
 
 
-@pytest.mark.usefixtures("f2008_create")
 @pytest.mark.parametrize(
     "string",
     [
@@ -90,5 +85,5 @@ def test_colons():
 )
 def test_invalid(string):
     """Test that there is no match for various invalid input strings."""
-    with pytest.raises(NoMatchError) as info:
+    with pytest.raises(NoMatchError):
         _ = Procedure_Stmt(string)

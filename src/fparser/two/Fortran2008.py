@@ -1601,18 +1601,18 @@ class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
 
         """
         line = string.lstrip()
-        has_module = False
+        optional_module = None
         if line[:6].upper() == "MODULE":
             line = line[6:].lstrip()
-            has_module = True
+            optional_module = "MODULE"
         if line[:9].upper() != "PROCEDURE":
             return None
         line = line[9:].lstrip()
-        has_colons = False
+        optional_colons = None
         if line[:2] == "::":
             line = line[2:].lstrip()
-            has_colons = True
-        return (has_module, has_colons, Procedure_Name_List(line))
+            optional_colons = "::"
+        return (Procedure_Name_List(line), optional_module, optional_colons)
 
     def tostr(self):
         """
@@ -1620,11 +1620,11 @@ class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
         :rtype: str
         """
         result = "PROCEDURE"
-        if self.items[0]:
-            result = f"MODULE {result}"
         if self.items[1]:
+            result = f"MODULE {result}"
+        if self.items[2]:
             result = f"{result} ::"
-        return f"{result} {self.items[2]}"
+        return f"{result} {self.items[0]}"
 
 
 #
