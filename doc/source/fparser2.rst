@@ -42,8 +42,10 @@ Fortran 2003. This is implemented in the Fortran2003.py `file`__ and
 contains an entirely separate parser to fparser1 that includes rules
 for Fortran 2003 syntax. Support for Fortran 2008 is being added in
 the Fortran2008.py `file`__ which extends the Fortran2003 rules
-appropriately. At this time fparser2 supports submodules, co-arrays,
-the 'mold' argument to allocate and the 'contiguous' keyword in Fortran2008.
+appropriately. At this time fparser2 supports the following
+Fortran2008 features: submodules, co-arrays, the 'mold' argument to
+allocate, the 'contiguous' keyword, the 'BLOCK' construct, the
+'CRITICAL' construct and the optional '::' for a procedure statement.
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
