@@ -7997,8 +7997,6 @@ class Loop_Control(Base):  # R830
                 scalar_logical_expr = Scalar_Logical_Expr(
                     repmap(brackets[1:rbrack_index].strip())
                 )
-                if not scalar_logical_expr:
-                    return None
                 return ("WHILE", scalar_logical_expr, optional_delim)
         # Try to match counter expression
         # More than one '=' in counter expression is not valid
