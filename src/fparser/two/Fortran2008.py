@@ -105,6 +105,7 @@ from fparser.two.Fortran2003 import (
     Execution_Part_Construct,
     File_Name_Expr,
     File_Unit_Number,
+    Forall_Header,
     Implicit_Part,
     Implicit_Part_Stmt,
     Import_Stmt,
@@ -818,7 +819,7 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
         return Alloc_Opt_List
 
 
-class Loop_Control(Loop_Control_2003): # R818
+class Loop_Control(Loop_Control_2003):  # R818
     """
     Fortran 2008 rule R818
 
@@ -830,26 +831,41 @@ class Loop_Control(Loop_Control_2003): # R818
     Extends the Fortran2003 rule R830 with the additional CONCURRENT clause.
 
     """
-    use_names = ["Do_Variable",
-                 "Scalar_Int_Expr",
-                 "Scalar_Logical_Expr",
-                 "Forall_Header"]
+
+    subclass_names = []
+    use_names = [
+        "Do_Variable",
+        "Scalar_Int_Expr",
+        "Scalar_Logical_Expr",
+        "Forall_Header",
+    ]
 
     @staticmethod
     def match(string):
-        """
-        :param str string: Fortran code to check for a match
-        :return: 3-tuple containing strings and instances of the classes
-                 determining loop control (optional comma delimiter,
-                 optional scalar logical expression describing "WHILE"
-                 condition or optional counter expression containing loop
-                 counter and scalar integer expression)
-        :rtype: 3-tuple of objects or nothing for an "infinite loop"
+        """Attempts to match the supplied text with this rule.
+
+        :param str string: Fortran code to check for a match.
+
+        :returns: 3-tuple containing strings and instances of the \
+            classes determining loop control. The first entry \
+            indicates the type of match ("WHILE", "COUNTER" or \
+            "CONCURRENT"), the second entry provides the classes \
+            resulting from matching and the third entry inidcates \
+            whether there is an optional preceding ','.
+        :rtype: Optional[Tuple[ \
+            str, \
+            Tuple[:py:class:`fparser.two.Fortran2003.Do_Variable`, \
+                  List[str]]| \
+                :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`| \
+                :py:class:`fparser.two.Fortran2003.Forall_Header`, \
+            Optional[str]]]
 
         """
-
-        *** result = Loop_Control_2003.match(string)
-
+        # Fortran2003 matches all but CONCURRENT so try this first
+        result = Loop_Control_2003.match(string)
+        if result:
+            return result
+        # Try to match with CONCURRENT
         line = string.lstrip()
         optional_delim = None
         if line.startswith(","):
@@ -857,7 +873,26 @@ class Loop_Control(Loop_Control_2003): # R818
             optional_delim = ","
         if line[:10].upper() != "CONCURRENT":
             return None
-        ?????return (Forall_Header(line[:10].lstrip()), None, optional_delim)
+        return (
+            "CONCURRENT",
+            Forall_Header(line[10:].lstrip().rstrip()),
+            optional_delim,
+        )
+
+    def tostr(self):
+        """
+        :returns: the Fortran representation of this object.
+        :rtype: str
+        """
+        if self.items[0] != "CONCURRENT":
+            # Use the F2003 tostr() implementation
+            return Loop_Control_2003.tostr(self)
+        # Return loop control construct containing "CONCURRENT" clause
+        loopctrl = f"CONCURRENT {self.items[1]}"
+        # Add optional delimiter to loop control construct if present
+        if self.items[2]:
+            loopctrl = f"{self.items[2]} {loopctrl}"
+        return loopctrl
 
 
 class If_Stmt(If_Stmt_2003):  # R837
