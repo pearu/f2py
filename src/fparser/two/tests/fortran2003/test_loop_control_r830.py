@@ -99,7 +99,7 @@ def test_counter():
         "while( )",
         "while (.true ",
         "while ())",
-        "while(a=b)",
+        "while('text')",
         " == ",
         " = ",
         "idx=",
