@@ -93,6 +93,9 @@ from fparser.two.utils import (
     WORDClsBase,
 )
 
+# These pylint errors are due to the auto-generation of classes in the
+# Fortran2003 file.
+# pylint: disable=no-name-in-module
 from fparser.two.Fortran2003 import (
     Base,
     BlockBase,
@@ -120,6 +123,8 @@ from fparser.two.Fortran2003 import (
     Stop_Code,
     Use_Stmt,
 )
+
+# pylint: enable=no-name-in-module
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
@@ -833,12 +838,11 @@ class Loop_Control(Loop_Control_2003):  # R818
     """
 
     subclass_names = []
-    use_names = [
-        "Do_Variable",
-        "Scalar_Int_Expr",
-        "Scalar_Logical_Expr",
-        "Forall_Header",
-    ]
+    # This class' match method makes use of the Fortran2003 match
+    # method so 'use_names' should include any classes used within
+    # there as well as any used here.
+    use_names = Loop_Control_2003.use_names[:]
+    use_names.append("Forall_Header")
 
     @staticmethod
     def match(string):

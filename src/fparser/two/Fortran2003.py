@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2022 Science and Technology
+# Modified work Copyright (c) 2017-2023 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -7952,7 +7952,7 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
 # pylint: disable=invalid-name
 class Loop_Control(Base):  # R830
     """
-    Fortran 2008 rule R830
+    Fortran 2003 rule R830
 
     loop-control is [ , ] do-variable = scalar-int-expr , scalar-int-expr
                        [ , scalar-int-expr ]
@@ -7972,7 +7972,7 @@ class Loop_Control(Base):  # R830
         :returns: 3-tuple containing strings and instances of the classes \
             determining loop control. The first entry indicates the type of \
             match ("WHILE" or "COUNTER"), the second entry provides the \
-            classes resulting from matching and the third entry inidcates \
+            classes resulting from matching and the third entry indicates \
             whether there is an optional preceding ','.
         :rtype: Optional[Tuple[ \
             str,

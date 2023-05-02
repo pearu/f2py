@@ -85,6 +85,10 @@ def test_counter():
     result = Loop_Control("idx = start,stop,step")
     assert isinstance(result, Loop_Control)
     assert str(result) == "idx = start, stop, step"
+    # Bounds are integer expressions
+    result = Loop_Control("idx = ((s+2)-q),(p*m)/4,a+b+c")
+    assert isinstance(result, Loop_Control)
+    assert str(result) == "idx = ((s + 2) - q), (p * m) / 4, a + b + c"
 
 
 @pytest.mark.parametrize(
