@@ -745,8 +745,17 @@ class FortranReaderBase:
         return item
 
     def put_item(self, item):
-        """Insert item to FIFO item buffer."""
-        self.fifo_item.insert(0, item)
+        """Insert item into FIFO buffer of 'innermost' reader object.
+
+        :param item:
+        :type item:
+        """
+        if self.reader:
+            # We are reading an INCLUDE file so put this item in the FIFO
+            # of the corresponding reader.
+            self.reader.put_item(item)
+        else:
+            self.fifo_item.insert(0, item)
 
     # Iterator methods:
 
@@ -780,26 +789,12 @@ class FortranReaderBase:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    # Manually check to see if something has not
-                    # matched and has been placed in the fifo. We
-                    # can't use _next() as this method is associated
-                    # with the include reader (self.reader._next()),
-                    # not this reader (self._next()).
-                    item = self.fifo_item.pop(0)
-                    #if ignore_comments:
-                    #    while isinstance(item, Comment):
-                    #        item = self.fifo_item.pop(0)
-                    return item
-                except IndexError:
-                    # There is nothing in the fifo buffer.
-                    try:
-                        # Return a line from the include.
-                        return self.reader.next(ignore_comments)
-                    except StopIteration:
-                        # There is nothing left in the include
-                        # file. Setting reader to None indicates that
-                        # we should now read from the main reader.
-                        self.reader = None
+                    return self.reader.next(ignore_comments)
+                except StopIteration:
+                    # There is nothing left in the include
+                    # file. Setting reader to None indicates that
+                    # we should now read from the main reader.
+                    self.reader = None
             item = self._next(ignore_comments)
             if isinstance(item, Line) and _IS_INCLUDE_LINE(item.line):
                 # catch INCLUDE statement and create a new FortranReader
