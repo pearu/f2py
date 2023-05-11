@@ -416,7 +416,6 @@ def check_include_works(
         reader = FortranFileReader(fortran_filename, ignore_comments=ignore_comments)
         for orig_line in expected.split("\n"):
             new_line = reader.next().line
-            print(new_line+"\n====\n"+orig_line)
             assert new_line == orig_line
         with pytest.raises(StopIteration):
             reader.next()
