@@ -4659,6 +4659,7 @@ class Namelist_Stmt(StmtBase):  # R552
                          namelist-group-object-list ] ...
 
     """
+
     subclass_names = []
     use_names = ["Namelist_Group_Name", "Namelist_Group_Object_List"]
 
@@ -4692,8 +4693,7 @@ class Namelist_Stmt(StmtBase):  # R552
             lst = parts.pop(0).strip()
             if lst.endswith(","):
                 lst = lst[:-1].rstrip()
-            items.append(
-                (Namelist_Group_Name(name), Namelist_Group_Object_List(lst)))
+            items.append((Namelist_Group_Name(name), Namelist_Group_Object_List(lst)))
         if parts:
             # There is a missing second '/'
             return None
@@ -4704,8 +4704,7 @@ class Namelist_Stmt(StmtBase):  # R552
         :returns: this Namelist_Stmt as a string.
         :rtype: str
         """
-        return "NAMELIST " + ", ".join(
-            f"/{name}/ {lst}" for name, lst in self.items)
+        return "NAMELIST " + ", ".join(f"/{name}/ {lst}" for name, lst in self.items)
 
 
 class Namelist_Group_Object(Base):  # R553
@@ -7975,6 +7974,7 @@ class Loop_Control(Base):  # pylint: disable=invalid-name
                          | [ , ] WHILE ( <scalar-logical-expr> )
 
     """
+
     subclass_names = []
     use_names = ["Do_Variable", "Scalar_Int_Expr", "Scalar_Logical_Expr"]
 

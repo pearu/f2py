@@ -42,38 +42,47 @@ from fparser.two.Fortran2003 import Namelist_Stmt
 from fparser.two.utils import NoMatchError
 
 
-@pytest.mark.parametrize("code", [
-    "", "namelost", "namelist", "namelist x", "namelist x/",
-    "namelist /x", "namelist /x/ y /"])
+@pytest.mark.parametrize(
+    "code",
+    [
+        "",
+        "namelost",
+        "namelist",
+        "namelist x",
+        "namelist x/",
+        "namelist /x",
+        "namelist /x/ y /",
+    ],
+)
 def test_match_errors(code):
-    '''Test that the match method returns None when the supplied code is
+    """Test that the match method returns None when the supplied code is
     invalid. Also check that this results in a NoMatchError for an
     instance of the class.
 
-    '''
+    """
     assert not Namelist_Stmt.match(code)
     with pytest.raises(NoMatchError):
         _ = Namelist_Stmt(code)
 
 
 def test_simple():
-    '''Test that a namelist with a single name and list is matched and
+    """Test that a namelist with a single name and list is matched and
     that the tostr() method outputs the resultant code as
     expected. Also check that the namelist keyword matching is case
     insensitive and that leading and trailing spaces are supported.
 
-    '''
+    """
     result = Namelist_Stmt(" NamelisT /x/ a ")
     assert isinstance(result, Namelist_Stmt)
     assert result.tostr() == "NAMELIST /x/ a"
 
 
 def test_multi():
-    '''Test that multiple names and lists are matched, with and without a
+    """Test that multiple names and lists are matched, with and without a
     comma separator and that the tostr() method outputs the resultant
     code as expected.
 
-    '''
+    """
     result = Namelist_Stmt("namelist /x/ a, /y/ b,c /z/ d")
     assert isinstance(result, Namelist_Stmt)
     assert result.tostr() == "NAMELIST /x/ a, /y/ b, c, /z/ d"
