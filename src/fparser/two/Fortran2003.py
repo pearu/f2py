@@ -5249,7 +5249,7 @@ class Allocate_Stmt(StmtBase):  # R623
         allocate-stmt is ALLOCATE ( [ type-spec :: ] allocation-list
                                     [, alloc-opt-list ] )
 
-    Subject to the following constraints\:
+    Subject to the following constraints:
 
     C622 (R629) Each allocate-object shall be a nonprocedure pointer or an
                  allocatable variable.
@@ -7958,6 +7958,16 @@ class Loop_Control(Base):  # R830
                        [ , scalar-int-expr ]
                     or [ , ] WHILE ( scalar-logical-expr )
 
+    This class would be better and more extensible if it called 2
+    classes, one for each of the above expressions. Something like the
+    suggestion below. However, this would result in a different
+    fparser tree, see issue #416.
+
+    F2003: While_Loop_Cntl: scalar-logical-expression, delim
+    F2003: Counter_Loop_Cntl: var, lower, upper, [step], delim
+    F2008: Concurrent_Loop_Cntl: conc_expr, delim
+    F2018: Concurrent_Loop_Cntl: conc_expr, local_x, delim
+
     """
 
     subclass_names = []
@@ -7969,19 +7979,20 @@ class Loop_Control(Base):  # R830
 
         :param str string: Fortran code to check for a match.
 
-        :returns: 3-tuple containing strings and instances of the classes \
-            determining loop control. The first entry indicates the type of \
-            match ("WHILE" or "COUNTER"), the second entry provides the \
-            classes resulting from matching and the third entry indicates \
-            whether there is an optional preceding ','.
+        :returns: None if there is no match, a 3-tuple with the first \
+            entry providing the result of matching the 'WHILE' part of \
+            the rule if there is a match, the second entry providing \
+            the result of matching the 'COUNTER' part of the rule if \
+            there is a match and the third entry indicating whether \
+            there is an optional preceding ','.
         :rtype: Optional[Tuple[ \
-            str,
-            Tuple[:py:class:`fparser.two.Fortran2003.Do_Variable`, List[str]]| \
-                :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`, \
+            Optional[ \
+                :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`], \
+            Optional[Tuple[ \
+                :py:class:`fparser.two.Fortran2003.Do_Variable`, List[str]]], \
             Optional[str]]]
 
         """
-        # pylint: disable=unbalanced-tuple-unpacking
         line = string.lstrip().rstrip()
         # Try to match optional delimiter
         optional_delim = None
@@ -7997,7 +8008,7 @@ class Loop_Control(Base):  # R830
                 scalar_logical_expr = Scalar_Logical_Expr(
                     repmap(brackets[1:rbrack_index].strip())
                 )
-                return ("WHILE", scalar_logical_expr, optional_delim)
+                return (scalar_logical_expr, None, optional_delim)
         # Try to match counter expression
         # More than one '=' in counter expression is not valid
         if line.count("=") != 1:
@@ -8011,21 +8022,23 @@ class Loop_Control(Base):  # R830
             Do_Variable(repmap(var.rstrip())),
             list(map(Scalar_Int_Expr, list(map(repmap, rhs)))),
         )
-        return ("COUNTER", counter_expr, optional_delim)
+        return (None, counter_expr, optional_delim)
 
     def tostr(self):
         """
         :returns: the Fortran representation of this object.
         :rtype: str
         """
-        if self.items[0] == "WHILE":
+        if self.items[0]:
             # Return loop control construct containing "WHILE" condition and
             # its <scalar-logical-expr>
-            loopctrl = f"WHILE ({self.items[1]})"
-        else:  # name == "COUNTER"
+            loopctrl = f"WHILE ({self.items[0]})"
+        else:  # counter expression
             # Return loop control construct containing counter expression:
             # <do-variable> as LHS and <scalar-int-expr> list as RHS
-            loopctrl = f"{self.items[1][0]} = {', '.join(map(str, self.items[1][1]))}"
+            loopctrl = (
+                f"{self.items[1][0]} = " f"{', '.join(map(str, self.items[1][1]))}"
+            )
         # Add optional delimiter to loop control construct if present
         if self.items[2]:
             loopctrl = f"{self.items[2]} {loopctrl}"

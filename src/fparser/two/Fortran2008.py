@@ -825,8 +825,7 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
 
 
 class Loop_Control(Loop_Control_2003):  # R818
-    """
-    Fortran 2008 rule R818
+    """Fortran 2008 rule R818
 
     loop-control is [ , ] do-variable = scalar-int-expr , scalar-int-expr
                        [ , scalar-int-expr ]
@@ -834,6 +833,17 @@ class Loop_Control(Loop_Control_2003):  # R818
                     or [ , ] CONCURRENT forall-header
 
     Extends the Fortran2003 rule R830 with the additional CONCURRENT clause.
+
+    The F2003 Loop_Control class would be better and more extensible
+    if it called 2 classes, one for each of the above
+    expressions. This would then affect the implementation of this
+    class. Something like the suggestion below. However, this would
+    result in a different fparser tree, see issue #416.
+
+    F2003: While_Loop_Cntl: scalar-logical-expression, delim
+    F2003: Counter_Loop_Cntl: var, lower, upper, [step], delim
+    F2008: Concurrent_Loop_Cntl: conc_expr, delim
+    F2018: Concurrent_Loop_Cntl: conc_expr, local_x, delim
 
     """
 
@@ -850,25 +860,28 @@ class Loop_Control(Loop_Control_2003):  # R818
 
         :param str string: Fortran code to check for a match.
 
-        :returns: 3-tuple containing strings and instances of the \
-            classes determining loop control. The first entry \
-            indicates the type of match ("WHILE", "COUNTER" or \
-            "CONCURRENT"), the second entry provides the classes \
-            resulting from matching and the third entry inidcates \
-            whether there is an optional preceding ','.
+        :returns: None if there is no match, a tuple with the first \
+            entry providing the result of matching the 'WHILE' part of \
+            the rule if there is a match, the second entry providing \
+            the result of matching the 'COUNTER' part of the rule if \
+            there is a match, the third entry indicating whether \
+            there is an optional preceding ',' and the fourth entry \
+            providing the result of matching the 'CONCURRENT' part of \
+            the rule if there is a match.
+
         :rtype: Optional[Tuple[ \
-            str, \
-            Tuple[:py:class:`fparser.two.Fortran2003.Do_Variable`, \
-                  List[str]]| \
-                :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`| \
-                :py:class:`fparser.two.Fortran2003.Forall_Header`, \
-            Optional[str]]]
+            Optional[ \
+                :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`], \
+            Optional[Tuple[ \
+                :py:class:`fparser.two.Fortran2003.Do_Variable`, List[str]]], \
+            Optional[str]], \
+            Optional[:py:class:`fparser.two.Fortran2003.Forall_Header`]]
 
         """
         # Fortran2003 matches all but CONCURRENT so try this first
         result = Loop_Control_2003.match(string)
         if result:
-            return result
+            return result + (None,)
         # Try to match with CONCURRENT
         line = string.lstrip()
         optional_delim = None
@@ -877,22 +890,18 @@ class Loop_Control(Loop_Control_2003):  # R818
             optional_delim = ","
         if line[:10].upper() != "CONCURRENT":
             return None
-        return (
-            "CONCURRENT",
-            Forall_Header(line[10:].lstrip().rstrip()),
-            optional_delim,
-        )
+        return (None, None, optional_delim, Forall_Header(line[10:].lstrip().rstrip()))
 
     def tostr(self):
         """
         :returns: the Fortran representation of this object.
         :rtype: str
         """
-        if self.items[0] != "CONCURRENT":
+        if self.items[0] or self.items[1]:
             # Use the F2003 tostr() implementation
             return Loop_Control_2003.tostr(self)
         # Return loop control construct containing "CONCURRENT" clause
-        loopctrl = f"CONCURRENT {self.items[1]}"
+        loopctrl = f"CONCURRENT {self.items[3]}"
         # Add optional delimiter to loop control construct if present
         if self.items[2]:
             loopctrl = f"{self.items[2]} {loopctrl}"
