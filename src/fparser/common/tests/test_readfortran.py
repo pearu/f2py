@@ -706,10 +706,12 @@ end program my_prog
     while True:
         lines.append(reader.get_item())
         # Try immediately putting the line back and then requesting it again.
+        # This checks that the correct FIFO buffer is being used.
         reader.put_item(lines[-1])
         assert reader.get_item().line == lines[-1].line
         if "var3 =" in lines[-1].line:
-            # Stop reading while we're still in the INCLUDE file.
+            # Stop reading while we're still in the INCLUDE file so that we
+            # have a stack of readers when calling `put_item` below.
             break
     # Put all the lines back in the same order that we saw them.
     for line in reversed(lines):
