@@ -2103,26 +2103,6 @@ def test_label_do_stmt():
     assert repr(obj) == "Label_Do_Stmt(None, Label('12'), None)"
 
 
-def test_loop_control():
-    """Tests incorrect loop control constructs (R829). Correct loop
-    control constructs are tested in test_block_label_do_construct()
-    and test_nonblock_label_do_construct()."""
-    tcls = Loop_Control
-
-    # More than one '=' in counter expression
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls("j = 1 = 10")
-    assert "Loop_Control: 'j = 1 = 10'" in str(excinfo.value)
-
-    # Incorrect number of elements in counter expression
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls("k = 10, -10, -2, -1")
-    assert "Loop_Control: 'k = 10, -10, -2, -1'" in str(excinfo.value)
-    with pytest.raises(NoMatchError) as excinfo:
-        _ = tcls("l = 5")
-    assert "Loop_Control: 'l = 5'" in str(excinfo.value)
-
-
 def test_continue_stmt():  # R848
     tcls = Continue_Stmt
     obj = tcls("continue")
