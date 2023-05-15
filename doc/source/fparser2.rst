@@ -45,7 +45,8 @@ the Fortran2008.py `file`__ which extends the Fortran2003 rules
 appropriately. At this time fparser2 supports the following
 Fortran2008 features: submodules, co-arrays, the 'mold' argument to
 allocate, the 'contiguous' keyword, the 'BLOCK' construct, the
-'CRITICAL' construct and the optional '::' for a procedure statement.
+'CRITICAL' construct, the optional '::' for a procedure statement and
+the 'do concurrent' construct.
 
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2003.py
 __ https://github.com/stfc/fparser/blob/master/src/fparser/two/Fortran2008.py
