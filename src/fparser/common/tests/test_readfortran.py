@@ -705,6 +705,9 @@ end program my_prog
     lines = []
     while True:
         lines.append(reader.get_item())
+        # Try immediately putting the line back and then requesting it again.
+        reader.put_item(lines[-1])
+        assert reader.get_item().line == lines[-1].line
         if "var3 =" in lines[-1].line:
             # Stop reading while we're still in the INCLUDE file.
             break
