@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+15/05/2023 PR #415 for #165. Bug fix for spurious matching of 'NAMELIST' in
+           certain contexts.
+
 15/05/2023 PR #408 for #403. Add support for the F2008 DO CONCURRENT.
 
 26/04/2023 PR #406 for #405. Add support for F2008 optional "::" in PROCEDURE

@@ -1394,16 +1394,6 @@ def test_letter_spec():  # R551
     assert str(obj) == "D"
 
 
-def test_namelist_stmt():  # R552
-    tcls = Namelist_Stmt
-    obj = tcls("namelist / nlist / a")
-    assert isinstance(obj, tcls), repr(obj)
-    assert str(obj) == "NAMELIST /nlist/ a"
-
-    obj = tcls("namelist / nlist / a, /mlist/ b,c /klist/ d,e")
-    assert str(obj) == "NAMELIST /nlist/ a, /mlist/ b, c, /klist/ d, e"
-
-
 def test_equivalence_stmt():  # R554
     tcls = Equivalence_Stmt
     obj = tcls("equivalence (a, b ,z)")
