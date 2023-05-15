@@ -874,8 +874,8 @@ class Loop_Control(Loop_Control_2003):  # R818
                 :py:class:`fparser.two.Fortran2003.Scalar_Logical_Expr`], \
             Optional[Tuple[ \
                 :py:class:`fparser.two.Fortran2003.Do_Variable`, List[str]]], \
-            Optional[str]], \
-            Optional[:py:class:`fparser.two.Fortran2003.Forall_Header`]]
+            Optional[str], \
+            Optional[:py:class:`fparser.two.Fortran2003.Forall_Header`]]]
 
         """
         # Fortran2003 matches all but CONCURRENT so try this first
