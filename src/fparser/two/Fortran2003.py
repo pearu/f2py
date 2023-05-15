@@ -4651,15 +4651,12 @@ class Letter_Spec(Base):  # R551
 
 class Namelist_Stmt(StmtBase):  # R552
     """
-    ::
+    Fortran 2003 rule R552::
 
-        <namelist-stmt> = NAMELIST / <namelist-group-name> /
-            <namelist-group-object-list> [ [ , ] / <namelist-group-name> /
-            <namelist-group-object-list> ]...
-
-    Attributes::
-
-        items : (Namelist_Group_Name, Namelist_Group_Object_List)-tuple
+        namelist-stmt is NAMELIST
+                         / namelist-group-name / namelist-group-object-list
+                         [ [,] / namelist-group-name /
+                         namelist-group-object-list ] ...
 
     """
 
@@ -4668,28 +4665,46 @@ class Namelist_Stmt(StmtBase):  # R552
 
     @staticmethod
     def match(string):
-        if string[:8].upper() != "NAMELIST":
-            return
-        line = string[8:].lstrip()
+        """Implements the matching for a Namelist_Stmt.
+
+        :param str string: a string containing the code to match.
+
+        :returns: `None` if there is no match, otherwise a `tuple` \
+            containing 2-tuples with a namelist name and a namelist object \
+            list.
+        :rtype: Optional[Tuple[Tuple[ \
+            fparser.two.Fortran2003.Namelist_Group_Name, \
+            fparser.two.Fortran2003.Namelist_Group_Object_List]]]
+
+        """
+        line = string.lstrip()
+        if line[:8].upper() != "NAMELIST":
+            return None
+        line = line[8:].lstrip()
+        if not line:
+            return None
         parts = line.split("/")
+        text_before_slash = parts.pop(0)
+        if text_before_slash:
+            return None
         items = []
-        fst = parts.pop(0)
-        assert not fst, repr((fst, parts))
         while len(parts) >= 2:
-            name, lst = parts[:2]
-            del parts[:2]
-            name = name.strip()
-            lst = lst.strip()
+            name = parts.pop(0).strip()
+            lst = parts.pop(0).strip()
             if lst.endswith(","):
                 lst = lst[:-1].rstrip()
             items.append((Namelist_Group_Name(name), Namelist_Group_Object_List(lst)))
-        assert not parts, repr(parts)
+        if parts:
+            # There is a missing second '/'
+            return None
         return tuple(items)
 
     def tostr(self):
-        return "NAMELIST " + ", ".join(
-            "/%s/ %s" % (name_lst) for name_lst in self.items
-        )
+        """
+        :returns: this Namelist_Stmt as a string.
+        :rtype: str
+        """
+        return "NAMELIST " + ", ".join(f"/{name}/ {lst}" for name, lst in self.items)
 
 
 class Namelist_Group_Object(Base):  # R553
