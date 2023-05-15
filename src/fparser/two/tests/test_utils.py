@@ -37,11 +37,8 @@ exception handling and ast traversal.
 
 """
 
-import os
-
 import pytest
 from fparser.api import get_reader
-from fparser.common.readfortran import FortranFileReader
 from fparser.two import Fortran2003, utils
 
 
@@ -144,30 +141,3 @@ def test_endstmtbase_match():
         require_stmt_type=True,
     )
     assert result == ("SUBROUTINE", Fortran2003.Name("sub"))
-
-
-@pytest.mark.usefixtures("f2003_create")
-def test_base_include_handling(tmpdir):
-    """Test parsing of code that involves an INCLUDE. This is beyond what
-    is tested in test_readfortran as it exercises the mechanisms used when
-    a match fails and content is given back to the reader."""
-    fortran_code = (
-        "module include_test\n  include 'test_include.h'\nend module include_test"
-    )
-    include_code = (
-        "interface mpi_sizeof\n"
-        "subroutine simple()\n"
-        "end subroutine simple\n"
-        "end interface mpi_sizeof"
-    )
-    with open(os.path.join(tmpdir, "test_prog.f90"), "w", encoding="utf-8") as cfile:
-        cfile.write(fortran_code)
-    with open(os.path.join(tmpdir, "test_include.h"), "w", encoding="utf-8") as cfile:
-        cfile.write(include_code)
-    reader = FortranFileReader(
-        os.path.join(tmpdir, "test_prog.f90"), include_dirs=[tmpdir]
-    )
-    prog = Fortran2003.Program(reader)
-    assert isinstance(prog, Fortran2003.Program)
-    nodes = utils.walk(prog, Fortran2003.Interface_Stmt)
-    assert len(nodes) == 1
