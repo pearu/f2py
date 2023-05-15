@@ -680,20 +680,41 @@ def test_put_item(ignore_comments):
         assert fifo_line == orig_line
 
 
-def test_put_item_include(ignore_comments):
+def test_put_item_include(ignore_comments, tmpdir):
     """Check that when a line that has been included via an include
     statement is consumed it can be pushed back so it can be consumed
     again. Test with and without ignoring comments.
 
     """
-    reader = FortranStringReader(FORTRAN_CODE, ignore_comments=ignore_comments)
+    _ = tmpdir.chdir()
+    cwd = str(tmpdir)
+    include_code = """
+    var1 = 1
+    var2 = 2
+    var3 = 3
+"""
+    with open(os.path.join(cwd, "my_include.h"), "w") as cfile:
+        cfile.write(include_code)
+    code = """
+program my_prog
+  integer :: var1, var2, var3
+  include 'my_include.h'
+end program my_prog
+"""
+    reader = FortranStringReader(code, ignore_comments=ignore_comments)
+    lines = []
     while True:
-        orig_line = reader.get_item()
-        if not orig_line:
+        lines.append(reader.get_item())
+        if "var3 =" in lines[-1].line:
+            # Stop reading while we're still in the INCLUDE file.
             break
-        reader.put_item(orig_line)
-        fifo_line = reader.get_item()
-        assert fifo_line == orig_line
+    # Put all the lines back in the same order that we saw them.
+    for line in reversed(lines):
+        reader.put_item(line)
+    # Check that the reader returns all those lines in the same order that
+    # we saw them originally.
+    for line in lines:
+        assert reader.get_item().line == line.line
 
 
 def test_multi_put_item(ignore_comments):
