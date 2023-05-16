@@ -745,8 +745,19 @@ class FortranReaderBase:
         return item
 
     def put_item(self, item):
-        """Insert item to FIFO item buffer."""
-        self.fifo_item.insert(0, item)
+        """Insert item into FIFO buffer of 'innermost' reader object.
+
+        :param item: the item to insert into the FIFO.
+        :type item: :py:class:`fparser.common.readfortran.Line` | \
+                    :py:class:`fparser.common.readfortran.MultiLine` | \
+                    :py:class:`fparser.common.readfortran.Comment`
+        """
+        if self.reader:
+            # We are reading an INCLUDE file so put this item in the FIFO
+            # of the corresponding reader.
+            self.reader.put_item(item)
+        else:
+            self.fifo_item.insert(0, item)
 
     # Iterator methods:
 
@@ -767,7 +778,7 @@ class FortranReaderBase:
         value.
 
         :returns: the next line item. This can be from a local fifo \
-        buffer, from an include reader or from this reader.
+                  buffer, from an include reader or from this reader.
         :rtype: py:class:`fparser.common.readfortran.Line`
 
         :raises StopIteration: if no more lines are found.
@@ -780,7 +791,6 @@ class FortranReaderBase:
             if self.reader is not None:
                 # inside INCLUDE statement
                 try:
-                    # Return a line from the include.
                     return self.reader.next(ignore_comments)
                 except StopIteration:
                     # There is nothing left in the include
