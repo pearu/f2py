@@ -394,6 +394,10 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
              :py:class:`fparser.two.Fortran2003.Component_Decl_List`)
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Component_Attr_Spec_List
+
         return Type_Declaration_StmtBase.match(
             Declaration_Type_Spec, Component_Attr_Spec_List, Component_Decl_List, string
         )
@@ -461,6 +465,10 @@ class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
         This overwrites the Fortran 2003 type with the Fortran 2008 variant.
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Attr_Spec_List
+
         return Attr_Spec_List
 
 
@@ -652,6 +660,10 @@ class Explicit_Coshape_Spec(SeparatorBase):  # R511
              :py:class:`fparser.two:Fortran2008.Lower_Cobound` or `None`)
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Coshape_Spec_List
+
         if not string.endswith("*"):
             return None
         line = string[:-1].rstrip()
@@ -821,6 +833,10 @@ class Allocate_Stmt(Allocate_Stmt_2003):  # R626
         :returns: the Fortran2008 flavour of Alloc_Opt_List.
         :rtype: type
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Alloc_Opt_List
+
         return Alloc_Opt_List
 
 
@@ -1147,6 +1163,10 @@ class Submodule_Stmt(Base, ScopingRegionMixin):  # R1117
                                :py:class:`fparser.two.Fortran2008.Submodule_Name`]]
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Submodule_Name
+
         # First look for "SUBMODULE"
         name = "SUBMODULE"
         if fstring[: len(name)].upper() != name:
@@ -1218,6 +1238,10 @@ class End_Submodule_Stmt(EndStmtBase):  # R1119
         is a match or `None` if there is no match
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Submodule_Name
+
         return EndStmtBase.match("SUBMODULE", Submodule_Name, fstring)
 
     def get_name(self):  # C1114
@@ -1259,6 +1283,10 @@ class Parent_Identifier(Base):  # R1118 (C1113)
         is a match or `None` if there is no match
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Ancestor_Module_Name, Parent_SubModule_Name
+
         split_string = fstring.split(":")
         len_split_string = len(split_string)
         lhs_name = split_string[0].lstrip().rstrip()
@@ -1300,8 +1328,10 @@ class Open_Stmt(Open_Stmt_2003):  # R904
         :rtype: Optional[:py:class:`fparser.two.Fortran2008.Open_Stmt]
 
         """
-        # The Connect_Spec_List class is generated automatically
-        # by code at the end of this module
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Connect_Spec_List
+
         obj = CALLBase.match("OPEN", Connect_Spec_List, string, require_rhs=True)
         if not obj:
             return None
@@ -1396,6 +1426,14 @@ class Connect_Spec(Connect_Spec_2003):
                   supplied string is not a match
         :rtype: Optional[Tuple[str, Any]]
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import (
+            Scalar_Default_Char_Expr,
+            Scalar_Int_Variable,
+            Scalar_Int_Expr,
+        )
+
         if "=" not in string:
             # The only argument which need not be named is the unit number
             return "UNIT", File_Unit_Number(string)
@@ -1559,6 +1597,10 @@ class End_Block_Stmt(EndStmtBase):  # R809
             Optional[:py:class:`fparser.two.Fortran2003.Block_Construct_Name`]]]
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Block_Construct_Name
+
         return EndStmtBase.match(
             "BLOCK", Block_Construct_Name, string, require_stmt_type=True
         )
@@ -1665,6 +1707,10 @@ class End_Critical_Stmt(EndStmtBase):
             Optional[:py:class:`fparser.two.Fortran2003.Critical_Construct_Name`]]]
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Critical_Construct_Name
+
         return EndStmtBase.match(
             "CRITICAL", Critical_Construct_Name, string, require_stmt_type=True
         )
@@ -1691,6 +1737,10 @@ class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
             :py:class:`fparser.two.Fortran2003.Procedure_Name_List`]]]
 
         """
+        # Avoid circular dependencies by importing here.
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Procedure_Name_List
+
         line = string.lstrip()
         optional_module = None
         if line[:6].upper() == "MODULE":
@@ -1718,61 +1768,9 @@ class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
         return f"{result} {self.items[0]}"
 
 
-#
-# GENERATE Scalar_, _List, _Name CLASSES
-#
-
-
-ClassType = type(Base)
-_names = dir()
-for clsname in _names:
-    new_cls = eval(clsname)
-    if not (
-        isinstance(new_cls, ClassType)
-        and issubclass(new_cls, Base)
-        and not new_cls.__name__.endswith("Base")
-    ):
-        continue
-
-    names = getattr(new_cls, "subclass_names", []) + getattr(new_cls, "use_names", [])
-    for n in names:
-        if n in _names:
-            continue
-        if n.endswith("_List"):
-            _names.append(n)
-            n = n[:-5]
-            # Generate 'list' class
-            exec(
-                f"""\
-class {n}_List(SequenceBase):
-    subclass_names = [\'{n}\']
-    use_names = []
-    @staticmethod
-    def match(string): return SequenceBase.match(r\',\', {n}, string)
-"""
-            )
-        elif n.endswith("_Name"):
-            _names.append(n)
-            n = n[:-5]
-            exec(
-                f"""\
-class {n}_Name(Base):
-    subclass_names = [\'Name\']
-"""
-            )
-        elif n.startswith("Scalar_"):
-            _names.append(n)
-            n = n[7:]
-            exec(
-                f"""\
-class Scalar_{n}(Base):
-    subclass_names = [\'{n}\']
-"""
-            )
-
-
 # Inspect the contents of this module and list all of the classes in __all__
 # for automatic documentation generation with AutoDoc.
+
 
 classes = inspect.getmembers(
     sys.modules[__name__],
