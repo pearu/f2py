@@ -75,9 +75,6 @@
 # module is first imported.
 # pylint: disable=exec-used
 # pylint: disable=unused-import
-import inspect
-import sys
-
 from fparser.common.splitline import string_replace_map, splitparen
 from fparser.two import pattern_tools as pattern
 from fparser.two.utils import (
@@ -1766,15 +1763,3 @@ class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
         if self.items[2]:
             result = f"{result} ::"
         return f"{result} {self.items[0]}"
-
-
-# Inspect the contents of this module and list all of the classes in __all__
-# for automatic documentation generation with AutoDoc.
-
-
-classes = inspect.getmembers(
-    sys.modules[__name__],
-    lambda member: inspect.isclass(member) and member.__module__ == __name__,
-)
-
-__all__ = [name[0] for name in classes]

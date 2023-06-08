@@ -37,6 +37,9 @@ Fortran 2008 module. Contains classes which extend the Fortran
 2003 standard to implement the Fortran 2008 standard.
 
 """
+import inspect
+import sys
+
 from fparser.two.Fortran2003 import Base, SequenceBase
 from fparser.two.Fortran2008.Fortran2008 import (
     Program_Unit,
@@ -93,15 +96,15 @@ from fparser.two.Fortran2008.Fortran2008 import (
 ClassType = type(Base)
 _names = dir()
 for clsname in _names:
-    new_cls = eval(clsname)
+    NEW_CLS = eval(clsname)
     if not (
-        isinstance(new_cls, ClassType)
-        and issubclass(new_cls, Base)
-        and not new_cls.__name__.endswith("Base")
+        isinstance(NEW_CLS, ClassType)
+        and issubclass(NEW_CLS, Base)
+        and not NEW_CLS.__name__.endswith("Base")
     ):
         continue
 
-    names = getattr(new_cls, "subclass_names", []) + getattr(new_cls, "use_names", [])
+    names = getattr(NEW_CLS, "subclass_names", []) + getattr(NEW_CLS, "use_names", [])
     for n in names:
         if n in _names:
             continue
@@ -136,3 +139,16 @@ class Scalar_{n}(Base):
     subclass_names = [\'{n}\']
 """
             )
+# Make sure NEW_CLS does not reference a class so is not accidentally
+# picked up in __all__ after all classnames have been processed.
+NEW_CLS = None
+
+
+# Determine the generated classes in this module and list these in
+# __all__ to support automatic documentation generation with AutoDoc.
+
+classes = inspect.getmembers(
+    sys.modules[__name__],
+    lambda member: inspect.isclass(member) and member.__module__ == __name__,
+)
+__all__ = [name[0] for name in classes if name[0]]
