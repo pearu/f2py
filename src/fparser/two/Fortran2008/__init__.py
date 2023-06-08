@@ -140,7 +140,7 @@ class Scalar_{n}(Base):
 """
             )
 # Make sure NEW_CLS does not reference a class so is not accidentally
-# picked up in __all__ after all classnames have been processed.
+# picked up in __all__.
 NEW_CLS = None
 
 
