@@ -18,6 +18,10 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+12/06/2023 PR #417 towards #411. Moves Fortran2008.py into a 'Fortran2008'
+           directory and moves the associated class generation into an '__init__.py'
+           in that directory.
+
 16/05/2023 PR #414 for #412. Bug fix for disappearing line when parsing
            include files.
 
