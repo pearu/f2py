@@ -10,12 +10,75 @@ Modifications by (in alphabetical order):
 * J. Henrichs, Australian Bureau of Meteorology
 * P. Hill, University of York, UK
 * I. Kavcic, UK Met Office
+* A. Morvan, Bull S. A. S., France
 * A. R. Porter, Science & Technology Facilities Council, UK
 * B. Reuter, ECMWF, UK
 * S. Siso, Science & Technology Facilities Council, UK
 * J. Tiira, University of Helsinki, Finland
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
+
+12/06/2023 PR #417 towards #411. Moves Fortran2008.py into a 'Fortran2008'
+           directory and moves the associated class generation into an '__init__.py'
+           in that directory.
+
+16/05/2023 PR #414 for #412. Bug fix for disappearing line when parsing
+           include files.
+
+15/05/2023 PR #415 for #165. Bug fix for code aborting when trying to match
+           'NAMELIST' in certain contexts.
+
+15/05/2023 PR #408 for #403. Add support for the F2008 DO CONCURRENT.
+
+26/04/2023 PR #406 for #405. Add support for F2008 optional "::" in PROCEDURE
+           statement.
+
+03/04/2023 PR #392 for #326. Add support for F2008 block and critical constructs.
+
+30/03/2023 PR #396 for #395. Fix trailing whitespace bug in CallBase.
+
+13/03/2023 PR #391 for #324. Add GH workfow to automate a pypi upload during
+           GH releases.
+
+01/02/2023 PR #389 for #388. Black 23.1 formatting changes.
+
+01/02/2023 PR #377 for #342. Add an AutoAPI and Doxygen sections in the
+           documentation.
+
+01/02/2023 PR #387 for #386. Support extension to permit in-line '!' 
+           comments in fixed-format Fortran.
+
+30/11/2022 PR #382 for #264. Ignore quotation marks in in-line comments.
+
+18/10/2022 PR #380 towards #379. Improve support for operators and symbol
+           renaming in the use construct.
+
+18/10/2022 PR #369 for #332. Add support for F2008 open intrinsic arguments.
+
+13/10/2022 PR #381 for #298. Fix F2008 allocate statement with arguments.
+
+20/09/2022 PR #376 for #349. Add support for use association to the
+           symbol table.
+
+15/09/2022 PR #378 for #375. Permit source files containing only comments
+           to be parsed.
+
+12/09/2022 PR #374 for #373. Removes @staticmethod decorator added to
+           Stmt_Function_Stmt.tostr() in error.
+
+05/09/2022 PR #372 fix for whitespace being lost when Format_Item_List is
+           contained within parentheses.
+
+02/09/2022 PR #356 - add support for the mold allocate parameter.
+
+11/08/2022 PR #368 for #367. Add support for visiting tuples in walk()
+           utility.
+
+11/08/2022 PR #364. Fix parsing of format-items with hollerith items and
+           omitted commas.
+
+08/08/2022 PR #363 for #363. Extends the dependency-analysis example utility
+           to cope with files in subdirectories.
 
 26/07/2022 PR #341 - replace staticmethod calls with decorator.
 

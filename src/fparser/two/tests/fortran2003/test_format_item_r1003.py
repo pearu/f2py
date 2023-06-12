@@ -42,6 +42,7 @@ Fortran95. However, Fortran compilers still support it.
 import pytest
 from fparser.two.Fortran2003 import Format_Item
 from fparser.two.utils import NoMatchError, InternalError
+from fparser.two import utils
 
 
 def test_data_edit_descriptor(f2003_create):
@@ -116,9 +117,10 @@ def test_format_list_descriptor(f2003_create):
         ast = Format_Item(my_input)
         assert my_input.replace(" ", "") in str(ast)
         assert repr(ast) == (
-            "Format_Item(None, Format_Item(None, Data_Edit"
-            "_Desc_C1002('F', Digit_String('2', None), Int"
-            "_Literal_Constant('2', None), None)))"
+            "Format_Item(None, Format_Item_List(',', ("
+            "Format_Item(None, Data_Edit_Desc_C1002('F', "
+            "Digit_String('2', None), Int_Literal_Constant("
+            "'2', None), None)),)))"
         )
     # R
     for my_input in ["2(F2.2)", " 2 (F2.2) ", " 2 ( F2.2 ) "]:
@@ -126,10 +128,22 @@ def test_format_list_descriptor(f2003_create):
         assert my_input.replace(" ", "") in str(ast)
         assert repr(ast) == (
             "Format_Item(Digit_String('2', None), Format_"
-            "Item(None, Data_Edit_Desc_C1002('F', Digit_"
-            "String('2', None), Int_Literal_Constant('2'"
-            ", None), None)))"
+            "Item_List(',', (Format_Item(None, Data_Edit_"
+            "Desc_C1002('F', Digit_String('2', None), Int_"
+            "Literal_Constant('2', None), None)),)))"
         )
+
+
+def test_format_list_descriptor_trailing_space(f2003_create, monkeypatch):
+    """Check that format item list descriptors preserve trailing space."""
+
+    monkeypatch.setattr(utils, "EXTENSIONS", ["hollerith"])
+    myinput = "(4Habc )"
+    ast = Format_Item(myinput)
+    assert str(ast) == myinput
+    assert repr(ast) == (
+        "Format_Item(None, Format_Item_List(',', (Hollerith_Item('abc '),)))"
+    )
 
 
 def test_hollerith_item(f2003_create, monkeypatch):
