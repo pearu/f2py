@@ -125,10 +125,6 @@ from fparser.two.Fortran2003 import (
 
 # Import of F2003 classes that are updated in this standard.
 from fparser.two.Fortran2003 import (
-    Action_Stmt as Action_Stmt_2003,
-    Action_Stmt_C201 as Action_Stmt_C201_2003,
-    Action_Stmt_C802 as Action_Stmt_C802_2003,
-    Action_Stmt_C824 as Action_Stmt_C824_2003,
     Alloc_Opt as Alloc_Opt_2003,
     Allocate_Stmt as Allocate_Stmt_2003,
     Attr_Spec as Attr_Spec_2003,
@@ -145,182 +141,6 @@ from fparser.two.Fortran2003 import (
     Program_Unit as Program_Unit_2003,
     Type_Declaration_Stmt as Type_Declaration_Stmt_2003,
 )
-
-
-class Program_Unit(Program_Unit_2003):  # R202
-    """
-    Fortran 2008 rule R202.
-
-    .. code-block:: fortran
-
-        program-unit is main-program
-                        or external-subprogram
-                        or module
-                        or submodule
-                        or block-data
-
-    """
-
-    # Fortran2008 adds the concept of submodules to a program-unit. We
-    # therefore extend the Fortran2003 specification
-    subclass_names = Program_Unit_2003.subclass_names[:]
-    subclass_names.append("Submodule")
-
-
-class Executable_Construct(Executable_Construct_2003):  # R213
-    # pylint: disable=invalid-name
-    """
-    Fortran 2008 rule R213.
-
-    .. code-block:: fortran
-
-        executable-construct is action-stmt
-                             or associate-construct
-                             or block-construct
-                             or case-construct
-                             or critical-construct
-                             or do-construct
-                             or forall-construct
-                             or if-construct
-                             or select-type-construct
-                             or where-construct
-
-    Associated constraints are:
-
-    "C201 (R208) An execution-part shall not contain an end-function-stmt,
-          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
-
-    """
-
-    subclass_names = [
-        "Action_Stmt",
-        "Associate_Construct",
-        "Block_Construct",
-        "Case_Construct",
-        "Critical_Construct",
-        "Do_Construct",
-        "Forall_Construct",
-        "If_Construct",
-        "Select_Type_Construct",
-        "Where_Construct",
-    ]
-
-
-class Executable_Construct_C201(Executable_Construct_C201_2003):
-    """
-    executable-construct-c201 is executable construct.
-    This applies C201.
-    """
-
-    subclass_names = Executable_Construct.subclass_names[:]
-    subclass_names[subclass_names.index("Action_Stmt")] = "Action_Stmt_C201"
-
-
-class Action_Stmt(Action_Stmt_2003):  # R214
-    """
-    Fortran 2008 rule R214.
-
-    .. code-block:: fortran
-
-        action-stmt is allocate-stmt
-                        or assignment-stmt
-                        or backspace-stmt
-                        or call-stmt
-                        or close-stmt
-                        or continue-stmt
-                        or cycle-stmt
-                        or deallocate-stmt
-                        or end-function-stmt
-                        or end-mp-subprogram-stmt
-                        or end-program-stmt
-                        or end-subroutine-stmt
-                        or endfile-stmt
-                        or error-stop-stmt
-                        or exit-stmt
-                        or flush-stmt
-                        or forall-stmt
-                        or goto-stmt
-                        or if-stmt
-                        or inquire-stmt
-                        or lock-stmt
-                        or nullify-stmt
-                        or open-stmt
-                        or pointer-assignment-stmt
-                        or print-stmt
-                        or read-stmt
-                        or return-stmt
-                        or rewind-stmt
-                        or stop-stmt
-                        or sync-all-stmt
-                        or sync-images-stmt
-                        or sync-memory-stmt
-                        or unlock-stmt
-                        or wait-stmt
-                        or where-stmt
-                        or write-stmt
-                        or arithmetic-if-stmt
-                        or computed-goto-stmt
-
-    The implementation of this rule adds the relevant subclass names
-    for new statements added in Fortran 2008.
-
-    Associated constraints are:
-
-    "C201 (R208) An execution-part shall not contain an end-function-stmt,
-          end-mp-subprogram-stmt, end-program-stmt, or end-subroutine-stmt."
-
-    NB: The following statements are not yet implemented:
-    end-mp-subprogram-stmt, endfile-stmt, lock-stmt, sync-all-stmt,
-    sync-images-stmt, sync-memory-stmt, unlock-stmt.
-
-    """
-
-    # Fortran 2008 adds a few additional action-stmt. We therefore
-    # extend the Fortran 2003 specification
-    subclass_names = Action_Stmt_2003.subclass_names[:]
-    subclass_names.append("Error_Stop_Stmt")
-
-
-class Action_Stmt_C201(Action_Stmt_C201_2003):
-    """
-    action-stmt-c201 is action-stmt
-    C201 is applied.
-    """
-
-    subclass_names = Action_Stmt.subclass_names[:]
-    subclass_names.remove("End_Function_Stmt")
-    subclass_names.remove("End_Subroutine_Stmt")
-
-
-class Action_Stmt_C816(Action_Stmt_C824_2003):
-    """
-    action-stmt-c816 is action-stmt
-    C816 is applied.
-    """
-
-    subclass_names = Action_Stmt.subclass_names[:]
-    subclass_names.remove("Arithmetic_If_Stmt")
-    subclass_names.remove("Continue_Stmt")
-    subclass_names.remove("Cycle_Stmt")
-    subclass_names.remove("End_Function_Stmt")
-    subclass_names.remove("End_Subroutine_Stmt")
-    subclass_names.remove("Error_Stop_Stmt")
-    subclass_names.remove("Exit_Stmt")
-    subclass_names.remove("Goto_Stmt")
-    subclass_names.remove("Return_Stmt")
-    subclass_names.remove("Stop_Stmt")
-
-
-class Action_Stmt_C828(Action_Stmt_C802_2003):
-    """
-    action-stmt-c828 is action-stmt
-    C828 is applied.
-    """
-
-    subclass_names = Action_Stmt.subclass_names[:]
-    subclass_names.remove("End_Function_Stmt")
-    subclass_names.remove("End_Subroutine_Stmt")
-    subclass_names.remove("If_Stmt")
 
 
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
@@ -920,7 +740,7 @@ class Loop_Control(Loop_Control_2003):  # R818
             loopctrl = f"{self.items[2]} {loopctrl}"
         return loopctrl
 
-
+from fparser.two.Fortran2008.action_stmt_c828 import Action_Stmt_C828
 class If_Stmt(If_Stmt_2003):  # R837
     """
     Fortran 2008 rule R837
