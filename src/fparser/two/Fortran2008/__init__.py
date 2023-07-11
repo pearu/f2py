@@ -48,19 +48,19 @@ from fparser.two.Fortran2008.action_stmt_r214 import Action_Stmt
 from fparser.two.Fortran2008.action_stmt_c201 import Action_Stmt_C201
 from fparser.two.Fortran2008.action_stmt_c816 import Action_Stmt_C816
 from fparser.two.Fortran2008.action_stmt_c828 import Action_Stmt_C828
+from fparser.two.Fortran2008.data_component_def_stmt_r436 import Data_Component_Def_Stmt
+from fparser.two.Fortran2008.component_attr_spec_r437 import Component_Attr_Spec
+from fparser.two.Fortran2008.type_declaration_stmt_r501 import Type_Declaration_Stmt
+from fparser.two.Fortran2008.codimension_attr_spec_r502d import Codimension_Attr_Spec
+from fparser.two.Fortran2008.coarray_bracket_spec_r502d0 import Coarray_Bracket_Spec
+from fparser.two.Fortran2008.attr_spec_r502 import Attr_Spec
+from fparser.two.Fortran2008.coarray_spec_r509 import Coarray_Spec
+from fparser.two.Fortran2008.deferred_coshape_spec_r510 import Deferred_Coshape_Spec
+from fparser.two.Fortran2008.explicit_coshape_spec_r511 import Explicit_Coshape_Spec
+from fparser.two.Fortran2008.coshape_spec_r511a import Coshape_Spec
+from fparser.two.Fortran2008.lower_cobound_r512 import Lower_Cobound
+from fparser.two.Fortran2008.upper_cobound_r513 import Upper_Cobound
 from fparser.two.Fortran2008.Fortran2008 import (
-    Data_Component_Def_Stmt,
-    Component_Attr_Spec,
-    Type_Declaration_Stmt,
-    Codimension_Attr_Spec,
-    Coarray_Bracket_Spec,
-    Attr_Spec,
-    Coarray_Spec,
-    Deferred_Coshape_Spec,
-    Explicit_Coshape_Spec,
-    Coshape_Spec,
-    Lower_Cobound,
-    Upper_Cobound,
     Do_Term_Action_Stmt,
     Alloc_Opt,
     Allocate_Stmt,
