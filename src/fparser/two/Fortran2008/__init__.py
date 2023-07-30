@@ -86,7 +86,7 @@ from fparser.two.Fortran2008.Fortran2008 import (
     Procedure_Stmt,
 )
 
-from fparser.two.Fortran2008.action_term_do_construct_r835 import (
+from fparser.two.Fortran2008.action_term_do_construct_r824 import (
     Action_Term_Do_Construct,
 )
 from fparser.two.Fortran2008.block_label_do_construct_r814_1 import (

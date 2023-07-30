@@ -33,7 +33,16 @@
 # -----------------------------------------------------------------------------
 """This module provides the Fortran2008-specific version of a partial
 implementation of the block-do-construct rule r814. fparser splits
-this rule into a label and nonlabel version.
+this rule into a label and nonlabel version for do-stmt (which is
+specified by rule r815). This class implements the label version of
+the rule: r814_1
+
+    block-do-construct is do-stmt
+                          do-block
+                          end-do
+
+The only difference to F2003 rule R826_1 is that we force this rule to
+use the F2008 version of label-do-stmt
 
 """
 

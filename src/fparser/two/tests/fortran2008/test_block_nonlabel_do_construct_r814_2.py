@@ -31,28 +31,32 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
-"""This module provides the Fortran2008-specific version of the
-label-do-stmt rule r816.
+
+"""Test Fortran 2008 rule R814_2
+
+    block-do-construct is do-stmt
+                          do-block
+                          end-do
+
+The implementation in fparser2 actually implements the case when
+do-stmt is a nonlabel-do-stmt (hence the name R814_2). R814_1 implements
+the case when do-stmt is a label-do-stmt.
+
+The only difference to F2003 rule R835 is that we force this rule to
+use the F2008 version of nonlabel-do-stmt
 
 """
+import pytest
 
-from fparser.two.Fortran2003 import (
-    Action_Term_Do_Construct as Action_Term_Do_Construct_2003,
-)
-from fparser.two.Fortran2008.label_do_stmt_r816 import Label_Do_Stmt
+from fparser.api import get_reader
+from fparser.two.Fortran2008 import Block_Nonlabel_Do_Construct
 
 
-class Action_Term_Do_Construct(Action_Term_Do_Construct_2003):
-    """Subclass the 2003 version so that this class will import the
-    Fortran2008 Label_Do_Stmt class.
-
-    """
-
-    @staticmethod
-    def label_do_stmt_cls():
-        """
-        :returns: Fortran2008 Label_Do_Stmt class.
-        :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
-
-        """
-        return Label_Do_Stmt
+@pytest.mark.usefixtures("f2008_create")
+def test_concurrent():
+    """Test that the Fortran2008 version supports do concurrent."""
+    code = "DO CONCURRENT (i = 1 : 20)\n  a(i) = 0.0\nEND DO"
+    reader = get_reader(code)
+    obj = Block_Nonlabel_Do_Construct(reader)
+    assert isinstance(obj, Block_Nonlabel_Do_Construct)
+    assert str(obj) == code

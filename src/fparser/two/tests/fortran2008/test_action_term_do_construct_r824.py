@@ -31,30 +31,28 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
-"""This module provides the Fortran2008-specific version of the
-nonlabel-do-stmt rule r817.
 
-    nonlabel-do-stmt is [ do-construct-name : ] DO [ loop-control ]
+"""Test Fortran 2008 rule R824
 
-The only difference to F2003 rule R829 is that we force this rule
-to use the F2008 version of loop-control
+    action-term-do-construct is label-do-stmt
+                                      do-body
+                                      do-term-action-stmt
+
+The only difference to F2003 rule R835 is that we force this rule to
+use the F2008 version of label-do-stmt
 
 """
-from fparser.two.Fortran2003 import Nonlabel_Do_Stmt as Nonlabel_Do_Stmt_2003
-from fparser.two.Fortran2008 import Loop_Control
+import pytest
+
+from fparser.api import get_reader
+from fparser.two.Fortran2008 import Action_Term_Do_Construct
 
 
-class Nonlabel_Do_Stmt(Nonlabel_Do_Stmt_2003):
-    """Subclass the 2003 version so that this class will import the
-    Fortran2008 Label_Do_Stmt class.
-
-    """
-
-    @staticmethod
-    def loop_control_cls():
-        """
-        :returns: Fortran2003 Loop_Control class.
-        :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
-
-        """
-        return Loop_Control
+@pytest.mark.usefixtures("f2008_create")
+def test_concurrent():
+    """Test that the Fortran2008 version supports do concurrent."""
+    code = "DO 10 CONCURRENT (i = 1 : 20)\n" "  a(i) = 0.0\n" "10 b(i) = 1.0"
+    reader = get_reader(code)
+    obj = Action_Term_Do_Construct(reader)
+    assert isinstance(obj, Action_Term_Do_Construct)
+    assert str(obj) == code

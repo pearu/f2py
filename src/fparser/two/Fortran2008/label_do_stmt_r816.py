@@ -34,6 +34,11 @@
 """This module provides the Fortran2008-specific version of the
 label-do-stmt rule r816.
 
+    label-do-stmt is [ do-construct-name : ] DO label [ loop-control ]
+
+The only difference to F2003 rule R828 is that we force this rule to
+use the F2008 version of loop-control
+
 """
 from fparser.two.Fortran2003 import Label_Do_Stmt as Label_Do_Stmt_2003
 from fparser.two.Fortran2008 import Loop_Control
@@ -41,7 +46,7 @@ from fparser.two.Fortran2008 import Loop_Control
 
 class Label_Do_Stmt(Label_Do_Stmt_2003):
     """Subclass the 2003 version so that this class will import the
-    Fortran2008 Loop_Control class
+    Fortran2008 Label_Do_Stmt class.
 
     """
 

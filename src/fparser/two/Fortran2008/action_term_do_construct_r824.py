@@ -32,29 +32,34 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 """This module provides the Fortran2008-specific version of the
-nonlabel-do-stmt rule r817.
+action-term-do-construct rule R824.
 
-    nonlabel-do-stmt is [ do-construct-name : ] DO [ loop-control ]
+    action-term-do-construct is label-do-stmt
+                                      do-body
+                                      do-term-action-stmt
 
-The only difference to F2003 rule R829 is that we force this rule
-to use the F2008 version of loop-control
+The only difference to F2003 rule R835 is that we force this rule to
+use the F2008 version of label-do-stmt
 
 """
-from fparser.two.Fortran2003 import Nonlabel_Do_Stmt as Nonlabel_Do_Stmt_2003
-from fparser.two.Fortran2008 import Loop_Control
+
+from fparser.two.Fortran2003 import (
+    Action_Term_Do_Construct as Action_Term_Do_Construct_2003,
+)
+from fparser.two.Fortran2008.label_do_stmt_r816 import Label_Do_Stmt
 
 
-class Nonlabel_Do_Stmt(Nonlabel_Do_Stmt_2003):
+class Action_Term_Do_Construct(Action_Term_Do_Construct_2003):
     """Subclass the 2003 version so that this class will import the
     Fortran2008 Label_Do_Stmt class.
 
     """
 
     @staticmethod
-    def loop_control_cls():
+    def label_do_stmt_cls():
         """
-        :returns: Fortran2003 Loop_Control class.
-        :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
+        :returns: Fortran2008 Label_Do_Stmt class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
 
         """
-        return Loop_Control
+        return Label_Do_Stmt
