@@ -38,6 +38,7 @@
 
 """
 import pytest
+from fparser.common import splitline
 from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2008 import Submodule_Stmt
 
@@ -95,8 +96,6 @@ def test_simple_error7(monkeypatch):
     right hand bracket.
 
     """
-    from fparser.common import splitline
-
     monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "id)", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule id) name")
@@ -108,8 +107,6 @@ def test_simple_error8(monkeypatch):
     left hand bracket.
 
     """
-    from fparser.common import splitline
-
     monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "(id", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id name")
@@ -121,8 +118,6 @@ def test_splitparen_error(monkeypatch):
     an error is returned. Monkeypatch to force this error.
 
     """
-    from fparser.common import splitline
-
     monkeypatch.setattr(splitline, "splitparen", lambda x: ["XXX", "", ""])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) name")
