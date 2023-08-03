@@ -90,21 +90,27 @@ def test_simple_error6():
     assert "Submodule_Stmt: 'submodule (id) (name)'" in str(excinfo.value)
 
 
-def test_simple_error7():
+def test_simple_error7(monkeypatch):
     """Test the parsing of a submodule statement when there is a single
     right hand bracket.
 
     """
+    from fparser.common import splitline
+
+    monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "id)", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule id) name")
     assert "Submodule_Stmt: 'submodule id) name'" in str(excinfo.value)
 
 
-def test_simple_error8():
+def test_simple_error8(monkeypatch):
     """Test the parsing of a submodule statement when there is a single
     left hand bracket.
 
     """
+    from fparser.common import splitline
+
+    monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "(id", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id name")
     assert "Submodule_Stmt: 'submodule (id name'" in str(excinfo.value)
