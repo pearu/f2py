@@ -35,7 +35,7 @@
 """
     Module containing Fortran2008 Coarray_Spec rule R509
 """
-from fparser.two.utils import Base 
+from fparser.two.utils import Base
 
 
 class Coarray_Spec(Base):  # R509

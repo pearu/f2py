@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,46 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 End_Submodule_Stmt rule R1119
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.utils import EndStmtBase
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+class End_Submodule_Stmt(EndStmtBase):  # R1119
     """
-    Fortran 2008 rule 501.
-
-    .. code-block:: fortran
-
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
-
-    Associated constraints are:
-
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
+    Fortran 2008 rule R1119
+    end-submodule-stmt is END [ SUBMODULE [ submodule-name ] ]
 
     """
+
+    subclass_names = []
+    use_names = ["Submodule_Name"]
 
     @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
+    def match(fstring):
+        """Check whether the input matches the rule
 
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
+        param string fstring : contains the Fortran that we are trying
+        to match
+
+        :return: instances of the Classes that have matched if there
+        is a match or `None` if there is no match
 
         """
         # Avoid circular dependencies by importing here.
         # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
+        from fparser.two.Fortran2008 import Submodule_Name
 
-        return Attr_Spec_List
+        return EndStmtBase.match("SUBMODULE", Submodule_Name, fstring)
+
+    def get_name(self):  # C1114
+        """Fortran 2008 constraint C1114 return the submodule name as
+        specified by the end submodule statement or `None` if one is
+        not specified. This is used by the base class to check whether
+        this name matches the submodule name.
+
+        :return: the name of the submodule stored in a Name class
+        :return type: :py:class:`fparser.two.Fortran2003.Name` or `None`
+
+        """
+        return self.items[1]

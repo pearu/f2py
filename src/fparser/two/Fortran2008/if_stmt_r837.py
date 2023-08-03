@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,28 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 If_Stmt rule R837
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.Fortran2003 import If_Stmt as If_Stmt_2003
+from fparser.two.Fortran2008.action_stmt_c828 import Action_Stmt_C828
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+class If_Stmt(If_Stmt_2003):  # R837
     """
-    Fortran 2008 rule 501.
+    Fortran 2008 rule R837
+    if-stmt is IF ( scalar-logical-expr ) action-stmt
 
-    .. code-block:: fortran
-
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
+    The implementation of this rule only replaces the :py:attr:`use_names` and
+    :py:attr:`action_stmt_class` attributes to use the Fortran 2008 variant
+    :py:class:`Action_Stmt_C828` instead of
+    :py:class:`fparser.two.Fortran2003.Action_Stmt_C802`.
 
     Associated constraints are:
 
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
+    C828 (R837) The action-stmt in the if-stmt shall not be an end-function-stmt,
+          end-mp-subprogram-stmt, end-program-stmt, end-subroutine-stmt, or if-stmt.
 
     """
 
-    @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
-
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
-
-        """
-        # Avoid circular dependencies by importing here.
-        # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
-
-        return Attr_Spec_List
+    use_names = ["Scalar_Logical_Expr", "Action_Stmt_C828"]
+    action_stmt_cls = Action_Stmt_C828

@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,38 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 End_Block_Stmt rule R809
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.utils import EndStmtBase
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+class End_Block_Stmt(EndStmtBase):  # R809
     """
-    Fortran 2008 rule 501.
+    Fortran 2008 Rule 809.
 
-    .. code-block:: fortran
-
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
-
-    Associated constraints are:
-
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
+    end-block-stmt is END BLOCK [ block-construct-name ]
 
     """
+
+    subclass_names = []
+    use_names = ["Block_Construct_Name"]
 
     @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
+    def match(string):
+        """
+        :param str string: Fortran code to check for a match
 
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
+        :return: 2-tuple containing "BLOCK" and, optionally, an associated \
+            Name or None if no match.
+        :rtype: Optional[Tuple[
+            str,
+            Optional[:py:class:`fparser.two.Fortran2003.Block_Construct_Name`]]]
 
         """
         # Avoid circular dependencies by importing here.
         # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
+        from fparser.two.Fortran2008 import Block_Construct_Name
 
-        return Attr_Spec_List
+        return EndStmtBase.match(
+            "BLOCK", Block_Construct_Name, string, require_stmt_type=True
+        )

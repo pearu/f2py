@@ -35,10 +35,11 @@
 """
     Module containing Fortran2008 Data_Component_Def_Stmt rule R436
 """
-from fparser.two.Fortran2003 import Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003
+from fparser.two.Fortran2003 import (
+    Data_Component_Def_Stmt as Data_Component_Def_Stmt_2003,
+)
 from fparser.two.Fortran2003 import Declaration_Type_Spec, Component_Decl_List
 from fparser.two.utils import Type_Declaration_StmtBase
-
 
 
 class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
@@ -112,8 +113,7 @@ class Data_Component_Def_Stmt(Data_Component_Def_Stmt_2003):  # R436
         # Avoid circular dependencies for generated clas by importing here.
         # pylint: disable=import-outside-toplevel
         from fparser.two.Fortran2008 import Component_Attr_Spec_List
+
         return Type_Declaration_StmtBase.match(
             Declaration_Type_Spec, Component_Attr_Spec_List, Component_Decl_List, string
         )
-
-

@@ -60,31 +60,31 @@ from fparser.two.Fortran2008.explicit_coshape_spec_r511 import Explicit_Coshape_
 from fparser.two.Fortran2008.coshape_spec_r511a import Coshape_Spec
 from fparser.two.Fortran2008.lower_cobound_r512 import Lower_Cobound
 from fparser.two.Fortran2008.upper_cobound_r513 import Upper_Cobound
-from fparser.two.Fortran2008.Fortran2008 import (
-    Do_Term_Action_Stmt,
-    Alloc_Opt,
-    Allocate_Stmt,
-    Loop_Control,
-    If_Stmt,
-    Error_Stop_Stmt,
-    Specification_Part_C1112,
-    Implicit_Part_C1112,
-    Implicit_Part_Stmt_C1112,
+from fparser.two.Fortran2008.do_term_action_stmt_r826 import Do_Term_Action_Stmt
+from fparser.two.Fortran2008.alloc_opt_r627 import Alloc_Opt
+from fparser.two.Fortran2008.allocate_stmt_r626 import Allocate_Stmt
+from fparser.two.Fortran2008.loop_control_r818 import Loop_Control
+from fparser.two.Fortran2008.if_stmt_r837 import If_Stmt
+from fparser.two.Fortran2008.error_stop_stmt_r856 import Error_Stop_Stmt
+from fparser.two.Fortran2008.specification_part_c1112 import Specification_Part_C1112
+from fparser.two.Fortran2008.implicit_part_c1112 import Implicit_Part_C1112
+from fparser.two.Fortran2008.implicit_part_stmt_c1112 import Implicit_Part_Stmt_C1112
+from fparser.two.Fortran2008.declaration_construct_c1112 import (
     Declaration_Construct_C1112,
-    Submodule,
-    Submodule_Stmt,
-    End_Submodule_Stmt,
-    Parent_Identifier,
-    Open_Stmt,
-    Connect_Spec,
-    Block_Construct,
-    Block_Stmt,
-    End_Block_Stmt,
-    Critical_Construct,
-    Critical_Stmt,
-    End_Critical_Stmt,
-    Procedure_Stmt,
 )
+from fparser.two.Fortran2008.submodule_r1116 import Submodule
+from fparser.two.Fortran2008.submodule_stmt_r1117 import Submodule_Stmt
+from fparser.two.Fortran2008.end_submodule_stmt_r1119 import End_Submodule_Stmt
+from fparser.two.Fortran2008.parent_identifier_r1118 import Parent_Identifier
+from fparser.two.Fortran2008.open_stmt_r904 import Open_Stmt
+from fparser.two.Fortran2008.connect_spec_r905 import Connect_Spec
+from fparser.two.Fortran2008.block_construct_r807 import Block_Construct
+from fparser.two.Fortran2008.block_stmt_r808 import Block_Stmt
+from fparser.two.Fortran2008.end_block_stmt_r809 import End_Block_Stmt
+from fparser.two.Fortran2008.critical_construct_r810 import Critical_Construct
+from fparser.two.Fortran2008.critical_stmt_r811 import Critical_Stmt
+from fparser.two.Fortran2008.end_critical_stmt_r812 import End_Critical_Stmt
+from fparser.two.Fortran2008.procedure_stmt_r1206 import Procedure_Stmt
 
 
 # pylint: disable=eval-used

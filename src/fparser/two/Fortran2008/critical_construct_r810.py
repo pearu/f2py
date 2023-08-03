@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,47 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 Critical_Construct rule R810
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.Fortran2003 import Execution_Part_Construct
+from fparser.two.Fortran2008.critical_stmt_r811 import Critical_Stmt
+from fparser.two.Fortran2008.end_critical_stmt_r812 import End_Critical_Stmt
+from fparser.two.utils import BlockBase
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+class Critical_Construct(BlockBase):
     """
-    Fortran 2008 rule 501.
+    Fortran 2008 Rule 810.
 
-    .. code-block:: fortran
+    critical-construct is critical-stmt
+                            block
+                            end-critical-stmt
 
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
-
-    Associated constraints are:
-
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
-
+    TODO: Should disallow RETURN (C809) and CYCLE or EXIT to outside block (C811)
     """
+
+    subclass_names = []
+    use_names = ["Critical_Stmt", "Execution_Part_Construct", "End_Critical_Stmt"]
 
     @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
+    def match(reader):
+        """
+        Attempt to match the supplied content with this Rule.
 
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
+        :param reader: the fortran file reader containing the line(s)
+                      of code that we are trying to match
+        :type reader: :py:class:`fparser.common.readfortran.FortranFileReader` \
+            | :py:class:`fparser.common.readfortran.FortranStringReader`
+
+        :returns: instance of class that has matched or `None` if no match.
+        :rtype: :py:class:`fparser.two.utils.BlockBase` | NoneType
 
         """
-        # Avoid circular dependencies by importing here.
-        # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
-
-        return Attr_Spec_List
+        return BlockBase.match(
+            Critical_Stmt,
+            [Execution_Part_Construct],
+            End_Critical_Stmt,
+            reader,
+            match_names=True,  # C810
+            strict_match_names=True,  # C810
+        )

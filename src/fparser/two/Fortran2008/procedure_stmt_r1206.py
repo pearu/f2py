@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,58 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 Procedure_Stmt rule R1206
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.Fortran2003 import Procedure_Stmt as Procedure_Stmt_2003
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
+class Procedure_Stmt(Procedure_Stmt_2003):  # R1206
     """
-    Fortran 2008 rule 501.
+    Fortran 2008 Rule 1206.
 
-    .. code-block:: fortran
-
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
-
-    Associated constraints are:
-
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
+    procedure-stmt is [ MODULE ] PROCEDURE [ :: ] procedure-name-list
 
     """
 
     @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
+    def match(string):
+        """:param str string: Fortran code to check for a match
 
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
+        :returns: 3-tuple containing a boolean indicating whether the \
+            optional MODULE keyword is included, a boolean indicating \
+            whether the optional '::' is included and a Procedure_Name_List \
+            instance, or None if there is no match.
+        :rtype: Optional[Tuple[ \
+            bool, bool, \
+            :py:class:`fparser.two.Fortran2003.Procedure_Name_List`]]]
 
         """
         # Avoid circular dependencies by importing here.
         # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
+        from fparser.two.Fortran2008 import Procedure_Name_List
 
-        return Attr_Spec_List
+        line = string.lstrip()
+        optional_module = None
+        if line[:6].upper() == "MODULE":
+            line = line[6:].lstrip()
+            optional_module = "MODULE"
+        if line[:9].upper() != "PROCEDURE":
+            return None
+        line = line[9:].lstrip()
+        optional_colons = None
+        if line[:2] == "::":
+            line = line[2:].lstrip()
+            optional_colons = "::"
+        return (Procedure_Name_List(line), optional_module, optional_colons)
+
+    def tostr(self):
+        """
+        :returns: the string representation of this node.
+        :rtype: str
+        """
+        result = "PROCEDURE"
+        if self.items[1]:
+            result = f"MODULE {result}"
+        if self.items[2]:
+            result = f"{result} ::"
+        return f"{result} {self.items[0]}"

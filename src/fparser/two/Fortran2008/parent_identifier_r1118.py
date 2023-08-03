@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2018-2023, Science and Technology Facilities Council.
+# Copyright (c) 2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,55 @@
 # -----------------------------------------------------------------------------
 
 """
-    Module containing Fortran2008 Type_Declaration_Stmt rule R501
+    Module containing Fortran2008 Parent_Identifier rule R1118
 """
-from fparser.two.Fortran2003 import Type_Declaration_Stmt as Type_Declaration_Stmt_2003
+from fparser.two.utils import Base
 
 
-class Type_Declaration_Stmt(Type_Declaration_Stmt_2003):  # R501
-    """
-    Fortran 2008 rule 501.
+class Parent_Identifier(Base):  # R1118 (C1113)
+    """Fortran 2008 rule R1118
+    parent-identifier is ancestor-module-name [ : parent-submodule-name ]
 
-    .. code-block:: fortran
-
-        type-declaration-stmt is declaration-type-spec [ [ , attr-spec ] ... :: ]
-                                 entity-decl-list
-
-    The implementation of this rule does not add anything to the Fortran 2003
-    variant but overwrites :py:meth:`get_attr_spec_list_cls` to use
-    the Fortran 2008 variant of :py:class:`Attr_Spec_List`.
-
-    Associated constraints are:
-
-    "C501 (R501)  The same attr-spec shall not appear more than once in a given
-          type-declaration-stmt."
-    "C502 (R501)  If a language-binding-spec with a NAME= specifier appears,
-          the entity-decl-list shall consist of a single entity-decl."
-    "C503 (R501)  If a language-binding-spec is specified, the entity-decl-list
-          shall not contain any procedure names."
-    "C505 (R501)  If initialization appears, a double-colon separator shall
-          appear before the entity-decl-list."
-
-    C501-C503, C505 are currently not checked - issue #259.
+    C1113 The ancestor-module-name shall be the name of a nonintrinsic
+    module; the parent-submodule name shall be the name of a
+    descendant of that module.
+    This constraint can not be tested by fparser in general as the
+    module or submodule may be in a different file. We therefore do
+    not check this constraint in fparser.
 
     """
+
+    use_names = ["Ancestor_Module_Name", "Parent_SubModule_Name"]
 
     @staticmethod
-    def get_attr_spec_list_cls():
-        """Return the type used to match the attr-spec-list
+    def match(fstring):
+        """Check whether the input matches the rule
 
-        This overwrites the Fortran 2003 type with the Fortran 2008 variant.
+        param string fstring : contains the Fortran that we are trying
+        to match
+
+        :return: instances of the Classes that have matched if there
+        is a match or `None` if there is no match
 
         """
         # Avoid circular dependencies by importing here.
         # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import Attr_Spec_List
+        from fparser.two.Fortran2008 import Ancestor_Module_Name, Parent_SubModule_Name
 
-        return Attr_Spec_List
+        split_string = fstring.split(":")
+        len_split_string = len(split_string)
+        lhs_name = split_string[0].lstrip().rstrip()
+        if len_split_string == 1:
+            return Ancestor_Module_Name(lhs_name), None
+        if len_split_string == 2:
+            rhs_name = split_string[1].lstrip().rstrip()
+            return Ancestor_Module_Name(lhs_name), Parent_SubModule_Name(rhs_name)
+        # we expect at most one ':' in our input so the match fails
+        return None
+
+    def tostr(self):
+        """return the fortran representation of this object"""
+        # return self.string  # this returns the original code
+        if self.items[1]:
+            return f"{self.items[0]}:{self.items[1]}"
+        return str(self.items[0])
