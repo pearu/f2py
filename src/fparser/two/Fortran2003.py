@@ -7811,9 +7811,6 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
 
         """
-        # Import here to avoid circular imports
-        from fparser.two.Fortran2003 import Label_Do_Stmt
-
         return Label_Do_Stmt
 
     def tofortran(self, tab="", isfix=None):
@@ -7873,9 +7870,6 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: :py:class:`fparser.two.Fortran2003.Nonlabel_Do_Stmt`
 
         """
-        # Import here to avoid circular imports
-        from fparser.two.Fortran2003 import Nonlabel_Do_Stmt
-
         return Nonlabel_Do_Stmt
 
 
@@ -7932,9 +7926,6 @@ class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
         :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
 
         """
-        # Import here to avoid circular imports
-        from fparser.two.Fortran2003 import Loop_Control
-
         return Loop_Control
 
     def tostr(self):
@@ -7986,9 +7977,9 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
     @classmethod
     def match(cls, string):
         """
-        :param str string: Fortran code to check for a match
-        :return: code line matching the nonlabeled "DO" statement
-        :rtype: string
+        :param str string: Fortran code to check for a match.
+        :return: code line matching the nonlabeled "DO" statement.
+        :rtype: str
         """
         return WORDClsBase.match("DO", cls.loop_control_cls(), string)
 
@@ -7999,15 +7990,12 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
 
         """
-        # Import here to avoid circular imports
-        from fparser.two.Fortran2003 import Loop_Control
-
         return Loop_Control
 
     def get_start_name(self):
         """
         :return: optional labeled "DO" statement name
-        :rtype: string
+        :rtype: str
         """
         return self.item.name
 
@@ -8224,9 +8212,6 @@ class Action_Term_Do_Construct(BlockBase):  # R836
         :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
 
         """
-        # Import here to avoid circular imports
-        from fparser.two.Fortran2003 import Label_Do_Stmt
-
         return Label_Do_Stmt
 
     def tofortran(self, tab="", isfix=None):

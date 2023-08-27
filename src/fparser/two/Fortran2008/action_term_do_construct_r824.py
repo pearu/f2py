@@ -59,7 +59,7 @@ class Action_Term_Do_Construct(Action_Term_Do_Construct_2003):
     def label_do_stmt_cls():
         """
         :returns: Fortran2008 Label_Do_Stmt class.
-        :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
+        :rtype: :py:class:`fparser.two.Fortran2008.Label_Do_Stmt`
 
         """
         return Label_Do_Stmt

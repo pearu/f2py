@@ -53,8 +53,8 @@ class Nonlabel_Do_Stmt(Nonlabel_Do_Stmt_2003):
     @staticmethod
     def loop_control_cls():
         """
-        :returns: Fortran2003 Loop_Control class.
-        :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
+        :returns: Fortran2008 Loop_Control class.
+        :rtype: :py:class:`fparser.two.Fortran2008.Loop_Control`
 
         """
         return Loop_Control
