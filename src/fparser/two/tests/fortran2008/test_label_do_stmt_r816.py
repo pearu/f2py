@@ -54,3 +54,11 @@ def test_concurrent():
     obj = Label_Do_Stmt(reader)
     assert isinstance(obj, Label_Do_Stmt)
     assert str(obj) == code
+
+
+# The 2008 version of the Label_Do_Stmt class is only added to make
+# sure that that a labelled do concurrent is parsed in f2008. There
+# are already functional tests (called test_functional) in
+# test_block_label_do_construct_r814_1.py and
+# test_action_term_do_construct_r824.py which make sure this class
+# does its job.

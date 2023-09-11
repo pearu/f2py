@@ -51,8 +51,28 @@ from fparser.two.Fortran2008 import Action_Term_Do_Construct
 @pytest.mark.usefixtures("f2008_create")
 def test_concurrent():
     """Test that the Fortran2008 version supports do concurrent."""
-    code = "DO 10 CONCURRENT (i = 1 : 20)\n" "  a(i) = 0.0\n" "10 b(i) = 1.0"
+    code = "DO 10 CONCURRENT (i = 1 : 20)\n  a(i) = 0.0\n10 b(i) = 1.0"
     reader = get_reader(code)
     obj = Action_Term_Do_Construct(reader)
     assert isinstance(obj, Action_Term_Do_Construct)
     assert str(obj) == code
+
+
+def test_functional(f2008_parser):
+    """The 2008 version of the Action_Term_Do_Construct class is only
+    added to make sure that that a labelled do concurrent (where the
+    label is not attached to a continue) is parsed in f2008. Therefore
+    add a functional test to make sure this class does its job.
+
+    """
+    code = (
+        "PROGRAM test\n"
+        "  INTEGER :: i\n"
+        "  REAL :: a(20), b(20)\n"
+        "  DO 10 CONCURRENT (i = 1 : 20)\n"
+        "    a(i) = 0.0\n"
+        "10 b(i) = 1.0\n"
+        "END PROGRAM"
+    )
+    tree = f2008_parser(get_reader(code))
+    assert str(tree) == code

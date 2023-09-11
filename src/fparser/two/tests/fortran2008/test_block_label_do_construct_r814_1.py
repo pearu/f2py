@@ -60,3 +60,23 @@ def test_concurrent():
     obj = Block_Label_Do_Construct(reader)
     assert isinstance(obj, Block_Label_Do_Construct)
     assert str(obj) == code
+
+
+def test_functional(f2008_parser):
+    """The 2008 version of the Block_Label_Do_Construct class is only
+    added to make sure that that a labelled do concurrent (where the
+    label is attached to a continue) is parsed in f2008. Therefore add
+    a functional test to make sure this class does its job.
+
+    """
+    code = (
+        "PROGRAM test\n"
+        "  INTEGER :: i\n"
+        "  REAL :: a(20)\n"
+        "  DO 10 CONCURRENT (i = 1 : 20)\n"
+        "    a(i) = 0.0\n"
+        "10 CONTINUE\n"
+        "END PROGRAM"
+    )
+    tree = f2008_parser(get_reader(code))
+    assert str(tree) == code

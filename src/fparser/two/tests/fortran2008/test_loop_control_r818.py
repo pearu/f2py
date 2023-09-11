@@ -43,7 +43,6 @@
 
 """
 import pytest
-from fparser.api import get_reader
 from fparser.two.Fortran2008 import Loop_Control
 from fparser.two.utils import NoMatchError
 
@@ -92,18 +91,3 @@ def test_invalid(string):
     """Test that there is no match for various invalid input strings."""
     with pytest.raises(NoMatchError):
         _ = Loop_Control(string)
-
-
-def test_functional(f2008_parser):
-    """Test that the CONCURRENT keyword can be parsed in the context of a
-    full program i.e. a functional test."""
-    code = (
-        "SUBROUTINE dummy\n"
-        "  REAL :: a(10)\n"
-        "  DO , CONCURRENT (i = 1 : 10)\n"
-        "    a(i) = 0.0\n"
-        "  END DO\n"
-        "END SUBROUTINE"
-    )
-    tree = f2008_parser(get_reader(code))
-    assert str(tree) == code

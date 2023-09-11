@@ -54,3 +54,10 @@ def test_concurrent():
     obj = Nonlabel_Do_Stmt(reader)
     assert isinstance(obj, Nonlabel_Do_Stmt)
     assert str(obj) == code
+
+
+# The 2008 version of the Nonlabel_Do_Stmt class is only added to make
+# sure that that a labelled do concurrent is parsed in f2008. There is
+# already a functional tests (called test_functional) in
+# test_block_nonlabel_do_construct_r814_2.py which make sure this
+# class does its job.
