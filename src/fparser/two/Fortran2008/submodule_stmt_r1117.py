@@ -105,7 +105,6 @@ class Submodule_Stmt(Base, ScopingRegionMixin):  # R1117
 
     def tostr(self):
         """return the fortran representation of this object"""
-        # return self.string  # this returns the original code
         return f"SUBMODULE ({self.items[0]}) {self.items[1]}"
 
     def get_name(self):  # C1114
@@ -115,6 +114,6 @@ class Submodule_Stmt(Base, ScopingRegionMixin):  # R1117
         submodule statement if one is provided.
 
         :return: the name of the submodule stored in a Name class
-        :return type: :py:class:`fparser.two.Fortran2003.Name`
+        :rtype: :py:class:`fparser.two.Fortran2003.Name`
         """
         return self.items[1]
