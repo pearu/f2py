@@ -7787,8 +7787,8 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
     subclass_names = []
     use_names = ["Label_Do_Stmt", "Execution_Part_Construct", "End_Do"]
 
-    @staticmethod
-    def match(reader):
+    @classmethod
+    def match(cls, reader):
         """
         :param reader: instance of `FortranReaderBase` class
         :type reader: :py:class:`FortranReaderBase`
@@ -7796,13 +7796,22 @@ class Block_Label_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: string
         """
         return BlockBase.match(
-            Label_Do_Stmt,
+            cls.label_do_stmt_cls(),
             [Execution_Part_Construct],
             End_Do,
             reader,
             match_labels=True,
             enable_do_label_construct_hook=True,
         )
+
+    @staticmethod
+    def label_do_stmt_cls():
+        """
+        :returns: Fortran2003 Label_Do_Stmt class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
+
+        """
+        return Label_Do_Stmt
 
     def tofortran(self, tab="", isfix=None):
         """
@@ -7837,8 +7846,8 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
     subclass_names = []
     use_names = ["Nonlabel_Do_Stmt", "Execution_Part_Construct", "End_Do_Stmt"]
 
-    @staticmethod
-    def match(reader):
+    @classmethod
+    def match(cls, reader):
         """
         :param reader: instance of `FortranReaderBase` class
         :type reader: :py:class:`FortranReaderBase`
@@ -7846,13 +7855,22 @@ class Block_Nonlabel_Do_Construct(BlockBase):  # pylint: disable=invalid-name
         :rtype: string
         """
         return BlockBase.match(
-            Nonlabel_Do_Stmt,
+            cls.nonlabel_do_stmt_cls(),
             [Execution_Part_Construct],
             End_Do_Stmt,
             reader,
             match_names=True,  # C821
             strict_match_names=True,  # C821
         )
+
+    @staticmethod
+    def nonlabel_do_stmt_cls():
+        """
+        :returns: Fortran2003 Nonlabel_Do_Stmt class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Nonlabel_Do_Stmt`
+
+        """
+        return Nonlabel_Do_Stmt
 
 
 class Do_Stmt(Base):  # pylint: disable=invalid-name
@@ -7878,8 +7896,8 @@ class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
     subclass_names = []
     use_names = ["Do_Construct_Name", "Label", "Loop_Control"]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def match(cls, string):
         """
         :param string: (source of) Fortran string to parse
         :type string: str or :py:class:`FortranReaderBase`
@@ -7898,8 +7916,17 @@ class Label_Do_Stmt(StmtBase):  # pylint: disable=invalid-name
         label = mpat.group()
         line = line[mpat.end() :].lstrip()
         if line:
-            return None, Label(label), Loop_Control(line)
+            return None, Label(label), cls.loop_control_cls()(line)
         return None, Label(label), None
+
+    @staticmethod
+    def loop_control_cls():
+        """
+        :returns: Fortran2003 Loop_Control class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
+
+        """
+        return Loop_Control
 
     def tostr(self):
         """
@@ -7947,19 +7974,28 @@ class Nonlabel_Do_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
     subclass_names = []
     use_names = ["Do_Construct_Name", "Loop_Control"]
 
+    @classmethod
+    def match(cls, string):
+        """
+        :param str string: Fortran code to check for a match.
+        :return: code line matching the nonlabeled "DO" statement.
+        :rtype: str
+        """
+        return WORDClsBase.match("DO", cls.loop_control_cls(), string)
+
     @staticmethod
-    def match(string):
+    def loop_control_cls():
         """
-        :param str string: Fortran code to check for a match
-        :return: code line matching the nonlabeled "DO" statement
-        :rtype: string
+        :returns: Fortran2003 Loop_Control class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Loop_Control`
+
         """
-        return WORDClsBase.match("DO", Loop_Control, string)
+        return Loop_Control
 
     def get_start_name(self):
         """
         :return: optional labeled "DO" statement name
-        :rtype: string
+        :rtype: str
         """
         return self.item.name
 
@@ -8158,16 +8194,25 @@ class Action_Term_Do_Construct(BlockBase):  # R836
     subclass_names = []
     use_names = ["Label_Do_Stmt", "Execution_Part_Construct", "Do_Term_Action_Stmt"]
 
-    @staticmethod
-    def match(reader):
+    @classmethod
+    def match(cls, reader):
         return BlockBase.match(
-            Label_Do_Stmt,
+            cls.label_do_stmt_cls(),
             [Execution_Part_Construct],
             Do_Term_Action_Stmt,
             reader,
             match_labels=True,
             enable_do_label_construct_hook=True,
         )
+
+    @staticmethod
+    def label_do_stmt_cls():
+        """
+        :returns: Fortran2003 Label_Do_Stmt class.
+        :rtype: :py:class:`fparser.two.Fortran2003.Label_Do_Stmt`
+
+        """
+        return Label_Do_Stmt
 
     def tofortran(self, tab="", isfix=None):
         """
@@ -8187,7 +8232,7 @@ class Action_Term_Do_Construct(BlockBase):  # R836
         line.append(start.tofortran(tab=tab, isfix=isfix))
         for item in self.content[1:-1]:
             line.append(item.tofortran(tab=tab + extra_tab, isfix=isfix))
-            if isinstance(item, Label_Do_Stmt):
+            if isinstance(item, self.label_do_stmt_cls()):
                 extra_tab += "  "
         if len(self.content) > 1:
             line.append(end.tofortran(tab=tab, isfix=isfix))

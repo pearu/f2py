@@ -86,6 +86,18 @@ from fparser.two.Fortran2008.Fortran2008 import (
     Procedure_Stmt,
 )
 
+from fparser.two.Fortran2008.action_term_do_construct_r824 import (
+    Action_Term_Do_Construct,
+)
+from fparser.two.Fortran2008.block_label_do_construct_r814_1 import (
+    Block_Label_Do_Construct,
+)
+from fparser.two.Fortran2008.block_nonlabel_do_construct_r814_2 import (
+    Block_Nonlabel_Do_Construct,
+)
+from fparser.two.Fortran2008.label_do_stmt_r816 import Label_Do_Stmt
+from fparser.two.Fortran2008.nonlabel_do_stmt_r817 import Nonlabel_Do_Stmt
+
 
 # pylint: disable=eval-used
 # pylint: disable=exec-used
