@@ -12333,16 +12333,15 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
         :param str string: the string to match with the pattern rule.
 
-        :return: a tuple of size 2 containing the name of the \
-        intrinsic and its arguments if there is a match, or None if \
-        there is not.
-        :rtype: (:py:class:`fparser.two.Fortran2003.Intrinsic_Name`, \
-        :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`) or \
-        NoneType
+        :return: a tuple of size 2 containing the name of the intrinsic
+            and its arguments if there is a match, or None if there is not.
+        :rtype: Tuple[:py:class:`fparser.two.Fortran2003.Intrinsic_Name`,
+            :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`] | NoneType
 
-        :raises InternalSyntaxError: If the number of arguments \
-        provided does not match the number of arguments expected by \
-        the intrinsic.
+        :raises InternalSyntaxError: If the number of arguments provided does
+            not match the number of arguments expected by the intrinsic and
+            there are no wildcard imports that could be bringing a routine
+            (that overrides it) into scope.
 
         """
         result = CallBase.match(Intrinsic_Name, Actual_Arg_Spec_List, string)
@@ -12385,7 +12384,12 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
             if max_nargs is None:
                 if nargs < min_nargs:
-                    return None  # ARPDBG
+                    if table and table.wildcard_imports:
+                        # Wrong number of arguments to be an intrinsic so it must
+                        # be a call to a routine being brought into scope from
+                        # elsewhere.
+                        return None
+
                     # None indicates an unlimited number of arguments
                     raise InternalSyntaxError(
                         "Intrinsic '{0}' expects at least {1} args but found "
@@ -12396,13 +12400,23 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 # None.
                 return result
             if min_nargs == max_nargs and nargs != min_nargs:
-                return None  # ARPDBG
+                if table and table.wildcard_imports:
+                    # Wrong number of arguments to be an intrinsic so it must
+                    # be a call to a routine being brought into scope from
+                    # elsewhere.
+                    return None
+
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
                     "".format(function_name, min_nargs, nargs)
                 )
             if min_nargs < max_nargs and (nargs < min_nargs or nargs > max_nargs):
-                return None  # ARPDBG
+                if table and table.wildcard_imports:
+                    # Wrong number of arguments to be an intrinsic so it must
+                    # be a call to a routine being brought into scope from
+                    # elsewhere.
+                    return None
+
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects between {1} and {2} args but "
                     "found {3}.".format(function_name, min_nargs, max_nargs, nargs)
