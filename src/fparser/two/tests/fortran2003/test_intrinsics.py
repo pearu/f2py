@@ -268,7 +268,7 @@ def test_intrinsic_inside_intrinsic():
     assert "Intrinsic_Name('COS')" in rep
 
 
-def test_shadowed_intrinsic(f2003_parser):
+def test_locally_shadowed_intrinsic(f2003_parser):
     """Check that a locally-defined symbol that shadows (overwrites) a
     Fortran intrinsic is correctly identified."""
     tree = f2003_parser(
@@ -306,7 +306,13 @@ module my_mod
 contains
   subroutine my_sub()
     real :: result
+    ! Too many args
     result = dot_product(1,1,1)
+    ! Too few args for an intrinsic that has no max arg. count
+    result = max()
+    ! Wrong number of args for an intrinsic with a min and max arg. count that are
+    ! not equal.
+    result = aint(1, 2, 3)
   end subroutine my_sub
 end module my_mod
     """
