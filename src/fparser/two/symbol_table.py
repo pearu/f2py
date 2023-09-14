@@ -701,6 +701,22 @@ class SymbolTable:
             current = current.parent
         return current
 
+    @property
+    def wildcard_imports(self):
+        """
+        :returns: names of all modules with wildcard imports into this scope or an
+                  empty list if there are none.
+        :rtype: List[Optional[str]]
+        """
+        mod_names = set()
+        for mod_name, mod in self._modules.items():
+            if mod.wildcard_import:
+                mod_names.add(mod_name)
+        if self.parent:
+            mod_names.update(self.parent.wildcard_imports)
+
+        return sorted(list(mod_names))
+
 
 #: The single, global container for all symbol tables constructed while
 #: parsing.

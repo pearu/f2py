@@ -279,6 +279,34 @@ END PROGRAM a_prog
     assert table.lookup("other").primitive_type == "logical"
 
 
+def test_wildcard_module_search(f2003_parser):
+    """Test the wildcard_imports method of the SymbolTable."""
+    _ = f2003_parser(
+        get_reader(
+            """\
+module my_mod
+  use other_mod, only: b
+  use medium_mod
+  use some_mod
+  real :: a
+contains
+  subroutine sub
+    use big_mod
+    use medium_mod, only: c
+    use pointless_mod, only:
+  end subroutine sub
+end module my_mod
+    """
+        )
+    )
+    # Module symbol table should have two modules listed with wildcard imports.
+    mod_table = SYMBOL_TABLES.lookup("my_mod")
+    assert mod_table.wildcard_imports == ["medium_mod", "some_mod"]
+    # Move down to the subroutine and check that we recurse upwards.
+    sub_table = mod_table.children[0]
+    assert sub_table.wildcard_imports == ["big_mod", "medium_mod", "some_mod"]
+
+
 def test_module_definition(f2003_parser):
     """Check that a SymbolTable is created for a module and populated with
     the symbols it defines."""
