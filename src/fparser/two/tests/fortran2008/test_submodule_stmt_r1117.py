@@ -38,6 +38,7 @@
 
 """
 import pytest
+from fparser.common import splitline
 from fparser.two.utils import NoMatchError
 from fparser.two.Fortran2008 import Submodule_Stmt
 
@@ -92,14 +93,10 @@ def test_simple_error6():
 
 def test_simple_error7(monkeypatch):
     """Test the parsing of a submodule statement when there is a single
-    right hand bracket. The error generated here is unreachable if
-    splitparen works correctly so we need to monkeypatch.
+    right hand bracket.
 
     """
-
-    monkeypatch.setattr(
-        "fparser.common.splitline.splitparen", lambda x: ["", "id)", "name"]
-    )
+    monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "id)", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule id) name")
     assert "Submodule_Stmt: 'submodule id) name'" in str(excinfo.value)
@@ -107,14 +104,10 @@ def test_simple_error7(monkeypatch):
 
 def test_simple_error8(monkeypatch):
     """Test the parsing of a submodule statement when there is a single
-    left hand bracket. The error generated here is unreachable if
-    splitparen works correctly so we need to monkeypatch.
+    left hand bracket.
 
     """
-
-    monkeypatch.setattr(
-        "fparser.common.splitline.splitparen", lambda x: ["", "(id", "name"]
-    )
+    monkeypatch.setattr(splitline, "splitparen", lambda x: ["", "(id", "name"])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id name")
     assert "Submodule_Stmt: 'submodule (id name'" in str(excinfo.value)
@@ -122,14 +115,10 @@ def test_simple_error8(monkeypatch):
 
 def test_splitparen_error(monkeypatch):
     """Test that if the first argument of the splitparen is not empty then
-    an error is returned.
+    an error is returned. Monkeypatch to force this error.
 
     """
-    # We must monkeypatch the splitparen function that has already been
-    # imported into the F2008 module.
-    monkeypatch.setattr(
-        "fparser.two.Fortran2008.Fortran2008.splitparen", lambda x: ["XXX", "", ""]
-    )
+    monkeypatch.setattr(splitline, "splitparen", lambda x: ["XXX", "", ""])
     with pytest.raises(NoMatchError) as excinfo:
         dummy_ = Submodule_Stmt("submodule (id) name")
     assert "Submodule_Stmt: 'submodule (id) name'" in str(excinfo.value)

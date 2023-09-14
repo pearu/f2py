@@ -18,6 +18,12 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+14/09/2023 PR #425 for #411. Splits the monolithic Fortran2008.py file
+           into separate classes.
+
+12/09/2023 PR #423 for #403. Adds full support for DO CONCURRENT in F2008
+           (fixes bugs in previous implementation).
+
 12/06/2023 PR #417 towards #411. Moves Fortran2008.py into a 'Fortran2008'
            directory and moves the associated class generation into an '__init__.py'
            in that directory.
