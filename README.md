@@ -1,5 +1,7 @@
 # News #
 
+  * 18/09/2023 Version 0.1.3 released (resolves issues with support for DO CONCURRENT).
+  * 19/06/2023 Version 0.1.2 released (bug fix for handling of INCLUDE files).
   * 28/04/2023 Version 0.1.1 released (extends F2008 support with the optional
     "::" in the MODULE PROCEDURE statement).
   * 18/04/2023 Version 0.1.0 released and status changed from `alpha` to `beta`. See the [CHANGELOG](CHANGELOG.md) for more details.
