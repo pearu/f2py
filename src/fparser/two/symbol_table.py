@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2021-2022, Science and Technology Facilities Council.
+# Copyright (c) 2021-2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -713,6 +713,11 @@ class SymbolTable:
             if mod.wildcard_import:
                 mod_names.add(mod_name)
         if self.parent:
+            # Any wildcard imports in a parent scope will affect this scoping
+            # region so carry on up. Note that if the root scoping region in
+            # the current file is a SUBMODULE then we will be missing whatever
+            # is brought into scope in the parent MODULE (since that will typically
+            # be in a separate source file).
             mod_names.update(self.parent.wildcard_imports)
 
         return sorted(list(mod_names))
