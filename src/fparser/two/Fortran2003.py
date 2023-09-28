@@ -12382,6 +12382,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
             max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
 
+            # None indicates an unlimited number of arguments
             if max_nargs is None:
                 if nargs < min_nargs:
                     if table and table.wildcard_imports:
@@ -12390,7 +12391,6 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                         # elsewhere.
                         return None
 
-                    # None indicates an unlimited number of arguments
                     raise InternalSyntaxError(
                         "Intrinsic '{0}' expects at least {1} args but found "
                         "{2}.".format(function_name, min_nargs, nargs)

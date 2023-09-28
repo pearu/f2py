@@ -294,8 +294,7 @@ end module my_mod
     assert sym.primitive_type == "real"
 
 
-@pytest.mark.parametrize("use_stmts", [("use some_mod", ""),
-                                       ("", "use some_mod")])
+@pytest.mark.parametrize("use_stmts", [("use some_mod", ""), ("", "use some_mod")])
 def test_shadowed_intrinsic_import(f2003_parser, use_stmts):
     """Check that an imported symbol that shadows (overwrites) a Fortran
     intrinsic is not identified as an intrinsic if it has the wrong
