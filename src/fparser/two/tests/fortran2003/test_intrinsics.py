@@ -294,17 +294,22 @@ end module my_mod
     assert sym.primitive_type == "real"
 
 
-def test_shadowed_intrinsic_import(f2003_parser):
-    """Check that an imported symbol that shadows (overwrites) a
-    Fortran intrinsic is not identified as an intrinsic if it has the wrong number of
-    'arguments'."""
+@pytest.mark.parametrize("use_stmts", [("use some_mod", ""),
+                                       ("", "use some_mod")])
+def test_shadowed_intrinsic_import(f2003_parser, use_stmts):
+    """Check that an imported symbol that shadows (overwrites) a Fortran
+    intrinsic is not identified as an intrinsic if it has the wrong
+    number of 'arguments'.
+
+    """
     tree = f2003_parser(
         get_reader(
-            """\
+            f"""\
 module my_mod
-  use some_mod
+  {use_stmts[0]}\n
 contains
   subroutine my_sub()
+    {use_stmts[1]}\n
     real :: result
     ! Too many args
     result = dot_product(1,1,1)
@@ -313,6 +318,16 @@ contains
     ! Wrong number of args for an intrinsic with a min and max arg. count that are
     ! not equal.
     result = aint(1, 2, 3)
+
+    contains
+
+    function tricky(a) result(b)
+      real, intent(in) :: a
+      real :: b
+      ! Another reference to dot_product for which we need to find the
+      ! wildcard import in the top-level module.
+      b = 2 * a + dot_product(a,1,2)
+    end function tricky
   end subroutine my_sub
 end module my_mod
     """
