@@ -1089,7 +1089,7 @@ class Where(BeginStatement):
     name = ""
 
     def tostr(self):
-        return "WHERE ( %s )" % (self.expr)
+        return (f"WHERE ( {self.item.apply_map(self.expr)} )")
 
     def process_item(self):
         self.expr = self.item.get_line()[5:].lstrip()[1:-1].strip()
