@@ -323,6 +323,45 @@ end module my_mod
     # Move down to the subroutine and check that we recurse upwards.
     sub_table = mod_table.children[0]
     assert sub_table.wildcard_imports == ["big_mod", "medium_mod", "some_mod"]
+    # Repeat for a program containing a subroutine containing a function.
+    _ = f2003_parser(
+        get_reader(
+            """\
+program my_prog
+  use pointless_mod, only: dee
+  use medium_mod
+  use no_really_mod
+  real :: a
+  call sub()
+contains
+  subroutine sub
+    use big_mod
+    use no_really_mod, only: avon
+    use medium_mod, only: c
+    use pointless_mod, only:
+    write(*,*) "yes", my_fn()
+  contains
+    integer function my_fn()
+      use no_really_mod, only: afon
+      use tiny_mod
+      my_fn = 1 + afon
+    end function my_fn
+  end subroutine sub
+end program my_prog
+    """
+        )
+    )
+    prog_table = SYMBOL_TABLES.lookup("my_prog")
+    assert prog_table.wildcard_imports == ["medium_mod", "no_really_mod"]
+    sub_table = prog_table.children[0]
+    assert sub_table.wildcard_imports == ["big_mod", "medium_mod", "no_really_mod"]
+    fn_table = sub_table.children[0]
+    assert fn_table.wildcard_imports == [
+        "big_mod",
+        "medium_mod",
+        "no_really_mod",
+        "tiny_mod",
+    ]
 
 
 def test_module_definition(f2003_parser):
