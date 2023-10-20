@@ -12385,7 +12385,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             # None indicates an unlimited number of arguments
             if max_nargs is None:
                 if nargs < min_nargs:
-                    if table and table.wildcard_imports:
+                    if table and not table.all_symbols_resolved:
                         # Wrong number of arguments to be an intrinsic so it must
                         # be a call to a routine being brought into scope from
                         # elsewhere.
@@ -12400,18 +12400,14 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
                 # None.
                 return result
             if min_nargs == max_nargs and nargs != min_nargs:
-                if table and table.wildcard_imports:
-                    # Wrong number of arguments to be an intrinsic so it must
-                    # be a call to a routine being brought into scope from
-                    # elsewhere.
+                if table and not table.all_symbols_resolved:
                     return None
-
                 raise InternalSyntaxError(
                     "Intrinsic '{0}' expects {1} arg(s) but found {2}."
                     "".format(function_name, min_nargs, nargs)
                 )
             if min_nargs < max_nargs and (nargs < min_nargs or nargs > max_nargs):
-                if table and table.wildcard_imports:
+                if table and not table.all_symbols_resolved:
                     # Wrong number of arguments to be an intrinsic so it must
                     # be a call to a routine being brought into scope from
                     # elsewhere.
