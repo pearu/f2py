@@ -294,6 +294,31 @@ end module my_mod
     assert sym.primitive_type == "real"
 
 
+def test_shadowed_intrinsic_named_import(f2003_parser):
+    """Check that an imported symbol that shadows (overwrites) a
+    Fortran intrinsic is correctly identified."""
+    tree = f2003_parser(
+        get_reader(
+            """\
+module my_mod
+  use some_mod, only: dot_product
+contains
+  subroutine my_sub()
+    real :: result
+    result = dot_product(1,1)
+  end subroutine my_sub
+end module my_mod
+    """
+        )
+    )
+    tables = SYMBOL_TABLES
+    # We should not have an intrinsic-function reference in the parse tree
+    assert not walk(tree, Intrinsic_Function_Reference)
+    table = tables.lookup("my_mod")
+    sym = table.children[0].lookup("dot_product")
+    assert sym.primitive_type == "unknown"
+
+
 @pytest.mark.parametrize("use_stmts", [("use some_mod", ""), ("", "use some_mod")])
 def test_shadowed_intrinsic_import(f2003_parser, use_stmts):
     """Check that an imported symbol that shadows (overwrites) a Fortran

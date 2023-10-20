@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2021-2022 Science and Technology Facilities Council.
+# Copyright (c) 2021-2023 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed
@@ -37,8 +37,10 @@
  of fparser2. """
 
 import pytest
-from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES, SymbolTableError
 from fparser.api import get_reader
+from fparser.two import Fortran2003
+from fparser.two.parser import ParserFactory
+from fparser.two.symbol_table import SymbolTable, SYMBOL_TABLES, SymbolTableError
 
 
 def test_basic_table():
@@ -48,6 +50,7 @@ def test_basic_table():
     assert table.name == "basic"
     assert table.parent is None
     assert table.children == []
+    assert table.node is None
     # Consistency checking is disabled by default
     assert table._checking_enabled is False
     with pytest.raises(KeyError) as err:
@@ -61,6 +64,15 @@ def test_basic_table():
     # Check that we can enable consistency checking
     table2 = SymbolTable("table2", checking_enabled=True)
     assert table2._checking_enabled is True
+    # Check that we can supply an associated parse tree node.
+    with pytest.raises(TypeError) as err:
+        SymbolTable("table3", node="oops")
+    assert (
+        "The 'node' argument to the SymbolTable constructor must be a "
+        "valid parse tree node (instance of utils.Base) but got 'str'" in str(err.value)
+    )
+    table3 = SymbolTable("table3", node=Fortran2003.Return_Stmt("return"))
+    assert isinstance(table3.node, Fortran2003.Return_Stmt)
 
 
 def test_add_data_symbol():
@@ -246,6 +258,12 @@ END PROGRAM a_prog
     assert table._modules["some_mod"].only_list == []
     assert "mod2" in table._modules
     assert sorted(table._modules["mod2"].only_list) == ["that_one", "this_one"]
+    sym = table.lookup("this_one")
+    assert sym.name == "this_one"
+    assert sym.primitive_type == "unknown"
+    sym = table.lookup("that_one")
+    assert sym.name == "that_one"
+    assert sym.primitive_type == "unknown"
 
 
 def test_module_use_with_rename(f2003_parser):
@@ -324,6 +342,7 @@ end module my_mod
     assert list(tables._symbol_tables.keys()) == ["my_mod"]
     table = tables.lookup("my_mod")
     assert isinstance(table, SymbolTable)
+    assert isinstance(table.node, Fortran2003.Module_Stmt)
     assert "some_mod" in table._modules
     assert "a" in table._data_symbols
     sym = table.lookup("a")
@@ -350,6 +369,7 @@ end module my_mod
     tables = SYMBOL_TABLES
     assert list(tables._symbol_tables.keys()) == ["my_mod"]
     table = tables.lookup("my_mod")
+    assert isinstance(table.node, Fortran2003.Module_Stmt)
     assert len(table.children) == 1
     assert table.children[0].name == "my_sub"
     assert table.children[0].parent is table
@@ -380,6 +400,48 @@ end program my_prog
     assert list(tables._symbol_tables.keys()) == ["my_prog"]
     table = SYMBOL_TABLES.lookup("my_prog")
     assert len(table.children) == 1
+    assert isinstance(table.node, Fortran2003.Program_Stmt)
     assert table.children[0].name == "my_sub"
+    assert isinstance(table.children[0].node, Fortran2003.Subroutine_Stmt)
     assert table.children[0]._data_symbols["b"].name == "b"
     assert table.children[0].parent is table
+
+
+def test_all_symbols_resolved(f2003_parser):
+    """Tests for the all_symbols_resolved() method."""
+    code = """\
+program my_prog
+  use some_mod
+  real :: a
+contains
+  subroutine my_sub()
+    real :: b
+  end subroutine my_sub
+end program my_prog
+    """
+    _ = f2003_parser(get_reader(code))
+    table = SYMBOL_TABLES.lookup("my_prog").children[0]
+    assert table.all_symbols_resolved is False
+    new_code = code.replace("some_mod\n", "some_mod, only: igor\n")
+    SYMBOL_TABLES.clear()
+    _ = f2003_parser(get_reader(new_code))
+    table = SYMBOL_TABLES.lookup("my_prog").children[0]
+    assert table.all_symbols_resolved is True
+
+
+def test_all_symbols_resolved_submodule():
+    """Tests for the all_symbols_resolved() method returns False when the table
+    is within a Fortran2008 submodule (since a submodule has access to the
+    scope of its parent module)."""
+    code = """\
+submodule (other_mod) my_mod
+  real :: a
+contains
+  subroutine my_sub()
+    real :: b
+  end subroutine my_sub
+end submodule my_mod
+    """
+    _ = ParserFactory().create(std="f2008")(get_reader(code))
+    table = SYMBOL_TABLES.lookup("my_mod").children[0]
+    assert table.all_symbols_resolved is False

@@ -419,11 +419,21 @@ class ModuleUse:
     @property
     def symbol_names(self):
         """
-        :returns: the names of all symbols associated with USE(s) of this \
+        :returns: the names of all symbols associated with USE(s) of this
                   module.
         :rtype: List[str]
         """
         return list(self._symbols.keys())
+
+    def lookup(self, name):
+        """
+        :returns: the symbol with the supplied name imported from this module (if any).
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
+
+        :raises KeyError: if no symbol with the supplied name is imported from
+                          this module.
+        """
+        return self._symbols[name.lower()]
 
     @property
     def only_list(self):
@@ -480,6 +490,8 @@ class SymbolTable:
         performed for symbols added to the table.
     :param node: the node in the parse tree associated with this table.
     :type node: Optional[:py:class:`fparser.two.utils.Base`]
+
+    :raises TypeError: if the supplied node is of the wrong type.
     """
 
     # TODO #201 add support for other symbol properties (kind, shape
@@ -498,6 +510,15 @@ class SymbolTable:
         # value (if any) is set via setter method.
         self._parent = None
         self.parent = parent
+        # The node in the parse tree with which this table is associated (if any).
+        from fparser.two.utils import Base
+
+        if node and not isinstance(node, Base):
+            raise TypeError(
+                f"The 'node' argument to the SymbolTable constructor must be a "
+                f"valid parse tree node (instance of utils.Base) but got "
+                f"'{type(node).__name__}'"
+            )
         self._node = node
         # Whether or not to perform validity checks when symbols are added.
         self._checking_enabled = checking_enabled
@@ -612,6 +633,11 @@ class SymbolTable:
         lname = name.lower()
         if lname in self._data_symbols:
             return self._data_symbols[lname]
+        for module in self._modules.values():
+            try:
+                return module.lookup(lname)
+            except KeyError:
+                pass
         # No match in this scope - search in parent scope (if any)
         if self.parent:
             return self.parent.lookup(lname)
@@ -746,13 +772,15 @@ class SymbolTable:
             then there could be symbols we don't have definitions for.
         :rtype: bool
         """
+        # wildcard_imports checks all parent scopes.
+        if self.wildcard_imports:
+            return False
+
         # pylint: disable=import-outside-toplevel
         from fparser.two.Fortran2008 import Submodule_Stmt
 
         cursor = self
         while cursor:
-            if cursor.wildcard_imports:
-                return False
             if isinstance(cursor.node, Submodule_Stmt):
                 return False
             cursor = cursor.parent

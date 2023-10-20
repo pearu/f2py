@@ -160,3 +160,15 @@ def test_moduse_update():
     moduse6 = ModuleUse("flInt")
     moduse5.update(moduse6)
     assert moduse5.wildcard_import is True
+
+
+def test_moduse_lookup():
+    """Tests for the lookup() method."""
+    moduse = ModuleUse("flint")
+    with pytest.raises(KeyError):
+        moduse.lookup("polly")
+    moduse2 = ModuleUse("flint", only_list=[("mate", None), ("cannON", None)])
+    sym = moduse2.lookup("caNNon")
+    assert sym.name == "cannon"
+    # As this symbol is imported, we don't know its type.
+    assert sym.primitive_type == "unknown"
