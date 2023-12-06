@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2022 Science and Technology Facilities Council.
+# Copyright (c) 2022-2023 Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Modifications made as part of the fparser project are distributed

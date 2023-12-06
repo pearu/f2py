@@ -431,14 +431,14 @@ class ModuleUse:
         :rtype: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
 
         :raises KeyError: if no symbol with the supplied name is imported from
-                          this module.
+                          this module into the current scope.
         """
         return self._symbols[name.lower()]
 
     @property
     def only_list(self):
         """
-        :returns: the local names that appear in an Only_List or None if there \
+        :returns: the local names that appear in an Only_List or None if there
                   is no such list.
         :rtype: Optional[List[str]]
         """
@@ -449,7 +449,7 @@ class ModuleUse:
     @property
     def rename_list(self):
         """
-        :returns: the local names that appear in a Rename_List or None if there \
+        :returns: the local names that appear in a Rename_List or None if there
                   is no such list.
         :rtype: Optional[List[str]]
         """
@@ -632,13 +632,16 @@ class SymbolTable:
         # Fortran is not case sensitive so convert input to lowercase.
         lname = name.lower()
         if lname in self._data_symbols:
+            # Found a match in this table.
             return self._data_symbols[lname]
         for module in self._modules.values():
             try:
+                # Look to see whether the symbol is imported into this table.
                 return module.lookup(lname)
             except KeyError:
                 pass
-        # No match in this scope - search in parent scope (if any)
+        # No match in this scope - search in parent scope (if any). This will
+        # recurse upwards through parent tables as necessary.
         if self.parent:
             return self.parent.lookup(lname)
         raise KeyError(f"Failed to find symbol named '{lname}'")
