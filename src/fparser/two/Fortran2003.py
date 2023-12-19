@@ -8568,6 +8568,7 @@ class Connect_Spec(KeywordValueBase):
                          | ACTION = <scalar-default-char-expr>
                          | ASYNCHRONOUS = <scalar-default-char-expr>
                          | BLANK = <scalar-default-char-expr>
+                         | CONVERT = <scalar-default-char-expr>
                          | DECIMAL = <scalar-default-char-expr>
                          | DELIM = <scalar-default-char-expr>
                          | ENCODING = <scalar-default-char-expr>
@@ -8582,6 +8583,9 @@ class Connect_Spec(KeywordValueBase):
                          | ROUND = <scalar-default-char-expr>
                          | SIGN = <scalar-default-char-expr>
                          | STATUS = <scalar-default-char-expr>
+
+    Note that CONVERT is not a part of the Fortran standard but is supported
+    by several major compilers (Gnu, Intel, Cray etc.).
 
     """
 
@@ -8615,6 +8619,7 @@ class Connect_Spec(KeywordValueBase):
                     "ACTION",
                     "ASYNCHRONOUS",
                     "BLANK",
+                    "CONVERT",
                     "DECIMAL",
                     "DELIM",
                     "ENCODING",
