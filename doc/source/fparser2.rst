@@ -353,6 +353,19 @@ extension adds support for the dollar descriptor in fparser.
 For more information see
 https://software.intel.com/en-us/fortran-compiler-developer-guide-and-reference-dollar-sign-and-backslash-editing
 
+CONVERT argument to OPEN
+++++++++++++++++++++++++
+
+The CONVERT argument may be used to specify how unformatted data being read
+from file is to be converted before being stored. For example::
+
+  OPEN(unit=23, file="some_data", form='unformatted',access='sequential', &
+       convert="LITTLE_ENDIAN")
+
+This extension is supported by (at least) the Gnu, Intel and Cray compilers
+but is not a part of any Fortran standard. More details can be found at
+https://gcc.gnu.org/onlinedocs/gfortran/CONVERT-specifier.html
+
 Classes
 -------
 
