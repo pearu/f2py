@@ -64,27 +64,75 @@
 # DAMAGE.
 
 """
-Module containing py.test tests for the Fortran2003 OPEN statement (R904).
+Module containing py.test tests for the connect-spec of a Fortran2003 OPEN
+statement (R905).
 
 """
 
 import pytest
 
-from fparser.two.Fortran2003 import Open_Stmt
-from fparser.two.utils import NoMatchError
+from fparser.two import Fortran2003, utils
+
+# from fparser.two.Fortran2003 import Open_Stmt
 
 
-def test_open_stmt():
-    """Tests that we correctly parse and re-generate the various forms
-    of OPEN statement (R904)."""
-    tcls = Open_Stmt
-    obj = tcls("open(23, file='some_file.txt')")
+@pytest.mark.parametrize(
+    "keyword",
+    [
+        "ACCESS",
+        "ACTION",
+        "ASYNCHRONOUS",
+        "BLANK",
+        "CONVERT",
+        "DECIMAL",
+        "DELIM",
+        "ENCODING",
+        "FORM",
+        "PAD",
+        "POSITION",
+        "ROUND",
+        "SIGN",
+        "STATUS",
+    ],
+)
+def test_connect_spec_char_keyword_args(keyword):
+    """Test that fparser2 supports the various keywords specified in R905
+    for the connect-spec that expect a scalar, character value. Note
+    that CONVERT is not actually part of the standard but is supported
+    by at least Gnu, Intel and Cray.
+
+    """
+    tcls = Fortran2003.Connect_Spec
+    obj = tcls(f"{keyword}='some-arg'")
     assert isinstance(obj, tcls)
-    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
-    obj = tcls("open(unit=23, file='some_file.txt')")
-    assert isinstance(obj, tcls)
-    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
-    # Incorrect spelling of OPEN.
-    with pytest.raises(NoMatchError) as err:
-        tcls("opn(23, file='yada')")
-    assert "Open_Stmt: 'opn(23," in str(err)
+    assert str(obj) == f"{keyword.upper()} = 'some-arg'"
+
+
+def test_connect_spec_non_char_expr():
+    """Test the support for all keywords which expect something other than
+    a char expression."""
+    tcls = Fortran2003.Connect_Spec
+    obj = tcls("ERR = 905")
+    assert isinstance(obj.items[1], Fortran2003.Label)
+    obj = tcls("FILE = 'a_file.txt'")
+    assert isinstance(obj.items[1], Fortran2003.Char_Literal_Constant)
+    obj = tcls("IOSTAT=ierr")
+    assert isinstance(obj.items[1], Fortran2003.Name)
+    obj = tcls("IOMSG=msg")
+    assert isinstance(obj.items[1], Fortran2003.Name)
+    obj = tcls("RECL=28")
+    assert isinstance(obj.items[1], Fortran2003.Int_Literal_Constant)
+    obj = tcls("UNIT=23")
+    assert isinstance(obj.items[1], Fortran2003.Int_Literal_Constant)
+    # Wrong type of argument.
+    with pytest.raises(utils.NoMatchError) as err:
+        _ = tcls("UNIT='Newtons'")
+    assert "Connect_Spec: 'UNIT" in str(err)
+
+
+def test_convert_support_disabled(monkeypatch):
+    """Test that the support for the CONVERT keyword may be disabled."""
+    monkeypatch.setattr(utils, "_EXTENSIONS", [])
+    with pytest.raises(utils.NoMatchError) as err:
+        _ = Fortran2003.Connect_Spec("CONVERT='big-endian'")
+    assert "Connect_Spec: 'CONVERT=" in str(err)

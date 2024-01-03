@@ -1,4 +1,4 @@
-# Modified work Copyright (c) 2017-2023 Science and Technology
+# Modified work Copyright (c) 2017-2024 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -84,7 +84,7 @@ from fparser.two.symbol_table import SYMBOL_TABLES
 # far forward from the current position. The 'x-format' extension
 # allows the X edit descriptor to be specified without a preceeding
 # integer.
-EXTENSIONS = ["x-format"]
+_EXTENSIONS = ["x-format"]
 
 # Cray pointers are a well known extension to the Fortran
 # standard. See http://pubs.cray.com/content/S-3901/8.6/
@@ -92,7 +92,7 @@ EXTENSIONS = ["x-format"]
 # https://gcc.gnu.org/onlinedocs/gfortran/Cray-pointers.html for
 # example. If 'cray-pointer' is specified in EXTENSIONS then this
 # extension is allowed in fparser.
-EXTENSIONS += ["cray-pointer"]
+_EXTENSIONS += ["cray-pointer"]
 
 # A Hollerith constant is a way of specifying a string as a sequence
 # of characters preceded by the string length and separated by an 'H'
@@ -101,13 +101,27 @@ EXTENSIONS += ["cray-pointer"]
 # for example for more details. fparser currently supports Hollerith
 # constants specified in format statements when 'hollerith' is specified
 # in the EXTENSIONS list.
-EXTENSIONS += ["hollerith"]
+_EXTENSIONS += ["hollerith"]
 
 # Many compilers support the use of '$' in a fortran write statement
 # to indicate that the carriage return should be suppressed. This is
 # an extension to the Fortran standard and is supported by fparser if
 # 'dollar-descriptor' is specified in the EXTENSIONS list.
-EXTENSIONS += ["dollar-descriptor"]
+_EXTENSIONS += ["dollar-descriptor"]
+
+# Many compilers support the optional 'CONVERT' argument to OPEN(). This is
+# used to indicate any endian-related conversion that must be performed
+# when reading/writing data using unformatted IO.
+_EXTENSIONS += ["open-convert"]
+
+
+def EXTENSIONS():
+    """
+    :returns: the list of extensions (to the Fortran standard) currently active.
+    :rtype: list[str]
+    """
+    return _EXTENSIONS
+
 
 # Set this to True to get verbose output (on stdout) detailing the matches made
 # while parsing.

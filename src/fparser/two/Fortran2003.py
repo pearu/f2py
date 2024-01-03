@@ -101,6 +101,7 @@ from fparser.two.utils import (
     DynamicImport,
 )
 from fparser.two.utils import (
+    EXTENSIONS,
     NoMatchError,
     FortranSyntaxError,
     InternalSyntaxError,
@@ -4232,9 +4233,7 @@ class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: (str, Cray_Pointer_Decl_List) or None
 
         """
-        from fparser.two.utils import EXTENSIONS
-
-        if "cray-pointer" not in EXTENSIONS:
+        if "cray-pointer" not in EXTENSIONS():
             return None
         return WORDClsBase.match(
             "POINTER", Cray_Pointer_Decl_List, string, require_cls=True
@@ -8546,7 +8545,9 @@ class Internal_File_Variable(Base):  # R903
 
 class Open_Stmt(StmtBase, CALLBase):  # R904
     """
-    <open-stmt> = OPEN ( <connect-spec-list> )
+    R904 is:
+
+    open-stmt is OPEN ( connect-spec-list )
     """
 
     subclass_names = []
@@ -8561,31 +8562,32 @@ class Open_Stmt(StmtBase, CALLBase):  # R904
 
 class Connect_Spec(KeywordValueBase):
     """
-    R905::
+    R905 is:
 
-        <connect-spec> = [ UNIT = ] <file-unit-number>
-                         | ACCESS = <scalar-default-char-expr>
-                         | ACTION = <scalar-default-char-expr>
-                         | ASYNCHRONOUS = <scalar-default-char-expr>
-                         | BLANK = <scalar-default-char-expr>
-                         | CONVERT = <scalar-default-char-expr>
-                         | DECIMAL = <scalar-default-char-expr>
-                         | DELIM = <scalar-default-char-expr>
-                         | ENCODING = <scalar-default-char-expr>
-                         | ERR = <label>
-                         | FILE = <file-name-expr>
-                         | FORM = <scalar-default-char-expr>
-                         | IOMSG = <iomsg-variable>
-                         | IOSTAT = <scalar-int-variable>
-                         | PAD = <scalar-default-char-expr>
-                         | POSITION = <scalar-default-char-expr>
-                         | RECL = <scalar-int-expr>
-                         | ROUND = <scalar-default-char-expr>
-                         | SIGN = <scalar-default-char-expr>
-                         | STATUS = <scalar-default-char-expr>
+    connect-spec is [ UNIT = ] file-unit-number
+                 or ACCESS = scalar-default-char-expr
+                 or ACTION = scalar-default-char-expr
+                 or ASYNCHRONOUS = scalar-default-char-expr
+                 or BLANK = scalar-default-char-expr
+                 [ or CONVERT = scalar-default-char-expr ]
+                 or DECIMAL = scalar-default-char-expr
+                 or DELIM = scalar-default-char-expr
+                 or ENCODING = scalar-default-char-expr
+                 or ERR = label
+                 or FILE = file-name-expr
+                 or FORM = scalar-default-char-expr
+                 or IOMSG = iomsg-variable
+                 or IOSTAT = scalar-int-variable
+                 or PAD = scalar-default-char-expr
+                 or POSITION = scalar-default-char-expr
+                 or RECL = scalar-int-expr
+                 or ROUND = scalar-default-char-expr
+                 or SIGN = scalar-default-char-expr
+                 or STATUS = scalar-default-char-expr
 
     Note that CONVERT is not a part of the Fortran standard but is supported
-    by several major compilers (Gnu, Intel, Cray etc.).
+    by several major compilers (Gnu, Intel, Cray etc.) and thus is matched
+    by fparser if the utils.EXTENSIONS() list includes the string 'open-convert'.
 
     """
 
@@ -8612,24 +8614,29 @@ class Connect_Spec(KeywordValueBase):
             # The only argument which need not be named is the unit number
             return "UNIT", File_Unit_Number(string)
         # We have a keyword-value pair. Check whether it is valid...
+        keyword_list = [
+            "ACCESS",
+            "ACTION",
+            "ASYNCHRONOUS",
+            "BLANK",
+            "DECIMAL",
+            "DELIM",
+            "ENCODING",
+            "FORM",
+            "PAD",
+            "POSITION",
+            "ROUND",
+            "SIGN",
+            "STATUS",
+        ]
+        if "open-convert" in EXTENSIONS():
+            # The CONVERT keyword is a non-standard extension supported by
+            # many compilers.
+            keyword_list.append("CONVERT")
+
         for keyword, value in [
             (
-                [
-                    "ACCESS",
-                    "ACTION",
-                    "ASYNCHRONOUS",
-                    "BLANK",
-                    "CONVERT",
-                    "DECIMAL",
-                    "DELIM",
-                    "ENCODING",
-                    "FORM",
-                    "PAD",
-                    "POSITION",
-                    "ROUND",
-                    "SIGN",
-                    "STATUS",
-                ],
+                keyword_list,
                 Scalar_Default_Char_Expr,
             ),
             ("ERR", Label),
@@ -10061,9 +10068,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         :rtype: str
 
         """
-        from fparser.two.utils import EXTENSIONS
-
-        if "hollerith" not in EXTENSIONS:
+        if "hollerith" not in EXTENSIONS():
             return None
         if not string:
             return None
@@ -10578,9 +10583,7 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
         if not strip_string:
             return None
         if len(strip_string) == 1 and strip_string in "/:$":
-            from fparser.two.utils import EXTENSIONS
-
-            if strip_string == "$" and "dollar-descriptor" not in EXTENSIONS:
+            if strip_string == "$" and "dollar-descriptor" not in EXTENSIONS():
                 return None
             return None, strip_string
         if strip_string[-1] == "/":
@@ -10689,9 +10692,7 @@ class Position_Edit_Desc(Base):  # R1013
             return start, number_obj
         if strip_string_upper[-1] == "X":
             # We match *X
-            from fparser.two.utils import EXTENSIONS
-
-            if "x-format" in EXTENSIONS and len(strip_string_upper) == 1:
+            if "x-format" in EXTENSIONS() and len(strip_string_upper) == 1:
                 # The match just contains 'X' which is not valid
                 # fortran 2003 but is an accepted extension
                 return None, "X"
