@@ -21,6 +21,7 @@ help:
 
 # Target that removes all generated files
 allclean: clean
-	@echo "Removing everything under 'source'..."
+	@echo "Removing everything under 'source/autoapi'..."
 	@rm -rf ./source/autoapi/*
+	@echo "Removing everything under 'source/doxygen'..."
 	@rm -rf ./source/doxygen/*
