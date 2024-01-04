@@ -12365,14 +12365,7 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
             # no current scoping region.
             pass
 
-        # This if/else will not be needed once issue #170 has been
-        # addressed.
-        if isinstance(function_args, Actual_Arg_Spec_List):
-            nargs = len(function_args.items)
-        elif function_args is None:
-            nargs = 0
-        else:
-            nargs = 1
+        nargs = 0 if function_args is None else len(function_args.items)
 
         if function_name in Intrinsic_Name.specific_function_names.keys():
             # If this is a specific function then use its generic
