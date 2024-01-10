@@ -36,7 +36,7 @@ requires-python = ">=3.6"
 dependencies = ["setuptools_scm"]
 
 [project.optional-dependencies]
-doc = ["sphinx", "sphinx_rtd_theme"]
+doc = ["sphinx", "sphinxcontrib.bibtex", "autoapi", "sphinx-autoapi", "sphinx_rtd_theme"]
 tests = ["pytest >= 3.3.0"]
 
 [project.scripts]
