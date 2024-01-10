@@ -84,6 +84,12 @@ def test_open_stmt():
     obj = tcls("open(unit=23, file='some_file.txt')")
     assert isinstance(obj, tcls)
     assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
+    obj = tcls("open(unit=23, file='some_file.txt', convert=endianness)")
+    assert isinstance(obj, tcls)
+    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt', CONVERT = endianness)"
+    obj = tcls("OPEN (993,FILE=FNAMETAB,form='UNFORMATTED',convert=file_endian,IOSTAT=IERR,STATUS='OLD')")
+    assert isinstance(obj, tcls)
+    assert str(obj) == "OPEN(UNIT = 993, FILE = FNAMETAB, FORM = 'UNFORMATTED', CONVERT = file_endian, IOSTAT = IERR, STATUS = 'OLD')"
     # Incorrect spelling of OPEN.
     with pytest.raises(NoMatchError) as err:
         tcls("opn(23, file='yada')")
