@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools >= 42",
+    "setuptools >= 61",
     "setuptools_scm[toml] >= 6.2",
     "setuptools_scm_git_archive",
     "wheel >= 0.29.0",
@@ -33,6 +33,7 @@ classifiers = [
 keywords = ["fortran", "parser"]
 dynamic = ["version"]
 requires-python = ">=3.6"
+dependencies = ["setuptools_scm"]
 
 [project.optional-dependencies]
 doc = ["sphinx", "sphinx_rtd_theme"]
