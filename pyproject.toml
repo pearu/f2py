@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools >= 61",
+    "setuptools >= 42",
     "setuptools_scm[toml] >= 6.2",
     "setuptools_scm_git_archive",
     "wheel >= 0.29.0",
@@ -42,4 +42,4 @@ tests = ["pytest >= 3.3.0"]
 fparser2 = "fparser.scripts.fparser2:main"
 
 [tool.setuptools_scm]
-version_file = "fparser/_version.py"
+write_to = "src/fparser/_version.py"
