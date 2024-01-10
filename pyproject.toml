@@ -42,4 +42,4 @@ tests = ["pytest >= 3.3.0"]
 fparser2 = "fparser.scripts.fparser2:main"
 
 [tool.setuptools_scm]
-version_file = "src/fparser/_version.py"
+version_file = "fparser/_version.py"
