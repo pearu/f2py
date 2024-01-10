@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2023 Science and Technology
+# Modified work Copyright (c) 2017-2024 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -8602,50 +8602,64 @@ class Connect_Spec(KeywordValueBase):
         "Scalar_Int_Variable",
     ]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def _keyword_value_list(cls):
         """
-        :param str string: Fortran code to check for a match
-        :return: 2-tuple containing the keyword and value or None if the
-                 supplied string is not a match
-        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
-        """
-        if "=" not in string:
-            # The only argument which need not be named is the unit number
-            return "UNIT", File_Unit_Number(string)
-        # We have a keyword-value pair. Check whether it is valid...
-        keyword_list = [
-            "ACCESS",
-            "ACTION",
-            "ASYNCHRONOUS",
-            "BLANK",
-            "DECIMAL",
-            "DELIM",
-            "ENCODING",
-            "FORM",
-            "PAD",
-            "POSITION",
-            "ROUND",
-            "SIGN",
-            "STATUS",
-        ]
-        if "open-convert" in EXTENSIONS():
-            # The CONVERT keyword is a non-standard extension supported by
-            # many compilers.
-            keyword_list.append("CONVERT")
+        Defines the valid keywords and corresponding classes to match against.
+        This has to be a method rather than a class property as those classes
+        are generated after this class has been created.
 
-        for keyword, value in [
-            (
-                keyword_list,
-                Scalar_Default_Char_Expr,
-            ),
+        :returns: list of keyword, class pairs to match against.
+        :rtype: list[tuple[str, type]]
+
+        """
+        result = [
+            ("ACCESS", Scalar_Default_Char_Expr),
+            ("ACTION", Scalar_Default_Char_Expr),
+            ("ASYNCHRONOUS", Scalar_Default_Char_Expr),
+            ("BLANK", Scalar_Default_Char_Expr),
+            ("DECIMAL", Scalar_Default_Char_Expr),
+            ("DELIM", Scalar_Default_Char_Expr),
+            ("ENCODING", Scalar_Default_Char_Expr),
+            ("FORM", Scalar_Default_Char_Expr),
+            ("PAD", Scalar_Default_Char_Expr),
+            ("POSITION", Scalar_Default_Char_Expr),
+            ("ROUND", Scalar_Default_Char_Expr),
+            ("SIGN", Scalar_Default_Char_Expr),
+            ("STATUS", Scalar_Default_Char_Expr),
             ("ERR", Label),
             ("FILE", File_Name_Expr),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
             ("RECL", Scalar_Int_Expr),
             ("UNIT", File_Unit_Number),
-        ]:
+        ]
+        if "open-convert" in EXTENSIONS():
+            # The CONVERT keyword is a non-standard extension supported by
+            # many compilers.
+            result.append(("CONVERT", Scalar_Default_Char_Expr))
+        return result
+
+    @classmethod
+    def match(cls, string):
+        """Implements the matching for connect-spec.
+
+        Note that this is implemented as a `classmethod` (not a
+        `staticmethod`), using attribute keywords from the list provided
+        as a class method. This allows expanding this list for
+        Fortran 2008 without having to reimplement the matching.
+
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing the keyword and value or None if the
+                 supplied string is not a match
+        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
+
+        """
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return "UNIT", File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
+        for keyword, value in cls._keyword_value_list():
             try:
                 obj = KeywordValueBase.match(keyword, value, string, upper_lhs=True)
             except NoMatchError:
