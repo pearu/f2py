@@ -145,6 +145,6 @@ if __name__ == "__main__":
         f_out.write("\n# Cleanup\n# =======\n")
         f_out.write("clean:\n")
         if main_name:
-            f_out.write(f"\trm -f {main_name} $(OBJS)")
+            f_out.write(f"\trm -f {main_name} $(OBJS) *.mod")
         else:
-            f_out.write("\trm -f $(OBJS)")
+            f_out.write("\trm -f $(OBJS) *.mod")
