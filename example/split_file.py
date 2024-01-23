@@ -36,9 +36,8 @@
 # Author: Joerg Henrichs, Bureau of Meteorology
 
 """This file contains an fparser script that splits a source file that contains
-several modules and/or subroutines into individual files. Note that existing
-files will be overwritten, so it is recommended to run this script in a clean
-directory.
+several modules and/or subroutines into individual files. If a file that needs
+to be created already exists, the script will abort.
 
 Usage:  split_file.py  file.f90
 """
@@ -115,8 +114,13 @@ if __name__ == "__main__":
     f90flags = os.getenv("F90FLAGS", "-g -O0")
     ldflags = os.getenv("LDFLAGS", "")
 
+    MAKEFILE = "Makefile"
+    if os.path.exists(MAKEFILE):
+        print(f"The file '{MAKEFILE}' already exists - aborting.")
+        sys.exit(-1)
+
     # Now create a makefile
-    with open("Makefile", mode='w', encoding='utf-8') as f_out:
+    with open(MAKEFILE, mode='w', encoding='utf-8') as f_out:
         f_out.write(f"F90?={f90}\n")
         f_out.write(f"F90FLAGS?={f90flags}\n")
         f_out.write(f"LDFLAGS?={ldflags}\n")
