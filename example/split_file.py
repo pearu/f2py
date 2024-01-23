@@ -87,7 +87,7 @@ if __name__ == "__main__":
     for unit in parse_tree.children:
         # For Module, Subroutine_Subprogram, Function_Subprogram, Main_Program
         # we always get the name using this:
-        unit_name = unit.children[0].items[1].string
+        unit_name = unit.children[0].items[1].string.lower()
 
         # Save the name of the main program if we have one, which will be
         # used in the Makefile created later
