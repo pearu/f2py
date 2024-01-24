@@ -160,8 +160,9 @@ def main():
 
     # Get a list of all preprocessor classes (which will determine
     # the extension to be used: F90/f90
-    all_cpp_classes = tuple(getattr(C99Preprocessor, i)
-                            for i in C99Preprocessor.CPP_CLASS_NAMES)
+    all_cpp_classes = tuple(
+        getattr(C99Preprocessor, i) for i in C99Preprocessor.CPP_CLASS_NAMES
+    )
     all_filenames = []
     all_objs = []
     main_name = ""
@@ -183,7 +184,7 @@ def main():
         if os.path.exists(filename):
             print(f"The file '{filename}' already exists - aborting.")
             sys.exit(-1)
-        with open(filename, mode='w', encoding='utf-8') as f_out:
+        with open(filename, mode="w", encoding="utf-8") as f_out:
             f_out.write(str(unit))
         all_filenames.append(filename)
         all_objs.append(f"{unit_name}.o")
