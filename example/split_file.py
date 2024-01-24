@@ -64,7 +64,7 @@ def usage():
 
 # -----------------------------------------------------------------------------
 def create_makefile(main_name, all_objs, all_filenames):
-    '''This function creates a Makefile to compile (and if a main_name is
+    """This function creates a Makefile to compile (and if a main_name is
     given to link) the binaries. It uses the create_dependencies.py script
     to add the actual dependencies between the modules to the makefile.
 
@@ -74,11 +74,13 @@ def create_makefile(main_name, all_objs, all_filenames):
     :param List[str] all_filenames: the list of all file names, used to
         call the `create_dependency.py` script
 
-    '''
+    """
     file_path = os.path.dirname(os.path.realpath(__file__))
     completed = subprocess.run(
-        [f"{file_path}/create_dependencies.py"]+all_filenames,
-        capture_output=True, check=True)
+        [f"{file_path}/create_dependencies.py"] + all_filenames,
+        capture_output=True,
+        check=True,
+    )
 
     # Query some environment flags which will define the
     # defaults in the Makefile
@@ -93,17 +95,20 @@ def create_makefile(main_name, all_objs, all_filenames):
 
     # Now create a makefile
     if main_name:
-        default_target = (f"default: {main_name}\n\n"
-                          f"{main_name}: $(OBJS)\n"
-                          f"\t$(F90) $(F90FLAGS) $(OBJS) -o {main_name} "
-                          f"$(LDFLAGS)")
+        default_target = (
+            f"default: {main_name}\n\n"
+            f"{main_name}: $(OBJS)\n"
+            f"\t$(F90) $(F90FLAGS) $(OBJS) -o {main_name} "
+            f"$(LDFLAGS)"
+        )
         clean_actions = f"\trm -f {main_name} $(OBJS) *.mod"
     else:
         default_target = "default: $(OBJS)"
         clean_actions = "\trm -f $(OBJS) *.mod"
 
-    with open(makefile, mode='w', encoding='utf-8') as f_out:
-        f_out.write(f"""
+    with open(makefile, mode="w", encoding="utf-8") as f_out:
+        f_out.write(
+            f"""
 F90 ?= {f90}
 # We have to enforce this setting, since using ?= will not
 # change the value of CPP, which will then be using `cc -E`, which
@@ -137,15 +142,16 @@ OBJS={' '.join(all_objs)}
 # =======
 clean:
 {clean_actions}
-""")
+"""
+        )
 
 
 # -----------------------------------------------------------------------------
 def main():
-    '''The main program. Having this as a dedicated function solves many
+    """The main program. Having this as a dedicated function solves many
     pylint complains.
 
-    '''
+    """
     if len(sys.argv) != 2:
         usage()
 
