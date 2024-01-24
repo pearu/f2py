@@ -56,14 +56,18 @@ It also supports files in subdirectories, e.g.:
   nor in the list of modules to ignore).
 
 ## split_file.py
-This script splits one Fortran source file into several files, each containing one
-top level module, subroutine, function or program. Each file uses the name of the
-program unit (module-, subroutine-, function-, program name) with .F90 as extension.
+This script splits one Fortran source file into several files, each containing
+one top level module, subroutine, function or program. Each file uses the name
+of the program unit (module-, subroutine-, function-, program name). The
+extension will be ``.F90`` if there are preprocessor directives in the file,
+and ``.f90`` otherwise.
 
-Additionally, it will create a Makefile to build either the binary (if a program
-is found in the files), or all object files. If the environment variables
-``F90``, ``F90FLAGS``, and ``LDFLAGS`` are set at run time of the script, it will
-use these values as default values for the makefile. But by setting these
-environment variables when running ``make``, these defaults can always be overwritten.
-The Makefile also has a ``clean`` target, which will remove all ``.mod``, object,
-and the program file (if available).
+Additionally, ``split_file.py`` will create a Makefile to build either the
+binary (if a program is found in the file), or all object files. If any of
+the environment variables ``F90``, ``F90FLAGS``, and ``LDFLAGS`` are set at
+run time of the script, it will use these values as default values in the
+makefile. But by setting these environment variables when running ``make``,
+these defaults can always be overwritten. The Makefile also has a ``clean``
+target, which will remove all ``.mod``, object, and the program file (if
+available). It uses the ``create_dependencies.py`` script to add the
+required dependencies to the Makefile.
