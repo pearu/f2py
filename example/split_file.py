@@ -48,8 +48,9 @@ import subprocess
 import sys
 
 from fparser.common.readfortran import FortranFileReader
-from fparser.two import Fortran2003
+from fparser.two import C99Preprocessor, Fortran2003
 from fparser.two.parser import ParserFactory
+from fparser.two.utils import walk
 
 
 # -----------------------------------------------------------------------------
@@ -66,9 +67,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         usage()
 
-    # Extension to use for the files that are being created
-    EXT = ".F90"
-
     try:
         reader = FortranFileReader(sys.argv[1])
     except IOError:
@@ -78,6 +76,10 @@ if __name__ == "__main__":
     Parser = ParserFactory().create(std="f2008")
     parse_tree = Parser(reader)
 
+    # Get a list of all preprocessor classes (which will determine
+    # the extension to be used: F90/f90
+    ALL_CPP_CLASSES = tuple(getattr(C99Preprocessor, i)
+                            for i in C99Preprocessor.CPP_CLASS_NAMES)
     all_filenames = []
     all_objs = []
     # pylint considers this a constant??
@@ -93,8 +95,12 @@ if __name__ == "__main__":
         # used in the Makefile created later
         if isinstance(unit, Fortran2003.Main_Program):
             main_name = unit_name
+        if any(walk(unit, ALL_CPP_CLASSES)):
+            ext = ".F90"
+        else:
+            ext = ".f90"
 
-        filename = f"{unit_name}{EXT}"
+        filename = f"{unit_name}{ext}"
         if os.path.exists(filename):
             print(f"The file '{filename}' already exists - aborting.")
             sys.exit(-1)
@@ -120,31 +126,49 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     # Now create a makefile
+    if main_name:
+        default_target = (f"default: {main_name}\n\n"
+                          f"{main_name}: $(OBJS)\n"
+                          f"\t$(F90) $(F90FLAGS) $(OBJS) -o {main_name} "
+                          f"$(LDFLAGS)")
+        clean_actions = f"\trm -f {main_name} $(OBJS) *.mod"
+    else:
+        default_target = "default: $(OBJS)"
+        clean_actions = "\trm -f $(OBJS) *.mod"
+
     with open(MAKEFILE, mode='w', encoding='utf-8') as f_out:
-        f_out.write(f"F90?={f90}\n")
-        f_out.write(f"F90FLAGS?={f90flags}\n")
-        f_out.write(f"LDFLAGS?={ldflags}\n")
-        f_out.write("\n")
-        f_out.write(f"OBJS={' '.join(all_objs)}\n")
-        f_out.write("\n")
-        if main_name:
-            f_out.write(f"default: {main_name}\n")
-            f_out.write("\n")
-            f_out.write(f"{main_name}: $(OBJS)\n")
-            f_out.write(f"\t$(F90) $(F90FLAGS) $(OBJS) -o {main_name} "
-                        f"$(LDFLAGS)n")
-            f_out.write("\n")
-        else:
-            f_out.write("default: $(OBJS)\n")
-        f_out.write("\n# Dependencies\n# ============\n")
-        f_out.write(completed.stdout.decode("utf-8"))
-        f_out.write("\n# Compilation rules\n# =================\n")
-        f_out.write(f"%.o: %{EXT}\n")
-        f_out.write("\t$(F90) $(F90FLAGS) -c $<\n")
-        f_out.write("\n")
-        f_out.write("\n# Cleanup\n# =======\n")
-        f_out.write("clean:\n")
-        if main_name:
-            f_out.write(f"\trm -f {main_name} $(OBJS) *.mod")
-        else:
-            f_out.write("\trm -f $(OBJS) *.mod")
+        f_out.write(f"""
+F90 ?= {f90}
+# We have to enforce this setting, since using ?= will not
+# change the value of CPP, which will then be using `cc -E`, which
+# in turn does not handle indented preprocessor lines.
+CPP = cpp
+# Don't use traditional, it does also not accept indented preprocessor lines
+CPPFLAGS ?= -P
+F90FLAGS ?= {f90flags}
+LDFLAGS ?= {ldflags}
+
+OBJS={' '.join(all_objs)}
+
+{default_target}
+
+# Dependencies
+# ============
+{completed.stdout.decode("utf-8")}
+
+# Preprocessing (required since some compilers do not
+# handle the indented preprocessor directives of fparser)
+# =======================================================
+%.f90: %.F90
+\t$(CPP) $(F90FLAGS) $(CPPFLAGS) $< > $@
+
+# Compilation rules
+# =================
+%.o: %.f90
+\t$(F90) $(F90FLAGS) -c $<
+
+# Cleanup
+# =======
+clean:
+{clean_actions}
+""")
