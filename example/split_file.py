@@ -126,7 +126,7 @@ OBJS={' '.join(all_objs)}
 # handle the indented preprocessor directives of fparser)
 # =======================================================
 %.f90: %.F90
-\t$(CPP) $(F90FLAGS) $(CPPFLAGS) $< > $@
+\t$(CPP) $(CPPFLAGS) $< > $@
 
 # Compilation rules
 # =================
