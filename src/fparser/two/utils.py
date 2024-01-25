@@ -665,7 +665,7 @@ class BlockBase(Base):
                 # NOTE: if the match subsequently fails then we must
                 #       delete this symbol table.
                 table_name = obj.get_scope_name()
-                SYMBOL_TABLES.enter_scope(table_name)
+                SYMBOL_TABLES.enter_scope(table_name, obj)
             # Store the index of the start of this block proper (i.e.
             # excluding any comments)
             start_idx = len(content)
