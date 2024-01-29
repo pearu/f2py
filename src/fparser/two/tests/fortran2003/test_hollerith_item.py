@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2022 Science and Technology Facilities Council
+# Copyright (c) 2019-2024 Science and Technology Facilities Council
 
 # All rights reserved.
 
@@ -129,7 +129,7 @@ def test_invalid_hollerith(f2003_create, monkeypatch):
     """
     from fparser.two import utils
 
-    monkeypatch.setattr(utils, "EXTENSIONS", [])
+    monkeypatch.setattr(utils, "_EXTENSIONS", [])
     myinput = "2Hab"
     with pytest.raises(NoMatchError) as excinfo:
         _ = Hollerith_Item(myinput)
