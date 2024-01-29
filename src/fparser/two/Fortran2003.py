@@ -324,7 +324,6 @@ class Program(BlockBase):  # R201
 
 
 class Include_Filename(StringBase):  # pylint: disable=invalid-name
-
     """Implements the matching of a filename from an include statement."""
 
     # There are no other classes. This is a simple string match.
@@ -347,7 +346,6 @@ class Include_Filename(StringBase):  # pylint: disable=invalid-name
 
 
 class Include_Stmt(Base):  # pylint: disable=invalid-name
-
     """Implements the matching of a Fortran include statement. There is no
     rule for this as the compiler is expected to inline any content
     from an include statement when one is found. However, for a parser
@@ -2603,7 +2601,6 @@ class Generic_Binding(StmtBase):
 
 
 class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
-
     """
     Fortran2003 Rule R453::
 
@@ -2633,7 +2630,6 @@ class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
 
 
 class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
-
     """
     Fortran2003 Rule R454::
 
