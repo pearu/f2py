@@ -1,5 +1,5 @@
 # News #
-  * 31/01/2024 Version 0.1.4 released (resolves issues with WHERE statements and intrinsics)
+  * 31/01/2024 Version 0.1.4 released (resolves issues with WHERE statements and intrinsics).
   * 18/09/2023 Version 0.1.3 released (resolves issues with support for DO CONCURRENT).
   * 19/06/2023 Version 0.1.2 released (bug fix for handling of INCLUDE files).
   * 28/04/2023 Version 0.1.1 released (extends F2008 support with the optional
