@@ -564,8 +564,7 @@ class FortranReaderBase:
 
     """
 
-    def __init__(self, source, mode, ignore_comments,
-                 omp_sentinel=False):
+    def __init__(self, source, mode, ignore_comments, omp_sentinel=False):
         self.source = source
         self._omp_sentinel = omp_sentinel
         self.set_format(mode)
@@ -642,7 +641,8 @@ class FortranReaderBase:
             cont_line = r"   [^ 0]"
             # Combine these two regular expressions
             self._re_omp_sentinel = re.compile(
-                f"{sentinel}({init_line}|{cont_line})", re.IGNORECASE)
+                f"{sentinel}({init_line}|{cont_line})", re.IGNORECASE
+            )
         else:
             # Initial free format sentinels: !$ as the first non-space
             # character followed by a space.
@@ -658,8 +658,7 @@ class FortranReaderBase:
             # expressions for free format, and the detection of continuation
             # lines need to be done in a later stage, when multiple lines
             # are concatenated.
-            self._re_omp_sentinel_cont = re.compile(r"^ *(\!\$) *&?",
-                                                    re.IGNORECASE)
+            self._re_omp_sentinel_cont = re.compile(r"^ *(\!\$) *&?", re.IGNORECASE)
 
     @property
     def format(self):
@@ -745,8 +744,7 @@ class FortranReaderBase:
             if grp:
                 # Remove the OMP sentinel. There are two groups which might
                 # be matched, depending if the line is the first line
-                line = line[:grp.start(1)] + "  " + line[grp.end(1):]
-
+                line = line[: grp.start(1)] + "  " + line[grp.end(1) :]
 
         self.source_lines.append(line)
 
@@ -1345,7 +1343,7 @@ class FortranReaderBase:
             grp = self._re_omp_sentinel.match(line)
             if grp:
                 # Replace the sentinel with spaces
-                line = line[:grp.start(1)] + "  " + line[grp.end(1):]
+                line = line[: grp.start(1)] + "  " + line[grp.end(1) :]
                 had_omp_sentinels = True
 
         is_f2py_directive = (
@@ -1519,7 +1517,7 @@ class FortranReaderBase:
                 grp = self._re_omp_sentinel_cont.match(line)
                 if grp:
                     # Replace the OMP sentinel with two spaces
-                    line = line[:grp.start(1)] + "  " + line[grp.end(1):]
+                    line = line[: grp.start(1)] + "  " + line[grp.end(1) :]
 
             if start_index:  # fix format code
                 line, qchar, had_comment = handle_inline_comment(
@@ -1639,7 +1637,7 @@ class FortranFileReader(FortranReaderBase):
         source_only=None,
         ignore_comments=True,
         ignore_encoding=True,
-        omp_sentinel=False
+        omp_sentinel=False,
     ):
         # The filename is used as a unique ID. This is then used to cache the
         # contents of the file. Obviously if the file changes content but not
@@ -1667,8 +1665,7 @@ class FortranFileReader(FortranReaderBase):
             file_candidate, ignore_encoding
         )
 
-        super().__init__(self.file, mode, ignore_comments,
-                         omp_sentinel=omp_sentinel)
+        super().__init__(self.file, mode, ignore_comments, omp_sentinel=omp_sentinel)
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1736,8 +1733,7 @@ class FortranStringReader(FortranReaderBase):
         mode = fparser.common.sourceinfo.get_source_info_str(
             string, ignore_encoding=ignore_encoding
         )
-        super().__init__(source, mode, ignore_comments,
-                         omp_sentinel=omp_sentinel)
+        super().__init__(source, mode, ignore_comments, omp_sentinel=omp_sentinel)
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:

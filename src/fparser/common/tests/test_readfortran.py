@@ -1476,15 +1476,17 @@ def test_omp_sentinels_single_line():
         comment = reader.next()
         assert isinstance(comment, Comment)
         assert comment.comment == input_text
-        reader = FortranStringReader(input_text, ignore_comments=False,
-                                     omp_sentinel=True)
+        reader = FortranStringReader(
+            input_text, ignore_comments=False, omp_sentinel=True
+        )
         line = reader.next()
         assert isinstance(line, Line)
         assert line.line == "bla"
 
         input_text = f"{sentinel}omp something"
-        reader = FortranStringReader(input_text, ignore_comments=False,
-                                     omp_sentinel=True)
+        reader = FortranStringReader(
+            input_text, ignore_comments=False, omp_sentinel=True
+        )
         line = reader.next()
         # This is not a conditional sentinel, so it must be returned
         # as a comment line:
@@ -1498,15 +1500,13 @@ def test_omp_sentinels_single_line():
     comment = reader.next()
     assert isinstance(comment, Comment)
     assert comment.comment == input_text.strip()
-    reader = FortranStringReader(input_text, ignore_comments=False,
-                                 omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "bla"
 
     input_text = "  !$omp something"
-    reader = FortranStringReader(input_text, ignore_comments=False,
-                                 omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
     line = reader.next()
     # This is not a conditional sentinel, so it must be returned
     # as a comment line:
@@ -1534,8 +1534,7 @@ def test_omp_sentinels_multiple_line():
     # Now enable handling of sentinels, which will result
     # in returning only one line with both concatenated.
     input_text = "!$     bla\n!$   &bla"
-    reader = FortranStringReader(input_text, ignore_comments=False,
-                                 omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "blabla"
@@ -1553,8 +1552,7 @@ def test_omp_sentinels_multiple_line():
     assert comment.comment == "!$&     bla"
 
     input_text = "!$     bla   &\n!$&     bla"
-    reader = FortranStringReader(input_text, ignore_comments=False,
-                                 omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
     # Make sure to enforce free format
     reader.set_format(FortranFormat(True, True))
     line = reader.next()
