@@ -1546,8 +1546,11 @@ def test_omp_sentinels_multiple_line():
     reader = FortranStringReader(input_text, ignore_comments=False)
     # Make sure to enforce free format
     reader.set_format(FortranFormat(True, True))
-    line = reader.next()
-    assert line.line == "bla        bla"
+    comment = reader.next()
+
+    assert comment.comment == "!$     bla   &"
+    comment = reader.next()
+    assert comment.comment == "!$&     bla"
 
     input_text = "!$     bla   &\n!$&     bla"
     reader = FortranStringReader(input_text, ignore_comments=False,
