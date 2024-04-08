@@ -248,6 +248,7 @@ corresponding dictionary entries are instances of the `SymbolTable`
 class:
 
 .. autoclass:: fparser.two.symbol_table.SymbolTable
+   :members:
 
 The entries in these tables are instances of the named tuple,
 `SymbolTable.Symbol` which currently has the properties:

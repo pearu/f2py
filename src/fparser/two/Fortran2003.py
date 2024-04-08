@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Modified work Copyright (c) 2017-2023 Science and Technology
+# Modified work Copyright (c) 2017-2024 Science and Technology
 # Facilities Council.
 # Original work Copyright (c) 1999-2008 Pearu Peterson
 
@@ -101,6 +101,7 @@ from fparser.two.utils import (
     DynamicImport,
 )
 from fparser.two.utils import (
+    EXTENSIONS,
     NoMatchError,
     FortranSyntaxError,
     InternalSyntaxError,
@@ -323,7 +324,6 @@ class Program(BlockBase):  # R201
 
 
 class Include_Filename(StringBase):  # pylint: disable=invalid-name
-
     """Implements the matching of a filename from an include statement."""
 
     # There are no other classes. This is a simple string match.
@@ -346,7 +346,6 @@ class Include_Filename(StringBase):  # pylint: disable=invalid-name
 
 
 class Include_Stmt(Base):  # pylint: disable=invalid-name
-
     """Implements the matching of a Fortran include statement. There is no
     rule for this as the compiler is expected to inline any content
     from an include statement when one is found. However, for a parser
@@ -2602,7 +2601,6 @@ class Generic_Binding(StmtBase):
 
 
 class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
-
     """
     Fortran2003 Rule R453::
 
@@ -2632,7 +2630,6 @@ class Binding_Attr(STRINGBase):  # pylint: disable=invalid-name
 
 
 class Final_Binding(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
-
     """
     Fortran2003 Rule R454::
 
@@ -4232,9 +4229,7 @@ class Cray_Pointer_Stmt(StmtBase, WORDClsBase):  # pylint: disable=invalid-name
         :rtype: (str, Cray_Pointer_Decl_List) or None
 
         """
-        from fparser.two.utils import EXTENSIONS
-
-        if "cray-pointer" not in EXTENSIONS:
+        if "cray-pointer" not in EXTENSIONS():
             return None
         return WORDClsBase.match(
             "POINTER", Cray_Pointer_Decl_List, string, require_cls=True
@@ -8546,7 +8541,9 @@ class Internal_File_Variable(Base):  # R903
 
 class Open_Stmt(StmtBase, CALLBase):  # R904
     """
-    <open-stmt> = OPEN ( <connect-spec-list> )
+    R904 is:
+
+    open-stmt is OPEN ( connect-spec-list )
     """
 
     subclass_names = []
@@ -8561,27 +8558,32 @@ class Open_Stmt(StmtBase, CALLBase):  # R904
 
 class Connect_Spec(KeywordValueBase):
     """
-    R905::
+    R905 is:
 
-        <connect-spec> = [ UNIT = ] <file-unit-number>
-                         | ACCESS = <scalar-default-char-expr>
-                         | ACTION = <scalar-default-char-expr>
-                         | ASYNCHRONOUS = <scalar-default-char-expr>
-                         | BLANK = <scalar-default-char-expr>
-                         | DECIMAL = <scalar-default-char-expr>
-                         | DELIM = <scalar-default-char-expr>
-                         | ENCODING = <scalar-default-char-expr>
-                         | ERR = <label>
-                         | FILE = <file-name-expr>
-                         | FORM = <scalar-default-char-expr>
-                         | IOMSG = <iomsg-variable>
-                         | IOSTAT = <scalar-int-variable>
-                         | PAD = <scalar-default-char-expr>
-                         | POSITION = <scalar-default-char-expr>
-                         | RECL = <scalar-int-expr>
-                         | ROUND = <scalar-default-char-expr>
-                         | SIGN = <scalar-default-char-expr>
-                         | STATUS = <scalar-default-char-expr>
+    connect-spec is [ UNIT = ] file-unit-number
+                 or ACCESS = scalar-default-char-expr
+                 or ACTION = scalar-default-char-expr
+                 or ASYNCHRONOUS = scalar-default-char-expr
+                 or BLANK = scalar-default-char-expr
+                 [ or CONVERT = scalar-default-char-expr ]
+                 or DECIMAL = scalar-default-char-expr
+                 or DELIM = scalar-default-char-expr
+                 or ENCODING = scalar-default-char-expr
+                 or ERR = label
+                 or FILE = file-name-expr
+                 or FORM = scalar-default-char-expr
+                 or IOMSG = iomsg-variable
+                 or IOSTAT = scalar-int-variable
+                 or PAD = scalar-default-char-expr
+                 or POSITION = scalar-default-char-expr
+                 or RECL = scalar-int-expr
+                 or ROUND = scalar-default-char-expr
+                 or SIGN = scalar-default-char-expr
+                 or STATUS = scalar-default-char-expr
+
+    Note that CONVERT is not a part of the Fortran standard but is supported
+    by several major compilers (Gnu, Intel, Cray etc.) and thus is matched
+    by fparser if the utils.EXTENSIONS() list includes the string 'open-convert'.
 
     """
 
@@ -8596,44 +8598,64 @@ class Connect_Spec(KeywordValueBase):
         "Scalar_Int_Variable",
     ]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def _keyword_value_list(cls):
         """
-        :param str string: Fortran code to check for a match
-        :return: 2-tuple containing the keyword and value or None if the
-                 supplied string is not a match
-        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
+        Defines the valid keywords and corresponding classes to match against.
+        This has to be a method rather than a class property as those classes
+        are generated after this class has been created.
+
+        :returns: list of keyword, class pairs to match against.
+        :rtype: list[tuple[str, type]]
+
         """
-        if "=" not in string:
-            # The only argument which need not be named is the unit number
-            return "UNIT", File_Unit_Number(string)
-        # We have a keyword-value pair. Check whether it is valid...
-        for keyword, value in [
-            (
-                [
-                    "ACCESS",
-                    "ACTION",
-                    "ASYNCHRONOUS",
-                    "BLANK",
-                    "DECIMAL",
-                    "DELIM",
-                    "ENCODING",
-                    "FORM",
-                    "PAD",
-                    "POSITION",
-                    "ROUND",
-                    "SIGN",
-                    "STATUS",
-                ],
-                Scalar_Default_Char_Expr,
-            ),
+        result = [
+            ("ACCESS", Scalar_Default_Char_Expr),
+            ("ACTION", Scalar_Default_Char_Expr),
+            ("ASYNCHRONOUS", Scalar_Default_Char_Expr),
+            ("BLANK", Scalar_Default_Char_Expr),
+            ("DECIMAL", Scalar_Default_Char_Expr),
+            ("DELIM", Scalar_Default_Char_Expr),
+            ("ENCODING", Scalar_Default_Char_Expr),
+            ("FORM", Scalar_Default_Char_Expr),
+            ("PAD", Scalar_Default_Char_Expr),
+            ("POSITION", Scalar_Default_Char_Expr),
+            ("ROUND", Scalar_Default_Char_Expr),
+            ("SIGN", Scalar_Default_Char_Expr),
+            ("STATUS", Scalar_Default_Char_Expr),
             ("ERR", Label),
             ("FILE", File_Name_Expr),
             ("IOSTAT", Scalar_Int_Variable),
             ("IOMSG", Iomsg_Variable),
             ("RECL", Scalar_Int_Expr),
             ("UNIT", File_Unit_Number),
-        ]:
+        ]
+        if "open-convert" in EXTENSIONS():
+            # The CONVERT keyword is a non-standard extension supported by
+            # many compilers.
+            result.append(("CONVERT", Scalar_Default_Char_Expr))
+        return result
+
+    @classmethod
+    def match(cls, string):
+        """Implements the matching for connect-spec.
+
+        Note that this is implemented as a `classmethod` (not a
+        `staticmethod`), using attribute keywords from the list provided
+        as a class method. This allows expanding this list for
+        Fortran 2008 without having to reimplement the matching.
+
+        :param str string: Fortran code to check for a match
+        :return: 2-tuple containing the keyword and value or None if the
+                 supplied string is not a match
+        :rtype: 2-tuple containing keyword (e.g. "UNIT") and associated value
+
+        """
+        if "=" not in string:
+            # The only argument which need not be named is the unit number
+            return "UNIT", File_Unit_Number(string)
+        # We have a keyword-value pair. Check whether it is valid...
+        for keyword, value in cls._keyword_value_list():
             try:
                 obj = KeywordValueBase.match(keyword, value, string, upper_lhs=True)
             except NoMatchError:
@@ -10056,9 +10078,7 @@ class Hollerith_Item(Base):  # pylint: disable=invalid-name
         :rtype: str
 
         """
-        from fparser.two.utils import EXTENSIONS
-
-        if "hollerith" not in EXTENSIONS:
+        if "hollerith" not in EXTENSIONS():
             return None
         if not string:
             return None
@@ -10573,9 +10593,7 @@ class Control_Edit_Desc(Base):  # pylint: disable=invalid-name
         if not strip_string:
             return None
         if len(strip_string) == 1 and strip_string in "/:$":
-            from fparser.two.utils import EXTENSIONS
-
-            if strip_string == "$" and "dollar-descriptor" not in EXTENSIONS:
+            if strip_string == "$" and "dollar-descriptor" not in EXTENSIONS():
                 return None
             return None, strip_string
         if strip_string[-1] == "/":
@@ -10684,9 +10702,7 @@ class Position_Edit_Desc(Base):  # R1013
             return start, number_obj
         if strip_string_upper[-1] == "X":
             # We match *X
-            from fparser.two.utils import EXTENSIONS
-
-            if "x-format" in EXTENSIONS and len(strip_string_upper) == 1:
+            if "x-format" in EXTENSIONS() and len(strip_string_upper) == 1:
                 # The match just contains 'X' which is not valid
                 # fortran 2003 but is an accepted extension
                 return None, "X"
@@ -12333,77 +12349,85 @@ class Intrinsic_Function_Reference(CallBase):  # No explicit rule
 
         :param str string: the string to match with the pattern rule.
 
-        :return: a tuple of size 2 containing the name of the \
-        intrinsic and its arguments if there is a match, or None if \
-        there is not.
-        :rtype: (:py:class:`fparser.two.Fortran2003.Intrinsic_Name`, \
-        :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`) or \
-        NoneType
+        :return: a tuple of size 2 containing the name of the intrinsic
+            and its arguments if there is a match, or None if there is not.
+        :rtype: Tuple[:py:class:`fparser.two.Fortran2003.Intrinsic_Name`,
+            :py:class:`fparser.two.Fortran2003.Actual_Arg_Spec_List`] | NoneType
 
-        :raises InternalSyntaxError: If the number of arguments \
-        provided does not match the number of arguments expected by \
-        the intrinsic.
+        :raises InternalSyntaxError: If the number of arguments provided does
+            not match the number of arguments expected by the intrinsic and
+            there are no wildcard imports that could be bringing a routine
+            (that overrides it) into scope.
 
         """
         result = CallBase.match(Intrinsic_Name, Actual_Arg_Spec_List, string)
-        if result:
-            # There is a match so check the number of args provided
-            # matches the number of args expected by the intrinsic.
-            function_name = str(result[0])
-            function_args = result[1]
+        if not result:
+            return None
 
-            # Check that that this name is not being shadowed (i.e. overridden)
-            # by a symbol in scope at this point.
-            table = SYMBOL_TABLES.current_scope
-            try:
-                table.lookup(function_name)
-                # We found a matching name so refuse to match this intrinsic.
+        # There is a match so check the number of args provided
+        # matches the number of args expected by the intrinsic.
+        function_name = str(result[0])
+        function_args = result[1]
+
+        # Check that that this name is not being shadowed (i.e. overridden)
+        # by a symbol in scope at this point.
+        table = SYMBOL_TABLES.current_scope
+        try:
+            table.lookup(function_name)
+            # We found a matching name so refuse to match this intrinsic.
+            return None
+        except (KeyError, AttributeError):
+            # There is either no matching name in the table or we have
+            # no current scoping region.
+            pass
+
+        nargs = 0 if function_args is None else len(function_args.items)
+
+        if function_name in Intrinsic_Name.specific_function_names.keys():
+            # If this is a specific function then use its generic
+            # name to test min and max number of arguments.
+            test_name = Intrinsic_Name.specific_function_names[function_name]
+        else:
+            test_name = function_name
+
+        min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
+        max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
+
+        # None indicates an unlimited number of arguments
+        if max_nargs is None:
+            if nargs < min_nargs:
+                if table and not table.all_symbols_resolved:
+                    # Wrong number of arguments to be an intrinsic so it must
+                    # be a call to a routine being brought into scope from
+                    # elsewhere.
+                    return None
+
+                raise InternalSyntaxError(
+                    "Intrinsic '{0}' expects at least {1} args but found "
+                    "{2}.".format(function_name, min_nargs, nargs)
+                )
+            # The number of arguments is valid. Return here as
+            # further tests will fail due to max_args being
+            # None.
+            return result
+        if min_nargs == max_nargs and nargs != min_nargs:
+            if table and not table.all_symbols_resolved:
                 return None
-            except (KeyError, AttributeError):
-                # There is either no matching name in the table or we have
-                # no current scoping region.
-                pass
+            raise InternalSyntaxError(
+                "Intrinsic '{0}' expects {1} arg(s) but found {2}."
+                "".format(function_name, min_nargs, nargs)
+            )
+        if min_nargs < max_nargs and (nargs < min_nargs or nargs > max_nargs):
+            if table and not table.all_symbols_resolved:
+                # Wrong number of arguments to be an intrinsic so it must
+                # be a call to a routine being brought into scope from
+                # elsewhere.
+                return None
 
-            # This if/else will not be needed once issue #170 has been
-            # addressed.
-            if isinstance(function_args, Actual_Arg_Spec_List):
-                nargs = len(function_args.items)
-            elif function_args is None:
-                nargs = 0
-            else:
-                nargs = 1
-
-            if function_name in Intrinsic_Name.specific_function_names.keys():
-                # If this is a specific function then use its generic
-                # name to test min and max number of arguments.
-                test_name = Intrinsic_Name.specific_function_names[function_name]
-            else:
-                test_name = function_name
-
-            min_nargs = Intrinsic_Name.generic_function_names[test_name]["min"]
-            max_nargs = Intrinsic_Name.generic_function_names[test_name]["max"]
-
-            if max_nargs is None:
-                if nargs < min_nargs:
-                    # None indicates an unlimited number of arguments
-                    raise InternalSyntaxError(
-                        "Intrinsic '{0}' expects at least {1} args but found "
-                        "{2}.".format(function_name, min_nargs, nargs)
-                    )
-                # The number of arguments is valid. Return here as
-                # further tests will fail due to max_args being
-                # None.
-                return result
-            if min_nargs == max_nargs and nargs != min_nargs:
-                raise InternalSyntaxError(
-                    "Intrinsic '{0}' expects {1} arg(s) but found {2}."
-                    "".format(function_name, min_nargs, nargs)
-                )
-            if min_nargs < max_nargs and (nargs < min_nargs or nargs > max_nargs):
-                raise InternalSyntaxError(
-                    "Intrinsic '{0}' expects between {1} and {2} args but "
-                    "found {3}.".format(function_name, min_nargs, max_nargs, nargs)
-                )
+            raise InternalSyntaxError(
+                "Intrinsic '{0}' expects between {1} and {2} args but "
+                "found {3}.".format(function_name, min_nargs, max_nargs, nargs)
+            )
         return result
 
 

@@ -18,6 +18,11 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+29/01/2024 PR #435 for #426. Add support for the CONVERT extension of the open()
+           intrinsic.
+
+25/01/2024 PR #418 for #313. Allow intrinsic shadowing and improve fparser symbol table.
+
 11/01/2024 PR #439 for #432. Fix RTD build and clean up setuptools config.
 
 03/10/2023 PR #431 for #430. Fixes bug in WHERE handling in fparser1.

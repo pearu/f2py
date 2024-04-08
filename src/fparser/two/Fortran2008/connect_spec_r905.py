@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2023, Science and Technology Facilities Council.
+# Copyright (c) 2023-2024, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,8 @@ from fparser.two.utils import KeywordValueBase, NoMatchError
 
 class Connect_Spec(Connect_Spec_2003):
     """
-    Fortran2008 rule R905.
+    Fortran2008 rule R905. Extends the Fortran2003 definition with support for
+    the NEWUNIT specifier.
 
     connect-spec is [ UNIT = ] file-unit-number
                      or ACCESS = scalar-default-char-expr
@@ -104,58 +105,15 @@ class Connect_Spec(Connect_Spec_2003):
         "Scalar_Int_Variable",
     ]
 
-    @staticmethod
-    def match(string):
+    @classmethod
+    def _keyword_value_list(cls):
         """
-        :param str string: Fortran code to check for a match
+        Extends the list of keywords supported in Fortran2003 with NEWUNIT.
 
-        :returns: 2-tuple containing the keyword and value or None if the
-                  supplied string is not a match
-        :rtype: Optional[Tuple[str, Any]]
+        :returns: list of keyword, class pairs to match against.
+        :rtype: list[tuple[str, type]]
+
         """
-        # Avoid circular dependencies by importing here.
-        # pylint: disable=import-outside-toplevel
-        from fparser.two.Fortran2008 import (
-            Scalar_Default_Char_Expr,
-            Scalar_Int_Variable,
-            Scalar_Int_Expr,
-        )
-
-        if "=" not in string:
-            # The only argument which need not be named is the unit number
-            return "UNIT", File_Unit_Number(string)
-        # We have a keyword-value pair. Check whether it is valid...
-        for keyword, value in [
-            (
-                [
-                    "ACCESS",
-                    "ACTION",
-                    "ASYNCHRONOUS",
-                    "BLANK",
-                    "DECIMAL",
-                    "DELIM",
-                    "ENCODING",
-                    "FORM",
-                    "PAD",
-                    "POSITION",
-                    "ROUND",
-                    "SIGN",
-                    "STATUS",
-                ],
-                Scalar_Default_Char_Expr,
-            ),
-            ("ERR", Label),
-            ("FILE", File_Name_Expr),
-            ("IOSTAT", Scalar_Int_Variable),
-            ("IOMSG", Iomsg_Variable),
-            ("RECL", Scalar_Int_Expr),
-            ("UNIT", File_Unit_Number),
-            ("NEWUNIT", File_Unit_Number),
-        ]:
-            try:
-                obj = KeywordValueBase.match(keyword, value, string, upper_lhs=True)
-            except NoMatchError:
-                obj = None
-            if obj is not None:
-                return obj
-        return None
+        result = Connect_Spec_2003._keyword_value_list()
+        result.append(("NEWUNIT", File_Unit_Number))
+        return result
