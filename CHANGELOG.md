@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+09/04/2024 PR #442 for #440. Adds a new 'split file' example that splits a single source
+           file into separate units and creates a Makefile for them.
+
 29/01/2024 PR #435 for #426. Add support for the CONVERT extension of the open()
            intrinsic.
 
