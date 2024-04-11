@@ -18,6 +18,16 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+09/04/2024 PR #442 for #440. Adds a new 'split file' example that splits a single source
+           file into separate units and creates a Makefile for them.
+
+29/01/2024 PR #435 for #426. Add support for the CONVERT extension of the open()
+           intrinsic.
+
+25/01/2024 PR #418 for #313. Allow intrinsic shadowing and improve fparser symbol table.
+
+11/01/2024 PR #439 for #432. Fix RTD build and clean up setuptools config.
+
 03/10/2023 PR #431 for #430. Fixes bug in WHERE handling in fparser1.
 
 14/09/2023 PR #425 for #411. Splits the monolithic Fortran2008.py file

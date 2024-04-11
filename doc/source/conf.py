@@ -6,13 +6,14 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import subprocess
+import fparser
 
 project = 'fparser'
-copyright = '2017-2022, Science and Technology Facilities Council'
+copyright = '2017-2024, Science and Technology Facilities Council'
 author = 'Andrew Porter, Rupert Ford, Balthasar Reuter and Pearu Peterson'
 
-version = '0.0.16'
-release = '0.0.16'
+version = fparser._get_version()
+release = fparser._get_version()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

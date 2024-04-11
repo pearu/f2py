@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Science and Technology Facilities Council.
+# Copyright (c) 2022-2024 Science and Technology Facilities Council.
 
 # All rights reserved.
 
@@ -41,6 +41,7 @@
                     or ACTION = scalar-default-char-expr
                     or ASYNCHRONOUS = scalar-default-char-expr
                     or BLANK = scalar-default-char-expr
+                    [ or CONVERT = scalar-default-char-expr ]
                     or DECIMAL = scalar-default-char-expr
                     or DELIM = scalar-default-char-expr
                     or ENCODING = scalar-default-char-expr
@@ -56,6 +57,9 @@
                     or ROUND = scalar-default-char-expr
                     or SIGN = scalar-default-char-expr
                     or STATUS = scalar-default-char-expr
+
+Note that the CONVERT argument is non-standard but supported by several major
+compilers.
 
 R906 file-name-expr is scalar-default-char-expr
 R907 iomsg-variable is scalar-default-char-variable
@@ -85,6 +89,7 @@ from fparser.two.utils import NoMatchError, walk
         "23, file='hello', err=36",
         "23, file='hello', status='OLD'",
         "unit=23, file='hello', action='read'",
+        "unit=23, file='hello', convert=endianess, action='read'",
     ],
 )
 @pytest.mark.usefixtures("f2008_parser")

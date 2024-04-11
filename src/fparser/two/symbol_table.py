@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2021-2022, Science and Technology Facilities Council.
+# Copyright (c) 2021-2023, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -87,17 +87,19 @@ class SymbolTables:
         self._symbol_tables = {}
         self._current_scope = None
 
-    def add(self, name):
+    def add(self, name, node=None):
         """
         Add a new symbol table with the supplied name. The name will be
         converted to lower case if necessary.
 
         :param str name: the name for the new table.
+        :param node: the node in the parse tree associated with this table.
+        :type node: Optional[:py:class:`fparser.two.utils.Base`]
 
         :returns: the new symbol table.
         :rtype: :py:class:`fparser.two.symbol_table.SymbolTable`
 
-        :raises SymbolTableError: if there is already an entry with the \
+        :raises SymbolTableError: if there is already an entry with the
                                   supplied name.
         """
         lower_name = name.lower()
@@ -106,7 +108,7 @@ class SymbolTables:
                 f"The table of top-level (un-nested) symbol tables already "
                 f"contains an entry for '{lower_name}'"
             )
-        table = SymbolTable(lower_name, checking_enabled=self._enable_checks)
+        table = SymbolTable(lower_name, checking_enabled=self._enable_checks, node=node)
         self._symbol_tables[lower_name] = table
         return table
 
@@ -131,7 +133,7 @@ class SymbolTables:
         """
         return self._current_scope
 
-    def enter_scope(self, name):
+    def enter_scope(self, name, node=None):
         """
         Called when the parser enters a new scoping region (i.e. when it
         encounters one of the classes listed in `_scoping_unit_classes`).
@@ -142,7 +144,8 @@ class SymbolTables:
         bottom.
 
         :param str name: name of the scoping region.
-
+        :param node: the node of the parse tree associated with this region.
+        :type node: Optional[:py:class:`fparser.two.utils.Base`]
         """
         lname = name.lower()
 
@@ -152,12 +155,15 @@ class SymbolTables:
                 table = self.lookup(lname)
             except KeyError:
                 # Create a new, top-level symbol table with the supplied name.
-                table = self.add(lname)
+                table = self.add(lname, node=node)
         else:
             # We are already inside a scoping region so create a new table
             # and setup its parent/child connections.
             table = SymbolTable(
-                lname, parent=self._current_scope, checking_enabled=self._enable_checks
+                lname,
+                parent=self._current_scope,
+                checking_enabled=self._enable_checks,
+                node=node,
             )
             self._current_scope.add_child(table)
 
@@ -413,16 +419,26 @@ class ModuleUse:
     @property
     def symbol_names(self):
         """
-        :returns: the names of all symbols associated with USE(s) of this \
+        :returns: the names of all symbols associated with USE(s) of this
                   module.
         :rtype: List[str]
         """
         return list(self._symbols.keys())
 
+    def lookup(self, name):
+        """
+        :returns: the symbol with the supplied name imported from this module (if any).
+        :rtype: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
+
+        :raises KeyError: if no symbol with the supplied name is imported from
+                          this module into the current scope.
+        """
+        return self._symbols[name.lower()]
+
     @property
     def only_list(self):
         """
-        :returns: the local names that appear in an Only_List or None if there \
+        :returns: the local names that appear in an Only_List or None if there
                   is no such list.
         :rtype: Optional[List[str]]
         """
@@ -433,7 +449,7 @@ class ModuleUse:
     @property
     def rename_list(self):
         """
-        :returns: the local names that appear in a Rename_List or None if there \
+        :returns: the local names that appear in a Rename_List or None if there
                   is no such list.
         :rtype: Optional[List[str]]
         """
@@ -466,13 +482,16 @@ class SymbolTable:
     Once #201 is complete it is planned to switch this so that the checks
     are instead enabled by default.
 
-    :param str name: the name of this scope. Will be the name of the \
-                     associated module or routine.
+    :param str name: the name of this scope. Will be the name of the
+        associated module or routine.
     :param parent: the symbol table within which this one is nested (if any).
     :type parent: :py:class:`fparser.two.symbol_table.SymbolTable.Symbol`
-    :param bool checking_enabled: whether or not validity checks are \
+    :param bool checking_enabled: whether or not validity checks are
         performed for symbols added to the table.
+    :param node: the node in the parse tree associated with this table.
+    :type node: Optional[:py:class:`fparser.two.utils.Base`]
 
+    :raises TypeError: if the supplied node is of the wrong type.
     """
 
     # TODO #201 add support for other symbol properties (kind, shape
@@ -480,7 +499,7 @@ class SymbolTable:
     # type checking for the various properties.
     Symbol = namedtuple("Symbol", "name primitive_type")
 
-    def __init__(self, name, parent=None, checking_enabled=False):
+    def __init__(self, name, parent=None, checking_enabled=False, node=None):
         self._name = name.lower()
         # Symbols defined in this scope that represent data.
         self._data_symbols = {}
@@ -491,6 +510,16 @@ class SymbolTable:
         # value (if any) is set via setter method.
         self._parent = None
         self.parent = parent
+        # The node in the parse tree with which this table is associated (if any).
+        from fparser.two.utils import Base
+
+        if node and not isinstance(node, Base):
+            raise TypeError(
+                f"The 'node' argument to the SymbolTable constructor must be a "
+                f"valid parse tree node (instance of utils.Base) but got "
+                f"'{type(node).__name__}'"
+            )
+        self._node = node
         # Whether or not to perform validity checks when symbols are added.
         self._checking_enabled = checking_enabled
         # Symbol tables nested within this one.
@@ -603,8 +632,16 @@ class SymbolTable:
         # Fortran is not case sensitive so convert input to lowercase.
         lname = name.lower()
         if lname in self._data_symbols:
+            # Found a match in this table.
             return self._data_symbols[lname]
-        # No match in this scope - search in parent scope (if any)
+        for module in self._modules.values():
+            try:
+                # Look to see whether the symbol is imported into this table.
+                return module.lookup(lname)
+            except KeyError:
+                pass
+        # No match in this scope - search in parent scope (if any). This will
+        # recurse upwards through parent tables as necessary.
         if self.parent:
             return self.parent.lookup(lname)
         raise KeyError(f"Failed to find symbol named '{lname}'")
@@ -643,6 +680,14 @@ class SymbolTable:
                 f"a SymbolTable but got '{type(value).__name__}'"
             )
         self._parent = value
+
+    @property
+    def node(self):
+        """
+        :returns: the scoping node (in the parse tree) asssociated with this SymbolTable.
+        :rtype: :py:class:`fparser.two.utils.Base`
+        """
+        return self._node
 
     def add_child(self, child):
         """
@@ -700,6 +745,49 @@ class SymbolTable:
         while current.parent:
             current = current.parent
         return current
+
+    @property
+    def wildcard_imports(self):
+        """
+        :returns: names of all modules with wildcard imports into this scope or an
+                  empty list if there are none.
+        :rtype: List[Optional[str]]
+        """
+        mod_names = set()
+        for mod_name, mod in self._modules.items():
+            if mod.wildcard_import:
+                mod_names.add(mod_name)
+        if self.parent:
+            # Any wildcard imports in a parent scope will affect this scoping
+            # region so carry on up. Note that if the root scoping region in
+            # the current file is a SUBMODULE then we will be missing whatever
+            # is brought into scope in the parent MODULE (since that will typically
+            # be in a separate source file).
+            mod_names.update(self.parent.wildcard_imports)
+
+        return sorted(list(mod_names))
+
+    @property
+    def all_symbols_resolved(self):
+        """
+        :returns: whether all symbols in this scope have been resolved. i.e. if
+            there are any wildcard imports or this table is within a submodule
+            then there could be symbols we don't have definitions for.
+        :rtype: bool
+        """
+        # wildcard_imports checks all parent scopes.
+        if self.wildcard_imports:
+            return False
+
+        # pylint: disable=import-outside-toplevel
+        from fparser.two.Fortran2008 import Submodule_Stmt
+
+        cursor = self
+        while cursor:
+            if isinstance(cursor.node, Submodule_Stmt):
+                return False
+            cursor = cursor.parent
+        return True
 
 
 #: The single, global container for all symbol tables constructed while

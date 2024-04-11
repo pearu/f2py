@@ -2365,18 +2365,6 @@ def test_inquire_spec_list():
     assert "Inquire_Spec_List: 'unit=23, afile=" in str(excinfo.value)
 
 
-def test_open_stmt():
-    """Tests that we correctly parse and re-generate the various forms
-    of OPEN statement (R904)."""
-    tcls = Open_Stmt
-    obj = tcls("open(23, file='some_file.txt')")
-    assert isinstance(obj, tcls)
-    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
-    obj = tcls("open(unit=23, file='some_file.txt')")
-    assert isinstance(obj, tcls)
-    assert str(obj) == "OPEN(UNIT = 23, FILE = 'some_file.txt')"
-
-
 def test_connect_spec():
     """Tests for individual elements of Connect_Spec (R905)."""
     tcls = Connect_Spec
