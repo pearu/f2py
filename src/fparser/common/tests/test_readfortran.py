@@ -1470,10 +1470,21 @@ def test_conditional_omp_sentinels_fixed_format_single_line():
 
     for sentinel in ["!$", "c$", "C$", "*$"]:
         input_text = f"{sentinel}    bla"
+
+        # 1. By default (not ignoring comments), the line is just a comment:
         reader = FortranStringReader(input_text, ignore_comments=False)
         comment = reader.next()
         assert isinstance(comment, Comment)
         assert comment.comment == input_text
+
+        # 2. And if comments are ignored, nothing should be returned and a
+        #    StopIteration exception will be raised.
+        reader = FortranStringReader(input_text, ignore_comments=True)
+        with pytest.raises(StopIteration):
+            comment = reader.next()
+
+        # 3. When omp-sentinels are accepted, we should get a line,
+        # not a comment:
         reader = FortranStringReader(
             input_text, ignore_comments=False, omp_sentinel=True
         )
@@ -1481,6 +1492,16 @@ def test_conditional_omp_sentinels_fixed_format_single_line():
         assert isinstance(line, Line)
         assert line.line == "bla"
 
+        # 4. If omp-sentinels are accepted, and comments ignored,
+        #    we should still get the line (with the sentinel removed):
+        reader = FortranStringReader(
+            input_text, ignore_comments=True, omp_sentinel=True
+        )
+        line = reader.next()
+        assert isinstance(line, Line)
+        assert line.line == "bla"
+
+        # 5. Make sure that a real omp directive stays a comment:
         input_text = f"{sentinel}omp something"
         reader = FortranStringReader(
             input_text, ignore_comments=False, omp_sentinel=True
@@ -1491,30 +1512,77 @@ def test_conditional_omp_sentinels_fixed_format_single_line():
         assert isinstance(line, Comment)
         assert line.line == input_text
 
+    # 6. Test some corner cases (all of which are not valid sentinels):
+    for sentinel in ["!!$", "! $", " !$", " ! $"]:
+        input_text = f"{sentinel}    bla"
+        reader = FortranStringReader(input_text, ignore_comments=False,
+                                     omp_sentinel=True)
+        # Enforce fixed format, otherwise fparser will silently switch
+        # to free format and suddenly interpret comments differently
+        reader.set_format(FortranFormat(False, False))
+        comment = reader.next()
+        assert isinstance(comment, Comment)
+        assert comment.comment == input_text
+
 
 def test_conditional_omp_sentinels_free_format_single_line():
     """Test handling of conditional OMP sentinels in a single line
     with source code in free format."""
 
+    # 1. By default, a omp sentinel will be returned as a comment
     input_text = "  !$ bla"
     reader = FortranStringReader(input_text, ignore_comments=False)
     comment = reader.next()
+    reader.set_format(FortranFormat(True, True))
     assert isinstance(comment, Comment)
     assert comment.comment == input_text.strip()
+
+    # 2. And if comments are ignored, nothing should be returned and a
+    #    StopIteration exception will be raised.
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    reader.set_format(FortranFormat(True, True))
+    with pytest.raises(StopIteration):
+        comment = reader.next()
+
+    # 3. When omp-sentinels are accepted, we should get a line,
+    # not a comment:4
     reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
+    reader.set_format(FortranFormat(True, True))
+    line = reader.next()
+    assert isinstance(line, Line)
+    assert line.line == "bla"
+
+    # 4. If omp-sentinels are accepted, and comments ignored,
+    #    we should still get the line (with the sentinel removed):
+    reader = FortranStringReader(input_text, ignore_comments=True,
                                  omp_sentinel=True)
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "bla"
 
+    # 5. Make sure that a real omp directive stays a comment:
     input_text = "  !$omp something"
     reader = FortranStringReader(input_text, ignore_comments=False,
                                  omp_sentinel=True)
+    reader.set_format(FortranFormat(True, True))
     line = reader.next()
     # This is not a conditional sentinel, so it must be returned
     # as a comment line:
     assert isinstance(line, Comment)
     assert line.line == input_text.strip()
+
+    # 6. Test some corner cases (all of which are not valid sentinels):
+    for sentinel in ["!!$", "! $", " ! $"]:
+        input_text = f"{sentinel}    bla"
+        reader = FortranStringReader(input_text, ignore_comments=False,
+                                     omp_sentinel=True)
+        reader.set_format(FortranFormat(True, True))
+        comment = reader.next()
+        assert isinstance(comment, Comment)
+        # Since fparser will remove leading white spaces, we need to
+        # compare with the input text after removing its white spaces:
+        assert comment.comment == input_text.strip()
 
 
 def test_conditional_omp_sentinels_fixed_format_multiple_line():
@@ -1540,6 +1608,15 @@ def test_conditional_omp_sentinels_fixed_format_multiple_line():
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "blabla"
+
+    # Add invalid sentinels in continuation lines:
+    input_text = "!$     bla\n! $   &bla"
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
+    line = reader.next()
+    assert line.line == "bla"
+    line = reader.next()
+    assert line.line == "! $   &bla"
 
 
 def test_conditional_omp_sentinels_free_format_multiple_line():
