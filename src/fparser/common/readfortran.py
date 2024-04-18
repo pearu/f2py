@@ -634,13 +634,16 @@ class FortranReaderBase:
             return
 
         if self._format.is_fixed or self._format.is_f77:
-            sentinel = r"^([\!\*c]\$)"
             # Initial lines fixed format sentinels: !$, c$, *! in first
-            # column then only spaces and digits up to column 5, and a
+            # column:
+            sentinel = r"^([\!\*c]\$)"
+
+            # Then only spaces and digits up to column 5, and a
             # space or 0 at column 6
             init_line = r"[ 0-9]{3}[ 0]"
-            # Continued lines fixed format sentinels: !$, c$, *! in first
-            # columns, then three spaces, and a non-space non-0 character
+
+            # Continued lines fixed format sentinels: the sentinel as
+            # above followed by three spaces, and a non-space, non-0 character
             # in column 6:
             cont_line = r"   [^ 0]"
             # Combine these two regular expressions
@@ -747,11 +750,7 @@ class FortranReaderBase:
             # regular expression checks for both an initial or a continuation
             # line, and if it is found, the sentinel is replaced with two
             # spaces:
-            grp = self._re_omp_sentinel.match(line)
-            if grp:
-                # Remove the OMP sentinel. There are two groups which might
-                # be matched, depending if the line is the first line
-                line = line[:grp.start(1)] + "  " + line[grp.end(1):]
+            line, _ = self.replace_omp_sentinels(line, self._re_omp_sentinel)
 
         self.source_lines.append(line)
 
@@ -1115,6 +1114,25 @@ class FortranReaderBase:
 
     # Auxiliary methods for processing raw source lines:
 
+    @staticmethod
+    def replace_omp_sentinels(line, regex):
+        '''Checks if the specified line matches the regex, which represents
+        a conditional OpenMP sentinel. If it is a match, the sentinel (which
+        must be the first group in the regex) is replaced with two spaces.
+        :param line: the line to check if it contains an OpenMP sentinel
+        :type line: str
+        :param regex: the compiled regular expression to use for detecting a
+            conditional sentinel.
+        :type regex: :py:class:`re.Pattern`
+
+        '''
+        grp = regex.match(line)
+        if grp:
+            # Replace the OMP sentinel with two spaces
+            line = line[:grp.start(1)] + "  " + line[grp.end(1):]
+            return (line, True)
+        return (line, False)
+
     def handle_cpp_directive(self, line):
         """
         Determine whether the current line is likely to hold
@@ -1360,11 +1378,8 @@ class FortranReaderBase:
         # continuation line can only be properly detected if there was a
         # previous non-continued conditional sentinel:
         if self._format.is_free and self._include_omp_conditional_lines:
-            grp = self._re_omp_sentinel.match(line)
-            if grp:
-                # Replace the sentinel with spaces
-                line = line[: grp.start(1)] + "  " + line[grp.end(1):]
-                had_include_omp_conditional_liness = True
+            line, had_include_omp_conditional_liness = \
+                self.replace_omp_sentinels(line, self._re_omp_sentinel)
 
         is_f2py_directive = (
             self._format.f2py_enabled and
@@ -1544,11 +1559,8 @@ class FortranReaderBase:
             if had_include_omp_conditional_liness:
                 # In free-format we can only have a continuation line
                 # if we had a omp line previously:
-                grp = self._re_omp_sentinel_cont.match(line)
-                if grp:
-                    # Replace the OMP sentinel with two spaces
-                    line = line[:grp.start(1)] + "  " + line[grp.end(1):]
-
+                line, _ = self.replace_omp_sentinels(
+                    line, self._re_omp_sentinel_cont)
             if start_index:  # fix format code
                 line, qchar, had_comment = handle_inline_comment(
                     line[start_index:], self.linecount, qchar
