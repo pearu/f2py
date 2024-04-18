@@ -162,6 +162,14 @@ Preprocessing directives are retained as `CppDirective` objects by the
 readers and are represented by matching nodes in the parse tree created
 by fparser2. See section `Preprocessing Directives`_ for more details.
 
+If the optional parameter `include_omp_conditional_lines` is set to `True`,
+then any source code line that contains a conditional OpenMP sentinel
+(e.g. `!$` at the beginning of a line) will be handled as if OpenMP is
+enabled - i.e. the sentinel will be replaced by spaces, and the remainder
+of the line is parsed. In this case, the lines will not be returned
+as comment lines, nor would they be ignored even if
+`ignore_comments` is set to `True`.
+
 Note that empty input, or input that consists of purely white space
 and/or newlines, is not treated as invalid Fortran and an empty parse
 tree is returned. Whilst this is not strictly valid, most compilers
