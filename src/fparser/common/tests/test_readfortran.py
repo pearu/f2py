@@ -1464,12 +1464,10 @@ def test_blank_lines_within_continuation():
     assert lines[1].line == "real :: c"
 
 
-def test_omp_sentinels_single_line():
-    """Test OMP sentinels for conditional directives in a single
-    line."""
+def test_conditional_omp_sentinels_fixed_format_single_line():
+    """Test handling of conditional OMP sentinels in a single line
+    with source code in fixed format."""
 
-    # Test fixed lines:
-    # -----------------
     for sentinel in ["!$", "c$", "C$", "*$"]:
         input_text = f"{sentinel}    bla"
         reader = FortranStringReader(input_text, ignore_comments=False)
@@ -1493,20 +1491,25 @@ def test_omp_sentinels_single_line():
         assert isinstance(line, Comment)
         assert line.line == input_text
 
-    # Free format:
-    # ------------
+
+def test_conditional_omp_sentinels_free_format_single_line():
+    """Test handling of conditional OMP sentinels in a single line
+    with source code in free format."""
+
     input_text = "  !$ bla"
     reader = FortranStringReader(input_text, ignore_comments=False)
     comment = reader.next()
     assert isinstance(comment, Comment)
     assert comment.comment == input_text.strip()
-    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "bla"
 
     input_text = "  !$omp something"
-    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
     line = reader.next()
     # This is not a conditional sentinel, so it must be returned
     # as a comment line:
@@ -1514,12 +1517,10 @@ def test_omp_sentinels_single_line():
     assert line.line == input_text.strip()
 
 
-def test_omp_sentinels_multiple_line():
-    """Test OMP sentinels for conditional directives with continuation
-    lines."""
+def test_conditional_omp_sentinels_fixed_format_multiple_line():
+    """Test handling of conditional OMP sentinels with continuation lines
+    with source code in fixed format."""
 
-    # Fixed format
-    # ------------
     input_text = "!$     bla\n!$   &bla"
     reader = FortranStringReader(input_text, ignore_comments=False)
     # Without handling of sentinels, this should return
@@ -1534,13 +1535,19 @@ def test_omp_sentinels_multiple_line():
     # Now enable handling of sentinels, which will result
     # in returning only one line with both concatenated.
     input_text = "!$     bla\n!$   &bla"
-    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
     line = reader.next()
     assert isinstance(line, Line)
     assert line.line == "blabla"
 
-    # Free format
-    # -----------
+
+def test_conditional_omp_sentinels_free_format_multiple_line():
+    """Test handling of conditional OMP sentinels with continuation lines
+    with source code in free format."""
+
+    # Test with the optional & in the continuation line:
+    # ---------------------------------------------------
     input_text = "!$     bla   &\n!$&     bla"
     reader = FortranStringReader(input_text, ignore_comments=False)
     # Make sure to enforce free format
@@ -1552,8 +1559,30 @@ def test_omp_sentinels_multiple_line():
     assert comment.comment == "!$&     bla"
 
     input_text = "!$     bla   &\n!$&     bla"
-    reader = FortranStringReader(input_text, ignore_comments=False, omp_sentinel=True)
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
     # Make sure to enforce free format
     reader.set_format(FortranFormat(True, True))
     line = reader.next()
     assert line.line == "bla        bla"
+
+    # Test without the optional & in the continuation line:
+    # -----------------------------------------------------
+    input_text = "!$     bla   &\n!$      bla"
+    reader = FortranStringReader(input_text, ignore_comments=False)
+    # Make sure to enforce free format
+    reader.set_format(FortranFormat(True, True))
+    comment = reader.next()
+
+    assert comment.comment == "!$     bla   &"
+    comment = reader.next()
+    assert comment.comment == "!$      bla"
+
+    input_text = "!$     bla   &\n!$     bla"
+    reader = FortranStringReader(input_text, ignore_comments=False,
+                                 omp_sentinel=True)
+    # Make sure to enforce free format
+    reader.set_format(FortranFormat(True, True))
+    line = reader.next()
+    # 8 spaces in input_text, plus two for replacing the !$
+    assert line.line == "bla          bla"
