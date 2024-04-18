@@ -556,8 +556,9 @@ class FortranReaderBase:
     :type mode: :py:class:`fparser.common.sourceinfo.Format`
     :param bool isstrict: whether we are strictly enforcing fixed format.
     :param bool ignore_comments: whether or not to discard comments.
-    :param bool omp_sentinel: whether or not the content of a line
-        with an OMP sentinel is parsed or not
+    :param Optional[bool] omp_sentinel: whether or not the content of a line
+        with an OMP sentinel is parsed or not. Default is False (in which
+        case it is treated as a Comment).
 
     The Fortran source is iterated by `get_single_line`,
     `get_next_line`, `put_single_line` methods.
@@ -736,7 +737,7 @@ class FortranReaderBase:
         # expand tabs, replace special symbols, get rid of nl characters
         line = line.expandtabs().replace("\xa0", " ").rstrip()
         if self._omp_sentinel and self._format.is_fixed:
-            # Fixed line sentinels can be handled here, since a continuation
+            # Fixed-format line sentinels can be handled here, since a continuation
             # line does not depend on the previous line. The regular
             # expression checks for both an initial or a continuation line,
             # and if it is found, the sentinel is replaced with two spaces:
@@ -1620,7 +1621,8 @@ class FortranFileReader(FortranReaderBase):
         Python-style encoding information (e.g. "-*- fortran -*-") when
         attempting to determine the format of the file. Default is True.
     :param Optional[bool] omp_sentinel: whether or not the content of a line
-        with an OMP sentinel is parsed or not. Default is False.
+        with an OMP sentinel is parsed or not. Default is False (in which
+        case it is treated as a Comment).
 
     For example::
 
@@ -1695,7 +1697,8 @@ class FortranStringReader(FortranReaderBase):
         Python-style encoding information (e.g. "-*- fortran -*-") when
         attempting to determine the format of the source. Default is True.
     :param Optional[bool] omp_sentinel: whether or not the content of a line
-        with an OMP sentinel is parsed or not. Default is False.
+        with an OMP sentinel is parsed or not. Default is False (in which
+        case it is treated as a Comment).
 
     For example:
 
