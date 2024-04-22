@@ -229,7 +229,7 @@ def extract_label(line):
     match = _LABEL_RE.match(line)
     if match:
         label = int(match.group("label"))
-        line = line[match.end():].lstrip()
+        line = line[match.end() :].lstrip()
     return label, line
 
 
@@ -251,7 +251,7 @@ def extract_construct_name(line):
     match = _CONSTRUCT_NAME_RE.match(line)
     if match:
         construct_name = match.group("name")
-        line = line[match.end():].lstrip()
+        line = line[match.end() :].lstrip()
     return construct_name, line
 
 
@@ -353,8 +353,7 @@ class Line:
         return s + repr(self.line)
 
     def isempty(self, ignore_comments=False):
-        return not (self.line or self.label is not None or
-                    self.name is not None)
+        return not (self.line or self.label is not None or self.name is not None)
 
     def get_line(self, apply_map=False):
         if apply_map:
@@ -378,22 +377,20 @@ class Line:
                 if i != -1 and l2[-1] == ")":
                     substrings = ["call " + l2[: i + 1]]
                     start_search = _HOLLERITH_START_SEARCH
-                    l2 = l2[i + 1:-1].strip()
+                    l2 = l2[i + 1 : -1].strip()
                     m = start_search(l2)
                     while m:
                         substrings.append(l2[: m.start()])
                         substrings.append(m.group("pre"))
                         num = int(m.group("num"))
-                        substrings.append("'" + l2[m.end():m.end() + num] +
-                                          "'")
-                        l2 = l2[m.end() + num:]
+                        substrings.append("'" + l2[m.end() : m.end() + num] + "'")
+                        l2 = l2[m.end() + num :]
                         m = start_search(l2)
                     substrings.append(l2)
                     substrings.append(")")
                     line = "".join(substrings)
 
-        line, str_map = string_replace_map(line,
-                                           lower=not self.reader.format.is_pyf)
+        line, str_map = string_replace_map(line, lower=not self.reader.format.is_pyf)
         self.strline = line
         self.strlinemap = str_map
         return line
@@ -534,8 +531,7 @@ class CppDirective(Line):
     """
 
     def __init__(self, line, linenospan, reader):
-        super(CppDirective, self).__init__(line, linenospan, None, None,
-                                           reader)
+        super(CppDirective, self).__init__(line, linenospan, None, None, reader)
 
 
 ##############################################################################
@@ -567,8 +563,9 @@ class FortranReaderBase:
 
     """
 
-    def __init__(self, source, mode, ignore_comments,
-                 include_omp_conditional_lines=False):
+    def __init__(
+        self, source, mode, ignore_comments, include_omp_conditional_lines=False
+    ):
         self.source = source
         self._include_omp_conditional_lines = include_omp_conditional_lines
         self.set_format(mode)
@@ -665,8 +662,7 @@ class FortranReaderBase:
             # expressions for free format, and the detection of continuation
             # lines need to be done in a later stage, when multiple lines
             # are concatenated.
-            self._re_omp_sentinel_cont = re.compile(r"^ *(\!\$) *&?",
-                                                    re.IGNORECASE)
+            self._re_omp_sentinel_cont = re.compile(r"^ *(\!\$) *&?", re.IGNORECASE)
 
     @property
     def format(self):
@@ -682,8 +678,7 @@ class FortranReaderBase:
         :returns: the name of this reader.
         :rtype: str
         """
-        return "{source} mode={mode}".format(source=self.source,
-                                             mode=self._format.mode)
+        return "{source} mode={mode}".format(source=self.source, mode=self._format.mode)
 
     def close_source(self):
         """Called when self.source.next() raises StopIteration."""
@@ -877,8 +872,7 @@ class FortranReaderBase:
                     return item
                 reader.info("including file %r" % (path), item)
                 self.reader = FortranFileReader(
-                    path, include_dirs=include_dirs,
-                    ignore_comments=ignore_comments
+                    path, include_dirs=include_dirs, ignore_comments=ignore_comments
                 )
                 result = self.reader.next(ignore_comments=ignore_comments)
                 return result
@@ -889,8 +883,7 @@ class FortranReaderBase:
         # rather than catching *every* exception.
         except Exception as err:
             message = self.format_message(
-                "FATAL ERROR", "while processing line",
-                self.linecount, self.linecount
+                "FATAL ERROR", "while processing line", self.linecount, self.linecount
             )
             logging.getLogger(__name__).critical(message)
             message = "Traceback\n" + "".join(traceback.format_stack())
@@ -970,8 +963,7 @@ class FortranReaderBase:
                         # using the existing span (line numbers) and
                         # reader.
                         new_line = Line(
-                            item.apply_map(line), item.span, label, name,
-                            item.reader
+                            item.apply_map(line), item.span, label, name, item.reader
                         )
                         items.append(new_line)
                 items.reverse()
@@ -982,8 +974,7 @@ class FortranReaderBase:
 
     # Interface to returned items:
 
-    def line_item(self, line, startlineno, endlineno, label,
-                  name, errmessage=None):
+    def line_item(self, line, startlineno, endlineno, label, name, errmessage=None):
         """Construct Line item."""
         if errmessage is None:
             return Line(line, (startlineno, endlineno), label, name, self)
@@ -996,8 +987,7 @@ class FortranReaderBase:
     ):
         """Construct MultiLine item."""
         if errmessage is None:
-            return MultiLine(prefix, lines, suffix, (startlineno, endlineno),
-                             self)
+            return MultiLine(prefix, lines, suffix, (startlineno, endlineno), self)
         return SyntaxErrorMultiLine(
             prefix, lines, suffix, (startlineno, endlineno), self, errmessage
         )
@@ -1033,8 +1023,7 @@ class FortranReaderBase:
         for i in range(max(1, startlineno - back_index), startlineno):
             r.append("%5d:%s" % (i, self.source_lines[i - 1]))
         for i in range(
-            startlineno, min(endlineno + back_index,
-                             len(self.source_lines)) + 1
+            startlineno, min(endlineno + back_index, len(self.source_lines)) + 1
         ):
             if i == 0 and not self.source_lines:
                 break
@@ -1081,8 +1070,7 @@ class FortranReaderBase:
                 len(self.source_lines),
             )
         else:
-            m = self.format_message("INFORMATION", message, item.span[0],
-                                    item.span[1])
+            m = self.format_message("INFORMATION", message, item.span[0], item.span[1])
         logging.getLogger(__name__).info(m)
 
     def error(self, message, item=None):
@@ -1108,15 +1096,14 @@ class FortranReaderBase:
                 message, len(self.source_lines) - 2, len(self.source_lines)
             )
         else:
-            m = self.format_warning_message(message, item.span[0],
-                                            item.span[1])
+            m = self.format_warning_message(message, item.span[0], item.span[1])
         logging.getLogger(__name__).warning(m)
 
     # Auxiliary methods for processing raw source lines:
 
     @staticmethod
     def replace_omp_sentinels(line, regex):
-        '''Checks if the specified line matches the regex, which represents
+        """Checks if the specified line matches the regex, which represents
         a conditional OpenMP sentinel. If it is a match, the sentinel (which
         must be the first group in the regex) is replaced with two spaces.
         :param line: the line to check if it contains an OpenMP sentinel
@@ -1125,11 +1112,11 @@ class FortranReaderBase:
             conditional sentinel.
         :type regex: :py:class:`re.Pattern`
 
-        '''
+        """
         grp = regex.match(line)
         if grp:
             # Replace the OMP sentinel with two spaces
-            line = line[:grp.start(1)] + "  " + line[grp.end(1):]
+            line = line[: grp.start(1)] + "  " + line[grp.end(1) :]
             return (line, True)
         return (line, False)
 
@@ -1291,12 +1278,12 @@ class FortranReaderBase:
 
             suffix = None
             multilines = []
-            line = line[i + 3:]
+            line = line[i + 3 :]
             while line is not None:
                 j = line.find(mlstr)
                 if j != -1 and "!" not in line[:j]:
                     multilines.append(line[:j])
-                    suffix = line[j + 3:]
+                    suffix = line[j + 3 :]
                     break
                 multilines.append(line)
                 line = self.get_single_line()
@@ -1306,16 +1293,12 @@ class FortranReaderBase:
                     message, startlineno, startlineno, i
                 )
                 return self.multiline_item(
-                    prefix, multilines, suffix, startlineno, self.linecount,
-                    message
+                    prefix, multilines, suffix, startlineno, self.linecount, message
                 )
-            suffix, qc, had_comment = self.handle_inline_comment(
-                suffix, self.linecount
-            )
+            suffix, qc, had_comment = self.handle_inline_comment(suffix, self.linecount)
             # no line continuation allowed in multiline suffix
             if qc is not None:
-                message = ("following character continuation: {!r},"
-                           " expected None.")
+                message = "following character continuation: {!r}," " expected None."
                 message = self.format_message(
                     "ASSERTION FAILURE(pyf)",
                     message.format(qc),
@@ -1369,8 +1352,7 @@ class FortranReaderBase:
                 line = get_single_line()
             lines.append(line)
             endlineno = self.linecount
-            return self.cpp_directive_item("".join(lines), startlineno,
-                                           endlineno)
+            return self.cpp_directive_item("".join(lines), startlineno, endlineno)
 
         line = self.handle_cf2py_start(line)
         had_include_omp_conditional_liness = False
@@ -1378,12 +1360,12 @@ class FortranReaderBase:
         # continuation line can only be properly detected if there was a
         # previous non-continued conditional sentinel:
         if self._format.is_free and self._include_omp_conditional_lines:
-            line, had_include_omp_conditional_liness = \
-                self.replace_omp_sentinels(line, self._re_omp_sentinel)
+            line, had_include_omp_conditional_liness = self.replace_omp_sentinels(
+                line, self._re_omp_sentinel
+            )
 
         is_f2py_directive = (
-            self._format.f2py_enabled and
-            startlineno in self.f2py_comment_lines
+            self._format.f2py_enabled and startlineno in self.f2py_comment_lines
         )
         isstrict = self._format.is_strict
         have_comment = False
@@ -1420,10 +1402,8 @@ class FortranReaderBase:
                         logging.getLogger(__name__).warning(message)
                         if i == 0:
                             # non standard comment line:
-                            return self.comment_item(line, startlineno,
-                                                     startlineno)
-                        mode = fparser.common.sourceinfo.FortranFormat(True,
-                                                                       False)
+                            return self.comment_item(line, startlineno, startlineno)
+                        mode = fparser.common.sourceinfo.FortranFormat(True, False)
                         self.set_format(mode)
                     else:
                         message = self.format_warning_message(
@@ -1432,16 +1412,14 @@ class FortranReaderBase:
                         logging.getLogger(__name__).warning(message)
                         if i == 0:
                             # non standard comment line:
-                            return self.comment_item(line, startlineno,
-                                                     startlineno)
+                            return self.comment_item(line, startlineno, startlineno)
                         # return line item with error message
                         # TODO: handle cases with line[6:]==''
                         message = self.format_error_message(
                             message, startlineno, self.linecount
                         )
                         return self.line_item(
-                            line[6:], startlineno, self.linecount, label,
-                            name, message
+                            line[6:], startlineno, self.linecount, label, name, message
                         )
             if self._format.is_fixed:  # Check for switched to free format
                 # check for label
@@ -1452,15 +1430,14 @@ class FortranReaderBase:
                     m = _CONSTRUCT_NAME_RE.match(line[6:])
                     if m:
                         name = m.group("name")
-                        line = line[:6] + line[6:][m.end():].lstrip()
+                        line = line[:6] + line[6:][m.end() :].lstrip()
                 if not line[6:].strip():
                     # check for a blank line
                     if name is not None:
                         self.error("No construct following construct-name.")
                     elif label is not None:
                         self.warning(
-                            "Label must follow nonblank character"
-                            " (F2008:3.2.5_2)"
+                            "Label must follow nonblank character" " (F2008:3.2.5_2)"
                         )
                     return self.comment_item("", startlineno, self.linecount)
                 # line is not a comment and the start of the line is valid
@@ -1489,8 +1466,7 @@ class FortranReaderBase:
         endlineno = self.linecount
         if self._format.is_fix and not is_f2py_directive:
             # handle inline comment
-            newline, qc, had_comment = handle_inline_comment(line[6:],
-                                                             startlineno)
+            newline, qc, had_comment = handle_inline_comment(line[6:], startlineno)
             have_comment |= had_comment
             lines = [newline]
             next_line = self.get_next_line()
@@ -1506,8 +1482,7 @@ class FortranReaderBase:
                 if _is_fix_comment(line2, isstrict, self._format.f2py_enabled):
                     # handle fix format comments inside line continuations
                     # after the line construction
-                    citem = self.comment_item(line2, self.linecount,
-                                              self.linecount)
+                    citem = self.comment_item(line2, self.linecount, self.linecount)
                     self.fifo_item.append(citem)
                 else:
                     # line continuation
@@ -1520,8 +1495,7 @@ class FortranReaderBase:
                 next_line = self.get_next_line()
             # no character continuation should follows now
             if qc is not None:
-                message = ("following character continuation: "
-                           "{!r}, expected None.")
+                message = "following character continuation: " "{!r}, expected None."
                 message = self.format_message(
                     "ASSERTION FAILURE(fix)",
                     message.format(qc),
@@ -1542,8 +1516,7 @@ class FortranReaderBase:
                             message, startlineno + i, startlineno + i, location
                         )
                         logging.getLogger(__name__).warning(message)
-            return self.line_item("".join(lines), startlineno, endlineno,
-                                  label, name)
+            return self.line_item("".join(lines), startlineno, endlineno, label, name)
 
         # line is free format or fixed format with f2py directive (that
         # will be interpreted as free format line).
@@ -1559,8 +1532,7 @@ class FortranReaderBase:
             if had_include_omp_conditional_liness:
                 # In free-format we can only have a continuation line
                 # if we had a omp line previously:
-                line, _ = self.replace_omp_sentinels(
-                    line, self._re_omp_sentinel_cont)
+                line, _ = self.replace_omp_sentinels(line, self._re_omp_sentinel_cont)
             if start_index:  # fix format code
                 line, qchar, had_comment = handle_inline_comment(
                     line[start_index:], self.linecount, qchar
@@ -1599,7 +1571,7 @@ class FortranReaderBase:
 
             i = line.rfind("&")
             if i != -1:
-                line_i1_rstrip = line[i + 1:].rstrip()
+                line_i1_rstrip = line[i + 1 :].rstrip()
             if not lines:
                 # first line
                 if i == -1 or line_i1_rstrip:
@@ -1619,23 +1591,20 @@ class FortranReaderBase:
                 if k != 1 and line[:k].lstrip():
                     k = -1
             endlineno = self.linecount
-            lines_append(line[k + 1:i])
+            lines_append(line[k + 1 : i])
             if i == len(line):
                 break
             line = get_single_line()
 
         if qchar is not None:
-            message = ("following character continuation: {!r}, "
-                       "expected None.")
+            message = "following character continuation: {!r}, " "expected None."
             message = self.format_message(
-                "ASSERTION FAILURE(free)", message.format(qchar),
-                startlineno, endlineno
+                "ASSERTION FAILURE(free)", message.format(qchar), startlineno, endlineno
             )
             logging.getLogger(__name__).error(message)
         line_content = "".join(lines).strip()
         if line_content:
-            return self.line_item(line_content, startlineno, endlineno,
-                                  label, name)
+            return self.line_item(line_content, startlineno, endlineno, label, name)
         if label is not None:
             message = "Label must follow nonblank character (F2008:3.2.5_2)"
             self.warning(message)
@@ -1712,8 +1681,11 @@ class FortranFileReader(FortranReaderBase):
         )
 
         super().__init__(
-            self.file, mode, ignore_comments,
-            include_omp_conditional_lines=include_omp_conditional_lines)
+            self.file,
+            mode,
+            ignore_comments,
+            include_omp_conditional_lines=include_omp_conditional_lines,
+        )
 
         if include_dirs is None:
             self.include_dirs.insert(0, os.path.dirname(self.id))
@@ -1783,8 +1755,11 @@ class FortranStringReader(FortranReaderBase):
             string, ignore_encoding=ignore_encoding
         )
         super().__init__(
-            source, mode, ignore_comments,
-            include_omp_conditional_lines=include_omp_conditional_lines)
+            source,
+            mode,
+            ignore_comments,
+            include_omp_conditional_lines=include_omp_conditional_lines,
+        )
         if include_dirs is not None:
             self.include_dirs = include_dirs[:]
         if source_only is not None:
