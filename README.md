@@ -53,6 +53,8 @@ The documentation for fparser is hosted on [ReadTheDocs](http://fparser.readthed
 [![codecov](https://codecov.io/gh/stfc/fparser/branch/master/graph/badge.svg?token=x0abs66TST)](https://codecov.io/gh/stfc/fparser)
 [![Documentation Status](https://readthedocs.org/projects/fparser/badge/?version=stable)](http://fparser.readthedocs.io/en/stable/?badge=stable)
 
+https://codecov.io/gh/stfc/fparser/graphs/icicle.svg?token=x0abs66TST
+
 # See also #
 
 [www.f2py.com](http://www.f2py.com).
