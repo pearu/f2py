@@ -7678,14 +7678,14 @@ class Type_Guard_Stmt(StmtBase):  # R823
     def match(string):
         """Implements the matching of a Type_Guard_Stmt rule.
 
-        param str string: a string containing the code that we are
-        trying to match.
+        :param str string: the code that we are trying to match.
 
-        :returns: a 3-tuple, containing the guard rules as a string,
+        :returns: a 3-tuple, containing the guard rule as a string (one of
+            'TYPE IS', 'CLASS IS' or 'CLASS DEFAULT'),
             followed by an optional Type_Spec and an optional
             Select_Construct_Name. Returns None if there is no match.
-        :rtype: Optional[str, Optional[:py:class:`fparser.two.Type_Spec`],
-            Optional[:py:class:`fparser.two.Select_Construct_Name`]]
+        :rtype: Optional[Tuple[str, Optional[:py:class:`fparser.two.Type_Spec`],
+            Optional[:py:class:`fparser.two.Select_Construct_Name`]]]
 
         """
         string = string.lstrip()
@@ -7703,8 +7703,6 @@ class Type_Guard_Stmt(StmtBase):  # R823
             elif line[:7].upper() == "DEFAULT":
                 line = line[7:].lstrip()
                 if line:
-                    # if isalnum(line[0]):
-                    #    return None
                     return "CLASS DEFAULT", None, Select_Construct_Name(line)
                 return "CLASS DEFAULT", None, None
             else:
