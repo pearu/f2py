@@ -631,7 +631,7 @@ class FortranReaderBase:
             return
 
         if self._format.is_fixed or self._format.is_f77:
-            # Initial lines fixed format sentinels: !$, c$, *! in first
+            # Initial lines fixed format sentinels: !$, c$, *$ in first
             # column:
             sentinel = r"^([\!\*c]\$)"
 
@@ -1106,11 +1106,15 @@ class FortranReaderBase:
         """Checks if the specified line matches the regex, which represents
         a conditional OpenMP sentinel. If it is a match, the sentinel (which
         must be the first group in the regex) is replaced with two spaces.
-        :param line: the line to check if it contains an OpenMP sentinel
-        :type line: str
+
+        :param str line: the line to check if it contains an OpenMP sentinel
         :param regex: the compiled regular expression to use for detecting a
             conditional sentinel.
         :type regex: :py:class:`re.Pattern`
+
+        :returns: 2-tuple consisting of the (potentially modified) line,
+            and whether a sentinel was found or not.
+        :type: Tuple[str, bool]
 
         """
         grp = regex.match(line)
@@ -1298,7 +1302,7 @@ class FortranReaderBase:
             suffix, qc, had_comment = self.handle_inline_comment(suffix, self.linecount)
             # no line continuation allowed in multiline suffix
             if qc is not None:
-                message = "following character continuation: {!r}," " expected None."
+                message = "following character continuation: {!r}, expected None."
                 message = self.format_message(
                     "ASSERTION FAILURE(pyf)",
                     message.format(qc),
@@ -1437,7 +1441,7 @@ class FortranReaderBase:
                         self.error("No construct following construct-name.")
                     elif label is not None:
                         self.warning(
-                            "Label must follow nonblank character" " (F2008:3.2.5_2)"
+                            "Label must follow nonblank character (F2008:3.2.5_2)"
                         )
                     return self.comment_item("", startlineno, self.linecount)
                 # line is not a comment and the start of the line is valid
@@ -1495,7 +1499,7 @@ class FortranReaderBase:
                 next_line = self.get_next_line()
             # no character continuation should follows now
             if qc is not None:
-                message = "following character continuation: " "{!r}, expected None."
+                message = "following character continuation: {!r}, expected None."
                 message = self.format_message(
                     "ASSERTION FAILURE(fix)",
                     message.format(qc),
@@ -1597,7 +1601,7 @@ class FortranReaderBase:
             line = get_single_line()
 
         if qchar is not None:
-            message = "following character continuation: {!r}, " "expected None."
+            message = "following character continuation: {!r}, expected None."
             message = self.format_message(
                 "ASSERTION FAILURE(free)", message.format(qchar), startlineno, endlineno
             )
