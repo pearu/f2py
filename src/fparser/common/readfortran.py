@@ -1114,7 +1114,7 @@ class FortranReaderBase:
 
         :returns: 2-tuple consisting of the (potentially modified) line,
             and whether a sentinel was found or not.
-        :type: Tuple[str, bool]
+        :rtype: tuple[str, bool]
 
         """
         grp = regex.match(line)
