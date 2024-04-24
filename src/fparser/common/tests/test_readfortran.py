@@ -1402,7 +1402,7 @@ def test_multiple_blank_lines():
     output as an empty Comment objects.
 
     """
-    input_text = "   \n\n" "program test\n" "  \n\n" "end program test\n" "  \n\n"
+    input_text = "   \n\nprogram test\n  \n\nend program test\n  \n\n"
     reader = FortranStringReader(input_text, ignore_comments=False)
     lines = list(reader)
     assert len(lines) == 8
@@ -1435,7 +1435,7 @@ def test_blank_lines_within_continuation():
 
     """
     input_text = (
-        "  \n" "  real :: a &\n" "  \n\n" "          ,b\n" "  \n" "  real :: c\n"
+        "  \n  real :: a &\n  \n\n          ,b\n  \n  real :: c\n"
     )
 
     reader = FortranStringReader(input_text, ignore_comments=False)
@@ -1597,6 +1597,9 @@ def test_conditional_include_omp_conditional_liness_fixed_format_multiple():
     with source code in fixed format."""
 
     input_text = "!$     bla\n!$   &bla"
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    with pytest.raises(StopIteration):
+        reader.next()
     reader = FortranStringReader(input_text, ignore_comments=False)
     # Without handling of sentinels, this should return
     # two comment lines:
@@ -1617,8 +1620,25 @@ def test_conditional_include_omp_conditional_liness_fixed_format_multiple():
     assert isinstance(line, Line)
     assert line.line == "blabla"
 
+    # Ignoring comments must not change the behaviour:
+    reader = FortranStringReader(
+        input_text, ignore_comments=True, include_omp_conditional_lines=True
+    )
+    line = reader.next()
+    assert isinstance(line, Line)
+    assert line.line == "blabla"
+
     # Add invalid sentinels in continuation lines:
     input_text = "!$     bla\n! $   &bla"
+    reader = FortranStringReader(
+        input_text, ignore_comments=True, include_omp_conditional_lines=True
+    )
+    line = reader.next()
+    assert line.line == "bla"
+    # The second line is just a comment line, so it must be ignored:
+    with pytest.raises(StopIteration):
+        reader.next()
+
     reader = FortranStringReader(
         input_text, ignore_comments=False, include_omp_conditional_lines=True
     )
@@ -1664,6 +1684,12 @@ def test_conditional_include_omp_conditional_liness_free_format_multiple():
     assert comment.comment == "!$     bla   &"
     comment = reader.next()
     assert comment.comment == "!$      bla"
+
+    reader = FortranStringReader(input_text, ignore_comments=True)
+    # Make sure to enforce free format
+    reader.set_format(FortranFormat(True, True))
+    with pytest.raises(StopIteration):
+        comment = reader.next()
 
     input_text = "!$     bla   &\n!$     bla"
     reader = FortranStringReader(
