@@ -1434,9 +1434,7 @@ def test_blank_lines_within_continuation():
     removed.
 
     """
-    input_text = (
-        "  \n  real :: a &\n  \n\n          ,b\n  \n  real :: c\n"
-    )
+    input_text = "  \n  real :: a &\n  \n\n          ,b\n  \n  real :: c\n"
 
     reader = FortranStringReader(input_text, ignore_comments=False)
     lines = list(reader)
