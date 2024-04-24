@@ -1548,7 +1548,7 @@ def test_conditional_include_omp_conditional_liness_free_format_single_line():
         comment = reader.next()
 
     # 3. When omp-sentinels are accepted, we should get a line,
-    # not a comment:4
+    # not a comment:
     reader = FortranStringReader(
         input_text, ignore_comments=False, include_omp_conditional_lines=True
     )
