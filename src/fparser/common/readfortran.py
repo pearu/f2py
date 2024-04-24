@@ -1359,12 +1359,12 @@ class FortranReaderBase:
             return self.cpp_directive_item("".join(lines), startlineno, endlineno)
 
         line = self.handle_cf2py_start(line)
-        had_include_omp_conditional_liness = False
+        had_omp_sentinels = False
         # Free format omp sentinels need to be handled here, since a
         # continuation line can only be properly detected if there was a
         # previous non-continued conditional sentinel:
         if self._format.is_free and self._include_omp_conditional_lines:
-            line, had_include_omp_conditional_liness = self.replace_omp_sentinels(
+            line, had_omp_sentinels = self.replace_omp_sentinels(
                 line, self._re_omp_sentinel
             )
 
@@ -1533,7 +1533,7 @@ class FortranReaderBase:
         put_item = self.fifo_item.append
         qchar = None
         while line is not None:
-            if had_include_omp_conditional_liness:
+            if had_omp_sentinels:
                 # In free-format we can only have a continuation line
                 # if we had a omp line previously:
                 line, _ = self.replace_omp_sentinels(line, self._re_omp_sentinel_cont)
