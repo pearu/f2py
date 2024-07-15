@@ -18,6 +18,8 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+15/07/2024 PR #438 for #437. Fix type guard statement bug. 
+
 24/04/2024 PR #444 for #443. Adds an option to the reader to handle code
            behind OpenMP sentinels (e.g. '!$ write(*,*) "hello"').
 
