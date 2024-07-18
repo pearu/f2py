@@ -86,7 +86,7 @@ jobs:
         LC_ALL=POSIX pytest --cov=fparser --cov-report=xml src/fparser
     - name: Test examples
       run: |
-        make -C example test src/fparser
+        make -C example test
     - name: Upload coverage to Codecov with GitHub Action
       uses: codecov/codecov-action@v4
       env:
