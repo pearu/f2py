@@ -101,10 +101,10 @@ def create_makefile(main_name, all_objs, all_filenames):
             f"\t$(F90) $(F90FLAGS) $(OBJS) -o {main_name} "
             f"$(LDFLAGS)"
         )
-        clean_actions = f"\trm -f {main_name} $(OBJS) $(OBJS:%.o=%.f90) *.mod"
+        clean_actions = f"\trm -f {main_name} $(OBJS) *.mod"
     else:
         default_target = "default: $(OBJS)"
-        clean_actions = "\trm -f $(OBJS) $(OBJS:%.o=%.f90) *.mod"
+        clean_actions = "\trm -f $(OBJS) *.mod"
 
     with open(makefile, mode="w", encoding="utf-8") as f_out:
         f_out.write(
