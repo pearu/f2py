@@ -35,7 +35,7 @@
 # ------------------------------------------------------------------------------
 # Author: Joerg Henrichs, Bureau of Meteorology
 
-'''This file contains an fparser script that parses Fortran files
+"""This file contains an fparser script that parses Fortran files
 and output the dependencies between these files suitable for a Makefile.
 
 It assumes that the module name in the use statement corresponds to the
@@ -43,16 +43,22 @@ name of the file (adding one of .F90/.f90/.x90). Only files in the current
 directory will be tested, so external dependencies will not be listed.
 
 Usage:  create_dependencies.py  file1.f90 file2.F90 ...
-'''
+"""
 
 import sys
 
 from fparser.common.readfortran import FortranFileReader
-from fparser.two.Fortran2003 import (Access_Stmt, Access_Spec, Attr_Spec,
-                                     Binding_Private_Stmt, 
-                                     Private_Components_Stmt, Protected_Stmt)
+from fparser.two.Fortran2003 import (
+    Access_Stmt,
+    Access_Spec,
+    Attr_Spec,
+    Binding_Private_Stmt,
+    Private_Components_Stmt,
+    Protected_Stmt,
+)
 from fparser.two.parser import ParserFactory
 from fparser.two.utils import walk
+
 
 # -----------------------------------------------------------------------------
 def remove_private(filename):
@@ -65,12 +71,15 @@ def remove_private(filename):
     # Loop over all access and protected statements. Note that a
     # `protected_stmt` is not an access statement, so it needs to
     # be listed additionally:
-    for node in walk(parse_tree, (Access_Stmt, Protected_Stmt,
-                                  Private_Components_Stmt,
-                                  Binding_Private_Stmt)):
+    for node in walk(
+        parse_tree,
+        (Access_Stmt, Protected_Stmt, Private_Components_Stmt, Binding_Private_Stmt),
+    ):
         # A Private_Components_Stms has no items:
-        if (isinstance(node, Private_Components_Stmt) or
-                node.items[0] in ["PRIVATE", "PROTECTED"]):
+        if isinstance(node, Private_Components_Stmt) or node.items[0] in [
+            "PRIVATE",
+            "PROTECTED",
+        ]:
             # Find the node in the parent, and remove it:
             node.parent.children.remove(node)
 
@@ -94,9 +103,9 @@ def remove_private(filename):
 
     return parse_tree
 
+
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
-
     filename = sys.argv[1]
     parse_tree = remove_private(filename)
     print(parse_tree)
