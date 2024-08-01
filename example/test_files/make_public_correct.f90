@@ -7,6 +7,7 @@ MODULE a_mod
   PUBLIC :: public_protected
   TYPE :: my_type
     INTEGER :: a, b
+    CONTAINS
   END TYPE my_type
   TYPE(my_type), PUBLIC :: my_var
   CONTAINS

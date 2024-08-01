@@ -62,6 +62,9 @@ from fparser.two.utils import walk
 
 # -----------------------------------------------------------------------------
 def remove_private(filename):
+    """Simple function that removes all private and protected declarations.
+    :param str filename: the file in which to remove private and protected
+    """
     reader = FortranFileReader(filename)
     parser = ParserFactory().create(std="f2008")
     parse_tree = parser(reader)
@@ -76,10 +79,9 @@ def remove_private(filename):
         (Access_Stmt, Protected_Stmt, Private_Components_Stmt, Binding_Private_Stmt),
     ):
         # A Private_Components_Stms has no items:
-        if isinstance(node, Private_Components_Stmt) or node.items[0] in [
-            "PRIVATE",
-            "PROTECTED",
-        ]:
+        if isinstance(
+            node, (Binding_Private_Stmt, Private_Components_Stmt)
+        ) or node.items[0] in ["PRIVATE", "PROTECTED"]:
             # Find the node in the parent, and remove it:
             node.parent.children.remove(node)
 
@@ -87,7 +89,7 @@ def remove_private(filename):
         if str(node) == "PRIVATE":
             node.string = "PUBLIC"
 
-    all_nodes = [node for node in walk(parse_tree, Attr_Spec)]
+    all_nodes = list(walk(parse_tree, Attr_Spec))
     for node in all_nodes:
         if str(node) == "PROTECTED":
             # This is a tuple, so we can't simple remove the attribute

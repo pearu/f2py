@@ -22,6 +22,8 @@ module a_mod
       ! Private_Components_Stmt
       private
       integer :: a, b
+   contains
+      private
 
    end type my_type
 
