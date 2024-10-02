@@ -43,10 +43,9 @@ from fparser.two.Fortran2008 import Stop_Code
 
 
 @pytest.mark.usefixtures("f2008_create")
-@pytest.mark.parametrize("string", ["1", "- 1", '"abc"', "'abc'",
-                                    "'abc' // 'def'"])
+@pytest.mark.parametrize("string", ["1", "- 1", '"abc"', "'abc'", "'abc' // 'def'"])
 def test_simple_stop_code(string):
-    """Test that error-stop matches the expected valid """
+    """Test that error-stop matches the expected valid values."""
     result = Stop_Code(string)
     assert str(result) == string
 
