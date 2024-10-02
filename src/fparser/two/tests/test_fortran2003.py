@@ -2110,6 +2110,14 @@ def test_stop_stmt():  # R849
     assert isinstance(obj, tcls), repr(obj)
     assert str(obj) == "STOP 'hey you'"
 
+    obj = tcls('stop "123"//"456"')
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == 'STOP "123" // "456"'
+
+    obj = tcls("stop -321")
+    assert isinstance(obj, tcls), repr(obj)
+    assert str(obj) == "STOP - 321"
+
 
 #
 # SECTION 9
