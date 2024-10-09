@@ -91,7 +91,7 @@ def remove_private(filename):
     all_nodes = list(walk(parse_tree, Attr_Spec))
     for node in all_nodes:
         if str(node) == "PROTECTED":
-            # This is a tuple, so we can't simple remove the attribute
+            # This is a tuple, so we can't simply remove the attribute
             node.parent.items = tuple(i for i in node.parent.items if i is not node)
             # If all items in the Attr_Spec are removed, we need to replace the
             # Attr_Spec in the parent-parent (Type_Declaration) with None,
@@ -107,6 +107,6 @@ def remove_private(filename):
 
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
-    filename = sys.argv[1]
-    parse_tree = remove_private(filename)
-    print(parse_tree)
+    user_filename = sys.argv[1]
+    modified_parse_tree = remove_private(user_filename)
+    print(modified_parse_tree)
