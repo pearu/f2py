@@ -33,6 +33,9 @@
 # ------------------------------------------------------------------------------
 # Author: J. Henrichs, Bureau of Meteorology
 
+# A simple Makefile driver to test the various examples.
+
+
 .PHONY: test create_dependency fparser2_f2008 make_public split_file
 
 test:  create_dependencies fparser2_f2008 make_public split_file

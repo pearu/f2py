@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # BSD 3-Clause License
 #
-# Copyright (c) 2020, Science and Technology Facilities Council.
+# Copyright (c) 2024, Science and Technology Facilities Council.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,13 @@
 # ------------------------------------------------------------------------------
 # Author: Joerg Henrichs, Bureau of Meteorology
 
-"""This file contains an fparser script that parses Fortran files
-and output the dependencies between these files suitable for a Makefile.
+"""This file contains a script that will remove any private or protected
+declaration in a Fortran file. This is used by PSyclone's kernel extraction
+and driver creation feature, see
+https://psyclone.readthedocs.io/en/latest/psyke.html.
+for details.
 
-It assumes that the module name in the use statement corresponds to the
-name of the file (adding one of .F90/.f90/.x90). Only files in the current
-directory will be tested, so external dependencies will not be listed.
-
-Usage:  create_dependencies.py  file1.f90 file2.F90 ...
+Usage:  make_public.py  file1.f90
 """
 
 import sys

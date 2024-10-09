@@ -55,7 +55,7 @@ out the re-created Fortran source code.
 
 create_dependencies.py
 ^^^^^^^^^^^^^^^^^^^^^^
-This file analysis the dependencies between a set of Fortran files, based on
+This file analyses the dependencies between a set of Fortran files, based on
 the ``Use`` statements in each file. It assumes that the module name in the
 ``use`` statement corresponds to the name of the file (adding one of
 .F90/.f90/.x90). Only files in the current directory will be tested, so
@@ -105,7 +105,7 @@ in a code section to a file. It also then creates a stand-alone driver program
 that will read this file, execute the kernel, and compare the results with
 the original results.
 
-Since PSyclone will follow call tree, the code must be able to read even
+Since PSyclone will follow the call tree, the code must be able to read even
 variables declared as ``private`` (to write them into the output file), and
 a driver program must be able to modify ``private`` and ``protected``
 variables in modules. If the driver creation is used, the 
