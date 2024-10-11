@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+11/10/2024 PR #450 for #448. Adds an example script for removing all protected/private
+           attributes from a parse tree.
+
 15/07/2024 PR #438 for #437. Fix type guard statement bug. 
 
 24/04/2024 PR #444 for #443. Adds an option to the reader to handle code
