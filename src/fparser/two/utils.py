@@ -117,7 +117,7 @@ _EXTENSIONS += ["open-convert"]
 # While non-standard, many compilers support negative numbers, and string
 # operations in stop statements, e.g. `stop -1` or `stop str1//str2`.
 # With this extension, these statements will be allowed.
-_EXTENSIONS += ["extended-stop-format"]
+_EXTENSIONS += ["extended-stop-args"]
 
 
 def EXTENSIONS():

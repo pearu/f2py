@@ -8513,7 +8513,7 @@ class Stop_Code(StringBase):  # R850
     @staticmethod
     def match(string):
         result = StringBase.match(pattern.abs_label, string)
-        if result or not "extended-stop-format" in EXTENSIONS():
+        if result or not "extended-stop-args" in EXTENSIONS():
             return result
         # This will allow statements like `stop -1` and `stop str1//str2`
         return Level_3_Expr(string)
