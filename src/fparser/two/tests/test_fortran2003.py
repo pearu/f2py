@@ -2100,10 +2100,10 @@ def test_continue_stmt():  # R848
 
 @pytest.mark.parametrize("standard_only", [True, False])
 def test_stop_stmt_standard_2003(standard_only, monkeypatch):
-    '''Test that stop statements are parsed correctly [R849].
+    """Test that stop statements are parsed correctly [R849].
     It tests both pure 2003 standard compliance, but also
     that negative numbers and string concatenations are accepted.
-    '''
+    """
     if standard_only:
         # Disable the stop-stmt extension for this test to verify
         # that really only standard expressions are accepted
@@ -2131,7 +2131,7 @@ def test_stop_stmt_standard_2003(standard_only, monkeypatch):
         # This should not be accepted according to F2003
         with pytest.raises(NoMatchError) as excinfo:
             tcls('stop "123"//"456"')
-        assert "Stop_Stmt: 'stop \"123\"//\"456\"" in str(excinfo.value)
+        assert 'Stop_Stmt: \'stop "123"//"456"' in str(excinfo.value)
 
         # This should not be accepted according to F2003
         with pytest.raises(NoMatchError) as excinfo:
