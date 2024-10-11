@@ -377,7 +377,7 @@ https://gcc.gnu.org/onlinedocs/gfortran/CONVERT-specifier.html
 Extended arguments for STOP
 +++++++++++++++++++++++++++
 
-May compiler support extended arguments for the STOP statement before Fortran 2008.
+Many compilers support extended arguments for the STOP statement before Fortran 2008.
 Examples are negative numbers, and string operations::
 
     STOP -1
