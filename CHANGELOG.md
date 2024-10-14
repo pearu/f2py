@@ -18,6 +18,9 @@ Modifications by (in alphabetical order):
 * P. Vitt, University of Siegen, Germany
 * A. Voysey, UK Met Office
 
+14/10/2024 PR #451 for #320. Adds an extension to Fortran2003 to support non-standard STOP
+           expressions and adds support for them in 2008.
+
 11/10/2024 PR #450 for #448. Adds an example script for removing all protected/private
            attributes from a parse tree.
 
