@@ -38,12 +38,11 @@
 """
 
 import pytest
-from fparser.two.utils import NoMatchError
-from fparser.two import Fortran2003, utils
-from fparser.two.Fortran2008 import Stop_Code
 
 from fparser.api import get_reader
 from fparser.two.utils import NoMatchError, walk
+from fparser.two import Fortran2003, utils
+from fparser.two.Fortran2008 import Stop_Code
 
 
 @pytest.mark.usefixtures("f2008_create")
