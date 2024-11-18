@@ -409,7 +409,7 @@ class Base(ComparableMixin):
         self.parent = None
 
     @show_result
-    def __new__(cls, string, parent_cls=None):
+    def __new__(cls, string, parent_cls=None, _deepcopy=False):
         if parent_cls is None:
             parent_cls = [cls]
         elif cls not in parent_cls:
@@ -417,6 +417,11 @@ class Base(ComparableMixin):
 
         # Get the class' match method if it has one
         match = getattr(cls, "match", None)
+
+        if _deepcopy:
+            # If this is deep copied (and string is None), simply call
+            # the super method without string
+            return super().__new__(cls)
 
         if (
             isinstance(string, FortranReaderBase)
@@ -504,6 +509,9 @@ class Base(ComparableMixin):
         else:
             errmsg = f"{cls.__name__}: '{string}'"
         raise NoMatchError(errmsg)
+
+    def __getnewargs__(self):
+        return (self.string, None, True)
 
     def get_root(self):
         """

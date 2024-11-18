@@ -252,7 +252,7 @@ class Program(BlockBase):  # R201
     use_names = ["Program_Unit"]
 
     @show_result
-    def __new__(cls, string):
+    def __new__(cls, string, _deepcopy=False):
         """Wrapper around base class __new__ to catch an internal NoMatchError
         exception and raise it as an external FortranSyntaxError exception.
 
@@ -264,7 +264,7 @@ class Program(BlockBase):  # R201
         """
         # pylint: disable=unused-argument
         try:
-            return Base.__new__(cls, string)
+            return Base.__new__(cls, string, _deepcopy=_deepcopy)
         except NoMatchError:
             # At the moment there is no useful information provided by
             # NoMatchError so we pass on an empty string.
@@ -276,6 +276,10 @@ class Program(BlockBase):  # R201
             # FortranSyntaxError, adding the reader object (which
             # provides line number information).
             raise FortranSyntaxError(string, excinfo)
+
+    def __getnewargs__(self):
+        # For deep copy
+        return (self.string, True)
 
     @staticmethod
     def match(reader):

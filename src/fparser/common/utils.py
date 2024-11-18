@@ -380,3 +380,6 @@ class classes(type, metaclass=meta_classes):
         cls = type.__new__(metacls, name, bases, dict)
         _classes_cache[name] = cls
         return cls
+
+    def __getnewargs__(self):
+        return (self.name, self.bases, self.dict)
