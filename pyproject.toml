@@ -1,0 +1,8 @@
+[build-system]
+requires = [
+        "setuptools>=42.0.0",
+        "wheel>=0.34.2",
+        # setup.py uses numpy.distutils, which was removed in 1.23
+        "numpy<1.23",
+        ]
+build-backend = "setuptools.build_meta"
